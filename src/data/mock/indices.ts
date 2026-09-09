@@ -2,7 +2,7 @@
  * Deterministic dummy snapshots for the secondary Urdais indices.
  *
  * Hard-coded, plausible values for layout work only. UCPI is intentionally
- * absent: it owns the primary Market Summary panel. Replace with API data
+ * absent: it owns the primary Information Markets panel. Replace with API data
  * when the backend publishes index values.
  */
 

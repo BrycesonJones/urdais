@@ -1,0 +1,35 @@
+import { UcpiSummary } from "@/components/market/ucpi-summary";
+import { UrdaisIndices } from "@/components/market/urdais-indices";
+import { INDEX_SNAPSHOTS } from "@/data/mock/indices";
+import { UCPI_INDEX, UCPI_SERIES, UCPI_SNAPSHOT } from "@/data/mock/ucpi";
+
+/**
+ * Information Markets: the structured, near-black data surface that rises
+ * into the bottom of the Liquid Chrome hero. The negative top margin creates
+ * the overlap and the section sits above the hero in stacking order. There is
+ * no outer shell: the background fades in over its first 40px so the chrome
+ * dissolves into a stable dark surface instead of meeting a hard edge. The
+ * surface is explicitly dark regardless of colour scheme.
+ */
+export function InformationMarketsSection() {
+  return (
+    <section
+      aria-labelledby="information-markets-heading"
+      className="relative z-10 -mt-10 flex-1 bg-[linear-gradient(to_bottom,rgba(10,10,10,0),#0a0a0a_40px)] px-4 pb-16 pt-8 text-neutral-50 sm:px-6 md:-mt-16 md:pt-10 lg:-mt-24 lg:px-8"
+    >
+      <div className="mx-auto max-w-screen-2xl">
+        <h2
+          id="information-markets-heading"
+          className="text-2xl font-semibold tracking-tight md:text-3xl"
+        >
+          Information Markets
+        </h2>
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
+          <UcpiSummary index={UCPI_INDEX} snapshot={UCPI_SNAPSHOT} series={UCPI_SERIES} />
+          <UrdaisIndices indices={INDEX_SNAPSHOTS} />
+        </div>
+      </div>
+    </section>
+  );
+}

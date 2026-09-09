@@ -9,7 +9,7 @@ type UcpiSummaryProps = {
   series: IndexSeries;
 };
 
-/** Primary Market Summary panel: UCPI value, change, and historical chart. */
+/** Primary Information Markets panel: UCPI value, change, and historical chart. */
 export function UcpiSummary({ index, snapshot, series }: UcpiSummaryProps) {
   return (
     <article
