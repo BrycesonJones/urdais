@@ -1,5 +1,7 @@
 # Urdais
 
+[![CI](https://github.com/BrycesonJones/urdais/actions/workflows/ci.yml/badge.svg)](https://github.com/BrycesonJones/urdais/actions/workflows/ci.yml)
+
 **Intelligence for the Information Age.**
 
 Urdais is an information and market-data platform for the Information Age: standardized data, historical time series, market intelligence, and proprietary indices covering AI compute, GPU pricing, token economics, memory, photonics, energy, crypto, and related areas.
@@ -80,3 +82,13 @@ The `@/*` path alias maps to `src/*`. Directories that are still empty are not c
 ## Workflow
 
 Work happens on feature branches merged through reviewed pull requests. Do not push directly to `main`.
+
+Every pull request and every push to `main` is validated by GitHub Actions (`.github/workflows/ci.yml`), which runs `npm ci` followed by:
+
+```text
+npm run lint
+npm run typecheck
+npm run build
+```
+
+CI uses the Node version from `.nvmrc`. Run the same three commands locally before opening a PR.
