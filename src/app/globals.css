@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+/*
+ * Global stylesheet.
+ *
+ * Tailwind utilities are available everywhere via the import above. Plain CSS
+ * (custom properties, base styles, one-off rules) can live here as well, and
+ * component-scoped CSS can be added later via CSS Modules (*.module.css).
+ *
+ * No design system or brand palette is defined yet; these are neutral defaults.
+ */
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+}
