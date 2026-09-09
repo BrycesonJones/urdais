@@ -6,14 +6,15 @@ import { UCPI_INDEX, UCPI_SERIES, UCPI_SNAPSHOT } from "@/data/mock/ucpi";
 /**
  * The structured market surface that rises into the bottom of the Liquid
  * Chrome hero. The negative top margin creates the overlap; the section sits
- * above the hero in stacking order, is explicitly light regardless of colour
- * scheme, and carries the page's large architectural top radius.
+ * above the hero in stacking order, is explicitly dark (a terminal-style
+ * surface continuing the hero's palette) regardless of colour scheme, and
+ * carries the page's large architectural top radius.
  */
 export function MarketSummarySection() {
   return (
     <section
       aria-labelledby="market-summary-heading"
-      className="relative z-10 -mt-10 flex-1 rounded-t-[32px] bg-white px-4 pb-16 pt-8 text-neutral-950 shadow-[0_-16px_48px_rgba(0,0,0,0.28)] sm:px-6 md:-mt-16 md:rounded-t-[36px] md:pt-10 lg:-mt-24 lg:px-8"
+      className="relative z-10 -mt-10 flex-1 rounded-t-[32px] border-t border-neutral-800 bg-[#0a0a0a] px-4 pb-16 pt-8 text-neutral-50 shadow-[0_-8px_32px_rgba(0,0,0,0.45)] sm:px-6 md:-mt-16 md:rounded-t-[36px] md:pt-10 lg:-mt-24 lg:px-8"
     >
       <div className="mx-auto max-w-screen-2xl">
         <h2
@@ -21,7 +22,7 @@ export function MarketSummarySection() {
           className="text-2xl font-semibold tracking-tight md:text-3xl"
         >
           Market summary
-          <span aria-hidden="true" className="ml-1 text-neutral-400">
+          <span aria-hidden="true" className="ml-1 text-neutral-600">
             ›
           </span>
         </h2>

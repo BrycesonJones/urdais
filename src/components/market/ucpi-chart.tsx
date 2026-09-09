@@ -15,7 +15,7 @@ const DEFAULT_RANGE: TimeRange = "1M";
 const INTRADAY_RANGES: ReadonlySet<TimeRange> = new Set(["1D", "1W"]);
 
 const focusRing =
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-500";
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400";
 
 /** Chart plus timeframe controls; owns the selected range. */
 export function UcpiChart({ symbol, unit, series }: UcpiChartProps) {
@@ -42,8 +42,8 @@ export function UcpiChart({ symbol, unit, series }: UcpiChartProps) {
               onClick={() => setRange(option)}
               className={`rounded-md px-2.5 py-1 text-xs font-medium tabular-nums transition-colors ${
                 selected
-                  ? "bg-neutral-900 text-white"
-                  : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
+                  ? "bg-white/10 text-neutral-50"
+                  : "text-neutral-400 hover:bg-white/5 hover:text-neutral-100"
               } ${focusRing}`}
             >
               {option}

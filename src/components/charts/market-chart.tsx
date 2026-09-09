@@ -26,14 +26,17 @@ type MarketChartProps = {
   className?: string;
 };
 
-// Neutral graphite treatment: the chart should read as structure, not compete
-// with the hero or pre-empt a brand palette.
-const LINE_COLOR = "#262626";
-const AREA_TOP = "rgba(38, 38, 38, 0.10)";
-const AREA_BOTTOM = "rgba(38, 38, 38, 0)";
-const AXIS_TEXT = "#737373";
-const GRID_COLOR = "#f0f0f0";
-const CROSSHAIR_COLOR = "#a3a3a3";
+// Dark terminal treatment: a silver line echoing the hero's chrome highlights
+// on the UCPI panel's own surface. The background is solid rather than
+// transparent so the library picks a legible attribution logo colour.
+const PANEL_BACKGROUND = "#111111";
+const LINE_COLOR = "#e5e5e5";
+const AREA_TOP = "rgba(229, 229, 229, 0.12)";
+const AREA_BOTTOM = "rgba(229, 229, 229, 0)";
+const AXIS_TEXT = "#8a8a8a";
+const GRID_COLOR = "#222222";
+const CROSSHAIR_COLOR = "#737373";
+const CROSSHAIR_LABEL_BACKGROUND = "#404040";
 const FONT_FAMILY =
   'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
@@ -58,7 +61,7 @@ export function MarketChart({ data, intraday, unit, label, className }: MarketCh
     const chart = createChart(container, {
       autoSize: true,
       layout: {
-        background: { type: ColorType.Solid, color: "transparent" },
+        background: { type: ColorType.Solid, color: PANEL_BACKGROUND },
         textColor: AXIS_TEXT,
         fontFamily: FONT_FAMILY,
         fontSize: 11,
@@ -75,8 +78,8 @@ export function MarketChart({ data, intraday, unit, label, className }: MarketCh
       timeScale: { borderVisible: false, fixLeftEdge: true, fixRightEdge: true },
       crosshair: {
         mode: CrosshairMode.Magnet,
-        vertLine: { color: CROSSHAIR_COLOR, style: LineStyle.Solid, labelBackgroundColor: LINE_COLOR },
-        horzLine: { color: CROSSHAIR_COLOR, style: LineStyle.Solid, labelBackgroundColor: LINE_COLOR },
+        vertLine: { color: CROSSHAIR_COLOR, style: LineStyle.Solid, labelBackgroundColor: CROSSHAIR_LABEL_BACKGROUND },
+        horzLine: { color: CROSSHAIR_COLOR, style: LineStyle.Solid, labelBackgroundColor: CROSSHAIR_LABEL_BACKGROUND },
       },
       // Keep page scrolling and zooming predictable: no wheel capture.
       handleScroll: { mouseWheel: false, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
@@ -133,7 +136,7 @@ export function MarketChart({ data, intraday, unit, label, className }: MarketCh
     <div className={["flex min-h-0 flex-col", className].filter(Boolean).join(" ")}>
       <p
         ref={readoutRef}
-        className="h-5 shrink-0 text-right text-xs tabular-nums text-neutral-500"
+        className="h-5 shrink-0 text-right text-xs tabular-nums text-neutral-400"
       />
       <div
         ref={containerRef}
