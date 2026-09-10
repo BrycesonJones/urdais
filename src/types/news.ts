@@ -11,9 +11,9 @@ export const NEWS_CATEGORIES = [
   { id: "compute", label: "Compute" },
   { id: "memory", label: "Memory" },
   { id: "photonics", label: "Photonics" },
-  { id: "crypto", label: "Crypto" },
   { id: "energy-power", label: "Energy / Power" },
   { id: "ai-chips", label: "AI Chips" },
+  { id: "crypto", label: "Crypto" },
 ] as const;
 
 export type NewsCategory = (typeof NEWS_CATEGORIES)[number]["id"];
