@@ -26,9 +26,20 @@ type MarketChartProps = {
   className?: string;
 };
 
+/*
+ * Attribution notice (Lightweight Charts NOTICE file, required by its
+ * Apache-2.0 licence terms):
+ *   TradingView Lightweight Charts™
+ *   Copyright (с) 2025 TradingView, Inc. https://www.tradingview.com/
+ *
+ * The on-chart attribution logo is disabled below. The licence allows this
+ * only when the page that shows the chart links to https://www.tradingview.com/
+ * elsewhere, so every page rendering MarketChart must include that link
+ * (see the attribution line in ucpi-chart.tsx).
+ */
+
 // Dark terminal treatment: a silver line echoing the hero's chrome highlights
-// on the UCPI panel's own surface. The background is solid rather than
-// transparent so the library picks a legible attribution logo colour.
+// on the UCPI panel's own surface.
 const PANEL_BACKGROUND = "#111111";
 const LINE_COLOR = "#e5e5e5";
 const AREA_TOP = "rgba(229, 229, 229, 0.12)";
@@ -65,6 +76,7 @@ export function MarketChart({ data, intraday, unit, label, className }: MarketCh
         textColor: AXIS_TEXT,
         fontFamily: FONT_FAMILY,
         fontSize: 11,
+        attributionLogo: false,
       },
       localization: {
         locale: "en-US",

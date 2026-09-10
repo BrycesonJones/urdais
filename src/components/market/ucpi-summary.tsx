@@ -14,7 +14,7 @@ export function UcpiSummary({ index, snapshot, series }: UcpiSummaryProps) {
   return (
     <article
       aria-labelledby="ucpi-heading"
-      className="flex flex-col gap-5 rounded-xl border border-neutral-800 bg-[#111111] p-5 sm:p-6"
+      className="flex flex-col gap-5 rounded-xl border border-neutral-800 bg-[#111111] p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06),0_20px_48px_-20px_rgba(0,0,0,0.9)] transition-colors hover:border-neutral-700 sm:p-6"
     >
       <header className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">

@@ -5,7 +5,7 @@ import type { IndexSnapshot } from "@/types/market";
 /** One compact watchlist-style row: symbol and name left, value and change right. */
 export function IndexRow({ index }: { index: IndexSnapshot }) {
   return (
-    <li className="flex items-center justify-between gap-4 py-3">
+    <li className="-mx-2 flex items-center justify-between gap-4 rounded-md px-2 py-3 transition-colors hover:bg-white/[0.03]">
       <div className="min-w-0">
         <p className="text-sm font-semibold text-neutral-50">{index.symbol}</p>
         <p className="truncate text-xs text-neutral-400">{index.name}</p>
