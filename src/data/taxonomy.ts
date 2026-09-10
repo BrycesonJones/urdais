@@ -46,7 +46,7 @@ export const MEASUREMENT_DOMAINS: MeasurementDomain[] = [
   {
     domain: "Crypto",
     description: "Native monetary markets of the Information Age",
-    examples: ["BTC purchasing power", "Network economics", "Stablecoins"],
+    examples: ["BTC purchasing power", "Network economics"],
   },
 ];
 
