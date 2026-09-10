@@ -18,7 +18,7 @@ export function InformationMarketsSection() {
   return (
     <section
       aria-labelledby="information-markets-heading"
-      className="relative z-10 -mt-10 flex-1 bg-[linear-gradient(to_bottom,rgba(10,10,10,0),#0a0a0a_40px)] px-4 pb-16 pt-8 text-neutral-50 sm:px-6 md:-mt-16 md:pt-10 lg:-mt-24 lg:px-8"
+      className="relative z-10 -mt-10 bg-[linear-gradient(to_bottom,rgba(10,10,10,0),#0a0a0a_40px)] px-4 pb-16 pt-8 text-neutral-50 sm:px-6 md:-mt-16 md:pt-10 lg:-mt-24 lg:px-8"
     >
       <div className="mx-auto max-w-screen-2xl">
         <h2
