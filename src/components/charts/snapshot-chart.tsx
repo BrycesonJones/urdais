@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent } from "react";
 
+import { useSvgId } from "@/components/charts/use-svg-id";
 import { formatNumber, formatTimestamp } from "@/lib/format";
 import type { TimeSeriesPoint } from "@/types/market";
 
@@ -60,7 +61,7 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
   const hoverIndex = hover && hover.series === data ? hover.index : null;
 
   // Instance-safe ids for SVG definitions, so several charts can share a page.
-  const baseId = `snap-${useIdSafe()}`;
+  const baseId = useSvgId("snap");
   const ids = {
     pattern: `${baseId}-pattern`,
     fade: `${baseId}-fade`,
@@ -270,11 +271,6 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
       </div>
     </div>
   );
-}
-
-/** React's useId, stripped to characters that are valid inside url(#…) references. */
-function useIdSafe(): string {
-  return useId().replace(/[^a-zA-Z0-9_-]/g, "");
 }
 
 /** Short axis label: time of day for intraday series, month and day otherwise. */

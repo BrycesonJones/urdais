@@ -36,3 +36,60 @@ export type MarketSnapshot = {
 };
 
 export type IndexSnapshot = MarketIndex & MarketSnapshot;
+
+/*
+ * Market detail page.
+ *
+ * These shapes are what the detail page consumes. They approximate what the
+ * future API will return per instrument (identity, snapshot, history,
+ * which ranges the history supports, and which series may be compared) and
+ * are mapped from mock data today.
+ */
+
+/** Selectable windows on the detail chart, in display order. */
+export const DETAIL_RANGES = ["1D", "5D", "1M", "6M", "YTD", "1Y", "5Y", "10Y", "ALL"] as const;
+
+export type DetailRange = (typeof DETAIL_RANGES)[number];
+
+/** Full history for one instrument: daily closes plus a trailing intraday tail. */
+export type DetailedSeries = {
+  daily: TimeSeriesPoint[];
+  /** 15-minute points covering at least the trailing five days. */
+  intraday: TimeSeriesPoint[];
+};
+
+/** Another instrument in the same market whose series shares this one's unit. */
+export type ComparisonOption = {
+  instrumentId: string;
+  label: string;
+};
+
+export type MarketInstrumentDetail = MarketIndex & {
+  /** Stable id used for selection and comparison lookups, e.g. "ucpi-h100". */
+  id: string;
+  snapshot: MarketSnapshot;
+  series: DetailedSeries;
+  /** Ranges the history is long enough to support; others are shown disabled. */
+  availableRanges: DetailRange[];
+  comparisons: ComparisonOption[];
+};
+
+/** A group of instruments that belong together, e.g. the Compute family of UCPI. */
+export type MarketFamily = {
+  id: string;
+  label: string;
+  /** Empty when the family exists in the taxonomy but has no instruments yet. */
+  instruments: MarketInstrumentDetail[];
+};
+
+/** A routed top-level market: one of the Urdais indices and its instrument families. */
+export type MarketDetail = MarketIndex & {
+  families: MarketFamily[];
+  defaultInstrumentId: string;
+};
+
+/** Return over one selectable range; null when the history is too short. */
+export type PeriodPerformance = {
+  range: DetailRange;
+  returnPercent: number | null;
+};
