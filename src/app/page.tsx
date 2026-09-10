@@ -1,5 +1,6 @@
-import { LiquidChromeSection } from "@/components/home/liquid-chrome-section";
 import { InformationMarketsSection } from "@/components/home/information-markets-section";
+import { LiquidChromeSection } from "@/components/home/liquid-chrome-section";
+import { NewsSections } from "@/components/home/news-sections";
 import { SiteHeader } from "@/components/layout/site-header";
 
 export default function HomePage() {
@@ -9,6 +10,7 @@ export default function HomePage() {
       <main className="flex flex-1 flex-col">
         <LiquidChromeSection />
         <InformationMarketsSection />
+        <NewsSections />
       </main>
     </>
   );
