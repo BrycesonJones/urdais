@@ -1,51 +1,25 @@
-import Link from "next/link";
-
 import { movementClass } from "@/components/market/movement";
 import { formatNumber, formatPercent, formatSigned, formatUpdatedAt } from "@/lib/format";
-import { marketIndexHref } from "@/lib/routes";
-import type { MarketDetail, MarketInstrumentDetail } from "@/types/market";
+import type { MarketInstrumentDetail } from "@/types/market";
 
 type MarketHeaderProps = {
-  markets: MarketDetail[];
-  market: MarketDetail;
   instrument: MarketInstrumentDetail;
 };
 
 /**
- * Identity and headline for the selected instrument: a strip of links to
- * the other routed markets, the symbol and name, when it was last updated,
- * and the current value at the largest size on the page with the day's
- * move beneath it. The move is the current-session change and does not
+ * Identity and headline for the selected instrument: the symbol and name,
+ * when it was last updated, and the current value at the largest size on
+ * the page with the day's move beneath it. The page opens directly on this;
+ * the instrument itself is the context. The move is the current-session change and does not
  * follow the chart range; historical returns live under the chart.
  */
-export function MarketHeader({ markets, market, instrument }: MarketHeaderProps) {
+export function MarketHeader({ instrument }: MarketHeaderProps) {
   const { snapshot } = instrument;
   const movement = movementClass(snapshot.change);
 
   return (
     <div className="min-w-0">
-      <nav aria-label="Urdais markets" className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-        <span className="text-neutral-500">Information Markets</span>
-        {markets.map((option) => {
-          const current = option.symbol === market.symbol;
-          return (
-            <Link
-              key={option.symbol}
-              href={marketIndexHref(option.symbol)}
-              aria-current={current ? "page" : undefined}
-              className={`rounded-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-400 ${
-                current
-                  ? "text-neutral-50 underline decoration-[#526fe0] decoration-2 underline-offset-8"
-                  : "text-neutral-400 hover:text-neutral-100"
-              }`}
-            >
-              {option.symbol}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-50 md:text-3xl">{instrument.symbol}</h1>
         <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
           Demo data

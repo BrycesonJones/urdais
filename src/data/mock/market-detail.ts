@@ -25,7 +25,7 @@ import type {
   MarketSnapshot,
 } from "@/types/market";
 
-/** About twelve years of daily closes: enough to exercise 10Y and ALL. */
+/** About twelve years of daily closes, so All time is a long, believable history. */
 const LONG_HISTORY_DAYS = 4400;
 
 const round = (value: number) => Math.round(value * 10_000) / 10_000;
@@ -76,7 +76,7 @@ const COMPUTE_SPECS: InstrumentSpec[] = [
     symbol: "UCPI-H200",
     name: "Urdais Compute Price Index · H200 benchmark",
     unit: UCPI_INDEX.unit,
-    // Roughly three years of history: 5Y and 10Y are not available.
+    // Roughly three years of history.
     daily: {
       seed: 20240115,
       asOf: MOCK_AS_OF,
@@ -93,7 +93,7 @@ const COMPUTE_SPECS: InstrumentSpec[] = [
     symbol: "UCPI-B200",
     name: "Urdais Compute Price Index · B200 benchmark",
     unit: UCPI_INDEX.unit,
-    // About eighteen months of history: only 1D through 1Y and ALL apply.
+    // About eighteen months of history.
     daily: {
       seed: 20250301,
       asOf: MOCK_AS_OF,
@@ -124,7 +124,7 @@ const UCPI_MARKET: MarketDetail = {
   families: [
     { id: "compute", label: "Compute", instruments: COMPUTE_INSTRUMENTS },
     // Present in the taxonomy; token-pricing instruments are a later slice.
-    { id: "models", label: "Models", instruments: [] },
+    { id: "tokens", label: "Tokens", instruments: [] },
   ],
 };
 

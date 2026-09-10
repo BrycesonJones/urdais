@@ -27,7 +27,7 @@ export function PeriodPerformance({ performance, selected, onSelect, className }
     <div
       role="group"
       aria-label="Chart timeframe and period return"
-      className={["grid grid-cols-3 gap-1 sm:grid-cols-5 lg:grid-cols-9", className].filter(Boolean).join(" ")}
+      className={["grid grid-cols-3 gap-1 sm:grid-cols-4 lg:grid-cols-8", className].filter(Boolean).join(" ")}
     >
       {performance.map(({ range, returnPercent }) => {
         const isSelected = range === selected;

@@ -7,7 +7,7 @@ import type { ChartSeries } from "@/components/charts/detailed-market-chart";
 import { MarketHeader } from "@/components/market-detail/market-header";
 import { MarketSelectors } from "@/components/market-detail/market-selectors";
 import { PeriodPerformance } from "@/components/market-detail/period-performance";
-import { defaultInstrument, findInstrument, MARKETS } from "@/data/mock/market-detail";
+import { defaultInstrument, findInstrument } from "@/data/mock/market-detail";
 import { isIntradayRange, periodPerformance, RANGE_LABELS, windowPoints } from "@/lib/market-ranges";
 import type { DetailRange, MarketDetail } from "@/types/market";
 
@@ -55,7 +55,7 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
     <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-8 text-neutral-50 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-screen-2xl">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <MarketHeader markets={MARKETS} market={market} instrument={instrument} />
+          <MarketHeader instrument={instrument} />
           <MarketSelectors
             market={market}
             instrument={instrument}

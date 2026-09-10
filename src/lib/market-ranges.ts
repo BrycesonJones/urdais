@@ -18,11 +18,10 @@ export const RANGE_LABELS: Record<DetailRange, string> = {
   "1D": "1 day",
   "5D": "5 days",
   "1M": "1 month",
+  "3M": "3 months",
   "6M": "6 months",
   YTD: "YTD",
   "1Y": "1 year",
-  "5Y": "5 years",
-  "10Y": "10 years",
   ALL: "All time",
 };
 
@@ -57,16 +56,14 @@ export function rangeStart(range: DetailRange, asOf: number): number | null {
       return asOf - 5 * DAY;
     case "1M":
       return shiftUtc(asOf, { months: -1 });
+    case "3M":
+      return shiftUtc(asOf, { months: -3 });
     case "6M":
       return shiftUtc(asOf, { months: -6 });
     case "YTD":
       return Date.UTC(new Date(asOf * 1000).getUTCFullYear(), 0, 1) / 1000;
     case "1Y":
       return shiftUtc(asOf, { years: -1 });
-    case "5Y":
-      return shiftUtc(asOf, { years: -5 });
-    case "10Y":
-      return shiftUtc(asOf, { years: -10 });
     case "ALL":
       return null;
   }
