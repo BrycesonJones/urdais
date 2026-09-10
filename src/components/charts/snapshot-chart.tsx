@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { PointerEvent } from "react";
 
 import { formatNumber, formatTimestamp } from "@/lib/format";
@@ -8,7 +8,7 @@ import type { TimeSeriesPoint } from "@/types/market";
 
 type SnapshotChartProps = {
   data: TimeSeriesPoint[];
-  /** Whether points are intraday, which switches axis and readout to time of day. */
+  /** Whether points are intraday, which switches axis and readout to show time of day. */
   intraday: boolean;
   unit: string;
   /** Accessible description of the chart, e.g. "UCPI historical chart, 1M range". */
@@ -16,33 +16,36 @@ type SnapshotChartProps = {
   className?: string;
 };
 
-// Dark terminal treatment: a silver line echoing the hero's chrome highlights
-// on the UCPI panel's own surface.
+// Neutral silver treatment on the panel's near-black surface. The line is
+// never coloured by performance; movement colours live in the text values.
 const LINE_COLOR = "#e5e5e5";
-const AREA_TOP_OPACITY = 0.12;
 const AXIS_TEXT = "#8a8a8a";
-const GRID_COLOR = "#222222";
-const CROSSHAIR_COLOR = "#737373";
+const CROSSHAIR_COLOR = "#525252";
 const MARKER_LABEL_BACKGROUND = "#e5e5e5";
 const MARKER_LABEL_TEXT = "#111111";
 
+// Square-matrix field beneath the line: small squares on a fixed grid,
+// strongest just under the line and fading out toward the bottom.
+const MATRIX_SQUARE = 3;
+const MATRIX_TOP_OPACITY = 0.55;
+const MATRIX_BOTTOM_OPACITY = 0;
+
 const PADDING = { top: 12, right: 52, bottom: 26, left: 4 };
-const Y_TICKS = 5;
-const MAX_X_TICKS = 6;
-const MIN_X_TICKS = 3;
-/** Approximate horizontal room each x label needs so labels never collide. */
-const X_LABEL_SPACING = 96;
-const AREA_GRADIENT_ID = "snapshot-area-fill";
+const MIN_X_TICKS = 2;
+const MAX_X_TICKS = 5;
+/** Horizontal room per x label, sized so counts land at 2–3 / 3–4 / 4–5 by breakpoint. */
+const X_LABEL_SPACING = 180;
 
 type Size = { width: number; height: number };
 
 /**
- * Urdais-owned snapshot chart: a small SVG line/area renderer for the
- * homepage. It draws the given series at the container's measured size,
- * with a few axis labels, a subtle grid, a last-value marker, and a pointer
- * crosshair whose reading is written to a text line above the graphic.
- * The value and change are always shown as text elsewhere, so the SVG is
- * a labelled illustration rather than the only source of the number.
+ * Urdais-owned snapshot chart: a small SVG thumbnail for the homepage.
+ * It draws a silver trend line over a square-matrix field clipped to the
+ * area under the line, a single current-value marker on the right, and a
+ * minimal set of muted x labels. No grid, no y-axis: precision belongs to
+ * the detailed chart page. A pointer crosshair (vertical guide and marker)
+ * writes its reading to a text line above the graphic. The value and change
+ * are always shown as text elsewhere, so the SVG is a labelled illustration.
  */
 export function SnapshotChart({ data, intraday, unit, label, className }: SnapshotChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -51,6 +54,15 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
   // implicitly clears it without an effect.
   const [hover, setHover] = useState<{ series: TimeSeriesPoint[]; index: number } | null>(null);
   const hoverIndex = hover && hover.series === data ? hover.index : null;
+
+  // Instance-safe ids for SVG definitions, so several charts can share a page.
+  const baseId = `snap-${useIdSafe()}`;
+  const ids = {
+    pattern: `${baseId}-pattern`,
+    fade: `${baseId}-fade`,
+    mask: `${baseId}-mask`,
+    clip: `${baseId}-clip`,
+  };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -92,18 +104,18 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
     const points = data.map((point, index) => `${x(index).toFixed(1)},${y(point.value).toFixed(1)}`);
     const linePath = `M${points.join("L")}`;
     const areaPath = `${linePath}L${x(data.length - 1).toFixed(1)},${plotBottom}L${plotLeft},${plotBottom}Z`;
+    const lineTop = y(max);
 
-    const yTicks = Array.from({ length: Y_TICKS }, (_, i) => {
-      const value = yMin + ((yMax - yMin) * i) / (Y_TICKS - 1);
-      return { value, y: y(value) };
-    });
     const xTickCount = Math.max(MIN_X_TICKS, Math.min(MAX_X_TICKS, Math.floor(plotWidth / X_LABEL_SPACING)));
     const xTicks = Array.from({ length: xTickCount }, (_, i) => {
       const index = Math.round(((data.length - 1) * i) / (xTickCount - 1));
       return { index, x: x(index) };
     });
 
-    return { plotLeft, plotRight, plotTop, plotBottom, x, y, linePath, areaPath, yTicks, xTicks };
+    // Slightly wider cells on wide charts so the field never turns into noise.
+    const matrixSpacing = plotWidth < 480 ? 8 : 10;
+
+    return { plotLeft, plotRight, plotTop, plotBottom, x, y, linePath, areaPath, lineTop, xTicks, matrixSpacing };
   }, [data, size]);
 
   function handlePointerMove(event: PointerEvent<SVGSVGElement>) {
@@ -138,34 +150,51 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
           >
             <title>{label}</title>
             <defs>
-              <linearGradient id={AREA_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor={LINE_COLOR} stopOpacity={AREA_TOP_OPACITY} />
-                <stop offset="1" stopColor={LINE_COLOR} stopOpacity={0} />
+              <pattern
+                id={ids.pattern}
+                patternUnits="userSpaceOnUse"
+                width={geometry.matrixSpacing}
+                height={geometry.matrixSpacing}
+                x={geometry.plotLeft}
+                y={geometry.plotBottom}
+              >
+                <rect width={MATRIX_SQUARE} height={MATRIX_SQUARE} fill={LINE_COLOR} />
+              </pattern>
+              <linearGradient
+                id={ids.fade}
+                gradientUnits="userSpaceOnUse"
+                x1="0"
+                x2="0"
+                y1={geometry.lineTop}
+                y2={geometry.plotBottom}
+              >
+                <stop offset="0" stopColor="#fff" stopOpacity={MATRIX_TOP_OPACITY} />
+                <stop offset="1" stopColor="#fff" stopOpacity={MATRIX_BOTTOM_OPACITY} />
               </linearGradient>
+              <mask id={ids.mask} maskUnits="userSpaceOnUse">
+                <rect
+                  x={geometry.plotLeft}
+                  y={geometry.plotTop}
+                  width={geometry.plotRight - geometry.plotLeft}
+                  height={geometry.plotBottom - geometry.plotTop}
+                  fill={`url(#${ids.fade})`}
+                />
+              </mask>
+              <clipPath id={ids.clip}>
+                <path d={geometry.areaPath} />
+              </clipPath>
             </defs>
 
-            {geometry.yTicks.map((tick) => (
-              <g key={tick.value}>
-                <line
-                  x1={geometry.plotLeft}
-                  x2={geometry.plotRight}
-                  y1={tick.y}
-                  y2={tick.y}
-                  stroke={GRID_COLOR}
-                  strokeWidth={1}
-                />
-                <text
-                  x={geometry.plotRight + 8}
-                  y={tick.y}
-                  fill={AXIS_TEXT}
-                  fontSize={11}
-                  dominantBaseline="middle"
-                  className="tabular-nums"
-                >
-                  {formatNumber(tick.value)}
-                </text>
-              </g>
-            ))}
+            {/* Square-matrix field: pattern clipped to the area under the line, fading downward. */}
+            <g clipPath={`url(#${ids.clip})`} mask={`url(#${ids.mask})`}>
+              <rect
+                x={geometry.plotLeft}
+                y={geometry.plotTop}
+                width={geometry.plotRight - geometry.plotLeft}
+                height={geometry.plotBottom - geometry.plotTop}
+                fill={`url(#${ids.pattern})`}
+              />
+            </g>
 
             {geometry.xTicks.map((tick, i) => {
               const point = data[tick.index];
@@ -185,7 +214,6 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
               );
             })}
 
-            <path d={geometry.areaPath} fill={`url(#${AREA_GRADIENT_ID})`} />
             <path
               d={geometry.linePath}
               fill="none"
@@ -195,7 +223,7 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
               strokeLinecap="round"
             />
 
-            {/* Last value marker and axis label. */}
+            {/* Current value: endpoint dot and a single right-edge label. */}
             <circle cx={geometry.x(data.length - 1)} cy={geometry.y(last.value)} r={3} fill={LINE_COLOR} />
             <g transform={`translate(${geometry.plotRight + 4}, ${geometry.y(last.value)})`}>
               <rect x={0} y={-9} width={PADDING.right - 6} height={18} rx={2} fill={MARKER_LABEL_BACKGROUND} />
@@ -238,6 +266,11 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
       </div>
     </div>
   );
+}
+
+/** React's useId, stripped to characters that are valid inside url(#…) references. */
+function useIdSafe(): string {
+  return useId().replace(/[^a-zA-Z0-9_-]/g, "");
 }
 
 /** Short axis label: time of day for intraday series, month and day otherwise. */

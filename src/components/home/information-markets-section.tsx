@@ -1,7 +1,10 @@
+import Link from "next/link";
+
 import { UcpiSummary } from "@/components/market/ucpi-summary";
 import { UrdaisIndices } from "@/components/market/urdais-indices";
 import { INDEX_SNAPSHOTS } from "@/data/mock/indices";
 import { UCPI_INDEX, UCPI_SERIES, UCPI_SNAPSHOT } from "@/data/mock/ucpi";
+import { MARKETS_HREF } from "@/lib/routes";
 
 /**
  * Information Markets: the structured, near-black data surface that rises
@@ -22,7 +25,18 @@ export function InformationMarketsSection() {
           id="information-markets-heading"
           className="text-2xl font-semibold tracking-tight md:text-3xl"
         >
-          Information Markets
+          <Link
+            href={MARKETS_HREF}
+            className="group inline-flex items-center gap-2 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-400"
+          >
+            Information Markets
+            <span
+              aria-hidden="true"
+              className="text-neutral-600 transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-neutral-300 group-focus-visible:text-neutral-300"
+            >
+              ›
+            </span>
+          </Link>
         </h2>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
