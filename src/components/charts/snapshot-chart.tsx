@@ -28,7 +28,10 @@ const MARKER_LABEL_TEXT = "#111111";
 
 const PADDING = { top: 12, right: 52, bottom: 26, left: 4 };
 const Y_TICKS = 5;
-const X_TICKS = 6;
+const MAX_X_TICKS = 6;
+const MIN_X_TICKS = 3;
+/** Approximate horizontal room each x label needs so labels never collide. */
+const X_LABEL_SPACING = 96;
 const AREA_GRADIENT_ID = "snapshot-area-fill";
 
 type Size = { width: number; height: number };
@@ -94,8 +97,9 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
       const value = yMin + ((yMax - yMin) * i) / (Y_TICKS - 1);
       return { value, y: y(value) };
     });
-    const xTicks = Array.from({ length: X_TICKS }, (_, i) => {
-      const index = Math.round(((data.length - 1) * i) / (X_TICKS - 1));
+    const xTickCount = Math.max(MIN_X_TICKS, Math.min(MAX_X_TICKS, Math.floor(plotWidth / X_LABEL_SPACING)));
+    const xTicks = Array.from({ length: xTickCount }, (_, i) => {
+      const index = Math.round(((data.length - 1) * i) / (xTickCount - 1));
       return { index, x: x(index) };
     });
 
@@ -166,7 +170,7 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
             {geometry.xTicks.map((tick, i) => {
               const point = data[tick.index];
               if (!point) return null;
-              const anchor = i === 0 ? "start" : i === X_TICKS - 1 ? "end" : "middle";
+              const anchor = i === 0 ? "start" : i === geometry.xTicks.length - 1 ? "end" : "middle";
               return (
                 <text
                   key={tick.index}
