@@ -9,7 +9,7 @@ import { NEWS_CATEGORIES } from "@/types/news";
  */
 export function NewsSections() {
   return (
-    <div className="flex-1 bg-[#0a0a0a] px-4 pb-20 text-neutral-50 sm:px-6 lg:px-8">
+    <div className="bg-[#0a0a0a] px-4 pb-20 text-neutral-50 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-screen-2xl flex-col gap-12">
         {NEWS_CATEGORIES.map((category) => (
           <NewsRail
