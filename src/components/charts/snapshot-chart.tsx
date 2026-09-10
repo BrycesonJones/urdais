@@ -16,18 +16,22 @@ type SnapshotChartProps = {
   className?: string;
 };
 
-// Neutral silver treatment on the panel's near-black surface. The line is
-// never coloured by performance; movement colours live in the text values.
-const LINE_COLOR = "#e5e5e5";
+// Urdais blue chart identity on the panel's near-black surface: an icy line
+// over a deeper cobalt matrix. The line is never coloured by performance;
+// movement colours live in the text values.
+const LINE_COLOR = "#b6c7ff";
+const MATRIX_COLOR = "#526fe0";
+const MARKER_COLOR = "#8ca4ff";
+const MARKER_LABEL_TEXT = "#040f30";
 const AXIS_TEXT = "#8a8a8a";
-const CROSSHAIR_COLOR = "#525252";
-const MARKER_LABEL_BACKGROUND = "#e5e5e5";
-const MARKER_LABEL_TEXT = "#111111";
+const CROSSHAIR_COLOR = "#3d4c85";
+const HOVER_MARKER_FILL = "#111111";
 
 // Square-matrix field beneath the line: small squares on a fixed grid,
-// strongest just under the line and fading out toward the bottom.
+// strongest just under the line and fading out toward the bottom. Cobalt is
+// darker than the old silver, so it starts a little more opaque.
 const MATRIX_SQUARE = 3;
-const MATRIX_TOP_OPACITY = 0.55;
+const MATRIX_TOP_OPACITY = 0.7;
 const MATRIX_BOTTOM_OPACITY = 0;
 
 const PADDING = { top: 12, right: 52, bottom: 26, left: 4 };
@@ -158,7 +162,7 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
                 x={geometry.plotLeft}
                 y={geometry.plotBottom}
               >
-                <rect width={MATRIX_SQUARE} height={MATRIX_SQUARE} fill={LINE_COLOR} />
+                <rect width={MATRIX_SQUARE} height={MATRIX_SQUARE} fill={MATRIX_COLOR} />
               </pattern>
               <linearGradient
                 id={ids.fade}
@@ -224,9 +228,9 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
             />
 
             {/* Current value: endpoint dot and a single right-edge label. */}
-            <circle cx={geometry.x(data.length - 1)} cy={geometry.y(last.value)} r={3} fill={LINE_COLOR} />
+            <circle cx={geometry.x(data.length - 1)} cy={geometry.y(last.value)} r={3} fill={MARKER_COLOR} />
             <g transform={`translate(${geometry.plotRight + 4}, ${geometry.y(last.value)})`}>
-              <rect x={0} y={-9} width={PADDING.right - 6} height={18} rx={2} fill={MARKER_LABEL_BACKGROUND} />
+              <rect x={0} y={-9} width={PADDING.right - 6} height={18} rx={2} fill={MARKER_COLOR} />
               <text
                 x={(PADDING.right - 6) / 2}
                 y={0}
@@ -255,7 +259,7 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
                   cx={geometry.x(hoverIndex)}
                   cy={geometry.y(hovered.value)}
                   r={4}
-                  fill="#111111"
+                  fill={HOVER_MARKER_FILL}
                   stroke={LINE_COLOR}
                   strokeWidth={2}
                 />

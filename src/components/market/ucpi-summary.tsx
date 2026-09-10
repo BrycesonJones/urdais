@@ -24,7 +24,7 @@ export function UcpiSummary({ index, snapshot, series }: UcpiSummaryProps) {
   return (
     <article
       aria-labelledby="ucpi-heading"
-      className="group flex flex-col gap-5 rounded-xl border border-white/10 bg-[#111111] p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07),0_0_0_1px_rgba(255,255,255,0.03),0_10px_32px_rgba(0,0,0,0.45),0_0_28px_rgba(255,255,255,0.035)] transition-[border-color,box-shadow] hover:border-white/15 hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),0_0_0_1px_rgba(255,255,255,0.04),0_10px_32px_rgba(0,0,0,0.45),0_0_32px_rgba(255,255,255,0.05)] focus-within:border-white/15 sm:p-6"
+      className="group flex flex-col gap-5 rounded-xl border border-white/10 bg-[#111111] p-5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07),0_0_0_1px_rgba(255,255,255,0.03),0_10px_32px_rgba(0,0,0,0.45),0_0_36px_rgba(82,111,224,0.16)] transition-[border-color,box-shadow] hover:border-white/15 hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),0_0_0_1px_rgba(255,255,255,0.04),0_10px_32px_rgba(0,0,0,0.45),0_0_40px_rgba(82,111,224,0.22)] focus-within:border-white/15 sm:p-6"
     >
       <header className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
