@@ -1,33 +1,36 @@
 "use client";
 
-import { SELECTOR_FOCUS, SELECTOR_SURFACE, SelectMenu } from "@/components/market-detail/select-menu";
+import { MultiSelectMenu, SELECTOR_FOCUS, SELECTOR_SURFACE, SelectMenu } from "@/components/market-detail/select-menu";
 import type { MarketDetail, MarketInstrumentDetail } from "@/types/market";
 
 type MarketSelectorsProps = {
   market: MarketDetail;
   instrument: MarketInstrumentDetail;
-  comparisonId: string | null;
+  comparisonIds: string[];
+  /** Most comparison series that may be shown at once alongside the primary. */
+  maxComparisons: number;
   onInstrumentChange: (instrumentId: string) => void;
-  onComparisonChange: (instrumentId: string | null) => void;
+  onToggleComparison: (instrumentId: string) => void;
+  onClearComparisons: () => void;
 };
-
-const NONE = "none";
 
 /**
  * Controls that choose what the chart shows. The primary row holds the
  * segmented market-family switch and the instrument menu within that family:
- * together they decide what is being viewed. The comparison menu, limited to
- * series that share the instrument's unit, starts beneath them because it
- * only modifies the current view. Every part is driven by the market data;
- * a standalone index with one family, one instrument, and nothing to
- * compare renders nothing at all.
+ * together they decide what is being viewed. The multi-select comparison
+ * menu, limited to series compatible with the instrument, starts beneath
+ * them because it only modifies the current view. Every part is driven by
+ * the market data; a standalone index with one family, one instrument, and
+ * nothing to compare renders nothing at all.
  */
 export function MarketSelectors({
   market,
   instrument,
-  comparisonId,
+  comparisonIds,
+  maxComparisons,
   onInstrumentChange,
-  onComparisonChange,
+  onToggleComparison,
+  onClearComparisons,
 }: MarketSelectorsProps) {
   const family = market.families.find((candidate) =>
     candidate.instruments.some((candidate) => candidate.id === instrument.id),
@@ -39,7 +42,9 @@ export function MarketSelectors({
 
   if (!showFamilies && !showInstruments && !showComparison) return null;
 
-  const comparison = comparisons.find((option) => option.instrumentId === comparisonId) ?? null;
+  const selectedLabels = comparisonIds
+    .map((id) => comparisons.find((option) => option.instrumentId === id)?.label)
+    .filter((label): label is string => Boolean(label));
 
   return (
     <div className="flex w-full flex-col gap-2 lg:w-auto">
@@ -63,9 +68,7 @@ export function MarketSelectors({
                       if (first && !selected) onInstrumentChange(first.id);
                     }}
                     className={`flex h-full flex-1 items-center justify-center rounded-[2px] px-3.5 text-sm font-medium transition-colors sm:flex-none ${
-                      selected
-                        ? "bg-white/[0.09] text-neutral-50"
-                        : "text-neutral-500 hover:text-neutral-200"
+                      selected ? "bg-white/[0.09] text-neutral-50" : "text-neutral-500 hover:text-neutral-200"
                     } ${SELECTOR_FOCUS}`}
                   >
                     {option.label}
@@ -90,20 +93,24 @@ export function MarketSelectors({
       )}
 
       {showComparison && (
-        <SelectMenu
+        <MultiSelectMenu
           label="Compare with"
-          emphasis="secondary"
-          options={[
-            { id: NONE, label: "None" },
-            ...comparisons.map((option) => ({ id: option.instrumentId, label: option.label })),
-          ]}
-          value={comparisonId ?? NONE}
-          onChange={(id) => onComparisonChange(id === NONE ? null : id)}
+          options={comparisons.map((option) => ({ id: option.instrumentId, label: option.label }))}
+          selected={comparisonIds}
+          max={maxComparisons}
+          onToggle={onToggleComparison}
+          onClear={onClearComparisons}
+          limitNote={`Maximum ${maxComparisons + 1} series`}
           className="sm:self-start"
         >
           <span>Compare with</span>
-          {comparison && <span className="font-medium text-neutral-100">{comparison.label}</span>}
-        </SelectMenu>
+          {selectedLabels.length === 1 && <span className="font-medium text-neutral-100">{selectedLabels[0]}</span>}
+          {selectedLabels.length > 1 && (
+            <span className="rounded-[2px] bg-white/[0.09] px-1.5 text-xs font-medium tabular-nums text-neutral-100">
+              {selectedLabels.length}
+            </span>
+          )}
+        </MultiSelectMenu>
       )}
     </div>
   );

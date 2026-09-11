@@ -1,5 +1,5 @@
 import { movementClass } from "@/components/market/movement";
-import { formatNumber, formatPercent, formatSigned, formatUpdatedAt } from "@/lib/format";
+import { formatNumber, formatPercent, formatUpdatedAt } from "@/lib/format";
 import type { MarketInstrumentDetail } from "@/types/market";
 
 type MarketHeaderProps = {
@@ -9,13 +9,14 @@ type MarketHeaderProps = {
 /**
  * Identity and headline for the selected instrument: the symbol and name,
  * when it was last updated, and the current value at the largest size on
- * the page with the day's move beneath it. The page opens directly on this;
- * the instrument itself is the context. The move is the current-session change and does not
- * follow the chart range; historical returns live under the chart.
+ * the page with the day's move beneath it as a percentage. The page opens
+ * directly on this; the instrument itself is the context. The move is the
+ * current-session change and does not follow the chart range; historical
+ * returns live under the chart.
  */
 export function MarketHeader({ instrument }: MarketHeaderProps) {
   const { snapshot } = instrument;
-  const movement = movementClass(snapshot.change);
+  const movement = movementClass(snapshot.changePercent);
 
   return (
     <div className="min-w-0">
@@ -36,7 +37,6 @@ export function MarketHeader({ instrument }: MarketHeaderProps) {
         <span className="text-base text-neutral-400 sm:text-lg">{instrument.unit}</span>
       </p>
       <p className={`mt-3 flex flex-wrap items-baseline gap-x-3 text-lg font-medium tabular-nums sm:text-xl ${movement}`}>
-        <span>{formatSigned(snapshot.change)}</span>{" "}
         <span>{formatPercent(snapshot.changePercent)}</span>{" "}
         <span className="text-sm font-normal text-neutral-500">today</span>
       </p>

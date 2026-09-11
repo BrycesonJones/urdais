@@ -26,10 +26,13 @@ export type MarketIndex = {
   unit: string;
 };
 
-/** Latest value and its change versus the previous daily close. */
+/**
+ * Latest value and its percentage change versus the previous daily close.
+ * Movement is expressed only as a percentage: it is what makes markets with
+ * different units and scales comparable, so no absolute delta is modelled.
+ */
 export type MarketSnapshot = {
   value: number;
-  change: number;
   changePercent: number;
   /** Unix timestamp in seconds (UTC) of the observation. */
   asOf: number;

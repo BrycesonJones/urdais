@@ -67,7 +67,6 @@ const previous = daily[daily.length - 2]!;
 
 export const UCPI_SNAPSHOT: MarketSnapshot = {
   value: latest.value,
-  change: round(latest.value - previous.value),
   changePercent: round(((latest.value - previous.value) / previous.value) * 100),
   asOf: latest.time,
 };

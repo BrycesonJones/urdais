@@ -17,11 +17,12 @@ export type ChartSeries = {
 
 type DetailedMarketChartProps = {
   primary: ChartSeries;
-  comparison?: ChartSeries | null;
+  /** Overlaid series in display order; the renderer supports up to COMPARISON_COLORS.length. */
+  comparisons?: ChartSeries[];
   /**
-   * How the two series share the axis. "absolute" plots raw values and
-   * expects a common unit; "relative" rebases every series to percentage
-   * change from its first point in the window. Ignored without a comparison.
+   * How the series share the axis. "absolute" plots raw values and expects
+   * a common unit; "relative" rebases every series to percentage change from
+   * its first point in the window. Ignored without comparisons.
    */
   basis?: ComparisonBasis;
   /** Whether points are intraday, which switches the axis and readout to time of day. */
@@ -32,15 +33,16 @@ type DetailedMarketChartProps = {
 };
 
 // Same Urdais blue identity as the homepage snapshot: an icy line over a
-// deeper cobalt square-matrix field. The comparison is a restrained muted
-// amber that stays legible against the icy line for every colour-vision
-// type. Lines are never coloured by performance.
+// deeper cobalt square-matrix field. Comparisons use a fixed, restrained
+// palette assigned by position (amber, violet, teal) that stays separable
+// from the icy line and from each other for every colour-vision type; the
+// legend and readout name each series so colour is never the only key.
+// Lines are never coloured by performance.
 const PRIMARY_LINE = "#b6c7ff";
 const PRIMARY_MATRIX = "#526fe0";
 const PRIMARY_MARKER = "#8ca4ff";
 const PRIMARY_MARKER_TEXT = "#040f30";
-const COMPARISON_LINE = "#d4a56a";
-const COMPARISON_MATRIX = "#a8834f";
+const COMPARISON_COLORS = ["#d4a56a", "#9c6fd0", "#3e9c94"] as const;
 const COMPARISON_MARKER_FILL = "#1a1a1a";
 const AXIS_TEXT = "#8a8a8a";
 const GRID_LINE = "rgba(255,255,255,0.06)";
@@ -53,10 +55,11 @@ const CROSSHAIR_TAG_FILL = "#262b3a";
 const CROSSHAIR_TAG_TEXT = "#dfe4f5";
 const SURFACE = "#0a0a0a";
 
-// Square-matrix field beneath each line: small squares on a fixed grid,
-// strongest just under the line and fading out toward the bottom. The
-// comparison field uses smaller squares offset by half a cell, so where the
-// two areas overlap the fields interleave instead of stacking.
+// Square-matrix field beneath the primary line: small squares on a fixed
+// grid, strongest just under the line and fading out toward the bottom. A
+// lone comparison gets a fainter field of smaller squares offset by half a
+// cell so the two interleave; with several comparisons only their lines are
+// drawn, since overlapping fields turn into noise.
 const MATRIX_SPACING = 12;
 const PRIMARY_SQUARE = 3;
 const PRIMARY_MATRIX_TOP_OPACITY = 0.6;
@@ -77,20 +80,25 @@ type Size = { width: number; height: number };
 /** A point with the value it is plotted at, which differs from `value` on a relative basis. */
 type PlotPoint = TimeSeriesPoint & { plotted: number };
 
+/** A comparison series with its plotted points and fixed colour. */
+type PlottedComparison = { series: ChartSeries; points: PlotPoint[]; color: string };
+
+const NO_COMPARISONS: ChartSeries[] = [];
+
 /**
  * Urdais-owned analytical chart for the market detail page: a large SVG
  * with a y-axis of nice ticks and hairline grid, calendar-aligned x labels,
- * a clipped square-matrix field fading downward under each line, an
- * optional comparison line on an absolute or rebased-percentage axis,
- * right-edge markers for each series' latest value, and a pointer crosshair
- * (vertical and horizontal guides, axis tags, intersection ring) with a
- * compact readout listing every series at that time. Numbers shown here
- * are also present as text elsewhere on the page, so the graphic is a
- * labelled illustration rather than the only source of a value.
+ * a clipped square-matrix field fading downward under the primary line, up
+ * to three comparison lines on an absolute or rebased-percentage axis,
+ * right-edge markers for every series' latest value, and a pointer
+ * crosshair (vertical and horizontal guides, axis tags, a ring on every
+ * series) with a compact readout listing each series at that time. Numbers
+ * shown here are also present as text elsewhere on the page, so the graphic
+ * is a labelled illustration rather than the only source of a value.
  */
 export function DetailedMarketChart({
   primary,
-  comparison,
+  comparisons = NO_COMPARISONS,
   basis = "absolute",
   intraday,
   label,
@@ -128,16 +136,26 @@ export function DetailedMarketChart({
     return () => observer.disconnect();
   }, []);
 
-  const comparisonPoints = comparison && comparison.points.length >= 2 ? comparison.points : null;
-  const relative = basis === "relative" && comparisonPoints !== null;
+  const visibleComparisons = useMemo(
+    () => comparisons.filter((series) => series.points.length >= 2).slice(0, COMPARISON_COLORS.length),
+    [comparisons],
+  );
+  const relative = basis === "relative" && visibleComparisons.length > 0;
   const axisUnit = relative ? "%" : primary.unit;
 
   // Plotted values: raw, or percentage change from the window's first point.
   const primaryPlot = useMemo(() => toPlotPoints(primary.points, relative), [primary.points, relative]);
-  const comparisonPlot = useMemo(
-    () => (comparisonPoints ? toPlotPoints(comparisonPoints, relative) : null),
-    [comparisonPoints, relative],
+  const comparisonPlots = useMemo<PlottedComparison[]>(
+    () =>
+      visibleComparisons.map((series, index) => ({
+        series,
+        points: toPlotPoints(series.points, relative),
+        color: COMPARISON_COLORS[index]!,
+      })),
+    [visibleComparisons, relative],
   );
+  // A single comparison earns a faint matrix field of its own.
+  const fieldedComparison = comparisonPlots.length === 1 ? comparisonPlots[0]! : null;
 
   const geometry = useMemo(() => {
     if (!size || size.width <= 0 || size.height <= 0 || primaryPlot.length < 2) return null;
@@ -149,7 +167,7 @@ export function DetailedMarketChart({
     const plotWidth = Math.max(plotRight - plotLeft, 1);
     const plotHeight = Math.max(plotBottom - plotTop, 1);
 
-    const allSeries = comparisonPlot ? [primaryPlot, comparisonPlot] : [primaryPlot];
+    const allSeries = [primaryPlot, ...comparisonPlots.map((comparison) => comparison.points)];
     let tMin = Infinity;
     let tMax = -Infinity;
     let vMin = Infinity;
@@ -197,10 +215,9 @@ export function DetailedMarketChart({
       y,
       primaryPath: toPath(primaryPlot),
       primaryArea: toArea(primaryPlot),
-      primaryTop: top(primaryPlot),
-      comparisonPath: comparisonPlot ? toPath(comparisonPlot) : null,
-      comparisonArea: comparisonPlot ? toArea(comparisonPlot) : null,
-      comparisonTop: comparisonPlot ? top(comparisonPlot) : null,
+      fadeTop: Math.min(top(primaryPlot), fieldedComparison ? top(fieldedComparison.points) : Infinity),
+      comparisonPaths: comparisonPlots.map((comparison) => toPath(comparison.points)),
+      fieldedArea: fieldedComparison ? toArea(fieldedComparison.points) : null,
       xTicks,
       yTicks: yAxis.ticks.map((value) => ({ value, y: y(value) })),
       yDecimals: yAxis.decimals,
@@ -209,7 +226,7 @@ export function DetailedMarketChart({
       vMin,
       vMax,
     };
-  }, [primaryPlot, comparisonPlot, relative, size]);
+  }, [primaryPlot, comparisonPlots, fieldedComparison, relative, size]);
 
   function handlePointerMove(event: PointerEvent<SVGSVGElement>) {
     if (!geometry) return;
@@ -221,33 +238,39 @@ export function DetailedMarketChart({
   }
 
   const lastPrimary = primaryPlot[primaryPlot.length - 1];
-  const lastComparison = comparisonPlot ? comparisonPlot[comparisonPlot.length - 1] : null;
   const hoveredPrimary = hoverIndex === null ? null : primaryPlot[hoverIndex];
   // A shorter comparison history has no reading before its first point.
-  const hoveredComparison = (() => {
-    if (!hoveredPrimary || !comparisonPlot) return null;
-    const candidate = comparisonPlot[nearestIndex(comparisonPlot, hoveredPrimary.time)];
+  const hoveredComparisons = comparisonPlots.map((comparison) => {
+    if (!hoveredPrimary) return null;
+    const candidate = comparison.points[nearestIndex(comparison.points, hoveredPrimary.time)];
     const tolerance = intraday ? 15 * 60 : DAY;
     return candidate && Math.abs(candidate.time - hoveredPrimary.time) <= tolerance ? candidate : null;
-  })();
+  });
 
   const formatPlotted = (value: number, decimals = 2) =>
     relative ? formatPercent(value, decimals) : formatAxisValue(value, decimals, axisUnit);
 
   const description = geometry
-    ? describeChart(primary, comparison ?? null, relative, intraday, geometry.vMin, geometry.vMax, formatPlotted)
+    ? describeChart(primary, visibleComparisons, relative, intraday, geometry.vMin, geometry.vMax, formatPlotted)
     : label;
 
-  // Keep the two right-edge markers from overlapping by nudging the comparison one.
-  let comparisonMarkerY: number | null = null;
-  if (geometry && lastPrimary && lastComparison) {
-    const primaryY = geometry.y(lastPrimary.plotted);
-    comparisonMarkerY = geometry.y(lastComparison.plotted);
-    const gap = comparisonMarkerY - primaryY;
-    if (Math.abs(gap) < MARKER_HEIGHT + 2) {
-      comparisonMarkerY = primaryY + Math.sign(gap || 1) * (MARKER_HEIGHT + 2);
-    }
-  }
+  // Right-edge tags: the primary stays put and comparison tags are nudged
+  // apart from it and each other so none overlap.
+  const comparisonTagYs = (() => {
+    if (!geometry || !lastPrimary) return [];
+    const placed = [geometry.y(lastPrimary.plotted)];
+    return comparisonPlots.map((comparison) => {
+      const last = comparison.points[comparison.points.length - 1]!;
+      let tagY = geometry.y(last.plotted);
+      for (let pass = 0; pass < placed.length; pass++) {
+        for (const other of placed) {
+          if (Math.abs(tagY - other) < MARKER_HEIGHT + 2) tagY = other + Math.sign(tagY - other || 1) * (MARKER_HEIGHT + 2);
+        }
+      }
+      placed.push(tagY);
+      return tagY;
+    });
+  })();
 
   // The readout sits beside the crosshair and flips sides past the middle.
   // On narrow charts it cannot fit beside the pointer, so it anchors to the
@@ -264,20 +287,21 @@ export function DetailedMarketChart({
 
   return (
     <div className={["flex min-h-0 flex-col", className].filter(Boolean).join(" ")}>
-      {/* Legend: only needed once two lines share the plot. Height is reserved to avoid layout shift. */}
+      {/* Legend: only needed once two or more lines share the plot. Height is reserved to avoid layout shift. */}
       <ul className="flex min-h-6 shrink-0 flex-wrap items-center gap-x-5 gap-y-1 pb-1 text-xs text-neutral-400">
-        {comparison && (
+        {comparisonPlots.length > 0 && (
           <>
             <li className="flex items-center gap-2">
               <LegendSwatch color={PRIMARY_LINE} width={2.5} />
               <span className="text-neutral-200">{primary.label}</span>
             </li>
-            <li className="flex items-center gap-2">
-              <LegendSwatch color={COMPARISON_LINE} width={1.5} />
-              <span className="text-neutral-200">{comparison.label}</span>
-              <span className="text-neutral-500">comparison</span>
-            </li>
-            {relative && <li className="text-neutral-500">% change over the selected range</li>}
+            {comparisonPlots.map((comparison) => (
+              <li key={comparison.series.id} className="flex items-center gap-2">
+                <LegendSwatch color={comparison.color} width={1.5} />
+                <span className="text-neutral-200">{comparison.series.label}</span>
+              </li>
+            ))}
+            <li className="text-neutral-500">{relative ? "% change over the selected range" : "comparison"}</li>
           </>
         )}
       </ul>
@@ -318,7 +342,7 @@ export function DetailedMarketChart({
               <clipPath id={ids.primaryClip}>
                 <path d={geometry.primaryArea} />
               </clipPath>
-              {geometry.comparisonArea && (
+              {fieldedComparison && geometry.fieldedArea && (
                 <>
                   <pattern
                     id={ids.comparisonPattern}
@@ -328,20 +352,20 @@ export function DetailedMarketChart({
                     x={geometry.plotLeft + MATRIX_SPACING / 2}
                     y={geometry.plotBottom + MATRIX_SPACING / 2}
                   >
-                    <rect width={COMPARISON_SQUARE} height={COMPARISON_SQUARE} fill={COMPARISON_MATRIX} />
+                    <rect width={COMPARISON_SQUARE} height={COMPARISON_SQUARE} fill={fieldedComparison.color} />
                   </pattern>
                   <clipPath id={ids.comparisonClip}>
-                    <path d={geometry.comparisonArea} />
+                    <path d={geometry.fieldedArea} />
                   </clipPath>
                 </>
               )}
-              {/* One fade for both fields: full strength at the highest line, gone at the bottom. */}
+              {/* One fade for the fields: full strength at the highest fielded line, gone at the bottom. */}
               <linearGradient
                 id={ids.fade}
                 gradientUnits="userSpaceOnUse"
                 x1="0"
                 x2="0"
-                y1={Math.min(geometry.primaryTop, geometry.comparisonTop ?? geometry.primaryTop)}
+                y1={geometry.fadeTop}
                 y2={geometry.plotBottom}
               >
                 <stop offset="0" stopColor="#fff" stopOpacity={1} />
@@ -399,7 +423,7 @@ export function DetailedMarketChart({
             <g clipPath={`url(#${ids.plot})`}>
               {/* Square-matrix fields: each pattern clipped to the area under its line, fading downward. */}
               <g mask={`url(#${ids.mask})`}>
-                {geometry.comparisonArea && (
+                {fieldedComparison && (
                   <g clipPath={`url(#${ids.comparisonClip})`} opacity={COMPARISON_MATRIX_TOP_OPACITY}>
                     <rect
                       x={geometry.plotLeft}
@@ -421,16 +445,18 @@ export function DetailedMarketChart({
                 </g>
               </g>
 
-              {geometry.comparisonPath && (
+              {/* Comparison lines draw first so the primary always sits on top. */}
+              {comparisonPlots.map((comparison, index) => (
                 <path
-                  d={geometry.comparisonPath}
+                  key={comparison.series.id}
+                  d={geometry.comparisonPaths[index]}
                   fill="none"
-                  stroke={COMPARISON_LINE}
+                  stroke={comparison.color}
                   strokeWidth={1.5}
                   strokeLinejoin="round"
                   strokeLinecap="round"
                 />
-              )}
+              ))}
               <path
                 d={geometry.primaryPath}
                 fill="none"
@@ -442,26 +468,29 @@ export function DetailedMarketChart({
             </g>
 
             {/* Latest values: endpoint dots and right-edge markers, primary strongest. */}
-            {lastComparison && comparisonMarkerY !== null && (
-              <>
-                <circle
-                  cx={geometry.x(lastComparison.time)}
-                  cy={geometry.y(lastComparison.plotted)}
-                  r={3}
-                  fill={COMPARISON_LINE}
-                  stroke={SURFACE}
-                  strokeWidth={2}
-                />
-                <AxisTag
-                  x={geometry.plotRight + 4}
-                  y={comparisonMarkerY}
-                  text={formatPlotted(lastComparison.plotted)}
-                  fill={COMPARISON_MARKER_FILL}
-                  stroke={COMPARISON_LINE}
-                  textColor={COMPARISON_LINE}
-                />
-              </>
-            )}
+            {comparisonPlots.map((comparison, index) => {
+              const last = comparison.points[comparison.points.length - 1]!;
+              return (
+                <g key={comparison.series.id}>
+                  <circle
+                    cx={geometry.x(last.time)}
+                    cy={geometry.y(last.plotted)}
+                    r={3}
+                    fill={comparison.color}
+                    stroke={SURFACE}
+                    strokeWidth={2}
+                  />
+                  <AxisTag
+                    x={geometry.plotRight + 4}
+                    y={comparisonTagYs[index]!}
+                    text={formatPlotted(last.plotted)}
+                    fill={COMPARISON_MARKER_FILL}
+                    stroke={comparison.color}
+                    textColor={comparison.color}
+                  />
+                </g>
+              );
+            })}
             <circle
               cx={geometry.x(lastPrimary.time)}
               cy={geometry.y(lastPrimary.plotted)}
@@ -478,7 +507,7 @@ export function DetailedMarketChart({
               textColor={PRIMARY_MARKER_TEXT}
             />
 
-            {/* Crosshair: dashed guides through the hovered primary point, axis tags, and rings on each series. */}
+            {/* Crosshair: dashed guides through the hovered primary point, axis tags, and a ring on every series. */}
             {hoveredPrimary && (
               <g pointerEvents="none">
                 <g stroke={CROSSHAIR_LINE} strokeOpacity={CROSSHAIR_OPACITY} strokeWidth={1} strokeDasharray={CROSSHAIR_DASH}>
@@ -507,16 +536,20 @@ export function DetailedMarketChart({
                   y={geometry.plotBottom + 4}
                   text={formatAxisTime(hoveredPrimary.time, intraday)}
                 />
-                {hoveredComparison && (
-                  <circle
-                    cx={geometry.x(hoveredComparison.time)}
-                    cy={geometry.y(hoveredComparison.plotted)}
-                    r={4}
-                    fill={SURFACE}
-                    stroke={COMPARISON_LINE}
-                    strokeWidth={1.5}
-                  />
-                )}
+                {comparisonPlots.map((comparison, index) => {
+                  const hovered = hoveredComparisons[index];
+                  return hovered ? (
+                    <circle
+                      key={comparison.series.id}
+                      cx={geometry.x(hovered.time)}
+                      cy={geometry.y(hovered.plotted)}
+                      r={4}
+                      fill={SURFACE}
+                      stroke={comparison.color}
+                      strokeWidth={1.5}
+                    />
+                  ) : null;
+                })}
                 <circle
                   cx={geometry.x(hoveredPrimary.time)}
                   cy={geometry.y(hoveredPrimary.plotted)}
@@ -545,15 +578,19 @@ export function DetailedMarketChart({
                 value={formatValueWithUnit(hoveredPrimary.value, primary.unit)}
                 note={relative ? formatPercent(hoveredPrimary.plotted) : null}
               />
-              {comparison && hoveredComparison && (
-                <TooltipRow
-                  color={COMPARISON_LINE}
-                  width={1.5}
-                  label={comparison.label}
-                  value={formatValueWithUnit(hoveredComparison.value, comparison.unit)}
-                  note={relative ? formatPercent(hoveredComparison.plotted) : null}
-                />
-              )}
+              {comparisonPlots.map((comparison, index) => {
+                const hovered = hoveredComparisons[index];
+                return hovered ? (
+                  <TooltipRow
+                    key={comparison.series.id}
+                    color={comparison.color}
+                    width={1.5}
+                    label={comparison.series.label}
+                    value={formatValueWithUnit(hovered.value, comparison.series.unit)}
+                    note={relative ? formatPercent(hovered.plotted) : null}
+                  />
+                ) : null;
+              })}
             </ul>
           </div>
         )}
@@ -581,7 +618,7 @@ function TooltipRow({
       <LegendSwatch color={color} width={width} />
       <span className="flex-1 whitespace-nowrap text-neutral-400">{label}</span>
       <span className="font-medium tabular-nums text-neutral-50">{value}</span>
-      {note && <span className="tabular-nums text-neutral-500">{note}</span>}
+      {note && <span className="w-14 text-right tabular-nums text-neutral-500">{note}</span>}
     </li>
   );
 }
@@ -799,7 +836,7 @@ function formatAxisTime(unixSeconds: number, intraday: boolean): string {
 /** Plain-language summary for assistive technology. */
 function describeChart(
   primary: ChartSeries,
-  comparison: ChartSeries | null,
+  comparisons: ChartSeries[],
   relative: boolean,
   intraday: boolean,
   vMin: number,
@@ -811,13 +848,14 @@ function describeChart(
   const range = `${formatTimestamp(first.time, intraday)} to ${formatTimestamp(last.time, intraday)}`;
   const axis = relative ? "percentage change" : "values";
   let text = `${primary.label} from ${range}: latest ${formatValueWithUnit(last.value, primary.unit)}, ${axis} plotted between ${formatPlotted(vMin)} and ${formatPlotted(vMax)}.`;
-  if (comparison) {
-    const lastComparison = comparison.points[comparison.points.length - 1];
-    if (lastComparison) {
-      text += ` Compared with ${comparison.label}, latest ${formatValueWithUnit(lastComparison.value, comparison.unit)}${
-        relative ? ", both rebased to the start of the range" : ""
-      }.`;
-    }
+  if (comparisons.length > 0) {
+    const latest = comparisons
+      .map((series) => {
+        const lastPoint = series.points[series.points.length - 1];
+        return lastPoint ? `${series.label} latest ${formatValueWithUnit(lastPoint.value, series.unit)}` : series.label;
+      })
+      .join("; ");
+    text += ` Compared with ${latest}${relative ? ", all rebased to the start of the range" : ""}.`;
   }
   return text;
 }

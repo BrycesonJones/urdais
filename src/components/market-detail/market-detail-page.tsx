@@ -12,6 +12,8 @@ import { isIntradayRange, periodPerformance, RANGE_LABELS, windowPoints } from "
 import type { DetailRange, MarketDetail } from "@/types/market";
 
 const DEFAULT_RANGE: DetailRange = "1M";
+/** V1 shows at most four series at once: the primary plus three comparisons. */
+const MAX_COMPARISONS = 3;
 
 /**
  * Shared Information Markets detail experience for every routed market.
@@ -21,17 +23,28 @@ const DEFAULT_RANGE: DetailRange = "1M";
  */
 export function MarketDetailPage({ market }: { market: MarketDetail }) {
   const [instrumentId, setInstrumentId] = useState(market.defaultInstrumentId);
-  const [comparisonId, setComparisonId] = useState<string | null>(null);
+  const [comparisonIds, setComparisonIds] = useState<string[]>([]);
   const [range, setRange] = useState<DetailRange>(DEFAULT_RANGE);
 
   const instrument = findInstrument(market, instrumentId) ?? defaultInstrument(market);
-  // Comparisons may live in another market, and each option says whether the
-  // two series share an absolute axis or are rebased to percentage change.
-  const comparisonOption = comparisonId
-    ? (instrument.comparisons.find((option) => option.instrumentId === comparisonId) ?? null)
-    : null;
-  const comparison = comparisonOption ? (findInstrumentById(comparisonOption.instrumentId) ?? null) : null;
-  const basis = comparisonOption?.basis ?? "absolute";
+  // Comparisons may live in another market. Every option an instrument offers
+  // shares one basis, so all visible comparisons overlay on the same axis:
+  // absolute within a family, rebased percentage change across indices.
+  const comparisonOptions = useMemo(
+    () =>
+      comparisonIds
+        .map((id) => instrument.comparisons.find((option) => option.instrumentId === id))
+        .filter((option): option is NonNullable<typeof option> => option !== undefined),
+    [comparisonIds, instrument],
+  );
+  const comparisons = useMemo(
+    () =>
+      comparisonOptions
+        .map((option) => findInstrumentById(option.instrumentId))
+        .filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== undefined),
+    [comparisonOptions],
+  );
+  const basis = comparisonOptions.some((option) => option.basis === "relative") ? "relative" : "absolute";
   // A range the instrument's history cannot support falls back to its full history.
   const effectiveRange = instrument.availableRanges.includes(range) ? range : "ALL";
   const asOf = instrument.snapshot.asOf;
@@ -48,23 +61,31 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
     }),
     [instrument, effectiveRange, asOf],
   );
-  const comparisonSeries = useMemo<ChartSeries | null>(
+  const comparisonSeries = useMemo<ChartSeries[]>(
     () =>
-      comparison
-        ? {
-            id: comparison.id,
-            label: comparison.symbol,
-            unit: comparison.unit,
-            points: windowPoints(comparison.series, effectiveRange, asOf),
-          }
-        : null,
-    [comparison, effectiveRange, asOf],
+      comparisons.map((candidate) => ({
+        id: candidate.id,
+        label: candidate.symbol,
+        unit: candidate.unit,
+        points: windowPoints(candidate.series, effectiveRange, asOf),
+      })),
+    [comparisons, effectiveRange, asOf],
   );
 
   function handleInstrumentChange(nextId: string) {
     setInstrumentId(nextId);
-    // Comparisons are defined per instrument, so a stale one is dropped.
-    setComparisonId(null);
+    // Comparisons are defined per instrument, so stale ones are dropped.
+    setComparisonIds([]);
+  }
+
+  function toggleComparison(id: string) {
+    setComparisonIds((current) =>
+      current.includes(id)
+        ? current.filter((candidate) => candidate !== id)
+        : current.length < MAX_COMPARISONS
+          ? [...current, id]
+          : current,
+    );
   }
 
   return (
@@ -75,19 +96,21 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
           <MarketSelectors
             market={market}
             instrument={instrument}
-            comparisonId={comparisonId}
+            comparisonIds={comparisonIds}
+            maxComparisons={MAX_COMPARISONS}
             onInstrumentChange={handleInstrumentChange}
-            onComparisonChange={setComparisonId}
+            onToggleComparison={toggleComparison}
+            onClearComparisons={() => setComparisonIds([])}
           />
         </div>
 
         <DetailedMarketChart
           primary={primarySeries}
-          comparison={comparisonSeries}
+          comparisons={comparisonSeries}
           basis={basis}
           intraday={intraday}
           label={`${instrument.symbol} chart, ${RANGE_LABELS[effectiveRange].toLowerCase()} range${
-            comparison ? `, compared with ${comparison.symbol}` : ""
+            comparisons.length > 0 ? `, compared with ${comparisons.map((candidate) => candidate.symbol).join(", ")}` : ""
           }`}
           className="mt-8 h-[380px] sm:h-[460px] lg:h-[580px]"
         />

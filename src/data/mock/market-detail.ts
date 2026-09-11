@@ -45,7 +45,6 @@ function buildInstrument(spec: InstrumentSpec, comparisons: ComparisonOption[]):
   const previous = daily[daily.length - 2]!;
   const snapshot: MarketSnapshot = {
     value: latest.value,
-    change: round(latest.value - previous.value),
     changePercent: round(((latest.value - previous.value) / previous.value) * 100),
     asOf: latest.time,
   };
