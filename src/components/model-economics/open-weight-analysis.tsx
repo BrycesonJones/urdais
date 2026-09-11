@@ -1,4 +1,4 @@
-import { SectionHeading } from "@/components/model-economics/section-heading";
+import { SectionHeading } from "@/components/analytics/section-heading";
 import { OPEN_WEIGHT_ANALYSIS, SHARE_WINDOW_DAYS } from "@/data/mock/model-economics";
 import { formatNumber } from "@/lib/format";
 

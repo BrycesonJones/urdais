@@ -18,7 +18,7 @@ import { buildDailySeries, buildIntradaySeries } from "@/data/mock/series-genera
 import type { DailySeriesConfig, IntradaySeriesConfig } from "@/data/mock/series-generator";
 import { MOCK_AS_OF, UCPI_DAILY_CONFIG, UCPI_INDEX, UCPI_INTRADAY_CONFIG } from "@/data/mock/ucpi";
 import { availableRanges } from "@/lib/market-ranges";
-import { MODEL_ECONOMICS_HREF } from "@/lib/routes";
+import { MODEL_ECONOMICS_HREF, POWER_ANALYTICS_HREF } from "@/lib/routes";
 import type {
   ComparisonOption,
   MarketDetail,
@@ -511,6 +511,7 @@ const UEPI_MARKET: MarketDetail = {
       label: "Wholesale Power",
       instruments: buildFamilyInstruments(POWER_SPECS),
       defaultInstrumentId: "power-pjm",
+      explore: { label: "Explore Power Analytics", href: POWER_ANALYTICS_HREF },
     },
   ],
 };

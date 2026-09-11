@@ -6,7 +6,7 @@
  * and routes are defined once.
  */
 
-import { marketIndexHref, MODEL_ECONOMICS_HREF } from "@/lib/routes";
+import { marketIndexHref, MODEL_ECONOMICS_HREF, POWER_ANALYTICS_HREF } from "@/lib/routes";
 
 export type MarketCatalogEntry = {
   symbol: string;
@@ -66,6 +66,41 @@ export const MARKET_PAGES: MarketPageEntry[] = [
       "frontier",
       "utvi",
       "labs",
+    ],
+  },
+  {
+    id: "power-analytics",
+    name: "Power Analytics",
+    description: "Grid capacity, interconnection, transmission, and flexibility",
+    href: POWER_ANALYTICS_HREF,
+    keywords: [
+      "power",
+      "power analytics",
+      "energy",
+      "electricity",
+      "grid",
+      "grid capacity",
+      "grid buildout",
+      "transmission",
+      "transmission capacity",
+      "load",
+      "load forecast",
+      "forecast",
+      "data center power",
+      "interconnection",
+      "interconnection queue",
+      "queue",
+      "poles",
+      "wires",
+      "substation",
+      "substations",
+      "transformer",
+      "transformers",
+      "headroom",
+      "flexibility",
+      "flexible capacity",
+      "interruptible load",
+      "delivery gap",
     ],
   },
 ];

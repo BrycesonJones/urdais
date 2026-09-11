@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { SELECTOR_FOCUS, SELECTOR_SURFACE } from "@/components/market-detail/select-menu";
-import { SectionHeading } from "@/components/model-economics/section-heading";
+import { SectionHeading } from "@/components/analytics/section-heading";
 import { LAB_SHARES, MODEL_SHARES, SHARE_WINDOW_DAYS } from "@/data/mock/model-economics";
 import { formatCompact, formatNumber } from "@/lib/format";
 import type { ShareRow } from "@/types/model-economics";

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { SectionHeading } from "@/components/model-economics/section-heading";
+import { SectionHeading } from "@/components/analytics/section-heading";
 import { FRONTIER_POINTS, SHARE_WINDOW_DAYS } from "@/data/mock/model-economics";
 import { TOKEN_UNIT } from "@/data/mock/token-providers";
 import { formatCompact, formatNumber } from "@/lib/format";

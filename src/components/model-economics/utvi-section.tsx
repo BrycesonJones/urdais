@@ -4,7 +4,7 @@ import { DetailedMarketChart } from "@/components/charts/detailed-market-chart";
 import { movementClass } from "@/components/market/movement";
 import { PeriodPerformance } from "@/components/market-detail/period-performance";
 import { useInstrumentChart } from "@/components/market-detail/use-instrument-chart";
-import { SectionHeading } from "@/components/model-economics/section-heading";
+import { SectionHeading } from "@/components/analytics/section-heading";
 import { UTVI } from "@/data/mock/model-economics";
 import { formatCompact, formatPercent, formatUpdatedAt } from "@/lib/format";
 

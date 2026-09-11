@@ -7,7 +7,7 @@ import { movementClass } from "@/components/market/movement";
 import { PeriodPerformance } from "@/components/market-detail/period-performance";
 import { MultiSelectMenu, SelectMenu } from "@/components/market-detail/select-menu";
 import { MAX_COMPARISONS, useInstrumentChart } from "@/components/market-detail/use-instrument-chart";
-import { SectionHeading } from "@/components/model-economics/section-heading";
+import { SectionHeading } from "@/components/analytics/section-heading";
 import { TOKEN_INSTRUMENTS } from "@/data/mock/market-detail";
 import { DEFAULT_TOKEN_LAB_ID, tokenInstrumentId } from "@/data/mock/token-providers";
 import { formatNumber, formatPercent } from "@/lib/format";
