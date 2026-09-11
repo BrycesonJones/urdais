@@ -36,6 +36,7 @@ const round = (value: number) => Math.round(value * 10_000) / 10_000;
 type InstrumentSpec = MarketIndex & {
   id: string;
   shortLabel: string;
+  benchmarkCode?: string;
   bandwidthGbps?: number;
   regionLabel?: string;
   daily: DailySeriesConfig;
@@ -56,6 +57,7 @@ function buildInstrument(spec: InstrumentSpec, comparisons: ComparisonOption[]):
   return {
     id: spec.id,
     shortLabel: spec.shortLabel,
+    ...(spec.benchmarkCode !== undefined ? { benchmarkCode: spec.benchmarkCode } : {}),
     ...(spec.bandwidthGbps !== undefined ? { bandwidthGbps: spec.bandwidthGbps } : {}),
     ...(spec.regionLabel !== undefined ? { regionLabel: spec.regionLabel } : {}),
     symbol: spec.symbol,
@@ -77,11 +79,14 @@ function computeSpec(
   slug: string,
   daily: Omit<DailySeriesConfig, "asOf">,
   intraday: IntradaySeriesConfig,
+  benchmarkCode?: string,
 ): InstrumentSpec {
   return {
     id: `ucpi-${slug}`,
     shortLabel: gpu,
-    symbol: `UCPI-${gpu}`,
+    // The instrument's own identity; the index prefix is added only for the headline at display time.
+    symbol: gpu,
+    ...(benchmarkCode ? { benchmarkCode } : {}),
     name: `${UCPI_INDEX.name} · ${gpu} benchmark`,
     unit: COMPUTE_UNIT,
     daily: { ...daily, asOf: MOCK_AS_OF },
@@ -91,11 +96,13 @@ function computeSpec(
 
 /** Selector order is intentional; it is not sorted. */
 const COMPUTE_SPECS: InstrumentSpec[] = [
+  // Headline benchmark: reads as UCPI-H100 on the UCPI page.
   computeSpec(
     "H100 SXM",
     "h100-sxm",
     { ...UCPI_DAILY_CONFIG, points: LONG_HISTORY_DAYS },
     UCPI_INTRADAY_CONFIG,
+    "H100",
   ),
   // Roughly three years of history.
   computeSpec(
@@ -290,7 +297,7 @@ function memorySpec(
   return {
     id: `${family}-${slug}`,
     shortLabel: part,
-    symbol: `UMPI-${part}`,
+    symbol: part,
     name: `${UMPI_IDENTITY.name} · ${part} benchmark`,
     unit,
     daily: { ...daily, asOf: MOCK_AS_OF },
@@ -379,7 +386,7 @@ function opticsSpec(
   return {
     id: `optics-${slug}`,
     shortLabel: `${generation} Optical Transceiver`,
-    symbol: `UPPI-${generation}`,
+    symbol: generation,
     name: `${UPPI_IDENTITY.name} · ${generation} optical transceiver benchmark`,
     unit: OPTICS_UNIT,
     bandwidthGbps,
@@ -466,7 +473,7 @@ function powerSpec(
   return {
     id: `power-${slug}`,
     shortLabel: market,
-    symbol: `UEPI-${market}`,
+    symbol: market,
     name: `${UEPI_IDENTITY.name} · ${market} wholesale power benchmark`,
     unit: POWER_UNIT,
     regionLabel,
@@ -601,6 +608,11 @@ export function findInstrument(market: MarketDetail, instrumentId: string): Mark
     if (match) return match;
   }
   return undefined;
+}
+
+/** The market an instrument belongs to, by id. */
+export function findMarketOfInstrument(instrument: MarketInstrumentDetail): MarketDetail | undefined {
+  return MARKETS.find((market) => findInstrument(market, instrument.id) !== undefined);
 }
 
 /** Instrument ids are unique across markets, so comparisons can resolve across them. */

@@ -24,6 +24,7 @@ export type TimeSeriesPoint = {
 export type IndexSeries = Record<TimeRange, TimeSeriesPoint[]>;
 
 export type MarketIndex = {
+  /** For a market, its index ticker; for an instrument, its own standalone identity, e.g. "H200". */
   symbol: string;
   name: string;
   /** Display unit, e.g. "$/GPU-hour" or "pts". */
@@ -84,8 +85,14 @@ export type ComparisonOption = {
 export type MarketInstrumentDetail = MarketIndex & {
   /** Stable id used for selection and comparison lookups, e.g. "ucpi-h100". */
   id: string;
-  /** Concise label for selectors within a family, e.g. "H100 SXM" for UCPI-H100 SXM. */
+  /** Concise label for selectors within a family, e.g. "H100 SXM". */
   shortLabel: string;
+  /**
+   * Short code used when this instrument is the market's headline
+   * benchmark, e.g. "H100" so the headline reads "UCPI-H100". Defaults to
+   * the symbol. Non-headline instruments never carry the index prefix.
+   */
+  benchmarkCode?: string;
   /**
    * Nominal bandwidth for optical instruments, in Gbps. Stored so a
    * normalised $/Gbps (price ÷ bandwidth) can be derived from the record

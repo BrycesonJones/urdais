@@ -7,7 +7,7 @@ import { MarketHeader } from "@/components/market-detail/market-header";
 import { MarketSelectors } from "@/components/market-detail/market-selectors";
 import { PeriodPerformance } from "@/components/market-detail/period-performance";
 import { MAX_COMPARISONS, useInstrumentChart } from "@/components/market-detail/use-instrument-chart";
-import { defaultInstrument, findInstrument, findInstrumentById } from "@/data/mock/market-detail";
+import { defaultInstrument, findInstrument, findInstrumentById, findMarketOfInstrument } from "@/data/mock/market-detail";
 import type { MarketDetail } from "@/types/market";
 
 /**
@@ -19,7 +19,7 @@ import type { MarketDetail } from "@/types/market";
 export function MarketDetailPage({ market }: { market: MarketDetail }) {
   const [instrumentId, setInstrumentId] = useState(market.defaultInstrumentId);
   const instrument = findInstrument(market, instrumentId) ?? defaultInstrument(market);
-  const chart = useInstrumentChart(instrument, findInstrumentById);
+  const chart = useInstrumentChart(instrument, findInstrumentById, { market, homeMarketOf: findMarketOfInstrument });
 
   function handleInstrumentChange(nextId: string) {
     setInstrumentId(nextId);
@@ -31,7 +31,7 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
     <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-6 text-neutral-50 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-screen-2xl">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <MarketHeader instrument={instrument} />
+          <MarketHeader market={market} instrument={instrument} />
           <MarketSelectors
             market={market}
             instrument={instrument}

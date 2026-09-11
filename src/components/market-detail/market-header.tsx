@@ -1,27 +1,32 @@
 import { movementClass } from "@/components/market/movement";
 import { formatNumber, formatPercent, formatUpdatedAt } from "@/lib/format";
-import type { MarketInstrumentDetail } from "@/types/market";
+import { instrumentDisplaySymbol } from "@/lib/market-display";
+import type { MarketDetail, MarketInstrumentDetail } from "@/types/market";
 
 type MarketHeaderProps = {
+  market: MarketDetail;
   instrument: MarketInstrumentDetail;
 };
 
 /**
- * Identity and headline for the selected instrument: the symbol and name,
+ * Identity and headline for the selected instrument: its display symbol
+ * (index-prefixed only for the market's headline benchmark), the name,
  * when it was last updated, and the current value at the largest size on
  * the page with the day's move beneath it as a percentage. The page opens
  * directly on this; the instrument itself is the context. The move is the
  * current-session change and does not follow the chart range; historical
  * returns live under the chart.
  */
-export function MarketHeader({ instrument }: MarketHeaderProps) {
+export function MarketHeader({ market, instrument }: MarketHeaderProps) {
   const { snapshot } = instrument;
   const movement = movementClass(snapshot.changePercent);
 
   return (
     <div className="min-w-0">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-50 md:text-3xl">{instrument.symbol}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-50 md:text-3xl">
+          {instrumentDisplaySymbol(market, instrument)}
+        </h1>
         <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
           Demo data
         </span>

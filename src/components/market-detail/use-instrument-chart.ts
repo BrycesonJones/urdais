@@ -3,12 +3,24 @@
 import { useMemo, useState } from "react";
 
 import type { ChartSeries } from "@/components/charts/detailed-market-chart";
+import { chartSeriesLabel } from "@/lib/market-display";
 import { isIntradayRange, periodPerformance, RANGE_LABELS, windowPoints } from "@/lib/market-ranges";
-import type { ComparisonBasis, DetailRange, MarketInstrumentDetail, PeriodPerformance } from "@/types/market";
+import type { ComparisonBasis, DetailRange, MarketDetail, MarketInstrumentDetail, PeriodPerformance } from "@/types/market";
 
 const DEFAULT_RANGE: DetailRange = "1M";
 /** V1 shows at most four series at once: the primary plus three comparisons. */
 export const MAX_COMPARISONS = 3;
+
+export type InstrumentChartOptions = {
+  /**
+   * The market whose page hosts the chart. Series from this market are
+   * named as instruments; series from another market carry that market's
+   * index/benchmark identity. Without it, instrument symbols are used.
+   */
+  market?: MarketDetail;
+  /** Resolves an instrument's home market, for cross-market naming. */
+  homeMarketOf?: (instrument: MarketInstrumentDetail) => MarketDetail | undefined;
+};
 
 export type InstrumentChart = {
   range: DetailRange;
@@ -39,7 +51,11 @@ export type InstrumentChart = {
 export function useInstrumentChart(
   instrument: MarketInstrumentDetail,
   resolve: (instrumentId: string) => MarketInstrumentDetail | undefined,
+  options: InstrumentChartOptions = {},
 ): InstrumentChart {
+  const { market, homeMarketOf } = options;
+  const seriesLabel = (candidate: MarketInstrumentDetail) =>
+    market && homeMarketOf ? chartSeriesLabel(market, candidate, homeMarketOf) : candidate.symbol;
   const [comparisonIds, setComparisonIds] = useState<string[]>([]);
   const [range, setRange] = useState<DetailRange>(DEFAULT_RANGE);
 
@@ -71,21 +87,23 @@ export function useInstrumentChart(
   const primarySeries = useMemo<ChartSeries>(
     () => ({
       id: instrument.id,
-      label: instrument.symbol,
+      label: seriesLabel(instrument),
       unit: instrument.unit,
       points: windowPoints(instrument.series, effectiveRange, asOf),
     }),
-    [instrument, effectiveRange, asOf],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seriesLabel is a pure function of the stable options
+    [instrument, effectiveRange, asOf, market],
   );
   const comparisonSeries = useMemo<ChartSeries[]>(
     () =>
       comparisons.map((candidate) => ({
         id: candidate.id,
-        label: candidate.symbol,
+        label: seriesLabel(candidate),
         unit: candidate.unit,
         points: windowPoints(candidate.series, effectiveRange, asOf),
       })),
-    [comparisons, effectiveRange, asOf],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seriesLabel is a pure function of the stable options
+    [comparisons, effectiveRange, asOf, market],
   );
   const performance = useMemo(() => periodPerformance(instrument.series, asOf), [instrument, asOf]);
 
@@ -99,8 +117,9 @@ export function useInstrumentChart(
     );
   }
 
-  const label = `${instrument.symbol} chart, ${RANGE_LABELS[effectiveRange].toLowerCase()} range${
-    comparisons.length > 0 ? `, compared with ${comparisons.map((candidate) => candidate.symbol).join(", ")}` : ""
+  // Accessible name: the instrument as itself, with the market named for context.
+  const label = `${instrument.shortLabel} chart${market ? ` for the ${market.name}` : ""}, ${RANGE_LABELS[effectiveRange].toLowerCase()} range${
+    comparisons.length > 0 ? `, compared with ${comparisons.map((candidate) => seriesLabel(candidate)).join(", ")}` : ""
   }`;
 
   return {
