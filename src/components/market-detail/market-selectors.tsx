@@ -64,8 +64,10 @@ export function MarketSelectors({
                     type="button"
                     aria-pressed={selected}
                     onClick={() => {
-                      const first = option.instruments[0];
-                      if (first && !selected) onInstrumentChange(first.id);
+                      const target =
+                        option.instruments.find((candidate) => candidate.id === option.defaultInstrumentId) ??
+                        option.instruments[0];
+                      if (target && !selected) onInstrumentChange(target.id);
                     }}
                     className={`flex h-full flex-1 items-center justify-center rounded-[2px] px-3.5 text-sm font-medium transition-colors sm:flex-none ${
                       selected ? "bg-white/[0.09] text-neutral-50" : "text-neutral-500 hover:text-neutral-200"

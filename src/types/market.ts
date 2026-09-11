@@ -95,6 +95,8 @@ export type MarketFamily = {
   label: string;
   /** Empty when the family exists in the taxonomy but has no instruments yet. */
   instruments: MarketInstrumentDetail[];
+  /** Instrument selected when the family is switched to; the first instrument otherwise. */
+  defaultInstrumentId?: string;
 };
 
 /** A routed top-level market: one of the Urdais indices and its instrument families. */

@@ -127,8 +127,22 @@ const COMPUTE_SPECS: InstrumentSpec[] = [
  * Provider-level token pricing semantics are provisional. These are generic
  * per-provider demo series in $/1M tokens that exist to exercise the family
  * selector and data contract; real backend work may later distinguish input,
- * output, cached, or other token pricing series per model. The values are
- * not actual provider prices.
+ * output, cached, batch, or reasoning token pricing series per model. The
+ * values are not actual provider prices.
+ *
+ * The selector chooses the lab or provider, not a model. A later layer will
+ * add model families and specific models beneath each provider:
+ *
+ *   Anthropic   → Claude
+ *   OpenAI      → GPT
+ *   Google      → Gemini
+ *   DeepSeek    → DeepSeek
+ *   Alibaba     → Qwen
+ *   Moonshot AI → Kimi
+ *   MiniMax     → MiniMax
+ *   Xiaomi      → MiMo
+ *   Meta        → Llama
+ *   Zhipu AI    → GLM
  */
 const TOKEN_UNIT = "$/1M tokens";
 
@@ -149,7 +163,7 @@ function tokenSpec(
   };
 }
 
-/** Selector order is intentional; it is not sorted. */
+/** Labs are listed alphabetically in the selector; see TOKEN_SPECS_SORTED. */
 const TOKEN_SPECS: InstrumentSpec[] = [
   tokenSpec(
     "Anthropic",
@@ -175,7 +189,46 @@ const TOKEN_SPECS: InstrumentSpec[] = [
     { seed: 20230304, latestValue: 1.1, latestDailyReturn: -0.0089, points: 700, volatility: 0.007, drift: -0.0015 },
     { seed: 9_400_000, days: 7, volatility: 0.003 },
   ),
+  tokenSpec(
+    "Alibaba",
+    "alibaba",
+    { seed: 20230305, latestValue: 2.4, latestDailyReturn: -0.0041, points: 800, volatility: 0.006, drift: -0.0013 },
+    { seed: 9_500_000, days: 7, volatility: 0.003 },
+  ),
+  tokenSpec(
+    "Moonshot AI",
+    "moonshot-ai",
+    { seed: 20230306, latestValue: 1.8, latestDailyReturn: 0.0056, points: 720, volatility: 0.008, drift: -0.0016 },
+    { seed: 9_600_000, days: 7, volatility: 0.003 },
+  ),
+  tokenSpec(
+    "MiniMax",
+    "minimax",
+    { seed: 20230307, latestValue: 1.2, latestDailyReturn: -0.0025, points: 700, volatility: 0.007, drift: -0.0011 },
+    { seed: 9_700_000, days: 7, volatility: 0.003 },
+  ),
+  tokenSpec(
+    "Xiaomi",
+    "xiaomi",
+    { seed: 20230308, latestValue: 0.9, latestDailyReturn: 0.0112, points: 600, volatility: 0.009, drift: -0.0018 },
+    { seed: 9_800_000, days: 7, volatility: 0.004 },
+  ),
+  tokenSpec(
+    "Meta",
+    "meta",
+    { seed: 20230309, latestValue: 3.1, latestDailyReturn: 0.0016, points: 900, volatility: 0.004, drift: -0.0008 },
+    { seed: 9_900_000, days: 7, volatility: 0.002 },
+  ),
+  tokenSpec(
+    "Zhipu AI",
+    "zhipu-ai",
+    { seed: 20230310, latestValue: 1.5, latestDailyReturn: -0.0067, points: 760, volatility: 0.007, drift: -0.0014 },
+    { seed: 9_950_000, days: 7, volatility: 0.003 },
+  ),
 ];
+
+/** Alphabetical by display name, so the selector stays predictable as labs are added. */
+const TOKEN_SPECS_SORTED = [...TOKEN_SPECS].sort((a, b) => a.shortLabel.localeCompare(b.shortLabel, "en"));
 
 /** Instruments in one family share a unit, so each may be compared with the others on absolute values. */
 function buildFamilyInstruments(specs: InstrumentSpec[]): MarketInstrumentDetail[] {
@@ -194,7 +247,12 @@ const UCPI_MARKET: MarketDetail = {
   defaultInstrumentId: "ucpi-h100-sxm",
   families: [
     { id: "compute", label: "Compute", instruments: buildFamilyInstruments(COMPUTE_SPECS) },
-    { id: "tokens", label: "Tokens", instruments: buildFamilyInstruments(TOKEN_SPECS) },
+    {
+      id: "tokens",
+      label: "Tokens",
+      instruments: buildFamilyInstruments(TOKEN_SPECS_SORTED),
+      defaultInstrumentId: "tokens-anthropic",
+    },
   ],
 };
 

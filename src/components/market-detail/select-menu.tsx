@@ -21,24 +21,50 @@ export const SELECTOR_SURFACE =
 const POPOVER_CLASS =
   "absolute z-30 mt-1 min-w-full rounded-[3px] border border-white/10 bg-[#0e0e0e] py-1 shadow-[0_8px_24px_rgba(0,0,0,0.5)]";
 
+/** Long option lists scroll inside the menu instead of running off the viewport. */
+const LIST_CLASS = "max-h-[24rem] overflow-y-auto outline-none";
+
+/** Keeps the active option visible while the list scrolls under keyboard navigation. */
+function useActiveOptionVisible(open: boolean, activeOptionId: string) {
+  useEffect(() => {
+    if (open) document.getElementById(activeOptionId)?.scrollIntoView({ block: "nearest" });
+  }, [open, activeOptionId]);
+}
+
 /**
- * Popovers open left-aligned under their trigger. One that is wider than
- * its trigger and sits near the right edge of the viewport would spill
- * out, so after opening it is measured and, if needed, right-aligned. The
- * adjustment is made on the element directly: it is layout, not state.
+ * Popovers open left-aligned under their trigger. After opening, the
+ * popover is measured and, if needed, right-aligned so it never spills past
+ * the viewport, and the option list is capped to the space left beneath it
+ * so a long list scrolls inside the menu rather than off the screen. The
+ * adjustments are made on the elements directly: they are layout, not state.
  */
-function usePopoverAlignment(open: boolean, popoverRef: RefObject<HTMLElement | null>) {
+function usePopoverFit(
+  open: boolean,
+  popoverRef: RefObject<HTMLElement | null>,
+  listRef: RefObject<HTMLElement | null>,
+) {
   useLayoutEffect(() => {
     const popover = popoverRef.current;
-    if (!open || !popover) return;
+    const list = listRef.current;
+    if (!open || !popover || !list) return;
     popover.style.left = "0";
     popover.style.right = "auto";
     if (popover.getBoundingClientRect().right > window.innerWidth - 8) {
       popover.style.left = "auto";
       popover.style.right = "0";
     }
-  }, [open, popoverRef]);
+    list.style.maxHeight = "";
+    const listRect = list.getBoundingClientRect();
+    const chromeBelow = popover.getBoundingClientRect().bottom - listRect.bottom;
+    const available = window.innerHeight - listRect.top - chromeBelow - VIEWPORT_GUTTER;
+    list.style.maxHeight = `${Math.max(MIN_LIST_HEIGHT, Math.min(available, listRect.height))}px`;
+  }, [open, popoverRef, listRef]);
 }
+
+/** Space kept between an open menu and the bottom of the viewport. */
+const VIEWPORT_GUTTER = 12;
+/** A list never shrinks below roughly four rows, so scrolling stays usable. */
+const MIN_LIST_HEIGHT = 144;
 
 /**
  * Open state shared by the menus: pointer presses outside close it (so
@@ -174,11 +200,12 @@ export function SelectMenu({ label, options, value, onChange, children, emphasis
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const { open, setOpen, handleBlur } = useMenuOpen(rootRef);
-  usePopoverAlignment(open, listRef);
+  usePopoverFit(open, listRef, listRef);
   const [activeIndex, setActiveIndex] = useState(0);
   const baseId = useId();
   const listId = `${baseId}-listbox`;
   const optionId = (index: number) => `${baseId}-option-${index}`;
+  useActiveOptionVisible(open, optionId(activeIndex));
 
   useEffect(() => {
     if (open) listRef.current?.focus();
@@ -247,7 +274,7 @@ export function SelectMenu({ label, options, value, onChange, children, emphasis
           aria-activedescendant={optionId(activeIndex)}
           tabIndex={-1}
           onKeyDown={handleListKeyDown}
-          className={`${POPOVER_CLASS} outline-none`}
+          className={`${POPOVER_CLASS} ${LIST_CLASS}`}
         >
           {options.map((option, index) => (
             <OptionRow
@@ -308,11 +335,12 @@ export function MultiSelectMenu({
   const listRef = useRef<HTMLUListElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const { open, setOpen, handleBlur } = useMenuOpen(rootRef);
-  usePopoverAlignment(open, popoverRef);
+  usePopoverFit(open, popoverRef, listRef);
   const [activeIndex, setActiveIndex] = useState(0);
   const baseId = useId();
   const listId = `${baseId}-listbox`;
   const optionId = (index: number) => `${baseId}-option-${index}`;
+  useActiveOptionVisible(open, optionId(activeIndex));
   const atLimit = selected.length >= max;
 
   useEffect(() => {
@@ -393,7 +421,7 @@ export function MultiSelectMenu({
             aria-activedescendant={optionId(activeIndex)}
             tabIndex={-1}
             onKeyDown={handleListKeyDown}
-            className="outline-none"
+            className={LIST_CLASS}
           >
             {options.map((option, index) => (
               <OptionRow
