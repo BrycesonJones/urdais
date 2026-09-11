@@ -308,6 +308,71 @@ const UPPI_MARKET = buildIndexMarket(
   { seed: 7_200_000, days: 7, volatility: 0.005 },
 );
 
+/**
+ * UEPI is an aggregate measure of energy and power economics relevant to AI
+ * and compute infrastructure: what powering Information Age infrastructure
+ * costs. Underlying series may later include $/kWh, $/MWh, regional and
+ * data-centre power pricing, and power availability; the aggregate is
+ * quoted in points. The demo history is moderately volatile and cyclical.
+ */
+const UEPI_MARKET = buildIndexMarket(
+  "UEPI",
+  "pts",
+  {
+    seed: 20180221,
+    latestValue: 118.4,
+    latestDailyReturn: 0.0063,
+    points: LONG_HISTORY_DAYS,
+    volatility: 0.012,
+    drift: 0.0003,
+    meanReversion: { level: 115, strength: 0.005 },
+  },
+  { seed: 7_300_000, days: 7, volatility: 0.006 },
+);
+
+/*
+ * The hardware stack is modelled as three deliberately separate indices:
+ *
+ *   UACI  AI silicon: processor and chip economics
+ *     ↓
+ *   UAXI  deployable accelerator hardware: cards, modules, boards, systems
+ *     ↓
+ *   UCPI  usable compute service: rental economics per GPU-hour
+ *
+ * Each answers a different question, so they are never merged.
+ */
+
+/**
+ * UACI is an aggregate measure of AI processor and chip market economics:
+ * what AI silicon costs. Underlying series may later include GPU silicon,
+ * ASICs, TPU-class processors, chip ASPs, price/performance, supply, and
+ * advanced packaging economics across generations such as H100, H200, B200,
+ * and MI300X; the aggregate is quoted in points. Semiconductor markets move
+ * hard, so the demo history carries higher structural volatility.
+ */
+const UACI_MARKET = buildIndexMarket(
+  "UACI",
+  "pts",
+  { seed: 20190619, latestValue: 203.75, latestDailyReturn: -0.0194, points: LONG_HISTORY_DAYS, volatility: 0.022, drift: 0.0006 },
+  { seed: 7_400_000, days: 7, volatility: 0.011 },
+);
+
+/**
+ * UAXI is an aggregate measure of finished, deployable AI acceleration
+ * hardware economics: what accelerator cards, SXM modules, boards, HGX-class
+ * systems, and rack-scale configurations cost. Underlying series may later
+ * include $/accelerator, performance per dollar, and availability or lead
+ * time; the aggregate is quoted in points. It is related to UACI but adds
+ * memory, boards, packaging, integration, and availability, so the demo
+ * history is a distinct, somewhat calmer walk.
+ */
+const UAXI_MARKET = buildIndexMarket(
+  "UAXI",
+  "pts",
+  { seed: 20200903, latestValue: 167.22, latestDailyReturn: -0.0088, points: LONG_HISTORY_DAYS, volatility: 0.016, drift: 0.0005 },
+  { seed: 7_500_000, days: 7, volatility: 0.008 },
+);
+
 // Strong long-run growth with crypto-scale daily moves.
 const UBWI_MARKET = buildIndexMarket(
   "UBWI",
@@ -325,6 +390,9 @@ export const MARKETS: MarketDetail[] = [
   UAVI_MARKET,
   UMPI_MARKET,
   UPPI_MARKET,
+  UEPI_MARKET,
+  UACI_MARKET,
+  UAXI_MARKET,
   UBWI_MARKET,
 ];
 

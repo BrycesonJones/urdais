@@ -25,6 +25,9 @@ export const MARKET_CATALOG: MarketCatalogEntry[] = [
   entry("UAVI", "Urdais AI Volatility Index"),
   entry("UMPI", "Urdais Memory Price Index"),
   entry("UPPI", "Urdais Photonics Price Index"),
+  entry("UEPI", "Urdais Energy & Power Index"),
+  entry("UACI", "Urdais AI Chip Index"),
+  entry("UAXI", "Urdais Accelerator Index"),
   entry("UBWI", "Bitcoin Wealth Index"),
 ];
 
