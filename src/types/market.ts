@@ -10,7 +10,11 @@ export const TIME_RANGES = ["1D", "1W", "1M", "3M", "1Y", "ALL"] as const;
 
 export type TimeRange = (typeof TIME_RANGES)[number];
 
-/** One observation in a historical series. `time` is a Unix timestamp in seconds (UTC). */
+/**
+ * One observation in a historical series. `time` is a Unix timestamp in
+ * seconds (UTC). `value` is signed: demo histories stay positive, but real
+ * observations such as wholesale power prices can be negative.
+ */
 export type TimeSeriesPoint = {
   time: number;
   value: number;
@@ -88,6 +92,12 @@ export type MarketInstrumentDetail = MarketIndex & {
    * later without parsing labels; not displayed yet.
    */
   bandwidthGbps?: number;
+  /**
+   * Geography for instruments that are geographically constrained, such as
+   * an organised wholesale power market. Metadata only: the instrument is
+   * keyed by the market entity, never by its region.
+   */
+  regionLabel?: string;
   snapshot: MarketSnapshot;
   series: DetailedSeries;
   /** Ranges the history is long enough to support; others are shown disabled. */

@@ -37,6 +37,12 @@ export type DailySeriesConfig = {
    * day. Used for series that should oscillate rather than trend.
    */
   meanReversion?: { level: number; strength: number };
+  /**
+   * Optional annual cycle: values are scaled by 1 + amplitude · cos of the
+   * distance from the peak day of year, normalised so the latest value
+   * stays anchored. Used for seasonal markets such as wholesale power.
+   */
+  seasonality?: { amplitude: number; peakDayOfYear: number };
 };
 
 export type IntradaySeriesConfig = {
@@ -94,10 +100,24 @@ export function buildDailySeries(config: DailySeriesConfig): TimeSeriesPoint[] {
     dailyReturn = Math.max(-0.5, Math.min(0.5, dailyReturn));
     values[i - 1] = current / (1 + dailyReturn);
   }
-  return values.map((value, i) => ({
-    time: asOf - (points - 1 - i) * DAY,
-    value: round(value),
-  }));
+  const seasonal = seasonalFactor(config);
+  return values.map((value, i) => {
+    const time = asOf - (points - 1 - i) * DAY;
+    return { time, value: round(value * seasonal(time)) };
+  });
+}
+
+/** Multiplicative seasonal factor for a timestamp, equal to 1 at the anchor so the latest value is unchanged. */
+function seasonalFactor(config: DailySeriesConfig): (time: number) => number {
+  const { seasonality, asOf } = config;
+  if (!seasonality) return () => 1;
+  const cycle = (time: number) => {
+    const date = new Date(time * 1000);
+    const dayOfYear = (Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) - Date.UTC(date.getUTCFullYear(), 0, 1)) / (DAY * 1000);
+    return 1 + seasonality.amplitude * Math.cos((2 * Math.PI * (dayOfYear - seasonality.peakDayOfYear)) / 365.25);
+  };
+  const anchor = cycle(asOf);
+  return (time) => cycle(time) / anchor;
 }
 
 /**

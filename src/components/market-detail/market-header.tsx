@@ -26,7 +26,10 @@ export function MarketHeader({ instrument }: MarketHeaderProps) {
           Demo data
         </span>
       </div>
-      <p className="mt-1 text-sm text-neutral-400 md:text-base">{instrument.name}</p>
+      <p className="mt-1 text-sm text-neutral-400 md:text-base">
+        {instrument.name}
+        {instrument.regionLabel && <span className="text-neutral-500"> · {instrument.regionLabel}</span>}
+      </p>
       <p className="mt-1 text-xs text-neutral-500 md:text-sm">Updated {formatUpdatedAt(snapshot.asOf)}</p>
 
       {/* Explicit spaces keep the text readable when announced or copied. */}

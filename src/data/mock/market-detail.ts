@@ -37,6 +37,7 @@ type InstrumentSpec = MarketIndex & {
   id: string;
   shortLabel: string;
   bandwidthGbps?: number;
+  regionLabel?: string;
   daily: DailySeriesConfig;
   intraday: IntradaySeriesConfig;
 };
@@ -56,6 +57,7 @@ function buildInstrument(spec: InstrumentSpec, comparisons: ComparisonOption[]):
     id: spec.id,
     shortLabel: spec.shortLabel,
     ...(spec.bandwidthGbps !== undefined ? { bandwidthGbps: spec.bandwidthGbps } : {}),
+    ...(spec.regionLabel !== undefined ? { regionLabel: spec.regionLabel } : {}),
     symbol: spec.symbol,
     name: spec.name,
     unit: spec.unit,
@@ -179,6 +181,7 @@ const HEADLINE_INSTRUMENT_ID: Record<string, string> = {
   UCPI: "ucpi-h100-sxm",
   UMPI: "hbm-hbm3e",
   UPPI: "optics-800g",
+  UEPI: "power-pjm",
 };
 
 function headlineInstrumentId(symbol: string): string {
@@ -418,27 +421,99 @@ const UPPI_MARKET: MarketDetail = {
   ],
 };
 
+/* ---------- UEPI: wholesale power ---------- */
+
 /**
- * UEPI is an aggregate measure of energy and power economics relevant to AI
- * and compute infrastructure: what powering Information Age infrastructure
- * costs. Underlying series may later include $/kWh, $/MWh, regional and
- * data-centre power pricing, and power availability; the aggregate is
- * quoted in points. The demo history is moderately volatile and cyclical.
+ * UEPI, the Urdais Energy & Power Index, asks what powering Information
+ * Age infrastructure costs. Its first family is Wholesale Power: a
+ * generalised daily wholesale electricity-price benchmark for each
+ * organised U.S. market, in $/MWh. The family is market-entity-first (PJM,
+ * ERCOT, …), with geography kept as instrument metadata, because wholesale
+ * power is priced by the market operator. A future Data Center Power
+ * family will be geography-first instead (Northern Virginia, Georgia,
+ * Texas, …): the price ultimately faced by compute operators, including
+ * delivered-power economics, with utilities such as Georgia Power modelled
+ * as provider/source metadata beneath a geography rather than as wholesale
+ * peers. The two must not be conflated; a vertically integrated utility is
+ * not an ISO/RTO peer, so it never appears in this family.
+ *
+ * PJM is the current UEPI headline wholesale-power benchmark because it
+ * covers a major U.S. electricity market with substantial data-centre and
+ * Information Age infrastructure exposure. The benchmark is metadata (the
+ * market's default instrument) and may change as UEPI methodology evolves.
+ *
+ * The exact hub, zone, and product (day-ahead, real-time, congestion) each
+ * benchmark represents is provisional and belongs to the data phase; the
+ * labels deliberately name only the market. Real wholesale observations
+ * can be negative, so series values are signed; these demo histories stay
+ * positive. When a second family arrives the generic family switch appears.
  */
-const UEPI_MARKET = buildIndexMarket(
-  "UEPI",
-  "pts",
-  {
-    seed: 20180221,
-    latestValue: 118.4,
-    latestDailyReturn: 0.0063,
-    points: LONG_HISTORY_DAYS,
-    volatility: 0.012,
-    drift: 0.0003,
-    meanReversion: { level: 115, strength: 0.005 },
-  },
-  { seed: 7_300_000, days: 7, volatility: 0.006 },
-);
+const UEPI_IDENTITY = catalogEntry("UEPI");
+const POWER_UNIT = "$/MWh";
+
+function powerSpec(
+  market: string,
+  slug: string,
+  regionLabel: string,
+  daily: Omit<DailySeriesConfig, "asOf">,
+  intraday: IntradaySeriesConfig,
+): InstrumentSpec {
+  return {
+    id: `power-${slug}`,
+    shortLabel: market,
+    symbol: `UEPI-${market}`,
+    name: `${UEPI_IDENTITY.name} · ${market} wholesale power benchmark`,
+    unit: POWER_UNIT,
+    regionLabel,
+    daily: { ...daily, asOf: MOCK_AS_OF },
+    intraday,
+  };
+}
+
+/** Flagship first, then by market relevance. Seasonal peaks are day-of-year: mid-summer or mid-winter. */
+const POWER_SPECS: InstrumentSpec[] = [
+  // Flagship: seasonal with a summer peak, moderate/high volatility, reverting to a level.
+  powerSpec("PJM", "pjm", "Mid-Atlantic / Midwest",
+    { seed: 20190101, latestValue: 41.82, latestDailyReturn: 0.0314, points: 2600, volatility: 0.045, drift: 0.0001, meanReversion: { level: 40, strength: 0.03 }, seasonality: { amplitude: 0.12, peakDayOfYear: 201 } },
+    { seed: 8_110_000, days: 7, volatility: 0.015 }),
+  // Most volatile: abrupt weather- and constraint-driven moves with a hard summer peak.
+  powerSpec("ERCOT", "ercot", "Texas",
+    { seed: 20190102, latestValue: 36.4, latestDailyReturn: -0.0421, points: 2600, volatility: 0.075, drift: 0.0001, meanReversion: { level: 35, strength: 0.03 }, seasonality: { amplitude: 0.2, peakDayOfYear: 217 } },
+    { seed: 8_120_000, days: 7, volatility: 0.025 }),
+  // Later summer cycle, moderate volatility, higher level.
+  powerSpec("CAISO", "caiso", "California",
+    { seed: 20190103, latestValue: 48.75, latestDailyReturn: 0.0088, points: 2600, volatility: 0.04, drift: 0.0002, meanReversion: { level: 47, strength: 0.025 }, seasonality: { amplitude: 0.14, peakDayOfYear: 237 } },
+    { seed: 8_130_000, days: 7, volatility: 0.012 }),
+  // Central: moderate volatility, milder summer cycle.
+  powerSpec("MISO", "miso", "Midwest / South",
+    { seed: 20190104, latestValue: 34.2, latestDailyReturn: 0.0157, points: 2600, volatility: 0.04, drift: 0.0001, meanReversion: { level: 33, strength: 0.03 }, seasonality: { amplitude: 0.1, peakDayOfYear: 196 } },
+    { seed: 8_140_000, days: 7, volatility: 0.012 }),
+  // Winter-sensitive: peak in January, moderate/high volatility.
+  powerSpec("ISO-NE", "iso-ne", "New England",
+    { seed: 20190105, latestValue: 52.3, latestDailyReturn: -0.0126, points: 2600, volatility: 0.05, drift: 0.0002, meanReversion: { level: 50, strength: 0.03 }, seasonality: { amplitude: 0.2, peakDayOfYear: 20 } },
+    { seed: 8_150_000, days: 7, volatility: 0.015 }),
+  powerSpec("NYISO", "nyiso", "New York",
+    { seed: 20190106, latestValue: 47.9, latestDailyReturn: 0.0203, points: 2600, volatility: 0.048, drift: 0.0002, meanReversion: { level: 46, strength: 0.03 }, seasonality: { amplitude: 0.17, peakDayOfYear: 25 } },
+    { seed: 8_160_000, days: 7, volatility: 0.015 }),
+  // Central: lowest level, its own late-summer cycle.
+  powerSpec("SPP", "spp", "Central U.S.",
+    { seed: 20190107, latestValue: 30.15, latestDailyReturn: 0.0064, points: 2600, volatility: 0.042, drift: 0.0001, meanReversion: { level: 29, strength: 0.03 }, seasonality: { amplitude: 0.11, peakDayOfYear: 211 } },
+    { seed: 8_170_000, days: 7, volatility: 0.013 }),
+];
+
+const UEPI_MARKET: MarketDetail = {
+  ...UEPI_IDENTITY,
+  unit: POWER_UNIT,
+  defaultInstrumentId: "power-pjm",
+  families: [
+    {
+      id: "wholesale-power",
+      label: "Wholesale Power",
+      instruments: buildFamilyInstruments(POWER_SPECS),
+      defaultInstrumentId: "power-pjm",
+    },
+  ],
+};
 
 /*
  * The hardware stack is modelled as three deliberately separate indices:
