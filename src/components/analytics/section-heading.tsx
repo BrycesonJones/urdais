@@ -8,7 +8,7 @@ type SectionHeadingProps = {
   aside?: ReactNode;
 };
 
-/** Heading row shared by the Model Economics sections: title, one-line subtitle, optional controls. */
+/** Heading row shared by the analytical market sections: title, one-line subtitle, optional controls. */
 export function SectionHeading({ id, title, subtitle, aside }: SectionHeadingProps) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

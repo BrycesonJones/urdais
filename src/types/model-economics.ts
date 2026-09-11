@@ -4,7 +4,6 @@
  * volume, capability, access class) and the views derived from it.
  */
 
-import type { TimeSeriesPoint } from "@/types/market";
 
 /** Whether a model's weights are downloadable. Demo metadata, not a licensing record. */
 export type AccessClass = "open-weight" | "proprietary";
@@ -21,9 +20,6 @@ export type ModelRecord = {
   /** Demo capability score, 0–100. Not a benchmark and not an Urdais index. */
   capabilityScore: number;
 };
-
-/** Daily observed token volume for one model, in tokens per day. */
-export type VolumeObservation = TimeSeriesPoint & { modelId: string };
 
 /** One row of a ranked share table. `share` is a percentage of the window total. */
 export type ShareRow = {

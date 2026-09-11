@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import type { PointerEvent } from "react";
 
+import { useContainerSize } from "@/components/charts/use-container-size";
 import { useSvgId } from "@/components/charts/use-svg-id";
-import { formatAxisValue, formatCompact, formatPercent, formatTimestamp, formatValueWithUnit } from "@/lib/format";
+import { formatAxisTime, formatAxisValue, formatCompact, formatPercent, formatTimestamp, formatValueWithUnit } from "@/lib/format";
 import type { ComparisonBasis, TimeSeriesPoint } from "@/types/market";
 
 /** One line on the chart. Points must be chronological. */
@@ -29,7 +30,7 @@ type DetailedMarketChartProps = {
   intraday: boolean;
   /** Format values as K / M / B / T counts, for volume-like units such as tokens per day. */
   compact?: boolean;
-  /** Accessible name of the chart, e.g. "UCPI-H100 SXM chart, 1 month range". */
+  /** Accessible name of the chart, e.g. "H100 SXM chart for the Urdais Compute Price Index, 1 month range". */
   label: string;
   className?: string;
 };
@@ -77,8 +78,6 @@ const NARROW_CHART_WIDTH = 560;
 const X_LABEL_SPACING = 96;
 const Y_LABEL_SPACING = 64;
 
-type Size = { width: number; height: number };
-
 /** A point with the value it is plotted at, which differs from `value` on a relative basis. */
 type PlotPoint = TimeSeriesPoint & { plotted: number };
 
@@ -108,8 +107,7 @@ export function DetailedMarketChart({
   label,
   className,
 }: DetailedMarketChartProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState<Size | null>(null);
+  const { ref: containerRef, size } = useContainerSize<HTMLDivElement>();
   // The crosshair is a free pointer position in plot coordinates, clamped
   // to the plot. It is stored with the series it belongs to, so a range or
   // instrument change implicitly clears it without an effect. Which
@@ -127,20 +125,6 @@ export function DetailedMarketChart({
     fade: `${baseId}-fade`,
     mask: `${baseId}-mask`,
   };
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const observer = new ResizeObserver(([entry]) => {
-      if (!entry) return;
-      const { width, height } = entry.contentRect;
-      setSize((current) =>
-        current && current.width === width && current.height === height ? current : { width, height },
-      );
-    });
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
 
   const visibleComparisons = useMemo(
     () => comparisons.filter((series) => series.points.length >= 2).slice(0, COMPARISON_COLORS.length),
@@ -232,8 +216,6 @@ export function DetailedMarketChart({
       xTicks,
       yTicks: yAxis.ticks.map((value) => ({ value, y: y(value) })),
       yDecimals: yAxis.decimals,
-      tMin,
-      tMax,
       vMin,
       vMax,
     };
@@ -265,9 +247,8 @@ export function DetailedMarketChart({
   const formatReading = (value: number, unit: string) =>
     compact ? `${formatCompact(value)} ${unit}` : formatValueWithUnit(value, unit);
 
-  const description = geometry
-    ? describeChart(primary, visibleComparisons, relative, intraday, geometry.vMin, geometry.vMax, formatPlotted, formatReading)
-    : label;
+  const description =
+    geometry && describeChart(primary, visibleComparisons, relative, intraday, geometry.vMin, geometry.vMax, formatPlotted, formatReading);
 
   // Right-edge tags: the primary stays put and comparison tags are nudged
   // apart from it and each other so none overlap.
@@ -832,15 +813,6 @@ function timeTicks(tMin: number, tMax: number, maxCount: number): { time: number
     year += step.n;
   }
   return ticks;
-}
-
-/** Short crosshair time label: time of day for intraday series, month and day otherwise. */
-function formatAxisTime(unixSeconds: number, intraday: boolean): string {
-  const date = new Date(unixSeconds * 1000);
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: "UTC",
-    ...(intraday ? { hour: "2-digit", minute: "2-digit", hour12: false } : { month: "short", day: "numeric" }),
-  }).format(date);
 }
 
 /** Plain-language summary for assistive technology. */

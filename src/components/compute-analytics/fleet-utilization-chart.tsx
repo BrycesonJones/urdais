@@ -5,7 +5,7 @@ import type { PointerEvent } from "react";
 
 import { SectionHeading } from "@/components/analytics/section-heading";
 import { useContainerSize } from "@/components/charts/use-container-size";
-import { UTILIZATION_RANKING, UTILIZATION_SERIES } from "@/data/mock/compute-analytics";
+import { DEFAULT_COMPUTE_INSTRUMENT_ID, UTILIZATION_RANKING, UTILIZATION_SERIES } from "@/data/mock/compute-analytics";
 import { formatNumber, formatTimestamp } from "@/lib/format";
 
 // Icy-blue primary plus the comparison palette and a neutral silver; every series is named in the legend and readout.
@@ -94,7 +94,7 @@ export function FleetUtilizationChart() {
                   <text key={tick.time} x={geometry.x(tick.time)} y={size.height - 10} fill={AXIS_TEXT} fontSize={11} textAnchor="middle">{tick.label}</text>
                 ))}
                 {geometry.paths.map((path, index) => (
-                  <path key={UTILIZATION_SERIES[index]!.instrumentId} d={path} fill="none" stroke={SERIES_COLORS[index]} strokeWidth={index === 0 ? 2 : 1.5} strokeLinejoin="round" />
+                  <path key={UTILIZATION_SERIES[index]!.instrumentId} d={path} fill="none" stroke={SERIES_COLORS[index]} strokeWidth={UTILIZATION_SERIES[index]!.instrumentId === DEFAULT_COMPUTE_INSTRUMENT_ID ? 2 : 1.5} strokeLinejoin="round" />
                 ))}
                 {hoverIndex !== null && (
                   <g pointerEvents="none">

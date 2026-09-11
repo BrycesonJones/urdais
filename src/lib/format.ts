@@ -44,7 +44,7 @@ export function formatValueWithUnit(value: number, unit: string, fractionDigits 
   return `${formatNumber(value, fractionDigits)} ${unit}`;
 }
 
-/** Axis tick label: dollar units carry the sign and at least two decimals; others are bare numbers. */
+/** Axis tick label: dollar units carry the `$` prefix and at least two decimals; others are bare numbers. */
 export function formatAxisValue(value: number, fractionDigits: number, unit: string): string {
   if (unit.startsWith("$")) return `$${formatNumber(value, Math.max(2, fractionDigits))}`;
   return formatNumber(value, fractionDigits);
@@ -81,4 +81,19 @@ export function formatCompact(value: number, fractionDigits = 2): string {
     if (abs >= size) return `${formatNumber(value / size, fractionDigits)}${suffix}`;
   }
   return formatNumber(value, fractionDigits);
+}
+
+/** Short axis or crosshair time label: time of day for intraday series, month and day otherwise. */
+export function formatAxisTime(unixSeconds: number, intraday: boolean): string {
+  const date = new Date(unixSeconds * 1000);
+  return new Intl.DateTimeFormat(LOCALE, {
+    timeZone: "UTC",
+    ...(intraday ? { hour: "2-digit", minute: "2-digit", hour12: false } : { month: "short", day: "numeric" }),
+  }).format(date);
+}
+
+/** Calendar quarter of a UTC timestamp, e.g. "Q3 2026". */
+export function formatQuarter(unixSeconds: number): string {
+  const date = new Date(unixSeconds * 1000);
+  return `Q${Math.floor(date.getUTCMonth() / 3) + 1} ${date.getUTCFullYear()}`;
 }

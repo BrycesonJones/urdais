@@ -41,7 +41,7 @@ export function FlexibleCapacityChart() {
     const batteryArea = `M${line((point) => point.unlockedGw)}L${[...FLEXIBILITY_CURVE].reverse().map((point) => `${x(point.flexibleHoursPerYear).toFixed(1)},${y(point.interruptibleGw).toFixed(1)}`).join("L")}Z`;
     const yTicks: number[] = [];
     for (let value = 0; value <= vMax; value += vMax / 4) yTicks.push(value);
-    return { plotLeft, plotRight, plotTop, plotBottom, x, y, totalPath: `M${line((point) => point.unlockedGw)}`, interruptibleArea, batteryArea, yTicks };
+    return { plotLeft, plotRight, x, y, totalPath: `M${line((point) => point.unlockedGw)}`, interruptibleArea, batteryArea, yTicks };
   }, [size]);
 
   const description = `Estimated additional capacity unlocked by flexible large loads: ${FLEXIBILITY_SCENARIOS.map(

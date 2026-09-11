@@ -83,10 +83,6 @@ export const MODEL_ROSTER: ModelRecord[] = MODEL_SPECS.map((spec) => {
   };
 });
 
-export function findModel(modelId: string): ModelRecord | undefined {
-  return MODEL_ROSTER.find((model) => model.id === modelId);
-}
-
 /* ---------- Token volume observations ---------- */
 
 /**

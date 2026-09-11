@@ -7,7 +7,7 @@ import { useContainerSize } from "@/components/charts/use-container-size";
 import { SectionHeading } from "@/components/analytics/section-heading";
 import { DELIVERY_SERIES, HORIZON_DELIVERY_GAP, TODAY_POINT } from "@/data/mock/power-analytics";
 import type { DeliveryPoint } from "@/data/mock/power-analytics";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, formatQuarter } from "@/lib/format";
 
 const LOAD_LINE = "#b6c7ff";
 const CAPACITY_LINE = "#d4a56a";
@@ -17,11 +17,8 @@ const GRID_LINE = "rgba(255,255,255,0.06)";
 const TODAY_LINE = "#aab2c5";
 const SURFACE = "#0a0a0a";
 const PADDING = { top: 20, right: 56, bottom: 30, left: 8 };
-
-const quarterLabel = (time: number) => {
-  const date = new Date(time * 1000);
-  return `Q${Math.floor(date.getUTCMonth() / 3) + 1} ${date.getUTCFullYear()}`;
-};
+/** Below this width the chart labels every other year. */
+const NARROW_CHART_WIDTH = 560;
 
 /**
  * Power Delivery Gap: observed load as a solid line up to today, forecast
@@ -83,9 +80,9 @@ export function PowerDeliveryGapChart() {
   }
 
   const hovered = hoverIndex === null ? null : DELIVERY_SERIES[hoverIndex]!;
-  const description = `Aggregate peak load across seven U.S. power markets, ${quarterLabel(DELIVERY_SERIES[0]!.time)} to ${quarterLabel(
+  const description = `Aggregate peak load across seven U.S. power markets, ${formatQuarter(DELIVERY_SERIES[0]!.time)} to ${formatQuarter(
     DELIVERY_SERIES[DELIVERY_SERIES.length - 1]!.time,
-  )}: observed load ${formatNumber(TODAY_POINT.actualLoadGw!, 0)} GW at ${quarterLabel(TODAY_POINT.time)}, forecast demand ${formatNumber(
+  )}: observed load ${formatNumber(TODAY_POINT.actualLoadGw!, 0)} GW at ${formatQuarter(TODAY_POINT.time)}, forecast demand ${formatNumber(
     HORIZON_DELIVERY_GAP.forecastLoadGw,
     0,
   )} GW against ${formatNumber(HORIZON_DELIVERY_GAP.deliverableCapacityGw, 0)} GW of deliverable capacity by the end of ${HORIZON_DELIVERY_GAP.year}, a delivery gap of ${formatNumber(
@@ -140,7 +137,8 @@ export function PowerDeliveryGapChart() {
                 <text x={geometry.plotRight + 8} y={geometry.y(tick)} fill={AXIS_TEXT} fontSize={11} dominantBaseline="middle" className="tabular-nums">{formatNumber(tick, 0)}</text>
               </g>
             ))}
-            {geometry.years.map((year, index) => (
+            {/* Every year fits at desktop widths; narrow charts label every other year so the labels never collide. */}
+            {geometry.years.filter((_, index) => size.width >= NARROW_CHART_WIDTH || index % 2 === 0).map((year, index) => (
               <text
                 key={year}
                 x={geometry.x(Date.UTC(year, 0, 1) / 1000)}
@@ -176,7 +174,7 @@ export function PowerDeliveryGapChart() {
             className="pointer-events-none absolute z-10 rounded-md border border-white/10 bg-neutral-900/95 px-3 py-2 text-xs shadow-lg shadow-black/40"
             style={{ top: geometry.plotTop + 4, ...(geometry.x(hovered.time) > size.width * 0.55 ? { right: size.width - geometry.x(hovered.time) + 12 } : { left: geometry.x(hovered.time) + 12 }) }}
           >
-            <p className="whitespace-nowrap text-neutral-400">{quarterLabel(hovered.time)}{hovered.forecastLoadGw !== null ? " · forecast" : ""}</p>
+            <p className="whitespace-nowrap text-neutral-400">{formatQuarter(hovered.time)}{hovered.forecastLoadGw !== null ? " · forecast" : ""}</p>
             <ul className="mt-1.5 flex flex-col gap-1 tabular-nums">
               <li className="flex justify-between gap-4"><span className="text-neutral-400">{hovered.actualLoadGw !== null ? "Actual load" : "Forecast demand"}</span><span className="font-medium text-neutral-50">{formatNumber((hovered.actualLoadGw ?? hovered.forecastLoadGw)!, 0)} GW</span></li>
               <li className="flex justify-between gap-4"><span className="text-neutral-400">Deliverable capacity</span><span className="font-medium text-neutral-50">{formatNumber(hovered.deliverableCapacityGw, 0)} GW</span></li>

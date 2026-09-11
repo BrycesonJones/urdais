@@ -6,7 +6,7 @@ import { useContainerSize } from "@/components/charts/use-container-size";
 import { SectionHeading } from "@/components/analytics/section-heading";
 import { SELECTOR_FOCUS, SELECTOR_SURFACE } from "@/components/market-detail/select-menu";
 import { BUILDOUT_METRICS, findBuildoutMetric } from "@/data/mock/power-analytics";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, formatPercent } from "@/lib/format";
 import type { BuildoutMetricId } from "@/types/power-analytics";
 
 const BAR_FILL = "#526fe0";
@@ -48,7 +48,7 @@ export function GridBuildoutChart() {
     const x = (index: number) => plotLeft + slot * index + (slot - barWidth) / 2;
     const yTicks: number[] = [];
     for (let value = 0; value <= yMax; value += step) yTicks.push(value);
-    return { plotLeft, plotRight, plotTop, plotBottom, y, x, slot, barWidth, yTicks, decimals: step < 1 ? 1 : 0 };
+    return { plotLeft, plotRight, plotBottom, y, x, barWidth, yTicks, decimals: step < 1 ? 1 : 0 };
   }, [size, metricId]);
 
   const description = `${metric.label}, ${metric.unit}, ${metric.points[0]!.year} to ${latest.year}: ${metric.points
@@ -84,8 +84,7 @@ export function GridBuildoutChart() {
         <span className="text-3xl font-semibold tracking-tight text-neutral-50 md:text-4xl">{formatNumber(latest.value, metric.id === "circuit-miles" ? 0 : 1)}</span>{" "}
         <span className="text-sm text-neutral-400">{metric.unit}</span>{" "}
         <span className={`text-sm font-medium ${improving ? "text-emerald-500" : "text-red-400"}`}>
-          {changePercent > 0 ? "+" : changePercent < 0 ? "−" : ""}
-          {formatNumber(Math.abs(changePercent), 1)}% vs {previous.year}
+          {formatPercent(changePercent, 1)} vs {previous.year}
         </span>{" "}
         <span className="text-xs text-neutral-500">{latest.year}{metric.lowerIsBetter ? " · lower is better" : ""}</span>
       </p>

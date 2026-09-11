@@ -71,7 +71,10 @@ export function InterconnectionQueue() {
             <span className="relative h-2.5 overflow-hidden rounded-[1px] bg-white/[0.04]" aria-hidden="true">
               <span className="absolute inset-y-0 left-0 rounded-[1px] bg-[#526fe0]" style={{ width: `${(row.queuedGw / max) * 100}%` }} />
             </span>
-            <span className="text-right font-medium tabular-nums text-neutral-50">{formatNumber(row.queuedGw, 0)}</span>
+            <span className="text-right font-medium tabular-nums text-neutral-50">
+              {formatNumber(row.queuedGw, 0)}
+              <span className="sr-only"> GW</span>
+            </span>
             <span className="text-right tabular-nums text-neutral-300">
               {row.medianWaitMonths} <span className="text-xs text-neutral-500">mo</span>
             </span>

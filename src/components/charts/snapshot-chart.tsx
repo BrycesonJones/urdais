@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import type { PointerEvent } from "react";
 
+import { useContainerSize } from "@/components/charts/use-container-size";
 import { useSvgId } from "@/components/charts/use-svg-id";
-import { formatNumber, formatTimestamp } from "@/lib/format";
+import { formatAxisTime, formatNumber, formatTimestamp } from "@/lib/format";
 import type { TimeSeriesPoint } from "@/types/market";
 
 type SnapshotChartProps = {
@@ -29,8 +30,7 @@ const CROSSHAIR_COLOR = "#3d4c85";
 const HOVER_MARKER_FILL = "#111111";
 
 // Square-matrix field beneath the line: small squares on a fixed grid,
-// strongest just under the line and fading out toward the bottom. Cobalt is
-// darker than the old silver, so it starts a little more opaque.
+// strongest just under the line and fading out toward the bottom.
 const MATRIX_SQUARE = 3;
 const MATRIX_TOP_OPACITY = 0.7;
 const MATRIX_BOTTOM_OPACITY = 0;
@@ -41,11 +41,9 @@ const MAX_X_TICKS = 5;
 /** Horizontal room per x label, sized so counts land at 2–3 / 3–4 / 4–5 by breakpoint. */
 const X_LABEL_SPACING = 180;
 
-type Size = { width: number; height: number };
-
 /**
  * Urdais-owned snapshot chart: a small SVG thumbnail for the homepage.
- * It draws a silver trend line over a square-matrix field clipped to the
+ * It draws an icy-blue trend line over a cobalt square-matrix field clipped to the
  * area under the line, a single current-value marker on the right, and a
  * minimal set of muted x labels. No grid, no y-axis: precision belongs to
  * the detailed chart page. A pointer crosshair (vertical guide and marker)
@@ -53,8 +51,7 @@ type Size = { width: number; height: number };
  * are always shown as text elsewhere, so the SVG is a labelled illustration.
  */
 export function SnapshotChart({ data, intraday, unit, label, className }: SnapshotChartProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState<Size | null>(null);
+  const { ref: containerRef, size } = useContainerSize<HTMLDivElement>();
   // Hover is stored with the series it belongs to, so a range change
   // implicitly clears it without an effect.
   const [hover, setHover] = useState<{ series: TimeSeriesPoint[]; index: number } | null>(null);
@@ -68,20 +65,6 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
     mask: `${baseId}-mask`,
     clip: `${baseId}-clip`,
   };
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const observer = new ResizeObserver(([entry]) => {
-      if (!entry) return;
-      const { width, height } = entry.contentRect;
-      setSize((current) =>
-        current && current.width === width && current.height === height ? current : { width, height },
-      );
-    });
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
 
   const geometry = useMemo(() => {
     if (!size || size.width <= 0 || size.height <= 0 || data.length < 2) return null;
@@ -273,11 +256,3 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
   );
 }
 
-/** Short axis label: time of day for intraday series, month and day otherwise. */
-function formatAxisTime(unixSeconds: number, intraday: boolean): string {
-  const date = new Date(unixSeconds * 1000);
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: "UTC",
-    ...(intraday ? { hour: "2-digit", minute: "2-digit", hour12: false } : { month: "short", day: "numeric" }),
-  }).format(date);
-}

@@ -13,8 +13,6 @@ import { DEFAULT_TOKEN_LAB_ID, tokenInstrumentId } from "@/data/mock/token-provi
 import { formatNumber, formatPercent } from "@/lib/format";
 import type { MarketInstrumentDetail } from "@/types/market";
 
-const NONE = "none";
-
 function findTokenInstrument(id: string): MarketInstrumentDetail | undefined {
   return TOKEN_INSTRUMENTS.find((instrument) => instrument.id === id);
 }
@@ -27,7 +25,7 @@ function findTokenInstrument(id: string): MarketInstrumentDetail | undefined {
  */
 export function TokenPriceSection() {
   const [instrumentId, setInstrumentId] = useState(tokenInstrumentId(DEFAULT_TOKEN_LAB_ID));
-  const instrument = findTokenInstrument(instrumentId) ?? TOKEN_INSTRUMENTS[0]!;
+  const instrument = findTokenInstrument(instrumentId) ?? findTokenInstrument(tokenInstrumentId(DEFAULT_TOKEN_LAB_ID))!;
   const chart = useInstrumentChart(instrument, findTokenInstrument);
   const comparisonLabels = chart.comparisonIds
     .map((id) => instrument.comparisons.find((option) => option.instrumentId === id)?.label)
@@ -57,10 +55,7 @@ export function TokenPriceSection() {
             </SelectMenu>
             <MultiSelectMenu
               label="Compare with"
-              options={[
-                { id: NONE, label: "None" },
-                ...instrument.comparisons.map((option) => ({ id: option.instrumentId, label: option.label })),
-              ].filter((option) => option.id !== NONE)}
+              options={instrument.comparisons.map((option) => ({ id: option.instrumentId, label: option.label }))}
               selected={chart.comparisonIds}
               max={MAX_COMPARISONS}
               onToggle={chart.toggleComparison}

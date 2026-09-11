@@ -57,7 +57,7 @@ export function ComputeAnalyticsPage() {
         </nav>
 
         <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-neutral-500">Forward curve and payback follow the selected accelerator; fleet utilization shows all five.</p>
+          <p className="text-xs text-neutral-500">Forward curve and payback follow the selected accelerator; fleet utilization shows every accelerator.</p>
           <SelectMenu
             label="Accelerator"
             options={COMPUTE_INSTRUMENTS.map((option) => ({ id: option.id, label: option.shortLabel }))}

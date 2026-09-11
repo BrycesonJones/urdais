@@ -118,8 +118,8 @@ export type MarketFamily = {
   label: string;
   /** Empty when the family exists in the taxonomy but has no instruments yet. */
   instruments: MarketInstrumentDetail[];
-  /** Instrument selected when the family is switched to; the first instrument otherwise. */
-  defaultInstrumentId?: string;
+  /** Instrument selected when the family is switched to, e.g. HBM3E for HBM, Anthropic for Tokens. */
+  defaultInstrumentId: string;
   /** A deeper analytical destination for this family, offered as a contextual link. */
   explore?: { label: string; href: string };
 };

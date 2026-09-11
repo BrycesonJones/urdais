@@ -6,14 +6,13 @@ import { SectionHeading } from "@/components/analytics/section-heading";
 import { useContainerSize } from "@/components/charts/use-container-size";
 import { findPayback } from "@/data/mock/compute-analytics";
 import { formatNumber } from "@/lib/format";
-import type { Tenor } from "@/types/compute-analytics";
+import { TENOR_LABEL } from "@/types/compute-analytics";
 
 const BAR = "#526fe0";
 const BAR_SPOT = "#8ca4ff";
 const AXIS_TEXT = "#8a8a8a";
 const GRID_LINE = "rgba(255,255,255,0.06)";
 const PADDING = { top: 24, right: 48, bottom: 30, left: 8 };
-const TENOR_LABEL: Record<Tenor, string> = { spot: "Spot", "1M": "1M", "3M": "3M", "6M": "6M", "1Y": "1Y" };
 
 /**
  * Payback Period: years to recover the selected accelerator's acquisition
@@ -25,7 +24,7 @@ const TENOR_LABEL: Record<Tenor, string> = { spot: "Spot", "1M": "1M", "3M": "3M
 export function PaybackPeriodChart({ instrumentId }: { instrumentId: string }) {
   const analysis = findPayback(instrumentId);
   const { ref, size } = useContainerSize<HTMLDivElement>();
-  const spot = analysis.points[0]!;
+  const spot = analysis.points.find((point) => point.tenor === "spot")!;
   const viable = analysis.points.filter((point) => point.paybackYears !== null);
 
   const geometry = useMemo(() => {
@@ -44,7 +43,7 @@ export function PaybackPeriodChart({ instrumentId }: { instrumentId: string }) {
     const x = (index: number) => plotLeft + slot * index + (slot - barWidth) / 2;
     const yTicks: number[] = [];
     for (let value = 0; value <= yMax + step / 2; value += step) yTicks.push(value);
-    return { plotLeft, plotRight, plotTop, plotBottom, y, x, barWidth, slot, yTicks, decimals: step < 1 ? 1 : 0 };
+    return { plotLeft, plotRight, plotBottom, y, x, barWidth, yTicks, decimals: step < 1 ? 1 : 0 };
   }, [size, instrumentId]);
 
   const description = `${analysis.label} payback years by tenor at ${formatNumber(analysis.utilizationPercent, 0)}% utilization: ${analysis.points
@@ -84,7 +83,7 @@ export function PaybackPeriodChart({ instrumentId }: { instrumentId: string }) {
                 <title>{`${TENOR_LABEL[point.tenor]}: ${point.paybackYears === null ? "not economic" : `${formatNumber(point.paybackYears, 1)} years`}`}</title>
                 {point.paybackYears !== null ? (
                   <>
-                    <rect x={geometry.x(index)} y={geometry.y(point.paybackYears)} width={geometry.barWidth} height={geometry.plotBottom - geometry.y(point.paybackYears)} fill={index === 0 ? BAR_SPOT : BAR} fillOpacity={index === 0 ? 1 : 0.75} />
+                    <rect x={geometry.x(index)} y={geometry.y(point.paybackYears)} width={geometry.barWidth} height={geometry.plotBottom - geometry.y(point.paybackYears)} fill={point.tenor === "spot" ? BAR_SPOT : BAR} fillOpacity={point.tenor === "spot" ? 1 : 0.75} />
                     <text x={geometry.x(index) + geometry.barWidth / 2} y={geometry.y(point.paybackYears) - 6} fill="#e5e7eb" fontSize={11} textAnchor="middle" className="tabular-nums">{formatNumber(point.paybackYears, 1)}y</text>
                   </>
                 ) : (

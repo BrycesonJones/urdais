@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { SectionHeading } from "@/components/analytics/section-heading";
+import { useContainerSize } from "@/components/charts/use-container-size";
 import { FRONTIER_POINTS, SHARE_WINDOW_DAYS } from "@/data/mock/model-economics";
 import { TOKEN_UNIT } from "@/data/mock/token-providers";
 import { formatCompact, formatNumber } from "@/lib/format";
@@ -24,8 +25,6 @@ const MAX_RADIUS = 16;
 const PRICE_TICKS = [0.25, 0.5, 1, 2, 5, 10, 20];
 const NARROW_CHART_WIDTH = 560;
 
-type Size = { width: number; height: number };
-
 const accessLabel = (point: FrontierPoint) => (point.accessClass === "open-weight" ? "Open-weight" : "Proprietary");
 
 /**
@@ -33,27 +32,13 @@ const accessLabel = (point: FrontierPoint) => (point.accessClass === "open-weigh
  * the roster, point size by observed volume, with open-weight models drawn
  * solid and proprietary models drawn as outlined rings so the classes differ
  * by more than colour. A thin dashed line traces the Pareto frontier of
- * non-dominated models. Hovering a point shows its full readout; each point
- * also carries an accessible name with the same facts.
+ * non-dominated models. Hovering a point shows its full readout. The SVG is
+ * a named group rather than a single image so that each point's own
+ * accessible name, carrying the same facts, stays reachable.
  */
 export function ModelFrontierChart() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState<Size | null>(null);
+  const { ref: containerRef, size } = useContainerSize<HTMLDivElement>();
   const [activeId, setActiveId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const observer = new ResizeObserver(([entry]) => {
-      if (!entry) return;
-      const { width, height } = entry.contentRect;
-      setSize((current) =>
-        current && current.width === width && current.height === height ? current : { width, height },
-      );
-    });
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, []);
 
   const geometry = useMemo(() => {
     if (!size || size.width <= 0 || size.height <= 0) return null;
@@ -128,7 +113,7 @@ export function ModelFrontierChart() {
       <div ref={containerRef} className="relative mt-6 h-[360px] sm:h-[420px]">
         {geometry && size && (
           <svg
-            role="img"
+            role="group"
             aria-label="Model Frontier: capability score against blended token price"
             width={size.width}
             height={size.height}

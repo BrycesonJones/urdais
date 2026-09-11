@@ -107,7 +107,9 @@ function navigate(key: string, index: number, count: number): number | null {
 }
 
 type TriggerProps = {
+  /** Full accessible name: the control's label plus its current value, so the visible text is part of the name. */
   label: string;
+  /** Primary triggers read as the main choice; secondary ones sit a step back. */
   open: boolean;
   listId: string;
   emphasis: "primary" | "secondary";
@@ -178,13 +180,11 @@ type SelectMenuProps = {
   /** Accessible name of the control, e.g. "Instrument". */
   label: string;
   options: SelectMenuOption[];
-  /** Id of the selected option; null when nothing is selected. */
-  value: string | null;
+  /** Id of the selected option. */
+  value: string;
   onChange: (id: string) => void;
   /** Closed-state trigger content. */
   children: ReactNode;
-  /** Primary triggers read as the main choice; secondary ones sit a step back. */
-  emphasis?: "primary" | "secondary";
   className?: string;
 };
 
@@ -195,7 +195,7 @@ type SelectMenuProps = {
  * Enter or Space selects and closes, Escape closes, and focus returns to
  * the trigger.
  */
-export function SelectMenu({ label, options, value, onChange, children, emphasis = "primary", className }: SelectMenuProps) {
+export function SelectMenu({ label, options, value, onChange, children, className }: SelectMenuProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -206,6 +206,7 @@ export function SelectMenu({ label, options, value, onChange, children, emphasis
   const listId = `${baseId}-listbox`;
   const optionId = (index: number) => `${baseId}-option-${index}`;
   useActiveOptionVisible(open, optionId(activeIndex));
+  const selectedLabel = options.find((option) => option.id === value)?.label;
 
   useEffect(() => {
     if (open) listRef.current?.focus();
@@ -254,10 +255,10 @@ export function SelectMenu({ label, options, value, onChange, children, emphasis
   return (
     <div ref={rootRef} onBlur={handleBlur} className={["relative", className].filter(Boolean).join(" ")}>
       <MenuTrigger
-        label={label}
+        label={selectedLabel ? `${label}: ${selectedLabel}` : label}
         open={open}
         listId={listId}
-        emphasis={emphasis}
+        emphasis="primary"
         onClick={() => (open ? closeMenu(false) : openMenu())}
         onKeyDown={handleTriggerKeyDown}
         triggerRef={triggerRef}
@@ -307,7 +308,6 @@ type MultiSelectMenuProps = {
   limitNote: string;
   /** Closed-state trigger content. */
   children: ReactNode;
-  emphasis?: "primary" | "secondary";
   className?: string;
 };
 
@@ -327,7 +327,6 @@ export function MultiSelectMenu({
   onClear,
   limitNote,
   children,
-  emphasis = "secondary",
   className,
 }: MultiSelectMenuProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -342,6 +341,9 @@ export function MultiSelectMenu({
   const optionId = (index: number) => `${baseId}-option-${index}`;
   useActiveOptionVisible(open, optionId(activeIndex));
   const atLimit = selected.length >= max;
+  const selectedLabels = selected
+    .map((id) => options.find((option) => option.id === id)?.label)
+    .filter((candidate): candidate is string => Boolean(candidate));
 
   useEffect(() => {
     if (open) listRef.current?.focus();
@@ -399,10 +401,10 @@ export function MultiSelectMenu({
   return (
     <div ref={rootRef} onBlur={handleBlur} className={["relative", className].filter(Boolean).join(" ")}>
       <MenuTrigger
-        label={label}
+        label={selectedLabels.length > 0 ? `${label}, ${selectedLabels.length} selected: ${selectedLabels.join(", ")}` : label}
         open={open}
         listId={listId}
-        emphasis={emphasis}
+        emphasis="secondary"
         onClick={() => (open ? closeMenu(false) : openMenu())}
         onKeyDown={handleTriggerKeyDown}
         triggerRef={triggerRef}

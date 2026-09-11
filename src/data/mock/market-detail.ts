@@ -1,5 +1,5 @@
 /**
- * Deterministic market detail data: the four routed Urdais markets, their
+ * Deterministic market detail data: the nine routed Urdais markets, their
  * instrument families, and long mock histories for the detail chart.
  *
  * Everything is generated from fixed seeds anchored at MOCK_AS_OF, so values
@@ -152,7 +152,7 @@ const TOKEN_SPECS: InstrumentSpec[] = TOKEN_LABS_SORTED.map((lab) => ({
 }));
 
 /** Instruments in one family share a unit, so each may be compared with the others on absolute values. */
-export function buildFamilyInstruments(specs: InstrumentSpec[]): MarketInstrumentDetail[] {
+function buildFamilyInstruments(specs: InstrumentSpec[]): MarketInstrumentDetail[] {
   return specs.map((spec) =>
     buildInstrument(
       spec,
@@ -174,6 +174,7 @@ const UCPI_MARKET: MarketDetail = {
       id: "compute",
       label: "Compute",
       instruments: buildFamilyInstruments(COMPUTE_SPECS),
+      defaultInstrumentId: "ucpi-h100-sxm",
       explore: { label: "Explore Compute Analytics", href: COMPUTE_ANALYTICS_HREF },
     },
     {
@@ -185,85 +186,6 @@ const UCPI_MARKET: MarketDetail = {
     },
   ],
 };
-
-/* ---------- Standalone indices ---------- */
-
-/** The instrument that stands for each routed market when it is used as a comparison. */
-const HEADLINE_INSTRUMENT_ID: Record<string, string> = {
-  UCPI: "ucpi-h100-sxm",
-  UMPI: "hbm-hbm3e",
-  UPPI: "optics-800g",
-  UEPI: "power-ercot",
-};
-
-function headlineInstrumentId(symbol: string): string {
-  return HEADLINE_INSTRUMENT_ID[symbol] ?? symbol.toLowerCase();
-}
-
-/**
- * An index compares with every other routed market's headline instrument.
- * Their units and scales differ, so the comparison is relative: both series
- * are rebased to percentage change over the selected range.
- */
-function indexComparisons(symbol: string): ComparisonOption[] {
-  return MARKET_CATALOG.filter((market) => market.symbol !== symbol).map((market) => ({
-    instrumentId: headlineInstrumentId(market.symbol),
-    label: market.symbol,
-    basis: "relative" as const,
-  }));
-}
-
-/** An index market is a single-instrument family compared against the other indices. */
-function buildIndexMarket(
-  symbol: string,
-  unit: string,
-  daily: Omit<DailySeriesConfig, "asOf">,
-  intraday: IntradaySeriesConfig,
-): MarketDetail {
-  const identity = catalogEntry(symbol);
-  const spec: InstrumentSpec = {
-    id: symbol.toLowerCase(),
-    shortLabel: symbol,
-    symbol,
-    name: identity.name,
-    unit,
-    daily: { ...daily, asOf: MOCK_AS_OF },
-    intraday,
-  };
-  const instrument = buildInstrument(spec, indexComparisons(symbol));
-  const family: MarketFamily = { id: "index", label: "Index", instruments: [instrument] };
-  return {
-    symbol: spec.symbol,
-    name: spec.name,
-    unit: spec.unit,
-    defaultInstrumentId: instrument.id,
-    families: [family],
-  };
-}
-
-// Long upward trend, read forwards.
-const UGAI_MARKET = buildIndexMarket(
-  "UGAI",
-  "pts",
-  { seed: 20140601, latestValue: 184.21, latestDailyReturn: 0.0114, points: LONG_HISTORY_DAYS, volatility: 0.011, drift: 0.0004 },
-  { seed: 4_400_000, days: 7, volatility: 0.006 },
-);
-
-// Volatility oscillates around a level instead of trending.
-const UAVI_MARKET = buildIndexMarket(
-  "UAVI",
-  "pts",
-  {
-    seed: 20150915,
-    latestValue: 27.84,
-    latestDailyReturn: -0.0312,
-    points: LONG_HISTORY_DAYS,
-    volatility: 0.03,
-    drift: 0,
-    meanReversion: { level: 30, strength: 0.03 },
-  },
-  { seed: 5_500_000, days: 7, volatility: 0.015 },
-);
 
 /* ---------- UMPI: memory families ---------- */
 
@@ -439,8 +361,8 @@ const UPPI_MARKET: MarketDetail = {
  * UEPI, the Urdais Energy & Power Index, asks what powering Information
  * Age infrastructure costs. Its first family is Wholesale Power: a
  * generalised daily wholesale electricity-price benchmark for each
- * organised U.S. market, in $/MWh. The family is market-entity-first (PJM,
- * ERCOT, …), with geography kept as instrument metadata, because wholesale
+ * organised U.S. market, in $/MWh. The family is market-entity-first (ERCOT,
+ * PJM, …), with geography kept as instrument metadata, because wholesale
  * power is priced by the market operator. A future Data Center Power
  * family will be geography-first instead (Northern Virginia, Georgia,
  * Texas, …): the price ultimately faced by compute operators, including
@@ -454,7 +376,7 @@ const UPPI_MARKET: MarketDetail = {
  * loads, grid constraints, storage, flexible demand, and rapid power-market
  * change converge particularly strongly in Texas. The benchmark is metadata
  * (the market's default instrument) and may change as the Information Age
- * power market evolves. PJM remains a first-class instrument in the family.
+ * power market evolves; the other markets are plain instruments in the family.
  *
  * The exact hub, zone, and product (day-ahead, real-time, congestion) each
  * benchmark represents is provisional and belongs to the data phase; the
@@ -542,6 +464,81 @@ const UEPI_MARKET: MarketDetail = {
  * Each answers a different question, so they are never merged.
  */
 
+/* ---------- Standalone indices ---------- */
+
+/** Routed markets with instrument families; each names its own headline benchmark. */
+const FAMILY_MARKETS: MarketDetail[] = [UCPI_MARKET, UMPI_MARKET, UPPI_MARKET, UEPI_MARKET];
+
+/** The instrument that stands for a market used as a comparison: its headline benchmark, or the index itself. */
+function headlineInstrumentId(symbol: string): string {
+  return FAMILY_MARKETS.find((market) => market.symbol === symbol)?.defaultInstrumentId ?? symbol.toLowerCase();
+}
+
+/**
+ * An index compares with every other routed market's headline instrument.
+ * Their units and scales differ, so the comparison is relative: both series
+ * are rebased to percentage change over the selected range.
+ */
+function indexComparisons(symbol: string): ComparisonOption[] {
+  return MARKET_CATALOG.filter((market) => market.symbol !== symbol).map((market) => ({
+    instrumentId: headlineInstrumentId(market.symbol),
+    label: market.symbol,
+    basis: "relative" as const,
+  }));
+}
+
+/** An index market is a single-instrument family compared against the other indices. */
+function buildIndexMarket(
+  symbol: string,
+  unit: string,
+  daily: Omit<DailySeriesConfig, "asOf">,
+  intraday: IntradaySeriesConfig,
+): MarketDetail {
+  const identity = catalogEntry(symbol);
+  const spec: InstrumentSpec = {
+    id: symbol.toLowerCase(),
+    shortLabel: symbol,
+    symbol,
+    name: identity.name,
+    unit,
+    daily: { ...daily, asOf: MOCK_AS_OF },
+    intraday,
+  };
+  const instrument = buildInstrument(spec, indexComparisons(symbol));
+  const family: MarketFamily = { id: "index", label: "Index", instruments: [instrument], defaultInstrumentId: instrument.id };
+  return {
+    symbol: spec.symbol,
+    name: spec.name,
+    unit: spec.unit,
+    defaultInstrumentId: instrument.id,
+    families: [family],
+  };
+}
+
+// Long upward trend, read forwards.
+const UGAI_MARKET = buildIndexMarket(
+  "UGAI",
+  "pts",
+  { seed: 20140601, latestValue: 184.21, latestDailyReturn: 0.0114, points: LONG_HISTORY_DAYS, volatility: 0.011, drift: 0.0004 },
+  { seed: 4_400_000, days: 7, volatility: 0.006 },
+);
+
+// Volatility oscillates around a level instead of trending.
+const UAVI_MARKET = buildIndexMarket(
+  "UAVI",
+  "pts",
+  {
+    seed: 20150915,
+    latestValue: 27.84,
+    latestDailyReturn: -0.0312,
+    points: LONG_HISTORY_DAYS,
+    volatility: 0.03,
+    drift: 0,
+    meanReversion: { level: 30, strength: 0.03 },
+  },
+  { seed: 5_500_000, days: 7, volatility: 0.015 },
+);
+
 /**
  * UACI is an aggregate measure of AI processor and chip market economics:
  * what AI silicon costs. Underlying series may later include GPU silicon,
@@ -628,5 +625,6 @@ export function findInstrumentById(instrumentId: string): MarketInstrumentDetail
 
 /** The instrument shown when a market is first opened. */
 export function defaultInstrument(market: MarketDetail): MarketInstrumentDetail {
-  return findInstrument(market, market.defaultInstrumentId) ?? market.families[0]!.instruments[0]!;
+  // Every market declares a headline that exists in one of its families.
+  return findInstrument(market, market.defaultInstrumentId)!;
 }

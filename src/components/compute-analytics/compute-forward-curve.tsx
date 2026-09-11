@@ -7,7 +7,8 @@ import { SectionHeading } from "@/components/analytics/section-heading";
 import { useContainerSize } from "@/components/charts/use-container-size";
 import { findForwardCurve } from "@/data/mock/compute-analytics";
 import { formatNumber, formatPercent } from "@/lib/format";
-import type { CurveShape, Tenor } from "@/types/compute-analytics";
+import { TENOR_LABEL } from "@/types/compute-analytics";
+import type { CurveShape } from "@/types/compute-analytics";
 
 const LINE = "#b6c7ff";
 const MARKER = "#8ca4ff";
@@ -17,7 +18,6 @@ const CROSSHAIR = "#aab2c5";
 const SURFACE = "#0a0a0a";
 const PADDING = { top: 20, right: 64, bottom: 30, left: 40 };
 
-const TENOR_LABEL: Record<Tenor, string> = { spot: "Spot", "1M": "1M", "3M": "3M", "6M": "6M", "1Y": "1Y" };
 const SHAPE_LABEL: Record<CurveShape, string> = { downward: "Downward sloping", flat: "Flat", upward: "Upward sloping" };
 
 /**
@@ -31,7 +31,7 @@ export function ComputeForwardCurve({ instrumentId }: { instrumentId: string }) 
   const curve = findForwardCurve(instrumentId);
   const { ref, size } = useContainerSize<HTMLDivElement>();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const oneYear = curve.marks[curve.marks.length - 1]!;
+  const oneYear = curve.marks.find((mark) => mark.tenor === "1Y")!;
 
   const geometry = useMemo(() => {
     if (!size || size.width <= 0 || size.height <= 0) return null;
@@ -126,7 +126,7 @@ export function ComputeForwardCurve({ instrumentId }: { instrumentId: string }) 
             {curve.marks.map((mark, index) => (
               <g key={mark.tenor}>
                 <title>{`${TENOR_LABEL[mark.tenor]}: $${formatNumber(mark.forwardPricePerGpuHour)} per GPU-hour, ${formatPercent(mark.changeVsSpotPercent, 1)} vs spot`}</title>
-                <circle cx={geometry.x(index)} cy={geometry.y(mark.forwardPricePerGpuHour)} r={index === activeIndex ? 6 : 4.5} fill={index === 0 ? MARKER : SURFACE} stroke={LINE} strokeWidth={2} />
+                <circle cx={geometry.x(index)} cy={geometry.y(mark.forwardPricePerGpuHour)} r={index === activeIndex ? 6 : 4.5} fill={mark.tenor === "spot" ? MARKER : SURFACE} stroke={LINE} strokeWidth={2} />
               </g>
             ))}
             {active && activeIndex !== null && (

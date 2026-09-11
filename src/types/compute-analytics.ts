@@ -12,6 +12,8 @@ import type { TimeSeriesPoint } from "@/types/market";
 /** Term structure tenors, in display order. "spot" is the current UCPI mark. */
 export const TENORS = ["spot", "1M", "3M", "6M", "1Y"] as const;
 export type Tenor = (typeof TENORS)[number];
+/** Display label per tenor. */
+export const TENOR_LABEL: Record<Tenor, string> = { spot: "Spot", "1M": "1M", "3M": "3M", "6M": "6M", "1Y": "1Y" };
 
 /** Explicit hardware and operating assumptions per accelerator. Demo values, not quotes. */
 export type HardwareEconomics = {

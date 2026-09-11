@@ -8,7 +8,7 @@ import { isIntradayRange, periodPerformance, RANGE_LABELS, windowPoints } from "
 import type { ComparisonBasis, DetailRange, MarketDetail, MarketInstrumentDetail, PeriodPerformance } from "@/types/market";
 
 const DEFAULT_RANGE: DetailRange = "1M";
-/** V1 shows at most four series at once: the primary plus three comparisons. */
+/** At most four series show at once: the primary plus three comparisons. */
 export const MAX_COMPARISONS = 3;
 
 export type InstrumentChartOptions = {
@@ -23,7 +23,6 @@ export type InstrumentChartOptions = {
 };
 
 export type InstrumentChart = {
-  range: DetailRange;
   setRange: (range: DetailRange) => void;
   /** The range actually shown: the selected one, or the longest the history supports. */
   effectiveRange: DetailRange;
@@ -31,12 +30,11 @@ export type InstrumentChart = {
   comparisonIds: string[];
   toggleComparison: (instrumentId: string) => void;
   clearComparisons: () => void;
-  comparisons: MarketInstrumentDetail[];
   basis: ComparisonBasis;
   primarySeries: ChartSeries;
   comparisonSeries: ChartSeries[];
   performance: PeriodPerformance[];
-  /** Accessible chart name, e.g. "UCPI-H100 SXM chart, 1 month range, compared with UCPI-H200". */
+  /** Accessible chart name, e.g. "H100 SXM chart for the Urdais Compute Price Index, 1 month range, compared with H200". */
   label: string;
 };
 
@@ -123,14 +121,12 @@ export function useInstrumentChart(
   }`;
 
   return {
-    range,
     setRange,
     effectiveRange,
     intraday,
     comparisonIds,
     toggleComparison,
     clearComparisons: () => setComparisonIds([]),
-    comparisons,
     basis,
     primarySeries,
     comparisonSeries,

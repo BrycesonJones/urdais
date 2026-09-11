@@ -1,6 +1,6 @@
 import { SectionHeading } from "@/components/analytics/section-heading";
 import { HEADROOM_MODERATE_PERCENT, HEADROOM_ROWS, HEADROOM_TIGHT_PERCENT, TODAY_POINT } from "@/data/mock/power-analytics";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, formatQuarter } from "@/lib/format";
 import type { HeadroomState } from "@/types/power-analytics";
 
 const STATE_LABEL: Record<HeadroomState, string> = { tight: "Tight", moderate: "Moderate", available: "Available" };
@@ -8,11 +8,6 @@ const STATE_CLASS: Record<HeadroomState, string> = {
   tight: "border-[#c96b6b]/50 text-[#e0a0a0]",
   moderate: "border-[#d4a56a]/50 text-[#e2c08d]",
   available: "border-white/15 text-neutral-300",
-};
-
-const quarterLabel = (time: number) => {
-  const date = new Date(time * 1000);
-  return `Q${Math.floor(date.getUTCMonth() / 3) + 1} ${date.getUTCFullYear()}`;
 };
 
 /**
@@ -30,7 +25,7 @@ export function TransmissionHeadroom() {
         subtitle="Remaining physical capacity across major power markets"
         aside={
           <p className="text-xs text-neutral-500">
-            Headroom = deliverable capacity − peak load, {quarterLabel(TODAY_POINT.time)} · Tight &lt; {HEADROOM_TIGHT_PERCENT}%, Moderate &lt; {HEADROOM_MODERATE_PERCENT}%
+            Headroom = deliverable capacity − peak load, {formatQuarter(TODAY_POINT.time)} · Tight &lt; {HEADROOM_TIGHT_PERCENT}%, Moderate &lt; {HEADROOM_MODERATE_PERCENT}%
           </p>
         }
       />
