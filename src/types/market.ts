@@ -58,10 +58,20 @@ export type DetailedSeries = {
   intraday: TimeSeriesPoint[];
 };
 
-/** Another instrument in the same market whose series shares this one's unit. */
+/**
+ * How two series share one axis: "absolute" overlays raw values and needs a
+ * common unit; "relative" rebases both to percentage change from the start
+ * of the selected range, which is how instruments with different units or
+ * scales, such as the Urdais indices, are compared.
+ */
+export type ComparisonBasis = "absolute" | "relative";
+
+/** Another instrument this one may be compared with, and on what basis. */
 export type ComparisonOption = {
+  /** Globally unique instrument id; may belong to another market. */
   instrumentId: string;
   label: string;
+  basis: ComparisonBasis;
 };
 
 export type MarketInstrumentDetail = MarketIndex & {

@@ -12,7 +12,7 @@
  * not economic forecasts. Replace at the data boundary when the API lands.
  */
 
-import { catalogEntry } from "@/data/market-catalog";
+import { catalogEntry, MARKET_CATALOG } from "@/data/market-catalog";
 import { buildDailySeries, buildIntradaySeries } from "@/data/mock/series-generator";
 import type { DailySeriesConfig, IntradaySeriesConfig } from "@/data/mock/series-generator";
 import { MOCK_AS_OF, UCPI_DAILY_CONFIG, UCPI_INDEX, UCPI_INTRADAY_CONFIG } from "@/data/mock/ucpi";
@@ -178,14 +178,14 @@ const TOKEN_SPECS: InstrumentSpec[] = [
   ),
 ];
 
-/** Instruments in one family share a unit, so each may be compared with the others in it. */
+/** Instruments in one family share a unit, so each may be compared with the others on absolute values. */
 function buildFamilyInstruments(specs: InstrumentSpec[]): MarketInstrumentDetail[] {
   return specs.map((spec) =>
     buildInstrument(
       spec,
       specs
         .filter((other) => other.id !== spec.id)
-        .map((other) => ({ instrumentId: other.id, label: other.shortLabel })),
+        .map((other) => ({ instrumentId: other.id, label: other.shortLabel, basis: "absolute" as const })),
     ),
   );
 }
@@ -201,7 +201,27 @@ const UCPI_MARKET: MarketDetail = {
 
 /* ---------- Standalone indices ---------- */
 
-/** An index market is a single-instrument family with no comparable series yet. */
+/** The instrument that stands for each routed market when it is used as a comparison. */
+const HEADLINE_INSTRUMENT_ID: Record<string, string> = { UCPI: "ucpi-h100-sxm" };
+
+function headlineInstrumentId(symbol: string): string {
+  return HEADLINE_INSTRUMENT_ID[symbol] ?? symbol.toLowerCase();
+}
+
+/**
+ * An index compares with every other routed market's headline instrument.
+ * Their units and scales differ, so the comparison is relative: both series
+ * are rebased to percentage change over the selected range.
+ */
+function indexComparisons(symbol: string): ComparisonOption[] {
+  return MARKET_CATALOG.filter((market) => market.symbol !== symbol).map((market) => ({
+    instrumentId: headlineInstrumentId(market.symbol),
+    label: market.symbol,
+    basis: "relative" as const,
+  }));
+}
+
+/** An index market is a single-instrument family compared against the other indices. */
 function buildIndexMarket(
   symbol: string,
   unit: string,
@@ -218,7 +238,7 @@ function buildIndexMarket(
     daily: { ...daily, asOf: MOCK_AS_OF },
     intraday,
   };
-  const instrument = buildInstrument(spec, []);
+  const instrument = buildInstrument(spec, indexComparisons(symbol));
   const family: MarketFamily = { id: "index", label: "Index", instruments: [instrument] };
   return {
     symbol: spec.symbol,
@@ -277,6 +297,15 @@ export function findMarket(symbol: string): MarketDetail | undefined {
 export function findInstrument(market: MarketDetail, instrumentId: string): MarketInstrumentDetail | undefined {
   for (const family of market.families) {
     const match = family.instruments.find((instrument) => instrument.id === instrumentId);
+    if (match) return match;
+  }
+  return undefined;
+}
+
+/** Instrument ids are unique across markets, so comparisons can resolve across them. */
+export function findInstrumentById(instrumentId: string): MarketInstrumentDetail | undefined {
+  for (const market of MARKETS) {
+    const match = findInstrument(market, instrumentId);
     if (match) return match;
   }
   return undefined;

@@ -7,7 +7,7 @@ import type { ChartSeries } from "@/components/charts/detailed-market-chart";
 import { MarketHeader } from "@/components/market-detail/market-header";
 import { MarketSelectors } from "@/components/market-detail/market-selectors";
 import { PeriodPerformance } from "@/components/market-detail/period-performance";
-import { defaultInstrument, findInstrument } from "@/data/mock/market-detail";
+import { defaultInstrument, findInstrument, findInstrumentById } from "@/data/mock/market-detail";
 import { isIntradayRange, periodPerformance, RANGE_LABELS, windowPoints } from "@/lib/market-ranges";
 import type { DetailRange, MarketDetail } from "@/types/market";
 
@@ -25,7 +25,13 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
   const [range, setRange] = useState<DetailRange>(DEFAULT_RANGE);
 
   const instrument = findInstrument(market, instrumentId) ?? defaultInstrument(market);
-  const comparison = comparisonId ? (findInstrument(market, comparisonId) ?? null) : null;
+  // Comparisons may live in another market, and each option says whether the
+  // two series share an absolute axis or are rebased to percentage change.
+  const comparisonOption = comparisonId
+    ? (instrument.comparisons.find((option) => option.instrumentId === comparisonId) ?? null)
+    : null;
+  const comparison = comparisonOption ? (findInstrumentById(comparisonOption.instrumentId) ?? null) : null;
+  const basis = comparisonOption?.basis ?? "absolute";
   // A range the instrument's history cannot support falls back to its full history.
   const effectiveRange = instrument.availableRanges.includes(range) ? range : "ALL";
   const asOf = instrument.snapshot.asOf;
@@ -34,13 +40,23 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
   // Windows are memoised so the chart's hover state, which is keyed on the
   // points array, survives re-renders that do not change the window.
   const primarySeries = useMemo<ChartSeries>(
-    () => ({ id: instrument.id, label: instrument.symbol, points: windowPoints(instrument.series, effectiveRange, asOf) }),
+    () => ({
+      id: instrument.id,
+      label: instrument.symbol,
+      unit: instrument.unit,
+      points: windowPoints(instrument.series, effectiveRange, asOf),
+    }),
     [instrument, effectiveRange, asOf],
   );
   const comparisonSeries = useMemo<ChartSeries | null>(
     () =>
       comparison
-        ? { id: comparison.id, label: comparison.symbol, points: windowPoints(comparison.series, effectiveRange, asOf) }
+        ? {
+            id: comparison.id,
+            label: comparison.symbol,
+            unit: comparison.unit,
+            points: windowPoints(comparison.series, effectiveRange, asOf),
+          }
         : null,
     [comparison, effectiveRange, asOf],
   );
@@ -68,8 +84,8 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
         <DetailedMarketChart
           primary={primarySeries}
           comparison={comparisonSeries}
+          basis={basis}
           intraday={intraday}
-          unit={instrument.unit}
           label={`${instrument.symbol} chart, ${RANGE_LABELS[effectiveRange].toLowerCase()} range${
             comparison ? `, compared with ${comparison.symbol}` : ""
           }`}
