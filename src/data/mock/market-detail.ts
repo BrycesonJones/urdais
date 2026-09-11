@@ -173,7 +173,7 @@ const UCPI_MARKET: MarketDetail = {
 /* ---------- Standalone indices ---------- */
 
 /** The instrument that stands for each routed market when it is used as a comparison. */
-const HEADLINE_INSTRUMENT_ID: Record<string, string> = { UCPI: "ucpi-h100-sxm" };
+const HEADLINE_INSTRUMENT_ID: Record<string, string> = { UCPI: "ucpi-h100-sxm", UMPI: "hbm-hbm3e" };
 
 function headlineInstrumentId(symbol: string): string {
   return HEADLINE_INSTRUMENT_ID[symbol] ?? symbol.toLowerCase();
@@ -244,27 +244,92 @@ const UAVI_MARKET = buildIndexMarket(
   { seed: 5_500_000, days: 7, volatility: 0.015 },
 );
 
+/* ---------- UMPI: memory families ---------- */
+
 /**
- * UMPI is an aggregate measure of high-performance memory market economics
- * relevant to AI infrastructure. Underlying series may later include HBM3E
- * and HBM4 pricing in $/GB and $/GB/s; the aggregate is quoted in points.
- * Memory pricing is cyclical, so the demo history oscillates around a level
- * with a gentle upward drift rather than trending hard.
+ * UMPI, the Urdais Memory Price Index, is a Memory market with two
+ * instrument families that do not share a pricing unit:
+ *
+ *   DRAM  commodity parts priced per part ($/part); flagship DDR5 16Gb
+ *   HBM   AI-accelerator memory priced per gigabyte ($/GB); flagship HBM3E
+ *
+ * HBM3E is the current UMPI headline benchmark because UMPI emphasises
+ * AI-era memory economics. That is metadata (the market's default
+ * instrument) and may later move to HBM4 or another technology without
+ * restructuring the UI. DDR5 16Gb is the current DRAM-family benchmark,
+ * distinct from the market headline. Comparisons stay inside a family, so
+ * DRAM and HBM never share an absolute axis. Underlying series may later
+ * include $/GB/s bandwidth pricing; every value here is demo data.
  */
-const UMPI_MARKET = buildIndexMarket(
-  "UMPI",
-  "pts",
-  {
-    seed: 20160412,
-    latestValue: 142.63,
-    latestDailyReturn: 0.0182,
-    points: LONG_HISTORY_DAYS,
-    volatility: 0.014,
-    drift: 0.0002,
-    meanReversion: { level: 130, strength: 0.004 },
-  },
-  { seed: 7_100_000, days: 7, volatility: 0.007 },
-);
+const UMPI_IDENTITY = catalogEntry("UMPI");
+const DRAM_UNIT = "$/part";
+const HBM_UNIT = "$/GB";
+
+function memorySpec(
+  family: "dram" | "hbm",
+  part: string,
+  slug: string,
+  unit: string,
+  daily: Omit<DailySeriesConfig, "asOf">,
+  intraday: IntradaySeriesConfig,
+): InstrumentSpec {
+  return {
+    id: `${family}-${slug}`,
+    shortLabel: part,
+    symbol: `UMPI-${part}`,
+    name: `${UMPI_IDENTITY.name} · ${part} benchmark`,
+    unit,
+    daily: { ...daily, asOf: MOCK_AS_OF },
+    intraday,
+  };
+}
+
+/** Relevance-first, not legacy-first: the flagship leads. Commodity-like, slow, cyclical shapes. */
+const DRAM_SPECS: InstrumentSpec[] = [
+  memorySpec("dram", "DDR5 16Gb", "ddr5-16gb", DRAM_UNIT,
+    { seed: 20221101, latestValue: 5.2, latestDailyReturn: 0.0058, points: 1300, volatility: 0.008, drift: 0.0002, meanReversion: { level: 5.0, strength: 0.004 } },
+    { seed: 8_100_000, days: 7, volatility: 0.003 }),
+  memorySpec("dram", "DDR4 16Gb", "ddr4-16gb", DRAM_UNIT,
+    { seed: 20160301, latestValue: 3.1, latestDailyReturn: -0.0032, points: 2600, volatility: 0.007, drift: -0.0001, meanReversion: { level: 3.2, strength: 0.003 } },
+    { seed: 8_200_000, days: 7, volatility: 0.003 }),
+  memorySpec("dram", "DDR4 8Gb", "ddr4-8gb", DRAM_UNIT,
+    { seed: 20150601, latestValue: 1.85, latestDailyReturn: 0.0011, points: 2600, volatility: 0.007, drift: -0.0002, meanReversion: { level: 1.9, strength: 0.003 } },
+    { seed: 8_300_000, days: 7, volatility: 0.003 }),
+  memorySpec("dram", "DDR4 16Gb eTT", "ddr4-16gb-ett", DRAM_UNIT,
+    { seed: 20170901, latestValue: 2.4, latestDailyReturn: -0.0083, points: 1900, volatility: 0.012, drift: -0.0002, meanReversion: { level: 2.5, strength: 0.003 } },
+    { seed: 8_400_000, days: 7, volatility: 0.005 }),
+  memorySpec("dram", "DDR4 8Gb eTT", "ddr4-8gb-ett", DRAM_UNIT,
+    { seed: 20170902, latestValue: 1.35, latestDailyReturn: 0.0149, points: 1900, volatility: 0.013, drift: -0.0003, meanReversion: { level: 1.4, strength: 0.003 } },
+    { seed: 8_500_000, days: 7, volatility: 0.005 }),
+  // Legacy part with structurally declining relevance.
+  memorySpec("dram", "DDR3 4Gb", "ddr3-4gb", DRAM_UNIT,
+    { seed: 20130501, latestValue: 0.95, latestDailyReturn: -0.0021, points: LONG_HISTORY_DAYS, volatility: 0.009, drift: -0.0004 },
+    { seed: 8_600_000, days: 7, volatility: 0.004 }),
+];
+
+/** HBM3E leads as the current flagship; HBM4 is a first-class instrument so a future flagship transition needs no restructuring. */
+const HBM_SPECS: InstrumentSpec[] = [
+  memorySpec("hbm", "HBM3E", "hbm3e", HBM_UNIT,
+    { seed: 20240201, latestValue: 8.42, latestDailyReturn: 0.0124, points: 900, volatility: 0.015, drift: -0.0004 },
+    { seed: 8_700_000, days: 7, volatility: 0.006 }),
+  memorySpec("hbm", "HBM3", "hbm3", HBM_UNIT,
+    { seed: 20220601, latestValue: 6.1, latestDailyReturn: -0.0037, points: 1400, volatility: 0.012, drift: -0.0006 },
+    { seed: 8_800_000, days: 7, volatility: 0.005 }),
+  // Newer and premium, with the most volatile demo history.
+  memorySpec("hbm", "HBM4", "hbm4", HBM_UNIT,
+    { seed: 20250715, latestValue: 12.8, latestDailyReturn: 0.0216, points: 420, volatility: 0.022, drift: -0.0003 },
+    { seed: 8_900_000, days: 7, volatility: 0.009 }),
+];
+
+const UMPI_MARKET: MarketDetail = {
+  ...UMPI_IDENTITY,
+  unit: HBM_UNIT,
+  defaultInstrumentId: "hbm-hbm3e",
+  families: [
+    { id: "dram", label: "DRAM", instruments: buildFamilyInstruments(DRAM_SPECS), defaultInstrumentId: "dram-ddr5-16gb" },
+    { id: "hbm", label: "HBM", instruments: buildFamilyInstruments(HBM_SPECS), defaultInstrumentId: "hbm-hbm3e" },
+  ],
+};
 
 /**
  * UPPI is an aggregate measure of photonics and optical interconnect market

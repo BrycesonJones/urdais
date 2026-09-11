@@ -13,6 +13,7 @@ import type { IndexSnapshot } from "@/types/market";
 export const INDEX_SNAPSHOTS: IndexSnapshot[] = MARKETS.filter((market) => market.symbol !== "UCPI").map(
   (market) => {
     const instrument = defaultInstrument(market);
-    return { symbol: market.symbol, name: market.name, unit: market.unit, ...instrument.snapshot };
+    // The headline instrument's unit, since that is whose value the row shows.
+    return { symbol: market.symbol, name: market.name, unit: instrument.unit, ...instrument.snapshot };
   },
 );
