@@ -26,7 +26,7 @@ import type {
   MarketSnapshot,
 } from "@/types/market";
 
-/** About twelve years of daily closes, so All time is a long, believable history. */
+/** About twelve years of daily closes: far more than any selectable range needs. */
 const LONG_HISTORY_DAYS = 4400;
 
 const round = (value: number) => Math.round(value * 10_000) / 10_000;

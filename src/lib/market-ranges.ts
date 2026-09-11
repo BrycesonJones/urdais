@@ -1,12 +1,12 @@
 /**
  * Range windows and period returns for the market detail chart.
  *
- * A range is a window that ends at the instrument's latest observation. Its
- * base is the last observation at or before the window start, so the return
- * is measured from the close that precedes the window, the way "year to
- * date" is measured from the previous year's final close. Pure functions of
- * the series and the as-of time, so the same history always yields the same
- * numbers.
+ * A range is a trailing window that ends at the instrument's latest
+ * observation: one day, seven calendar days, or one, three, six, or twelve
+ * calendar months. Its base is the last observation at or before the window
+ * start, so the return is measured from the close that precedes the window.
+ * Pure functions of the series and the as-of time, so the same history
+ * always yields the same numbers.
  */
 
 import { DETAIL_RANGES } from "@/types/market";
@@ -16,17 +16,15 @@ const DAY = 86_400;
 
 export const RANGE_LABELS: Record<DetailRange, string> = {
   "1D": "1 day",
-  "5D": "5 days",
+  "1W": "1 week",
   "1M": "1 month",
   "3M": "3 months",
   "6M": "6 months",
-  YTD: "YTD",
   "1Y": "1 year",
-  ALL: "All time",
 };
 
 /** Ranges drawn from the 15-minute series rather than daily closes. */
-const INTRADAY_RANGES: ReadonlySet<DetailRange> = new Set(["1D", "5D"]);
+const INTRADAY_RANGES: ReadonlySet<DetailRange> = new Set(["1D", "1W"]);
 
 export function isIntradayRange(range: DetailRange): boolean {
   return INTRADAY_RANGES.has(range);
@@ -47,25 +45,23 @@ function shiftUtc(unixSeconds: number, { months = 0, years = 0 }: { months?: num
   );
 }
 
-/** Start of the window for a range, or null for the full history. */
-export function rangeStart(range: DetailRange, asOf: number): number | null {
+/** Start of the trailing window for a range. */
+export function rangeStart(range: DetailRange, asOf: number): number {
   switch (range) {
     case "1D":
       return asOf - DAY;
-    case "5D":
-      return asOf - 5 * DAY;
+    case "1W":
+      // Seven calendar days: Urdais markets are quoted continuously, so a
+      // five-observation trading week would be the wrong model.
+      return asOf - 7 * DAY;
     case "1M":
       return shiftUtc(asOf, { months: -1 });
     case "3M":
       return shiftUtc(asOf, { months: -3 });
     case "6M":
       return shiftUtc(asOf, { months: -6 });
-    case "YTD":
-      return Date.UTC(new Date(asOf * 1000).getUTCFullYear(), 0, 1) / 1000;
     case "1Y":
       return shiftUtc(asOf, { years: -1 });
-    case "ALL":
-      return null;
   }
 }
 
@@ -86,29 +82,34 @@ function baseIndex(points: TimeSeriesPoint[], time: number): number {
   return result;
 }
 
-function sourcePoints(series: DetailedSeries, range: DetailRange): TimeSeriesPoint[] {
-  return isIntradayRange(range) ? series.intraday : series.daily;
-}
-
 /**
- * Points inside the window, starting at the base observation. When the
- * history starts after the window does, the whole history is returned so a
- * shorter comparison series can still be drawn over a longer primary window.
+ * Points inside the window, starting at the base observation. Intraday
+ * windows draw the 15-minute series; when that series begins after the
+ * window opens, the daily close at the window start stands in as the base,
+ * since the fine series is pinned to those closes. When the history starts
+ * after the window does, the whole history is returned so a shorter
+ * comparison series can still be drawn over a longer primary window.
  */
 export function windowPoints(series: DetailedSeries, range: DetailRange, asOf: number): TimeSeriesPoint[] {
-  const points = sourcePoints(series, range);
   const start = rangeStart(range, asOf);
-  if (start === null) return points;
-  const base = baseIndex(points, start);
-  return base < 0 ? points : points.slice(base);
+  if (isIntradayRange(range)) {
+    const base = baseIndex(series.intraday, start);
+    if (base >= 0) return series.intraday.slice(base);
+    const dailyBase = baseIndex(series.daily, start);
+    const tail = series.intraday.filter((point) => point.time > start);
+    return dailyBase >= 0 ? [series.daily[dailyBase]!, ...tail] : tail;
+  }
+  const base = baseIndex(series.daily, start);
+  return base < 0 ? series.daily : series.daily.slice(base);
 }
 
 /** A range is supported when the history reaches back to the window's base. */
 export function isRangeAvailable(series: DetailedSeries, range: DetailRange, asOf: number): boolean {
-  const points = sourcePoints(series, range);
-  if (points.length < 2) return false;
   const start = rangeStart(range, asOf);
-  return start === null || baseIndex(points, start) >= 0;
+  if (isIntradayRange(range)) {
+    return series.intraday.length >= 2 && (baseIndex(series.intraday, start) >= 0 || baseIndex(series.daily, start) >= 0);
+  }
+  return series.daily.length >= 2 && baseIndex(series.daily, start) >= 0;
 }
 
 export function availableRanges(series: DetailedSeries, asOf: number): DetailRange[] {

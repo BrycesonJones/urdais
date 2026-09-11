@@ -45,8 +45,11 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
     [comparisonOptions],
   );
   const basis = comparisonOptions.some((option) => option.basis === "relative") ? "relative" : "absolute";
-  // A range the instrument's history cannot support falls back to its full history.
-  const effectiveRange = instrument.availableRanges.includes(range) ? range : "ALL";
+  // A range the instrument's history cannot support falls back to the
+  // longest one it can; the strip shows that range as the selected one.
+  const effectiveRange = instrument.availableRanges.includes(range)
+    ? range
+    : (instrument.availableRanges[instrument.availableRanges.length - 1] ?? "1D");
   const asOf = instrument.snapshot.asOf;
   const intraday = isIntradayRange(effectiveRange);
 

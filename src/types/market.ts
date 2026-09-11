@@ -50,7 +50,7 @@ export type IndexSnapshot = MarketIndex & MarketSnapshot;
  */
 
 /** Selectable windows on the detail chart, in display order. */
-export const DETAIL_RANGES = ["1D", "5D", "1M", "3M", "6M", "YTD", "1Y", "ALL"] as const;
+export const DETAIL_RANGES = ["1D", "1W", "1M", "3M", "6M", "1Y"] as const;
 
 export type DetailRange = (typeof DETAIL_RANGES)[number];
 
