@@ -69,6 +69,7 @@ export function FlexibleCapacityChart() {
         <li className="flex items-center gap-2"><span aria-hidden="true" className="inline-block size-3 rounded-[1px]" style={{ backgroundColor: INTERRUPTIBLE_FILL, opacity: 0.6 }} /><span className="text-neutral-200">Interruptible load</span></li>
         <li className="flex items-center gap-2"><span aria-hidden="true" className="inline-block size-3 rounded-[1px]" style={{ backgroundColor: BATTERY_FILL, opacity: 0.5 }} /><span className="text-neutral-200">Battery shifting</span></li>
         <li className="flex items-center gap-2"><span aria-hidden="true" className="inline-block h-[2px] w-4 rounded-full" style={{ backgroundColor: TOTAL_LINE }} /><span className="text-neutral-200">Total unlocked</span></li>
+        <li className="text-neutral-500">GW unlocked against flexible hours per year</li>
       </ul>
 
       <div ref={ref} className="relative mt-3 h-[260px] sm:h-[300px]">
@@ -91,8 +92,6 @@ export function FlexibleCapacityChart() {
                 <text x={geometry.x(scenario.flexibleHoursPerYear)} y={size.height - 10} fill={AXIS_TEXT} fontSize={11} textAnchor={scenario.flexibleHoursPerYear === 0 ? "start" : "middle"}>{scenario.flexibleHoursPerYear}</text>
               </g>
             ))}
-            <text x={geometry.plotRight} y={geometry.plotBottom + 24} fill={AXIS_TEXT} fontSize={10} textAnchor="end">flexible hours / year →</text>
-            <text x={geometry.plotLeft + 4} y={geometry.plotTop - 4} fill={AXIS_TEXT} fontSize={10}>GW unlocked</text>
           </svg>
         )}
       </div>

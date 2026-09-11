@@ -140,8 +140,17 @@ export function PowerDeliveryGapChart() {
                 <text x={geometry.plotRight + 8} y={geometry.y(tick)} fill={AXIS_TEXT} fontSize={11} dominantBaseline="middle" className="tabular-nums">{formatNumber(tick, 0)}</text>
               </g>
             ))}
-            {geometry.years.map((year) => (
-              <text key={year} x={geometry.x(Date.UTC(year, 0, 1) / 1000)} y={size.height - 10} fill={AXIS_TEXT} fontSize={11} textAnchor="middle">{year}</text>
+            {geometry.years.map((year, index) => (
+              <text
+                key={year}
+                x={geometry.x(Date.UTC(year, 0, 1) / 1000)}
+                y={size.height - 10}
+                fill={AXIS_TEXT}
+                fontSize={11}
+                textAnchor={index === 0 ? "start" : "middle"}
+              >
+                {year}
+              </text>
             ))}
             {geometry.gapPath && <path d={geometry.gapPath} fill={GAP_FILL} fillOpacity={0.22} />}
             <path d={geometry.capacityPath} fill="none" stroke={CAPACITY_LINE} strokeWidth={1.5} strokeLinejoin="round" />
