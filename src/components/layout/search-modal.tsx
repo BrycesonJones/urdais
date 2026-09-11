@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, MouseEvent } from "react";
 
 import { SearchIcon } from "@/components/icons/search-icon";
+import { searchMarketCatalog } from "@/data/market-catalog";
 
 type SearchModalProps = {
   open: boolean;
@@ -11,7 +14,10 @@ type SearchModalProps = {
 };
 
 /**
- * UI-only search dialog shell.
+ * Global search dialog. For now it searches only the first-class Urdais
+ * indices from the lightweight market catalog, filtered locally, and is the
+ * primary way to jump between their detail pages. Instruments, news, and
+ * pages join when a real catalog backend exists.
  *
  * Built on the native <dialog> element so that modal semantics, the top
  * layer, Escape handling, and focus restoration come from the platform
@@ -22,6 +28,8 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
+  const router = useRouter();
+  const results = searchMarketCatalog(query);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -35,7 +43,8 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
     }
   }, [open]);
 
-  // Fired for Escape, programmatic close(), and the close button alike.
+  // Fired for Escape, programmatic close(), and the close button alike, so
+  // every way of closing clears the query.
   function handleClose() {
     setQuery("");
     onClose();
@@ -47,9 +56,14 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
     if (event.target === event.currentTarget) onClose();
   }
 
+  // Enter in the input opens the first match; the result links remain the
+  // primary, tabbable way to navigate.
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    // Search is not implemented yet; never navigate on submit.
     event.preventDefault();
+    const first = results[0];
+    if (!first) return;
+    router.push(first.href);
+    onClose();
   }
 
   return (
@@ -81,7 +95,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             aria-label="Search Urdais"
-            placeholder="Search instruments, indices, and markets"
+            placeholder="Search indices"
             autoComplete="off"
             spellCheck={false}
             className="h-14 min-w-0 flex-1 bg-transparent text-base text-neutral-100 outline-none placeholder:text-neutral-500"
@@ -111,9 +125,35 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
           </button>
         </form>
 
-        <div className="px-4 py-8 text-center text-sm text-neutral-500">
-          Search functionality coming soon.
-        </div>
+        {results.length > 0 ? (
+          <nav aria-label="Search results" className="p-2">
+            <p className="px-2 pb-1 pt-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">
+              Indices
+            </p>
+            <ul>
+              {results.map((market) => (
+                <li key={market.symbol}>
+                  <Link
+                    href={market.href}
+                    onClick={onClose}
+                    className="group flex items-center gap-4 rounded-md px-2 py-2.5 transition-colors hover:bg-white/[0.06] focus-visible:bg-white/[0.06] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#8ca4ff]"
+                  >
+                    <span className="w-14 shrink-0 text-sm font-semibold text-neutral-50">{market.symbol}</span>
+                    <span className="min-w-0 flex-1 truncate text-sm text-neutral-400">{market.name}</span>
+                    <span
+                      aria-hidden="true"
+                      className="text-neutral-600 transition-colors group-hover:text-neutral-300 group-focus-visible:text-neutral-300"
+                    >
+                      →
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ) : (
+          <p className="px-4 py-8 text-center text-sm text-neutral-500">No matching indices.</p>
+        )}
       </div>
     </dialog>
   );

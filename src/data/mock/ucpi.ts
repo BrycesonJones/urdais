@@ -12,11 +12,14 @@
 
 import { buildDailySeries, buildIntradaySeries, STEPS_PER_DAY } from "@/data/mock/series-generator";
 import type { DailySeriesConfig, IntradaySeriesConfig } from "@/data/mock/series-generator";
+import { catalogEntry } from "@/data/market-catalog";
 import type { IndexSeries, MarketIndex, MarketSnapshot } from "@/types/market";
 
+const ucpi = catalogEntry("UCPI");
+
 export const UCPI_INDEX: MarketIndex = {
-  symbol: "UCPI",
-  name: "Urdais Compute Price Index",
+  symbol: ucpi.symbol,
+  name: ucpi.name,
   unit: "$/GPU-hour",
 };
 

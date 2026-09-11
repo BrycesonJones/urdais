@@ -67,6 +67,8 @@ export type ComparisonOption = {
 export type MarketInstrumentDetail = MarketIndex & {
   /** Stable id used for selection and comparison lookups, e.g. "ucpi-h100". */
   id: string;
+  /** Concise label for selectors within a family, e.g. "H100 SXM" for UCPI-H100 SXM. */
+  shortLabel: string;
   snapshot: MarketSnapshot;
   series: DetailedSeries;
   /** Ranges the history is long enough to support; others are shown disabled. */
