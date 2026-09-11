@@ -89,7 +89,7 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
   }
 
   return (
-    <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-8 text-neutral-50 sm:px-6 lg:px-8">
+    <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-6 text-neutral-50 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-screen-2xl">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <MarketHeader instrument={instrument} />
@@ -112,14 +112,17 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
           label={`${instrument.symbol} chart, ${RANGE_LABELS[effectiveRange].toLowerCase()} range${
             comparisons.length > 0 ? `, compared with ${comparisons.map((candidate) => candidate.symbol).join(", ")}` : ""
           }`}
-          className="mt-8 h-[380px] sm:h-[460px] lg:h-[580px]"
+          // Substantial but not the whole fold: on desktop the height follows the
+          // viewport between a usable floor and a cap, so the timeframe strip
+          // beneath stays discoverable on a typical laptop window.
+          className="mt-6 h-[320px] sm:h-[400px] lg:h-[clamp(340px,46vh,480px)]"
         />
 
         <PeriodPerformance
           performance={periodPerformance(instrument.series, asOf)}
           selected={effectiveRange}
           onSelect={setRange}
-          className="mt-4 border-t border-white/10 pt-4"
+          className="mt-3 border-t border-white/10 pt-3"
         />
       </div>
     </main>
