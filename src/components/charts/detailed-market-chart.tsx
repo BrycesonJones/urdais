@@ -90,9 +90,10 @@ const NO_COMPARISONS: ChartSeries[] = [];
  * with a y-axis of nice ticks and hairline grid, calendar-aligned x labels,
  * a clipped square-matrix field fading downward under the primary line, up
  * to three comparison lines on an absolute or rebased-percentage axis,
- * right-edge markers for every series' latest value, and a pointer
- * crosshair (vertical and horizontal guides, axis tags, a ring on every
- * series) with a compact readout listing each series at that time. Numbers
+ * right-edge markers for every series' latest value, and a free pointer
+ * crosshair: vertical and horizontal guides that follow the pointer with
+ * axis tags for the coordinate under it, while rings on every series and a
+ * compact readout inspect the observation nearest the crosshair's x. Numbers
  * shown here are also present as text elsewhere on the page, so the graphic
  * is a labelled illustration rather than the only source of a value.
  */
@@ -106,10 +107,12 @@ export function DetailedMarketChart({
 }: DetailedMarketChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<Size | null>(null);
-  // Hover is stored with the series it belongs to, so a range or instrument
-  // change implicitly clears it without an effect.
-  const [hover, setHover] = useState<{ points: TimeSeriesPoint[]; index: number } | null>(null);
-  const hoverIndex = hover && hover.points === primary.points ? hover.index : null;
+  // The crosshair is a free pointer position in plot coordinates, clamped
+  // to the plot. It is stored with the series it belongs to, so a range or
+  // instrument change implicitly clears it without an effect. Which
+  // observation the readout inspects is derived from its x alone.
+  const [pointer, setPointer] = useState<{ points: TimeSeriesPoint[]; x: number; y: number } | null>(null);
+  const crosshair = pointer && pointer.points === primary.points ? pointer : null;
 
   const baseId = useSvgId("detail");
   const ids = {
@@ -193,6 +196,9 @@ export function DetailedMarketChart({
 
     const x = (time: number) => plotLeft + ((time - tMin) / (tMax - tMin)) * plotWidth;
     const y = (value: number) => plotBottom - ((value - yMin) / (yMax - yMin)) * plotHeight;
+    // Inverses, for reading the time and axis value under a free pointer.
+    const timeAt = (px: number) => tMin + ((px - plotLeft) / plotWidth) * (tMax - tMin);
+    const valueAt = (py: number) => yMin + ((plotBottom - py) / plotHeight) * (yMax - yMin);
 
     const toPath = (points: PlotPoint[]) =>
       `M${points.map((point) => `${x(point.time).toFixed(1)},${y(point.plotted).toFixed(1)}`).join("L")}`;
@@ -213,6 +219,8 @@ export function DetailedMarketChart({
       plotBottom,
       x,
       y,
+      timeAt,
+      valueAt,
       primaryPath: toPath(primaryPlot),
       primaryArea: toArea(primaryPlot),
       fadeTop: Math.min(top(primaryPlot), fieldedComparison ? top(fieldedComparison.points) : Infinity),
@@ -231,14 +239,16 @@ export function DetailedMarketChart({
   function handlePointerMove(event: PointerEvent<SVGSVGElement>) {
     if (!geometry) return;
     const rect = event.currentTarget.getBoundingClientRect();
-    const px = event.clientX - rect.left;
-    const fraction = (px - geometry.plotLeft) / (geometry.plotRight - geometry.plotLeft);
-    const time = geometry.tMin + Math.min(Math.max(fraction, 0), 1) * (geometry.tMax - geometry.tMin);
-    setHover({ points: primary.points, index: nearestIndex(primary.points, time) });
+    const px = Math.min(Math.max(event.clientX - rect.left, geometry.plotLeft), geometry.plotRight);
+    const py = Math.min(Math.max(event.clientY - rect.top, geometry.plotTop), geometry.plotBottom);
+    setPointer({ points: primary.points, x: px, y: py });
   }
 
   const lastPrimary = primaryPlot[primaryPlot.length - 1];
-  const hoveredPrimary = hoverIndex === null ? null : primaryPlot[hoverIndex];
+  // Data inspection follows the crosshair's x only: the nearest observation
+  // to the time under the pointer, regardless of where the pointer is vertically.
+  const hoveredPrimary =
+    crosshair && geometry ? primaryPlot[nearestIndex(primary.points, geometry.timeAt(crosshair.x))] ?? null : null;
   // A shorter comparison history has no reading before its first point.
   const hoveredComparisons = comparisonPlots.map((comparison) => {
     if (!hoveredPrimary) return null;
@@ -276,8 +286,8 @@ export function DetailedMarketChart({
   // On narrow charts it cannot fit beside the pointer, so it anchors to the
   // plot edge opposite the pointer instead.
   const tooltipStyle = (() => {
-    if (!geometry || !hoveredPrimary || !size) return {};
-    const px = geometry.x(hoveredPrimary.time);
+    if (!geometry || !crosshair || !size) return {};
+    const px = crosshair.x;
     const onLeft = px > size.width * 0.55;
     if (size.width < NARROW_CHART_WIDTH) {
       return onLeft ? { left: geometry.plotLeft } : { right: PADDING.right };
@@ -316,7 +326,7 @@ export function DetailedMarketChart({
             viewBox={`0 0 ${size.width} ${size.height}`}
             className="block select-none"
             onPointerMove={handlePointerMove}
-            onPointerLeave={() => setHover(null)}
+            onPointerLeave={() => setPointer(null)}
           >
             <title>{label}</title>
             <desc>{description}</desc>
@@ -507,34 +517,29 @@ export function DetailedMarketChart({
               textColor={PRIMARY_MARKER_TEXT}
             />
 
-            {/* Crosshair: dashed guides through the hovered primary point, axis tags, and a ring on every series. */}
-            {hoveredPrimary && (
+            {/*
+              Free crosshair: dashed guides through the pointer itself, with axis
+              tags reading the coordinate under it. The rings mark the actual
+              observations nearest that x, so they sit on the lines rather than
+              at the crosshair intersection.
+            */}
+            {crosshair && hoveredPrimary && (
               <g pointerEvents="none">
                 <g stroke={CROSSHAIR_LINE} strokeOpacity={CROSSHAIR_OPACITY} strokeWidth={1} strokeDasharray={CROSSHAIR_DASH}>
-                  <line
-                    x1={geometry.x(hoveredPrimary.time)}
-                    x2={geometry.x(hoveredPrimary.time)}
-                    y1={geometry.plotTop}
-                    y2={geometry.plotBottom}
-                  />
-                  <line
-                    x1={geometry.plotLeft}
-                    x2={geometry.plotRight}
-                    y1={geometry.y(hoveredPrimary.plotted)}
-                    y2={geometry.y(hoveredPrimary.plotted)}
-                  />
+                  <line x1={crosshair.x} x2={crosshair.x} y1={geometry.plotTop} y2={geometry.plotBottom} />
+                  <line x1={geometry.plotLeft} x2={geometry.plotRight} y1={crosshair.y} y2={crosshair.y} />
                 </g>
                 <AxisTag
                   x={geometry.plotRight + 4}
-                  y={geometry.y(hoveredPrimary.plotted)}
-                  text={formatPlotted(hoveredPrimary.plotted)}
+                  y={crosshair.y}
+                  text={formatPlotted(geometry.valueAt(crosshair.y))}
                   fill={CROSSHAIR_TAG_FILL}
                   textColor={CROSSHAIR_TAG_TEXT}
                 />
                 <TimeTag
-                  x={Math.min(Math.max(geometry.x(hoveredPrimary.time), geometry.plotLeft + 36), geometry.plotRight - 36)}
+                  x={Math.min(Math.max(crosshair.x, geometry.plotLeft + 36), geometry.plotRight - 36)}
                   y={geometry.plotBottom + 4}
-                  text={formatAxisTime(hoveredPrimary.time, intraday)}
+                  text={formatAxisTime(geometry.timeAt(crosshair.x), intraday)}
                 />
                 {comparisonPlots.map((comparison, index) => {
                   const hovered = hoveredComparisons[index];
@@ -564,7 +569,7 @@ export function DetailedMarketChart({
         )}
 
         {/* Readout: a compact HTML tooltip beside the crosshair, flipping sides near the right edge. */}
-        {geometry && hoveredPrimary && (
+        {geometry && crosshair && hoveredPrimary && (
           <div
             className="pointer-events-none absolute z-10 rounded-md border border-white/10 bg-neutral-900/95 px-3 py-2 text-xs shadow-lg shadow-black/40"
             style={{ top: geometry.plotTop + 4, ...tooltipStyle }}
