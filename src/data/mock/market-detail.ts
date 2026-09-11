@@ -272,6 +272,42 @@ const UAVI_MARKET = buildIndexMarket(
   { seed: 5_500_000, days: 7, volatility: 0.015 },
 );
 
+/**
+ * UMPI is an aggregate measure of high-performance memory market economics
+ * relevant to AI infrastructure. Underlying series may later include HBM3E
+ * and HBM4 pricing in $/GB and $/GB/s; the aggregate is quoted in points.
+ * Memory pricing is cyclical, so the demo history oscillates around a level
+ * with a gentle upward drift rather than trending hard.
+ */
+const UMPI_MARKET = buildIndexMarket(
+  "UMPI",
+  "pts",
+  {
+    seed: 20160412,
+    latestValue: 142.63,
+    latestDailyReturn: 0.0182,
+    points: LONG_HISTORY_DAYS,
+    volatility: 0.014,
+    drift: 0.0002,
+    meanReversion: { level: 130, strength: 0.004 },
+  },
+  { seed: 7_100_000, days: 7, volatility: 0.007 },
+);
+
+/**
+ * UPPI is an aggregate measure of photonics and optical interconnect market
+ * economics relevant to AI infrastructure. Underlying series may later
+ * include optical transceivers, $/Gbps, optical bandwidth, and interconnect
+ * components; the aggregate is quoted in points. Read forwards, the demo
+ * history drifts gently lower: moving information keeps getting cheaper.
+ */
+const UPPI_MARKET = buildIndexMarket(
+  "UPPI",
+  "pts",
+  { seed: 20170808, latestValue: 96.41, latestDailyReturn: -0.0074, points: LONG_HISTORY_DAYS, volatility: 0.01, drift: -0.0002 },
+  { seed: 7_200_000, days: 7, volatility: 0.005 },
+);
+
 // Strong long-run growth with crypto-scale daily moves.
 const UBWI_MARKET = buildIndexMarket(
   "UBWI",
@@ -283,7 +319,14 @@ const UBWI_MARKET = buildIndexMarket(
 /* ---------- Lookup ---------- */
 
 /** Routed markets in display order; the first is the default for /markets. */
-export const MARKETS: MarketDetail[] = [UCPI_MARKET, UGAI_MARKET, UAVI_MARKET, UBWI_MARKET];
+export const MARKETS: MarketDetail[] = [
+  UCPI_MARKET,
+  UGAI_MARKET,
+  UAVI_MARKET,
+  UMPI_MARKET,
+  UPPI_MARKET,
+  UBWI_MARKET,
+];
 
 export const DEFAULT_MARKET_SYMBOL = UCPI_MARKET.symbol;
 
