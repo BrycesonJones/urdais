@@ -13,10 +13,12 @@
  */
 
 import { catalogEntry, MARKET_CATALOG } from "@/data/market-catalog";
+import { DEFAULT_TOKEN_LAB_ID, TOKEN_LABS_SORTED, TOKEN_UNIT, tokenInstrumentId } from "@/data/mock/token-providers";
 import { buildDailySeries, buildIntradaySeries } from "@/data/mock/series-generator";
 import type { DailySeriesConfig, IntradaySeriesConfig } from "@/data/mock/series-generator";
 import { MOCK_AS_OF, UCPI_DAILY_CONFIG, UCPI_INDEX, UCPI_INTRADAY_CONFIG } from "@/data/mock/ucpi";
 import { availableRanges } from "@/lib/market-ranges";
+import { MODEL_ECONOMICS_HREF } from "@/lib/routes";
 import type {
   ComparisonOption,
   MarketDetail,
@@ -124,114 +126,22 @@ const COMPUTE_SPECS: InstrumentSpec[] = [
 /* ---------- UCPI: token pricing ---------- */
 
 /**
- * Provider-level token pricing semantics are provisional. These are generic
- * per-provider demo series in $/1M tokens that exist to exercise the family
- * selector and data contract; real backend work may later distinguish input,
- * output, cached, batch, or reasoning token pricing series per model. The
- * values are not actual provider prices.
- *
- * The selector chooses the lab or provider, not a model. A later layer will
- * add model families and specific models beneath each provider:
- *
- *   Anthropic   → Claude
- *   OpenAI      → GPT
- *   Google      → Gemini
- *   DeepSeek    → DeepSeek
- *   Alibaba     → Qwen
- *   Moonshot AI → Kimi
- *   MiniMax     → MiniMax
- *   Xiaomi      → MiMo
- *   Meta        → Llama
- *   Zhipu AI    → GLM
+ * Provider-level token pricing built from the shared lab catalog in
+ * token-providers.ts; see that module for the provisional semantics. The
+ * same instruments back the Model Economics Token Price view.
  */
-const TOKEN_UNIT = "$/1M tokens";
-
-function tokenSpec(
-  provider: string,
-  slug: string,
-  daily: Omit<DailySeriesConfig, "asOf">,
-  intraday: IntradaySeriesConfig,
-): InstrumentSpec {
-  return {
-    id: `tokens-${slug}`,
-    shortLabel: provider,
-    symbol: provider,
-    name: "Token price benchmark · demo provider series",
-    unit: TOKEN_UNIT,
-    daily: { ...daily, asOf: MOCK_AS_OF },
-    intraday,
-  };
-}
-
-/** Labs are listed alphabetically in the selector; see TOKEN_SPECS_SORTED. */
-const TOKEN_SPECS: InstrumentSpec[] = [
-  tokenSpec(
-    "Anthropic",
-    "anthropic",
-    { seed: 20230301, latestValue: 9.0, latestDailyReturn: 0.0022, points: 900, volatility: 0.004, drift: -0.0009 },
-    { seed: 9_100_000, days: 7, volatility: 0.002 },
-  ),
-  tokenSpec(
-    "OpenAI",
-    "openai",
-    { seed: 20230302, latestValue: 7.5, latestDailyReturn: -0.0066, points: 900, volatility: 0.005, drift: -0.001 },
-    { seed: 9_200_000, days: 7, volatility: 0.002 },
-  ),
-  tokenSpec(
-    "Google",
-    "google",
-    { seed: 20230303, latestValue: 4.2, latestDailyReturn: 0.0024, points: 900, volatility: 0.005, drift: -0.0012 },
-    { seed: 9_300_000, days: 7, volatility: 0.002 },
-  ),
-  tokenSpec(
-    "DeepSeek",
-    "deepseek",
-    { seed: 20230304, latestValue: 1.1, latestDailyReturn: -0.0089, points: 700, volatility: 0.007, drift: -0.0015 },
-    { seed: 9_400_000, days: 7, volatility: 0.003 },
-  ),
-  tokenSpec(
-    "Alibaba",
-    "alibaba",
-    { seed: 20230305, latestValue: 2.4, latestDailyReturn: -0.0041, points: 800, volatility: 0.006, drift: -0.0013 },
-    { seed: 9_500_000, days: 7, volatility: 0.003 },
-  ),
-  tokenSpec(
-    "Moonshot AI",
-    "moonshot-ai",
-    { seed: 20230306, latestValue: 1.8, latestDailyReturn: 0.0056, points: 720, volatility: 0.008, drift: -0.0016 },
-    { seed: 9_600_000, days: 7, volatility: 0.003 },
-  ),
-  tokenSpec(
-    "MiniMax",
-    "minimax",
-    { seed: 20230307, latestValue: 1.2, latestDailyReturn: -0.0025, points: 700, volatility: 0.007, drift: -0.0011 },
-    { seed: 9_700_000, days: 7, volatility: 0.003 },
-  ),
-  tokenSpec(
-    "Xiaomi",
-    "xiaomi",
-    { seed: 20230308, latestValue: 0.9, latestDailyReturn: 0.0112, points: 600, volatility: 0.009, drift: -0.0018 },
-    { seed: 9_800_000, days: 7, volatility: 0.004 },
-  ),
-  tokenSpec(
-    "Meta",
-    "meta",
-    { seed: 20230309, latestValue: 3.1, latestDailyReturn: 0.0016, points: 900, volatility: 0.004, drift: -0.0008 },
-    { seed: 9_900_000, days: 7, volatility: 0.002 },
-  ),
-  tokenSpec(
-    "Zhipu AI",
-    "zhipu-ai",
-    { seed: 20230310, latestValue: 1.5, latestDailyReturn: -0.0067, points: 760, volatility: 0.007, drift: -0.0014 },
-    { seed: 9_950_000, days: 7, volatility: 0.003 },
-  ),
-];
-
-/** Alphabetical by display name, so the selector stays predictable as labs are added. */
-const TOKEN_SPECS_SORTED = [...TOKEN_SPECS].sort((a, b) => a.shortLabel.localeCompare(b.shortLabel, "en"));
+const TOKEN_SPECS: InstrumentSpec[] = TOKEN_LABS_SORTED.map((lab) => ({
+  id: tokenInstrumentId(lab.id),
+  shortLabel: lab.name,
+  symbol: lab.name,
+  name: "Token price benchmark · demo provider series",
+  unit: TOKEN_UNIT,
+  daily: { ...lab.price, asOf: MOCK_AS_OF },
+  intraday: lab.intraday,
+}));
 
 /** Instruments in one family share a unit, so each may be compared with the others on absolute values. */
-function buildFamilyInstruments(specs: InstrumentSpec[]): MarketInstrumentDetail[] {
+export function buildFamilyInstruments(specs: InstrumentSpec[]): MarketInstrumentDetail[] {
   return specs.map((spec) =>
     buildInstrument(
       spec,
@@ -242,6 +152,9 @@ function buildFamilyInstruments(specs: InstrumentSpec[]): MarketInstrumentDetail
   );
 }
 
+/** Every lab's token-price instrument, alphabetical, each comparable with the others. */
+export const TOKEN_INSTRUMENTS: MarketInstrumentDetail[] = buildFamilyInstruments(TOKEN_SPECS);
+
 const UCPI_MARKET: MarketDetail = {
   ...UCPI_INDEX,
   defaultInstrumentId: "ucpi-h100-sxm",
@@ -250,8 +163,9 @@ const UCPI_MARKET: MarketDetail = {
     {
       id: "tokens",
       label: "Tokens",
-      instruments: buildFamilyInstruments(TOKEN_SPECS_SORTED),
-      defaultInstrumentId: "tokens-anthropic",
+      instruments: TOKEN_INSTRUMENTS,
+      defaultInstrumentId: tokenInstrumentId(DEFAULT_TOKEN_LAB_ID),
+      explore: { label: "Explore Model Economics", href: MODEL_ECONOMICS_HREF },
     },
   ],
 };

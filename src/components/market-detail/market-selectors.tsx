@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { MultiSelectMenu, SELECTOR_FOCUS, SELECTOR_SURFACE, SelectMenu } from "@/components/market-detail/select-menu";
 import type { MarketDetail, MarketInstrumentDetail } from "@/types/market";
 
@@ -113,6 +115,18 @@ export function MarketSelectors({
             </span>
           )}
         </MultiSelectMenu>
+      )}
+
+      {family?.explore && (
+        <Link
+          href={family.explore.href}
+          className={`group inline-flex items-center gap-1.5 self-start rounded-sm text-sm text-neutral-400 transition-colors hover:text-neutral-100 ${SELECTOR_FOCUS}`}
+        >
+          {family.explore.label}
+          <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">
+            →
+          </span>
+        </Link>
       )}
     </div>
   );

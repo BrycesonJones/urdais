@@ -6,7 +6,7 @@
  * and routes are defined once.
  */
 
-import { marketIndexHref } from "@/lib/routes";
+import { marketIndexHref, MODEL_ECONOMICS_HREF } from "@/lib/routes";
 
 export type MarketCatalogEntry = {
   symbol: string;
@@ -30,6 +30,57 @@ export const MARKET_CATALOG: MarketCatalogEntry[] = [
   entry("UAXI", "Urdais Accelerator Index"),
   entry("UBWI", "Bitcoin Wealth Index"),
 ];
+
+/** An analytical market page that is not an index: discoverable in search under "Markets". */
+export type MarketPageEntry = {
+  id: string;
+  name: string;
+  description: string;
+  href: string;
+  /** Extra search terms beyond the name and description. */
+  keywords: string[];
+};
+
+export const MARKET_PAGES: MarketPageEntry[] = [
+  {
+    id: "model-economics",
+    name: "Model Economics",
+    description: "Token price, volume, market share, and capability",
+    href: MODEL_ECONOMICS_HREF,
+    keywords: [
+      "model",
+      "models",
+      "model economics",
+      "model pricing",
+      "model frontier",
+      "token",
+      "tokens",
+      "token economics",
+      "token price",
+      "token volume",
+      "market share",
+      "open weight",
+      "open-weight",
+      "proprietary",
+      "capability",
+      "frontier",
+      "utvi",
+      "labs",
+    ],
+  },
+];
+
+/** Case-insensitive match on the name and description at word boundaries, or on any keyword prefix. */
+export function searchMarketPages(query: string): MarketPageEntry[] {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return MARKET_PAGES;
+  return MARKET_PAGES.filter(
+    (page) =>
+      ` ${page.name.toLowerCase()}`.includes(` ${needle}`) ||
+      ` ${page.description.toLowerCase()}`.includes(` ${needle}`) ||
+      page.keywords.some((keyword) => keyword.startsWith(needle) || needle.startsWith(keyword)),
+  );
+}
 
 export function catalogEntry(symbol: string): MarketCatalogEntry {
   const match = MARKET_CATALOG.find((candidate) => candidate.symbol === symbol);

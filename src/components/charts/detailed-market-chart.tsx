@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { PointerEvent } from "react";
 
 import { useSvgId } from "@/components/charts/use-svg-id";
-import { formatAxisValue, formatPercent, formatTimestamp, formatValueWithUnit } from "@/lib/format";
+import { formatAxisValue, formatCompact, formatPercent, formatTimestamp, formatValueWithUnit } from "@/lib/format";
 import type { ComparisonBasis, TimeSeriesPoint } from "@/types/market";
 
 /** One line on the chart. Points must be chronological. */
@@ -27,6 +27,8 @@ type DetailedMarketChartProps = {
   basis?: ComparisonBasis;
   /** Whether points are intraday, which switches the axis and readout to time of day. */
   intraday: boolean;
+  /** Format values as K / M / B / T counts, for volume-like units such as tokens per day. */
+  compact?: boolean;
   /** Accessible name of the chart, e.g. "UCPI-H100 SXM chart, 1 month range". */
   label: string;
   className?: string;
@@ -102,6 +104,7 @@ export function DetailedMarketChart({
   comparisons = NO_COMPARISONS,
   basis = "absolute",
   intraday,
+  compact = false,
   label,
   className,
 }: DetailedMarketChartProps) {
@@ -258,10 +261,12 @@ export function DetailedMarketChart({
   });
 
   const formatPlotted = (value: number, decimals = 2) =>
-    relative ? formatPercent(value, decimals) : formatAxisValue(value, decimals, axisUnit);
+    relative ? formatPercent(value, decimals) : compact ? formatCompact(value) : formatAxisValue(value, decimals, axisUnit);
+  const formatReading = (value: number, unit: string) =>
+    compact ? `${formatCompact(value)} ${unit}` : formatValueWithUnit(value, unit);
 
   const description = geometry
-    ? describeChart(primary, visibleComparisons, relative, intraday, geometry.vMin, geometry.vMax, formatPlotted)
+    ? describeChart(primary, visibleComparisons, relative, intraday, geometry.vMin, geometry.vMax, formatPlotted, formatReading)
     : label;
 
   // Right-edge tags: the primary stays put and comparison tags are nudged
@@ -580,7 +585,7 @@ export function DetailedMarketChart({
                 color={PRIMARY_LINE}
                 width={2.5}
                 label={primary.label}
-                value={formatValueWithUnit(hoveredPrimary.value, primary.unit)}
+                value={formatReading(hoveredPrimary.value, primary.unit)}
                 note={relative ? formatPercent(hoveredPrimary.plotted) : null}
               />
               {comparisonPlots.map((comparison, index) => {
@@ -591,7 +596,7 @@ export function DetailedMarketChart({
                     color={comparison.color}
                     width={1.5}
                     label={comparison.series.label}
-                    value={formatValueWithUnit(hovered.value, comparison.series.unit)}
+                    value={formatReading(hovered.value, comparison.series.unit)}
                     note={relative ? formatPercent(hovered.plotted) : null}
                   />
                 ) : null;
@@ -847,17 +852,18 @@ function describeChart(
   vMin: number,
   vMax: number,
   formatPlotted: (value: number) => string,
+  formatReading: (value: number, unit: string) => string,
 ): string {
   const first = primary.points[0]!;
   const last = primary.points[primary.points.length - 1]!;
   const range = `${formatTimestamp(first.time, intraday)} to ${formatTimestamp(last.time, intraday)}`;
   const axis = relative ? "percentage change" : "values";
-  let text = `${primary.label} from ${range}: latest ${formatValueWithUnit(last.value, primary.unit)}, ${axis} plotted between ${formatPlotted(vMin)} and ${formatPlotted(vMax)}.`;
+  let text = `${primary.label} from ${range}: latest ${formatReading(last.value, primary.unit)}, ${axis} plotted between ${formatPlotted(vMin)} and ${formatPlotted(vMax)}.`;
   if (comparisons.length > 0) {
     const latest = comparisons
       .map((series) => {
         const lastPoint = series.points[series.points.length - 1];
-        return lastPoint ? `${series.label} latest ${formatValueWithUnit(lastPoint.value, series.unit)}` : series.label;
+        return lastPoint ? `${series.label} latest ${formatReading(lastPoint.value, series.unit)}` : series.label;
       })
       .join("; ");
     text += ` Compared with ${latest}${relative ? ", all rebased to the start of the range" : ""}.`;

@@ -6,10 +6,14 @@
  * domains are categories, not rankings, so they carry no numbering.
  */
 
+import { MODEL_ECONOMICS_HREF } from "@/lib/routes";
+
 export type MeasurementDomain = {
   domain: string;
   description: string;
   examples: string[];
+  /** Set once a domain has a real analytical destination; the row becomes a link. */
+  href?: string;
 };
 
 export const MEASUREMENT_DOMAINS: MeasurementDomain[] = [
@@ -42,6 +46,7 @@ export const MEASUREMENT_DOMAINS: MeasurementDomain[] = [
     domain: "Model Economics",
     description: "Price of machine intelligence",
     examples: ["$/1M input tokens", "$/1M output tokens", "Inference cost"],
+    href: MODEL_ECONOMICS_HREF,
   },
   {
     domain: "Crypto",

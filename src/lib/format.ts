@@ -67,3 +67,18 @@ export function formatUpdatedAt(unixSeconds: number): string {
   }).format(date);
   return `${day} · ${time} UTC`;
 }
+
+/** Large counts in K / M / B / T form, e.g. 14.82T. Values below a thousand keep two decimals. */
+export function formatCompact(value: number, fractionDigits = 2): string {
+  const abs = Math.abs(value);
+  const units: [number, string][] = [
+    [1e12, "T"],
+    [1e9, "B"],
+    [1e6, "M"],
+    [1e3, "K"],
+  ];
+  for (const [size, suffix] of units) {
+    if (abs >= size) return `${formatNumber(value / size, fractionDigits)}${suffix}`;
+  }
+  return formatNumber(value, fractionDigits);
+}

@@ -1,94 +1,30 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { DetailedMarketChart } from "@/components/charts/detailed-market-chart";
-import type { ChartSeries } from "@/components/charts/detailed-market-chart";
 import { MarketHeader } from "@/components/market-detail/market-header";
 import { MarketSelectors } from "@/components/market-detail/market-selectors";
 import { PeriodPerformance } from "@/components/market-detail/period-performance";
+import { MAX_COMPARISONS, useInstrumentChart } from "@/components/market-detail/use-instrument-chart";
 import { defaultInstrument, findInstrument, findInstrumentById } from "@/data/mock/market-detail";
-import { isIntradayRange, periodPerformance, RANGE_LABELS, windowPoints } from "@/lib/market-ranges";
-import type { DetailRange, MarketDetail } from "@/types/market";
-
-const DEFAULT_RANGE: DetailRange = "1M";
-/** V1 shows at most four series at once: the primary plus three comparisons. */
-const MAX_COMPARISONS = 3;
+import type { MarketDetail } from "@/types/market";
 
 /**
  * Shared Information Markets detail experience for every routed market.
- * Owns the selected instrument, comparison, and range; everything else is
- * derived from the market's deterministic detail data. Mount with a key of
- * the market symbol so navigating between markets resets the selection.
+ * Owns the selected instrument; range and comparison state live in the
+ * shared chart hook. Mount with a key of the market symbol so navigating
+ * between markets resets the selection.
  */
 export function MarketDetailPage({ market }: { market: MarketDetail }) {
   const [instrumentId, setInstrumentId] = useState(market.defaultInstrumentId);
-  const [comparisonIds, setComparisonIds] = useState<string[]>([]);
-  const [range, setRange] = useState<DetailRange>(DEFAULT_RANGE);
-
   const instrument = findInstrument(market, instrumentId) ?? defaultInstrument(market);
-  // Comparisons may live in another market. Every option an instrument offers
-  // shares one basis, so all visible comparisons overlay on the same axis:
-  // absolute within a family, rebased percentage change across indices.
-  const comparisonOptions = useMemo(
-    () =>
-      comparisonIds
-        .map((id) => instrument.comparisons.find((option) => option.instrumentId === id))
-        .filter((option): option is NonNullable<typeof option> => option !== undefined),
-    [comparisonIds, instrument],
-  );
-  const comparisons = useMemo(
-    () =>
-      comparisonOptions
-        .map((option) => findInstrumentById(option.instrumentId))
-        .filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== undefined),
-    [comparisonOptions],
-  );
-  const basis = comparisonOptions.some((option) => option.basis === "relative") ? "relative" : "absolute";
-  // A range the instrument's history cannot support falls back to the
-  // longest one it can; the strip shows that range as the selected one.
-  const effectiveRange = instrument.availableRanges.includes(range)
-    ? range
-    : (instrument.availableRanges[instrument.availableRanges.length - 1] ?? "1D");
-  const asOf = instrument.snapshot.asOf;
-  const intraday = isIntradayRange(effectiveRange);
-
-  // Windows are memoised so the chart's hover state, which is keyed on the
-  // points array, survives re-renders that do not change the window.
-  const primarySeries = useMemo<ChartSeries>(
-    () => ({
-      id: instrument.id,
-      label: instrument.symbol,
-      unit: instrument.unit,
-      points: windowPoints(instrument.series, effectiveRange, asOf),
-    }),
-    [instrument, effectiveRange, asOf],
-  );
-  const comparisonSeries = useMemo<ChartSeries[]>(
-    () =>
-      comparisons.map((candidate) => ({
-        id: candidate.id,
-        label: candidate.symbol,
-        unit: candidate.unit,
-        points: windowPoints(candidate.series, effectiveRange, asOf),
-      })),
-    [comparisons, effectiveRange, asOf],
-  );
+  const chart = useInstrumentChart(instrument, findInstrumentById);
 
   function handleInstrumentChange(nextId: string) {
     setInstrumentId(nextId);
     // Comparisons are defined per instrument, so stale ones are dropped.
-    setComparisonIds([]);
-  }
-
-  function toggleComparison(id: string) {
-    setComparisonIds((current) =>
-      current.includes(id)
-        ? current.filter((candidate) => candidate !== id)
-        : current.length < MAX_COMPARISONS
-          ? [...current, id]
-          : current,
-    );
+    chart.clearComparisons();
   }
 
   return (
@@ -99,22 +35,20 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
           <MarketSelectors
             market={market}
             instrument={instrument}
-            comparisonIds={comparisonIds}
+            comparisonIds={chart.comparisonIds}
             maxComparisons={MAX_COMPARISONS}
             onInstrumentChange={handleInstrumentChange}
-            onToggleComparison={toggleComparison}
-            onClearComparisons={() => setComparisonIds([])}
+            onToggleComparison={chart.toggleComparison}
+            onClearComparisons={chart.clearComparisons}
           />
         </div>
 
         <DetailedMarketChart
-          primary={primarySeries}
-          comparisons={comparisonSeries}
-          basis={basis}
-          intraday={intraday}
-          label={`${instrument.symbol} chart, ${RANGE_LABELS[effectiveRange].toLowerCase()} range${
-            comparisons.length > 0 ? `, compared with ${comparisons.map((candidate) => candidate.symbol).join(", ")}` : ""
-          }`}
+          primary={chart.primarySeries}
+          comparisons={chart.comparisonSeries}
+          basis={chart.basis}
+          intraday={chart.intraday}
+          label={chart.label}
           // Substantial but not the whole fold: on desktop the height follows the
           // viewport between a usable floor and a cap, so the timeframe strip
           // beneath stays discoverable on a typical laptop window.
@@ -122,9 +56,9 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
         />
 
         <PeriodPerformance
-          performance={periodPerformance(instrument.series, asOf)}
-          selected={effectiveRange}
-          onSelect={setRange}
+          performance={chart.performance}
+          selected={chart.effectiveRange}
+          onSelect={chart.setRange}
           className="mt-3 border-t border-white/10 pt-3"
         />
       </div>
