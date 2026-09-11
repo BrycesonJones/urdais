@@ -82,6 +82,12 @@ export type MarketInstrumentDetail = MarketIndex & {
   id: string;
   /** Concise label for selectors within a family, e.g. "H100 SXM" for UCPI-H100 SXM. */
   shortLabel: string;
+  /**
+   * Nominal bandwidth for optical instruments, in Gbps. Stored so a
+   * normalised $/Gbps (price ÷ bandwidth) can be derived from the record
+   * later without parsing labels; not displayed yet.
+   */
+  bandwidthGbps?: number;
   snapshot: MarketSnapshot;
   series: DetailedSeries;
   /** Ranges the history is long enough to support; others are shown disabled. */

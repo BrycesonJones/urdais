@@ -36,6 +36,7 @@ const round = (value: number) => Math.round(value * 10_000) / 10_000;
 type InstrumentSpec = MarketIndex & {
   id: string;
   shortLabel: string;
+  bandwidthGbps?: number;
   daily: DailySeriesConfig;
   intraday: IntradaySeriesConfig;
 };
@@ -54,6 +55,7 @@ function buildInstrument(spec: InstrumentSpec, comparisons: ComparisonOption[]):
   return {
     id: spec.id,
     shortLabel: spec.shortLabel,
+    ...(spec.bandwidthGbps !== undefined ? { bandwidthGbps: spec.bandwidthGbps } : {}),
     symbol: spec.symbol,
     name: spec.name,
     unit: spec.unit,
@@ -173,7 +175,11 @@ const UCPI_MARKET: MarketDetail = {
 /* ---------- Standalone indices ---------- */
 
 /** The instrument that stands for each routed market when it is used as a comparison. */
-const HEADLINE_INSTRUMENT_ID: Record<string, string> = { UCPI: "ucpi-h100-sxm", UMPI: "hbm-hbm3e" };
+const HEADLINE_INSTRUMENT_ID: Record<string, string> = {
+  UCPI: "ucpi-h100-sxm",
+  UMPI: "hbm-hbm3e",
+  UPPI: "optics-800g",
+};
 
 function headlineInstrumentId(symbol: string): string {
   return HEADLINE_INSTRUMENT_ID[symbol] ?? symbol.toLowerCase();
@@ -331,19 +337,86 @@ const UMPI_MARKET: MarketDetail = {
   ],
 };
 
+/* ---------- UPPI: pluggable optics ---------- */
+
 /**
- * UPPI is an aggregate measure of photonics and optical interconnect market
- * economics relevant to AI infrastructure. Underlying series may later
- * include optical transceivers, $/Gbps, optical bandwidth, and interconnect
- * components; the aggregate is quoted in points. Read forwards, the demo
- * history drifts gently lower: moving information keeps getting cheaper.
+ * UPPI, the Urdais Photonics Price Index, asks what moving information with
+ * optical infrastructure costs. Its first family is pluggable optical
+ * transceivers, one benchmark instrument per bandwidth generation, priced
+ * in $/transceiver. Each instrument records its nominal bandwidth so a
+ * normalised $/Gbps (price ÷ bandwidthGbps), the cost of moving a unit of
+ * information and the meaningful cross-generation comparison, can be
+ * derived later; only the raw price is shown for now.
+ *
+ * 800G is the current UPPI headline benchmark because it is a
+ * representative high-bandwidth optical interconnect generation for modern
+ * AI and data-centre networking. The benchmark is metadata (the market's
+ * default instrument) and may later move to 1.6T or another generation.
+ * Generations are not yet subdivided by reach or standard (DR8, FR4, …).
+ *
+ * A future family structure may become Pluggable Optics plus Optical
+ * Engines / CPO, at which point the generic family switch appears; with one
+ * family it stays hidden.
  */
-const UPPI_MARKET = buildIndexMarket(
-  "UPPI",
-  "pts",
-  { seed: 20170808, latestValue: 96.41, latestDailyReturn: -0.0074, points: LONG_HISTORY_DAYS, volatility: 0.01, drift: -0.0002 },
-  { seed: 7_200_000, days: 7, volatility: 0.005 },
-);
+const UPPI_IDENTITY = catalogEntry("UPPI");
+const OPTICS_UNIT = "$/transceiver";
+
+function opticsSpec(
+  generation: string,
+  slug: string,
+  bandwidthGbps: number,
+  daily: Omit<DailySeriesConfig, "asOf">,
+  intraday: IntradaySeriesConfig,
+): InstrumentSpec {
+  return {
+    id: `optics-${slug}`,
+    shortLabel: `${generation} Optical Transceiver`,
+    symbol: `UPPI-${generation}`,
+    name: `${UPPI_IDENTITY.name} · ${generation} optical transceiver benchmark`,
+    unit: OPTICS_UNIT,
+    bandwidthGbps,
+    daily: { ...daily, asOf: MOCK_AS_OF },
+    intraday,
+  };
+}
+
+/** Product order: the flagship first, then by market relevance, not by nominal bandwidth. */
+const OPTICS_SPECS: InstrumentSpec[] = [
+  // Current flagship: active, moderately volatile, gradual cost compression.
+  opticsSpec("800G", "800g", 800,
+    { seed: 20230815, latestValue: 928.4, latestDailyReturn: -0.0112, points: 1100, volatility: 0.012, drift: -0.0005 },
+    { seed: 8_010_000, days: 7, volatility: 0.005 }),
+  // Mature: lower price, steady commoditisation.
+  opticsSpec("400G", "400g", 400,
+    { seed: 20200610, latestValue: 412.5, latestDailyReturn: -0.0034, points: 2200, volatility: 0.008, drift: -0.0006 },
+    { seed: 8_020_000, days: 7, volatility: 0.003 }),
+  // Newest and premium: highest price, shortest history, most volatile.
+  opticsSpec("1.6T", "1-6t", 1600,
+    { seed: 20251020, latestValue: 2140.0, latestDailyReturn: 0.0187, points: 300, volatility: 0.02, drift: -0.0009 },
+    { seed: 8_030_000, days: 7, volatility: 0.008 }),
+  // Legacy transition: lower price, calmer.
+  opticsSpec("200G", "200g", 200,
+    { seed: 20180305, latestValue: 236.8, latestDailyReturn: 0.0021, points: 2600, volatility: 0.007, drift: -0.0004 },
+    { seed: 8_040_000, days: 7, volatility: 0.003 }),
+  // Legacy: lowest price, structurally mature.
+  opticsSpec("100G", "100g", 100,
+    { seed: 20140922, latestValue: 98.6, latestDailyReturn: -0.0048, points: LONG_HISTORY_DAYS, volatility: 0.006, drift: -0.0003 },
+    { seed: 8_050_000, days: 7, volatility: 0.002 }),
+];
+
+const UPPI_MARKET: MarketDetail = {
+  ...UPPI_IDENTITY,
+  unit: OPTICS_UNIT,
+  defaultInstrumentId: "optics-800g",
+  families: [
+    {
+      id: "pluggable-optics",
+      label: "Pluggable Optics",
+      instruments: buildFamilyInstruments(OPTICS_SPECS),
+      defaultInstrumentId: "optics-800g",
+    },
+  ],
+};
 
 /**
  * UEPI is an aggregate measure of energy and power economics relevant to AI
