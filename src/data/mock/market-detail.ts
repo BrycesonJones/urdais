@@ -18,7 +18,7 @@ import { buildDailySeries, buildIntradaySeries } from "@/data/mock/series-genera
 import type { DailySeriesConfig, IntradaySeriesConfig } from "@/data/mock/series-generator";
 import { MOCK_AS_OF, UCPI_DAILY_CONFIG, UCPI_INDEX, UCPI_INTRADAY_CONFIG } from "@/data/mock/ucpi";
 import { availableRanges } from "@/lib/market-ranges";
-import { MODEL_ECONOMICS_HREF, POWER_ANALYTICS_HREF } from "@/lib/routes";
+import { COMPUTE_ANALYTICS_HREF, MODEL_ECONOMICS_HREF, POWER_ANALYTICS_HREF } from "@/lib/routes";
 import type {
   ComparisonOption,
   MarketDetail,
@@ -163,7 +163,12 @@ const UCPI_MARKET: MarketDetail = {
   ...UCPI_INDEX,
   defaultInstrumentId: "ucpi-h100-sxm",
   families: [
-    { id: "compute", label: "Compute", instruments: buildFamilyInstruments(COMPUTE_SPECS) },
+    {
+      id: "compute",
+      label: "Compute",
+      instruments: buildFamilyInstruments(COMPUTE_SPECS),
+      explore: { label: "Explore Compute Analytics", href: COMPUTE_ANALYTICS_HREF },
+    },
     {
       id: "tokens",
       label: "Tokens",

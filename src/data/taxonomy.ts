@@ -6,7 +6,7 @@
  * domains are categories, not rankings, so they carry no numbering.
  */
 
-import { MODEL_ECONOMICS_HREF, POWER_ANALYTICS_HREF } from "@/lib/routes";
+import { COMPUTE_ANALYTICS_HREF, MODEL_ECONOMICS_HREF, POWER_ANALYTICS_HREF } from "@/lib/routes";
 
 export type MeasurementDomain = {
   domain: string;
@@ -21,6 +21,7 @@ export const MEASUREMENT_DOMAINS: MeasurementDomain[] = [
     domain: "Compute",
     description: "Price of computational capacity",
     examples: ["$/GPU-hour", "$/PFLOP-hour", "H100 · H200 · B200"],
+    href: COMPUTE_ANALYTICS_HREF,
   },
   {
     domain: "Memory",

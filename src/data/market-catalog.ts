@@ -6,7 +6,7 @@
  * and routes are defined once.
  */
 
-import { marketIndexHref, MODEL_ECONOMICS_HREF, POWER_ANALYTICS_HREF } from "@/lib/routes";
+import { COMPUTE_ANALYTICS_HREF, marketIndexHref, MODEL_ECONOMICS_HREF, POWER_ANALYTICS_HREF } from "@/lib/routes";
 
 export type MarketCatalogEntry = {
   symbol: string;
@@ -66,6 +66,38 @@ export const MARKET_PAGES: MarketPageEntry[] = [
       "frontier",
       "utvi",
       "labs",
+    ],
+  },
+  {
+    id: "compute-analytics",
+    name: "Compute Analytics",
+    description: "Forward pricing, utilization, and hardware economics",
+    href: COMPUTE_ANALYTICS_HREF,
+    keywords: [
+      "compute analytics",
+      "compute economics",
+      "compute",
+      "gpu",
+      "gpus",
+      "gpu economics",
+      "forward",
+      "forward curve",
+      "forwards",
+      "compute forward",
+      "term structure",
+      "tenor",
+      "utilization",
+      "gpu utilization",
+      "fleet utilization",
+      "fleet",
+      "payback",
+      "payback period",
+      "hardware economics",
+      "hardware",
+      "gpu rental",
+      "rental economics",
+      "accelerator economics",
+      "capex",
     ],
   },
   {
