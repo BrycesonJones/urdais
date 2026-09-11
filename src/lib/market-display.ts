@@ -3,9 +3,9 @@
  *
  * An Urdais index ticker belongs to the market, and only the market's
  * current headline benchmark carries the combined index/benchmark identity:
- * H100 SXM is `UCPI-H100`, HBM3E is `UMPI-HBM3E`, 800G is `UPPI-800G`, PJM
- * is `UEPI-PJM`. Every other selectable instrument is presented as itself
- * (`H200`, `HBM4`, `200G`, `ISO-NE`): an instrument viewed inside the
+ * H100 SXM is `UCPI-H100`, HBM3E is `UMPI-HBM3E`, 800G is `UPPI-800G`, ERCOT
+ * is `UEPI-ERCOT`. Every other selectable instrument is presented as itself
+ * (`H200`, `HBM4`, `200G`, `PJM`): an instrument viewed inside the
  * market, not a separate Urdais index. The headline is decided by the
  * market's explicit `defaultInstrumentId`, never by position or by a
  * family's own default, so a benchmark change needs no naming change.

@@ -193,7 +193,7 @@ const HEADLINE_INSTRUMENT_ID: Record<string, string> = {
   UCPI: "ucpi-h100-sxm",
   UMPI: "hbm-hbm3e",
   UPPI: "optics-800g",
-  UEPI: "power-pjm",
+  UEPI: "power-ercot",
 };
 
 function headlineInstrumentId(symbol: string): string {
@@ -449,10 +449,12 @@ const UPPI_MARKET: MarketDetail = {
  * peers. The two must not be conflated; a vertically integrated utility is
  * not an ISO/RTO peer, so it never appears in this family.
  *
- * PJM is the current UEPI headline wholesale-power benchmark because it
- * covers a major U.S. electricity market with substantial data-centre and
- * Information Age infrastructure exposure. The benchmark is metadata (the
- * market's default instrument) and may change as UEPI methodology evolves.
+ * ERCOT is the current UEPI headline benchmark because Urdais emphasises
+ * the emerging Information Age power economy: large compute/data-centre
+ * loads, grid constraints, storage, flexible demand, and rapid power-market
+ * change converge particularly strongly in Texas. The benchmark is metadata
+ * (the market's default instrument) and may change as the Information Age
+ * power market evolves. PJM remains a first-class instrument in the family.
  *
  * The exact hub, zone, and product (day-ahead, real-time, congestion) each
  * benchmark represents is provisional and belongs to the data phase; the
@@ -484,14 +486,14 @@ function powerSpec(
 
 /** Flagship first, then by market relevance. Seasonal peaks are day-of-year: mid-summer or mid-winter. */
 const POWER_SPECS: InstrumentSpec[] = [
-  // Flagship: seasonal with a summer peak, moderate/high volatility, reverting to a level.
-  powerSpec("PJM", "pjm", "Mid-Atlantic / Midwest",
-    { seed: 20190101, latestValue: 41.82, latestDailyReturn: 0.0314, points: 2600, volatility: 0.045, drift: 0.0001, meanReversion: { level: 40, strength: 0.03 }, seasonality: { amplitude: 0.12, peakDayOfYear: 201 } },
-    { seed: 8_110_000, days: 7, volatility: 0.015 }),
-  // Most volatile: abrupt weather- and constraint-driven moves with a hard summer peak.
+  // Flagship. Most volatile: abrupt weather- and constraint-driven moves with a hard summer peak.
   powerSpec("ERCOT", "ercot", "Texas",
     { seed: 20190102, latestValue: 36.4, latestDailyReturn: -0.0421, points: 2600, volatility: 0.075, drift: 0.0001, meanReversion: { level: 35, strength: 0.03 }, seasonality: { amplitude: 0.2, peakDayOfYear: 217 } },
     { seed: 8_120_000, days: 7, volatility: 0.025 }),
+  // Seasonal with a summer peak, moderate/high volatility, reverting to a level.
+  powerSpec("PJM", "pjm", "Mid-Atlantic / Midwest",
+    { seed: 20190101, latestValue: 41.82, latestDailyReturn: 0.0314, points: 2600, volatility: 0.045, drift: 0.0001, meanReversion: { level: 40, strength: 0.03 }, seasonality: { amplitude: 0.12, peakDayOfYear: 201 } },
+    { seed: 8_110_000, days: 7, volatility: 0.015 }),
   // Later summer cycle, moderate volatility, higher level.
   powerSpec("CAISO", "caiso", "California",
     { seed: 20190103, latestValue: 48.75, latestDailyReturn: 0.0088, points: 2600, volatility: 0.04, drift: 0.0002, meanReversion: { level: 47, strength: 0.025 }, seasonality: { amplitude: 0.14, peakDayOfYear: 237 } },
@@ -516,13 +518,13 @@ const POWER_SPECS: InstrumentSpec[] = [
 const UEPI_MARKET: MarketDetail = {
   ...UEPI_IDENTITY,
   unit: POWER_UNIT,
-  defaultInstrumentId: "power-pjm",
+  defaultInstrumentId: "power-ercot",
   families: [
     {
       id: "wholesale-power",
       label: "Wholesale Power",
       instruments: buildFamilyInstruments(POWER_SPECS),
-      defaultInstrumentId: "power-pjm",
+      defaultInstrumentId: "power-ercot",
       explore: { label: "Explore Power Analytics", href: POWER_ANALYTICS_HREF },
     },
   ],

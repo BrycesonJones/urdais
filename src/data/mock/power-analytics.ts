@@ -60,6 +60,12 @@ export function findPowerMarket(marketId: string): PowerMarket {
 /* ---------- Per-market demo parameters ---------- */
 
 type MarketProfile = {
+  /**
+   * Stable per-market seed for the small deterministic wobbles in the load and
+   * buildout observations. Fixed per market so UEPI's selector order (which
+   * puts the current headline first) never moves an analytics number.
+   */
+  seed: number;
   /** Peak load and deliverable capacity at the start of 2024, GW. */
   load2024: number;
   capacity2024: number;
@@ -79,42 +85,49 @@ type MarketProfile = {
 
 const PROFILES: Record<string, MarketProfile> = {
   "power-pjm": {
+    seed: 0,
     load2024: 150, capacity2024: 186, loadGrowth: 0.045, forecastGrowth: 0.085, capacityGrowth: 0.018, seasonalAmplitude: 0.06, peakQuarter: 2,
     queue: { load: 64, loadWait: 48, generation: 262, generationWait: 60 },
     buildout: { capacityGw: 4.2, miles: 1180, substationGva: 9.6, transformerMonths: 34 },
     flexibility: { marketId: "power-pjm", interruptibleLoadGw: 9.5, batteryShiftableLoadGw: 5.2 },
   },
   "power-ercot": {
+    seed: 1,
     load2024: 85, capacity2024: 106, loadGrowth: 0.07, forecastGrowth: 0.11, capacityGrowth: 0.035, seasonalAmplitude: 0.09, peakQuarter: 2,
     queue: { load: 71, loadWait: 52, generation: 190, generationWait: 30 },
     buildout: { capacityGw: 5.1, miles: 1650, substationGva: 8.8, transformerMonths: 30 },
     flexibility: { marketId: "power-ercot", interruptibleLoadGw: 8.8, batteryShiftableLoadGw: 6.4 },
   },
   "power-caiso": {
+    seed: 2,
     load2024: 47, capacity2024: 59, loadGrowth: 0.025, forecastGrowth: 0.04, capacityGrowth: 0.015, seasonalAmplitude: 0.07, peakQuarter: 2,
     queue: { load: 18, loadWait: 36, generation: 121, generationWait: 48 },
     buildout: { capacityGw: 1.9, miles: 420, substationGva: 4.1, transformerMonths: 36 },
     flexibility: { marketId: "power-caiso", interruptibleLoadGw: 3.1, batteryShiftableLoadGw: 4.6 },
   },
   "power-miso": {
+    seed: 3,
     load2024: 120, capacity2024: 139, loadGrowth: 0.03, forecastGrowth: 0.055, capacityGrowth: 0.012, seasonalAmplitude: 0.05, peakQuarter: 2,
     queue: { load: 32, loadWait: 40, generation: 142, generationWait: 44 },
     buildout: { capacityGw: 2.8, miles: 960, substationGva: 6.3, transformerMonths: 33 },
     flexibility: { marketId: "power-miso", interruptibleLoadGw: 6.2, batteryShiftableLoadGw: 2.9 },
   },
   "power-iso-ne": {
+    seed: 4,
     load2024: 24, capacity2024: 27.5, loadGrowth: 0.02, forecastGrowth: 0.035, capacityGrowth: 0.01, seasonalAmplitude: 0.05, peakQuarter: 0,
     queue: { load: 6, loadWait: 30, generation: 25, generationWait: 38 },
     buildout: { capacityGw: 0.6, miles: 140, substationGva: 1.4, transformerMonths: 35 },
     flexibility: { marketId: "power-iso-ne", interruptibleLoadGw: 1.3, batteryShiftableLoadGw: 1.1 },
   },
   "power-nyiso": {
+    seed: 5,
     load2024: 31, capacity2024: 37, loadGrowth: 0.025, forecastGrowth: 0.04, capacityGrowth: 0.012, seasonalAmplitude: 0.06, peakQuarter: 2,
     queue: { load: 9, loadWait: 34, generation: 31, generationWait: 42 },
     buildout: { capacityGw: 0.9, miles: 210, substationGva: 2.2, transformerMonths: 35 },
     flexibility: { marketId: "power-nyiso", interruptibleLoadGw: 1.8, batteryShiftableLoadGw: 1.5 },
   },
   "power-spp": {
+    seed: 6,
     load2024: 52, capacity2024: 63.5, loadGrowth: 0.04, forecastGrowth: 0.07, capacityGrowth: 0.02, seasonalAmplitude: 0.06, peakQuarter: 2,
     queue: { load: 21, loadWait: 38, generation: 92, generationWait: 40 },
     buildout: { capacityGw: 2.1, miles: 880, substationGva: 3.9, transformerMonths: 32 },
@@ -148,7 +161,7 @@ const quarterStart = (year: number, quarter: number) => Date.UTC(year, quarter *
  * now waiting in the queue. Deliverable capacity grows at the market's
  * buildout pace throughout.
  */
-export const LOAD_OBSERVATIONS: LoadObservation[] = POWER_MARKETS.flatMap((market, marketIndex) => {
+export const LOAD_OBSERVATIONS: LoadObservation[] = POWER_MARKETS.flatMap((market) => {
   const p = profile(market.id);
   const rows: LoadObservation[] = [];
   let index = 0;
@@ -163,7 +176,7 @@ export const LOAD_OBSERVATIONS: LoadObservation[] = POWER_MARKETS.flatMap((marke
       let actual: number | null = null;
       let forecast: number | null = null;
       if (historical) {
-        actual = p.load2024 * (1 + p.loadGrowth) ** yearsFrom2024 * seasonal * (1 + wobble(marketIndex + 1, index, 0.015));
+        actual = p.load2024 * (1 + p.loadGrowth) ** yearsFrom2024 * seasonal * (1 + wobble(p.seed + 1, index, 0.015));
         lastActual = actual / seasonal;
       } else {
         const quartersAhead = (time - POWER_ANALYTICS_AS_OF) / (91.25 * 86_400);
@@ -288,18 +301,18 @@ export const HEADROOM_ROWS: HeadroomRow[] = POWER_MARKETS.map((market) => {
 export const BUILDOUT_YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026] as const;
 
 /** Yearly buildout per market: additions ramp up towards the latest year; transformer lead times lengthen. */
-export const INFRASTRUCTURE_OBSERVATIONS: InfrastructureObservation[] = POWER_MARKETS.flatMap((market, marketIndex) => {
-  const b = profile(market.id).buildout;
+export const INFRASTRUCTURE_OBSERVATIONS: InfrastructureObservation[] = POWER_MARKETS.flatMap((market) => {
+  const { seed, buildout: b } = profile(market.id);
   return BUILDOUT_YEARS.map((year, index) => {
     const yearsBack = BUILDOUT_YEARS.length - 1 - index;
-    const ramp = 0.9 ** yearsBack * (1 + wobble(marketIndex + 11, index, 0.08));
+    const ramp = 0.9 ** yearsBack * (1 + wobble(seed + 11, index, 0.08));
     return {
       year,
       marketId: market.id,
       transmissionCapacityAddedGw: round1(b.capacityGw * ramp),
       transmissionMilesAdded: Math.round(b.miles * ramp),
       substationCapacityAddedGva: round1(b.substationGva * ramp),
-      transformerLeadTimeMonths: Math.round(b.transformerMonths - 2.2 * yearsBack + wobble(marketIndex + 23, index, 1.5)),
+      transformerLeadTimeMonths: Math.round(b.transformerMonths - 2.2 * yearsBack + wobble(seed + 23, index, 1.5)),
     };
   });
 });
