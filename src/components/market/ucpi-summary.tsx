@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { UcpiChart } from "@/components/market/ucpi-chart";
 import { movementClass } from "@/components/market/movement";
-import { formatNumber, formatPercent, formatSigned, formatTimestamp } from "@/lib/format";
+import { formatNumber, formatPercent, formatTimestamp } from "@/lib/format";
 import { marketIndexHref } from "@/lib/routes";
 import type { IndexSeries, MarketIndex, MarketSnapshot } from "@/types/market";
 
@@ -55,10 +55,7 @@ export function UcpiSummary({ index, snapshot, series }: UcpiSummaryProps) {
             {formatNumber(snapshot.value)}
           </span>{" "}
           <span className="text-sm text-neutral-400">{index.unit}</span>{" "}
-          <span className={`text-sm font-medium ${movementClass(snapshot.change)}`}>
-            {formatSigned(snapshot.change)}
-          </span>{" "}
-          <span className={`text-sm font-medium ${movementClass(snapshot.change)}`}>
+          <span className={`text-sm font-medium ${movementClass(snapshot.changePercent)}`}>
             {formatPercent(snapshot.changePercent)}
           </span>{" "}
           <span className="text-xs text-neutral-400">

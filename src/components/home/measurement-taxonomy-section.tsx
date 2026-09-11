@@ -1,11 +1,14 @@
+import Link from "next/link";
+
 import { MEASUREMENT_DIMENSIONS, MEASUREMENT_DOMAINS } from "@/data/taxonomy";
 
 /**
  * "What Urdais Measures": an editorial index of the seven measurement
  * domains in a 35/65 split, followed by the cross-cutting "Measured across"
  * key. Typography, spacing, and dividers carry the design. Rows are static
- * classification content, not controls, so they have no hover or focus
- * treatment. Fully server-rendered.
+ * classification content with no hover or focus treatment, except a domain
+ * that has a real analytical destination, which renders as a link with a
+ * restrained hover and a visible focus ring. Fully server-rendered.
  */
 export function MeasurementTaxonomySection() {
   return (
@@ -31,32 +34,54 @@ export function MeasurementTaxonomySection() {
           </div>
 
           <ol className="divide-y divide-neutral-800 border-y border-neutral-800">
-            {MEASUREMENT_DOMAINS.map((item) => (
-              <li
-                key={item.domain}
-                className="grid gap-y-3 py-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,15rem)] lg:gap-x-8 lg:py-6"
-              >
-                <div>
-                  <h3 className="text-base font-semibold uppercase tracking-wide text-neutral-50 md:text-lg">
-                    {item.domain}
-                  </h3>
-                  <p className="mt-1 text-sm text-neutral-400">{item.description}</p>
-                </div>
-
-                <ul className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-xs text-neutral-400 lg:flex-col lg:items-end lg:gap-y-1.5 lg:text-right">
-                  {item.examples.map((example, i) => (
-                    <li key={example} className="flex items-center gap-x-3">
-                      {i > 0 && (
-                        <span aria-hidden="true" className="text-neutral-600 lg:hidden">
-                          ·
+            {MEASUREMENT_DOMAINS.map((item) => {
+              const body = (
+                <>
+                  <div>
+                    <h3 className="text-base font-semibold uppercase tracking-wide text-neutral-50 md:text-lg">
+                      {item.domain}
+                      {item.href && (
+                        <span
+                          aria-hidden="true"
+                          className="ml-2 inline-block text-neutral-600 transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-neutral-300 group-focus-visible:text-neutral-300"
+                        >
+                          →
                         </span>
                       )}
-                      {example}
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
+                    </h3>
+                    <p className="mt-1 text-sm text-neutral-400">{item.description}</p>
+                  </div>
+
+                  <ul className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-xs text-neutral-400 lg:flex-col lg:items-end lg:gap-y-1.5 lg:text-right">
+                    {item.examples.map((example, i) => (
+                      <li key={example} className="flex items-center gap-x-3">
+                        {i > 0 && (
+                          <span aria-hidden="true" className="text-neutral-600 lg:hidden">
+                            ·
+                          </span>
+                        )}
+                        {example}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              );
+              const layout = "grid gap-y-3 py-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,15rem)] lg:gap-x-8 lg:py-6";
+              return (
+                <li key={item.domain}>
+                  {item.href ? (
+                    <Link
+                      href={item.href}
+                      className={`group -mx-2 rounded-md px-2 transition-colors hover:bg-white/[0.03] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff] ${layout}`}
+                    >
+                      {body}
+                    </Link>
+                  ) : (
+                    <div className={layout}>{body}</div>
+                  )}
+                </li>
+              );
+            })}
           </ol>
         </div>
 

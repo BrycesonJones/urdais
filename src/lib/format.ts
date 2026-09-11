@@ -37,3 +37,63 @@ export function formatTimestamp(unixSeconds: number, withTime: boolean): string 
   }).format(date);
   return withTime ? `${formatted} UTC` : formatted;
 }
+
+/** Value with its unit in compact form: "$2.41" for dollar units, "184.21 pts" otherwise. */
+export function formatValueWithUnit(value: number, unit: string, fractionDigits = 2): string {
+  if (unit.startsWith("$")) return `$${formatNumber(value, fractionDigits)}`;
+  return `${formatNumber(value, fractionDigits)} ${unit}`;
+}
+
+/** Axis tick label: dollar units carry the `$` prefix and at least two decimals; others are bare numbers. */
+export function formatAxisValue(value: number, fractionDigits: number, unit: string): string {
+  if (unit.startsWith("$")) return `$${formatNumber(value, Math.max(2, fractionDigits))}`;
+  return formatNumber(value, fractionDigits);
+}
+
+/** Last-updated line, e.g. "Sep 4, 2026 · 16:00 UTC". */
+export function formatUpdatedAt(unixSeconds: number): string {
+  const date = new Date(unixSeconds * 1000);
+  const day = new Intl.DateTimeFormat(LOCALE, {
+    timeZone: "UTC",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+  const time = new Intl.DateTimeFormat(LOCALE, {
+    timeZone: "UTC",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+  return `${day} · ${time} UTC`;
+}
+
+/** Large counts in K / M / B / T form, e.g. 14.82T. Values below a thousand keep two decimals. */
+export function formatCompact(value: number, fractionDigits = 2): string {
+  const abs = Math.abs(value);
+  const units: [number, string][] = [
+    [1e12, "T"],
+    [1e9, "B"],
+    [1e6, "M"],
+    [1e3, "K"],
+  ];
+  for (const [size, suffix] of units) {
+    if (abs >= size) return `${formatNumber(value / size, fractionDigits)}${suffix}`;
+  }
+  return formatNumber(value, fractionDigits);
+}
+
+/** Short axis or crosshair time label: time of day for intraday series, month and day otherwise. */
+export function formatAxisTime(unixSeconds: number, intraday: boolean): string {
+  const date = new Date(unixSeconds * 1000);
+  return new Intl.DateTimeFormat(LOCALE, {
+    timeZone: "UTC",
+    ...(intraday ? { hour: "2-digit", minute: "2-digit", hour12: false } : { month: "short", day: "numeric" }),
+  }).format(date);
+}
+
+/** Calendar quarter of a UTC timestamp, e.g. "Q3 2026". */
+export function formatQuarter(unixSeconds: number): string {
+  const date = new Date(unixSeconds * 1000);
+  return `Q${Math.floor(date.getUTCMonth() / 3) + 1} ${date.getUTCFullYear()}`;
+}

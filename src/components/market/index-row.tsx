@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { movementClass } from "@/components/market/movement";
-import { formatNumber, formatPercent, formatSigned } from "@/lib/format";
+import { formatNumber, formatPercent } from "@/lib/format";
 import { marketIndexHref } from "@/lib/routes";
 import type { IndexSnapshot } from "@/types/market";
 
@@ -26,8 +26,8 @@ export function IndexRow({ index }: { index: IndexSnapshot }) {
           {formatNumber(index.value)}{" "}
           <span className="text-xs font-normal text-neutral-400">{index.unit}</span>
         </p>
-        <p className={`text-xs font-medium ${movementClass(index.change)}`}>
-          {formatSigned(index.change)} · {formatPercent(index.changePercent)}
+        <p className={`text-xs font-medium ${movementClass(index.changePercent)}`}>
+          {formatPercent(index.changePercent)}
         </p>
       </div>
       </Link>

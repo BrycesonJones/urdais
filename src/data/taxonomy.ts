@@ -6,10 +6,14 @@
  * domains are categories, not rankings, so they carry no numbering.
  */
 
+import { COMPUTE_ANALYTICS_HREF, MODEL_ECONOMICS_HREF, POWER_ANALYTICS_HREF } from "@/lib/routes";
+
 export type MeasurementDomain = {
   domain: string;
   description: string;
   examples: string[];
+  /** Set once a domain has a real analytical destination; the row becomes a link. */
+  href?: string;
 };
 
 export const MEASUREMENT_DOMAINS: MeasurementDomain[] = [
@@ -17,6 +21,7 @@ export const MEASUREMENT_DOMAINS: MeasurementDomain[] = [
     domain: "Compute",
     description: "Price of computational capacity",
     examples: ["$/GPU-hour", "$/PFLOP-hour", "H100 · H200 · B200"],
+    href: COMPUTE_ANALYTICS_HREF,
   },
   {
     domain: "Memory",
@@ -32,6 +37,7 @@ export const MEASUREMENT_DOMAINS: MeasurementDomain[] = [
     domain: "Energy / Power",
     description: "Price of powering computation",
     examples: ["$/kWh", "$/MWh", "Regional pricing"],
+    href: POWER_ANALYTICS_HREF,
   },
   {
     domain: "AI Chips",
@@ -42,6 +48,7 @@ export const MEASUREMENT_DOMAINS: MeasurementDomain[] = [
     domain: "Model Economics",
     description: "Price of machine intelligence",
     examples: ["$/1M input tokens", "$/1M output tokens", "Inference cost"],
+    href: MODEL_ECONOMICS_HREF,
   },
   {
     domain: "Crypto",
