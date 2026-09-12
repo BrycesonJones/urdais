@@ -1,0 +1,39 @@
+export type DocSection = "Overview" | "Methodology" | "Developers" | "Resources";
+
+export type DocPage = {
+  slug: string;
+  title: string;
+  description: string;
+  section: DocSection;
+  file: string;
+};
+
+/** Order controls navigation and previous/next. Register only published pages.
+ * Nested slugs (e.g. methodology/indices) use the same route and renderer.
+ */
+export const docPages: readonly DocPage[] = [
+  {
+    slug: "",
+    title: "Introduction",
+    description: "Documentation for Urdais information products and their technical foundations.",
+    section: "Overview",
+    file: "introduction.md",
+  },
+  {
+    slug: "methodology",
+    title: "Methodology Overview",
+    description: "The shared framework for defining Urdais outputs, provenance, lineage, and methodology versions.",
+    section: "Methodology",
+    file: "methodology.md",
+  },
+];
+
+export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];
+
+export function docHref(slug: string) {
+  return slug ? `/docs/${slug}` : "/docs";
+}
+
+export function findDoc(slug: string) {
+  return docPages.find((page) => page.slug === slug);
+}

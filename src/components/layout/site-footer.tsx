@@ -25,6 +25,11 @@ export function SiteFooter() {
         <nav aria-label="Footer" className="flex flex-col items-center gap-y-7">
           <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
             <li>
+              <Link href="/docs" className={linkClass}>
+                Docs
+              </Link>
+            </li>
+            <li>
               <Link href="/contact" className={linkClass}>
                 Contact
               </Link>

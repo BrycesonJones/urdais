@@ -8,6 +8,28 @@ Urdais is an information and market-data platform for the Information Age: stand
 
 This repository contains the Urdais web frontend. Product and architecture context lives in [`docs/FRONTEND_PRD.md`](docs/FRONTEND_PRD.md) and [`docs/BACKEND_PRD.md`](docs/BACKEND_PRD.md).
 
+## Documentation
+
+Public documentation starts at `/docs`; `/docs/methodology` renders the canonical
+[`docs/methodology.md`](docs/methodology.md) directly. Methodology decisions precede
+data schemas and backend implementation, one output at a time.
+
+To publish a page, add a Markdown file under `docs/` and register its file, slug,
+section, title, and description in `src/lib/docs/catalog.ts`. The optional catch-all
+route supports nested slugs. The catalog controls static generation, sidebar order,
+and previous/next links; empty sections are hidden and unknown routes return 404.
+Only registered files are public; repository PRDs are not exposed automatically.
+
+Markdown is read on the server and rendered with `react-markdown` at build time.
+`unified`, `remark-parse`, `mdast-util-to-string`, and `github-slugger` derive heading
+anchors and the on-page contents from Markdown syntax, including inline formatting.
+Raw HTML is disabled. Use one H1, H2 sections, and H3 subsections; links to other
+public docs should use `/docs/...` URLs. Content changes require a new build/deploy.
+No MDX execution, custom page components, or docs hosting service is required.
+
+Docs search is deferred: the existing search is specific to markets and indices.
+The page catalog and Markdown sources provide an entry point for future indexing.
+
 ## Stack
 
 - [Next.js](https://nextjs.org/) (App Router) with React Server Components
@@ -54,7 +76,7 @@ Environment variables are documented in [`.env.example`](.env.example). Copy it 
 
 ```text
 urdais/
-├── docs/                 # product / architecture context (PRDs)
+├── docs/                 # public Markdown docs and product / architecture context
 ├── public/               # static assets served from /
 ├── src/
 │   ├── app/              # Next.js routes, layouts, metadata, globals.css
