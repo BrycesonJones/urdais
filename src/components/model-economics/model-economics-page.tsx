@@ -24,8 +24,7 @@ export function ModelEconomicsPage() {
     <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-6 text-neutral-50 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-screen-2xl">
         <header>
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#8ca4ff]">Model Economics</p>
-          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="text-3xl font-semibold tracking-tight text-neutral-50 md:text-4xl">Model Economics</h1>
             <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
               Demo data
