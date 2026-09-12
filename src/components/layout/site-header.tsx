@@ -11,7 +11,6 @@ import { MAP_HREF } from "@/lib/routes";
 
 const NAV_LINKS = [
   { label: "Map", href: MAP_HREF, onIntent: prefetchMapRenderer },
-  { label: "Products", href: "/products" },
   { label: "Contact", href: "/contact" },
 ] as const;
 

@@ -26,9 +26,10 @@ describe("SiteHeader map navigation", () => {
     expect(prefetchMapRenderer).toHaveBeenCalledTimes(2);
   });
 
-  it("keeps the other navigation links as they were", () => {
+  it("keeps the other navigation links as they were, without Products", () => {
     render(<SiteHeader />);
-    expect(screen.getByRole("link", { name: "Products" })).toHaveClass("hidden");
+    expect(screen.queryByRole("link", { name: "Products" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
     expect(screen.getByRole("link", { name: "Get Started" })).toHaveAttribute("href", "/get-started");
   });
 });
