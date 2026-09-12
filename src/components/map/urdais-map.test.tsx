@@ -14,6 +14,7 @@ const maplibre = vi.hoisted(() => {
     addSource: ReturnType<typeof vi.fn>;
     getLayer: ReturnType<typeof vi.fn>;
     addLayer: ReturnType<typeof vi.fn>;
+    setFilter: ReturnType<typeof vi.fn>;
     getStyle: ReturnType<typeof vi.fn>;
     /** Fires the handlers registered for a map event (optionally on a layer), as the real map would. */
     emit: (event: string, layer?: string, payload?: unknown) => void;
@@ -46,6 +47,7 @@ const maplibre = vi.hoisted(() => {
       addSource: vi.fn((id: string, source: unknown) => sources.set(id, source)),
       getLayer: vi.fn((id: string) => layers.get(id)),
       addLayer: vi.fn((layer: { id: string }) => layers.set(layer.id, layer)),
+      setFilter: vi.fn(),
       getStyle: vi.fn(() => ({ layers: [{ id: "background", type: "background" }, { id: "label_city", type: "symbol" }] })),
       emit: (event, layer, payload) => handlers.get(key(event, layer))?.forEach((handler) => handler(payload)),
       handlerCount: (event, layer) => handlers.get(key(event, layer))?.length ?? 0,
@@ -218,6 +220,60 @@ describe("UrdaisMap", () => {
     expect(instance.handlerCount("mousemove", POINTS_LAYER_ID)).toBe(0);
     expect(instance.handlerCount("mouseleave", POINTS_LAYER_ID)).toBe(0);
     expect(instance.remove).toHaveBeenCalledTimes(1);
+  });
+
+  it("applies the visibility filter once the layer exists, and re-applies it on change without recreating anything", async () => {
+    const { DEFAULT_MAP_VISIBILITY, buildPointFilter } = await import("@/components/map/map-point-style");
+    const { POINTS_LAYER_ID } = await import("@/components/map/point-layer");
+    const UrdaisMap = await loadComponent();
+    const { rerender } = render(<UrdaisMap visibility={DEFAULT_MAP_VISIBILITY} />);
+    await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
+    const instance = maplibre.instances[0]!;
+    expect(instance.setFilter).not.toHaveBeenCalled();
+    instance.emit("load");
+    expect(instance.setFilter).toHaveBeenCalledTimes(1);
+    expect(instance.setFilter).toHaveBeenLastCalledWith(POINTS_LAYER_ID, buildPointFilter(DEFAULT_MAP_VISIBILITY));
+
+    const hidden = { ...DEFAULT_MAP_VISIBILITY, power_infrastructure: false, unmapped: false };
+    rerender(<UrdaisMap visibility={hidden} />);
+    expect(instance.setFilter).toHaveBeenCalledTimes(2);
+    expect(instance.setFilter).toHaveBeenLastCalledWith(POINTS_LAYER_ID, buildPointFilter(hidden));
+    expect(maplibre.Map).toHaveBeenCalledTimes(1);
+    expect(instance.addSource).toHaveBeenCalledTimes(1);
+    expect(instance.addLayer).toHaveBeenCalledTimes(1);
+    expect(instance.remove).not.toHaveBeenCalled();
+    expect(instance.options.center).toEqual([10, 20]);
+  });
+
+  it("uses the latest visibility if it changed before the style loaded", async () => {
+    const { DEFAULT_MAP_VISIBILITY, buildPointFilter } = await import("@/components/map/map-point-style");
+    const { POINTS_LAYER_ID } = await import("@/components/map/point-layer");
+    const UrdaisMap = await loadComponent();
+    const { rerender } = render(<UrdaisMap visibility={DEFAULT_MAP_VISIBILITY} />);
+    await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
+    const instance = maplibre.instances[0]!;
+    const hidden = { ...DEFAULT_MAP_VISIBILITY, data_center: false };
+    rerender(<UrdaisMap visibility={hidden} />);
+    expect(instance.setFilter).not.toHaveBeenCalled();
+    instance.emit("load");
+    expect(instance.setFilter).toHaveBeenCalledTimes(1);
+    expect(instance.setFilter).toHaveBeenLastCalledWith(POINTS_LAYER_ID, buildPointFilter(hidden));
+  });
+
+  it("closes an open popup when its point's group is hidden", async () => {
+    const { DEFAULT_MAP_VISIBILITY } = await import("@/components/map/map-point-style");
+    const { POINTS_LAYER_ID } = await import("@/components/map/point-layer");
+    const UrdaisMap = await loadComponent();
+    const { rerender } = render(<UrdaisMap visibility={DEFAULT_MAP_VISIBILITY} />);
+    await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
+    const instance = maplibre.instances[0]!;
+    instance.emit("load");
+    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "Demo Point 3", mappingStatus: "mapped", category: "data_center" }, geometry: { type: "Point", coordinates: [-0.128, 51.507] } }] });
+    expect(maplibre.popups).toHaveLength(1);
+    rerender(<UrdaisMap visibility={{ ...DEFAULT_MAP_VISIBILITY, compute_cluster: false }} />);
+    expect(maplibre.popups[0]?.removed).toBe(false);
+    rerender(<UrdaisMap visibility={{ ...DEFAULT_MAP_VISIBILITY, compute_cluster: false, data_center: false }} />);
+    expect(maplibre.popups[0]?.removed).toBe(true);
   });
 
   it("removes the map on unmount", async () => {

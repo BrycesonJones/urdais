@@ -5,8 +5,11 @@ import { useEffect, useRef } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { applyBasemapOverrides } from "@/components/map/basemap-style";
-import { addPointLayer } from "@/components/map/point-layer";
+import { DEFAULT_MAP_VISIBILITY } from "@/components/map/map-point-style";
+import type { MapVisibilityState } from "@/components/map/map-point-style";
+import { addPointLayer, applyPointVisibility } from "@/components/map/point-layer";
 import { attachPointInteractions } from "@/components/map/point-popup";
+import type { PointInteractions } from "@/components/map/point-popup";
 import { loadMapRenderer } from "@/components/map/prefetch-map";
 import { getMapPoints } from "@/data/mock/map-points";
 import { buildMapFeatureCollection } from "@/lib/map-geojson";
@@ -41,9 +44,11 @@ const MIN_ZOOM = 1;
  * container. It renders the basemap plus one GeoJSON point source and one
  * circle layer (see point-layer.ts), fed through the getMapPoints seam,
  * which currently returns static demo points, and the mapped-point profile
- * popup (point-popup.ts). Category colours, clustering, and filtering are
- * added later on the same instance, so this component owns the map
- * lifecycle and nothing else.
+ * popup (point-popup.ts). The `visibility` prop, owned by the workspace
+ * that renders the legend, is applied as a layer filter whenever it
+ * changes: the map, source, data, and viewport are untouched, only the
+ * filter expression moves. Clustering is added later on the same
+ * instance, so this component owns the map lifecycle and nothing else.
  *
  * MapLibre touches `window` on import, so the renderer is loaded inside
  * the effect (through the shared loader in prefetch-map.ts): the page
@@ -53,8 +58,19 @@ const MIN_ZOOM = 1;
  * the mount → unmount → mount sequence React runs in development so no
  * orphan instance survives.
  */
-export function UrdaisMap() {
+type UrdaisMapProps = {
+  /** Which point groups to show; defaults to everything. */
+  visibility?: MapVisibilityState;
+};
+
+export function UrdaisMap({ visibility = DEFAULT_MAP_VISIBILITY }: UrdaisMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<import("maplibre-gl").Map | null>(null);
+  const interactionsRef = useRef<PointInteractions | null>(null);
+  // The latest visibility, readable from the one-time load handler without
+  // re-running the map effect (which would recreate the map). Updated in the
+  // visibility effect below, never during render.
+  const visibilityRef = useRef(visibility);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -62,7 +78,6 @@ export function UrdaisMap() {
 
     let cancelled = false;
     let map: import("maplibre-gl").Map | null = null;
-    let detachInteractions: (() => void) | null = null;
 
     // The style is fetched here rather than by MapLibre so the label
     // overrides can be applied before the first render; it is one request
@@ -99,21 +114,35 @@ export function UrdaisMap() {
       // labels. `load` fires once per map; the guard covers an unmount that
       // races it, and addPointLayer itself never adds twice.
       const points = buildMapFeatureCollection(getMapPoints());
+      mapRef.current = map;
       map.on("load", () => {
         if (cancelled || !map) return;
         addPointLayer(map, points);
-        detachInteractions = attachPointInteractions(map, Popup);
+        applyPointVisibility(map, visibilityRef.current);
+        interactionsRef.current = attachPointInteractions(map, Popup);
       });
     });
 
     return () => {
       cancelled = true;
-      detachInteractions?.();
-      detachInteractions = null;
+      interactionsRef.current?.dispose();
+      interactionsRef.current = null;
+      mapRef.current = null;
       map?.remove();
       map = null;
     };
   }, []);
+
+  // Filter changes never touch the map instance: just the layer filter, and
+  // the popup if its point was hidden. Before the layer exists this is a
+  // no-op and the load handler applies the latest state instead.
+  useEffect(() => {
+    visibilityRef.current = visibility;
+    const map = mapRef.current;
+    if (!map) return;
+    applyPointVisibility(map, visibility);
+    interactionsRef.current?.applyVisibility(visibility);
+  }, [visibility]);
 
   return <div ref={containerRef} role="region" aria-label="World map" className="h-full w-full bg-[#f2f3f0]" />;
 }

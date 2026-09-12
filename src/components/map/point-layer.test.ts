@@ -1,8 +1,8 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
 import { describe, expect, it, vi } from "vitest";
 
-import { POINT_COLOR_EXPRESSION } from "@/components/map/map-point-style";
-import { POINTS_LAYER_ID, POINTS_SOURCE_ID, addPointLayer } from "@/components/map/point-layer";
+import { DEFAULT_MAP_VISIBILITY, POINT_COLOR_EXPRESSION, buildPointFilter } from "@/components/map/map-point-style";
+import { POINTS_LAYER_ID, POINTS_SOURCE_ID, addPointLayer, applyPointVisibility } from "@/components/map/point-layer";
 import { buildMapFeatureCollection } from "@/lib/map-geojson";
 
 const collection = buildMapFeatureCollection([
@@ -19,6 +19,7 @@ function stubMap() {
     addSource: vi.fn((id: string, source: unknown) => sources.set(id, source)),
     getLayer: vi.fn((id: string) => layers.get(id)),
     addLayer: vi.fn((layer: { id: string; paint?: Record<string, unknown> }, beforeId?: string) => layers.set(layer.id, { layer, beforeId })),
+    setFilter: vi.fn(),
     getStyle: vi.fn(() => ({
       layers: [
         { id: "background", type: "background" },
@@ -74,5 +75,24 @@ describe("addPointLayer", () => {
     expect((paint["circle-color"] as unknown[])[0]).toBe("case");
     expect(paint["circle-stroke-width"]).toBe(1);
     expect(map.addLayer.mock.calls.filter(([layer]) => (layer as { type?: string }).type === "circle")).toHaveLength(1);
+  });
+});
+
+describe("applyPointVisibility", () => {
+  it("sets the layer filter from the visibility state without touching the source or layer", () => {
+    const map = stubMap();
+    addPointLayer(map, collection);
+    const hidden = { ...DEFAULT_MAP_VISIBILITY, unmapped: false };
+    applyPointVisibility(map, hidden);
+    expect(map.setFilter).toHaveBeenCalledTimes(1);
+    expect(map.setFilter).toHaveBeenCalledWith(POINTS_LAYER_ID, buildPointFilter(hidden));
+    expect(map.addSource).toHaveBeenCalledTimes(1);
+    expect(map.addLayer).toHaveBeenCalledTimes(1);
+  });
+
+  it("is a no-op before the layer exists", () => {
+    const map = stubMap();
+    applyPointVisibility(map, DEFAULT_MAP_VISIBILITY);
+    expect(map.setFilter).not.toHaveBeenCalled();
   });
 });

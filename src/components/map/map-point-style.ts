@@ -1,4 +1,4 @@
-import type { DataDrivenPropertyValueSpecification } from "maplibre-gl";
+import type { DataDrivenPropertyValueSpecification, FilterSpecification } from "maplibre-gl";
 
 import type { MapPointCategory, MapPointStatus } from "@/types/map";
 
@@ -85,3 +85,44 @@ export const MAP_LEGEND_ROWS: ReadonlyArray<{ id: string; label: string; color: 
   ...MAP_POINT_CATEGORIES.map((category) => ({ id: category, label: MAP_POINT_CATEGORY_LABELS[category], color: MAP_POINT_CATEGORY_COLORS[category] })),
   { id: "unmapped", label: UNMAPPED_POINT_LABEL, color: UNMAPPED_POINT_COLOR },
 ];
+
+/* ---------- Visibility filters ---------- */
+
+/** A toggleable group on the map: each category, plus unmapped points. */
+export type MapVisibilityGroup = MapPointCategory | "unmapped";
+
+/** Which groups are currently shown. Keys derive from the taxonomy, so a new category cannot be forgotten. */
+export type MapVisibilityState = Record<MapVisibilityGroup, boolean>;
+
+/** Every toggleable group in legend order. */
+export const MAP_VISIBILITY_GROUPS: readonly MapVisibilityGroup[] = [...MAP_POINT_CATEGORIES, "unmapped"];
+
+/** Everything visible; also what a fresh `/map` starts with, since nothing is persisted. */
+export const DEFAULT_MAP_VISIBILITY: MapVisibilityState = Object.freeze(
+  Object.fromEntries(MAP_VISIBILITY_GROUPS.map((group) => [group, true])),
+) as MapVisibilityState;
+
+/** The group a feature belongs to for visibility purposes, or null when it has no valid group. */
+export function visibilityGroupOf(properties: { mappingStatus?: unknown; category?: unknown } | null | undefined): MapVisibilityGroup | null {
+  if (!properties) return null;
+  if (properties.mappingStatus === "unmapped") return "unmapped";
+  if (properties.mappingStatus === "mapped" && isMapPointCategory(properties.category)) return properties.category;
+  return null;
+}
+
+/**
+ * MapLibre filter for the circle layer built from the visibility state: a
+ * feature shows when it is unmapped and unmapped is on, or when it is
+ * mapped and its category is on. The full dataset stays loaded; only this
+ * expression changes, so toggling is instant. With every group off the
+ * `in` list is empty and the unmapped branch is `false`, so nothing shows
+ * and the expression remains valid.
+ */
+export function buildPointFilter(visibility: MapVisibilityState): FilterSpecification {
+  const enabledCategories = MAP_POINT_CATEGORIES.filter((category) => visibility[category]);
+  return [
+    "any",
+    ["all", ["==", ["get", "mappingStatus"], "unmapped"], visibility.unmapped],
+    ["all", ["==", ["get", "mappingStatus"], "mapped"], ["in", ["get", "category"], ["literal", enabledCategories]]],
+  ] as unknown as FilterSpecification;
+}

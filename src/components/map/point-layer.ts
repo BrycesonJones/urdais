@@ -1,6 +1,7 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
 
-import { POINT_COLOR_EXPRESSION } from "@/components/map/map-point-style";
+import { POINT_COLOR_EXPRESSION, buildPointFilter } from "@/components/map/map-point-style";
+import type { MapVisibilityState } from "@/components/map/map-point-style";
 import type { MapPointCollection } from "@/lib/map-geojson";
 
 /** The one GeoJSON source every Urdais point lives in; later phases call `setData` on it. */
@@ -41,4 +42,15 @@ export function addPointLayer(map: MapLibreMap, collection: MapPointCollection):
     },
     firstLabelLayer,
   );
+}
+
+/**
+ * Applies the legend's visibility state as a layer filter. Nothing else is
+ * touched: the map, the source, the data, and the viewport all stay as they
+ * are, and features filtered out are neither drawn nor hit-tested, so they
+ * cannot be hovered or clicked. A no-op until the layer exists.
+ */
+export function applyPointVisibility(map: MapLibreMap, visibility: MapVisibilityState): void {
+  if (!map.getLayer(POINTS_LAYER_ID)) return;
+  map.setFilter(POINTS_LAYER_ID, buildPointFilter(visibility));
 }

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 
 import { SiteHeader } from "@/components/layout/site-header";
-import { MapLegend } from "@/components/map/map-legend";
-import { UrdaisMap } from "@/components/map/urdais-map";
+import { MapWorkspace } from "@/components/map/map-workspace";
 
 export const metadata: Metadata = {
   title: "Map",
@@ -19,15 +18,16 @@ export const metadata: Metadata = {
  * controls are top-right and the scale and attribution are bottom-right,
  * so nothing competes with it. On phones MapLibre opens the compact
  * attribution across the full width on load, so the legend sits above that
- * strip there. It is React-owned and independent of the MapLibre lifecycle.
+ * strip there. The workspace owns the legend's visibility state; both the
+ * legend and the map are React-owned and the legend is independent of the
+ * MapLibre lifecycle.
  */
 export default function MapRoute() {
   return (
     <div className="flex h-dvh flex-col">
       <SiteHeader />
       <main className="relative min-h-80 w-full flex-1">
-        <UrdaisMap />
-        <MapLegend className="absolute bottom-16 left-3 sm:bottom-3" />
+        <MapWorkspace />
       </main>
     </div>
   );

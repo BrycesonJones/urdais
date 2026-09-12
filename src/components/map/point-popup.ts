@@ -1,6 +1,7 @@
 import type { LngLatLike, Map as MapLibreMap, MapGeoJSONFeature, MapMouseEvent, Popup as MapLibrePopup, PopupOptions } from "maplibre-gl";
 
-import { MAP_POINT_CATEGORY_LABELS, isMapPointCategory } from "@/components/map/map-point-style";
+import { MAP_POINT_CATEGORY_LABELS, isMapPointCategory, visibilityGroupOf } from "@/components/map/map-point-style";
+import type { MapVisibilityState } from "@/components/map/map-point-style";
 import { POINTS_LAYER_ID } from "@/components/map/point-layer";
 
 /** What the profile card shows. Only mapped points with a name qualify. */
@@ -14,6 +15,14 @@ export type MapPointProfile = {
 
 /** MapLibre's Popup class, handed in because the renderer is loaded lazily. */
 export type PopupConstructor = new (options?: PopupOptions) => MapLibrePopup;
+
+/** Handle on the wired interactions. */
+export type PointInteractions = {
+  /** Closes the open popup if its point's group has been hidden. */
+  applyVisibility: (visibility: MapVisibilityState) => void;
+  /** Removes the handlers and any open popup. */
+  dispose: () => void;
+};
 
 /**
  * Reads a clicked feature's properties defensively. GeoJSON properties are
@@ -100,17 +109,21 @@ const POPUP_OPTIONS: PopupOptions = {
  * click on a mapped point opens its profile card anchored to the point (a
  * second click elsewhere replaces it, so at most one popup exists), a
  * click on an unmapped point does nothing, and the cursor turns into a
- * pointer only while over a mapped point. Returns a dispose function that
- * removes the handlers and any open popup; the map component calls it
- * before removing the map so nothing leaks across remounts.
+ * pointer only while over a mapped point. Hidden points never reach these
+ * handlers because the layer filter removes them from hit-testing, and a
+ * popup whose point is hidden after opening is closed by applyVisibility.
+ * dispose removes the handlers and any open popup; the map component calls
+ * it before removing the map so nothing leaks across remounts.
  */
-export function attachPointInteractions(map: MapLibreMap, Popup: PopupConstructor): () => void {
+export function attachPointInteractions(map: MapLibreMap, Popup: PopupConstructor): PointInteractions {
   let popup: MapLibrePopup | null = null;
+  let openGroup: ReturnType<typeof visibilityGroupOf> = null;
   const canvas = map.getCanvas();
 
   const closePopup = () => {
     popup?.remove();
     popup = null;
+    openGroup = null;
   };
 
   const handleClick = (event: MapMouseEvent & { features?: MapGeoJSONFeature[] }) => {
@@ -120,8 +133,10 @@ export function attachPointInteractions(map: MapLibreMap, Popup: PopupConstructo
     closePopup();
     const anchor = feature.geometry.coordinates as LngLatLike;
     popup = new Popup(POPUP_OPTIONS).setLngLat(anchor).setDOMContent(buildProfileCard(profile)).addTo(map);
+    openGroup = visibilityGroupOf(feature.properties);
     popup.on("close", () => {
       popup = null;
+      openGroup = null;
     });
   };
 
@@ -137,11 +152,19 @@ export function attachPointInteractions(map: MapLibreMap, Popup: PopupConstructo
   map.on("mousemove", POINTS_LAYER_ID, handleMove);
   map.on("mouseleave", POINTS_LAYER_ID, handleLeave);
 
-  return () => {
-    map.off("click", POINTS_LAYER_ID, handleClick);
-    map.off("mousemove", POINTS_LAYER_ID, handleMove);
-    map.off("mouseleave", POINTS_LAYER_ID, handleLeave);
-    closePopup();
-    canvas.style.cursor = "";
+  return {
+    applyVisibility: (visibility) => {
+      if (popup && openGroup && !visibility[openGroup]) {
+        closePopup();
+        canvas.style.cursor = "";
+      }
+    },
+    dispose: () => {
+      map.off("click", POINTS_LAYER_ID, handleClick);
+      map.off("mousemove", POINTS_LAYER_ID, handleMove);
+      map.off("mouseleave", POINTS_LAYER_ID, handleLeave);
+      closePopup();
+      canvas.style.cursor = "";
+    },
   };
 }
