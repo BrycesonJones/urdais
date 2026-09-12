@@ -1,0 +1,176 @@
+/*
+ * Chrome reveal: a one-time formation pass in which a heading is rendered
+ * out of the same liquid-chrome material as the homepage hero.
+ *
+ * The text is painted through `background-clip: text`. Beneath a solid
+ * base sit a shadow pool, three specular pools, and a band of silver veins,
+ * using the tone-mapping palette of the LiquidChrome fragment shader
+ * (shadows, base, silver midtones, white specular). On top of those sits
+ * the resolve layer: the element's own text colour, solid beneath a soft
+ * upper edge, which rises from below the baseline until it covers the
+ * glyphs. The material is therefore visible in the upper part of the
+ * letters first and recedes upward as the text settles.
+ *
+ * Timeline (of the 1200ms pass, which starts 100ms after first paint so
+ * the hero canvas has a frame on screen): 0–18% the text fades and
+ * settles into place with the material in the upper part of the glyphs;
+ * 18–88% the resolve layer rises through the letters while the pools
+ * drift; 88–92% the normal text fill fades in over the already resolved
+ * glyphs; 92–100% the clipped background is dropped and any inherited
+ * text-shadow restored, so the settled element is painted exactly like
+ * ordinary text. Both hand-offs are visually no-ops because the resolve
+ * layer already covers the glyphs. Every property that changes in the
+ * last stretch is restated at 92% so nothing switches earlier.
+ *
+ * Timing, easing, and geometry are fixed here so every instance on the page
+ * forms in lockstep as one rendering event; there is deliberately no
+ * per-instance configuration. The one hook is --reveal-shadow: an optional
+ * drop-shadow() filter a container can set to stand in for its inherited
+ * text-shadow during the pass, since text-shadow paints over a clipped text
+ * background.
+ *
+ * Everything is gated on `prefers-reduced-motion: no-preference`: with
+ * reduced motion the class adds nothing beyond `display`, and the text
+ * renders static, in its final colour, immediately.
+ *
+ * Runs once on first paint; there is no JS trigger.
+ */
+
+.text {
+  --chrome-shadow: #000;
+  --chrome-base: #1a1a1a;
+  --chrome-silver: rgb(204 204 230);
+  --chrome-specular: #fff;
+  /* Height of the resolve layer's soft edge. */
+  --reveal-edge: 0.6em;
+  /* Where that edge starts, from the top of the box: below the baseline,
+     so the glyphs begin fully chrome. */
+  --reveal-start: 1em;
+
+  /* A box of its own so transform applies; wrapping still happens inside. */
+  display: inline-block;
+
+  /* The material, topmost layer first. Held in a custom property so the
+     92% keyframe can restate it: a discrete property named only in the
+     final keyframe would otherwise flip at the eased midpoint of the whole
+     run, not at the end. */
+  --reveal-layers:
+      /* Resolve layer: final text colour, solid beneath a soft upper edge. */
+      linear-gradient(
+        to top,
+        currentColor 0 calc(100% - var(--reveal-edge)),
+        transparent 100%
+      ),
+      /* Shadow pool. */
+      radial-gradient(ellipse closest-side, var(--chrome-shadow) 0 35%, rgb(0 0 0 / 0) 100%),
+      /* Specular pools: hard white cores softening through silver. */
+      radial-gradient(
+        ellipse closest-side,
+        var(--chrome-specular) 0 28%,
+        var(--chrome-silver) 48%,
+        rgb(26 26 26 / 0) 100%
+      ),
+      radial-gradient(
+        ellipse closest-side,
+        var(--chrome-specular) 0 22%,
+        var(--chrome-silver) 40%,
+        rgb(26 26 26 / 0) 100%
+      ),
+      radial-gradient(ellipse closest-side, var(--chrome-silver) 0 30%, rgb(26 26 26 / 0) 100%),
+      /* Silver veins through the dark base. */
+      linear-gradient(
+        112deg,
+        var(--chrome-base) 0%,
+        var(--chrome-shadow) 14%,
+        var(--chrome-silver) 26%,
+        var(--chrome-base) 34%,
+        var(--chrome-shadow) 50%,
+        var(--chrome-silver) 62%,
+        var(--chrome-specular) 66%,
+        var(--chrome-base) 76%,
+        var(--chrome-shadow) 90%,
+        var(--chrome-base) 100%
+      ),
+      /* Base: nothing is ever transparent. */
+      linear-gradient(var(--chrome-base), var(--chrome-base));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .text {
+    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    background-repeat: no-repeat;
+    background-image: var(--reveal-layers);
+    background-size:
+      100% calc(100% + var(--reveal-edge)),
+      2.2em 0.9em,
+      2.4em 1.3em,
+      1.6em 0.9em,
+      3em 1.1em,
+      220% 100%,
+      100% 100%;
+    text-shadow: none;
+    filter: var(--reveal-shadow, none);
+    animation: form 1200ms 100ms both;
+  }
+}
+
+@keyframes form {
+  0% {
+    opacity: 0;
+    transform: translateY(0.25em);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    background-position:
+      0 var(--reveal-start),
+      44% 0.7em,
+      12% -0.35em,
+      58% 0.65em,
+      92% -0.1em,
+      62% 0,
+      0 0;
+  }
+  18% {
+    opacity: 1;
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.55, 0.05, 0.25, 1);
+    background-position:
+      0 calc(var(--reveal-start) - 0.1em),
+      42% 0.65em,
+      15% -0.3em,
+      56% 0.6em,
+      90% -0.05em,
+      58% 0,
+      0 0;
+  }
+  88% {
+    -webkit-text-fill-color: transparent;
+    animation-timing-function: linear;
+    background-position:
+      0 calc(-1 * var(--reveal-edge)),
+      36% 0.3em,
+      30% 0.1em,
+      48% 0.3em,
+      75% 0.2em,
+      42% 0,
+      0 0;
+  }
+  92% {
+    -webkit-text-fill-color: currentColor;
+    background-image: var(--reveal-layers);
+    -webkit-background-clip: text;
+    background-clip: text;
+    text-shadow: none;
+    filter: var(--reveal-shadow, none);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    -webkit-text-fill-color: currentColor;
+    background-image: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    text-shadow: inherit;
+    filter: none;
+  }
+}
