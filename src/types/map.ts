@@ -21,4 +21,8 @@ export type UrdaisMapPoint = {
   latitude: number;
   name: string;
   mappingStatus: MapPointStatus;
+  /** Shown on the profile popup when present, e.g. "Atlanta, Georgia, USA". */
+  location?: string;
+  /** Shown on the profile popup when present. */
+  operator?: string;
 };

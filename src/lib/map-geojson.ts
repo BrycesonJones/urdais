@@ -3,8 +3,12 @@ import type { Feature, FeatureCollection, Point } from "geojson";
 import { isMapPointStatus } from "@/components/map/map-point-style";
 import type { MapPointStatus, UrdaisMapPoint } from "@/types/map";
 
-/** Properties carried on each rendered point feature; `mappingStatus` drives the circle colour. */
-export type MapPointProperties = { name: string; mappingStatus: MapPointStatus };
+/**
+ * Properties carried on each rendered point feature. `mappingStatus` drives
+ * the circle colour; `location` and `operator` feed the profile popup and
+ * are present only when the point has them.
+ */
+export type MapPointProperties = { name: string; mappingStatus: MapPointStatus; location?: string; operator?: string };
 
 export type MapPointFeature = Feature<Point, MapPointProperties>;
 export type MapPointCollection = FeatureCollection<Point, MapPointProperties>;
@@ -22,7 +26,8 @@ export function isValidLatitude(value: number): boolean {
  * source consumes. Pure and deterministic: features keep the input order,
  * carry the point id as the feature id (so later `setData` updates and
  * feature-state changes address the same dot), and keep `name` and
- * `mappingStatus` in properties.
+ * `mappingStatus` in properties, plus `location` and `operator` when the
+ * point carries them (never as empty or undefined keys).
  *
  * Invalid input is rejected, not coerced: a point with a longitude outside
  * −180…180, a latitude outside −90…90, a non-finite coordinate, an empty
@@ -42,11 +47,18 @@ export function buildMapFeatureCollection(points: readonly UrdaisMapPoint[]): Ma
     if (!isValidLongitude(point.longitude)) throw new Error(`Map point "${point.id}" has an invalid longitude: ${point.longitude}`);
     if (!isValidLatitude(point.latitude)) throw new Error(`Map point "${point.id}" has an invalid latitude: ${point.latitude}`);
     if (!isMapPointStatus(point.mappingStatus)) throw new Error(`Map point "${point.id}" has an unknown mapping status: ${String(point.mappingStatus)}`);
+    const properties: MapPointProperties = { name: point.name, mappingStatus: point.mappingStatus };
+    for (const key of ["location", "operator"] as const) {
+      const value = point[key];
+      if (value === undefined) continue;
+      if (typeof value !== "string" || value.trim() === "") throw new Error(`Map point "${point.id}" has an invalid ${key}: ${String(value)}`);
+      properties[key] = value;
+    }
     return {
       type: "Feature",
       id: point.id,
       geometry: { type: "Point", coordinates: [point.longitude, point.latitude] },
-      properties: { name: point.name, mappingStatus: point.mappingStatus },
+      properties,
     };
   });
   return { type: "FeatureCollection", features };

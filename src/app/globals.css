@@ -27,6 +27,39 @@
   }
 }
 
+/*
+ * Profile popup on the map (see src/components/map/point-popup.ts). MapLibre
+ * supplies the anchoring, tip, and close button; this only restyles its
+ * content box to the Urdais card treatment. Kept here because the popup is
+ * created outside the React tree.
+ */
+.urdais-point-popup .maplibregl-popup-content {
+  padding: 0.75rem 0.875rem;
+  border: 1px solid rgb(0 0 0 / 0.1);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+  color: #171717;
+  font-size: 0.875rem;
+}
+.urdais-point-popup .maplibregl-popup-close-button {
+  top: 0.25rem;
+  right: 0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.25rem;
+  color: #525252;
+  font-size: 1.125rem;
+  line-height: 1;
+}
+.urdais-point-popup .maplibregl-popup-close-button:hover {
+  background: rgb(0 0 0 / 0.06);
+  color: #171717;
+}
+.urdais-point-popup .maplibregl-popup-close-button:focus-visible {
+  outline: 2px solid #526fe0;
+  outline-offset: 1px;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
