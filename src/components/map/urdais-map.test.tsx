@@ -8,30 +8,47 @@ const maplibre = vi.hoisted(() => {
     addControl: ReturnType<typeof vi.fn>;
     remove: ReturnType<typeof vi.fn>;
     on: ReturnType<typeof vi.fn>;
+    off: ReturnType<typeof vi.fn>;
+    getCanvas: ReturnType<typeof vi.fn>;
     getSource: ReturnType<typeof vi.fn>;
     addSource: ReturnType<typeof vi.fn>;
     getLayer: ReturnType<typeof vi.fn>;
     addLayer: ReturnType<typeof vi.fn>;
     getStyle: ReturnType<typeof vi.fn>;
-    /** Fires the handlers registered for a map event, as the real map would. */
-    emit: (event: string) => void;
+    /** Fires the handlers registered for a map event (optionally on a layer), as the real map would. */
+    emit: (event: string, layer?: string, payload?: unknown) => void;
+    /** Live handler count for an event / layer pair. */
+    handlerCount: (event: string, layer?: string) => number;
   };
   const instances: Instance[] = [];
   const Map = vi.fn(function (this: unknown, options: Record<string, unknown>) {
-    const handlers = new globalThis.Map<string, Array<() => void>>();
+    const handlers = new globalThis.Map<string, Array<(payload?: unknown) => void>>();
     const sources = new globalThis.Map<string, unknown>();
     const layers = new globalThis.Map<string, unknown>();
+    const canvas = document.createElement("canvas");
+    const key = (event: string, layer?: string) => (layer ? `${event}:${layer}` : event);
+    const register = (event: string, layerOrHandler: string | ((payload?: unknown) => void), maybeHandler?: (payload?: unknown) => void) => {
+      const [layer, handler] = typeof layerOrHandler === "string" ? [layerOrHandler, maybeHandler!] : [undefined, layerOrHandler];
+      handlers.set(key(event, layer), [...(handlers.get(key(event, layer)) ?? []), handler]);
+    };
+    const unregister = (event: string, layerOrHandler: string | ((payload?: unknown) => void), maybeHandler?: (payload?: unknown) => void) => {
+      const [layer, handler] = typeof layerOrHandler === "string" ? [layerOrHandler, maybeHandler!] : [undefined, layerOrHandler];
+      handlers.set(key(event, layer), (handlers.get(key(event, layer)) ?? []).filter((candidate) => candidate !== handler));
+    };
     const instance: Instance = {
       options,
       addControl: vi.fn(),
       remove: vi.fn(),
-      on: vi.fn((event: string, handler: () => void) => handlers.set(event, [...(handlers.get(event) ?? []), handler])),
+      on: vi.fn(register),
+      off: vi.fn(unregister),
+      getCanvas: vi.fn(() => canvas),
       getSource: vi.fn((id: string) => sources.get(id)),
       addSource: vi.fn((id: string, source: unknown) => sources.set(id, source)),
       getLayer: vi.fn((id: string) => layers.get(id)),
       addLayer: vi.fn((layer: { id: string }) => layers.set(layer.id, layer)),
       getStyle: vi.fn(() => ({ layers: [{ id: "background", type: "background" }, { id: "label_city", type: "symbol" }] })),
-      emit: (event) => handlers.get(event)?.forEach((handler) => handler()),
+      emit: (event, layer, payload) => handlers.get(key(event, layer))?.forEach((handler) => handler(payload)),
+      handlerCount: (event, layer) => handlers.get(key(event, layer))?.length ?? 0,
     };
     instances.push(instance);
     return instance;
@@ -42,12 +59,20 @@ const maplibre = vi.hoisted(() => {
   const ScaleControl = vi.fn(function (this: unknown, options: unknown) {
     return { kind: "scale", options };
   });
-  return { instances, Map, NavigationControl, ScaleControl, setWorkerUrl: vi.fn() };
+  const popups: Array<{ removed: boolean; content: HTMLElement | null }> = [];
+  const Popup = vi.fn(function (this: unknown) {
+    const popup = { removed: false, content: null as HTMLElement | null };
+    popups.push(popup);
+    const api = { setLngLat: () => api, setDOMContent: (content: HTMLElement) => ((popup.content = content), api), addTo: () => api, remove: () => ((popup.removed = true), api), on: () => api };
+    return api;
+  });
+  return { instances, popups, Map, NavigationControl, Popup, ScaleControl, setWorkerUrl: vi.fn() };
 });
 
 vi.mock("maplibre-gl", () => ({
   Map: maplibre.Map,
   NavigationControl: maplibre.NavigationControl,
+  Popup: maplibre.Popup,
   ScaleControl: maplibre.ScaleControl,
   setWorkerUrl: maplibre.setWorkerUrl,
 }));
@@ -62,7 +87,9 @@ async function loadComponent() {
 describe("UrdaisMap", () => {
   beforeEach(() => {
     maplibre.instances.length = 0;
+    maplibre.popups.length = 0;
     maplibre.Map.mockClear();
+    maplibre.Popup.mockClear();
     maplibre.NavigationControl.mockClear();
     maplibre.ScaleControl.mockClear();
     maplibre.setWorkerUrl.mockClear();
@@ -161,6 +188,32 @@ describe("UrdaisMap", () => {
     unmount();
     instance.emit("load");
     expect(instance.addSource).not.toHaveBeenCalled();
+    expect(instance.remove).toHaveBeenCalledTimes(1);
+  });
+
+  it("wires the point interactions once after load and removes them, and any open popup, on unmount", async () => {
+    const { POINTS_LAYER_ID } = await import("@/components/map/point-layer");
+    const UrdaisMap = await loadComponent();
+    const { unmount } = render(<UrdaisMap />);
+    await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
+    const instance = maplibre.instances[0]!;
+    instance.emit("load");
+    expect(instance.handlerCount("click", POINTS_LAYER_ID)).toBe(1);
+    expect(instance.handlerCount("mousemove", POINTS_LAYER_ID)).toBe(1);
+    expect(instance.handlerCount("mouseleave", POINTS_LAYER_ID)).toBe(1);
+
+    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "Demo Point 1", mappingStatus: "mapped", operator: "Demo Operator" }, geometry: { type: "Point", coordinates: [-84.388, 33.749] } }] });
+    expect(maplibre.popups).toHaveLength(1);
+    expect(maplibre.popups[0]?.content?.textContent).toContain("Demo Point 1");
+
+    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "Demo Point 2", mappingStatus: "unmapped" }, geometry: { type: "Point", coordinates: [0, 0] } }] });
+    expect(maplibre.popups).toHaveLength(1);
+
+    unmount();
+    expect(maplibre.popups[0]?.removed).toBe(true);
+    expect(instance.handlerCount("click", POINTS_LAYER_ID)).toBe(0);
+    expect(instance.handlerCount("mousemove", POINTS_LAYER_ID)).toBe(0);
+    expect(instance.handlerCount("mouseleave", POINTS_LAYER_ID)).toBe(0);
     expect(instance.remove).toHaveBeenCalledTimes(1);
   });
 

@@ -6,6 +6,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 import { applyBasemapOverrides } from "@/components/map/basemap-style";
 import { addPointLayer } from "@/components/map/point-layer";
+import { attachPointInteractions } from "@/components/map/point-popup";
 import { loadMapRenderer } from "@/components/map/prefetch-map";
 import { getMapPoints } from "@/data/mock/map-points";
 import { buildMapFeatureCollection } from "@/lib/map-geojson";
@@ -39,10 +40,10 @@ const MIN_ZOOM = 1;
  * The Urdais map workspace: one MapLibre GL JS instance filling its
  * container. It renders the basemap plus one GeoJSON point source and one
  * circle layer (see point-layer.ts), fed through the getMapPoints seam,
- * which currently returns static demo points. Mapped/unmapped semantics,
- * category colours, clustering, popups, and filtering are added later on
- * the same instance, so this component owns the map lifecycle and nothing
- * else.
+ * which currently returns static demo points, and the mapped-point profile
+ * popup (point-popup.ts). Category colours, clustering, and filtering are
+ * added later on the same instance, so this component owns the map
+ * lifecycle and nothing else.
  *
  * MapLibre touches `window` on import, so the renderer is loaded inside
  * the effect (through the shared loader in prefetch-map.ts): the page
@@ -61,6 +62,7 @@ export function UrdaisMap() {
 
     let cancelled = false;
     let map: import("maplibre-gl").Map | null = null;
+    let detachInteractions: (() => void) | null = null;
 
     // The style is fetched here rather than by MapLibre so the label
     // overrides can be applied before the first render; it is one request
@@ -72,7 +74,7 @@ export function UrdaisMap() {
         .then((style: StyleSpecification) => applyBasemapOverrides(style))
         .catch(() => BASEMAP_STYLE_URL);
 
-    void Promise.all([loadMapRenderer(), loadStyle()]).then(([{ Map, NavigationControl, ScaleControl, setWorkerUrl }, style]) => {
+    void Promise.all([loadMapRenderer(), loadStyle()]).then(([{ Map, NavigationControl, Popup, ScaleControl, setWorkerUrl }, style]) => {
       if (cancelled) return;
       setWorkerUrl(WORKER_URL);
       map = new Map({
@@ -100,11 +102,14 @@ export function UrdaisMap() {
       map.on("load", () => {
         if (cancelled || !map) return;
         addPointLayer(map, points);
+        detachInteractions = attachPointInteractions(map, Popup);
       });
     });
 
     return () => {
       cancelled = true;
+      detachInteractions?.();
+      detachInteractions = null;
       map?.remove();
       map = null;
     };

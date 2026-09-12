@@ -69,6 +69,20 @@ describe("buildMapFeatureCollection", () => {
     expect(features.map((feature) => feature.properties.mappingStatus)).toEqual(["mapped", "unmapped"]);
   });
 
+  it("carries operator and location into properties only when the point has them", () => {
+    const withProfile = buildMapFeatureCollection([{ ...atlanta, operator: "Demo Operator", location: "Atlanta, Georgia, USA" }]);
+    expect(withProfile.features[0]?.properties).toEqual({ name: "Example Point", mappingStatus: "mapped", operator: "Demo Operator", location: "Atlanta, Georgia, USA" });
+    const partial = buildMapFeatureCollection([{ ...london, location: "London, United Kingdom" }]);
+    expect(partial.features[0]?.properties).toEqual({ name: "Second Point", mappingStatus: "unmapped", location: "London, United Kingdom" });
+    expect(buildMapFeatureCollection([atlanta]).features[0]?.properties).not.toHaveProperty("operator");
+    expect(buildMapFeatureCollection([atlanta]).features[0]?.properties).not.toHaveProperty("location");
+  });
+
+  it("rejects blank or non-string profile metadata", () => {
+    expect(() => buildMapFeatureCollection([{ ...atlanta, operator: "  " }])).toThrow('Map point "example-1" has an invalid operator');
+    expect(() => buildMapFeatureCollection([{ ...atlanta, location: 42 as unknown as string }])).toThrow('Map point "example-1" has an invalid location: 42');
+  });
+
   it("rejects a mapping status outside the known set at runtime, even if the types were bypassed", () => {
     const partial = { ...atlanta, mappingStatus: "partial" } as unknown as UrdaisMapPoint;
     expect(() => buildMapFeatureCollection([partial])).toThrow('Map point "example-1" has an unknown mapping status: partial');
