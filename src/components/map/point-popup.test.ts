@@ -2,6 +2,7 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 import { describe, expect, it, vi } from "vitest";
 
 import { POINTS_LAYER_ID } from "@/components/map/point-layer";
+import { DEFAULT_MAP_VISIBILITY } from "@/components/map/map-point-style";
 import { attachPointInteractions, buildProfileCard, readMappedPointProfile } from "@/components/map/point-popup";
 
 function stubPopup() {
@@ -102,7 +103,7 @@ describe("buildProfileCard", () => {
 describe("attachPointInteractions", () => {
   it("registers click, mousemove, and mouseleave on the circle layer once and removes them on dispose", () => {
     const { map } = stubMap();
-    const dispose = attachPointInteractions(map, stubPopup().Popup);
+    const { dispose } = attachPointInteractions(map, stubPopup().Popup);
     for (const event of ["click", "mousemove", "mouseleave"]) expect(map.registered(event, POINTS_LAYER_ID)).toBe(1);
     expect(map.on).toHaveBeenCalledTimes(3);
     dispose();
@@ -148,7 +149,7 @@ describe("attachPointInteractions", () => {
   it("removes an open popup on dispose", () => {
     const { map } = stubMap();
     const { Popup, instances } = stubPopup();
-    const dispose = attachPointInteractions(map, Popup);
+    const { dispose } = attachPointInteractions(map, Popup);
     map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
     dispose();
     expect(instances[0]?.removed).toBe(true);
@@ -157,7 +158,7 @@ describe("attachPointInteractions", () => {
   it("forgets a popup the user closed, so a later dispose does not remove it twice", () => {
     const { map } = stubMap();
     const { Popup, instances } = stubPopup();
-    const dispose = attachPointInteractions(map, Popup);
+    const { dispose } = attachPointInteractions(map, Popup);
     map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
     instances[0]?.handlers.close?.();
     const removeSpy = vi.fn();
@@ -177,5 +178,31 @@ describe("attachPointInteractions", () => {
     map.fire("mousemove", POINTS_LAYER_ID, { features: [mapped] });
     map.fire("mouseleave", POINTS_LAYER_ID, {});
     expect(canvas.style.cursor).toBe("");
+  });
+
+  it("closes the open popup when its point's group is hidden, and leaves it when another group is", () => {
+    const { map, canvas } = stubMap();
+    const { Popup, instances } = stubPopup();
+    const { applyVisibility } = attachPointInteractions(map, Popup);
+    map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
+    applyVisibility({ ...DEFAULT_MAP_VISIBILITY, semiconductor_fab: false, unmapped: false });
+    expect(instances[0]?.removed).toBe(false);
+    applyVisibility({ ...DEFAULT_MAP_VISIBILITY, data_center: false });
+    expect(instances[0]?.removed).toBe(true);
+    expect(canvas.style.cursor).toBe("");
+    applyVisibility({ ...DEFAULT_MAP_VISIBILITY, data_center: false });
+    expect(instances).toHaveLength(1);
+  });
+
+  it("re-enabling a group after a hide lets the point open a fresh popup", () => {
+    const { map } = stubMap();
+    const { Popup, instances } = stubPopup();
+    const { applyVisibility } = attachPointInteractions(map, Popup);
+    map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
+    applyVisibility({ ...DEFAULT_MAP_VISIBILITY, data_center: false });
+    applyVisibility(DEFAULT_MAP_VISIBILITY);
+    map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
+    expect(instances).toHaveLength(2);
+    expect(instances[1]?.removed).toBe(false);
   });
 });
