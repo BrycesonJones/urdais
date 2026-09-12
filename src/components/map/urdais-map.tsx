@@ -13,6 +13,7 @@ import type { PointInteractions } from "@/components/map/point-popup";
 import { loadMapRenderer } from "@/components/map/prefetch-map";
 import { getMapPoints } from "@/data/mock/map-points";
 import { buildMapFeatureCollection } from "@/lib/map-geojson";
+import type { MapPointCollection } from "@/lib/map-geojson";
 import type { StyleSpecification } from "maplibre-gl";
 
 /**
@@ -44,11 +45,12 @@ const MIN_ZOOM = 1;
  * container. It renders the basemap plus one GeoJSON point source and one
  * circle layer (see point-layer.ts), fed through the getMapPoints seam,
  * which currently returns static demo points, and the mapped-point profile
- * popup (point-popup.ts). The `visibility` prop, owned by the workspace
- * that renders the legend, is applied as a layer filter whenever it
- * changes: the map, source, data, and viewport are untouched, only the
- * filter expression moves. Clustering is added later on the same
- * instance, so this component owns the map lifecycle and nothing else.
+ * popup (point-popup.ts). The source clusters natively, so the `visibility`
+ * prop, owned by the workspace that renders the legend, is applied by
+ * feeding the source the visible subset of the canonical collection
+ * (kept here in a ref, never refetched); the map, source, layers, and
+ * viewport are untouched. This component owns the map lifecycle and
+ * nothing else.
  *
  * MapLibre touches `window` on import, so the renderer is loaded inside
  * the effect (through the shared loader in prefetch-map.ts): the page
@@ -71,6 +73,8 @@ export function UrdaisMap({ visibility = DEFAULT_MAP_VISIBILITY }: UrdaisMapProp
   // re-running the map effect (which would recreate the map). Updated in the
   // visibility effect below, never during render.
   const visibilityRef = useRef(visibility);
+  // The canonical, unfiltered collection; visibility derives subsets of it.
+  const collectionRef = useRef<MapPointCollection | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -114,11 +118,11 @@ export function UrdaisMap({ visibility = DEFAULT_MAP_VISIBILITY }: UrdaisMapProp
       // labels. `load` fires once per map; the guard covers an unmount that
       // races it, and addPointLayer itself never adds twice.
       const points = buildMapFeatureCollection(getMapPoints());
+      collectionRef.current = points;
       mapRef.current = map;
       map.on("load", () => {
         if (cancelled || !map) return;
-        addPointLayer(map, points);
-        applyPointVisibility(map, visibilityRef.current);
+        addPointLayer(map, points, visibilityRef.current);
         interactionsRef.current = attachPointInteractions(map, Popup);
       });
     });
@@ -128,19 +132,22 @@ export function UrdaisMap({ visibility = DEFAULT_MAP_VISIBILITY }: UrdaisMapProp
       interactionsRef.current?.dispose();
       interactionsRef.current = null;
       mapRef.current = null;
+      collectionRef.current = null;
       map?.remove();
       map = null;
     };
   }, []);
 
-  // Filter changes never touch the map instance: just the layer filter, and
-  // the popup if its point was hidden. Before the layer exists this is a
-  // no-op and the load handler applies the latest state instead.
+  // Visibility changes never touch the map instance: the source is handed
+  // the visible subset (so clusters recount honestly) and the popup closes
+  // if its point was hidden. Before the source exists this is a no-op and
+  // the load handler seeds the source with the latest state instead.
   useEffect(() => {
     visibilityRef.current = visibility;
     const map = mapRef.current;
-    if (!map) return;
-    applyPointVisibility(map, visibility);
+    const collection = collectionRef.current;
+    if (!map || !collection) return;
+    applyPointVisibility(map, collection, visibility);
     interactionsRef.current?.applyVisibility(visibility);
   }, [visibility]);
 

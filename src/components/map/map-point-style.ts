@@ -1,5 +1,6 @@
-import type { DataDrivenPropertyValueSpecification, FilterSpecification } from "maplibre-gl";
+import type { DataDrivenPropertyValueSpecification } from "maplibre-gl";
 
+import type { MapPointCollection } from "@/lib/map-geojson";
 import type { MapPointCategory, MapPointStatus } from "@/types/map";
 
 /**
@@ -111,18 +112,17 @@ export function visibilityGroupOf(properties: { mappingStatus?: unknown; categor
 }
 
 /**
- * MapLibre filter for the circle layer built from the visibility state: a
- * feature shows when it is unmapped and unmapped is on, or when it is
- * mapped and its category is on. The full dataset stays loaded; only this
- * expression changes, so toggling is instant. With every group off the
- * `in` list is empty and the unmapped branch is `false`, so nothing shows
- * and the expression remains valid.
+ * The subset of a point collection that the visibility state shows: an
+ * unmapped point when unmapped is on, a mapped point when its category is
+ * on. Pure and order-preserving. This is what the clustered source is fed,
+ * so clusters and their counts only ever describe visible points.
  */
-export function buildPointFilter(visibility: MapVisibilityState): FilterSpecification {
-  const enabledCategories = MAP_POINT_CATEGORIES.filter((category) => visibility[category]);
-  return [
-    "any",
-    ["all", ["==", ["get", "mappingStatus"], "unmapped"], visibility.unmapped],
-    ["all", ["==", ["get", "mappingStatus"], "mapped"], ["in", ["get", "category"], ["literal", enabledCategories]]],
-  ] as unknown as FilterSpecification;
+export function filterPointCollection(collection: MapPointCollection, visibility: MapVisibilityState): MapPointCollection {
+  return {
+    ...collection,
+    features: collection.features.filter((feature) => {
+      const group = visibilityGroupOf(feature.properties);
+      return group !== null && visibility[group];
+    }),
+  };
 }

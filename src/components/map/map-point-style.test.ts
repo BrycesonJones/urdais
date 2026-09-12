@@ -4,7 +4,7 @@ import {
   DEFAULT_MAP_VISIBILITY,
   FALLBACK_POINT_COLOR,
   MAP_VISIBILITY_GROUPS,
-  buildPointFilter,
+  filterPointCollection,
   visibilityGroupOf,
   MAP_LEGEND_ROWS,
   MAP_POINT_CATEGORIES,
@@ -91,46 +91,45 @@ describe("map point style", () => {
   });
 });
 
-describe("buildPointFilter", () => {
-  const filterFor = (visibility: Partial<Record<(typeof MAP_VISIBILITY_GROUPS)[number], boolean>>) => buildPointFilter({ ...DEFAULT_MAP_VISIBILITY, ...visibility });
-  const enabledList = (filter: unknown) => (((filter as unknown[][])[2] as unknown[][])[2]![2] as unknown[])[1] as unknown[];
-  const unmappedFlag = (filter: unknown) => ((filter as unknown[][])[1] as unknown[])[2];
+describe("filterPointCollection", () => {
+  const feature = (id: string, properties: Record<string, unknown>) => ({ type: "Feature" as const, id, geometry: { type: "Point" as const, coordinates: [0, 0] }, properties });
+  const collection = {
+    type: "FeatureCollection" as const,
+    features: [
+      feature("a", { name: "A", mappingStatus: "mapped", category: "data_center" }),
+      feature("b", { name: "B", mappingStatus: "mapped", category: "compute_cluster" }),
+      feature("c", { name: "C", mappingStatus: "mapped", category: "power_infrastructure" }),
+      feature("d", { name: "D", mappingStatus: "mapped", category: "semiconductor_fab" }),
+      feature("e", { name: "E", mappingStatus: "unmapped" }),
+    ],
+  } as unknown as Parameters<typeof filterPointCollection>[0];
+  const ids = (visibility: Partial<Record<(typeof MAP_VISIBILITY_GROUPS)[number], boolean>>) => filterPointCollection(collection, { ...DEFAULT_MAP_VISIBILITY, ...visibility }).features.map((item) => item.id);
 
-  it("shows every group when all are enabled", () => {
-    const filter = filterFor({});
-    expect(filter).toEqual([
-      "any",
-      ["all", ["==", ["get", "mappingStatus"], "unmapped"], true],
-      ["all", ["==", ["get", "mappingStatus"], "mapped"], ["in", ["get", "category"], ["literal", ["data_center", "compute_cluster", "power_infrastructure", "semiconductor_fab"]]]],
-    ]);
+  it("keeps every feature when all groups are enabled, in order", () => {
+    expect(ids({})).toEqual(["a", "b", "c", "d", "e"]);
   });
 
   it.each([
-    ["data_center", ["compute_cluster", "power_infrastructure", "semiconductor_fab"]],
-    ["compute_cluster", ["data_center", "power_infrastructure", "semiconductor_fab"]],
-    ["power_infrastructure", ["data_center", "compute_cluster", "semiconductor_fab"]],
-    ["semiconductor_fab", ["data_center", "compute_cluster", "power_infrastructure"]],
-  ] as const)("disabling %s excludes only that category and leaves unmapped alone", (group, remaining) => {
-    const filter = filterFor({ [group]: false });
-    expect(enabledList(filter)).toEqual(remaining);
-    expect(unmappedFlag(filter)).toBe(true);
+    ["data_center", ["b", "c", "d", "e"]],
+    ["compute_cluster", ["a", "c", "d", "e"]],
+    ["power_infrastructure", ["a", "b", "d", "e"]],
+    ["semiconductor_fab", ["a", "b", "c", "e"]],
+    ["unmapped", ["a", "b", "c", "d"]],
+  ] as const)("disabling %s drops only that group", (group, remaining) => {
+    expect(ids({ [group]: false })).toEqual(remaining);
   });
 
-  it("disabling Unmapped excludes only unmapped points", () => {
-    const filter = filterFor({ unmapped: false });
-    expect(unmappedFlag(filter)).toBe(false);
-    expect(enabledList(filter)).toEqual(["data_center", "compute_cluster", "power_infrastructure", "semiconductor_fab"]);
+  it("supports several groups off at once and an empty result when all are off", () => {
+    expect(ids({ data_center: false, semiconductor_fab: false, unmapped: false })).toEqual(["b", "c"]);
+    expect(ids({ data_center: false, compute_cluster: false, power_infrastructure: false, semiconductor_fab: false, unmapped: false })).toEqual([]);
   });
 
-  it("supports several categories off at once", () => {
-    const filter = filterFor({ data_center: false, semiconductor_fab: false });
-    expect(enabledList(filter)).toEqual(["compute_cluster", "power_infrastructure"]);
-  });
-
-  it("with everything off still yields a valid expression that matches nothing", () => {
-    const filter = filterFor({ data_center: false, compute_cluster: false, power_infrastructure: false, semiconductor_fab: false, unmapped: false });
-    expect(unmappedFlag(filter)).toBe(false);
-    expect(enabledList(filter)).toEqual([]);
-    expect((filter as unknown[])[0]).toBe("any");
+  it("does not mutate the input and drops features with no valid group", () => {
+    const withBad = { ...collection, features: [...collection.features, feature("z", { name: "Z", mappingStatus: "mapped" })] } as typeof collection;
+    const before = JSON.stringify(withBad);
+    const out = filterPointCollection(withBad, DEFAULT_MAP_VISIBILITY);
+    expect(out.features.map((item) => item.id)).toEqual(["a", "b", "c", "d", "e"]);
+    expect(JSON.stringify(withBad)).toBe(before);
+    expect(out).not.toBe(withBad);
   });
 });
