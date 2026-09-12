@@ -1,10 +1,13 @@
 import type { LngLatLike, Map as MapLibreMap, MapGeoJSONFeature, MapMouseEvent, Popup as MapLibrePopup, PopupOptions } from "maplibre-gl";
 
+import { MAP_POINT_CATEGORY_LABELS, isMapPointCategory } from "@/components/map/map-point-style";
 import { POINTS_LAYER_ID } from "@/components/map/point-layer";
 
 /** What the profile card shows. Only mapped points with a name qualify. */
 export type MapPointProfile = {
   name: string;
+  /** Human-readable category label, never the raw enum value. */
+  category?: string;
   location?: string;
   operator?: string;
 };
@@ -28,6 +31,7 @@ export function readMappedPointProfile(feature: Pick<MapGeoJSONFeature, "propert
   const name = text(record.name);
   if (!name) return null;
   const profile: MapPointProfile = { name };
+  if (isMapPointCategory(record.category)) profile.category = MAP_POINT_CATEGORY_LABELS[record.category];
   const location = text(record.location);
   const operator = text(record.operator);
   if (location) profile.location = location;
@@ -44,6 +48,7 @@ export function buildProfileCard(profile: MapPointProfile): HTMLElement {
   title.textContent = profile.name;
   card.append(title);
   const rows: Array<[string, string | undefined]> = [
+    ["Category", profile.category],
     ["Operator", profile.operator],
     ["Location", profile.location],
   ];

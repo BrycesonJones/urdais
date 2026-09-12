@@ -5,20 +5,25 @@ import type { UrdaisMapPoint } from "@/types/map";
  * not Urdais facilities, markets, or measurements: the coordinates are
  * neutral geographic anchors (well-known city locations on several
  * continents) chosen only so that dots are obviously visible at world and
- * regional zoom, and the mapped/unmapped split (four of each) exists only
- * to exercise both colours. The operator and location on the mapped points
+ * regional zoom, and the mapped/unmapped split (six and four) exists only
+ * to exercise the colours: the six mapped points cover the four
+ * categories (two data centres, two compute clusters, one power
+ * infrastructure point, one semiconductor fab) so every colour is on the
+ * map. The operator and location on the mapped points
  * are placeholder text for the profile popup, not descriptions of anything
  * that exists. Delete this list when the backend supplies real points.
  */
 export const DEMO_MAP_POINTS: readonly UrdaisMapPoint[] = [
-  { id: "demo-1", name: "Demo Point 1", longitude: -84.388, latitude: 33.749, mappingStatus: "mapped", operator: "Demo Operator", location: "Atlanta, Georgia, USA" },
+  { id: "demo-1", name: "Demo Point 1", longitude: -84.388, latitude: 33.749, mappingStatus: "mapped", category: "compute_cluster", operator: "Demo Operator", location: "Atlanta, Georgia, USA" },
   { id: "demo-2", name: "Demo Point 2", longitude: -122.419, latitude: 37.775, mappingStatus: "unmapped" },
-  { id: "demo-3", name: "Demo Point 3", longitude: -0.128, latitude: 51.507, mappingStatus: "mapped", operator: "Demo Operator", location: "London, United Kingdom" },
+  { id: "demo-3", name: "Demo Point 3", longitude: -0.128, latitude: 51.507, mappingStatus: "mapped", category: "data_center", operator: "Demo Operator", location: "London, United Kingdom" },
   { id: "demo-4", name: "Demo Point 4", longitude: 8.682, latitude: 50.111, mappingStatus: "unmapped" },
-  { id: "demo-5", name: "Demo Point 5", longitude: 103.82, latitude: 1.352, mappingStatus: "mapped", operator: "Demo Operator", location: "Singapore" },
+  { id: "demo-5", name: "Demo Point 5", longitude: 103.82, latitude: 1.352, mappingStatus: "mapped", category: "data_center", operator: "Demo Operator", location: "Singapore" },
   { id: "demo-6", name: "Demo Point 6", longitude: 139.692, latitude: 35.69, mappingStatus: "unmapped" },
-  { id: "demo-7", name: "Demo Point 7", longitude: 151.209, latitude: -33.868, mappingStatus: "mapped", location: "Sydney, Australia" },
+  { id: "demo-7", name: "Demo Point 7", longitude: 151.209, latitude: -33.868, mappingStatus: "mapped", category: "power_infrastructure", location: "Sydney, Australia" },
   { id: "demo-8", name: "Demo Point 8", longitude: -46.633, latitude: -23.55, mappingStatus: "unmapped" },
+  { id: "demo-9", name: "Demo Point 9", longitude: 121.0, latitude: 24.8, mappingStatus: "mapped", category: "semiconductor_fab", operator: "Demo Operator", location: "Hsinchu, Taiwan" },
+  { id: "demo-10", name: "Demo Point 10", longitude: -97.743, latitude: 30.267, mappingStatus: "mapped", category: "compute_cluster", location: "Austin, Texas, USA" },
 ];
 
 /**

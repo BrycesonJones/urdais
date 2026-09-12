@@ -35,13 +35,19 @@ function stubMap() {
 }
 
 const feature = (properties: Record<string, unknown>, coordinates = [-0.128, 51.507]) => ({ properties, geometry: { type: "Point", coordinates } });
-const mapped = feature({ name: "Demo Point 3", mappingStatus: "mapped", operator: "Demo Operator", location: "London, United Kingdom" });
+const mapped = feature({ name: "Demo Point 3", mappingStatus: "mapped", category: "data_center", operator: "Demo Operator", location: "London, United Kingdom" });
 const unmapped = feature({ name: "Demo Point 4", mappingStatus: "unmapped" }, [8.682, 50.111]);
 
 describe("readMappedPointProfile", () => {
-  it("returns the profile for a mapped feature and drops blank optional fields", () => {
-    expect(readMappedPointProfile(mapped)).toEqual({ name: "Demo Point 3", operator: "Demo Operator", location: "London, United Kingdom" });
+  it("returns the profile for a mapped feature with a readable category, and drops blank optional fields", () => {
+    expect(readMappedPointProfile(mapped)).toEqual({ name: "Demo Point 3", category: "Data Center", operator: "Demo Operator", location: "London, United Kingdom" });
     expect(readMappedPointProfile(feature({ name: "Only name", mappingStatus: "mapped", location: "  ", operator: 7 }))).toEqual({ name: "Only name" });
+  });
+
+  it("never shows a raw category value, and tolerates a missing or unknown one", () => {
+    expect(readMappedPointProfile(feature({ name: "Fab", mappingStatus: "mapped", category: "semiconductor_fab" }))).toEqual({ name: "Fab", category: "Semiconductor Fab" });
+    expect(readMappedPointProfile(feature({ name: "Odd", mappingStatus: "mapped", category: "gpu" }))).toEqual({ name: "Odd" });
+    expect(readMappedPointProfile(feature({ name: "None", mappingStatus: "mapped", category: 9 }))).toEqual({ name: "None" });
   });
 
   it("returns null for unmapped, unnamed, or malformed features without throwing", () => {
@@ -55,11 +61,12 @@ describe("readMappedPointProfile", () => {
 
 describe("buildProfileCard", () => {
   it("renders the name and labelled operator and location as text, never as markup", () => {
-    const card = buildProfileCard({ name: "<b>Demo</b> Point", operator: "Demo Operator", location: "Atlanta, Georgia, USA" });
+    const card = buildProfileCard({ name: "<b>Demo</b> Point", category: "Compute Cluster", operator: "Demo Operator", location: "Atlanta, Georgia, USA" });
     expect(card.querySelector("p")?.textContent).toBe("<b>Demo</b> Point");
     expect(card.querySelector("b")).toBeNull();
-    expect([...card.querySelectorAll("dt")].map((term) => term.textContent)).toEqual(["Operator:", "Location:"]);
-    expect([...card.querySelectorAll("dd")].map((detail) => detail.textContent)).toEqual(["Demo Operator", "Atlanta, Georgia, USA"]);
+    expect([...card.querySelectorAll("dt")].map((term) => term.textContent)).toEqual(["Category:", "Operator:", "Location:"]);
+    expect([...card.querySelectorAll("dd")].map((detail) => detail.textContent)).toEqual(["Compute Cluster", "Demo Operator", "Atlanta, Georgia, USA"]);
+    expect(card.textContent).not.toContain("compute_cluster");
   });
 
   it("omits the detail list entirely when there is nothing beyond the name", () => {
@@ -89,6 +96,7 @@ describe("attachPointInteractions", () => {
     expect(instances[0]?.added).toBe(true);
     expect(instances[0]?.content?.textContent).toContain("Demo Point 3");
     expect(instances[0]?.content?.textContent).toContain("Demo Operator");
+    expect(instances[0]?.content?.textContent).toContain("Data Center");
     expect(instances[0]?.options).toMatchObject({ closeButton: true, className: "urdais-point-popup" });
   });
 

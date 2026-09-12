@@ -164,9 +164,11 @@ describe("UrdaisMap", () => {
     expect(instance.addLayer.mock.calls[0]?.[0]).toMatchObject({ id: POINTS_LAYER_ID, type: "circle", source: POINTS_SOURCE_ID });
     expect(instance.addLayer.mock.calls[0]?.[1]).toBe("label_city");
 
-    const supplied = (instance.addSource.mock.calls[0]?.[1] as { data: { features: Array<{ properties: { mappingStatus: string } }> } }).data;
+    const supplied = (instance.addSource.mock.calls[0]?.[1] as { data: { features: Array<{ properties: { mappingStatus: string; category?: string } }> } }).data;
     const statuses = new Set(supplied.features.map((feature) => feature.properties.mappingStatus));
     expect(statuses).toEqual(new Set(["mapped", "unmapped"]));
+    const categories = new Set(supplied.features.filter((feature) => feature.properties.mappingStatus === "mapped").map((feature) => feature.properties.category));
+    expect(categories).toEqual(new Set(["data_center", "compute_cluster", "power_infrastructure", "semiconductor_fab"]));
   });
 
   it("does not duplicate the source or layer if load fires again", async () => {
@@ -202,9 +204,10 @@ describe("UrdaisMap", () => {
     expect(instance.handlerCount("mousemove", POINTS_LAYER_ID)).toBe(1);
     expect(instance.handlerCount("mouseleave", POINTS_LAYER_ID)).toBe(1);
 
-    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "Demo Point 1", mappingStatus: "mapped", operator: "Demo Operator" }, geometry: { type: "Point", coordinates: [-84.388, 33.749] } }] });
+    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "Demo Point 1", mappingStatus: "mapped", category: "compute_cluster", operator: "Demo Operator" }, geometry: { type: "Point", coordinates: [-84.388, 33.749] } }] });
     expect(maplibre.popups).toHaveLength(1);
     expect(maplibre.popups[0]?.content?.textContent).toContain("Demo Point 1");
+    expect(maplibre.popups[0]?.content?.textContent).toContain("Compute Cluster");
 
     instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "Demo Point 2", mappingStatus: "unmapped" }, geometry: { type: "Point", coordinates: [0, 0] } }] });
     expect(maplibre.popups).toHaveLength(1);

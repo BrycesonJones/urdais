@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { buildMapFeatureCollection, isValidLatitude, isValidLongitude } from "@/lib/map-geojson";
 import type { UrdaisMapPoint } from "@/types/map";
 
-const atlanta: UrdaisMapPoint = { id: "example-1", name: "Example Point", longitude: -84.388, latitude: 33.749, mappingStatus: "mapped" };
+const atlanta: UrdaisMapPoint = { id: "example-1", name: "Example Point", longitude: -84.388, latitude: 33.749, mappingStatus: "mapped", category: "data_center" };
 const london: UrdaisMapPoint = { id: "example-2", name: "Second Point", longitude: -0.128, latitude: 51.507, mappingStatus: "unmapped" };
 
 describe("buildMapFeatureCollection", () => {
@@ -15,7 +15,7 @@ describe("buildMapFeatureCollection", () => {
           type: "Feature",
           id: "example-1",
           geometry: { type: "Point", coordinates: [-84.388, 33.749] },
-          properties: { name: "Example Point", mappingStatus: "mapped" },
+          properties: { name: "Example Point", mappingStatus: "mapped", category: "data_center" },
         },
       ],
     });
@@ -40,9 +40,9 @@ describe("buildMapFeatureCollection", () => {
 
   it("accepts the edges of the valid ranges", () => {
     const corners: UrdaisMapPoint[] = [
-      { id: "a", name: "A", longitude: -180, latitude: -90, mappingStatus: "mapped" },
+      { id: "a", name: "A", longitude: -180, latitude: -90, mappingStatus: "mapped", category: "compute_cluster" },
       { id: "b", name: "B", longitude: 180, latitude: 90, mappingStatus: "unmapped" },
-      { id: "c", name: "C", longitude: 0, latitude: 0, mappingStatus: "mapped" },
+      { id: "c", name: "C", longitude: 0, latitude: 0, mappingStatus: "mapped", category: "semiconductor_fab" },
     ];
     expect(buildMapFeatureCollection(corners).features).toHaveLength(3);
   });
@@ -71,11 +71,31 @@ describe("buildMapFeatureCollection", () => {
 
   it("carries operator and location into properties only when the point has them", () => {
     const withProfile = buildMapFeatureCollection([{ ...atlanta, operator: "Demo Operator", location: "Atlanta, Georgia, USA" }]);
-    expect(withProfile.features[0]?.properties).toEqual({ name: "Example Point", mappingStatus: "mapped", operator: "Demo Operator", location: "Atlanta, Georgia, USA" });
+    expect(withProfile.features[0]?.properties).toEqual({ name: "Example Point", mappingStatus: "mapped", category: "data_center", operator: "Demo Operator", location: "Atlanta, Georgia, USA" });
     const partial = buildMapFeatureCollection([{ ...london, location: "London, United Kingdom" }]);
     expect(partial.features[0]?.properties).toEqual({ name: "Second Point", mappingStatus: "unmapped", location: "London, United Kingdom" });
     expect(buildMapFeatureCollection([atlanta]).features[0]?.properties).not.toHaveProperty("operator");
     expect(buildMapFeatureCollection([atlanta]).features[0]?.properties).not.toHaveProperty("location");
+  });
+
+  it("preserves a mapped point's category and requires one", () => {
+    const { features } = buildMapFeatureCollection([{ ...atlanta, category: "power_infrastructure" }]);
+    expect(features[0]?.properties.category).toBe("power_infrastructure");
+    const missing = { ...atlanta, category: undefined } as UrdaisMapPoint;
+    expect(() => buildMapFeatureCollection([missing])).toThrow('Map point "example-1" is mapped but has no category');
+  });
+
+  it("rejects an unknown category on any point, even if the types were bypassed", () => {
+    const gpu = { ...atlanta, category: "gpu" } as unknown as UrdaisMapPoint;
+    expect(() => buildMapFeatureCollection([gpu])).toThrow('Map point "example-1" has an unknown category: gpu');
+    const unmappedBad = { ...london, category: "transformer" } as unknown as UrdaisMapPoint;
+    expect(() => buildMapFeatureCollection([unmappedBad])).toThrow('Map point "example-2" has an unknown category: transformer');
+  });
+
+  it("lets an unmapped point omit its category, and keeps a valid one when given", () => {
+    expect(buildMapFeatureCollection([london]).features[0]?.properties).toEqual({ name: "Second Point", mappingStatus: "unmapped" });
+    const withCategory = buildMapFeatureCollection([{ ...london, category: "data_center" }]);
+    expect(withCategory.features[0]?.properties).toEqual({ name: "Second Point", mappingStatus: "unmapped", category: "data_center" });
   });
 
   it("rejects blank or non-string profile metadata", () => {
