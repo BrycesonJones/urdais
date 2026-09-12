@@ -66,6 +66,9 @@ export const MARKET_PAGES: MarketPageEntry[] = [
       "frontier",
       "utvi",
       "labs",
+      "xai",
+      "x.ai",
+      "grok",
     ],
   },
   {
