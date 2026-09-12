@@ -73,6 +73,10 @@ The following categories are reserved for future output-specific methodologies. 
 - **Maps:** to be developed one output at a time.
 - **News / Information:** to be developed one output at a time.
 
+## Shared Methodologies
+
+The [Urdais AI Equity Universe](/docs/methodology/ai-equity-universe) proposes shared company eligibility and base weighting for future UGAI and UAVI outputs. It is a draft with unresolved empirical parameters, not a production universe or a completed index methodology.
+
 ## Lineage Model
 
 Published Output → Methodology Version → Calculated / Normalized Inputs → Raw Observations → Original Sources
