@@ -40,8 +40,8 @@ export const MEASUREMENT_DOMAINS: MeasurementDomain[] = [
     href: POWER_ANALYTICS_HREF,
   },
   {
-    domain: "AI Chips",
-    description: "Price of computation hardware",
+    domain: "Chips & Accelerators",
+    description: "Price of advanced compute hardware",
     examples: ["$/accelerator", "Performance/$", "Availability"],
   },
   {

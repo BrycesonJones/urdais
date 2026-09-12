@@ -1,5 +1,5 @@
 /**
- * Deterministic market detail data: the nine routed Urdais markets, their
+ * Deterministic market detail data: the eight routed Urdais markets, their
  * instrument families, and long mock histories for the detail chart.
  *
  * Everything is generated from fixed seeds anchored at MOCK_AS_OF, so values
@@ -453,13 +453,11 @@ const UEPI_MARKET: MarketDetail = {
 };
 
 /*
- * The hardware stack is modelled as three deliberately separate indices:
+ * The compute hardware stack is modelled as two deliberately separate indices:
  *
- *   UACI  AI silicon: processor and chip economics
+ *   UACI  the capital asset: what advanced compute hardware costs
  *     ↓
- *   UAXI  deployable accelerator hardware: cards, modules, boards, systems
- *     ↓
- *   UCPI  usable compute service: rental economics per GPU-hour
+ *   UCPI  the service: what using compute capacity costs per GPU-hour
  *
  * Each answers a different question, so they are never merged.
  */
@@ -510,6 +508,8 @@ function buildIndexMarket(
     symbol: spec.symbol,
     name: spec.name,
     unit: spec.unit,
+    ...(identity.description ? { description: identity.description } : {}),
+    ...(identity.question ? { question: identity.question } : {}),
     defaultInstrumentId: instrument.id,
     families: [family],
   };
@@ -540,34 +540,22 @@ const UAVI_MARKET = buildIndexMarket(
 );
 
 /**
- * UACI is an aggregate measure of AI processor and chip market economics:
- * what AI silicon costs. Underlying series may later include GPU silicon,
- * ASICs, TPU-class processors, chip ASPs, price/performance, supply, and
- * advanced packaging economics across generations such as H100, H200, B200,
- * and MI300X; the aggregate is quoted in points. Semiconductor markets move
- * hard, so the demo history carries higher structural volatility.
+ * UACI, the Urdais Chip & Accelerator Index, is the single canonical index
+ * for advanced AI accelerator hardware: normalized market pricing for
+ * leading accelerators, weighted by representative compute capability and
+ * market relevance. Representative constituents are accelerator-class parts
+ * such as NVIDIA H100, H200, and B200 / GB200-class, and AMD MI300X; the
+ * final basket and weights are not settled, and CPUs, DRAM, NAND,
+ * networking, and photonics are not constituents (they have their own
+ * markets). The aggregate is quoted in points. This is a placeholder demo
+ * walk that methodology-backed data replaces; it is not a blend of the two
+ * former chip and accelerator series.
  */
 const UACI_MARKET = buildIndexMarket(
   "UACI",
   "pts",
   { seed: 20190619, latestValue: 203.75, latestDailyReturn: -0.0194, points: LONG_HISTORY_DAYS, volatility: 0.022, drift: 0.0006 },
   { seed: 7_400_000, days: 7, volatility: 0.011 },
-);
-
-/**
- * UAXI is an aggregate measure of finished, deployable AI acceleration
- * hardware economics: what accelerator cards, SXM modules, boards, HGX-class
- * systems, and rack-scale configurations cost. Underlying series may later
- * include $/accelerator, performance per dollar, and availability or lead
- * time; the aggregate is quoted in points. It is related to UACI but adds
- * memory, boards, packaging, integration, and availability, so the demo
- * history is a distinct, somewhat calmer walk.
- */
-const UAXI_MARKET = buildIndexMarket(
-  "UAXI",
-  "pts",
-  { seed: 20200903, latestValue: 167.22, latestDailyReturn: -0.0088, points: LONG_HISTORY_DAYS, volatility: 0.016, drift: 0.0005 },
-  { seed: 7_500_000, days: 7, volatility: 0.008 },
 );
 
 // Strong long-run growth with crypto-scale daily moves.
@@ -589,7 +577,6 @@ export const MARKETS: MarketDetail[] = [
   UPPI_MARKET,
   UEPI_MARKET,
   UACI_MARKET,
-  UAXI_MARKET,
   UBWI_MARKET,
 ];
 

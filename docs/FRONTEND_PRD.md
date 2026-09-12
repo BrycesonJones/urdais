@@ -410,6 +410,7 @@ Public Urdais indices include:
 * **UCPI — Urdais Compute Price Index**
 * **UGAI — Urdais Global AI Index**
 * **UAVI — Urdais AI Volatility Index**
+* **UACI — Urdais Chip & Accelerator Index**: "Tracks normalized market pricing for leading AI accelerators, weighted by representative compute capability and market relevance." It is the single canonical index for advanced AI accelerator hardware and measures the hardware / capital-asset layer (what advanced compute hardware costs); UCPI remains separate and measures usage / service pricing (what using compute capacity costs). The former AI Chip Index and Accelerator Index were consolidated into it. Its detailed methodology, constituent basket, weights, and backend data model are deferred.
 * **UBWI — Bitcoin Wealth Index**
 
 Premium indices may include:

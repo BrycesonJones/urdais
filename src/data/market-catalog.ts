@@ -12,11 +12,23 @@ export type MarketCatalogEntry = {
   symbol: string;
   name: string;
   href: string;
+  /** One-sentence definition shown on the detail page, where the product has settled one. */
+  description?: string;
+  /** The question the index answers, shown as its subtitle. */
+  question?: string;
 };
 
-function entry(symbol: string, name: string): MarketCatalogEntry {
-  return { symbol, name, href: marketIndexHref(symbol) };
+function entry(symbol: string, name: string, detail?: Pick<MarketCatalogEntry, "description" | "question">): MarketCatalogEntry {
+  return { symbol, name, href: marketIndexHref(symbol), ...detail };
 }
+
+/** The single canonical index for advanced AI accelerator hardware: the capital-asset layer, distinct from UCPI's usage pricing. */
+export const CHIP_ACCELERATOR_INDEX = {
+  symbol: "UACI",
+  name: "Urdais Chip & Accelerator Index",
+  description: "Tracks normalized market pricing for leading AI accelerators, weighted by representative compute capability and market relevance.",
+  question: "What does advanced compute hardware cost?",
+} as const;
 
 /** Routed markets in display order; the first is the default for /markets. */
 export const MARKET_CATALOG: MarketCatalogEntry[] = [
@@ -26,8 +38,7 @@ export const MARKET_CATALOG: MarketCatalogEntry[] = [
   entry("UMPI", "Urdais Memory Price Index"),
   entry("UPPI", "Urdais Photonics Price Index"),
   entry("UEPI", "Urdais Energy & Power Index"),
-  entry("UACI", "Urdais AI Chip Index"),
-  entry("UAXI", "Urdais Accelerator Index"),
+  entry(CHIP_ACCELERATOR_INDEX.symbol, CHIP_ACCELERATOR_INDEX.name, { description: CHIP_ACCELERATOR_INDEX.description, question: CHIP_ACCELERATOR_INDEX.question }),
   entry("UBWI", "Bitcoin Wealth Index"),
 ];
 

@@ -29,6 +29,10 @@ export type MarketIndex = {
   name: string;
   /** Display unit, e.g. "$/GPU-hour" or "pts". */
   unit: string;
+  /** One-sentence definition, present once the product has settled one for an index. */
+  description?: string;
+  /** The question the index answers, shown as its subtitle. */
+  question?: string;
 };
 
 /**
