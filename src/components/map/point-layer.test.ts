@@ -1,10 +1,14 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
 import { describe, expect, it, vi } from "vitest";
 
+import { MAPPED_POINT_COLOR, UNMAPPED_POINT_COLOR } from "@/components/map/map-point-style";
 import { POINTS_LAYER_ID, POINTS_SOURCE_ID, addPointLayer } from "@/components/map/point-layer";
 import { buildMapFeatureCollection } from "@/lib/map-geojson";
 
-const collection = buildMapFeatureCollection([{ id: "p1", name: "P1", longitude: 1, latitude: 2 }]);
+const collection = buildMapFeatureCollection([
+  { id: "p1", name: "P1", longitude: 1, latitude: 2, mappingStatus: "mapped" },
+  { id: "p2", name: "P2", longitude: 3, latitude: 4, mappingStatus: "unmapped" },
+]);
 
 /** A map stub that remembers what was added, with a Positron-like layer order. */
 function stubMap() {
@@ -62,11 +66,12 @@ describe("addPointLayer", () => {
     expect(map.addLayer).toHaveBeenCalledTimes(1);
   });
 
-  it("uses a single neutral treatment with no data-driven colour yet", () => {
+  it("colours the one circle layer by mappingStatus: mapped in the mapped colour, everything else black", () => {
     const map = stubMap();
     addPointLayer(map, collection);
     const paint = map.addLayer.mock.calls[0]?.[0].paint ?? {};
-    expect(typeof paint["circle-color"]).toBe("string");
+    expect(paint["circle-color"]).toEqual(["match", ["get", "mappingStatus"], "mapped", MAPPED_POINT_COLOR, UNMAPPED_POINT_COLOR]);
     expect(paint["circle-stroke-width"]).toBe(1);
+    expect(map.addLayer.mock.calls.filter(([layer]) => (layer as { type?: string }).type === "circle")).toHaveLength(1);
   });
 });

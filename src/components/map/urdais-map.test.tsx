@@ -136,6 +136,10 @@ describe("UrdaisMap", () => {
     expect(instance.addLayer).toHaveBeenCalledTimes(1);
     expect(instance.addLayer.mock.calls[0]?.[0]).toMatchObject({ id: POINTS_LAYER_ID, type: "circle", source: POINTS_SOURCE_ID });
     expect(instance.addLayer.mock.calls[0]?.[1]).toBe("label_city");
+
+    const supplied = (instance.addSource.mock.calls[0]?.[1] as { data: { features: Array<{ properties: { mappingStatus: string } }> } }).data;
+    const statuses = new Set(supplied.features.map((feature) => feature.properties.mappingStatus));
+    expect(statuses).toEqual(new Set(["mapped", "unmapped"]));
   });
 
   it("does not duplicate the source or layer if load fires again", async () => {
