@@ -1,6 +1,6 @@
 import { movementClass } from "@/components/market/movement";
 import { formatNumber, formatPercent, formatUpdatedAt } from "@/lib/format";
-import { instrumentDisplaySymbol } from "@/lib/market-display";
+import { instrumentDisplaySymbol, isHeadlineInstrument } from "@/lib/market-display";
 import type { MarketDetail, MarketInstrumentDetail } from "@/types/market";
 
 type MarketHeaderProps = {
@@ -11,7 +11,8 @@ type MarketHeaderProps = {
 /**
  * Identity and headline for the selected instrument: its display symbol
  * (index-prefixed only for the market's headline benchmark), the name,
- * when it was last updated, and the current value at the largest size on
+ * the index's definition and the question it answers when the product has
+ * settled them, when it was last updated, and the current value at the largest size on
  * the page with the day's move beneath it as a percentage. The page opens
  * directly on this; the instrument itself is the context. The move is the
  * current-session change and does not follow the chart range; historical
@@ -35,6 +36,12 @@ export function MarketHeader({ market, instrument }: MarketHeaderProps) {
         {instrument.name}
         {instrument.regionLabel && <span className="text-neutral-500"> · {instrument.regionLabel}</span>}
       </p>
+      {isHeadlineInstrument(market, instrument) && market.description && (
+        <p className="mt-2 max-w-2xl text-sm text-neutral-400">{market.description}</p>
+      )}
+      {isHeadlineInstrument(market, instrument) && market.question && (
+        <p className="mt-1 text-sm italic text-neutral-500">{market.question}</p>
+      )}
       <p className="mt-1 text-xs text-neutral-500 md:text-sm">Updated {formatUpdatedAt(snapshot.asOf)}</p>
 
       {/* Explicit spaces keep the text readable when announced or copied. */}
