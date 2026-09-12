@@ -23,3 +23,24 @@ describe("shared methodology pages", () => {
     expect(draft.match(/^# /gm)).toHaveLength(1);
   });
 });
+
+describe("output methodology pages", () => {
+  const ugai = findDoc("methodology/ugai");
+  const universe = findDoc("methodology/ai-equity-universe");
+
+  it("registers UGAI under Methodology, directly after its parent universe", () => {
+    expect(ugai).toMatchObject({ section: "Methodology", file: "methodology/ugai.md" });
+    expect(docPages[docPages.indexOf(universe!) + 1]).toBe(ugai);
+    expect(docHref(ugai!.slug)).toBe("/docs/methodology/ugai");
+  });
+
+  it("links UGAI to and from the parent universe and the framework", () => {
+    const read = (file: string) => readFileSync(path.join(process.cwd(), "docs", file), "utf8");
+    const ugaiDoc = read(ugai!.file);
+    expect(ugaiDoc).toContain(`](${docHref(universe!.slug)})`);
+    expect(ugaiDoc).toContain("](/docs/methodology)");
+    expect(ugaiDoc.match(/^# /gm)).toHaveLength(1);
+    expect(read(universe!.file)).toContain(`](${docHref(ugai!.slug)})`);
+    expect(read("methodology.md")).toContain(`](${docHref(ugai!.slug)})`);
+  });
+});

@@ -67,7 +67,7 @@ Copy these headings when developing an individual output. Leave unresolved decis
 
 The following categories are reserved for future output-specific methodologies. None is defined by this framework.
 
-- **Indices:** to be developed one output at a time.
+- **Indices:** to be developed one output at a time. The first proposed index methodology is [UGAI](/docs/methodology/ugai), the Urdais Global AI Index, which consumes the shared AI Equity Universe.
 - **Markets:** to be developed one output at a time.
 - **Market Analytics:** to be developed one output at a time.
 - **Maps:** to be developed one output at a time.
