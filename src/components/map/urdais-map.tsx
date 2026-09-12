@@ -4,11 +4,17 @@ import { useEffect, useRef } from "react";
 
 import "maplibre-gl/dist/maplibre-gl.css";
 
+import { applyBasemapOverrides } from "@/components/map/basemap-style";
+import { loadMapRenderer } from "@/components/map/prefetch-map";
+import type { StyleSpecification } from "maplibre-gl";
+
 /**
  * OpenFreeMap's Positron style: a subdued, low-noise basemap served from
  * OpenMapTiles vector tiles with OpenStreetMap data. It needs no API key.
  * The style's tile source declares the required OpenFreeMap, OpenMapTiles,
  * and OpenStreetMap attribution, which MapLibre's attribution control shows.
+ * Its place-label layers are adjusted by basemap-style.ts for city-level
+ * context; everything else is used as published.
  */
 const BASEMAP_STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
 
@@ -33,12 +39,13 @@ const MIN_ZOOM = 1;
  * added later as MapLibre sources and layers on the same instance, so this
  * component owns the map lifecycle and nothing else.
  *
- * MapLibre touches `window` on import, so the renderer is imported inside
- * the effect: the page renders on the server without it, the library ships
- * in its own chunk that only `/map` (or an intentional prefetch) loads, and
- * the map is created once per mount and removed on unmount. A cancelled
- * flag covers the mount → unmount → mount sequence React runs in
- * development so no orphan instance survives.
+ * MapLibre touches `window` on import, so the renderer is loaded inside
+ * the effect (through the shared loader in prefetch-map.ts): the page
+ * renders on the server without it, the library ships in its own chunk
+ * that only `/map` (or an intentional prefetch) loads, and the map is
+ * created once per mount and removed on unmount. A cancelled flag covers
+ * the mount → unmount → mount sequence React runs in development so no
+ * orphan instance survives.
  */
 export function UrdaisMap() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,12 +57,22 @@ export function UrdaisMap() {
     let cancelled = false;
     let map: import("maplibre-gl").Map | null = null;
 
-    void import("maplibre-gl").then(({ Map, NavigationControl, setWorkerUrl }) => {
+    // The style is fetched here rather than by MapLibre so the label
+    // overrides can be applied before the first render; it is one request
+    // either way. If the fetch fails MapLibre is handed the URL and reports
+    // the error itself.
+    const loadStyle = (): Promise<StyleSpecification | string> =>
+      fetch(BASEMAP_STYLE_URL)
+        .then((response) => (response.ok ? response.json() : Promise.reject(new Error(String(response.status)))))
+        .then((style: StyleSpecification) => applyBasemapOverrides(style))
+        .catch(() => BASEMAP_STYLE_URL);
+
+    void Promise.all([loadMapRenderer(), loadStyle()]).then(([{ Map, NavigationControl, ScaleControl, setWorkerUrl }, style]) => {
       if (cancelled) return;
       setWorkerUrl(WORKER_URL);
       map = new Map({
         container,
-        style: BASEMAP_STYLE_URL,
+        style,
         center: INITIAL_CENTER,
         zoom: INITIAL_ZOOM,
         minZoom: MIN_ZOOM,
@@ -64,6 +81,13 @@ export function UrdaisMap() {
       // expanded on wide maps and collapses it to its info button on narrow
       // ones, so it stays reachable without covering the map.
       map.addControl(new NavigationControl({ showCompass: false }), "top-right");
+      // Metric distance scale. Controls added to a bottom corner stack above
+      // the ones already there, so bottom-right puts the scale directly
+      // above the attribution rather than beside it, and the two never
+      // overlap even when the compact attribution opens on narrow maps. It
+      // re-measures on every zoom and switches between metres and
+      // kilometres itself.
+      map.addControl(new ScaleControl({ unit: "metric", maxWidth: 120 }), "bottom-right");
     });
 
     return () => {
