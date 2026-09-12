@@ -27,7 +27,7 @@ UGAI consumes the following from each parent universe version, without modificat
 - **Representative securities**: one listing per company, with the identifiers and price currency the parent recorded.
 - **Base weights** `w_i`: the parent's issuer-capped, accessible free-float weights, summing to one across members.
 - **Classifications**: activity tags and exposure tiers, carried for attribution and reporting only; they do not affect calculation.
-- **Company identity continuity** across corporate actions, as determined by the parent's corporate-action and exceptional-event rules, including event snapshots that remove a member between scheduled reviews.
+- **Company identity continuity** across corporate actions, as determined by the parent's corporate-action and exceptional-event rules, including event snapshots that remove a member between scheduled reviews. An event snapshot is consumed for membership, identity, and removal timing; its renormalized event-snapshot weights are not a UGAI reset input (see [Universe Versions and Rebalances](#docs-universe-versions-and-rebalances)).
 
 A parent version is consumed only after it is published as valid. UGAI never selects from a draft, backfilled, or corrected parent snapshot for a date on which that snapshot was not yet the published version; a parent correction produces a UGAI correction under [Corrections and Restatements](#docs-corrections-and-restatements), not a silent recomputation. If the parent methodology or its taxonomy changes, historical UGAI observations remain tied to the parent methodology version and universe version that were effective at the time. UGAI carries its own methodology version independently (see [Methodology Versioning](#docs-methodology-versioning)).
 
@@ -48,7 +48,7 @@ Three series types were evaluated:
 
 No net-return series is proposed for launch. A net series would require a stated reference investor and a maintained withholding-rate table; that is a possible future extension, listed under open questions, and it would be an additional labelled series rather than a redefinition of the headline. Local-currency and currency-hedged variants are likewise out of scope.
 
-Because the AI Equity Universe is expected to have a low aggregate dividend yield, the two series will typically move closely together; they must still be maintained as distinct series with distinct identifiers, and neither may be substituted for the other in publication or history.
+The price-return and gross-total-return series may diverge according to the distribution characteristics of the constituent universe, which are not known before a production universe exists. They are therefore maintained as distinct series with distinct identifiers, and neither may be substituted for the other in publication or history.
 
 ## Index Calculation
 
@@ -57,7 +57,7 @@ UGAI is a divisor-based, base-weighted aggregative index (the Laspeyres form use
 Notation, for calculation day `t` and constituent representative security `i`:
 
 - `q_i,t`: index shares of security `i` effective for day `t` (constant between resets and events; see [Index Shares](#docs-index-shares)).
-- `P_i,t`: the official closing price of security `i` in its price currency for day `t`, after any corporate-action adjustment effective on `t`, or the carried price defined in [Missing Data and Market Disruptions](#docs-missing-data-and-market-disruptions).
+- `P_i,t`: the raw official closing price published for representative security `i` for day `t` by its exchange or the approved market-data source, expressed in the security's stated price currency and units, or the carried price defined in [Missing Data and Market Disruptions](#docs-missing-data-and-market-disruptions). It is the observed close as published, not a historically back-adjusted series. UGAI never rewrites an observed close; every corporate-action effect enters through the index-share and divisor adjustments defined in [Corporate Actions](#docs-corporate-actions).
 - `X_i,t`: the reference exchange rate for day `t`, expressed as USD per one unit of the price currency of `i` (see [Currency](#docs-currency)).
 - `MV_t = Σ_i q_i,t × P_i,t × X_i,t`: index market value in USD.
 - `D_t`: the divisor effective for day `t`.
@@ -68,7 +68,7 @@ The price-return level is:
 
 The level for day `t` depends only on quantities and divisor known before the open of day `t` and on prices and exchange rates observed for day `t`. All corporate-action, universe, and divisor changes are applied after the close of day `t − 1` so that they are effective for day `t`; none is applied intraday.
 
-The live weight of a constituent on any day is `w_i,t = q_i,t × P_i,t × X_i,t / MV_t`. It equals the parent base weight only at the close on which index shares were last set, and drifts thereafter.
+The **as-of weight** of a constituent on any day is `w_i,t = q_i,t × P_i,t × X_i,t / MV_t`. It equals the parent base weight only at the close on which index shares were last set at a scheduled reset, and drifts thereafter. As-of weights are the constituent weights UGAI publishes for an observation date; they are distinct from the parent's base weights and from the parent's event-snapshot weights (see [Universe Versions and Rebalances](#docs-universe-versions-and-rebalances)).
 
 Calculation uses unrounded values throughout. Published levels are rounded for display; a rounded value is never an input to a subsequent calculation.
 
@@ -86,29 +86,43 @@ Index shares are stored at a fixed decimal precision that is an **unresolved** o
 
 `D_s+1 = D_s × Σ_i q_i,s+1 × P_i,s × X_i,s / MV_s`
 
-Index shares are not shares outstanding, not free-float shares, and not a claim about any company's share count. They are the quantities that reproduce the parent's base weights at the reset close, and they change only at resets, at parent event snapshots, and through the corporate-action share adjustments defined below. Changes in a company's shares outstanding or free float between resets do not change `q_i`; they reach UGAI only through the parent's next base-weight snapshot. This is a deliberate simplification relative to providers that update index shares for large issuance between reviews; its cost (a temporarily stale representation of a company's float) and its benefit (index shares are fully determined by the parent snapshot and announced corporate-action terms) are both disclosed. Revisiting it is an open question.
+Index shares are not shares outstanding, not free-float shares, and not a claim about any company's share count. They are the quantities that reproduce the parent's base weights at the reset close, and they change only at scheduled resets, at parent event snapshots (where only the removed security's index shares change, to zero), and through the corporate-action share adjustments defined below. Changes in a company's shares outstanding or free float between resets do not change `q_i`; they reach UGAI only through the parent's next base-weight snapshot. This is a deliberate simplification relative to providers that update index shares for large issuance between reviews; its cost (a temporarily stale representation of a company's float) and its benefit (index shares are fully determined by the parent snapshot and announced corporate-action terms) are both disclosed. Revisiting it is an open question.
 
 ## Weight Drift
 
-Between resets, constituent weights drift with relative price and currency movements and are not corrected. If a constituent's target weight at the reset was 8% and its price subsequently rises so that its live weight is 10.4%, UGAI carries 10.4% until the next reset. No daily, weekly, or threshold-triggered re-weighting occurs, and the parent's issuer cap is not re-applied between resets. A market index that continuously forced weights back to targets would embed a trading rule and would not represent the market-value evolution of the admitted portfolio.
+Between resets, constituent weights drift with relative price and currency movements and are not corrected. If a constituent's target weight at the reset was 8% and its price subsequently rises so that its as-of weight is 10.4%, UGAI carries 10.4% until the next scheduled reset. No daily, weekly, or threshold-triggered re-weighting occurs, and the parent's issuer cap is not re-applied between resets. A market index that continuously forced weights back to targets would embed a trading rule and would not represent the market-value evolution of the admitted portfolio.
 
-The cap therefore binds only at resets. Between resets, published concentration statistics report live weights; the base weights that produced them remain available from the parent snapshot.
+The cap therefore binds only at scheduled resets. Between resets, published concentration statistics report as-of weights; the base weights that produced them remain available from the parent snapshot. An exceptional parent deletion between resets does not interrupt drift: the deleted member leaves, surviving index shares are unchanged, and surviving as-of weights continue from their drifted state (see [Universe Versions and Rebalances](#docs-universe-versions-and-rebalances)).
 
 ## Universe Versions and Rebalances
 
 Two distinct processes must not be conflated:
 
 - **Universe reconstitution** is the parent's quarterly review of membership, classifications, representative securities, and base weights. It produces a new universe version with an announcement timestamp and an effective timestamp. UGAI does not perform it.
-- **UGAI rebalance** is the operational reset of index shares to the new base weights, applied after the close of the last calculation day before the parent effective timestamp, using that day's closing prices and exchange rates as in [Index Shares](#docs-index-shares).
+- **UGAI rebalance** (the scheduled reset) is the operational reset of index shares to the new base weights, applied after the close of the last calculation day before the parent effective timestamp, using that day's closing prices and exchange rates as in [Index Shares](#docs-index-shares).
 
-Each parent version therefore produces exactly one scheduled UGAI reset, on the parent's quarterly cadence. At the reset:
+Each scheduled parent version therefore produces exactly one scheduled UGAI reset, on the parent's quarterly cadence. At the reset:
 
 1. Departing securities are removed at their closing price on the implementation day; index shares go to zero.
 2. Incoming securities are added with index shares computed from their closing price on the implementation day.
 3. Continuing securities have index shares recomputed from the new base weights, including any change of representative security the parent has decided.
 4. The divisor is set so that the level is unchanged at the implementation close.
 
-Parent **event snapshots** (exceptional deletions and other between-review events the parent methodology defines) produce an unscheduled UGAI event reset at the parent's effective time: the affected securities are removed at the parent's decision price, no replacements are inserted, the surviving index shares are unchanged, and the divisor is reduced by the removed market value. The parent's proportional renormalization of surviving base weights is reproduced automatically by holding surviving index shares fixed, because removing one holding from a fixed-quantity portfolio leaves the others in proportion.
+Parent **event snapshots** (exceptional deletions and other between-review events the parent methodology defines) change UGAI membership but do not trigger an unscheduled rebalance of surviving UGAI holdings. The event snapshot is authoritative for membership, company identity, and removal timing. At the parent's effective time, applied after the close of the last calculation day before it:
+
+1. The affected securities are removed at the parent's decision price; their index shares go to zero. No replacements are inserted.
+2. The divisor is reduced by the removed market value so that the removal produces no fictitious return (see [Additions and Deletions](#docs-additions-and-deletions)).
+3. Surviving index shares are unchanged. Surviving as-of weights continue from their existing drifted state; they are not reset to the parent's event-snapshot weights.
+4. The next scheduled quarterly reset restores the parent's target weights for the version then effective.
+
+The parent methodology renormalizes the surviving base weights and reapplies its issuer cap in the event snapshot. Those event-snapshot weights are the parent's canonical allocation for downstream consumers whose methodologies call for them; they are not a UGAI reset input. Holding surviving index shares fixed does not reproduce them, because UGAI's weights will already have drifted through price and exchange-rate movement since the last reset, and the parent's cap reapplication is not a proportional operation. Reproducing them would be an unscheduled rebalance, which this methodology does not perform.
+
+Four quantities are therefore distinct and must not be conflated:
+
+- **Parent base weights:** the scheduled parent version's capped allocation, and UGAI's only reset input.
+- **Parent event-snapshot weights:** the parent's renormalized allocation after an exceptional deletion, consumed by UGAI for membership, identity, and timing only.
+- **UGAI index shares:** the fixed quantities set at the last scheduled reset, changed only by corporate-action share adjustments and by removals.
+- **UGAI as-of weights:** the drifted weights implied by index shares at an observation date's closing prices and exchange rates, which are the weights UGAI publishes.
 
 The parent's announcement must precede the UGAI reset. If a parent version is announced without enough lead time to implement it by its effective timestamp, UGAI continues on the previous version and implements at the earliest close after the announcement, and the delay is published; the minimum lead time is an **unresolved** parameter shared with the parent's operational calendar.
 
@@ -118,7 +132,7 @@ UGAI is calculated and published in **USD**. Selection rationale: the parent's c
 
 Conversion uses one reference exchange-rate observation per currency per calculation day, `X_i,t`, expressed as USD per unit of price currency, taken at a single global reference time. The proposed convention is a recognized end-of-day fixing at a fixed time (the researched providers use a 16:00 London closing spot fixing); the exact source, fixing time, licensing, and fallback rules are **unresolved** launch parameters. The same observation converts prices, dividends, and corporate-action cash amounts dated `t`. Bid, ask, or mid conventions must be specified with the source and applied consistently; orientation (USD per unit, never inverted per currency) must be validated on ingestion.
 
-If a fixing for day `t` is not published for a currency, the last published fixing is carried forward and the observation is flagged stale (see [Missing Data and Market Disruptions](#docs-missing-data-and-market-disruptions)). A currency redenomination is applied as a unit change in the price currency: prices and the exchange rate change by reciprocal factors on the effective date, index shares are unchanged, and the divisor is unchanged; the redenomination factor is recorded against the security's price history so that pre- and post-event prices remain comparable.
+If a fixing for day `t` is not published for a currency, the last published fixing is carried forward and the observation is flagged stale (see [Missing Data and Market Disruptions](#docs-missing-data-and-market-disruptions)). A currency redenomination is applied as a unit change in the price currency: the observed prices and the exchange rate change by reciprocal factors on the effective date, index shares are unchanged, and the divisor is unchanged. Observed closes are retained as published in each unit; the redenomination factor is recorded against the security's price history, not applied to stored closes, so that pre- and post-event prices remain comparable.
 
 Because constituent markets close at different times, a price observed at a local close and an exchange rate observed at the reference time are not simultaneous. This is the standard convention of the researched global indices and is accepted here; it is disclosed as a limitation rather than corrected with estimated rates.
 
@@ -143,7 +157,7 @@ Dividend treatment is a methodology rule, not an implementation detail; it deter
   `UGAI_TR_t = UGAI_TR_t−1 × (UGAI_t + DP_t) / UGAI_t−1`
 
   Reinvestment is across the index, not into the paying security, so index shares do not change.
-- **Special cash dividends and capital repayments outside the regular policy** are treated as capital events in both series: the price is adjusted downward by the gross amount on the ex-date and the divisor is reduced so that the index level does not fall. They are not additionally reinvested in the total-return series.
+- **Special cash dividends and capital repayments outside the regular policy** are treated as capital events in both series: the adjusted reference price is the cum-price less the gross amount, and the divisor is reduced so that the ex-date price drop attributable to the distribution does not lower the index level (see [Corporate Actions](#docs-corporate-actions)). The observed ex-date close is not altered. They are not additionally reinvested in the total-return series.
 - **Classification** of a distribution as ordinary or special follows the issuer's own characterization corroborated by the exchange or corporate-action source; where they conflict, the parent's source hierarchy applies and the decision is recorded.
 - **Undeclared amounts**: if the amount is not confirmed by the ex-date, no estimate is applied; when confirmed, the dividend points are applied on the next calculation day as a labelled late reinvestment, without restating earlier levels. Whether to permit vendor or prior-period estimates is an open question.
 - **Retracted or changed dividends** produce a negative or positive adjustment on the day the change is known, applied to the total-return series only.
@@ -155,13 +169,15 @@ No withholding-tax table is required for launch because no net series is publish
 
 Company identity, membership, and representative-security decisions are the parent's. UGAI's task is to preserve economic continuity: a corporate action must change the index level only to the extent it changes the market value an index holder would experience. Adjustments are applied after the close of the day before the ex-date or effective date, so they are effective for the ex-date. The event, terms, source, effective time, adjusted quantities, and divisor change are recorded for every action.
 
-For each action, the treatment is stated as: price adjustment, index-share adjustment, divisor adjustment. Let `A` shares held receive `B` new shares, `S` be a subscription price, and `P` the cum-price (the close before the ex-date).
+Observed prices are never rewritten. `P_i,t` remains the raw official close on every day, including the ex-date. Where a treatment below refers to an adjusted price, that value is the **adjusted reference price**: a methodology-derived quantity computed from the cum-price and the action terms, used only to establish the post-event market value at the cum close and hence the index-share and divisor adjustments. It is recorded against the corporate action, not stored as a price, and it does not replace an observed close. The same applies to a theoretical ex-price or an entitlement value where an action requires one. Index continuity is therefore the sum of four separately recorded components: the raw official close, the UGAI corporate-action treatment (the derived reference values), the index-share adjustment, and the divisor adjustment. UGAI must not consume a vendor's historically back-adjusted price series and then apply these adjustments again; where a source delivers adjusted prices, the unadjusted official close must be recoverable and is the value ingested.
 
-- **Stock split, reverse split, bonus issue, stock dividend in the same security:** `q × (A + B) / A` (or the split ratio); price adjusted by the inverse; market value unchanged; **no divisor change**.
+For each action, the treatment is stated as: adjusted reference price, index-share adjustment, divisor adjustment. Let `A` shares held receive `B` new shares, `S` be a subscription price, and `P` the cum-price (the raw official close before the ex-date).
+
+- **Stock split, reverse split, bonus issue, stock dividend in the same security:** `q × (A + B) / A` (or the split ratio); adjusted reference price `P × A / (A + B)`; market value unchanged at the cum close; **no divisor change**.
 - **Ordinary cash dividend:** no price or share adjustment; **no divisor change**; total-return reinvestment as above.
-- **Special cash dividend, capital repayment:** price adjusted to `P − amount`; index shares unchanged; **divisor decreases** by `q × amount × X / UGAI`.
-- **Rights issue or entitlement offer (in the money, `S < P`):** treated as fully subscribed. Adjusted price `(A × P + B × S) / (A + B)`; `q × (A + B) / A`; **divisor increases** by the subscription value `q × (B / A) × S × X / UGAI`. Out-of-the-money or unpriced rights: no adjustment. Rights lines are not added as separate holdings.
-- **Stock distribution of another listed security, spin-off, demerger:** the parent's price is reduced by the value of the distribution on the ex-date. The distributed security is not a parent member and is not admitted by UGAI; to avoid a fictitious loss, it is held as a **temporary distribution line** valued at the first available official price (or the price implied by the parent's cum/ex price drop until it trades), with no divisor change on the ex-date. The distribution line is removed at its closing price at the next scheduled reset, or earlier if it ceases to trade, with a divisor reduction; if the parent admits the new company at that reset, the line is replaced by ordinary index shares. A distribution that will not list, or for which no value can be established, is removed at zero with the parent's price adjustment reversed to the extent evidenced; the maximum holding period for an unpriced line is **unresolved**.
+- **Special cash dividend, capital repayment:** adjusted reference price `P − amount`; index shares unchanged; **divisor decreases** by `q × amount × X / UGAI`.
+- **Rights issue or entitlement offer (in the money, `S < P`):** treated as fully subscribed. Adjusted reference price `(A × P + B × S) / (A + B)`; `q × (A + B) / A`; **divisor increases** by the subscription value `q × (B / A) × S × X / UGAI`. Out-of-the-money or unpriced rights: no adjustment. Rights lines are not added as separate holdings.
+- **Stock distribution of another listed security, spin-off, demerger:** the distributing company's adjusted reference price is its cum-price less the value of the distribution. The distributed security is not a universe member and is not admitted by UGAI; to avoid a fictitious loss, it is held as a **temporary distribution line** valued at the first available official price (or the value implied by the distributing company's cum/ex price drop until it trades), with no divisor change on the ex-date. The distribution line is removed at its closing price at the next scheduled reset, or earlier if it ceases to trade, with a divisor reduction; if the parent admits the new company at that reset, the line is replaced by ordinary index shares. A distribution that will not list, or for which no value can be established, is removed at zero with the distributing company's reference-price reduction reversed to the extent evidenced; the maximum holding period for an unpriced line is **unresolved**.
 - **Merger or acquisition of a member:** the target is removed at the parent's effective time at its last official close, or at the offer terms if it is not trading; **divisor decreases** by its market value. If the acquirer is a member and consideration includes acquirer shares, the acquirer's index shares increase by the shares an index holder of the target would receive at the terms, and the divisor adjustment nets the two effects. A non-member acquirer's shares are not added. Cash consideration is not reinvested in the price-return series and is not treated as a dividend.
 - **Share issuance, buybacks, placements, lock-up expiries, cancellations:** no index-share change between resets; captured at the next parent base-weight snapshot.
 - **Representative-security substitution for the same economic claim** (share-class conversion, depositary receipt to underlying, listing migration decided by the parent): the incoming line takes `q × conversion ratio`, priced so that market value is continuous at the switch close; **no divisor change** if value is preserved at the terms, otherwise the divisor absorbs the difference. Price currency changes flow through `X`.
@@ -169,7 +185,7 @@ For each action, the treatment is stated as: price adjustment, index-share adjus
 - **Delisting, cancellation, liquidation, bankruptcy:** removed at the parent's effective time at the last official close, or at the parent's decision price (which may be a nominal zero) if no reliable price exists; **divisor decreases** accordingly. Liquidation distributions received before removal are treated as capital repayments.
 - **Trading halts and suspensions:** the last official close is carried and flagged; no adjustment until the parent decides removal or trading resumes.
 
-Any action not listed is treated by analogy to the closest listed case with the objective stated above, and the treatment is recorded as a documented decision before it is applied. No action is applied on estimated terms except where this document says so explicitly.
+Any action not listed is treated by analogy to the closest listed case with the objective stated above. A treatment for an unlisted or novel corporate action must be documented and justified against the economic-continuity principle and, where practicable, published before application. If the treatment is expected to recur or establishes a new general rule, it must subsequently be incorporated into the methodology through a versioned methodology amendment under [Methodology Versioning](#docs-methodology-versioning); an operational precedent does not become a rule by repetition. No action is applied on estimated terms except where this document says so explicitly.
 
 ## Additions and Deletions
 
@@ -179,7 +195,7 @@ A membership change is not an investment return. Whether at a scheduled reset or
 2. Departing securities are removed and incoming securities added at the same closing prices and exchange rates, producing `MV_after`.
 3. The divisor is adjusted so that `MV_before / D_before = MV_after / D_after`.
 
-The level at the implementation close is therefore identical before and after the change, and the next day's return reflects only price and exchange-rate movements of the new composition. A security added at a reset enters at its closing price, not at any earlier or announced price; a security removed leaves at its closing price or the parent's decision price. No index jump is created or suppressed.
+The level at the implementation close is therefore identical before and after the change, and the next day's return reflects only price and exchange-rate movements of the new composition. A security added at a reset enters at its closing price, not at any earlier or announced price; a security removed leaves at its closing price or the parent's decision price. No index jump is created or suppressed. At a parent event snapshot there are no incoming securities and surviving index shares are not recomputed; the only quantity change is the removed security's index shares going to zero.
 
 ## Divisor
 
@@ -205,7 +221,7 @@ The divisor is stored to full precision with each observation, and the sequence 
 
 ## Base Value and Base Date
 
-**Base value:** 1,000.00 on the base date. Rationale: with two decimal places for display, a base of 1,000 gives one basis point of resolution in daily changes at launch levels, whereas 100 gives ten; the value is otherwise arbitrary. The initial divisor is `MV_base / 1,000`.
+**Base value:** 1,000.00 on the base date. Rationale: levels are displayed to two decimal places, so the smallest displayed change is 0.01 index points. At a level of 100 that is 0.01%, one basis point; at a level of 1,000 it is 0.001%, one tenth of a basis point. A base of 1,000 therefore gives finer displayed percentage resolution than a base of 100 at launch levels. The value is otherwise economically arbitrary and carries no information; percentage changes are computed from unrounded levels regardless of the base. The initial divisor is `MV_base / 1,000`.
 
 **Base date:** a launch parameter, **unresolved**, to be fixed only when a validated historical dataset exists. It is not selected for cosmetic reasons. Conditions for selecting it:
 
@@ -238,7 +254,7 @@ UGAI publishes, for the headline and the total-return series:
 - percentage change over defined periods (one day, week to date, month to date, year to date, one year, and since base), computed from unrounded levels of the relevant observations and shown to a stated precision;
 - the historical time series of levels and daily percentage changes;
 - the methodology version, universe version, and last-updated timestamp;
-- live constituent weights and the parent base weights that produced them, with the universe version.
+- as-of constituent weights for the observation date, and the parent base weights and universe version from which the index shares were last set.
 
 Percentage change is the primary market signal. Point change (the arithmetic difference between levels) is not a defined product signal: it depends on the arbitrary base value and is not comparable across indices or over time. The level is retained for continuity and for computing changes.
 
@@ -297,12 +313,12 @@ Downstream displays must distinguish these states and must not present a delayed
 Conceptual objects UGAI requires. These describe information, not storage:
 
 - **UGAIObservation:** date, series (headline or total return), level, daily change, status, calculation and publication timestamps, market-data cutoff, UGAI methodology version, parent methodology version, universe version, parameter set, divisor.
-- **UGAIConstituentSnapshot:** for a date, each constituent's company and security identity, index shares, closing price and currency, exchange rate, USD market value, live weight, parent base weight, input statuses, and any distribution line held.
+- **UGAIConstituentSnapshot:** for a date, each constituent's company and security identity, index shares, raw official closing price and currency, exchange rate, USD market value, as-of weight, parent base weight, input statuses, and any distribution line held.
 - **IndexShare:** a security's index shares with effective interval and the reset, event, or corporate action that set them.
 - **IndexDivisor:** the divisor with effective interval and, for each change, the cause, the before and after market values, and the inputs.
-- **SecurityPrice:** official closing price per listing per day, currency, source, timestamp, session status (traded, holiday, halted), and adjustment factors applied.
+- **SecurityPrice:** raw official closing price per listing per day as published, currency and units, source, timestamp, and session status (traded, holiday, halted); stored unadjusted, with no back-adjustment applied.
 - **FXObservation:** reference rate per currency per day, orientation, source, fixing time, and status (published, carried).
-- **CorporateAction:** issuer, security, type, terms, cum and ex dates, effective time, source, confirmation status, and the UGAI treatment applied.
+- **CorporateAction:** issuer, security, type, terms, cum and ex dates, effective time, source, confirmation status, the UGAI treatment applied, and any adjusted reference price, theoretical ex-price, or entitlement value derived for it.
 - **Dividend:** security, amount, currency, classification (ordinary or special), ex-date, confirmation status, and reinvestment record.
 - **UniverseVersion:** reference to the parent version consumed, with its effective and publication timestamps.
 - **MethodologyVersion:** UGAI methodology and parameter-set identifiers with effective dates and change records.
@@ -327,10 +343,10 @@ Before an observation is published, at minimum:
 - **Price currency and units:** the price currency matches the reference data; unit conventions (for example pence versus pounds) are validated.
 - **Stale prices:** sessions marked traded have an official close; carried prices are flagged with their age.
 - **Exchange-rate orientation:** each rate is USD per unit of price currency; inverted or absent rates block publication.
-- **Split and action adjustments:** pre- and post-action prices and shares are consistent with the terms; market value is continuous across value-neutral events.
+- **Split and action adjustments:** pre- and post-action raw closes, derived reference values, and index shares are consistent with the terms; market value is continuous across value-neutral events; no ingested close is a back-adjusted value.
 - **Duplicate listings:** no security appears twice; distribution lines are identified as such.
 - **Corporate-action timing:** adjustments are effective on the ex-date and not before or after.
-- **Weights:** live weights sum to one; base weights at a reset match the parent snapshot.
+- **Weights:** as-of weights sum to one; base weights at a scheduled reset match the parent snapshot.
 - **Divisor continuity:** the level before and after every after-close change is identical at constant prices.
 - **Implausible moves:** a constituent or index daily change outside a tolerance is held for review before publication.
 - **Missing observations:** counts and weights of carried, stale, or missing inputs are within tolerance.
@@ -348,11 +364,11 @@ UGAI has its own methodology version, independent of the parent's. Each observat
 
 A change to UGAI's rules, parameters, or calendar is announced with a prospective effective date and a documented rationale and impact assessment; it does not alter observations before that date. A change to the parent methodology reaches UGAI only through a new universe version and does not by itself change UGAI's version. Editing this public page is not a production change.
 
-Version history: **0.1.0-draft, 12 September 2026**, initial research-backed proposal; no production effective date.
+Version history: **0.1.0-draft, 12 September 2026**, initial research-backed proposal, amended in review on 12 September 2026 before merge (exceptional-deletion mechanics, base-value rationale, return-series divergence wording, raw official close definition, novel-action governance, as-of weight terminology); no production effective date.
 
 ## Relationship to UAVI
 
-UAVI, the future Urdais AI Volatility Index, is a sibling output. It inherits constituent base weights from the parent AI Equity Universe snapshot, applies its own options-eligibility filter, and renormalizes the surviving base weights, exactly as the parent methodology specifies. UAVI does not consume UGAI's live, drifted weights, index shares, divisor, or price series unless a future UAVI methodology explicitly decides otherwise. UGAI is not an input to UAVI, and UGAI's daily price movements must not become an implicit dependency of UAVI through shared data structures. No options methodology is defined here.
+UAVI, the future Urdais AI Volatility Index, is a sibling output. It inherits constituent base weights from the parent AI Equity Universe snapshot, applies its own options-eligibility filter, and renormalizes the surviving base weights, exactly as the parent methodology specifies. UAVI inherits the canonical AI Equity Universe base weights, not UGAI's index shares or as-of (drifted) weights. UAVI does not consume UGAI's as-of weights, index shares, divisor, or price series unless a future UAVI methodology explicitly decides otherwise. UGAI is not an input to UAVI, and UGAI's daily price movements must not become an implicit dependency of UAVI through shared data structures. No options methodology is defined here.
 
 ## Open Questions / Empirical Validation Required
 
