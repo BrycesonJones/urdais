@@ -1,5 +1,5 @@
 /**
- * The token-provider catalog: the ten AI labs whose provider-level token
+ * The token-provider catalog: the AI labs whose provider-level token
  * pricing Urdais tracks, with the seeded parameters for each deterministic
  * demo price history. This is the single source for both the UCPI Tokens
  * family and the Model Economics Token Price view, so the two never drift.
@@ -98,6 +98,13 @@ export const TOKEN_LABS: TokenLab[] = [
     modelFamily: "GLM",
     price: { seed: 20230310, latestValue: 1.5, latestDailyReturn: -0.0067, points: 760, volatility: 0.007, drift: -0.0014 },
     intraday: { seed: 9_950_000, days: 7, volatility: 0.003 },
+  },
+  {
+    id: "xai",
+    name: "xAI",
+    modelFamily: "Grok",
+    price: { seed: 20230311, latestValue: 4.0, latestDailyReturn: 0.0028, points: 720, volatility: 0.006, drift: -0.0011 },
+    intraday: { seed: 9_970_000, days: 7, volatility: 0.003 },
   },
 ];
 

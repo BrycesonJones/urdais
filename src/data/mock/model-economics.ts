@@ -66,6 +66,11 @@ const MODEL_SPECS: ModelSpec[] = [
   { id: "mimo", labId: "xiaomi", modelName: "MiMo", accessClass: "open-weight", blendedPrice: 0.45, capabilityScore: 78.3, latestVolume: 0.25e12, growth: 0.006, volatility: 0.05, seed: 41_014 },
   { id: "llama", labId: "meta", modelName: "Llama", accessClass: "open-weight", blendedPrice: 0.6, capabilityScore: 81.6, latestVolume: 0.85e12, growth: 0.0006, volatility: 0.035, seed: 41_015 },
   { id: "glm", labId: "zhipu-ai", modelName: "GLM", accessClass: "open-weight", blendedPrice: 0.95, capabilityScore: 86.2, latestVolume: 0.55e12, growth: 0.004, volatility: 0.045, seed: 41_016 },
+  // Grok blended prices are the simple average of official standard
+  // (< 200k prompt) input and output rates from https://docs.x.ai/developers/models
+  // (retrieved 2026-09-12). Long-context and cached rates are not modelled.
+  { id: "grok-4-6", labId: "xai", modelName: "Grok 4.6", accessClass: "proprietary", blendedPrice: 4.0, capabilityScore: 93.1, latestVolume: 0.75e12, growth: 0.0032, volatility: 0.035, seed: 41_017 },
+  { id: "grok-4-3", labId: "xai", modelName: "Grok 4.3", accessClass: "proprietary", blendedPrice: 1.875, capabilityScore: 88.2, latestVolume: 0.5e12, growth: 0.0038, volatility: 0.04, seed: 41_018 },
 ];
 
 export const MODEL_ROSTER: ModelRecord[] = MODEL_SPECS.map((spec) => {
