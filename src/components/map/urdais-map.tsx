@@ -68,9 +68,9 @@ export function UrdaisMap({ visibility = DEFAULT_MAP_VISIBILITY }: UrdaisMapProp
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
   const interactionsRef = useRef<PointInteractions | null>(null);
   // The latest visibility, readable from the one-time load handler without
-  // re-running the map effect (which would recreate the map).
+  // re-running the map effect (which would recreate the map). Updated in the
+  // visibility effect below, never during render.
   const visibilityRef = useRef(visibility);
-  visibilityRef.current = visibility;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -137,6 +137,7 @@ export function UrdaisMap({ visibility = DEFAULT_MAP_VISIBILITY }: UrdaisMapProp
   // the popup if its point was hidden. Before the layer exists this is a
   // no-op and the load handler applies the latest state instead.
   useEffect(() => {
+    visibilityRef.current = visibility;
     const map = mapRef.current;
     if (!map) return;
     applyPointVisibility(map, visibility);
