@@ -5,9 +5,12 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { SearchIcon } from "@/components/icons/search-icon";
 import { SearchModal } from "@/components/layout/search-modal";
+import { prefetchMapRenderer } from "@/components/map/prefetch-map";
 import { SITE_NAME } from "@/constants/site";
+import { MAP_HREF } from "@/lib/routes";
 
 const NAV_LINKS = [
+  { label: "Map", href: MAP_HREF, onIntent: prefetchMapRenderer },
   { label: "Products", href: "/products" },
   { label: "Contact", href: "/contact" },
 ] as const;
@@ -73,15 +76,23 @@ export function SiteHeader() {
         </button>
 
         <nav aria-label="Primary" className="ml-auto flex items-center gap-1 sm:gap-2">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`hidden rounded-md px-3 py-1.5 text-sm text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-100 md:inline-block ${focusRing}`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {NAV_LINKS.map((link) => {
+            // Warm a route's heavy client code on hover or focus, ahead of the click.
+            const onIntent = "onIntent" in link ? link.onIntent : undefined;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onPointerEnter={onIntent}
+                onFocus={onIntent}
+                className={`rounded-md px-3 py-1.5 text-sm text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-100 md:inline-block ${
+                  link.href === MAP_HREF ? "" : "hidden"
+                } ${focusRing}`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <Link
             href="/get-started"
             className={`ml-1 rounded-md bg-neutral-100 px-3.5 py-1.5 text-sm font-medium text-neutral-950 transition-colors hover:bg-white sm:ml-2 ${focusRing}`}

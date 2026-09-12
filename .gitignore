@@ -43,3 +43,6 @@ next-env.d.ts
 
 # OS / cache
 .eslintcache
+
+# vendored at dev/build time by scripts/sync-maplibre-worker.mjs
+/public/vendor/

@@ -2,19 +2,22 @@
   "name": "urdais",
   "version": "0.1.0",
   "private": true,
-  "description": "Urdais — an information and market-data platform for the Information Age.",
+  "description": "Urdais \u2014 an information and market-data platform for the Information Age.",
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
   },
   "scripts": {
+    "predev": "node scripts/sync-maplibre-worker.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/sync-maplibre-worker.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "maplibre-gl": "^6.9.0",
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8"

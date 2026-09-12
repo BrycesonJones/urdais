@@ -15,3 +15,6 @@ export const POWER_ANALYTICS_HREF = `${MARKETS_HREF}/power-analytics`;
 export function marketIndexHref(symbol: string): string {
   return `${MARKETS_HREF}/${symbol.toLowerCase()}`;
 }
+
+/** The map workspace: a dedicated route so the MapLibre renderer stays isolated from the rest of the product. */
+export const MAP_HREF = "/map";

@@ -140,6 +140,7 @@ The primary experience should be a shared market-data interface.
 * **TypeScript**
 * **Tailwind CSS**
 * **TradingView Lightweight Charts**
+* **MapLibre GL JS** for the dedicated `/map` workspace, on OpenFreeMap (OpenMapTiles / OpenStreetMap) tiles with their required attribution
 
 ## Supporting Services
 
@@ -235,6 +236,7 @@ The exact navigation structure may evolve during implementation, but Urdais V1 s
 Urdais
 ├── Markets / Instruments
 ├── Indices
+├── Map
 ├── Compute
 ├── AI Models / Tokens
 ├── Outcome Economics
@@ -243,6 +245,8 @@ Urdais
 ├── Account
 └── Subscription / Billing
 ```
+
+The `/map` route is a dedicated map workspace so the heavier map renderer stays isolated from the rest of the product. Its current phase renders the basemap only; mapped and unmapped points, category colours, legends, popups, filtering, clustering, and item detail routing are intentionally deferred to later phases.
 
 Infrastructure categories include:
 
