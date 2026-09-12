@@ -1,8 +1,8 @@
-import type { LngLatLike, Map as MapLibreMap, MapGeoJSONFeature, MapMouseEvent, Popup as MapLibrePopup, PopupOptions } from "maplibre-gl";
+import type { GeoJSONSource, LngLat, LngLatLike, Map as MapLibreMap, MapGeoJSONFeature, MapMouseEvent, Popup as MapLibrePopup, PopupOptions } from "maplibre-gl";
 
 import { MAP_POINT_CATEGORY_LABELS, isMapPointCategory, visibilityGroupOf } from "@/components/map/map-point-style";
 import type { MapVisibilityState } from "@/components/map/map-point-style";
-import { POINTS_LAYER_ID } from "@/components/map/point-layer";
+import { CLUSTERS_LAYER_ID, POINTS_LAYER_ID, POINTS_SOURCE_ID } from "@/components/map/point-layer";
 
 /** What the profile card shows. Only mapped points with a name qualify. */
 export type MapPointProfile = {
@@ -109,21 +109,27 @@ const POPUP_OPTIONS: PopupOptions = {
  * click on a mapped point opens its profile card anchored to the point (a
  * second click elsewhere replaces it, so at most one popup exists), a
  * click on an unmapped point does nothing, and the cursor turns into a
- * pointer only while over a mapped point. Hidden points never reach these
- * handlers because the layer filter removes them from hit-testing, and a
- * popup whose point is hidden after opening is closed by applyVisibility.
- * dispose removes the handlers and any open popup; the map component calls
- * it before removing the map so nothing leaks across remounts.
+ * pointer only while over a mapped point. A click on a cluster asks the
+ * source for the zoom at which that cluster splits and eases the camera
+ * there, never opening a popup; hovering a cluster also shows a pointer.
+ * Hidden points never reach these handlers because they are not in the
+ * source, a popup whose point is hidden after opening is closed by
+ * applyVisibility, and a popup whose point is swallowed by a cluster after
+ * a zoom or pan is closed on moveend. dispose removes the handlers and any
+ * open popup; the map component calls it before removing the map so nothing
+ * leaks across remounts.
  */
 export function attachPointInteractions(map: MapLibreMap, Popup: PopupConstructor): PointInteractions {
   let popup: MapLibrePopup | null = null;
   let openGroup: ReturnType<typeof visibilityGroupOf> = null;
+  let openAnchor: LngLatLike | null = null;
   const canvas = map.getCanvas();
 
   const closePopup = () => {
     popup?.remove();
     popup = null;
     openGroup = null;
+    openAnchor = null;
   };
 
   const handleClick = (event: MapMouseEvent & { features?: MapGeoJSONFeature[] }) => {
@@ -134,10 +140,37 @@ export function attachPointInteractions(map: MapLibreMap, Popup: PopupConstructo
     const anchor = feature.geometry.coordinates as LngLatLike;
     popup = new Popup(POPUP_OPTIONS).setLngLat(anchor).setDOMContent(buildProfileCard(profile)).addTo(map);
     openGroup = visibilityGroupOf(feature.properties);
+    openAnchor = anchor;
     popup.on("close", () => {
       popup = null;
       openGroup = null;
+      openAnchor = null;
     });
+  };
+
+  const handleClusterClick = (event: MapMouseEvent & { features?: MapGeoJSONFeature[] }) => {
+    const feature = event.features?.[0];
+    const clusterId = feature?.properties?.cluster_id;
+    if (typeof clusterId !== "number" || feature?.geometry.type !== "Point") return;
+    const source = map.getSource(POINTS_SOURCE_ID) as GeoJSONSource | undefined;
+    if (!source) return;
+    const center = feature.geometry.coordinates as LngLatLike;
+    void source
+      .getClusterExpansionZoom(clusterId)
+      .then((zoom) => map.easeTo({ center, zoom }))
+      .catch(() => undefined);
+  };
+
+  const handleClusterMove = () => {
+    canvas.style.cursor = "pointer";
+  };
+
+  // After any camera change, a point may have been absorbed into a cluster;
+  // if nothing is individually rendered at the popup's anchor, close it.
+  const handleMoveEnd = () => {
+    if (!popup || !openAnchor) return;
+    const rendered = map.queryRenderedFeatures(map.project(openAnchor as LngLat), { layers: [POINTS_LAYER_ID] });
+    if (rendered.length === 0) closePopup();
   };
 
   const handleMove = (event: MapMouseEvent & { features?: MapGeoJSONFeature[] }) => {
@@ -151,6 +184,10 @@ export function attachPointInteractions(map: MapLibreMap, Popup: PopupConstructo
   map.on("click", POINTS_LAYER_ID, handleClick);
   map.on("mousemove", POINTS_LAYER_ID, handleMove);
   map.on("mouseleave", POINTS_LAYER_ID, handleLeave);
+  map.on("click", CLUSTERS_LAYER_ID, handleClusterClick);
+  map.on("mousemove", CLUSTERS_LAYER_ID, handleClusterMove);
+  map.on("mouseleave", CLUSTERS_LAYER_ID, handleLeave);
+  map.on("moveend", handleMoveEnd);
 
   return {
     applyVisibility: (visibility) => {
@@ -163,6 +200,10 @@ export function attachPointInteractions(map: MapLibreMap, Popup: PopupConstructo
       map.off("click", POINTS_LAYER_ID, handleClick);
       map.off("mousemove", POINTS_LAYER_ID, handleMove);
       map.off("mouseleave", POINTS_LAYER_ID, handleLeave);
+      map.off("click", CLUSTERS_LAYER_ID, handleClusterClick);
+      map.off("mousemove", CLUSTERS_LAYER_ID, handleClusterMove);
+      map.off("mouseleave", CLUSTERS_LAYER_ID, handleLeave);
+      map.off("moveend", handleMoveEnd);
       closePopup();
       canvas.style.cursor = "";
     },

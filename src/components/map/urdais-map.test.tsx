@@ -14,8 +14,12 @@ const maplibre = vi.hoisted(() => {
     addSource: ReturnType<typeof vi.fn>;
     getLayer: ReturnType<typeof vi.fn>;
     addLayer: ReturnType<typeof vi.fn>;
-    setFilter: ReturnType<typeof vi.fn>;
+    easeTo: ReturnType<typeof vi.fn>;
+    project: ReturnType<typeof vi.fn>;
+    queryRenderedFeatures: ReturnType<typeof vi.fn>;
     getStyle: ReturnType<typeof vi.fn>;
+    /** The one GeoJSON source stub, once added. */
+    source: () => { setData: ReturnType<typeof vi.fn>; getClusterExpansionZoom: ReturnType<typeof vi.fn> } | undefined;
     /** Fires the handlers registered for a map event (optionally on a layer), as the real map would. */
     emit: (event: string, layer?: string, payload?: unknown) => void;
     /** Live handler count for an event / layer pair. */
@@ -24,7 +28,7 @@ const maplibre = vi.hoisted(() => {
   const instances: Instance[] = [];
   const Map = vi.fn(function (this: unknown, options: Record<string, unknown>) {
     const handlers = new globalThis.Map<string, Array<(payload?: unknown) => void>>();
-    const sources = new globalThis.Map<string, unknown>();
+    const sources = new globalThis.Map<string, { setData: ReturnType<typeof vi.fn>; getClusterExpansionZoom: ReturnType<typeof vi.fn> }>();
     const layers = new globalThis.Map<string, unknown>();
     const canvas = document.createElement("canvas");
     const key = (event: string, layer?: string) => (layer ? `${event}:${layer}` : event);
@@ -44,10 +48,13 @@ const maplibre = vi.hoisted(() => {
       off: vi.fn(unregister),
       getCanvas: vi.fn(() => canvas),
       getSource: vi.fn((id: string) => sources.get(id)),
-      addSource: vi.fn((id: string, source: unknown) => sources.set(id, source)),
+      addSource: vi.fn((id: string, source: unknown) => sources.set(id, { ...(source as object), setData: vi.fn(), getClusterExpansionZoom: vi.fn(async () => 7) })),
       getLayer: vi.fn((id: string) => layers.get(id)),
       addLayer: vi.fn((layer: { id: string }) => layers.set(layer.id, layer)),
-      setFilter: vi.fn(),
+      easeTo: vi.fn(),
+      project: vi.fn(() => ({ x: 10, y: 10 })),
+      queryRenderedFeatures: vi.fn(() => [{}]),
+      source: () => sources.get("urdais-points"),
       getStyle: vi.fn(() => ({ layers: [{ id: "background", type: "background" }, { id: "label_city", type: "symbol" }] })),
       emit: (event, layer, payload) => handlers.get(key(event, layer))?.forEach((handler) => handler(payload)),
       handlerCount: (event, layer) => handlers.get(key(event, layer))?.length ?? 0,
@@ -161,10 +168,11 @@ describe("UrdaisMap", () => {
     expect(instance.addSource).not.toHaveBeenCalled();
     instance.emit("load");
     expect(instance.addSource).toHaveBeenCalledTimes(1);
-    expect(instance.addSource).toHaveBeenCalledWith(POINTS_SOURCE_ID, { type: "geojson", data: buildMapFeatureCollection(DEMO_MAP_POINTS) });
-    expect(instance.addLayer).toHaveBeenCalledTimes(1);
-    expect(instance.addLayer.mock.calls[0]?.[0]).toMatchObject({ id: POINTS_LAYER_ID, type: "circle", source: POINTS_SOURCE_ID });
-    expect(instance.addLayer.mock.calls[0]?.[1]).toBe("label_city");
+    expect(instance.addSource).toHaveBeenCalledWith(POINTS_SOURCE_ID, { type: "geojson", data: buildMapFeatureCollection(DEMO_MAP_POINTS), cluster: true, clusterRadius: 48, clusterMaxZoom: 12 });
+    expect(instance.addLayer).toHaveBeenCalledTimes(3);
+    expect(instance.addLayer.mock.calls.map(([layer]) => (layer as { id: string }).id)).toEqual(["urdais-point-clusters", "urdais-point-cluster-count", POINTS_LAYER_ID]);
+    expect(instance.addLayer.mock.calls[2]?.[0]).toMatchObject({ id: POINTS_LAYER_ID, type: "circle", source: POINTS_SOURCE_ID, filter: ["!", ["has", "point_count"]] });
+    expect(instance.addLayer.mock.calls.every(([, beforeId]) => beforeId === "label_city")).toBe(true);
 
     const supplied = (instance.addSource.mock.calls[0]?.[1] as { data: { features: Array<{ properties: { mappingStatus: string; category?: string } }> } }).data;
     const statuses = new Set(supplied.features.map((feature) => feature.properties.mappingStatus));
@@ -181,7 +189,7 @@ describe("UrdaisMap", () => {
     instance.emit("load");
     instance.emit("load");
     expect(instance.addSource).toHaveBeenCalledTimes(1);
-    expect(instance.addLayer).toHaveBeenCalledTimes(1);
+    expect(instance.addLayer).toHaveBeenCalledTimes(3);
   });
 
   it("skips adding points when the map was unmounted before its style loaded", async () => {
@@ -205,6 +213,10 @@ describe("UrdaisMap", () => {
     expect(instance.handlerCount("click", POINTS_LAYER_ID)).toBe(1);
     expect(instance.handlerCount("mousemove", POINTS_LAYER_ID)).toBe(1);
     expect(instance.handlerCount("mouseleave", POINTS_LAYER_ID)).toBe(1);
+    expect(instance.handlerCount("click", "urdais-point-clusters")).toBe(1);
+    expect(instance.handlerCount("mousemove", "urdais-point-clusters")).toBe(1);
+    expect(instance.handlerCount("mouseleave", "urdais-point-clusters")).toBe(1);
+    expect(instance.handlerCount("moveend")).toBe(1);
 
     instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "Demo Point 1", mappingStatus: "mapped", category: "compute_cluster", address: "Atlanta, Georgia, USA", contactEmail: "demo@example.com" }, geometry: { type: "Point", coordinates: [-84.388, 33.749] } }] });
     expect(maplibre.popups).toHaveLength(1);
@@ -219,45 +231,89 @@ describe("UrdaisMap", () => {
     expect(instance.handlerCount("click", POINTS_LAYER_ID)).toBe(0);
     expect(instance.handlerCount("mousemove", POINTS_LAYER_ID)).toBe(0);
     expect(instance.handlerCount("mouseleave", POINTS_LAYER_ID)).toBe(0);
+    expect(instance.handlerCount("click", "urdais-point-clusters")).toBe(0);
+    expect(instance.handlerCount("mousemove", "urdais-point-clusters")).toBe(0);
+    expect(instance.handlerCount("moveend")).toBe(0);
     expect(instance.remove).toHaveBeenCalledTimes(1);
   });
 
-  it("applies the visibility filter once the layer exists, and re-applies it on change without recreating anything", async () => {
-    const { DEFAULT_MAP_VISIBILITY, buildPointFilter } = await import("@/components/map/map-point-style");
-    const { POINTS_LAYER_ID } = await import("@/components/map/point-layer");
+  it("feeds the clustered source the visible subset on change, without recreating the map, source, layers, or viewport", async () => {
+    const { DEFAULT_MAP_VISIBILITY, filterPointCollection } = await import("@/components/map/map-point-style");
+    const { DEMO_MAP_POINTS } = await import("@/data/mock/map-points");
+    const { buildMapFeatureCollection } = await import("@/lib/map-geojson");
     const UrdaisMap = await loadComponent();
     const { rerender } = render(<UrdaisMap visibility={DEFAULT_MAP_VISIBILITY} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
     const instance = maplibre.instances[0]!;
-    expect(instance.setFilter).not.toHaveBeenCalled();
     instance.emit("load");
-    expect(instance.setFilter).toHaveBeenCalledTimes(1);
-    expect(instance.setFilter).toHaveBeenLastCalledWith(POINTS_LAYER_ID, buildPointFilter(DEFAULT_MAP_VISIBILITY));
+    const source = instance.source()!;
+    expect(source.setData).not.toHaveBeenCalled();
 
     const hidden = { ...DEFAULT_MAP_VISIBILITY, power_infrastructure: false, unmapped: false };
     rerender(<UrdaisMap visibility={hidden} />);
-    expect(instance.setFilter).toHaveBeenCalledTimes(2);
-    expect(instance.setFilter).toHaveBeenLastCalledWith(POINTS_LAYER_ID, buildPointFilter(hidden));
+    expect(source.setData).toHaveBeenCalledTimes(1);
+    const expected = filterPointCollection(buildMapFeatureCollection(DEMO_MAP_POINTS), hidden);
+    expect(source.setData).toHaveBeenLastCalledWith(expected);
+    const supplied = source.setData.mock.calls[0]?.[0] as { features: Array<{ properties: { mappingStatus: string; category?: string } }> };
+    expect(supplied.features.some((feature) => feature.properties.mappingStatus === "unmapped" || feature.properties.category === "power_infrastructure")).toBe(false);
+    expect(supplied.features.length).toBeGreaterThan(0);
     expect(maplibre.Map).toHaveBeenCalledTimes(1);
     expect(instance.addSource).toHaveBeenCalledTimes(1);
-    expect(instance.addLayer).toHaveBeenCalledTimes(1);
+    expect(instance.addLayer).toHaveBeenCalledTimes(3);
     expect(instance.remove).not.toHaveBeenCalled();
-    expect(instance.options.center).toEqual([10, 20]);
+    expect(instance.easeTo).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledTimes(1);
+
+    const allOff = { data_center: false, compute_cluster: false, power_infrastructure: false, semiconductor_fab: false, unmapped: false };
+    rerender(<UrdaisMap visibility={allOff} />);
+    expect(source.setData).toHaveBeenLastCalledWith({ type: "FeatureCollection", features: [] });
+    rerender(<UrdaisMap visibility={DEFAULT_MAP_VISIBILITY} />);
+    expect(source.setData).toHaveBeenLastCalledWith(buildMapFeatureCollection(DEMO_MAP_POINTS));
   });
 
-  it("uses the latest visibility if it changed before the style loaded", async () => {
-    const { DEFAULT_MAP_VISIBILITY, buildPointFilter } = await import("@/components/map/map-point-style");
-    const { POINTS_LAYER_ID } = await import("@/components/map/point-layer");
+  it("seeds the source with the latest visibility if it changed before the style loaded", async () => {
+    const { DEFAULT_MAP_VISIBILITY, filterPointCollection } = await import("@/components/map/map-point-style");
+    const { DEMO_MAP_POINTS } = await import("@/data/mock/map-points");
+    const { buildMapFeatureCollection } = await import("@/lib/map-geojson");
     const UrdaisMap = await loadComponent();
     const { rerender } = render(<UrdaisMap visibility={DEFAULT_MAP_VISIBILITY} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
     const instance = maplibre.instances[0]!;
     const hidden = { ...DEFAULT_MAP_VISIBILITY, data_center: false };
     rerender(<UrdaisMap visibility={hidden} />);
-    expect(instance.setFilter).not.toHaveBeenCalled();
+    expect(instance.addSource).not.toHaveBeenCalled();
     instance.emit("load");
-    expect(instance.setFilter).toHaveBeenCalledTimes(1);
-    expect(instance.setFilter).toHaveBeenLastCalledWith(POINTS_LAYER_ID, buildPointFilter(hidden));
+    expect(instance.addSource.mock.calls[0]?.[1]).toMatchObject({ data: filterPointCollection(buildMapFeatureCollection(DEMO_MAP_POINTS), hidden) });
+    expect(instance.source()!.setData).not.toHaveBeenCalled();
+  });
+
+  it("zooms into a clicked cluster through the source's expansion zoom and never opens a popup", async () => {
+    const UrdaisMap = await loadComponent();
+    render(<UrdaisMap />);
+    await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
+    const instance = maplibre.instances[0]!;
+    instance.emit("load");
+    instance.emit("click", "urdais-point-clusters", { features: [{ properties: { cluster: true, cluster_id: 42, point_count: 6 }, geometry: { type: "Point", coordinates: [-77.4, 39.0] } }] });
+    await waitFor(() => expect(instance.easeTo).toHaveBeenCalledTimes(1));
+    expect(instance.source()!.getClusterExpansionZoom).toHaveBeenCalledWith(42);
+    expect(instance.easeTo).toHaveBeenCalledWith({ center: [-77.4, 39.0], zoom: 7 });
+    expect(maplibre.popups).toHaveLength(0);
+  });
+
+  it("closes an open popup once its point is no longer individually rendered after the camera moves", async () => {
+    const { POINTS_LAYER_ID } = await import("@/components/map/point-layer");
+    const UrdaisMap = await loadComponent();
+    render(<UrdaisMap />);
+    await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
+    const instance = maplibre.instances[0]!;
+    instance.emit("load");
+    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "Demo Point 3", mappingStatus: "mapped", category: "data_center" }, geometry: { type: "Point", coordinates: [-0.128, 51.507] } }] });
+    expect(maplibre.popups).toHaveLength(1);
+    instance.emit("moveend");
+    expect(maplibre.popups[0]?.removed).toBe(false);
+    instance.queryRenderedFeatures.mockReturnValueOnce([]);
+    instance.emit("moveend");
+    expect(maplibre.popups[0]?.removed).toBe(true);
   });
 
   it("closes an open popup when its point's group is hidden", async () => {

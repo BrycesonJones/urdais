@@ -1,7 +1,7 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
 import { describe, expect, it, vi } from "vitest";
 
-import { POINTS_LAYER_ID } from "@/components/map/point-layer";
+import { CLUSTERS_LAYER_ID, POINTS_LAYER_ID } from "@/components/map/point-layer";
 import { DEFAULT_MAP_VISIBILITY } from "@/components/map/map-point-style";
 import { attachPointInteractions, buildProfileCard, readMappedPointProfile } from "@/components/map/point-popup";
 
@@ -25,12 +25,21 @@ function stubPopup() {
 function stubMap() {
   const handlers = new Map<string, Array<(event: unknown) => void>>();
   const canvas = document.createElement("canvas");
+  const key = (event: string, layer?: string) => (layer ? `${event}:${layer}` : event);
+  const split = (layerOrHandler: string | ((event: unknown) => void), maybeHandler?: (event: unknown) => void) =>
+    typeof layerOrHandler === "string" ? ([layerOrHandler, maybeHandler!] as const) : ([undefined, layerOrHandler] as const);
+  const source = { getClusterExpansionZoom: vi.fn(async (id: number) => (id === 99 ? Promise.reject(new Error("unknown cluster")) : 8)) };
   const map = {
     getCanvas: () => canvas,
-    on: vi.fn((event: string, layer: string, handler: (event: unknown) => void) => handlers.set(`${event}:${layer}`, [...(handlers.get(`${event}:${layer}`) ?? []), handler])),
-    off: vi.fn((event: string, layer: string, handler: (event: unknown) => void) => handlers.set(`${event}:${layer}`, (handlers.get(`${event}:${layer}`) ?? []).filter((candidate) => candidate !== handler))),
-    fire: (event: string, layer: string, payload: unknown) => handlers.get(`${event}:${layer}`)?.forEach((handler) => handler(payload)),
-    registered: (event: string, layer: string) => handlers.get(`${event}:${layer}`)?.length ?? 0,
+    getSource: vi.fn(() => source),
+    easeTo: vi.fn(),
+    project: vi.fn(() => ({ x: 5, y: 5 })),
+    queryRenderedFeatures: vi.fn(() => [{}]),
+    on: vi.fn((event: string, layerOrHandler: string | ((event: unknown) => void), maybeHandler?: (event: unknown) => void) => { const [layer, handler] = split(layerOrHandler, maybeHandler); handlers.set(key(event, layer), [...(handlers.get(key(event, layer)) ?? []), handler]); }),
+    off: vi.fn((event: string, layerOrHandler: string | ((event: unknown) => void), maybeHandler?: (event: unknown) => void) => { const [layer, handler] = split(layerOrHandler, maybeHandler); handlers.set(key(event, layer), (handlers.get(key(event, layer)) ?? []).filter((candidate) => candidate !== handler)); }),
+    fire: (event: string, layer: string | undefined, payload?: unknown) => handlers.get(key(event, layer))?.forEach((handler) => handler(payload)),
+    registered: (event: string, layer?: string) => handlers.get(key(event, layer))?.length ?? 0,
+    source,
   };
   return { map: map as unknown as MapLibreMap & typeof map, canvas };
 }
@@ -101,13 +110,15 @@ describe("buildProfileCard", () => {
 });
 
 describe("attachPointInteractions", () => {
-  it("registers click, mousemove, and mouseleave on the circle layer once and removes them on dispose", () => {
+  it("registers the point, cluster, and moveend handlers once and removes them on dispose", () => {
     const { map } = stubMap();
     const { dispose } = attachPointInteractions(map, stubPopup().Popup);
-    for (const event of ["click", "mousemove", "mouseleave"]) expect(map.registered(event, POINTS_LAYER_ID)).toBe(1);
-    expect(map.on).toHaveBeenCalledTimes(3);
+    for (const event of ["click", "mousemove", "mouseleave"]) { expect(map.registered(event, POINTS_LAYER_ID)).toBe(1); expect(map.registered(event, CLUSTERS_LAYER_ID)).toBe(1); }
+    expect(map.registered("moveend")).toBe(1);
+    expect(map.on).toHaveBeenCalledTimes(7);
     dispose();
-    for (const event of ["click", "mousemove", "mouseleave"]) expect(map.registered(event, POINTS_LAYER_ID)).toBe(0);
+    for (const event of ["click", "mousemove", "mouseleave"]) { expect(map.registered(event, POINTS_LAYER_ID)).toBe(0); expect(map.registered(event, CLUSTERS_LAYER_ID)).toBe(0); }
+    expect(map.registered("moveend")).toBe(0);
   });
 
   it("opens a popup anchored to a clicked mapped point with its profile", () => {
@@ -204,5 +215,61 @@ describe("attachPointInteractions", () => {
     map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
     expect(instances).toHaveLength(2);
     expect(instances[1]?.removed).toBe(false);
+  });
+
+  it("eases into a clicked cluster at the source's expansion zoom, and opens no popup", async () => {
+    const { map } = stubMap();
+    const { Popup, instances } = stubPopup();
+    attachPointInteractions(map, Popup);
+    map.fire("click", CLUSTERS_LAYER_ID, { features: [{ properties: { cluster: true, cluster_id: 7, point_count: 12 }, geometry: { type: "Point", coordinates: [-96.8, 32.8] } }] });
+    await vi.waitFor(() => expect(map.easeTo).toHaveBeenCalledTimes(1));
+    expect(map.source.getClusterExpansionZoom).toHaveBeenCalledWith(7);
+    expect(map.easeTo).toHaveBeenCalledWith({ center: [-96.8, 32.8], zoom: 8 });
+    expect(instances).toHaveLength(0);
+  });
+
+  it("ignores malformed cluster clicks and a failed expansion lookup", async () => {
+    const { map } = stubMap();
+    attachPointInteractions(map, stubPopup().Popup);
+    map.fire("click", CLUSTERS_LAYER_ID, { features: [{ properties: { point_count: 3 }, geometry: { type: "Point", coordinates: [0, 0] } }] });
+    map.fire("click", CLUSTERS_LAYER_ID, { features: [] });
+    map.fire("click", CLUSTERS_LAYER_ID, {});
+    map.fire("click", CLUSTERS_LAYER_ID, { features: [{ properties: { cluster_id: 99 }, geometry: { type: "Point", coordinates: [0, 0] } }] });
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(map.easeTo).not.toHaveBeenCalled();
+    expect(map.source.getClusterExpansionZoom).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not expand a cluster from an individual point click", () => {
+    const { map } = stubMap();
+    attachPointInteractions(map, stubPopup().Popup);
+    map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
+    expect(map.source.getClusterExpansionZoom).not.toHaveBeenCalled();
+    expect(map.easeTo).not.toHaveBeenCalled();
+  });
+
+  it("shows a pointer over a cluster and restores it on leave", () => {
+    const { map, canvas } = stubMap();
+    attachPointInteractions(map, stubPopup().Popup);
+    map.fire("mousemove", CLUSTERS_LAYER_ID, { features: [{ properties: { cluster_id: 1 } }] });
+    expect(canvas.style.cursor).toBe("pointer");
+    map.fire("mouseleave", CLUSTERS_LAYER_ID, {});
+    expect(canvas.style.cursor).toBe("");
+  });
+
+  it("closes the popup after a camera move once its point is no longer rendered individually", () => {
+    const { map } = stubMap();
+    const { Popup, instances } = stubPopup();
+    attachPointInteractions(map, Popup);
+    map.fire("moveend", undefined, {});
+    map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
+    map.fire("moveend", undefined, {});
+    expect(instances[0]?.removed).toBe(false);
+    expect(map.queryRenderedFeatures).toHaveBeenCalledWith({ x: 5, y: 5 }, { layers: [POINTS_LAYER_ID] });
+    map.queryRenderedFeatures.mockReturnValueOnce([]);
+    map.fire("moveend", undefined, {});
+    expect(instances[0]?.removed).toBe(true);
+    map.fire("moveend", undefined, {});
+    expect(map.queryRenderedFeatures).toHaveBeenCalledTimes(2);
   });
 });
