@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { buildMapFeatureCollection, isValidLatitude, isValidLongitude } from "@/lib/map-geojson";
 import type { UrdaisMapPoint } from "@/types/map";
 
-const atlanta: UrdaisMapPoint = { id: "example-1", name: "Example Point", longitude: -84.388, latitude: 33.749 };
-const london: UrdaisMapPoint = { id: "example-2", name: "Second Point", longitude: -0.128, latitude: 51.507 };
+const atlanta: UrdaisMapPoint = { id: "example-1", name: "Example Point", longitude: -84.388, latitude: 33.749, mappingStatus: "mapped" };
+const london: UrdaisMapPoint = { id: "example-2", name: "Second Point", longitude: -0.128, latitude: 51.507, mappingStatus: "unmapped" };
 
 describe("buildMapFeatureCollection", () => {
   it("converts a valid point into a Point feature with [longitude, latitude] and its name", () => {
@@ -15,7 +15,7 @@ describe("buildMapFeatureCollection", () => {
           type: "Feature",
           id: "example-1",
           geometry: { type: "Point", coordinates: [-84.388, 33.749] },
-          properties: { name: "Example Point" },
+          properties: { name: "Example Point", mappingStatus: "mapped" },
         },
       ],
     });
@@ -40,9 +40,9 @@ describe("buildMapFeatureCollection", () => {
 
   it("accepts the edges of the valid ranges", () => {
     const corners: UrdaisMapPoint[] = [
-      { id: "a", name: "A", longitude: -180, latitude: -90 },
-      { id: "b", name: "B", longitude: 180, latitude: 90 },
-      { id: "c", name: "C", longitude: 0, latitude: 0 },
+      { id: "a", name: "A", longitude: -180, latitude: -90, mappingStatus: "mapped" },
+      { id: "b", name: "B", longitude: 180, latitude: 90, mappingStatus: "unmapped" },
+      { id: "c", name: "C", longitude: 0, latitude: 0, mappingStatus: "mapped" },
     ];
     expect(buildMapFeatureCollection(corners).features).toHaveLength(3);
   });
@@ -62,6 +62,18 @@ describe("buildMapFeatureCollection", () => {
   it("rejects a missing or duplicated id, so feature ids stay stable and unique", () => {
     expect(() => buildMapFeatureCollection([{ ...atlanta, id: "" }])).toThrow('Map point "Example Point" has no id');
     expect(() => buildMapFeatureCollection([atlanta, { ...london, id: "example-1" }])).toThrow('Map point id "example-1" is used more than once');
+  });
+
+  it("preserves each point's mapping status in its properties", () => {
+    const { features } = buildMapFeatureCollection([atlanta, london]);
+    expect(features.map((feature) => feature.properties.mappingStatus)).toEqual(["mapped", "unmapped"]);
+  });
+
+  it("rejects a mapping status outside the known set at runtime, even if the types were bypassed", () => {
+    const partial = { ...atlanta, mappingStatus: "partial" } as unknown as UrdaisMapPoint;
+    expect(() => buildMapFeatureCollection([partial])).toThrow('Map point "example-1" has an unknown mapping status: partial');
+    const missing = { ...atlanta, mappingStatus: undefined } as unknown as UrdaisMapPoint;
+    expect(() => buildMapFeatureCollection([missing])).toThrow("unknown mapping status");
   });
 
   it("does not build a partial collection when a later point is invalid", () => {
