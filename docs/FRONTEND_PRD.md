@@ -246,7 +246,7 @@ Urdais
 └── Subscription / Billing
 ```
 
-The `/map` route is a dedicated map workspace so the heavier map renderer stays isolated from the rest of the product. Its current phase renders the basemap only; mapped and unmapped points, category colours, legends, popups, filtering, clustering, and item detail routing are intentionally deferred to later phases.
+The `/map` route is a dedicated map workspace so the heavier map renderer stays isolated from the rest of the product. Its basemap (OpenFreeMap Positron with Urdais label overrides) provides city-level geographic context that densifies with zoom, plus a metric distance scale; mapped and unmapped points, category colours, legends, popups, filtering, clustering, and item detail routing are intentionally deferred to later phases.
 
 Infrastructure categories include:
 
