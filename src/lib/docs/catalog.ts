@@ -26,6 +26,13 @@ export const docPages: readonly DocPage[] = [
     section: "Methodology",
     file: "methodology.md",
   },
+  {
+    slug: "methodology/ai-equity-universe",
+    title: "AI Equity Universe",
+    description: "Proposed shared methodology for AI equity eligibility, classifications, and base weights used by future UGAI and UAVI outputs.",
+    section: "Methodology",
+    file: "methodology/ai-equity-universe.md",
+  },
 ];
 
 export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];
