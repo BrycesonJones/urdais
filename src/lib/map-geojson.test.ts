@@ -69,13 +69,21 @@ describe("buildMapFeatureCollection", () => {
     expect(features.map((feature) => feature.properties.mappingStatus)).toEqual(["mapped", "unmapped"]);
   });
 
-  it("carries operator and location into properties only when the point has them", () => {
-    const withProfile = buildMapFeatureCollection([{ ...atlanta, operator: "Demo Operator", location: "Atlanta, Georgia, USA" }]);
-    expect(withProfile.features[0]?.properties).toEqual({ name: "Example Point", mappingStatus: "mapped", category: "data_center", operator: "Demo Operator", location: "Atlanta, Georgia, USA" });
-    const partial = buildMapFeatureCollection([{ ...london, location: "London, United Kingdom" }]);
-    expect(partial.features[0]?.properties).toEqual({ name: "Second Point", mappingStatus: "unmapped", location: "London, United Kingdom" });
-    expect(buildMapFeatureCollection([atlanta]).features[0]?.properties).not.toHaveProperty("operator");
-    expect(buildMapFeatureCollection([atlanta]).features[0]?.properties).not.toHaveProperty("location");
+  it("carries address and contactEmail into properties only when the point has them, trimmed", () => {
+    const withProfile = buildMapFeatureCollection([{ ...atlanta, address: "  8209 Valley Pike, Middletown, Virginia, USA ", contactEmail: " contact@example.com " }]);
+    expect(withProfile.features[0]?.properties).toEqual({ name: "Example Point", mappingStatus: "mapped", category: "data_center", address: "8209 Valley Pike, Middletown, Virginia, USA", contactEmail: "contact@example.com" });
+    const addressOnly = buildMapFeatureCollection([{ ...london, address: "London, United Kingdom" }]);
+    expect(addressOnly.features[0]?.properties).toEqual({ name: "Second Point", mappingStatus: "unmapped", address: "London, United Kingdom" });
+    const emailOnly = buildMapFeatureCollection([{ ...atlanta, contactEmail: "demo@example.com" }]);
+    expect(emailOnly.features[0]?.properties).toEqual({ name: "Example Point", mappingStatus: "mapped", category: "data_center", contactEmail: "demo@example.com" });
+    expect(buildMapFeatureCollection([atlanta]).features[0]?.properties).not.toHaveProperty("address");
+    expect(buildMapFeatureCollection([atlanta]).features[0]?.properties).not.toHaveProperty("contactEmail");
+  });
+
+  it("never emits an operator property", () => {
+    const legacy = { ...atlanta, operator: "Demo Operator", location: "Atlanta" } as UrdaisMapPoint;
+    const { features } = buildMapFeatureCollection([legacy]);
+    expect(JSON.stringify(features[0]?.properties)).not.toMatch(/operator|location/);
   });
 
   it("preserves a mapped point's category and requires one", () => {
@@ -99,8 +107,16 @@ describe("buildMapFeatureCollection", () => {
   });
 
   it("rejects blank or non-string profile metadata", () => {
-    expect(() => buildMapFeatureCollection([{ ...atlanta, operator: "  " }])).toThrow('Map point "example-1" has an invalid operator');
-    expect(() => buildMapFeatureCollection([{ ...atlanta, location: 42 as unknown as string }])).toThrow('Map point "example-1" has an invalid location: 42');
+    expect(() => buildMapFeatureCollection([{ ...atlanta, address: "  " }])).toThrow('Map point "example-1" has an invalid address');
+    expect(() => buildMapFeatureCollection([{ ...atlanta, address: 42 as unknown as string }])).toThrow('Map point "example-1" has an invalid address: 42');
+  });
+
+  it("accepts a plausible contact email and rejects blank or malformed ones", () => {
+    expect(buildMapFeatureCollection([{ ...atlanta, contactEmail: "first.last+tag@sub.example.co" }]).features[0]?.properties.contactEmail).toBe("first.last+tag@sub.example.co");
+    for (const bad of ["", "   ", "no-at-sign", "@example.com", "user@", "user@nodot", "two@@example.com", "spaced user@example.com", "user@.example.com"]) {
+      expect(() => buildMapFeatureCollection([{ ...atlanta, contactEmail: bad }]), bad).toThrow('Map point "example-1" has an invalid contactEmail');
+    }
+    expect(() => buildMapFeatureCollection([{ ...atlanta, contactEmail: 7 as unknown as string }])).toThrow("invalid contactEmail: 7");
   });
 
   it("rejects a mapping status outside the known set at runtime, even if the types were bypassed", () => {

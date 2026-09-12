@@ -33,8 +33,17 @@ export type UrdaisMapPoint = {
   mappingStatus: MapPointStatus;
   /** Required for mapped points, which are coloured by it; optional for unmapped points. */
   category?: MapPointCategory;
-  /** Shown on the profile popup when present, e.g. "Atlanta, Georgia, USA". */
-  location?: string;
-  /** Shown on the profile popup when present. */
-  operator?: string;
+  /**
+   * Best known address or location string, shown on the profile popup:
+   * a full street address ("8209 Valley Pike, Middletown, Virginia, USA")
+   * or just the place ("Memphis, Tennessee, USA"). Not parsed into parts.
+   */
+  address?: string;
+  /**
+   * Best publicly available contact email for the item, shown on the
+   * profile popup as a mailto link. Named for the role so that sales,
+   * support, press, or facility contacts can be added later without
+   * ambiguity.
+   */
+  contactEmail?: string;
 };

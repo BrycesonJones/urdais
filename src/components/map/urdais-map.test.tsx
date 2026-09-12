@@ -204,7 +204,7 @@ describe("UrdaisMap", () => {
     expect(instance.handlerCount("mousemove", POINTS_LAYER_ID)).toBe(1);
     expect(instance.handlerCount("mouseleave", POINTS_LAYER_ID)).toBe(1);
 
-    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "Demo Point 1", mappingStatus: "mapped", category: "compute_cluster", operator: "Demo Operator" }, geometry: { type: "Point", coordinates: [-84.388, 33.749] } }] });
+    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "Demo Point 1", mappingStatus: "mapped", category: "compute_cluster", address: "Atlanta, Georgia, USA", contactEmail: "demo@example.com" }, geometry: { type: "Point", coordinates: [-84.388, 33.749] } }] });
     expect(maplibre.popups).toHaveLength(1);
     expect(maplibre.popups[0]?.content?.textContent).toContain("Demo Point 1");
     expect(maplibre.popups[0]?.content?.textContent).toContain("Compute Cluster");

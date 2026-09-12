@@ -35,13 +35,15 @@ function stubMap() {
 }
 
 const feature = (properties: Record<string, unknown>, coordinates = [-0.128, 51.507]) => ({ properties, geometry: { type: "Point", coordinates } });
-const mapped = feature({ name: "Demo Point 3", mappingStatus: "mapped", category: "data_center", operator: "Demo Operator", location: "London, United Kingdom" });
+const mapped = feature({ name: "Demo Point 3", mappingStatus: "mapped", category: "data_center", address: "London, United Kingdom", contactEmail: "demo@example.com" });
 const unmapped = feature({ name: "Demo Point 4", mappingStatus: "unmapped" }, [8.682, 50.111]);
 
 describe("readMappedPointProfile", () => {
   it("returns the profile for a mapped feature with a readable category, and drops blank optional fields", () => {
-    expect(readMappedPointProfile(mapped)).toEqual({ name: "Demo Point 3", category: "Data Center", operator: "Demo Operator", location: "London, United Kingdom" });
-    expect(readMappedPointProfile(feature({ name: "Only name", mappingStatus: "mapped", location: "  ", operator: 7 }))).toEqual({ name: "Only name" });
+    expect(readMappedPointProfile(mapped)).toEqual({ name: "Demo Point 3", category: "Data Center", address: "London, United Kingdom", contactEmail: "demo@example.com" });
+    expect(readMappedPointProfile(feature({ name: "Only name", mappingStatus: "mapped", address: "  ", contactEmail: 7 }))).toEqual({ name: "Only name" });
+    expect(readMappedPointProfile(feature({ name: "Bad mail", mappingStatus: "mapped", contactEmail: "not an email" }))).toEqual({ name: "Bad mail" });
+    expect(readMappedPointProfile(feature({ name: "Legacy", mappingStatus: "mapped", operator: "Demo Operator", location: "Somewhere" }))).toEqual({ name: "Legacy" });
   });
 
   it("never shows a raw category value, and tolerates a missing or unknown one", () => {
@@ -60,13 +62,34 @@ describe("readMappedPointProfile", () => {
 });
 
 describe("buildProfileCard", () => {
-  it("renders the name and labelled operator and location as text, never as markup", () => {
-    const card = buildProfileCard({ name: "<b>Demo</b> Point", category: "Compute Cluster", operator: "Demo Operator", location: "Atlanta, Georgia, USA" });
+  it("renders the name, category, address, and email as text, never as markup, and never an Operator row", () => {
+    const card = buildProfileCard({ name: "<b>Demo</b> Point", category: "Compute Cluster", address: "8209 Valley Pike, Middletown, Virginia, USA", contactEmail: "contact@example.com" });
     expect(card.querySelector("p")?.textContent).toBe("<b>Demo</b> Point");
     expect(card.querySelector("b")).toBeNull();
-    expect([...card.querySelectorAll("dt")].map((term) => term.textContent)).toEqual(["Category:", "Operator:", "Location:"]);
-    expect([...card.querySelectorAll("dd")].map((detail) => detail.textContent)).toEqual(["Compute Cluster", "Demo Operator", "Atlanta, Georgia, USA"]);
+    expect([...card.querySelectorAll("dt")].map((term) => term.textContent)).toEqual(["Category:", "Address:", "Email:"]);
+    expect([...card.querySelectorAll("dd")].map((detail) => detail.textContent)).toEqual(["Compute Cluster", "8209 Valley Pike, Middletown, Virginia, USA", "contact@example.com"]);
     expect(card.textContent).not.toContain("compute_cluster");
+    expect(card.textContent).not.toMatch(/Operator/);
+  });
+
+  it("renders the email as a same-tab mailto link with a safe href", () => {
+    const card = buildProfileCard({ name: "Demo", contactEmail: "contact@example.com" });
+    const link = card.querySelector("a");
+    expect(link?.getAttribute("href")).toBe("mailto:contact@example.com");
+    expect(link?.textContent).toBe("contact@example.com");
+    expect(link?.getAttribute("target")).toBeNull();
+    expect(card.querySelectorAll("a")).toHaveLength(1);
+    const tricky = buildProfileCard({ name: "Demo", contactEmail: 'a"@example.com' });
+    expect(tricky.querySelector("a")?.getAttribute("href")).toBe('mailto:a"@example.com');
+    expect(tricky.innerHTML).not.toContain("<script");
+  });
+
+  it("omits the Address row when there is no address and the Email row when there is no email", () => {
+    const addressOnly = buildProfileCard({ name: "Demo", category: "Data Center", address: "Singapore" });
+    expect([...addressOnly.querySelectorAll("dt")].map((term) => term.textContent)).toEqual(["Category:", "Address:"]);
+    expect(addressOnly.querySelector("a")).toBeNull();
+    const emailOnly = buildProfileCard({ name: "Demo", category: "Power Infrastructure", contactEmail: "demo@example.com" });
+    expect([...emailOnly.querySelectorAll("dt")].map((term) => term.textContent)).toEqual(["Category:", "Email:"]);
   });
 
   it("omits the detail list entirely when there is nothing beyond the name", () => {
@@ -95,7 +118,8 @@ describe("attachPointInteractions", () => {
     expect(instances[0]?.lngLat).toEqual([-0.128, 51.507]);
     expect(instances[0]?.added).toBe(true);
     expect(instances[0]?.content?.textContent).toContain("Demo Point 3");
-    expect(instances[0]?.content?.textContent).toContain("Demo Operator");
+    expect(instances[0]?.content?.textContent).toContain("London, United Kingdom");
+    expect(instances[0]?.content?.querySelector("a")?.getAttribute("href")).toBe("mailto:demo@example.com");
     expect(instances[0]?.content?.textContent).toContain("Data Center");
     expect(instances[0]?.options).toMatchObject({ closeButton: true, className: "urdais-point-popup" });
   });

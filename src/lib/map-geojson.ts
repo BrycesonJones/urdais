@@ -6,10 +6,21 @@ import type { MapPointCategory, MapPointStatus, UrdaisMapPoint } from "@/types/m
 /**
  * Properties carried on each rendered point feature. `mappingStatus` and
  * `category` drive the circle colour (category is always present on mapped
- * features); `location` and `operator` feed the profile popup and are
+ * features); `address` and `contactEmail` feed the profile popup and are
  * present only when the point has them.
  */
-export type MapPointProperties = { name: string; mappingStatus: MapPointStatus; category?: MapPointCategory; location?: string; operator?: string };
+export type MapPointProperties = { name: string; mappingStatus: MapPointStatus; category?: MapPointCategory; address?: string; contactEmail?: string };
+
+/**
+ * A practical email-shape check, not RFC validation: exactly one "@", a
+ * non-empty local part, a domain with at least one dot, and no whitespace.
+ */
+export function isPlausibleEmail(value: string): boolean {
+  const at = value.indexOf("@");
+  if (at <= 0 || at !== value.lastIndexOf("@")) return false;
+  const domain = value.slice(at + 1);
+  return !/\s/.test(value) && domain.includes(".") && !domain.startsWith(".") && !domain.endsWith(".");
+}
 
 export type MapPointFeature = Feature<Point, MapPointProperties>;
 export type MapPointCollection = FeatureCollection<Point, MapPointProperties>;
@@ -27,8 +38,10 @@ export function isValidLatitude(value: number): boolean {
  * source consumes. Pure and deterministic: features keep the input order,
  * carry the point id as the feature id (so later `setData` updates and
  * feature-state changes address the same dot), and keep `name` and
- * `mappingStatus` in properties, plus `location` and `operator` when the
- * point carries them (never as empty or undefined keys).
+ * `mappingStatus` in properties, plus `address` and `contactEmail` when
+ * the point carries them (never as empty or undefined keys). Both are
+ * trimmed; a blank or non-string value, or an email that fails the
+ * plausibility check, is rejected with the point named.
  *
  * Invalid input is rejected, not coerced: a point with a longitude outside
  * −180…180, a latitude outside −90…90, a non-finite coordinate, an empty
@@ -53,11 +66,15 @@ export function buildMapFeatureCollection(points: readonly UrdaisMapPoint[]): Ma
     if (point.mappingStatus === "mapped" && point.category === undefined) throw new Error(`Map point "${point.id}" is mapped but has no category`);
     const properties: MapPointProperties = { name: point.name, mappingStatus: point.mappingStatus };
     if (point.category !== undefined) properties.category = point.category;
-    for (const key of ["location", "operator"] as const) {
-      const value = point[key];
-      if (value === undefined) continue;
-      if (typeof value !== "string" || value.trim() === "") throw new Error(`Map point "${point.id}" has an invalid ${key}: ${String(value)}`);
-      properties[key] = value;
+    if (point.address !== undefined) {
+      const address = typeof point.address === "string" ? point.address.trim() : "";
+      if (address === "") throw new Error(`Map point "${point.id}" has an invalid address: ${String(point.address)}`);
+      properties.address = address;
+    }
+    if (point.contactEmail !== undefined) {
+      const email = typeof point.contactEmail === "string" ? point.contactEmail.trim() : "";
+      if (email === "" || !isPlausibleEmail(email)) throw new Error(`Map point "${point.id}" has an invalid contactEmail: ${String(point.contactEmail)}`);
+      properties.contactEmail = email;
     }
     return {
       type: "Feature",
