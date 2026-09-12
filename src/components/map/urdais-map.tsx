@@ -5,7 +5,10 @@ import { useEffect, useRef } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { applyBasemapOverrides } from "@/components/map/basemap-style";
+import { addPointLayer } from "@/components/map/point-layer";
 import { loadMapRenderer } from "@/components/map/prefetch-map";
+import { getMapPoints } from "@/data/mock/map-points";
+import { buildMapFeatureCollection } from "@/lib/map-geojson";
 import type { StyleSpecification } from "maplibre-gl";
 
 /**
@@ -34,10 +37,12 @@ const MIN_ZOOM = 1;
 
 /**
  * The Urdais map workspace: one MapLibre GL JS instance filling its
- * container. This phase renders the basemap only. Data layers (mapped and
- * unmapped points, category colours, clustering, popups, filtering) are
- * added later as MapLibre sources and layers on the same instance, so this
- * component owns the map lifecycle and nothing else.
+ * container. It renders the basemap plus one GeoJSON point source and one
+ * circle layer (see point-layer.ts), fed through the getMapPoints seam,
+ * which currently returns static demo points. Mapped/unmapped semantics,
+ * category colours, clustering, popups, and filtering are added later on
+ * the same instance, so this component owns the map lifecycle and nothing
+ * else.
  *
  * MapLibre touches `window` on import, so the renderer is loaded inside
  * the effect (through the shared loader in prefetch-map.ts): the page
@@ -88,6 +93,14 @@ export function UrdaisMap() {
       // re-measures on every zoom and switches between metres and
       // kilometres itself.
       map.addControl(new ScaleControl({ unit: "metric", maxWidth: 120 }), "bottom-right");
+      // Data layers wait for the style so they can be slotted beneath its
+      // labels. `load` fires once per map; the guard covers an unmount that
+      // races it, and addPointLayer itself never adds twice.
+      const points = buildMapFeatureCollection(getMapPoints());
+      map.on("load", () => {
+        if (cancelled || !map) return;
+        addPointLayer(map, points);
+      });
     });
 
     return () => {

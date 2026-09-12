@@ -2,7 +2,7 @@
   "name": "urdais",
   "version": "0.1.0",
   "private": true,
-  "description": "Urdais \u2014 an information and market-data platform for the Information Age.",
+  "description": "Urdais — an information and market-data platform for the Information Age.",
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
@@ -28,6 +28,7 @@
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
+    "@types/geojson": "^7946.0.16",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
