@@ -3,9 +3,36 @@ import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const maplibre = vi.hoisted(() => {
-  const instances: Array<{ options: Record<string, unknown>; addControl: ReturnType<typeof vi.fn>; remove: ReturnType<typeof vi.fn> }> = [];
+  type Instance = {
+    options: Record<string, unknown>;
+    addControl: ReturnType<typeof vi.fn>;
+    remove: ReturnType<typeof vi.fn>;
+    on: ReturnType<typeof vi.fn>;
+    getSource: ReturnType<typeof vi.fn>;
+    addSource: ReturnType<typeof vi.fn>;
+    getLayer: ReturnType<typeof vi.fn>;
+    addLayer: ReturnType<typeof vi.fn>;
+    getStyle: ReturnType<typeof vi.fn>;
+    /** Fires the handlers registered for a map event, as the real map would. */
+    emit: (event: string) => void;
+  };
+  const instances: Instance[] = [];
   const Map = vi.fn(function (this: unknown, options: Record<string, unknown>) {
-    const instance = { options, addControl: vi.fn(), remove: vi.fn() };
+    const handlers = new globalThis.Map<string, Array<() => void>>();
+    const sources = new globalThis.Map<string, unknown>();
+    const layers = new globalThis.Map<string, unknown>();
+    const instance: Instance = {
+      options,
+      addControl: vi.fn(),
+      remove: vi.fn(),
+      on: vi.fn((event: string, handler: () => void) => handlers.set(event, [...(handlers.get(event) ?? []), handler])),
+      getSource: vi.fn((id: string) => sources.get(id)),
+      addSource: vi.fn((id: string, source: unknown) => sources.set(id, source)),
+      getLayer: vi.fn((id: string) => layers.get(id)),
+      addLayer: vi.fn((layer: { id: string }) => layers.set(layer.id, layer)),
+      getStyle: vi.fn(() => ({ layers: [{ id: "background", type: "background" }, { id: "label_city", type: "symbol" }] })),
+      emit: (event) => handlers.get(event)?.forEach((handler) => handler()),
+    };
     instances.push(instance);
     return instance;
   });
@@ -91,6 +118,46 @@ describe("UrdaisMap", () => {
     ]);
     expect(maplibre.NavigationControl).toHaveBeenCalledWith({ showCompass: false });
     expect(maplibre.ScaleControl).toHaveBeenCalledWith({ unit: "metric", maxWidth: 120 });
+  });
+
+  it("adds the demo points as one GeoJSON source and one circle layer once the style has loaded", async () => {
+    const { POINTS_LAYER_ID, POINTS_SOURCE_ID } = await import("@/components/map/point-layer");
+    const { DEMO_MAP_POINTS } = await import("@/data/mock/map-points");
+    const { buildMapFeatureCollection } = await import("@/lib/map-geojson");
+    const UrdaisMap = await loadComponent();
+    render(<UrdaisMap />);
+    await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
+    const instance = maplibre.instances[0]!;
+
+    expect(instance.addSource).not.toHaveBeenCalled();
+    instance.emit("load");
+    expect(instance.addSource).toHaveBeenCalledTimes(1);
+    expect(instance.addSource).toHaveBeenCalledWith(POINTS_SOURCE_ID, { type: "geojson", data: buildMapFeatureCollection(DEMO_MAP_POINTS) });
+    expect(instance.addLayer).toHaveBeenCalledTimes(1);
+    expect(instance.addLayer.mock.calls[0]?.[0]).toMatchObject({ id: POINTS_LAYER_ID, type: "circle", source: POINTS_SOURCE_ID });
+    expect(instance.addLayer.mock.calls[0]?.[1]).toBe("label_city");
+  });
+
+  it("does not duplicate the source or layer if load fires again", async () => {
+    const UrdaisMap = await loadComponent();
+    render(<UrdaisMap />);
+    await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
+    const instance = maplibre.instances[0]!;
+    instance.emit("load");
+    instance.emit("load");
+    expect(instance.addSource).toHaveBeenCalledTimes(1);
+    expect(instance.addLayer).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips adding points when the map was unmounted before its style loaded", async () => {
+    const UrdaisMap = await loadComponent();
+    const { unmount } = render(<UrdaisMap />);
+    await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
+    const instance = maplibre.instances[0]!;
+    unmount();
+    instance.emit("load");
+    expect(instance.addSource).not.toHaveBeenCalled();
+    expect(instance.remove).toHaveBeenCalledTimes(1);
   });
 
   it("removes the map on unmount", async () => {
