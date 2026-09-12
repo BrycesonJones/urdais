@@ -1,15 +1,16 @@
-import { MAP_POINT_STATUSES, MAP_POINT_STATUS_COLOR, MAP_POINT_STATUS_LABEL } from "@/components/map/map-point-style";
+import { MAP_LEGEND_ROWS } from "@/components/map/map-point-style";
 
 type MapLegendProps = {
   className?: string;
 };
 
 /**
- * Compact legend for the point statuses on the map. Plain React UI: it
- * reads the same colour constants the MapLibre layer paints with and knows
- * nothing about the map instance, so it renders (and stays readable to
- * assistive technology, through its text labels) whether or not the map
- * has loaded. The colour swatches are decorative; the words carry meaning.
+ * Compact legend for the points on the map: one row per infrastructure
+ * category, then unmapped. Plain React UI: it reads the same colour table
+ * the MapLibre layer paints with and knows nothing about the map instance,
+ * so it renders (and stays readable to assistive technology, through its
+ * text labels) whether or not the map has loaded. The colour swatches are
+ * decorative; the words carry meaning.
  */
 export function MapLegend({ className }: MapLegendProps) {
   return (
@@ -19,14 +20,10 @@ export function MapLegend({ className }: MapLegendProps) {
       className={["rounded-md border border-black/10 bg-white/90 px-2.5 py-2 text-xs text-neutral-800 backdrop-blur-sm", className].filter(Boolean).join(" ")}
     >
       <ul className="flex flex-col gap-1.5">
-        {MAP_POINT_STATUSES.map((status) => (
-          <li key={status} className="flex items-center gap-2">
-            <span
-              aria-hidden="true"
-              className="inline-block size-2.5 shrink-0 rounded-full border border-white"
-              style={{ backgroundColor: MAP_POINT_STATUS_COLOR[status] }}
-            />
-            <span>{MAP_POINT_STATUS_LABEL[status]}</span>
+        {MAP_LEGEND_ROWS.map((row) => (
+          <li key={row.id} className="flex items-center gap-2">
+            <span aria-hidden="true" className="inline-block size-2.5 shrink-0 rounded-full border border-white" style={{ backgroundColor: row.color }} />
+            <span>{row.label}</span>
           </li>
         ))}
       </ul>

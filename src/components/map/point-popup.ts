@@ -1,12 +1,15 @@
 import type { LngLatLike, Map as MapLibreMap, MapGeoJSONFeature, MapMouseEvent, Popup as MapLibrePopup, PopupOptions } from "maplibre-gl";
 
+import { MAP_POINT_CATEGORY_LABELS, isMapPointCategory } from "@/components/map/map-point-style";
 import { POINTS_LAYER_ID } from "@/components/map/point-layer";
 
 /** What the profile card shows. Only mapped points with a name qualify. */
 export type MapPointProfile = {
   name: string;
-  location?: string;
-  operator?: string;
+  /** Human-readable category label, never the raw enum value. */
+  category?: string;
+  address?: string;
+  contactEmail?: string;
 };
 
 /** MapLibre's Popup class, handed in because the renderer is loaded lazily. */
@@ -28,14 +31,19 @@ export function readMappedPointProfile(feature: Pick<MapGeoJSONFeature, "propert
   const name = text(record.name);
   if (!name) return null;
   const profile: MapPointProfile = { name };
-  const location = text(record.location);
-  const operator = text(record.operator);
-  if (location) profile.location = location;
-  if (operator) profile.operator = operator;
+  if (isMapPointCategory(record.category)) profile.category = MAP_POINT_CATEGORY_LABELS[record.category];
+  const address = text(record.address);
+  const contactEmail = text(record.contactEmail);
+  if (address) profile.address = address;
+  if (contactEmail && !/\s/.test(contactEmail) && contactEmail.includes("@")) profile.contactEmail = contactEmail;
   return profile;
 }
 
-/** The card's DOM, built with textContent only so point data can never inject markup. */
+/**
+ * The card's DOM, built with createElement and textContent only so point
+ * data can never inject markup. The email is a real mailto link (same tab,
+ * keyboard reachable); the href is set as a property, never interpolated.
+ */
 export function buildProfileCard(profile: MapPointProfile): HTMLElement {
   const card = document.createElement("div");
   card.className = "flex flex-col gap-1.5 pr-4";
@@ -43,15 +51,16 @@ export function buildProfileCard(profile: MapPointProfile): HTMLElement {
   title.className = "text-sm font-semibold leading-snug text-neutral-900";
   title.textContent = profile.name;
   card.append(title);
-  const rows: Array<[string, string | undefined]> = [
-    ["Operator", profile.operator],
-    ["Location", profile.location],
+  const rows: Array<[string, string | undefined, "text" | "email"]> = [
+    ["Category", profile.category, "text"],
+    ["Address", profile.address, "text"],
+    ["Email", profile.contactEmail, "email"],
   ];
-  const present = rows.filter((row): row is [string, string] => Boolean(row[1]));
+  const present = rows.filter((row): row is [string, string, "text" | "email"] => Boolean(row[1]));
   if (present.length > 0) {
     const list = document.createElement("dl");
     list.className = "flex flex-col gap-0.5 text-xs text-neutral-600";
-    for (const [label, value] of present) {
+    for (const [label, value, kind] of present) {
       const row = document.createElement("div");
       row.className = "flex gap-1.5";
       const term = document.createElement("dt");
@@ -59,7 +68,15 @@ export function buildProfileCard(profile: MapPointProfile): HTMLElement {
       term.textContent = `${label}:`;
       const detail = document.createElement("dd");
       detail.className = "min-w-0 text-neutral-800";
-      detail.textContent = value;
+      if (kind === "email") {
+        const link = document.createElement("a");
+        link.href = `mailto:${value}`;
+        link.textContent = value;
+        link.className = "break-all text-[#3b55c4] underline decoration-[#3b55c4]/40 underline-offset-2 hover:decoration-[#3b55c4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#526fe0]";
+        detail.append(link);
+      } else {
+        detail.textContent = value;
+      }
       row.append(term, detail);
       list.append(row);
     }
