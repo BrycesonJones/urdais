@@ -47,6 +47,13 @@ export const docPages: readonly DocPage[] = [
     section: "Methodology",
     file: "methodology/uavi.md",
   },
+  {
+    slug: "methodology/ucpi",
+    title: "UCPI",
+    description: "Proposed shared methodology for the Urdais Compute Price Index family: compute instrument identity, executable-offer observations, normalization, and aggregation for per-accelerator price children.",
+    section: "Methodology",
+    file: "methodology/ucpi.md",
+  },
 ];
 
 export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];
