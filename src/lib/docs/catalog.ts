@@ -33,6 +33,13 @@ export const docPages: readonly DocPage[] = [
     section: "Methodology",
     file: "methodology/ai-equity-universe.md",
   },
+  {
+    slug: "methodology/ugai",
+    title: "UGAI",
+    description: "Proposed methodology for the Urdais Global AI Index: calculation, index shares, divisor, currency, corporate actions, and publication on top of the AI Equity Universe.",
+    section: "Methodology",
+    file: "methodology/ugai.md",
+  },
 ];
 
 export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];

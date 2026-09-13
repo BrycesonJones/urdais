@@ -8,7 +8,7 @@ This proposal follows the principles of the [Urdais methodology framework](/docs
 
 The Urdais AI Equity Universe is the shared set of publicly traded companies with evidenced, material commercial exposure to the global AI economy, together with their representative securities and base weights. It is a shared methodology primitive, not a market index or a recommendation to invest.
 
-UGAI, the Urdais Global AI Index, will use this universe and its base weighting methodology for equity-performance measurement. UAVI, the Urdais AI Volatility Index, will inherit the same constituent base weights, apply its own options-eligibility filter, and renormalize the surviving weights. No options requirement is imposed on the parent universe.
+[UGAI](/docs/methodology/ugai), the Urdais Global AI Index, will use this universe and its base weighting methodology for equity-performance measurement. UAVI, the Urdais AI Volatility Index, will inherit the same constituent base weights, apply its own options-eligibility filter, and renormalize the surviving weights. No options requirement is imposed on the parent universe.
 
 The intended measurement is the investable public equity of companies materially participating in AI supply and commercialization. It is not a measure of AI revenue, economic value added, model capability, private-company valuations, or the productivity gains of every business adopting AI. Supply-chain revenues can overlap across different companies; this is not an additive estimate of the size of the AI economy.
 
