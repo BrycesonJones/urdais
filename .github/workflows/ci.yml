@@ -45,3 +45,38 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # Database foundation: migrations bootstrap from zero on a real PostgreSQL 17
+  # (matching the hosted engine), pass the database tests, and replay
+  # deterministically. No hosted project and no secrets are involved; CI never
+  # touches UrdaisDev. Only psql is needed, which the runner image provides.
+  database:
+    name: database
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      URDAIS_PG_EXTERNAL: "1"
+      URDAIS_DB_NAME: urdais_ci
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Bootstrap platform roles, replay migrations from zero twice, run database tests
+        run: scripts/db/local.sh ci

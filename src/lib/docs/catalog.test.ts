@@ -84,25 +84,51 @@ describe("compute price child specifications", () => {
   });
 });
 
-describe("internal research artifacts", () => {
-  const researchDir = path.join(process.cwd(), "docs", "research");
+describe("internal research and architecture artifacts", () => {
+  const internalDirs = ["research", "architecture"] as const;
 
   it("are never registered in the public docs catalog", () => {
     const routed = docPages.map((page) => page.file);
-    expect(routed.some((file) => file.startsWith("research/"))).toBe(false);
-    for (const file of readdirSync(researchDir)) {
-      expect(routed).not.toContain(`research/${file}`);
+    for (const dir of internalDirs) {
+      expect(routed.some((file) => file.startsWith(`${dir}/`))).toBe(false);
+      for (const file of readdirSync(path.join(process.cwd(), "docs", dir))) {
+        expect(routed).not.toContain(`${dir}/${file}`);
+      }
     }
   });
 
   it("exist, are markdown, and each carries a single title marking it unrouted", () => {
-    const files = readdirSync(researchDir).filter((file) => file.endsWith(".md"));
-    expect(files.length).toBeGreaterThan(0);
-    for (const file of files) {
-      const doc = readFileSync(path.join(researchDir, file), "utf8");
-      expect(doc.match(/^# /gm)).toHaveLength(1);
-      expect(doc).toContain("not registered in the docs catalog");
+    for (const dir of internalDirs) {
+      const absolute = path.join(process.cwd(), "docs", dir);
+      const files = readdirSync(absolute).filter((file) => file.endsWith(".md"));
+      expect(files.length).toBeGreaterThan(0);
+      for (const file of files) {
+        const doc = readFileSync(path.join(absolute, file), "utf8");
+        expect(doc.match(/^# /gm)).toHaveLength(1);
+        expect(doc).toContain("not registered in the docs catalog");
+      }
     }
+  });
+});
+
+describe("supabase configuration", () => {
+  const config = readFileSync(path.join(process.cwd(), "supabase", "config.toml"), "utf8");
+
+  it("keeps the internal reference and pipeline schemas out of the exposed API schemas", () => {
+    const match = config.match(/^schemas = \[(.*)\]$/m);
+    expect(match).not.toBeNull();
+    const exposed = (match?.[1] ?? "").split(",").map((s) => s.trim().replace(/"/g, "")).filter(Boolean);
+    expect(exposed).toEqual(["public", "graphql_public"]);
+    expect(exposed).not.toContain("reference");
+    expect(exposed).not.toContain("pipeline");
+  });
+
+  it("targets the same PostgreSQL major version as the hosted development project", () => {
+    expect(config).toMatch(/^major_version = 17$/m);
+  });
+
+  it("commits no credential", () => {
+    expect(config).not.toMatch(/service_role|password\s*=\s*"[^"]+"|eyJ[A-Za-z0-9_-]{20,}/);
   });
 });
 

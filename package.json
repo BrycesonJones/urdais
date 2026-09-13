@@ -15,7 +15,16 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:start": "scripts/db/local.sh start",
+    "db:stop": "scripts/db/local.sh stop",
+    "db:reset": "scripts/db/local.sh reset",
+    "db:migrate": "scripts/db/local.sh migrate",
+    "db:test": "scripts/db/local.sh test",
+    "db:replay": "scripts/db/local.sh replay",
+    "db:types": "scripts/db/local.sh types",
+    "db:check-types": "scripts/db/local.sh check-types",
+    "db:ci": "scripts/db/local.sh ci"
   },
   "dependencies": {
     "github-slugger": "^2.0.0",

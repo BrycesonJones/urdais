@@ -46,3 +46,6 @@ next-env.d.ts
 
 # vendored at dev/build time by scripts/sync-maplibre-worker.mjs
 /public/vendor/
+
+# local PostgreSQL cluster managed by scripts/db/local.sh
+/.local/

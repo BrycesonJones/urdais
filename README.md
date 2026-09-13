@@ -43,6 +43,7 @@ The page catalog and Markdown sources provide an entry point for future indexing
 
 - Node.js 22 or newer (Node 24 LTS recommended; see `.nvmrc`)
 - npm 10 or newer
+- For database work only: PostgreSQL client and server binaries (`psql`, `initdb`, `pg_ctl`; PostgreSQL 16 or 17). Docker is not required. The [Supabase CLI](https://supabase.com/docs/guides/cli) is needed only to link the hosted development project or generate types.
 
 ## Getting started
 
@@ -62,7 +63,18 @@ npm run build      # create a production build
 npm run start      # serve the production build
 npm run lint       # run ESLint
 npm run typecheck  # generate Next.js route types and run tsc --noEmit
+npm test           # run Vitest
+
+# Database foundation (see docs/architecture/ucpi-h100-backend-foundation.md)
+npm run db:start   # start a throwaway local PostgreSQL cluster under .local/pg (port 54329)
+npm run db:reset   # drop and recreate the working database
+npm run db:migrate # apply supabase/migrations/*.sql in order
+npm run db:test    # run supabase/tests/*.sql (each test rolls itself back)
+npm run db:replay  # reset -> migrate -> test, twice, proving a deterministic bootstrap
+npm run db:stop    # stop the local cluster
 ```
+
+Migrations under `supabase/migrations/` are the single source of truth for the database. They are applied to the hosted development project (`UrdaisDev`) only after passing `db:replay`, and never edited afterwards; a correction is a new migration. Pull-request CI runs the same replay against PostgreSQL 17 and never connects to the hosted project.
 
 ## Environment variables
 
@@ -77,6 +89,14 @@ Environment variables are documented in [`.env.example`](.env.example). Copy it 
 ```text
 urdais/
 ├── docs/                 # public Markdown docs and product / architecture context
+│   ├── methodology/      # routed methodology pages (registered in src/lib/docs/catalog.ts)
+│   ├── research/         # internal research artifacts; never routed
+│   └── architecture/     # internal architecture documents; never routed
+├── scripts/db/           # local-first database harness, platform-role bootstrap, schema fingerprint
+├── supabase/
+│   ├── config.toml       # Supabase CLI project config (no credentials)
+│   ├── migrations/       # canonical database schema, applied in filename order
+│   └── tests/            # SQL database tests, one transaction each, rolled back
 ├── public/               # static assets served from /
 ├── src/
 │   ├── app/              # Next.js routes, layouts, metadata, globals.css
@@ -105,12 +125,17 @@ The `@/*` path alias maps to `src/*`. Directories that are still empty are not c
 
 Work happens on feature branches merged through reviewed pull requests. Do not push directly to `main`.
 
-Every pull request and every push to `main` is validated by GitHub Actions (`.github/workflows/ci.yml`), which runs `npm ci` followed by:
+Every pull request and every push to `main` is validated by GitHub Actions (`.github/workflows/ci.yml`) in two independent jobs.
+
+The `validate` job runs `npm ci` followed by:
 
 ```text
 npm run lint
 npm run typecheck
+npm test
 npm run build
 ```
 
-CI uses the Node version from `.nvmrc`. Run the same three commands locally before opening a PR.
+The `database` job starts a PostgreSQL 17 service container, bootstraps the Supabase platform roles, applies every migration from zero, runs the SQL tests, and repeats the whole cycle once more to prove the bootstrap is deterministic. It needs no hosted project and no secrets.
+
+CI uses the Node version from `.nvmrc`. Run the four `validate` commands and `npm run db:replay` locally before opening a PR.
