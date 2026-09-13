@@ -79,9 +79,10 @@ describe("compute price child specifications", () => {
 
   it("is a draft that states its launch is blocked and labels research prices", () => {
     const childDoc = readFileSync(path.join(process.cwd(), "docs", child!.file), "utf8");
-    expect(childDoc).toContain("version 0.1.2-draft");
+    expect(childDoc).toContain("version 0.1.3-draft");
     expect(childDoc).toContain("Launch blocked");
     expect(childDoc).toContain("Research snapshot only");
+    expect(childDoc).toContain("0.1.2-draft, 13 September 2026");
     expect(childDoc).toContain("0.1.1-draft, 13 September 2026");
     expect(childDoc).toContain("0.1.0-draft, 12 September 2026");
   });
@@ -92,7 +93,10 @@ describe("compute price child specifications", () => {
     expect(childDoc).toContain("Stage Criteria: P0, P1, and P2");
     expect(childDoc).toContain("Ingestion Field Contract");
     expect(childDoc).toContain("MARKET_BREADTH_MINIMUM");
-    expect(childDoc).toContain("Three numerical publication gates");
+    expect(childDoc).toContain("No numerical publication gate remains open for launch");
+    expect(childDoc).toContain("host-memory floor of 80 GB per accelerator");
+    expect(childDoc).toContain("canonical-quantity selection");
+    expect(childDoc).toContain("no price or availability evidence is carried across calculation dates at launch");
     expect(childDoc).not.toContain("Four numerical publication gates");
     expect(read(ucpi!.file)).toContain("version 0.1.1-draft");
   });
