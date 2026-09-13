@@ -33,12 +33,12 @@ Every word of that question carries weight. **Defined** means the compute produc
 Five distinct price statistics could be called "the price of compute", and they are not interchangeable:
 
 1. **The typical advertised price**: what sellers publish, whether or not anything is available at it.
-2. **The price offered by a typical participating seller**: what a buyer approaching the market could actually transact at now, across the sellers who offer the product.
+2. **The price offered by a typical participating supplier**: what a buyer approaching the market could actually transact at now, across those who offer the product.
 3. **The capacity-weighted offer price**: the price attaching to the typical available unit of capacity.
 4. **The transaction-weighted clearing price**: the price at which purchased compute actually cleared.
 5. **The marginal cheapest available price**: the best price findable anywhere at that moment.
 
-**UCPI's target concept is the second: the market-accessible price offered by a typical participating seller of the specified product.** That is the object the primary question describes, and it is the object a buyer can act on.
+**UCPI's target concept is the second: the market-accessible price offered by a typical participating capacity source for the specified product.** That is the object the primary question describes, and it is the object a buyer can act on.
 
 The target concept and the statistic currently computed are not the same thing, and the document names both rather than letting the ambition stand in for the arithmetic. The computed statistic is stated in [The observable proxy](#docs-what-ucpi-measures) below and in [Regional Aggregation](#docs-regional-aggregation).
 
@@ -54,13 +54,13 @@ The published statistic is stated exactly, because a benchmark's description is 
 
 > **The regional median of each eligible participant's lowest-priced qualifying accessible offer for the child-specified product.**
 
-In product language, UCPI measures **the typical participating seller's best qualifying accessible price for the specified compute product within a region**. The word "typical" applies to the distribution across participants, not to the distribution of raw offers.
+In product language, UCPI measures **the typical participating capacity source's best qualifying accessible price for the specified compute product within a region**. A **capacity source** is the infrastructure operator where the operator is reliably determinable, and the seller otherwise, as defined in [Capacity-Source Identity and Collapse](#docs-capacity-source-identity-and-collapse); it is the participant unit over which the median is taken. The word "typical" applies to the distribution across participants, not to the distribution of raw offers.
 
 It is therefore none of the following, and must not be described as any of them: the median of all offers; the price of the typical available accelerator-hour; the price paid by the typical buyer; a capacity-weighted price; or a transaction-weighted clearing price.
 
 Three consequences follow and must be disclosed wherever UCPI is used.
 
-- **UCPI is a seller-side accessibility statistic, not a volume-weighted market price.** It answers "what does the specified product cost across the participants offering it" and not "what did the typical purchased accelerator-hour clear at". A participant with one available accelerator and a participant with ten thousand contribute equally, because their relative capacity is not reliably observable. Where most capacity concentrates with few participants, the two questions can diverge materially, and this limitation is not removable by any diagnostic; the diagnostics published with every observation record what is known about composition, and the section on [Coverage and Composition](#docs-coverage-and-composition) is explicit that economic capacity concentration remains unknown where capacity is not observable.
+- **UCPI is a supply-side accessibility statistic, not a volume-weighted market price.** It answers "what does the specified product cost across the participants offering it" and not "what did the typical purchased accelerator-hour clear at". A participant with one available accelerator and a participant with ten thousand contribute equally, because their relative capacity is not reliably observable. Where most capacity concentrates with few participants, the two questions can diverge materially, and this limitation is not removable by any diagnostic; the diagnostics published with every observation record what is known about composition, and the section on [Coverage and Composition](#docs-coverage-and-composition) is explicit that economic capacity concentration remains unknown where capacity is not observable.
 - **UCPI is not an index level.** It is a price in currency per accelerator-hour. See [Published Values](#docs-published-values).
 - **UCPI is not a cost model.** It measures the price of renting a defined product, not the cost of producing compute, the total cost of ownership of a deployment, or the cost of any workload.
 
@@ -357,7 +357,7 @@ A newly learned attribution applies prospectively from the date it becomes known
 
 ## Regional Aggregation
 
-The regional value is the **median across capacity-source observations within the canonical region**, with each participant weighted equally.
+The regional value is the **median across capacity-source observations within the canonical region**, with each participating capacity source weighted equally.
 
 For final aggregation participants `k = 1 … N` with representative accessible prices `x_k`, sorted ascending:
 
@@ -397,9 +397,9 @@ Until then, a user comparing regions does so explicitly, using regional series t
 
 Weighting is not a technical detail, and the family states its philosophy plainly: **the economic question is chosen first, and the weighting follows from it.**
 
-Equal-seller weighting asks what the typical seller charges for the specified product. Capacity weighting asks what the typical available unit of capacity costs. Transaction weighting asks what purchased compute cleared at. Cheapest-available asks what the best obtainable deal is. These are four different questions with four different answers, and a benchmark that does not say which one it is answering is not a benchmark.
+Equal-participant weighting asks what the typical participating capacity source charges for the specified product. Capacity weighting asks what the typical available unit of capacity costs. Transaction weighting asks what purchased compute cleared at. Cheapest-available asks what the best obtainable deal is. These are four different questions with four different answers, and a benchmark that does not say which one it is answering is not a benchmark.
 
-UCPI answers the first, because it is the question the available data can support honestly, and it publishes the diagnostics that reveal where the first and second answers would diverge. Where data later supports the second, it will be added as a distinct series with its own name, not substituted silently into an existing one.
+UCPI answers the first, because it is the question the available data can support honestly, and it publishes the composition diagnostics that record what is known about the participant set. Where data later supports the second, it will be added as a distinct series with its own name, not substituted silently into an existing one.
 
 ## Robustness and Outliers
 
@@ -441,7 +441,7 @@ Each observation therefore records the participants added since the previous obs
 
 Nothing is fabricated. Where inputs are absent, the family's response is to narrow the claim, not to fill the gap.
 
-A seller that disappears from coverage leaves the calculation, and the change in seller count is published. A source that cannot be retrieved produces a carried observation within the freshness limit and an excluded one beyond it. A region that loses coverage below its gate produces a value that is not published as normal. Where only one eligible seller remains, no regional value is published, because a single seller's price is not a market price; it may be published as a seller-level diagnostic. An observation whose availability cannot be established is ineligible. Sources that conflict irreconcilably produce a Conflicted observation that is withheld and escalated. A price shown as requiring a quote is not a price.
+A participant that disappears from coverage leaves the calculation, and the change in participant count is published. A source that cannot be retrieved produces a carried observation within the freshness limit and an excluded one beyond it. A region that loses coverage below its gate produces a value that is not published as normal. Where only one eligible participant remains, no regional value is published, because a single participant's price is not a market price; it may be published as a participant-level diagnostic. An observation whose availability cannot be established is ineligible. Sources that conflict irreconcilably produce a Conflicted observation that is withheld and escalated. A price shown as requiring a quote is not a price.
 
 **Carrying an observation forward is always visible.** Its age, its share of coverage, and its effect are published; a silent carry is prohibited in every case.
 
@@ -465,15 +465,15 @@ Consistent with Urdais convention, **percentage change is the headline change si
 
 Each observation publishes the price level; percentage changes over defined periods computed from unrounded values; the instrument, region, procurement mode, and service tier that define it; the coverage and concentration diagnostics; the as-of date; the status; and the family methodology version, child specification version, and parameter set.
 
-Dispersion is published alongside the level rather than as a separate product. Retaining the percentile distribution and cross-seller spread preserves the information that future scarcity, fragmentation, and regional basis analytics would require, without committing to those products now.
+Dispersion is published alongside the level rather than as a separate product. Retaining the percentile distribution and cross-participant spread preserves the information that future scarcity, fragmentation, and regional basis analytics would require, without committing to those products now.
 
 ## Historical Integrity and Lineage
 
 Every published value must be traceable through:
 
-UCPI Child Observation → UCPI Family Methodology Version → UCPI Child Specification Version → Eligible Seller-Level Observations → Normalized Offers → Raw Compute Offers → Seller and Marketplace Sources
+UCPI Child Observation → UCPI Family Methodology Version → UCPI Child Specification Version → Final Capacity-Source Observations → Seller-Level Observations → Normalized Offers → Raw Compute Offers → Seller and Marketplace Sources
 
-For any historical date it must be possible to answer which instrument definition applied; which sellers and operators were eligible and which were excluded with which reason; what offers existed and on what commercial terms; what region mapping and service-tier classification applied; what availability evidence supported each observation; what currency conversion was used; what aggregation rule applied; which methodology and specification versions governed the result; and what information was actually available at that time.
+For any historical date it must be possible to answer which instrument definition applied; which sellers and operators were eligible and which were excluded with which reason; how sellers resolved into capacity sources and under which attribution evidence; what offers existed and on what commercial terms; what region mapping and service-tier classification applied; what availability evidence supported each observation; what currency conversion was used; what aggregation rule applied; which methodology and specification versions governed the result; and what information was actually available at that time.
 
 Retain raw offers, rejected and superseded observations, source retrieval evidence and vintages, and the mapping and classification decisions with their effective intervals. A historical value must never change because a mapping, a taxonomy, or a parameter changed later.
 
@@ -483,7 +483,7 @@ Any series computed for dates before a child's first live publication is labelle
 
 Distinguish, each with its own record: an **input correction**, where a price, currency, instrument identity, region mapping, availability state, or commercial term was wrong; a **classification error**, where procurement mode or service tier was misassigned; a **duplication error**, where one operator's capacity was counted more than once; a **staleness error**, where a withdrawn or stale offer was treated as current; a **calculation error**, where these rules were misapplied; and a **publication error**.
 
-These are not: a genuine price change, a seller entering or leaving coverage, or a methodology amendment with a future effective date.
+These are not: a genuine price change, a participant entering or leaving coverage, or a methodology amendment with a future effective date.
 
 Handling follows the Urdais convention. Inside the correction window, restatement, with each restated value carrying the original value, the reason, the detection and republication timestamps, and the status **Corrected**, and the original retained as **Superseded**. Outside the window, history is ordinarily left as published and the correction applied prospectively with a notice. An **exceptional historical restatement** may be made only where an error materially compromises the integrity, interpretability, or reproducibility of the series; it must be publicly documented, identify the affected observations, preserve the originals, record the reason and approval, and be published as a distinct event. This is a high bar and not a licence to tidy small errors.
 
@@ -616,7 +616,7 @@ The provider's [H100 rental price index page](https://www.silicondata.com/produc
 
 The [H100 daily and contract pricing index](https://gpu-index.semianalysis.com/) collects prices "from hyperscale clouds, neoclouds, GPU marketplaces, and rental routers/aggregators" combined with "analyst-run contract-pricing surveys", across contract lengths from on-demand to five years. It is published hourly, constructed as "a composition-jump-resistant weighted mean of rental prices" with hyperscale clouds weighted more heavily than marketplaces, applies a "per-step move cap" circuit breaker in which "an input printing an implausible jump is rejected rather than passed into the level", and carries a source's "last accepted price ... forward for a limited window (forward-fill), so no index is computed on a constantly shifting subset of sources". The document states that the window is limited but does not disclose its length.
 
-**Adopt:** the recognition that composition change, rather than price change, is a primary risk in a compute index, which is why this family fixes the unit of observation at the seller and publishes composition diagnostics; and the use of analyst survey evidence for contract pricing, which corresponds to the quote and transaction tiers of the source hierarchy. **Modify:** weighting provider types differently is a defensible answer to a different question, and the family instead fixes the question first and weights sellers equally within a specification, publishing the diagnostics that reveal the difference. **Adopt in principle:** bounding any carry-forward to a limited window, which corresponds to the age limits in [Freshness and Staleness](#docs-freshness-and-staleness), and the stated reason for it, that an index should not be computed on a constantly shifting subset of sources. **Reject:** the per-step move cap. A move cap suppresses exactly the large genuine price movements a compute benchmark exists to report, and it cannot distinguish a data error from a real scarcity event; the family uses validation rules with recorded reasons instead. **Modify:** UCPI requires the carry window to be published rather than merely stated to exist, applies separate limits to price and availability freshness, and publishes the carried share with every observation, because a carried price whose age is not disclosed cannot be assessed by a user.
+**Adopt:** the recognition that composition change, rather than price change, is a primary risk in a compute index, which is why this family fixes the unit of aggregation at the capacity source and publishes composition diagnostics; and the use of analyst survey evidence for contract pricing, which corresponds to the quote and transaction tiers of the source hierarchy. **Modify:** weighting provider types differently is a defensible answer to a different question, and the family instead fixes the question first and weights sellers equally within a specification, publishing the diagnostics that reveal the difference. **Adopt in principle:** bounding any carry-forward to a limited window, which corresponds to the age limits in [Freshness and Staleness](#docs-freshness-and-staleness), and the stated reason for it, that an index should not be computed on a constantly shifting subset of sources. **Reject:** the per-step move cap. A move cap suppresses exactly the large genuine price movements a compute benchmark exists to report, and it cannot distinguish a data error from a real scarcity event; the family uses validation rules with recorded reasons instead. **Modify:** UCPI requires the carry window to be published rather than merely stated to exist, applies separate limits to price and availability freshness, and publishes the carried share with every observation, because a carried price whose age is not disclosed cannot be assessed by a user.
 
 ### Observed market structure
 
