@@ -49,6 +49,32 @@ describe("compute price methodology", () => {
   });
 });
 
+describe("compute price child specifications", () => {
+  const child = findDoc("methodology/ucpi-h100-sxm");
+  const ucpi = findDoc("methodology/ucpi");
+
+  it("registers UCPI-H100-SXM under Methodology, directly after its parent family", () => {
+    expect(child).toMatchObject({ section: "Methodology", file: "methodology/ucpi-h100-sxm.md" });
+    expect(docPages[docPages.indexOf(ucpi!) + 1]).toBe(child);
+    expect(docHref(child!.slug)).toBe("/docs/methodology/ucpi-h100-sxm");
+  });
+
+  it("links the child to its parent family and the parent back to the child", () => {
+    const read = (file: string) => readFileSync(path.join(process.cwd(), "docs", file), "utf8");
+    const childDoc = read(child!.file);
+    expect(childDoc).toContain(`](${docHref(ucpi!.slug)})`);
+    expect(childDoc.match(/^# /gm)).toHaveLength(1);
+    expect(read(ucpi!.file)).toContain(`](${docHref(child!.slug)})`);
+  });
+
+  it("is a draft that states its launch is blocked and labels research prices", () => {
+    const childDoc = readFileSync(path.join(process.cwd(), "docs", child!.file), "utf8");
+    expect(childDoc).toContain("0.1.0-draft");
+    expect(childDoc).toContain("Launch blocked");
+    expect(childDoc).toContain("Research snapshot only");
+  });
+});
+
 describe("output methodology pages", () => {
   const ugai = findDoc("methodology/ugai");
   const uavi = findDoc("methodology/uavi");
