@@ -33,24 +33,34 @@ Every word of that question carries weight. **Defined** means the compute produc
 Five distinct price statistics could be called "the price of compute", and they are not interchangeable:
 
 1. **The typical advertised price**: what sellers publish, whether or not anything is available at it.
-2. **The typical executable offer price**: what a buyer approaching the market could actually transact at now.
+2. **The price offered by a typical participating seller**: what a buyer approaching the market could actually transact at now, across the sellers who offer the product.
 3. **The capacity-weighted offer price**: the price attaching to the typical available unit of capacity.
 4. **The transaction-weighted clearing price**: the price at which purchased compute actually cleared.
 5. **The marginal cheapest available price**: the best price findable anywhere at that moment.
 
-**UCPI targets the second: the typical executable offer price for the specified product.** That is the object the primary question describes, and it is the object a buyer can act on.
+**UCPI's target concept is the second: the market-accessible price offered by a typical participating seller of the specified product.** That is the object the primary question describes, and it is the object a buyer can act on.
 
-The other four are rejected as targets for specific reasons. The advertised price (1) measures publication, not the market: a price displayed beside no capacity is not formed by the competitive forces of supply and demand. The cheapest available price (5) is determined by whichever seller is currently most marginal, is the statistic most sensitive to a single erroneous observation, and answers a shopping question rather than a market question; market evidence in the [research appendix](#docs-research-precedents) shows a marketplace's own floor price and its own median differing by between seventeen and one hundred and three percent across accelerator models on a single day, so the choice between them is material rather than cosmetic. The capacity-weighted price (3) is the more economically complete object and is the natural future extension, but capacity is not reliably observable across providers and must not be fabricated. The transaction-weighted clearing price (4) is the ideal, and is not observable: compute transactions are private, contracts are negotiated, and no consolidated tape exists.
+The target concept and the statistic currently computed are not the same thing, and the document names both rather than letting the ambition stand in for the arithmetic. The computed statistic is stated in [The observable proxy](#docs-what-ucpi-measures) below and in [Regional Aggregation](#docs-regional-aggregation).
+
+The other four are rejected as targets for specific reasons. The advertised price (1) measures publication, not the market: a price displayed beside no capacity is not formed by the competitive forces of supply and demand. The cheapest available price (5) is determined by whichever seller is currently most marginal, is the statistic most sensitive to a single erroneous observation, and answers a shopping question rather than a market question; market evidence in the [research appendix](#docs-research-precedents) shows a marketplace's own floor price and its own median differing by between seventeen and one hundred and three percent across accelerator models on a single day, so the choice between them is material rather than cosmetic.
+
+The rejection of a market-wide minimum is not in tension with taking a minimum inside each participant, because the two operate on different populations and mean different things. Within a participant, the lowest qualifying price is that participant's best accessible supply price for a product the specification has already pinned. Across participants, the median identifies the typical participant. The market-wide minimum across all participants, which UCPI rejects as a headline, would identify only the marginal cheapest offer in the market. The capacity-weighted price (3) is the more economically complete object and is the natural future extension, but capacity is not reliably observable across providers and must not be fabricated. The transaction-weighted clearing price (4) is the ideal, and is not observable: compute transactions are private, contracts are negotiated, and no consolidated tape exists.
 
 ### The observable proxy, and the gap
 
 Because the target is not directly observable in the way an exchange price is, UCPI states its proxy and its limits explicitly rather than blurring them.
 
-The published statistic is a **robust central measure of the executable offer price for the specified product, taken one observation per eligible seller, across a defined region**. Each eligible seller contributes once, regardless of how many catalogue entries it publishes.
+The published statistic is stated exactly, because a benchmark's description is part of its methodology and a broader phrase would overstate what is computed:
+
+> **The regional median of each eligible participant's lowest-priced qualifying accessible offer for the child-specified product.**
+
+In product language, UCPI measures **the typical participating seller's best qualifying accessible price for the specified compute product within a region**. The word "typical" applies to the distribution across participants, not to the distribution of raw offers.
+
+It is therefore none of the following, and must not be described as any of them: the median of all offers; the price of the typical available accelerator-hour; the price paid by the typical buyer; a capacity-weighted price; or a transaction-weighted clearing price.
 
 Three consequences follow and must be disclosed wherever UCPI is used.
 
-- **UCPI is a seller-side accessibility statistic, not a volume-weighted market price.** It answers "what does the specified product cost across the sellers offering it" and not "what did the typical purchased accelerator-hour clear at". A seller with one available accelerator and a seller with ten thousand contribute equally, because their relative capacity is not reliably observable. Where most capacity concentrates with few sellers, the two questions can diverge materially, and the concentration diagnostics published with every observation exist so that a user can see when they are likely to.
+- **UCPI is a seller-side accessibility statistic, not a volume-weighted market price.** It answers "what does the specified product cost across the participants offering it" and not "what did the typical purchased accelerator-hour clear at". A participant with one available accelerator and a participant with ten thousand contribute equally, because their relative capacity is not reliably observable. Where most capacity concentrates with few participants, the two questions can diverge materially, and this limitation is not removable by any diagnostic; the diagnostics published with every observation record what is known about composition, and the section on [Coverage and Composition](#docs-coverage-and-composition) is explicit that economic capacity concentration remains unknown where capacity is not observable.
 - **UCPI is not an index level.** It is a price in currency per accelerator-hour. See [Published Values](#docs-published-values).
 - **UCPI is not a cost model.** It measures the price of renting a defined product, not the cost of producing compute, the total cost of ownership of a deployment, or the cost of any workload.
 
@@ -68,9 +78,11 @@ UCPI does not measure hardware acquisition prices, colocation or power costs, or
 
 The boundary is deliberate, and rules belong on one side of it only.
 
-**This family methodology owns** the conceptual observation model; the identity frameworks for compute instruments, sellers, operators, and regions; the source hierarchy; the availability and executability framework; the procurement taxonomy; the service-tier framework; the principles for bundles, multi-accelerator offers, and fractional accelerators; price-component and currency normalization; temporal and freshness rules; the aggregation architecture; robustness principles; coverage and concentration diagnostics; missing-data behaviour; publication statuses; corrections; lineage; and versioning.
+**This family methodology owns** the economic object and the exact statistic computed; the conceptual observation model; the observation-type taxonomy; the identity frameworks for compute instruments, sellers, operators, capacity sources, and regions, including the capacity-source collapse principle and the role of marketplaces; the source-quality framework and its separation from observation type; the availability and executability semantics; the reconfirmation semantics; the procurement taxonomy; the service-tier framework including tenancy; the principles for bundles, multi-accelerator offers, and fractional accelerators; the distinction between fixed and usage-proportional mandatory charges; currency normalization principles; temporal and freshness rules; the aggregation architecture, the aggregation population, and the median convention; robustness principles; the percentile population; coverage and composition diagnostics; missing-data behaviour; publication statuses; corrections; lineage; and versioning.
 
-**A child specification owns** the exact hardware identity and its identity-defining attributes; the eligible service tiers; the single eligible procurement mode; the eligible regions and which series are published; any instrument-specific normalization; the numerical parameters this document leaves unresolved; the child's first publication date; and the child's own version history.
+**A child specification owns** the exact hardware identity and its identity-defining attributes; the eligible service tiers including its tenancy and virtualization requirements; the single eligible procurement mode; the topology class and minimum quantity; the bundle envelope; the eligible regions and the region taxonomy it uses; the availability evidence threshold; the freshness ages, which may differ by dimension; the numerical publication gates; the currency and rate parameters; the percentile interpolation convention; any instrument-specific normalization; the empirical choice among the seller-reduction alternatives the family permits; the child's first publication date; and the child's own version history.
+
+A family-level identity problem is never pushed into a child. Where this document leaves a choice open, it names the permitted alternatives and the evidence required to choose among them.
 
 A rule that mentions a particular accelerator belongs in a child, not here. Nothing in this document is written to accommodate H100 specifically.
 
@@ -80,7 +92,9 @@ An accelerator model name does not define a comparable product. Two offers both 
 
 A **compute instrument** is therefore defined by an explicit attribute set, and the child specification states which attributes are identity-defining for it. The family recognizes three categories of attribute, and the distinction matters because they are used differently.
 
-**Identity-defining attributes** determine whether two offers are the same product at all. Differences here make offers incomparable and cannot be normalized away. They include the vendor; the accelerator family and model; the architecture generation; the form factor, which separates SXM, PCIe, NVL and equivalents; the accelerator memory capacity and type; whether the offer is a full physical device or a fractional partition; and whether the device is dedicated to one tenant or shared.
+**Identity-defining attributes** determine whether two offers are the same hardware product at all. Differences here make offers incomparable and cannot be normalized away. They include the vendor; the accelerator family and model; the architecture generation; the form factor, which separates SXM, PCIe, NVL and equivalents; the accelerator memory capacity and type; and whether the offer is a **full physical device or a fractional partition**.
+
+Tenancy is deliberately **not** an identity-defining attribute. Whether a full accelerator is exclusively assigned, virtualized, or shared at the host level is a property of how it is sold and operated, not of the hardware, so it belongs to the service framework below. Keeping it in both places would have made the same characteristic decide eligibility twice under two different rules.
 
 **Service and commercial attributes** determine the commercial context of an otherwise identical device. Differences here are not normalized away either, but they are handled by fixing them in the specification rather than by excluding the offer: the procurement mode, the service tier, the minimum quantity and node topology, the minimum commitment duration, and the region.
 
@@ -129,11 +143,37 @@ Ranked from strongest:
 7. **Third-party aggregator or comparison site**, for discovery and corroboration only.
 8. **Search results, press coverage, marketing material, and commentary**, for discovery only.
 
-Tiers 1 through 5 may produce eligible observations. Tier 6 may produce eligible observations only where the dataset's methodology is disclosed, assessed, and recorded, and never where it is proprietary and unverifiable. **Tiers 7 and 8 never produce a production observation.** Search-engine snippets are not evidence of price.
+Grades 1 through 5 may produce eligible observations subject to the observation-type rule below. Grade 6 may produce eligible observations only where the dataset's methodology is disclosed, assessed, and recorded, and never where it is proprietary and unverifiable. **Grades 7 and 8 never produce a production observation.** Search-engine snippets are not evidence of price.
 
-Consistent with the benchmark principle that in a thin market a confirmed executable offer may carry more meaning than an isolated transaction, a tier 1 observation does not automatically override a tier 2 or 3 observation. A single negotiated contract at an unrepresentative price is not a better estimate of the executable market price than a set of contemporaneous firm offers. The hierarchy governs admissibility and recorded confidence; it does not mechanically override the aggregation rules.
+Where sources conflict for the same seller, region, instrument, and grade, the higher grade prevails; where they conflict within a grade, the observation is flagged **Conflicted**, withheld from the calculation, and escalated rather than averaged.
 
-Where sources conflict for the same seller, region, instrument, and tier, the higher tier prevails; where they conflict within a tier, the observation is flagged **Conflicted**, withheld from the calculation, and escalated rather than averaged.
+### Source quality and observation type are different questions
+
+The ranking above answers only one question: **how reliable is this evidence?** It does not answer the separate and equally important question: **what economic object does this evidence represent?** Collapsing the two into one ordinal list would let a more authoritative document displace a better-matched measurement, and a more authoritative document is not necessarily a better measurement of UCPI's target.
+
+Every observation therefore carries an **observation type** independently of its source grade:
+
+- **Current accessible offer**: a price at which the specified product can be obtained now.
+- **Firm written quote**: a price a seller has committed to for a stated validity period.
+- **Concluded transaction**: a price at which the product was actually bought at some past moment.
+- **Advertised non-accessible price**: a published price with no current availability.
+- **Indicative or list price**: a published reference price that is not an offer.
+
+UCPI's economic object is a **current accessible offer**, so observation type, not source grade, determines admission to the headline statistic.
+
+### Transaction evidence
+
+A concluded transaction is the strongest possible evidence that a price existed, and it is not automatically a measurement of a current accessible offer. A transaction may record a negotiated clearing price, a historic contract, a bulk discount, a long commitment, or a customer-specific rate, none of which is the price now available to an ordinary buyer.
+
+**Concluded transactions are therefore corroborative evidence by default, and are not automatically headline inputs.** They may support a separate transaction-price series as future work, which would measure a different and legitimate object.
+
+A transaction may enter the current accessible-price calculation only where all of the following are established and recorded: it is specification-matched; the procurement mode, service tier, region, and commercial quantity and topology are the same; it is contemporaneous under the approved recency rule; and the price remains available to an equivalent buyer under materially equivalent terms. Where any of those cannot be shown, the transaction is not mixed into the offer-price distribution.
+
+The family rule on recency is fixed now even though its value is not: **a historical execution does not establish a current executable offer indefinitely.** The permitted age, `transaction_relevance_age`, is an **unresolved** empirical parameter.
+
+### On the use of benchmark-administration precedent
+
+The evidence-quality framework above is informed by benchmark-administration principles cited in the [research appendix](#docs-research-precedents), which rank concluded transactions above firm executable offers above other information for benchmarks anchored in transactions. Those principles inform **evidence-quality governance**. They do not determine whether an observation matches UCPI's economic object, which is a separate determination Urdais makes here, and they do not imply that transactions must dominate current offers in this market. The same source expressly contemplates benchmarks built on executable quotes and notes that in a thin market a confirmed offer may carry more meaning than an outlier transaction. No external body has reviewed or endorsed UCPI.
 
 ## Raw Compute Offer
 
@@ -149,13 +189,21 @@ Availability is recorded as one of: **Available**, where the product can be obta
 
 Only Available, and Limited where the child admits it, may produce an eligible observation. Sold out, Waitlisted, and Quote required are ineligible for the price statistic. Unknown is ineligible for the headline but is retained.
 
-The **advertised-versus-executable gap is itself market information** and is published rather than discarded. The count and price distribution of ineligible-but-advertised offers, particularly sold-out ones, is a scarcity signal: a widening gap between what is advertised and what is obtainable is precisely what a compute-market observer wants to see. Excluding those observations from the price while publishing them as a diagnostic preserves both the integrity of the statistic and the information.
+The **availability and pricing gap** between advertised and accessible prices is retained and published rather than discarded. The count and price distribution of advertised-but-ineligible offers, with their availability states and their age and source status, is published as a diagnostic alongside every observation.
+
+The methodology records the gap and does not interpret it causally. A low advertised price beside no availability **may** indicate scarcity, and may equally indicate a page that has simply not been updated. Both are worth observing and the data cannot distinguish them without further evidence, so the gap is published for analysis rather than labelled a scarcity signal. Excluding these observations from the price while retaining them as a diagnostic preserves both the integrity of the statistic and the information.
 
 An **availability evidence standard** grades how availability was established, from a programmatic confirmation that an order would be accepted, through an explicit contemporaneous status signal from the seller, to an inference from the absence of a sold-out indication. The minimum acceptable grade is a child parameter and is **unresolved**; the distribution of eligible observations across evidence grades must be published, because a child resting mostly on the weakest grade is making a weaker claim than one resting on the strongest, and users must be able to see which.
 
 ## Procurement Modes
 
-Procurement modes are distinguished as: **on-demand**, available immediately without commitment and not subject to interruption; **spot or preemptible**, cheaper but interruptible at the seller's discretion; **reserved or committed**, priced against a commitment term; **negotiated or enterprise**, contracted privately; **auction or marketplace-dynamic**, where price is set by platform supply and demand; and **promotional, trial, or subsidized**, where the price is not the ordinary commercial price.
+A procurement mode describes **commercial obligation and interruption characteristics**, and nothing else. The modes are: **on-demand**, available immediately without commitment and not subject to interruption; **interruptible**, covering spot and preemptible capacity that the seller may reclaim; **reserved or committed**, priced against a commitment term; and **negotiated contract**, contracted privately on bespoke terms.
+
+**A marketplace is not a procurement mode.** It is a venue, and it belongs to seller and source identity, as set out in [Seller, Operator, and Marketplace Identity](#docs-seller-operator-and-marketplace-identity). A marketplace can sell on-demand, interruptible, reserved, and auction-priced capacity, so treating "marketplace" as though it were equivalent to "spot" or "on-demand" would conflate where a product is bought with what is being bought.
+
+Where price is set dynamically by platform supply and demand, that is recorded as a separate attribute, **price formation**, with values such as posted or auction and dynamic. Price formation is orthogonal to procurement mode: an auction-formed price may attach to interruptible or to on-demand capacity. Where a genuine procurement form exists whose commercial obligation is itself defined by an auction, it is documented as such by the child rather than assumed into an existing mode.
+
+**Promotional, trial, and subsidized prices** are not a procurement mode either; they are a pricing condition, recorded as an attribute and excluded from every child as set out below.
 
 **Procurement mode is specification-defining. A child fixes exactly one mode, and modes are never blended into one series.** An on-demand hour, an interruptible hour, and an hour under a multi-year commitment are different products bearing different risk and different obligations, and a number averaging them would describe none of them. Where several modes are worth publishing for one instrument, they are published as sibling series that a user may compare deliberately, not merged into a single figure.
 
@@ -167,7 +215,7 @@ Dividing a committed-term price by the hours in the term produces an arithmetic 
 
 Two prices for identical hardware are not comparable if one is a dedicated instance with an uptime commitment and the other is a shared, interruptible, best-effort instance. Market evidence in the appendix shows a single provider offering the same accelerators under two differently operated tiers on one page.
 
-A **service tier** is a named bundle of service characteristics that a child requires. The family defines the dimensions a tier may constrain: tenancy, meaning dedicated or shared; interruption policy; uptime or availability commitment; provisioning and access model; support and replacement commitments; intra-node interconnect, such as NVLink or NVSwitch presence; inter-node fabric, such as InfiniBand or Ethernet and its bandwidth; attached storage and local disk; host CPU and memory allocation; virtualization and isolation model; and compliance or sovereignty attributes where they are economically material.
+A **service tier** is a named bundle of service characteristics that a child requires. The family defines the dimensions a tier may constrain, beginning with **tenancy and exclusivity**, whose values include full-device exclusive assignment through passthrough, full-device virtualized, host-level shared tenancy, bare metal, and fractional partition. A child may require a full accelerator with exclusive device tenancy without asserting that tenancy changes the accelerator's hardware identity, and **bare metal is not required of every full-device product**: which virtualization and tenancy values qualify is a child decision, made on evidence about whether they move price. The remaining dimensions are: interruption policy; uptime or availability commitment; provisioning and access model; support and replacement commitments; intra-node interconnect, such as NVLink or NVSwitch presence; inter-node fabric, such as InfiniBand or Ethernet and its bandwidth; attached storage and local disk; host CPU and memory allocation; virtualization and isolation model; and compliance or sovereignty attributes where they are economically material.
 
 The family does not make every dimension a hard rule. It requires that a child declare, for each dimension, whether it is a **comparability requirement** that an offer must satisfy to be eligible, or **recorded metadata** that is preserved but not enforced. Dimensions treated as metadata become named heterogeneity in the child's limitations. Which dimensions must be requirements for a given instrument is an empirical question: it depends on whether they measurably move price, and that is tested before a child launches rather than assumed.
 
@@ -199,9 +247,17 @@ Fractional compute is a legitimate future family member with its own specificati
 
 ## Price Components
 
-The price entering an observation is the **mandatory cost of obtaining the specified product for the specified duration**. That includes the compute rental charge, any mandatory platform, reservation, or support fee required to access the product, and any mandatory minimum spend, expressed on the same basis.
+The price entering an observation is the **mandatory cost of obtaining the specified product for the specified duration**. It excludes charges that depend on how the buyer uses the product rather than on obtaining it, including data egress, additional storage beyond the specified bundle, and optional support upgrades. It excludes optional extras entirely.
 
-It excludes charges that depend on how the buyer uses the product rather than on obtaining it, including data egress, additional storage beyond the specified bundle, and optional support upgrades. It excludes optional extras entirely.
+### Usage-proportional and fixed mandatory charges are treated differently
+
+Mandatory charges are not homogeneous, and converting them as though they were would require an invented assumption. A charge of five hundred currency units to activate a service plus two per hour is not an hourly price until someone decides how many hours to spread the five hundred over, and that decision, not the market, would then determine the published figure.
+
+**Usage-proportional mandatory charges** scale with the metered quantity and enter the normalized hourly figure directly. A mandatory platform fee expressed per accelerator-hour is simply added.
+
+**Fixed or one-time mandatory charges**, including activation fees, setup fees, and fixed reservation charges, are **never silently amortized**. Where a child fixes an explicit minimum or commitment duration, the child may define an amortization rule over that contractual minimum, because the contract itself then supplies the horizon rather than the methodology inventing one. Where no such contractual horizon exists, the fixed charge is retained and disclosed separately, and the offer is either excluded from a pure hourly-price series because comparability cannot be achieved, or published as a multi-component cost. **A generic assumed utilization horizon is never selected.**
+
+**A mandatory minimum spend is a commercial constraint, not an incremental hourly charge.** It is recorded on the offer and preserved, and whether it makes an offer comparable with offers that carry no such floor is a child decision, not an arithmetic one.
 
 **Prices are recorded exclusive of transaction taxes**, with the tax treatment of the source recorded. Market evidence shows at least one seller publishing prices explicitly exclusive of sales tax, value-added tax, and goods-and-services tax, while others publish without stating a basis. Comparing a tax-inclusive price with a tax-exclusive one would introduce a jurisdictional artifact into a price comparison; where a source's tax basis cannot be established, the observation is flagged and its share published.
 
@@ -237,27 +293,89 @@ The calculation cutoff, the publication target, and the publication deadline are
 
 A seller page that has not changed may mean the price is unchanged, or may mean nothing was published and nothing was checked. Many sources expose no update timestamp, so the family records what was actually established rather than inferring.
 
-Each observation carries a freshness state: **Reconfirmed**, where the source was retrieved within the current cycle and the price was unchanged; **Newly observed**, where the price changed at this retrieval; **Carried**, where the source could not be retrieved this cycle and a prior value is being relied upon, with its age; **Source unavailable**, where retrieval failed and no value is relied upon; and **Withdrawn**, where the seller no longer offers the instrument.
+Each observation carries a freshness state: **Reconfirmed**, defined below; **Newly observed**, where an eligibility-relevant field changed at this retrieval; **Carried**, where the source could not be retrieved this cycle and a prior value is being relied upon, with its age; **Source unavailable**, where retrieval failed and no value is relied upon; and **Withdrawn**, where the seller no longer offers the instrument.
 
-Carried observations are permitted only within a maximum age that is **unresolved** and must be set from measured seller updating behaviour. **A carried observation is never presented as current**: its age is recorded, the share of an observation's coverage that is carried is published, and a child whose carried share exceeds its gate is not published as a normal value. Beyond the maximum age the observation becomes ineligible and the seller drops out of coverage rather than persisting indefinitely at a stale price.
+### Reconfirmation is multidimensional
 
-## Seller-Level Aggregation
+**An unchanged price does not establish an unchanged offer.** A page can continue to display an hourly figure after the product has sold out, moved to a waitlist, changed configuration, raised its minimum quantity, or changed its terms. Because UCPI measures accessible offers, a freshness rule that checked only the price would certify as current precisely the observations most likely to have stopped being offers.
 
-**The unit of observation is the seller, not the offer.** A seller publishing a hundred configurations must not carry a hundred times the influence of a seller publishing one; catalogue verbosity is an artifact of how a business structures its product page and carries no market information.
+**Reconfirmed** therefore requires the current collection cycle to re-establish every eligibility-relevant field that can change, at minimum: the price; the availability state and its evidence; the instrument identity; the procurement mode; the quantity and topology requirements; the material commercial terms; and any mandatory fees.
 
-Eligible offers are therefore reduced to at most one **seller-level observation** per seller, per instrument, per region, per service tier, per procurement mode. Because the child specification has already pinned the product, the offers competing within such a cell describe the same product from the same seller.
+Slowly changing reference data need not be re-retrieved every cycle where its version and effective interval remain valid. The family therefore distinguishes three freshness dimensions, which a child may govern with different limits: **price freshness**, **availability freshness**, and **reference-data freshness**.
 
-**The proposed default rule is the lowest eligible offer price within the cell**, on the reasoning that the specification has fixed the product, so a lower price for an identical specification is simply the price at which that seller will supply it, which is the quantity the target statistic is about. Two alternatives are recognized and must be tested: the **median eligible offer within the cell**, which is less sensitive to a single cheap zone, and a **capacity-weighted price within the cell** where capacity is disclosed.
+### Carry-forward
 
-One asymmetry is recorded now rather than discovered later: where a seller offers the specified product in several zones within a region at several prices, the lowest-price rule selects the cheapest zone, and sellers with more zones therefore get more opportunities to present a low price. Whether that materially biases the seller-level observation is an empirical question listed for validation, and the rule may be replaced on that evidence.
+A carried observation may enter a calculation only where the price is within its permitted carry age, **the availability evidence is also within its permitted age**, and no known withdrawal or configuration change exists. **A recent price paired with stale availability evidence is not a current accessible offer**, and the combination is ineligible rather than admitted on the strength of the fresher half.
+
+Carry ages are **unresolved** and must be set from measured seller updating behaviour, separately per dimension where the evidence supports it. **A carried observation is never presented as current**: its age is recorded, the carried share is published, and a child whose carried share exceeds its gate is not published as a normal value. Beyond the maximum age the observation becomes ineligible and the participant drops out of coverage rather than persisting indefinitely at a stale price.
+
+## Seller-Level Reduction
+
+**The unit of aggregation is never the offer.** A seller publishing a hundred configurations must not carry a hundred times the influence of a seller publishing one; catalogue verbosity is an artifact of how a business structures its product page and carries no market information.
+
+Eligible offers are therefore reduced to at most one **seller-level observation** per seller, per instrument, per region, per service tier, per procurement mode, per topology class, per calculation date. Because the child specification has already pinned the product, the offers competing within such a cell describe the same product from the same seller.
+
+**The proposed default rule is the lowest eligible offer price within the cell.** For seller `s` with eligible offer prices `P_s1 … P_sn` in the cell:
+
+`p_s = min_j P_sj`
+
+The reasoning is that the specification has fixed the product, so a lower price for an identical specification is simply the price at which that seller will supply it, which is what an accessibility statistic is about.
+
+**This rule is provisional, not settled.** Its known bias is recorded here rather than discovered later: a seller offering the specified product across several qualifying zones or catalogue variants has more opportunities to produce a low minimum than a seller offering it once, so breadth of catalogue can lower a participant's observation without any difference in the price it would actually charge for the same thing.
+
+The first child must therefore empirically compare at least three rules before the family adopts one: the **seller minimum** defined above; the **seller median** across eligible offers in the cell, which is less sensitive to a single cheap zone; and a **fixed or canonical-zone selection** where a stable zone can be identified, which removes the breadth asymmetry entirely. A **capacity-weighted price within the cell** is a fourth candidate wherever capacity is disclosed. The data may not vindicate the minimum, and the family does not assume it will.
+
+## Capacity-Source Identity and Collapse
+
+Seller-level reduction alone is insufficient, because several sellers can offer the same operator's capacity. Counting each as an independent participant would give one physical pool of capacity several equal weights, which is precisely the distortion the offer-level reduction exists to prevent, one level up.
+
+The participant unit entering regional aggregation is therefore the **capacity source**:
+
+> **The capacity source is the infrastructure operator where the underlying operator is reliably determinable, and the seller otherwise.**
+
+### Collapse rule
+
+Where several eligible seller-level observations map to the same determinable infrastructure operator for the same child, region, service tier, procurement mode, topology class, and calculation date, they form **one capacity-source observation**.
+
+The representative price for that capacity source is **the lowest eligible seller-level price through which that operator's qualifying capacity can actually be obtained**. The rule follows from what UCPI measures: the statistic is about the accessible price of the specified product, and if the same operator's capacity is obtainable more cheaply through one channel than another, the cheaper channel is the accessible price for that capacity.
+
+Two alternatives were considered and are recorded, because the choice is not self-evident. **Operator-direct precedence**, using the operator's own price and ignoring reseller channels, has the merit that the operator's own terms are the primary commercial relationship; it was not adopted because a buyer who can obtain the same specified product more cheaply through a reseller faces the cheaper price, and ignoring that would misstate accessibility. **Excluding reseller channels entirely** was not adopted because resale is a genuine part of how this market is accessed.
+
+The risk in the adopted rule is stated rather than hidden: a lower resale price may reflect subsidy, a different bundle, or a different commercial term rather than cheaper access to the same product. The family's protection is that the child specification must already have pinned the product, service tier, topology, and commercial terms before any offer is eligible, so a materially different commercial product should have been excluded earlier. Whether that protection holds in practice is an item for empirical validation, and the collapse rule may be replaced on that evidence.
+
+### Undetermined operators
+
+Where the infrastructure operator cannot be reliably determined, the seller remains the participant identity, the attribution status is recorded as **Undetermined**, and the undetermined share is published with every observation.
+
+Operator identity is **never** inferred from matching or similar prices, from hostnames or network characteristics, from geography, from similar configurations, or from commercial speculation. An attribution requires evidence, and the evidence is recorded.
+
+### Attribution changes over time
+
+Discovering later that two sellers share an operator is **new knowledge, not a historical error**, and it must not silently rewrite published history. Every attribution records its evidence, the time the attribution became known, and its effective interval.
+
+A newly learned attribution applies prospectively from the date it becomes known. A demonstrated historical error, where the attribution in force at the time was wrong on evidence then available, is handled under [Corrections and Restatements](#docs-corrections-and-restatements). The two are distinguished on the record, because conflating them would let point-in-time discipline erode every time the market became better understood.
 
 ## Regional Aggregation
 
-The regional value is a **robust central measure across seller-level observations within the canonical region**, with each eligible seller weighted equally.
+The regional value is the **median across capacity-source observations within the canonical region**, with each participant weighted equally.
 
-The proposed central measure is the **median across seller-level observations**. A median is chosen over a mean because the distribution of compute prices is not symmetric and contains legitimate extreme values at both ends: genuinely scarce capacity priced high, and marginal or distressed capacity priced low. A mean would let one such value move the published price substantially, while a median reports the middle of the market and is unaffected by how extreme the extremes are.
+For final aggregation participants `k = 1 … N` with representative accessible prices `x_k`, sorted ascending:
 
-Equal seller weighting is a deliberate answer to a question, not a convenience. It asks what the specified product costs across the sellers who offer it. It does not ask what the typical available accelerator-hour costs, which would require capacity weights, nor what purchased compute cleared at, which would require transaction weights. The [What UCPI Measures](#docs-what-ucpi-measures) section states this limitation, and it must accompany the published value.
+`UCPI_r = x_((N+1)/2)` for odd `N`
+
+`UCPI_r = [ x_(N/2) + x_(N/2+1) ] / 2` for even `N`
+
+The **even-`N` convention is the arithmetic mean of the two central ordered observations**. This is a definitional choice rather than an empirical parameter, and the family fixes it now so that no child may resolve it differently. All inputs are unrounded normalized prices; a rounded value is never an input.
+
+A median is chosen over a mean because the distribution of compute prices is not symmetric and contains legitimate extreme values at both ends: genuinely scarce capacity priced high, and marginal or distressed capacity priced low. A mean would let one such value move the published price substantially, while a median reports the middle of the market and is unaffected by how extreme the extremes are.
+
+Equal participant weighting is a deliberate answer to a question, not a convenience. It asks what the specified product costs across the participants who offer it. It does not ask what the typical available accelerator-hour costs, which would require capacity weights, nor what purchased compute cleared at, which would require transaction weights. The [What UCPI Measures](#docs-what-ucpi-measures) section states this limitation, and it must accompany the published value.
+
+### The full calculation sequence
+
+The sequence is deterministic and is applied in this order:
+
+Raw compute offers → instrument, region, procurement-mode and service-tier eligibility → availability and freshness eligibility → seller-level candidate offers → seller-level reduction → operator attribution → capacity-source collapse where determinable → final aggregation-participant observations → regional median → UCPI child price observation.
 
 Alternatives are retained for validation rather than dismissed: capacity weighting where capacity becomes reliably observable, transaction weighting where transaction evidence becomes sufficient, and trimmed or winsorized means. None may be adopted without evidence that the required inputs exist and are reliable.
 
@@ -265,7 +383,13 @@ Alternatives are retained for validation rather than dismissed: capacity weighti
 
 No global value is published in this version. The reasoning is in [Geographic Framework](#docs-geographic-framework): a global price is a regional weighting, no defensible weighting basis currently exists, and an arbitrary one would be embedded in the most visible number produced.
 
-When a basis does exist, the family will define it by amendment. The candidate bases, in order of preference on economic grounds, are observed regional capacity, observed regional transaction volume, and observed regional seller counts. Equal region weighting is not a candidate: it asserts a claim about regional importance that is certainly false.
+When a basis does exist, the family will define it by amendment. The candidates are not of equal standing.
+
+**Preferred where observable**: observed regional available capacity, or observed regional transaction volume. Each measures the economic weight of a region in the market the benchmark describes.
+
+**A weak fallback requiring explicit justification**: regional participant or seller counts. A count measures how fragmented a region's supply is at least as much as how important it is, so a region served by many small sellers would outweigh one served by a few large ones irrespective of the compute involved. It is recorded as a candidate only because it is observable, and adopting it would require a documented argument that fragmentation is an acceptable proxy in the specific case.
+
+**Equal region weighting remains rejected**: it asserts a claim about regional importance that is certainly false. No global value is introduced by this version.
 
 Until then, a user comparing regions does so explicitly, using regional series that each state their own coverage.
 
@@ -287,13 +411,31 @@ Statistical dispersion measures are used as **diagnostics that trigger review**,
 
 The choice of a median as the central measure already provides the necessary resistance to a small number of bad values without deleting them. Trimming and winsorization are recorded as alternatives requiring evidence that they improve the measure, and no trimming fraction is adopted here.
 
-## Coverage and Concentration
+## Coverage and Composition
 
-A price derived from too few sellers, or dominated by one, has stopped representing a market. Benchmark design principles require that sample adequacy, market size, and the distribution of activity among participants be considered in construction, and the family makes that concrete by publishing the relevant diagnostics with every observation rather than only assessing them internally.
+A price derived from too few participants has stopped representing a market. Benchmark design principles require that sample adequacy, market size, and the distribution of activity among participants be considered, and the family makes that concrete by publishing diagnostics with every observation rather than assessing them only internally.
 
-Each published observation carries: the eligible seller count; the eligible operator count and the share of observations whose operator is undetermined; the largest seller's share and the **effective seller count**, computed as the reciprocal of the sum of squared seller shares; the eligible offer count before reduction to seller level; the price distribution as tenth, fiftieth, and ninetieth percentiles and the interquartile range; the source-tier distribution; the availability evidence-grade distribution; the carried and stale shares; the share of advertised-but-ineligible offers with their reasons, including sold-out offers; and, where measurable, capacity coverage.
+**Equal-weight concentration measures are not published, because they carry no information.** With `N` equally weighted participants every weight is `1/N`, so the largest participant weight is `1/N` and the effective participant count computed as the reciprocal of the sum of squared weights is exactly `N`. Reporting either as a concentration measure would restate the participant count while implying that something about market structure had been measured. **Economic capacity concentration is unknown wherever capacity is not observable**, and saying so is more honest than publishing a tautology in its place.
 
-These exist so a user can tell the difference between a price supported by fifteen sellers in a liquid region and a price supported by two, without inferring it from the number itself.
+Where capacity shares are independently and reliably observable, a genuine capacity concentration measure may be published as a separate diagnostic, since those shares can actually vary. Capacity shares are never fabricated in order to produce one.
+
+Each published observation carries: the **final aggregation-participant count**; the eligible seller count; the count of participants with a determined operator and the **undetermined-operator share**; the reseller and operator-direct mix; the eligible offer count before reduction; the price distribution as tenth, fiftieth, and ninetieth percentiles and the interquartile range; the **source-quality distribution**; the **observation-type distribution**; the availability evidence-grade distribution; the fresh and carried shares; the **availability and pricing gap** described in [Availability and Executability](#docs-availability-and-executability); the composition change described below; and capacity coverage where it is actually measurable.
+
+These exist so a user can tell the difference between a price supported by fifteen participants and one supported by two, without inferring it from the number itself.
+
+### Percentile population
+
+**Percentiles and the interquartile range are computed over exactly the final aggregation-participant observations that enter the regional median**, after seller-level reduction and any determinable capacity-source collapse. The headline and the published distribution therefore describe the same population.
+
+Where any dispersion measure is computed over a different population, for example across raw offers rather than participants, it is labelled with that population explicitly and is never presented alongside the headline as though it described the same thing.
+
+The percentile interpolation convention must be deterministic and stated in the child specification. Percentile reporting at small participant counts is governed by the child's publication and diagnostic requirements; no minimum count is invented here.
+
+### Composition change
+
+A UCPI value can move because the set of participants moved, not because any price moved: a participant may enter or leave, a source may become unavailable, availability may change, or an operator attribution may change and collapse two participants into one. A user reading a change in the level is entitled to know whether it reflects prices or composition.
+
+Each observation therefore records the participants added since the previous observation, those removed, and any change arising from capacity-source collapse. This is a disclosure requirement, not a matched-participant index: constructing a matched-participant price change analytic is recorded as possible future work and is not attempted here.
 
 ## Missing Data
 
@@ -307,9 +449,9 @@ A seller that disappears from coverage leaves the calculation, and the change in
 
 A child publishes a normal value only when the measure still represents its market. The gates are defined here as concepts; **their numerical values are unresolved** and must be set from measured coverage, not chosen so that a series publishes.
 
-The gates are: a minimum eligible seller count; a minimum eligible operator count; a maximum largest-seller share; a minimum effective seller count; a maximum carried or stale share; a maximum share of observations resting on the weakest availability evidence grade; a minimum source-tier standard; and a maximum share of observations with unresolved bundle or comparability status.
+The gates are: a minimum final aggregation-participant count; a minimum count of participants with a determined operator, or equivalently a maximum undetermined-operator share; a maximum carried or stale share; a maximum share of observations resting on the weakest availability evidence grade; a minimum source-quality standard; and a maximum share of observations with unresolved bundle or comparability status. Equal-weight concentration measures are not used as gates, for the reason given in [Coverage and Composition](#docs-coverage-and-composition).
 
-Two conditions are structural rather than parametric and apply now: a region with no eligible seller-level observation has no value, and a region with exactly one has no market price. Both produce Unavailable.
+Two conditions are structural rather than parametric and apply now: a region with no eligible participant observation has no value, and a region with exactly one has no market price. Both produce Unavailable.
 
 Failing a gate produces a Delayed or Unavailable observation with the failing gate named. It never produces a value computed from a residual set and presented as if complete.
 
@@ -367,10 +509,13 @@ These describe information the family requires. They are not database tables, an
 - **ServiceTier**: tenancy, interruption policy, uptime commitment, provisioning model, support and replacement commitments, intra-node interconnect, inter-node fabric, storage, host resources, virtualization model, compliance attributes, and, for each, whether the child treats it as a requirement or as metadata.
 - **ComputeOffer**: the raw offer as defined in [Raw Compute Offer](#docs-raw-compute-offer), retained unmodified.
 - **NormalizedOffer**: the derived price on the normalized unit and currency, the conversions applied with their inputs, the preserved commercial constraints, and the normalization status.
-- **EligibilityAssessment**: the eligibility outcome, the rule applied, the exclusion reason where excluded, the availability evidence grade, and the source tier.
-- **SellerPriceObservation**: the seller-level representative price, the offers considered, the selection rule applied, and the input status.
+- **PriceComponents**: the usage-proportional mandatory charges entering the normalized figure, the fixed or one-time mandatory charges held separately with any contractual amortization applied, any mandatory minimum spend, the excluded usage-dependent charges, and the tax basis.
+- **AvailabilityEvidence**: the availability state, the evidence grade, the evidence itself, and the time it was established, recorded separately from price evidence so the two can age independently.
+- **EligibilityAssessment**: the eligibility outcome, the rule applied, the exclusion reason where excluded, the source quality grade, and the **observation type**.
+- **SellerPriceObservation**: the seller, the seller-level representative price, the eligible offer set considered, the seller-reduction rule applied, and the input status.
+- **CapacitySourceObservation**: the capacity-source identity, being the operator where determined and the seller otherwise; the operator attribution status and its evidence; the contributing seller-level observations; the collapse rule applied; the final representative accessible price; and the input status. This is the object over which the regional median and all published percentiles are computed.
 - **UCPIChildSpecification**: the instrument definition, region definitions and published series, service-tier requirements, the single procurement mode, instrument-specific normalization, the parameter set, the publication gates, and the child's version.
-- **UCPIObservation**: child identifier, region, price level, percentage changes, the full diagnostic set, status, family and child versions, parameter set, and the calculation and publication timestamps.
+- **UCPIObservation**: child identifier, region, price level, percentage changes, the full diagnostic set including the composition change since the previous observation, status, family and child versions, parameter set, and the calculation and publication timestamps.
 - **SourceReference**: source identity, tier, retrieval evidence and timestamp, licensing basis, and retention rights.
 - **FXObservation**: currency pair, rate, source, fixing time, and status.
 - **MethodologyVersion** and **CorrectionRecord**, with effective dates and change records.
@@ -399,7 +544,7 @@ The family carries its own version, independent of any child. Each published obs
 
 A change to family rules is announced with a prospective effective date, a documented rationale, and an impact assessment, and does not alter observations before that date. A change to a child specification affects that child only. Editing this public page is not a production change.
 
-Version history: **0.1.0-draft, 12 September 2026**, initial research-backed proposal; no production effective date.
+Version history: **0.1.0-draft, 12 September 2026**, initial research-backed proposal, amended in review on 12 September 2026 before merge: the published statistic named exactly as the regional median of each participant's lowest qualifying accessible offer rather than as a broader typical-offer phrase; the capacity source introduced as the aggregation participant with a deterministic operator-collapse rule and point-in-time attribution discipline; source quality separated from observation type, with concluded transactions made corroborative by default rather than automatically headline inputs; equal-weight concentration measures withdrawn as tautological and the percentile population fixed to the final participants; the even-`N` median convention fixed; reconfirmation made multidimensional with separate price and availability freshness; marketplace removed from the procurement taxonomy and price formation separated from it; tenancy moved from hardware identity to the service framework; fixed mandatory charges separated from usage-proportional ones with amortization permitted only against a contractual horizon; the advertised-versus-accessible gap stated as an observation rather than a causal scarcity signal; seller-count global weighting qualified as a weak fallback; and a source description of bounded carry-forward corrected. No production effective date.
 
 ## Child Specification Requirements
 
@@ -417,11 +562,15 @@ No production value may be published under this draft. The following require rea
 
 - **Canonical region taxonomy**: the region set, the mapping from seller labels, and whether offers within a proposed region are plausibly substitutable.
 - **Global weighting basis**: whether regional capacity, transaction volume, or another defensible basis becomes available, and what a global series would measure if it did.
-- **Seller-level selection rule**: whether lowest-eligible, median-eligible, or a capacity-weighted rule better represents a seller's accessible price, and the size of the multi-zone asymmetry the lowest-eligible rule introduces.
+- **Seller-reduction rule**: compare the seller minimum, the seller median, and a fixed or canonical-zone selection, with a capacity-weighted rule where capacity exists, and measure the **multi-zone breadth bias**, meaning how much a seller's catalogue breadth lowers its observation independently of what it would charge.
+- **Operator attribution and capacity-source collapse**: what share of offers permits reliable operator determination; the measured price difference between operator-direct and reseller channels for the same capacity; how often collapse changes the participant count; and whether the adopted lowest-accessible-channel collapse rule admits materially different commercial products in practice.
+- **Transaction relevance age**: how quickly a concluded transaction stops evidencing a current accessible offer, and whether specification-matched contemporaneous transactions are ever available in sufficient number to enter the headline at all.
+- **Transaction-price sibling feasibility**: whether a separate transaction-price series could be constructed, and what it would measure.
+- **Composition effects**: how much of observed period-to-period movement is participant entry and exit rather than price change, and whether a matched-participant analytic is worth constructing.
 - **Regional central measure**: whether the median is the right central measure against alternatives, tested on observed distributions rather than assumed.
-- **Publication gates**: the numerical values for seller and operator counts, concentration, effective seller count, carried and stale shares, and evidence-grade composition.
+- **Publication gates**: the numerical values for the participant count, the determined-operator count or undetermined share, carried and stale shares, source-quality standard, and evidence-grade composition.
 - **Availability evidence standard**: what grades are achievable across sellers, what share of the market can support the stronger grades, and what minimum a child can require without emptying itself.
-- **Freshness limits**: measured seller updating behaviour, including any weekend and holiday pattern, and the maximum defensible carry age.
+- **Freshness limits**: measured seller updating behaviour, including any weekend and holiday pattern, and the maximum defensible carry age **separately for price, for availability evidence, and for slowly changing reference data**.
 - **Service-tier requirements**: which dimensions measurably move price for a given instrument, and therefore which must be requirements rather than metadata.
 - **Bundle envelope**: the observed dispersion of host resources for a given instrument, and whether a defensible ordinary envelope exists.
 - **Topology and quantity**: the distribution of minimum quantities and topology classes, and whether separate series are needed.
@@ -435,7 +584,7 @@ No production value may be published under this draft. The following require rea
 
 ### Validation programme
 
-Before a child launches, test on real point-in-time observations: seller and operator coverage by region; instrument-identity consistency and how often a product name alone would mislead; the achievable availability verification rate and evidence-grade distribution; the procurement-mode and service-tier distribution; bundle heterogeneity; the distribution of minimum quantities and topologies; normalized price dispersion within and across sellers and regions; disagreement between sources for the same product; detectable seller and operator duplication; stale-price and revision frequency; outlier behaviour and how often statistical flags correspond to real defects; regional basis; seller concentration and effective seller count; whether capacity data exists in usable form; the sensitivity of the published value to the seller-level rule, the central measure, and the eligibility boundaries; weekend and holiday updating behaviour; and historical source-retention feasibility.
+Before a child launches, test on real point-in-time observations: seller and operator coverage by region; instrument-identity consistency and how often a product name alone would mislead; the achievable availability verification rate and evidence-grade distribution; the procurement-mode and service-tier distribution; bundle heterogeneity; the distribution of minimum quantities and topologies; normalized price dispersion within and across sellers and regions; disagreement between sources for the same product; detectable seller and operator duplication; stale-price and revision frequency; outlier behaviour and how often statistical flags correspond to real defects; regional basis; participant entry and exit and how much of period-to-period movement it explains; whether capacity data exists in usable form and whether a genuine capacity concentration measure can be computed; the sensitivity of the published value to the seller-reduction rule, the capacity-source collapse rule, the central measure, and the eligibility boundaries; weekend and holiday updating behaviour; and historical source-retention feasibility.
 
 Parameters must not be chosen to make a child publish. A child that cannot pass defensible gates is not launched.
 
@@ -465,9 +614,9 @@ The provider's [H100 rental price index page](https://www.silicondata.com/produc
 
 ### SemiAnalysis, H100 price index
 
-The [H100 daily and contract pricing index](https://gpu-index.semianalysis.com/) collects prices "from hyperscale clouds, neoclouds, GPU marketplaces, and rental routers/aggregators" combined with "analyst-run contract-pricing surveys", across contract lengths from on-demand to five years. It is published hourly, constructed as "a composition-jump-resistant weighted mean of rental prices" with hyperscale clouds weighted more heavily than marketplaces, applies a "per-step move cap" circuit breaker rejecting implausible jumps, and forward-fills missing hourly data from the last accepted price.
+The [H100 daily and contract pricing index](https://gpu-index.semianalysis.com/) collects prices "from hyperscale clouds, neoclouds, GPU marketplaces, and rental routers/aggregators" combined with "analyst-run contract-pricing surveys", across contract lengths from on-demand to five years. It is published hourly, constructed as "a composition-jump-resistant weighted mean of rental prices" with hyperscale clouds weighted more heavily than marketplaces, applies a "per-step move cap" circuit breaker in which "an input printing an implausible jump is rejected rather than passed into the level", and carries a source's "last accepted price ... forward for a limited window (forward-fill), so no index is computed on a constantly shifting subset of sources". The document states that the window is limited but does not disclose its length.
 
-**Adopt:** the recognition that composition change, rather than price change, is a primary risk in a compute index, which is why this family fixes the unit of observation at the seller and publishes composition diagnostics; and the use of analyst survey evidence for contract pricing, which corresponds to the quote and transaction tiers of the source hierarchy. **Modify:** weighting provider types differently is a defensible answer to a different question, and the family instead fixes the question first and weights sellers equally within a specification, publishing the diagnostics that reveal the difference. **Reject:** the per-step move cap and indefinite forward-fill for UCPI. A move cap suppresses exactly the large genuine price movements a compute benchmark exists to report, and it cannot distinguish a data error from a real scarcity event; the family uses validation rules with recorded reasons instead. Forward-fill without a disclosed age limit risks presenting a stale price as current, which [Freshness and Staleness](#docs-freshness-and-staleness) prohibits.
+**Adopt:** the recognition that composition change, rather than price change, is a primary risk in a compute index, which is why this family fixes the unit of observation at the seller and publishes composition diagnostics; and the use of analyst survey evidence for contract pricing, which corresponds to the quote and transaction tiers of the source hierarchy. **Modify:** weighting provider types differently is a defensible answer to a different question, and the family instead fixes the question first and weights sellers equally within a specification, publishing the diagnostics that reveal the difference. **Adopt in principle:** bounding any carry-forward to a limited window, which corresponds to the age limits in [Freshness and Staleness](#docs-freshness-and-staleness), and the stated reason for it, that an index should not be computed on a constantly shifting subset of sources. **Reject:** the per-step move cap. A move cap suppresses exactly the large genuine price movements a compute benchmark exists to report, and it cannot distinguish a data error from a real scarcity event; the family uses validation rules with recorded reasons instead. **Modify:** UCPI requires the carry window to be published rather than merely stated to exist, applies separate limits to price and availability freshness, and publishes the carried share with every observation, because a carried price whose age is not disclosed cannot be assessed by a user.
 
 ### Observed market structure
 
