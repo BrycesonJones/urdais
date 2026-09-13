@@ -29,7 +29,7 @@ Repository migrations under `supabase/migrations/` are the single source of trut
 
 `UrdaisDev` runs on the same PostgreSQL major version as CI. The local cluster is one major version behind because that is what is installed; the DDL used here is identical across 16 and 17, and CI is the authoritative check against 17.
 
-**Parity is verified structurally, not assumed.** `scripts/db/schema-fingerprint.sql` digests the columns, constraints, indexes, triggers, functions, RLS flags, policies and role privileges of both schemas. Run against the local database and the hosted project, it produced identical digests for all eight components at the end of Phase 3 (258 columns, 164 constraints, 58 indexes, 9 triggers, 4 functions, 20 tables with RLS, 0 policies, 20 privilege rows). Any future divergence between the repository and `UrdaisDev` shows up as a digest mismatch.
+**Parity is verified structurally, not assumed.** `scripts/db/schema-fingerprint.sql` digests the columns, constraints, indexes, triggers, functions, RLS flags, policies and role privileges of both schemas. Run against the local database and the hosted project, it produced identical digests for all eight components at the end of Phase 3 (260 columns, 171 constraints, 61 indexes, 9 triggers, 4 functions, 21 tables with RLS, 0 policies, 21 privilege rows), and the 249-row ISO reference set matched by row digest as well. Any future divergence between the repository and `UrdaisDev` shows up as a digest mismatch.
 
 The repository knows its development project through the git-ignored `supabase/.temp/project-ref`, written by `supabase link`, and through the non-secret `SUPABASE_PROJECT_REF` in `.env.example`. No database password, access token, or service-role key is committed anywhere.
 
@@ -45,7 +45,7 @@ reference.providers ──< reference.source_interfaces ──< pipeline.source_
                                    ├──< reference.region_mappings ┘ (evidence retrieval)     │
                                    └──< reference.native_identifiers ──> reference.market_entities ──< reference.entity_roles
                                                                                      │
-reference.canonical_regions <── reference.region_mappings                            │
+reference.iso_countries <── reference.canonical_regions <── reference.region_mappings │
         │                              │                                             │
         └──────────────┐               │                                             │
                        ▼               ▼                                             ▼
@@ -64,9 +64,9 @@ Every foreign key on the lineage chain is `ON DELETE RESTRICT`. Nothing cascades
 
 Two internal schemas, neither present in the API-exposed list (`supabase/config.toml` keeps the default `["public", "graphql_public"]`).
 
-**`reference`** holds Urdais-owned, slowly changing, versioned data: methodology lineage, instruments, the source registry, market entities and roles, canonical regions, region mappings, native identifiers, and the two vocabularies.
+**`reference`** holds Urdais-owned, slowly changing, versioned data: methodology lineage, instruments, the source registry, market entities and roles, the ISO 3166-1 reference set, canonical regions, region mappings, native identifiers, and the two vocabularies. Fourteen tables.
 
-**`pipeline`** holds data-bearing tables that later phases write: retrievals, raw offers, normalized observations, evidence links, assessments, exclusions and diagnostics.
+**`pipeline`** holds data-bearing tables that later phases write: retrievals, raw offers, normalized observations, evidence links, assessments, exclusions and diagnostics. Seven tables.
 
 ## 6. Table responsibilities
 
@@ -80,7 +80,8 @@ Two internal schemas, neither present in the API-exposed list (`supabase/config.
 | `reference.source_interfaces` | One concrete interface Urdais reads, with class, access and production-approval state | Operational |
 | `reference.market_entities` | A commercial party | Operational |
 | `reference.entity_roles` | Seller / operator / marketplace / marketplace-host roles on an entity | Operational |
-| `reference.canonical_regions` | Adopted canonical countries, ISO 3166-1 alpha-2 | Migration-managed |
+| `reference.iso_countries` | The 249 officially assigned ISO 3166-1 alpha-2 codes, from the IANA tz database | Migration-managed reference set |
+| `reference.canonical_regions` | Adopted canonical countries; each code must exist in `iso_countries` | Migration-managed |
 | `reference.region_mappings` | Versioned native-value → country mapping, may be unresolved | Versioned; intervals closed, never deleted |
 | `reference.native_identifiers` | Source-native IDs, their canonical mapping, their stability status | Operational registry |
 | `reference.exclusion_reasons` | The 26 methodology exclusion codes with stage and category | Migration-managed |
@@ -115,6 +116,8 @@ Every raw `native_*` column is nullable because source reality is sparse; the fu
 
 `methodologies → methodology_versions` and `instruments → instrument_spec_versions → methodology_versions`. A trigger rejects a spec version that references a version of a different methodology. Both version tables carry a CHECK that a `draft` has no effective date, so no draft can ever be given a production effective date by accident.
 
+**Lineage consistency is database-enforced downstream as well.** `instrument_spec_versions` exposes `(id, instrument_id, methodology_version_id)` as a unique key, and `normalized_observations` references that whole triple with one composite foreign key, so its three lineage columns can only ever be a combination that exists as one spec-version row: an H200 instrument paired with the H100 spec, or the H100 spec paired with an unrelated methodology version, cannot be stored. `normalized_observations` in turn exposes `(id, instrument_spec_version_id, methodology_version_id)`, and `eligibility_assessments` references that triple, so an assessment's spec version and methodology version must equal those its observation was produced under. Four negative tests prove each mismatch is rejected; the reprocessing test still shows one raw offer coexisting under two spec versions. No Phase 5 code is trusted to keep these aligned.
+
 Seeded, with fixed UUIDs and the SHA-256 of each document at `main` e0ec563:
 
 | Row | Version | Status | Hash |
@@ -138,7 +141,7 @@ The instrument's lifecycle status is `launch_blocked`. Its output unit is `USD /
 
 ## 11. Region mappings
 
-`canonical_regions.code` is ISO 3166-1 alpha-2 with two CHECKs: format, and exclusion of the user-assigned and exceptionally reserved codes (`AA`, `AC`, `CP`, `CQ`, `DG`, `EA`, `EU`, `EZ`, `FX`, `IC`, `SU`, `TA`, `UK`, `UN`, `ZZ`, `QM`–`QZ`, `XA`–`XZ`). **`EU` cannot be inserted as a canonical region.** No country is seeded; adoption of a country is a migration alongside the evidence for its first mapping.
+`reference.iso_countries` holds the 249 officially assigned ISO 3166-1 alpha-2 codes, generated from the IANA Time Zone Database's public-domain `iso3166.tab` (current to ISO/TC 46 N1127, 2024-02-29). `canonical_regions.code` is a foreign key into it, so **membership in ISO 3166-1 is proven, not approximated**: a well-formed but unassigned pair such as `ZQ` fails the FK. Two CHECKs remain as a clearer first line: format, and exclusion of the user-assigned and exceptionally reserved codes (`AA`, `AC`, `CP`, `CQ`, `DG`, `EA`, `EU`, `EZ`, `FX`, `IC`, `SU`, `TA`, `UK`, `UN`, `ZZ`, `QM`–`QZ`, `XA`–`XZ`). **`EU` cannot be inserted as a canonical region.** No country is adopted in Phase 3; adoption is a migration alongside the evidence for its first mapping.
 
 `region_mappings` records `source_interface_id`, the exact `native_region_value`, `mapping_status` of `mapped` or `unresolved`, `canonical_region_code` and `confidence` (both required when mapped, both null when unresolved, by CHECK), free-text `evidence`, an optional `evidence_retrieval_id`, a `version`, and an effective interval. A partial unique index allows one open-ended mapping per native value per interface; a new version closes the old interval first. A CoreWeave "EU" table heading is stored as an `unresolved` row and produces `REGION_UNRESOLVED` downstream; the schema cannot store a representative country for it.
 
@@ -164,7 +167,7 @@ Three distinct times, kept on both raw and normalized rows:
 
 ## 15. Eligibility persistence
 
-`eligibility_assessments` records `p0`, `p1`, `p2` as booleans with CHECKs `p1 ⇒ p0` and `p2 ⇒ p1`, plus `input_status` from the family's input vocabulary (`valid`, `stale`, `ineligible`, `unavailable`, `conflicted`) with a CHECK that `p2` is `valid` or `stale` and that a `valid` input is `p2`. It references the normalized observation, the spec version and the methodology version, so the same observation can carry one current assessment per spec version.
+`eligibility_assessments` records `p0`, `p1`, `p2` as booleans with CHECKs `p1 ⇒ p0` and `p2 ⇒ p1`, plus `input_status` from the family's input vocabulary (`valid`, `stale`, `ineligible`, `unavailable`, `conflicted`) with a CHECK that `p2` is `valid` or `stale` and that a `valid` input is `p2`. It references the normalized observation, the spec version and the methodology version through one composite foreign key, so the versions on an assessment are necessarily the versions of its observation, and the same observation carries one current assessment per spec version.
 
 ## 16. Exclusions versus diagnostics
 
@@ -172,7 +175,7 @@ Two tables, two vocabularies, no shared string array. `eligibility_exclusions.re
 
 ## 17. Versioning
 
-Every normalized observation and every assessment references an `instrument_spec_version_id` and a `methodology_version_id`. Region mappings carry their own version and the observation references the specific mapping row. The same raw offer under spec 0.1.1 and a future 0.1.2 yields two coexisting rows, verified by test.
+Every normalized observation and every assessment references an `instrument_spec_version_id` and a `methodology_version_id`, and composite foreign keys guarantee those references agree with each other and with the instrument (section 8). Region mappings carry their own version and the observation references the specific mapping row. The same raw offer under spec 0.1.1 and a future 0.1.2 yields two coexisting rows, verified by test.
 
 ## 18. Immutability
 
@@ -186,7 +189,7 @@ Retrievals: `idempotency_key` is unique; a retried write conflicts and is skippe
 
 ## 20. Access and RLS
 
-Option A, internal schemas, with Option B layered on top. Neither schema is API-exposed. `anon` and `authenticated` hold no privilege at schema, table, sequence or function level, and default privileges for future objects revoke them too. Every table has RLS enabled with zero policies. `service_role` has USAGE and the per-table privileges the immutability model allows. The security test impersonates `anon` and `authenticated` against all 20 tables for SELECT and INSERT and confirms `insufficient_privilege`, confirms `service_role` can read as a positive control, and asserts the privilege matrix via `has_table_privilege`.
+Option A, internal schemas, with Option B layered on top. Neither schema is API-exposed. `anon` and `authenticated` hold no privilege at schema, table, sequence or function level, and default privileges for future objects revoke them too. Every table has RLS enabled with zero policies. `service_role` has USAGE and the per-table privileges the immutability model allows. The security test impersonates `anon` and `authenticated` against all 21 tables for SELECT and INSERT and confirms `insufficient_privilege`, confirms `service_role` can read as a positive control, and asserts the privilege matrix via `has_table_privilege`.
 
 ## 21. Indexes
 

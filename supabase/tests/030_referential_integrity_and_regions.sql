@@ -49,10 +49,14 @@ begin
   end;
   if not ok then raise exception 'EU was accepted as a canonical region'; end if;
 
-  -- Neither can a user-assigned code or a malformed one.
+  -- Neither can a user-assigned code, a malformed one, or a well-formed pair
+  -- that ISO has simply never assigned.
   ok := false;
   begin insert into reference.canonical_regions (code, name) values ('XX', 'x'); exception when check_violation then ok := true; end;
   if not ok then raise exception 'XX was accepted as a canonical region'; end if;
+  ok := false;
+  begin insert into reference.canonical_regions (code, name) values ('ZQ', 'x'); exception when foreign_key_violation then ok := true; end;
+  if not ok then raise exception 'unassigned code ZQ was accepted as a canonical region'; end if;
   ok := false;
   begin insert into reference.canonical_regions (code, name) values ('us', 'x'); exception when check_violation then ok := true; end;
   if not ok then raise exception 'lowercase code was accepted as a canonical region'; end if;

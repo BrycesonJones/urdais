@@ -13,7 +13,7 @@ declare
     'reference.instrument_spec_versions', 'reference.providers', 'reference.source_interfaces',
     'reference.market_entities', 'reference.entity_roles', 'reference.canonical_regions',
     'reference.region_mappings', 'reference.native_identifiers', 'reference.exclusion_reasons',
-    'reference.diagnostic_codes',
+    'reference.diagnostic_codes', 'reference.iso_countries',
     'pipeline.source_retrievals', 'pipeline.raw_offers', 'pipeline.normalized_observations',
     'pipeline.observation_evidence', 'pipeline.eligibility_assessments',
     'pipeline.eligibility_exclusions', 'pipeline.eligibility_diagnostics'
