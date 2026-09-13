@@ -55,7 +55,22 @@ The child admits only Explicit and Documented grades to P2, and grades Documente
 
 Under the child's rule this is **Ambiguous**: neither clearly exclusive nor clearly shared, a full device established but exclusivity not. Lambda observations would carry `TENANCY_UNRESOLVED` and would not reach P2. The 0.1.1 marketplace case was closed by finding a statement that had been missed; here the documentation has been searched and the statement is not there.
 
-**Resolution path.** A one-sentence statement from Lambda that on-demand H100 instances hold their GPUs exclusively, comparable to its GH200 statement, would grade Documented. That request belongs in the pending permission conversation and is on the checklist in the launch-readiness matrix. An alternative evidentiary route, hardware documentation establishing that exposing a full 80 GB device to one virtual machine is necessarily single-tenant, was not pursued here and is not assumed.
+**Resolution path.** A one-sentence statement from Lambda that on-demand H100 instances hold their GPUs exclusively, comparable to its GH200 statement, would grade Documented. An alternative evidentiary route, hardware documentation establishing that exposing a full 80 GB device to one virtual machine is necessarily single-tenant, was not pursued and is not assumed.
+
+### Tenancy clarification, sent 13 September 2026
+
+| Field | Value |
+|---|---|
+| Status | **Sent, awaiting response** |
+| Channel | In-thread reply on the existing permission request, so that Lambda sees one conversation rather than two |
+| Thread | Gmail thread `1a09b5dfdba9b13d` (the request sent 13 September 2026, 15:24 UTC, to `legal@lambdal.com`) |
+| Message | Gmail message `1a09d05f8dbdd35e` |
+| Thread state before sending | One message, ours; no reply from Lambda; the only provider mail received since the outreach round was Runpod's automated ticket acknowledgement |
+| Sending account and signature | `bryceson.jones17@gmail.com`, matching |
+| Question asked | *For Lambda Public Cloud on-demand `gpu_1x_h100_sxm5` instances (1x H100, 80 GB SXM5): is the H100 GPU exclusively assigned to that customer's instance for the duration of the instance, rather than concurrently shared with another customer?* |
+| Framing | Explicitly an additional technical clarification that does not replace or change the permission questions; notes the GH200 statement and the absence of an H100 equivalent; asks for a one-line yes or no or a documentation link; explains that without a seller statement the methodology cannot include the product regardless of the permission answer |
+
+**What a reply would and would not do.** A "yes" or a documentation link grades Lambda's H100 on-demand tenancy **Documented** (or **Explicit**, if stated per product by the seller) and removes `TENANCY_UNRESOLVED`. It changes **nothing** on either permission axis: collection stays `under_review`, index use stays `not_permitted`, production stays blocked until both axes are `permitted` on written evidence. Conversely, a permission grant that does not answer this question leaves tenancy Ambiguous. The two evidence dimensions are recorded separately and neither is rounded into the other.
 
 ## Availability
 
