@@ -35,22 +35,32 @@ begin
     raise exception 'the marketplace interface is not recorded as blocked on both axes';
   end if;
 
-  -- Runpod is unresolved on both axes, not prohibited: its Terms restrict automated
-  -- access while its official API documentation provides a programmatic interface,
-  -- and neither source settles index use. Ambiguity is recorded as ambiguity.
-  if (select terms_review_state from reference.source_interfaces where id = runpod) <> 'under_review'
-     or (select data_use_terms_state from reference.source_interfaces where id = runpod) <> 'under_review'
-     or (select production_access_state from reference.source_interfaces where id = runpod) <> 'production_review_pending' then
-    raise exception 'Runpod is not recorded as unresolved on both axes';
+  -- Runpod is prohibited on both axes absent written permission. The Terms define
+  -- the Site to include runpod.io subdomains, so they reach api.runpod.io, and the
+  -- systematic-retrieval clause describes exactly what Urdais would do.
+  if (select terms_review_state from reference.source_interfaces where id = runpod) <> 'not_permitted'
+     or (select data_use_terms_state from reference.source_interfaces where id = runpod) <> 'not_permitted'
+     or (select production_access_state from reference.source_interfaces where id = runpod) <> 'production_blocked' then
+    raise exception 'Runpod is not recorded as prohibited on both axes';
   end if;
-  -- No written agreement is asserted, because neither source states one is required.
-  if (select written_agreement_required from reference.source_interfaces where id = runpod) is not null then
-    raise exception 'Runpod records a written-agreement requirement the evidence does not establish';
+  -- The Terms name written permission as the remedy, so the requirement is asserted.
+  if (select written_agreement_required from reference.source_interfaces where id = runpod) is not true then
+    raise exception 'Runpod does not record the written-permission requirement its Terms state';
   end if;
-  -- Both sides of the conflict are retained so it stays auditable.
-  if (select terms_evidence->>'conflict' from reference.source_interfaces where id = runpod) is null then
-    raise exception 'Runpod evidence does not record the conflict between its primary sources';
+  -- The scope clause that decided this is retained verbatim.
+  select count(*) into n from reference.source_interfaces,
+       lateral jsonb_array_elements(terms_evidence->'documents') d,
+       lateral jsonb_array_elements(d->'clauses') c
+   where id = runpod and c->>'axis' = 'scope' and c->>'text' like '%subdomains%';
+  if n = 0 then raise exception 'Runpod evidence lost the scope clause that reaches the API subdomain'; end if;
+  -- The superseded assessment is retained so the revision stays auditable.
+  if (select terms_evidence->'prior_assessment'->>'terms_review_state' from reference.source_interfaces where id = runpod) <> 'under_review' then
+    raise exception 'Runpod evidence does not retain its prior assessment';
   end if;
+  if (select terms_evidence->>'revision' from reference.source_interfaces where id = runpod) is null then
+    raise exception 'Runpod evidence does not explain why the classification changed';
+  end if;
+  -- Both primary sources are still retained, including the one that cuts the other way.
   select count(*) into n from reference.source_interfaces,
        lateral jsonb_array_elements(terms_evidence->'documents') d
    where id = runpod and d->>'title' ilike '%API%';
@@ -111,13 +121,17 @@ begin
   end;
   if not ok then raise exception 'invented data-use state was accepted'; end if;
 
-  -- Exactly the settled prohibitions are blocked: the marketplace on both axes and
+  -- Three settled prohibitions are blocked: the marketplace and Runpod on both axes,
   -- Lambda on data use. An unresolved source is review-pending, never blocked.
   select count(*) into n from reference.source_interfaces where production_access_state = 'production_blocked';
-  if n <> 2 then raise exception 'expected 2 blocked interfaces (settled prohibitions only), found %', n; end if;
+  if n <> 3 then raise exception 'expected 3 blocked interfaces (settled prohibitions only), found %', n; end if;
   select count(*) into n from reference.source_interfaces
    where terms_review_state = 'under_review' or data_use_terms_state = 'under_review';
-  if n < 4 then raise exception 'expected at least 4 interfaces with an unresolved axis, found %', n; end if;
+  if n < 3 then raise exception 'expected at least 3 interfaces with an unresolved axis, found %', n; end if;
+  -- Every blocked source names written permission as the remedy.
+  select count(*) into n from reference.source_interfaces
+   where production_access_state = 'production_blocked' and written_agreement_required is not true;
+  if n <> 0 then raise exception '% blocked interface(s) do not record a written-permission requirement', n; end if;
 
   -- Registry rows are not market participants: no entity, role or observation was created.
   select count(*) into n from reference.market_entities;
