@@ -36,6 +36,30 @@ begin
     raise exception 'the marketplace interface is not recorded as blocked on both axes';
   end if;
 
+  -- Vast: classification unchanged by the terms investigation, evidence expanded.
+  -- The licence grant with its exhaustive permitted uses is the decisive clause.
+  if (select terms_review_state from reference.source_interfaces where id = vast) <> 'not_permitted'
+     or (select data_use_terms_state from reference.source_interfaces where id = vast) <> 'not_permitted'
+     or (select production_access_state from reference.source_interfaces where id = vast) <> 'production_blocked'
+     or (select written_agreement_required from reference.source_interfaces where id = vast) is not true then
+    raise exception 'Vast classification is not as the investigation left it';
+  end if;
+  select count(*) into n from reference.source_interfaces,
+       lateral jsonb_array_elements(terms_evidence->'documents') d,
+       lateral jsonb_array_elements(d->'clauses') c
+   where id = vast and c->>'text' like '%any other commercial data product or market-information purpose%';
+  if n = 0 then raise exception 'Vast evidence lost the licence grant and its exclusion'; end if;
+  -- The enumeration problem is a methodology constraint, held apart from the axes.
+  if (select terms_evidence->>'methodology_constraint' from reference.source_interfaces where id = vast) is null then
+    raise exception 'Vast evidence does not record the enumeration constraint';
+  end if;
+  -- The written-agreement remedy is named so the outreach can ask for it directly.
+  select count(*) into n from reference.source_interfaces,
+       lateral jsonb_array_elements(terms_evidence->'documents') d,
+       lateral jsonb_array_elements(d->'clauses') c
+   where id = vast and c->>'axis' = 'remedy';
+  if n = 0 then raise exception 'Vast evidence does not record the agreement remedy'; end if;
+
   -- Runpod is prohibited on both axes absent written permission. The Terms define
   -- the Site to include runpod.io subdomains, so they reach api.runpod.io, and the
   -- systematic-retrieval clause describes exactly what Urdais would do.
