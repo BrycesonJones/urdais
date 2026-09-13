@@ -44,8 +44,18 @@ describe("compute price methodology", () => {
 
   it("is a family parent, not a child instrument specification", () => {
     const ucpiDoc = readFileSync(path.join(process.cwd(), "docs", ucpi!.file), "utf8");
-    expect(ucpiDoc).toContain("0.1.0-draft");
+    expect(ucpiDoc).toContain("version 0.1.1-draft");
+    expect(ucpiDoc).toContain("0.1.0-draft, 12 September 2026");
     expect(ucpiDoc).not.toMatch(/^#+ .*UCPI-H100/m);
+  });
+
+  it("owns the participant-count rule and reserves Limited for availability", () => {
+    const ucpiDoc = readFileSync(path.join(process.cwd(), "docs", ucpi!.file), "utf8");
+    expect(ucpiDoc).toContain("### Participant count and market breadth");
+    expect(ucpiDoc).toContain("**Minimum** means the value rests on exactly two independent capacity sources");
+    expect(ucpiDoc).toContain("A single participant's price is not a market price");
+    expect(ucpiDoc).toContain("reserved for the availability state of an input");
+    expect(ucpiDoc).toContain("The participant count is not a numerical gate above the structural floor");
   });
 });
 
@@ -69,18 +79,29 @@ describe("compute price child specifications", () => {
 
   it("is a draft that states its launch is blocked and labels research prices", () => {
     const childDoc = readFileSync(path.join(process.cwd(), "docs", child!.file), "utf8");
-    expect(childDoc).toContain("version 0.1.1-draft");
+    expect(childDoc).toContain("version 0.1.2-draft");
     expect(childDoc).toContain("Launch blocked");
     expect(childDoc).toContain("Research snapshot only");
+    expect(childDoc).toContain("0.1.1-draft, 13 September 2026");
     expect(childDoc).toContain("0.1.0-draft, 12 September 2026");
   });
 
-  it("keeps parameter decisions in the child and leaves the parent family unedited", () => {
+  it("keeps parameter decisions in the child and adopts the parent's market-breadth rule without restating thresholds", () => {
     const read = (file: string) => readFileSync(path.join(process.cwd(), "docs", file), "utf8");
     const childDoc = read(child!.file);
     expect(childDoc).toContain("Stage Criteria: P0, P1, and P2");
     expect(childDoc).toContain("Ingestion Field Contract");
-    expect(read(ucpi!.file)).toContain("0.1.0-draft");
+    expect(childDoc).toContain("MARKET_BREADTH_MINIMUM");
+    expect(childDoc).toContain("Three numerical publication gates");
+    expect(childDoc).not.toContain("Four numerical publication gates");
+    expect(read(ucpi!.file)).toContain("version 0.1.1-draft");
+  });
+
+  it("routed methodology pages contain no markdown tables, which the renderer does not support", () => {
+    for (const page of docPages) {
+      const doc = readFileSync(path.join(process.cwd(), "docs", page.file), "utf8");
+      expect(doc.split("\n").filter((line) => line.trimStart().startsWith("|"))).toEqual([]);
+    }
   });
 });
 

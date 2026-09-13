@@ -24,9 +24,11 @@ values ('dddddddd-0000-4000-8000-000000000001', 'cccccccc-0000-4000-8000-0000000
   'H100 SXM', 'H100', 'SXM', 81559, '68137', '37070',
   1.468888888888889, 'USD', 'per_hour', 1, 0.125, 'France, FR', 'false');
 
--- A hypothetical future spec version for the same instrument.
+-- A hypothetical future spec version for the same instrument. The version
+-- string is deliberately synthetic so it can never collide with a real
+-- seeded version.
 insert into reference.instrument_spec_versions (id, instrument_id, methodology_version_id, version, status, document_path)
-values ('22222222-0000-4000-8000-000000000102', '22222222-0000-4000-8000-000000000001', '11111111-0000-4000-8000-000000000101', '0.1.2-draft', 'draft', 'docs/methodology/ucpi-h100-sxm.md');
+values ('22222222-0000-4000-8000-000000000102', '22222222-0000-4000-8000-000000000001', '11111111-0000-4000-8000-000000000101', '9.9.0-draft', 'draft', 'docs/methodology/ucpi-h100-sxm.md');
 
 do $$
 declare

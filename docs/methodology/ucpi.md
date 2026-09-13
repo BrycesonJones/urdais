@@ -1,6 +1,6 @@
 # Urdais Compute Price Index Family (UCPI)
 
-**Status: proposed methodology, version 0.1.0-draft.** Prepared 12 September 2026. No production value, child specification, provider list, parameter set, or price history is established by this document. Nothing here describes live infrastructure.
+**Status: proposed methodology, version 0.1.1-draft.** Prepared 12 September 2026, amended 13 September 2026. No production value, child specification, provider list, parameter set, or price history is established by this document. Nothing here describes live infrastructure.
 
 This proposal follows the principles of the [Urdais methodology framework](/docs/methodology). It is a shared primitive rather than a published output: the framework's output template applies to the child instruments that consume it, not to this document. Rules expressed as requirements describe the proposed design, subject to approval. Parameters marked **unresolved** are launch requirements, not defaults. No UCPI child may be published until this family methodology has an approved version, a child specification exists, source licensing is secured, and the items in [Open Questions / Empirical Validation Required](#docs-open-questions--empirical-validation-required) are closed in a versioned release.
 
@@ -123,6 +123,8 @@ Publishing an unweighted global number would therefore embed an unexamined assum
 One physical accelerator can be offered through several commercial paths, and counting each as an independent market participant would overstate both the breadth of the market and the influence of whoever is being double-counted.
 
 Three roles are distinguished. The **seller** is the counterparty with which a buyer would contract. The **infrastructure operator** owns or operates the physical hardware. The **marketplace** is a venue through which third-party sellers list capacity, and which may or may not itself be a seller.
+
+A seller is identified by its legal identity. Two trading names, brands, tiers, or catalogues under one legal entity or under common control are one seller, and resolve to one seller-level observation before any participant is counted. This is a consequence of what a seller is rather than an additional rule, and it matters most where a region has few participants, since two brands of one company would otherwise present as a market.
 
 Deduplication is performed at the level of the entity whose capacity is being offered, that is the operator where it is determinable, and the seller otherwise. Where a marketplace lists many third-party sellers, the family treats each distinct determinable operator as one participant rather than treating the marketplace as one participant or as many.
 
@@ -369,6 +371,8 @@ The **even-`N` convention is the arithmetic mean of the two central ordered obse
 
 A median is chosen over a mean because the distribution of compute prices is not symmetric and contains legitimate extreme values at both ends: genuinely scarce capacity priced high, and marginal or distressed capacity priced low. A mean would let one such value move the published price substantially, while a median reports the middle of the market and is unaffected by how extreme the extremes are.
 
+At exactly two participants that reasoning does not apply, and the family says so rather than leaving it to the arithmetic. The median of two observations is their mean; there is no middle distinct from the extremes, each participant is pivotal, and a change in either price moves the regional value by half that change. The family does not treat this as a reason to withhold the value, because two independent participants form a price where one does not, but it is a reason to label the value, and [Publication Gates](#docs-publication-gates) defines the market-breadth qualifier that does so. Three is the smallest count at which the median is an order statistic distinct from both extremes, and therefore the smallest count at which the reason for choosing a median holds.
+
 Equal participant weighting is a deliberate answer to a question, not a convenience. It asks what the specified product costs across the participants who offer it. It does not ask what the typical available accelerator-hour costs, which would require capacity weights, nor what purchased compute cleared at, which would require transaction weights. The [What UCPI Measures](#docs-what-ucpi-measures) section states this limitation, and it must accompany the published value.
 
 ### The full calculation sequence
@@ -423,13 +427,25 @@ Each published observation carries: the **final aggregation-participant count**;
 
 These exist so a user can tell the difference between a price supported by fifteen participants and one supported by two, without inferring it from the number itself.
 
+### Market breadth
+
+Every published regional value carries a **market-breadth qualifier** with exactly two values. **Minimum** means the value rests on exactly two independent capacity sources, the smallest number that constitutes a market under this family. **Normal** means it rests on three or more. The qualifier is derived from the final aggregation-participant count and from nothing else; it is not a status, it never replaces the participant count, and it accompanies the value wherever the value appears. The rule that produces it is in [Publication Gates](#docs-publication-gates).
+
+At Minimum breadth two further disclosures are mandatory. First, that **every participant is pivotal**: removing either would leave no market price, and a change in either price moves the value by half that change. Second, that the dispersion diagnostics are **withheld**: with two observations every percentile and the interquartile range are interpolations between the two participant prices, and publishing them would publish those prices individually under the description of a distribution. The level, the participant count, and the qualifier are published. Whether the two prices may additionally be shown is a data-rights question for each contributing source rather than a methodology question, and a user should understand that the level itself, combined with public knowledge of one participant's price, determines the other.
+
+### Source concentration
+
+Economic breadth is counted in capacity sources, because that is the unit whose prices are set independently. It is not counted in data sources. Twenty independent hosts observed through one lawful and reproducible venue are twenty price setters; two vertically integrated clouds observed through two interfaces are two. The number of interfaces measures how Urdais observes the market, not how the market is structured.
+
+Observing a market through few interfaces is nonetheless a real dependency, on that venue's availability, sampling, ordering, and terms, and it is disclosed rather than gated. Each published observation carries the **contributing-source count**, the number of distinct source interfaces through which the final participants were observed, and the **largest-source participant share**, the share of final participants observed through the single most-used interface. Neither is a publication gate. A child may not adopt a minimum interface count as a gate without a documented argument that interface concentration, rather than participant concentration, is what would make its value unrepresentative.
+
 ### Percentile population
 
 **Percentiles and the interquartile range are computed over exactly the final aggregation-participant observations that enter the regional median**, after seller-level reduction and any determinable capacity-source collapse. The headline and the published distribution therefore describe the same population.
 
 Where any dispersion measure is computed over a different population, for example across raw offers rather than participants, it is labelled with that population explicitly and is never presented alongside the headline as though it described the same thing.
 
-The percentile interpolation convention must be deterministic and stated in the child specification. Percentile reporting at small participant counts is governed by the child's publication and diagnostic requirements; no minimum count is invented here.
+The percentile interpolation convention must be deterministic and stated in the child specification. Percentile reporting at small participant counts is governed by the child's publication and diagnostic requirements, except that at Minimum breadth the family withholds percentiles and the interquartile range for the reason given under Market breadth above; no other minimum count is invented here.
 
 ### Composition change
 
@@ -441,7 +457,7 @@ Each observation therefore records the participants added since the previous obs
 
 Nothing is fabricated. Where inputs are absent, the family's response is to narrow the claim, not to fill the gap.
 
-A participant that disappears from coverage leaves the calculation, and the change in participant count is published. A source that cannot be retrieved produces a carried observation within the freshness limit and an excluded one beyond it. A region that loses coverage below its gate produces a value that is not published as normal. Where only one eligible participant remains, no regional value is published, because a single participant's price is not a market price; it may be published as a participant-level diagnostic. An observation whose availability cannot be established is ineligible. Sources that conflict irreconcilably produce a Conflicted observation that is withheld and escalated. A price shown as requiring a quote is not a price.
+A participant that disappears from coverage leaves the calculation, and the change in participant count is published. A source that cannot be retrieved produces a carried observation within the freshness limit and an excluded one beyond it. A region that loses coverage below its gate produces a value that is not published as normal. Where only one eligible participant remains, no regional value is published, because a single participant's price is not a market price; it may be published as a participant-level diagnostic. Where exactly two remain, the value is published at Minimum breadth under [Publication Gates](#docs-publication-gates), never silently as a normal value. An observation whose availability cannot be established is ineligible. Sources that conflict irreconcilably produce a Conflicted observation that is withheld and escalated. A price shown as requiring a quote is not a price.
 
 **Carrying an observation forward is always visible.** Its age, its share of coverage, and its effect are published; a silent carry is prohibited in every case.
 
@@ -449,9 +465,24 @@ A participant that disappears from coverage leaves the calculation, and the chan
 
 A child publishes a normal value only when the measure still represents its market. The gates are defined here as concepts; **their numerical values are unresolved** and must be set from measured coverage, not chosen so that a series publishes.
 
-The gates are: a minimum final aggregation-participant count; a minimum count of participants with a determined operator, or equivalently a maximum undetermined-operator share; a maximum carried or stale share; a maximum share of observations resting on the weakest availability evidence grade; a minimum source-quality standard; and a maximum share of observations with unresolved bundle or comparability status. Equal-weight concentration measures are not used as gates, for the reason given in [Coverage and Composition](#docs-coverage-and-composition).
+The gates are: a minimum count of participants with a determined operator, or equivalently a maximum undetermined-operator share; a maximum carried or stale share; a maximum share of observations resting on the weakest availability evidence grade; a minimum source-quality standard; and a maximum share of observations with unresolved bundle or comparability status. Equal-weight concentration measures are not used as gates, for the reason given in [Coverage and Composition](#docs-coverage-and-composition). **The participant count is not a numerical gate above the structural floor.** It governs the market-breadth qualifier instead, as set out below; that is a deliberate change from the first draft, which listed a minimum participant count among the numerical gates, and it is recorded in [Methodology Versioning](#docs-methodology-versioning).
 
-Two conditions are structural rather than parametric and apply now: a region with no eligible participant observation has no value, and a region with exactly one has no market price. Both produce Unavailable.
+### Participant count and market breadth
+
+The participant-count rule is structural rather than parametric. It follows from the arithmetic of the median rather than from any coverage measurement, and it applies now.
+
+- **No eligible participant.** The region has no value. **Unavailable**, with the condition named as no eligible participant.
+- **Exactly one.** A single participant's price is not a market price. **Unavailable**, with the condition named as single participant. The price may be published as a participant-level diagnostic.
+- **Exactly two.** The value is published with status **Published** and market breadth **Minimum**. Two independent capacity sources are the smallest set in which a price is formed by more than one party, so this is a market price, and it is the thinnest one the family will describe as such. The median of two is their mean and each participant is pivotal, so the value is published only with the disclosures required under [Coverage and Composition](#docs-coverage-and-composition).
+- **Three or more.** The value is published with market breadth **Normal**, subject to every other gate. Three is the smallest count at which the median is an order statistic distinct from both extremes, and therefore the smallest count at which the reason for choosing a median holds.
+
+The boundaries fall at two and three because those are the counts at which the statistic changes character, not because either was found adequate in data. A larger count is statistically preferable at every level, and the family does not invent a threshold on that ground. The participant count is published with every value so that a user may apply their own, and the qualifier states which side of the structural boundary the value sits on.
+
+**Independence at the floor.** The two participants at Minimum breadth must be independent capacity sources under [Capacity-Source Identity and Collapse](#docs-capacity-source-identity-and-collapse): distinct determinable operators or, where operators are undetermined, distinct sellers by legal identity, neither under common control with the other and neither observed on evidence to be reselling the other's capacity. Two regions of one provider, two brands or tiers of one company, two records of one seller through two interfaces, and a reseller together with its disclosed underlying operator each count once. Where operators are undetermined, independence rests on seller identity and carries the standing limitation that undisclosed shared operation cannot be detected; at two participants that limitation is at its most consequential, and the undetermined-operator share is published with the value as always. Independence is never inferred from prices, in either direction.
+
+**Transitions are deterministic.** The qualifier is computed from the participant count on each calculation date, with no hysteresis and no waiting period. A region moving from three participants to two publishes at Minimum breadth that day; moving from two to one produces Unavailable; returning to two or to three restores the corresponding state on the day it occurs. Every such move is a participant entry or exit and is disclosed under the composition-change rule, so a user can see that breadth changed and why. A waiting period was considered and rejected: it would either publish Normal breadth over a region that has two participants or withhold a value from one that has three, and each misdescribes the market on that date.
+
+All other gates apply at every participant count. Minimum breadth discloses how many parties formed the price; it exempts nothing.
 
 Failing a gate produces a Delayed or Unavailable observation with the failing gate named. It never produces a value computed from a residual set and presented as if complete.
 
@@ -463,7 +494,7 @@ Rebasing to an arbitrary base of one hundred was evaluated and rejected. Officia
 
 Consistent with Urdais convention, **percentage change is the headline change signal**. The currency difference between two levels is a legitimate analytical quantity and is not the headline; the two are labelled distinctly and never presented interchangeably.
 
-Each observation publishes the price level; percentage changes over defined periods computed from unrounded values; the instrument, region, procurement mode, and service tier that define it; the coverage and concentration diagnostics; the as-of date; the status; and the family methodology version, child specification version, and parameter set.
+Each observation publishes the price level; percentage changes over defined periods computed from unrounded values; the instrument, region, procurement mode, and service tier that define it; the market-breadth qualifier; the coverage and concentration diagnostics; the as-of date; the status; and the family methodology version, child specification version, and parameter set.
 
 Dispersion is published alongside the level rather than as a separate product. Retaining the percentile distribution and cross-participant spread preserves the information that future scarcity, fragmentation, and regional basis analytics would require, without committing to those products now.
 
@@ -497,6 +528,8 @@ Input status is separate and never collapsed into the headline status: **Valid**
 
 Both are published, because a value resting on many carried observations is making a weaker claim than one resting on freshly confirmed ones.
 
+Market breadth is not a status. A value at Minimum breadth has status Published, and the qualifier accompanies the status without substituting for it. The word **Limited** is reserved for the availability state of an input, defined in [Availability and Executability](#docs-availability-and-executability), and is not used for breadth, so that a value's breadth and the availability composition of its inputs can never be read as one thing.
+
 ## Conceptual Data Requirements
 
 These describe information the family requires. They are not database tables, and no schema is defined here.
@@ -515,7 +548,7 @@ These describe information the family requires. They are not database tables, an
 - **SellerPriceObservation**: the seller, the seller-level representative price, the eligible offer set considered, the seller-reduction rule applied, and the input status.
 - **CapacitySourceObservation**: the capacity-source identity, being the operator where determined and the seller otherwise; the operator attribution status and its evidence; the contributing seller-level observations; the collapse rule applied; the final representative accessible price; and the input status. This is the object over which the regional median and all published percentiles are computed.
 - **UCPIChildSpecification**: the instrument definition, region definitions and published series, service-tier requirements, the single procurement mode, instrument-specific normalization, the parameter set, the publication gates, and the child's version.
-- **UCPIObservation**: child identifier, region, price level, percentage changes, the full diagnostic set including the composition change since the previous observation, status, family and child versions, parameter set, and the calculation and publication timestamps.
+- **UCPIObservation**: child identifier, region, price level, percentage changes, the market-breadth qualifier, the full diagnostic set including the composition change since the previous observation, status, family and child versions, parameter set, and the calculation and publication timestamps.
 - **SourceReference**: source identity, tier, retrieval evidence and timestamp, licensing basis, and retention rights.
 - **FXObservation**: currency pair, rate, source, fixing time, and status.
 - **MethodologyVersion** and **CorrectionRecord**, with effective dates and change records.
@@ -544,7 +577,7 @@ The family carries its own version, independent of any child. Each published obs
 
 A change to family rules is announced with a prospective effective date, a documented rationale, and an impact assessment, and does not alter observations before that date. A change to a child specification affects that child only. Editing this public page is not a production change.
 
-Version history: **0.1.0-draft, 12 September 2026**, initial research-backed proposal, amended in review on 12 September 2026 before merge: the published statistic named exactly as the regional median of each participant's lowest qualifying accessible offer rather than as a broader typical-offer phrase; the capacity source introduced as the aggregation participant with a deterministic operator-collapse rule and point-in-time attribution discipline; source quality separated from observation type, with concluded transactions made corroborative by default rather than automatically headline inputs; equal-weight concentration measures withdrawn as tautological and the percentile population fixed to the final participants; the even-`N` median convention fixed; reconfirmation made multidimensional with separate price and availability freshness; marketplace removed from the procurement taxonomy and price formation separated from it; tenancy moved from hardware identity to the service framework; fixed mandatory charges separated from usage-proportional ones with amortization permitted only against a contractual horizon; the advertised-versus-accessible gap stated as an observation rather than a causal scarcity signal; seller-count global weighting qualified as a weak fallback; and a source description of bounded carry-forward corrected. No production effective date.
+Version history: **0.1.1-draft, 13 September 2026**, market-breadth amendment. The participant-count publication gate above the structural floor is resolved structurally rather than left as a numerical parameter: a region with exactly two independent capacity sources publishes with a mandatory market-breadth qualifier of Minimum, and a region with three or more publishes at Normal breadth, subject to every other gate. The amendment records why the median of two is their mean and why three is the first count at which the median's rationale holds; defines independence at the floor in terms of the existing capacity-source identity, with seller identity clarified as legal identity; makes breadth transitions deterministic without hysteresis; withholds dispersion diagnostics at Minimum breadth because they would disclose the two participant prices individually; adds the contributing-source count and the largest-source participant share as disclosed rather than gated source-concentration diagnostics, deciding that breadth is counted in capacity sources and not in interfaces; and reserves the word Limited for availability. The rationale and the scenario analysis that prompted it are recorded in an internal architecture document. No production effective date. **0.1.0-draft, 12 September 2026**, initial research-backed proposal, amended in review on 12 September 2026 before merge: the published statistic named exactly as the regional median of each participant's lowest qualifying accessible offer rather than as a broader typical-offer phrase; the capacity source introduced as the aggregation participant with a deterministic operator-collapse rule and point-in-time attribution discipline; source quality separated from observation type, with concluded transactions made corroborative by default rather than automatically headline inputs; equal-weight concentration measures withdrawn as tautological and the percentile population fixed to the final participants; the even-`N` median convention fixed; reconfirmation made multidimensional with separate price and availability freshness; marketplace removed from the procurement taxonomy and price formation separated from it; tenancy moved from hardware identity to the service framework; fixed mandatory charges separated from usage-proportional ones with amortization permitted only against a contractual horizon; the advertised-versus-accessible gap stated as an observation rather than a causal scarcity signal; seller-count global weighting qualified as a weak fallback; and a source description of bounded carry-forward corrected. No production effective date.
 
 ## Child Specification Requirements
 
@@ -568,7 +601,7 @@ No production value may be published under this draft. The following require rea
 - **Transaction-price sibling feasibility**: whether a separate transaction-price series could be constructed, and what it would measure.
 - **Composition effects**: how much of observed period-to-period movement is participant entry and exit rather than price change, and whether a matched-participant analytic is worth constructing.
 - **Regional central measure**: whether the median is the right central measure against alternatives, tested on observed distributions rather than assumed.
-- **Publication gates**: the numerical values for the participant count, the determined-operator count or undetermined share, carried and stale shares, source-quality standard, and evidence-grade composition.
+- **Publication gates**: the numerical values for the determined-operator count or undetermined share, carried and stale shares, source-quality standard, and evidence-grade composition. The participant count is resolved structurally in [Publication Gates](#docs-publication-gates) and is no longer a numerical gate.
 - **Availability evidence standard**: what grades are achievable across sellers, what share of the market can support the stronger grades, and what minimum a child can require without emptying itself.
 - **Freshness limits**: measured seller updating behaviour, including any weekend and holiday pattern, and the maximum defensible carry age **separately for price, for availability evidence, and for slowly changing reference data**.
 - **Service-tier requirements**: which dimensions measurably move price for a given instrument, and therefore which must be requirements rather than metadata.
