@@ -14,7 +14,7 @@ Four results are decisive enough to state alone.
 
 **The interface does not return a complete or stable result set.** The marketplace caps responses at 64 records regardless of the requested limit, reports `truncated: false` while doing so, and returns different subsets for different orderings of the same query. Per-offer content was perfectly consistent across nine responses; only set membership varied. **The seller minimum is not well defined under incomplete enumeration**, which is a new argument against the family's provisional default that did not exist before this study.
 
-**The bundle envelope decides whether the marketplace segment is in the index at all.** Applying the specialist-cloud host-resource range observed in Phase 1 to the marketplace admits 2 of 23 eligible offers, 9%. The envelope level is therefore a decision about coverage, not a data-cleaning parameter, and is not set here.
+**The bundle envelope decides whether the marketplace segment is in the index at all.** Applying the specialist-cloud host-resource range observed in Phase 1 to the marketplace admits 2 of the 23 pre-bundle research candidates, 9%. The envelope level is therefore a decision about coverage, not a data-cleaning parameter, and is not set here.
 
 **An availability rule can be stated provider-neutrally.** The usable distinction is not how granular a capacity signal is but whether it is **discriminating**: whether the same field can express "not obtainable" for the specified product. Offer booleans, region capacity lists and ordinal datacenter availability all can. Catalog presence and price-page presence never can.
 
@@ -103,7 +103,7 @@ Within-cell price dispersion was **not** explained by bundle quality in a consis
 
 ### Enumeration incompleteness is an argument about the reduction rule
 
-The minimum over an incompletely enumerated offer set is a **one-directionally biased** estimator: an offer that was not retrieved can only have raised the observed minimum, never lowered it, so the observed minimum is an upper bound on the true minimum and the size of the bias depends on how much of the set the collector happened to receive. A median over the same partial set is not biased in a fixed direction and is less sensitive to which subset arrived.
+Stated exactly: because a retrieved subset is contained in the complete set, **the minimum over the retrieved subset is weakly greater than or equal to the minimum over the complete set**. The enumeration error is therefore **one-sided**, able to move the observed participant price up but never down, with a magnitude depending on how much of the set the collector happened to receive. A median over the same partial set carries no such one-sided error and is less sensitive to which subset arrived.
 
 This does not settle the rule. It adds a consideration the family did not have, and it is recorded so that the ratification study weighs it.
 
@@ -137,11 +137,19 @@ The documented query filter for `geolocation` is a "two letter country code". In
 
 Phase 1 recorded the date fields with semantics unverified. The host documentation states that once an offer is created "the offer accepts new rentals until the offer end date". `end_date` is therefore a **forward-looking limit on the offer**, not the time availability last changed. **No availability-change timestamp exists at this venue, which was the last candidate for one anywhere.**
 
-### Tenancy is documented at the container level and not at the device level
+### Tenancy is documented at the device level, correcting an earlier reading
 
-The venue's security documentation states that "Clients are isolated in unprivileged Docker containers and only have access to their own data" with "Separate namespaces and cgroups, Network isolation, File system isolation, Process isolation". It does **not** state that an accelerator is exclusively assigned to one renter.
+**This finding was corrected before the amendment was finalized, and the correction went in the direction of admitting the venue rather than excluding it.**
 
-The `gpu_frac` arithmetic and the uniform full 80 GB `gpu_ram` are strong evidence that accelerators are allocated in whole units. Exclusivity between concurrent renters on one machine is an inference from that, not a published statement.
+The first reading rested on the venue's security documentation, which states that "Clients are isolated in unprivileged Docker containers and only have access to their own data" with "Separate namespaces and cgroups, Network isolation, File system isolation, Process isolation". That page says nothing about the accelerator itself, so the venue was initially graded Ambiguous on the ground that device exclusivity had not been stated.
+
+**The venue does state it, on a page that had not been read.** Its official Concepts documentation defines the term directly: an instance is "a running, isolated environment on the host's machine with **exclusive access to the GPUs you rented**", adding that instances "are almost always Docker containers; a small subset are virtual machines".
+
+That is a published statement by the venue, in its own product documentation, that the accelerators an instance rents are exclusively accessed. Under the child's existing grades it is **Documented**: official product documentation establishing a full-device product. It is not graded Explicit, because it is platform documentation covering every offer rather than a per-offer assertion by the individual seller behind an offer.
+
+**No other primary source from the venue contradicts it.** The security documentation is silent on accelerator assignment rather than opposed to it, and the venue's published documentation index contains no concept of a partitioned, time-shared, multi-instance or virtualized fractional accelerator. The `gpu_frac` arithmetic and the uniform full 80 GB `gpu_ram` independently establish allocation in whole accelerators, so the documentary and arithmetic evidence agree.
+
+**The child's tenancy rule is unchanged.** Only the grade assigned to one venue changed, and it changed on a primary source rather than on an inference.
 
 ### The venue distinguishes certified datacenter hosts
 
@@ -199,7 +207,7 @@ The CoreWeave row is the reason the mapping rule needs an explicit refusal case 
 
 ### Region granularity sensitivity
 
-Computed over the marketplace's eligible offers, which are the only ones carrying both region and availability.
+Computed over the 23 pre-bundle research candidates, which are the only observations carrying both region and availability.
 
 | Taxonomy | Regions reaching two participants | Detail |
 |---|---|---|
@@ -229,7 +237,7 @@ The two dimensions differ by orders of magnitude, which vindicates the family's 
 
 Phase 1 measured specialist-cloud bundles at 16 to 26 virtual CPUs and 125 to 256 GB of host memory per accelerator, a spread of 1.62 and 2.05 times, with 40% of sellers not disclosing.
 
-The marketplace is far more heterogeneous. Across the 23 eligible offers, per accelerator:
+The marketplace is far more heterogeneous. Across the 23 pre-bundle research candidates, per accelerator:
 
 | Resource | Minimum | Median | Maximum | Ratio |
 |---|---|---|---|---|
@@ -242,9 +250,9 @@ Applying the specialist-cloud band as a two-sided envelope:
 | Population | Within vCPU band | Within RAM band | Within both |
 |---|---|---|---|
 | All 116 offers | 78% | 27% | **18%** |
-| 23 eligible offers | 65% | 22% | **9%** |
+| 23 research candidates | 65% | 22% | **9%** |
 
-**A two-sided envelope drawn from specialist-cloud bundles removes 91% of the marketplace's eligible offers**, and host memory is the binding constraint.
+**A two-sided envelope drawn from specialist-cloud bundles removes 91% of those candidates**, and host memory is the binding constraint.
 
 A one-sided floor behaves differently, and its level decides coverage:
 
@@ -288,7 +296,7 @@ Recorded here with evidence; made in the methodology document.
 | `gpu_frac` trap | Not known | Exact for 35 of 35 machines; uniform 80 GB | Machine fraction, never a device fraction | High | No |
 | Seller reduction | Unsettled | 6 cells; median above minimum by up to 18.95%; regional value unmoved at N=3; enumeration incomplete | **Minimum retained, still unratified** | None by construction | **Yes** |
 | Bundle envelope | Unresolved | 7x, 18.3x, 8.7x dispersion; 9% survive a two-sided band; floor level decides publication | **Form resolved as a floor; level unresolved** | Medium on form, none on level | **Yes** |
-| Tenancy grade | Rule only | Container isolation documented; device exclusivity not stated | Explicit and Documented only; marketplace grades Ambiguous | Medium-high | **Yes** |
+| Tenancy grade | Rule only | Concepts page states an instance has "exclusive access to the GPUs you rented"; no contradicting primary source; no partitioning concept in the venue's documentation | Explicit and Documented only; **marketplace grades Documented** | High | **No** |
 | Operator attribution | Unresolved | 0 of 13; venue holds identity but does not publish | Diagnostic, never a gate | High | **No** |
 | Marketplace seller ID | Unresolved | Documented as a user account; stable within session; cross-time untested | Provisional key with a named unresolved state | Medium | **Yes** for marketplace participation |
 | Price freshness architecture | Unresolved | Azure dates; AWS publication date; silence elsewhere | Source-effective and observed times, absence as null | High | **No** |
@@ -313,6 +321,8 @@ Recorded here with evidence; made in the methodology document.
 
 **No cross-time observation exists.** Identifier stability, price cadence for specialist clouds, and availability cadence all require repeated observation that this phase did not perform.
 
+**The 23 research candidates are not P2 observations and must never be reported as any.** They satisfy hardware identity, service product, procurement mode, topology class, tenancy and availability. They have not been tested against the bundle envelope, whose level is unresolved; they carry no established tax basis; their freshness cannot be assessed against unresolved ages; and their seller-level reduction depends on a rule that is not ratified and on an offer set that is not enumerable. **P2 remains empty.**
+
 ## Potential Parent Issues
 
 **None.** Every decision above was expressible within the family methodology as written. The family's separation of source quality from observation type, its availability state vocabulary, its three freshness dimensions, its capacity-source definition with seller fallback, its prohibition on inferring operator identity, its structural floor, and its requirement that a child declare a bundle envelope all survived contact with the evidence and in several cases determined the answer. **The parent was not modified.**
@@ -325,7 +335,7 @@ All retrieved 13 September 2026.
 
 **Verified by direct call**: [Vast.ai bundles search](https://cloud.vast.ai/api/v0/bundles/), thirteen requests, all HTTP 200, including an H100-filtered query returning 64 records and a rentable-filtered query returning 16. [Azure Retail Prices API](https://prices.azure.com/api/retail/prices), HTTP 200 unauthenticated, 138 H100 SKU records across 24 regions. [AWS EC2 bulk price list region index](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/region_index.json), HTTP 200, 106 regions, publication date 2026-09-10T19:55:14Z. [Lambda Cloud OpenAPI specification](https://cloud.lambda.ai/api/v1/openapi.json), HTTP 200 unauthenticated, read for the instance-types schema. [Lambda instance types](https://cloud.lambda.ai/api/v1/instance-types), **HTTP 401**, confirming the documented key requirement.
 
-**Documentation read**: [Vast.ai search offers reference](https://docs.vast.ai/api-reference/search/search-offers), for field definitions, the country-code filter granularity, and the absence of a documented limit or pagination. [Vast.ai hosting overview](https://docs.vast.ai/host/hosting-overview), for host accounts and offer end dates. [Vast.ai security FAQ](https://docs.vast.ai/guides/reference/faq/security.md), for container isolation. [Vast.ai datacenter status](https://docs.vast.ai/host/datacenter-status.md), for certified datacenter requirements. [RunPod list GPU types](https://docs.runpod.io/api-reference-v2/catalog/list-gpu-types), for the availability expansion, its four values, its contexts and the count parameter.
+**Documentation read**: [Vast.ai search offers reference](https://docs.vast.ai/api-reference/search/search-offers), for field definitions, the country-code filter granularity, and the absence of a documented limit or pagination. [Vast.ai Concepts](https://docs.vast.ai/guides/concepts.md), for the definition of an instance as an isolated environment "with exclusive access to the GPUs you rented", which is the primary support for grading that venue's tenancy Documented. [Vast.ai hosting overview](https://docs.vast.ai/host/hosting-overview), for host accounts and offer end dates. [Vast.ai security FAQ](https://docs.vast.ai/guides/reference/faq/security.md), for container isolation, and as the page whose silence produced the superseded Ambiguous grade. [Vast.ai datacenter status](https://docs.vast.ai/host/datacenter-status.md), for certified datacenter requirements. [RunPod list GPU types](https://docs.runpod.io/api-reference-v2/catalog/list-gpu-types), for the availability expansion, its four values, its contexts and the count parameter.
 
 **Not retrieved**: RunPod `DataCenter` region values, Lambda's live H100 instance list, and DigitalOcean sizes, all key-gated. Nebius, Crusoe and Hyperstack H100-bearing endpoints remain unestablished from Phase 1.
 
@@ -340,3 +350,5 @@ All retrieved 13 September 2026.
 **13 September 2026**: correction to that study. An unfiltered 64-row marketplace sample had been treated as H100 evidence; it contained 2 H100 SXM rows. The availability rate, multi-offer count and operator-identity claim drawn from it were withdrawn, and `host_id` was reclassified as a marketplace host and seller identifier.
 
 **13 September 2026, this study**: the first targeted parameter-closure work. The H100-filtered sample that Phase 1 named as its prerequisite was obtained, producing the first comparable cells and the first measured accessible-capacity counts for this product, and establishing that the venue's interface cannot enumerate its own population.
+
+**13 September 2026, correction before merge.** The marketplace's tenancy was first graded Ambiguous on the ground that its documentation did not state device exclusivity. That was a failure to read the right page: the venue's Concepts documentation states that an instance has "exclusive access to the GPUs you rented". The grade is corrected to **Documented**, which removes marketplace tenancy from the child's launch blockers. The tenancy rule itself was not changed, and the correction creates no P2 observations. In the same pass the research population previously called "23 eligible offers" was relabelled **pre-bundle research candidates**, because calling offers eligible before the bundle envelope and several other P2 requirements have been applied overstated their status; and the enumeration argument was tightened from "biased upward" to the exact statement that a subset minimum is weakly greater than or equal to the complete-set minimum.
