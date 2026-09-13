@@ -32,7 +32,7 @@ Every blocker known after the merged parent, child, source registry, Phase 4 evi
 | 8 | Runpod datacenter to country | `SOURCE_MAPPING` | **Partially resolved**: mapping rule fixed via the API's own `countryCodes` filter and `countryCode` field; US evidenced for two datacenters; full list at first authenticated call |
 | 9 | Lambda region to country | `GEOGRAPHY` | **Resolved**: all 14 regions mapped from Lambda's own table (US ×9, JP ×2, IN, DE, IL) |
 | 10 | Runpod tenancy | `TENANCY` | **Resolved: Documented**, on the statement that a running Pod's GPU "is exclusively reserved for you" |
-| 11 | Lambda tenancy | `TENANCY` | **Externally blocked: Ambiguous.** Only GH200 is stated single-tenant; H100 documentation is silent. Needs one statement from Lambda |
+| 11 | Lambda tenancy | `TENANCY` | **Externally blocked: Ambiguous.** Only GH200 is stated single-tenant; H100 documentation is silent. A narrow in-thread clarification was sent 13 September 2026 (message `1a09d05f8dbdd35e`); awaiting a one-line answer |
 | 12 | Runpod Grade ≥ 3 availability | `AVAILABILITY` | **Resolved by design**: `NONE/LOW/MEDIUM/HIGH` per datacenter at `count=1`, per cloud tier; live values at first call |
 | 13 | Lambda Grade ≥ 3 availability | `AVAILABILITY` | **Resolved by design**: `regions_with_capacity_available`, required and possibly empty; live values at first call |
 | 14 | Freshness ages | `FRESHNESS` | **Resolved**: both evidence ages equal the calculation cycle |
@@ -45,7 +45,7 @@ Every blocker known after the merged parent, child, source registry, Phase 4 evi
 | 21 | Marketplace seller-identifier stability | `OTHER` | Not a blocker for a two-cloud launch; binds only for marketplace participation |
 | 22 | Country overlap between the two candidates | `GEOGRAPHY` | **Partially resolved**: the United States is the only defensible overlap; confirmed only by live availability on a date |
 | 23 | Individual-price disclosure at N=2 | `DATA_RIGHTS_DISPLAY` | **Partially resolved**: methodology withholds dispersion; agreement terms must be settled per the checklist in section 9 |
-| 24 | Calculation cutoff and publication timing | `OTHER` | **Resolvable now, family decision**: proposed end of calculation date in UTC; not adopted by the child because the parameter is the parent's |
+| 24 | Calculation cutoff and publication timing | `OTHER` | **Resolved in UCPI 0.1.2-draft**: UTC calendar date, half-open window `[D 00:00Z, D+1 00:00Z)`, cutoff exclusive, observation time controls, last complete reconfirmation before cutoff, publication by `D+2 00:00Z` else Delayed; child 0.1.4-draft inherits |
 | 25 | Schema representation of three launch fields | `IMPLEMENTATION` | **Resolvable now**: gaps and smallest amendments proposed in section 10; not applied in this PR |
 | 26 | Collector implementation | `IMPLEMENTATION` | Blocked by policy until both axes are permitted for at least two independent sources |
 | 27 | Publication layer (seller-level, participant, series tables) | `IMPLEMENTATION` | Phase 6, after collection exists |
@@ -174,7 +174,7 @@ Three small amendments, none applied here: they belong with the first collector,
 | Tax basis | exclusive, Terms | exclusive, price surface | evidence by general terms | RESOLVED |
 | Seller reduction | canonical 1×, min of tiers | canonical 1× | ratified | RESOLVED |
 | Numerical gates | n/a | n/a | none open | RESOLVED |
-| Calculation cutoff | n/a | n/a | **family parameter, unresolved** | OPEN, administrator decision |
+| Calculation cutoff | n/a | n/a | UTC half-open day, cutoff next midnight exclusive, deadline the midnight after | RESOLVED, UCPI 0.1.2-draft |
 | Schema gaps | — | — | three columns proposed | OPEN, with first collector |
 | Collector, publication layer, live validation | — | — | — | AFTER PERMISSION |
 
@@ -182,8 +182,7 @@ Three small amendments, none applied here: they belong with the first collector,
 
 **If Runpod and Lambda both sent acceptable permission replies today, the blockers that would still prevent the first publication are:**
 
-1. **A tenancy statement from Lambda for H100 on-demand instances.** Without it, Lambda's observations are `TENANCY_UNRESOLVED`, the region has one participant, and the value is Unavailable. This is a sentence, not a negotiation, and it belongs in the same reply.
-2. **The family's calculation cutoff and publication timing**, which a collector needs before its first run. An administrator decision; the child proposes end of the calculation date in UTC.
-3. **Collector implementation and live validation**, including the first-call verifications: Runpod's `minPodGpuCount`, its datacenter-to-country list, and live Grade-3 availability at 1× in at least one common country on the same date, together with the Phase 6 publication layer and the three proposed schema columns.
+1. **A tenancy statement from Lambda for H100 on-demand instances**, now asked for directly in the permission thread (message `1a09d05f8dbdd35e`, 13 September 2026). Without it, Lambda's observations are `TENANCY_UNRESOLVED`, the region has one participant, and the value is Unavailable. If the answer arrives with the permission reply, this item disappears.
+2. **Collector implementation and live validation**, including the first-call verifications: Runpod's `minPodGpuCount`, its datacenter-to-country list, and live Grade-3 availability at 1× in at least one common country on the same date, together with the Phase 6 publication layer and the three proposed schema columns.
 
-Items 1 and 2 are the substance hiding underneath. Neither is large; both are real; neither is permission.
+The calculation cutoff, previously item 2 here, was resolved at family level in UCPI 0.1.2-draft on 13 September 2026 and no longer stands between permission and implementation. The Lambda tenancy statement is the only remaining non-permission evidence blocker, and it is a sentence, not a negotiation.

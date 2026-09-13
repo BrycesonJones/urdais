@@ -44,9 +44,19 @@ describe("compute price methodology", () => {
 
   it("is a family parent, not a child instrument specification", () => {
     const ucpiDoc = readFileSync(path.join(process.cwd(), "docs", ucpi!.file), "utf8");
-    expect(ucpiDoc).toContain("version 0.1.1-draft");
+    expect(ucpiDoc).toContain("version 0.1.2-draft");
+    expect(ucpiDoc).toContain("0.1.1-draft, 13 September 2026");
     expect(ucpiDoc).toContain("0.1.0-draft, 12 September 2026");
     expect(ucpiDoc).not.toMatch(/^#+ .*UCPI-H100/m);
+  });
+
+  it("owns the calculation calendar with an exact half-open UTC window", () => {
+    const ucpiDoc = readFileSync(path.join(process.cwd(), "docs", ucpi!.file), "utf8");
+    expect(ucpiDoc).toContain("### The calculation calendar and cutoff");
+    expect(ucpiDoc).toContain("`[D 00:00:00 UTC, D+1 00:00:00 UTC)`");
+    expect(ucpiDoc).toContain("last complete reconfirmation before the cutoff");
+    expect(ucpiDoc).toContain("The publication deadline for `D` is `D+2 00:00:00 UTC`");
+    expect(ucpiDoc).not.toContain("The calculation cutoff, the publication target, and the publication deadline are **unresolved**");
   });
 
   it("owns the participant-count rule and reserves Limited for availability", () => {
@@ -79,9 +89,10 @@ describe("compute price child specifications", () => {
 
   it("is a draft that states its launch is blocked and labels research prices", () => {
     const childDoc = readFileSync(path.join(process.cwd(), "docs", child!.file), "utf8");
-    expect(childDoc).toContain("version 0.1.3-draft");
+    expect(childDoc).toContain("version 0.1.4-draft");
     expect(childDoc).toContain("Launch blocked");
     expect(childDoc).toContain("Research snapshot only");
+    expect(childDoc).toContain("0.1.3-draft, 13 September 2026");
     expect(childDoc).toContain("0.1.2-draft, 13 September 2026");
     expect(childDoc).toContain("0.1.1-draft, 13 September 2026");
     expect(childDoc).toContain("0.1.0-draft, 12 September 2026");
@@ -98,7 +109,8 @@ describe("compute price child specifications", () => {
     expect(childDoc).toContain("canonical-quantity selection");
     expect(childDoc).toContain("no price or availability evidence is carried across calculation dates at launch");
     expect(childDoc).not.toContain("Four numerical publication gates");
-    expect(read(ucpi!.file)).toContain("version 0.1.1-draft");
+    expect(childDoc).toContain("**Requires a parent decision**: none.");
+    expect(read(ucpi!.file)).toContain("version 0.1.2-draft");
   });
 
   it("routed methodology pages contain no markdown tables, which the renderer does not support", () => {
