@@ -1,6 +1,32 @@
-# Runpod Permission Request — Draft
+# Runpod Permission Request — Sent 13 September 2026
 
-**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Prepared 13 September 2026. This is a **draft for review and has not been sent.** It supports the classification recorded in the H100 Source Terms Review, where Runpod is `not_permitted` on both permission axes pending written permission.
+**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Prepared 13 September 2026. **Sent 13 September 2026; awaiting a response.** It supports the classification recorded in the H100 Source Terms Review, where Runpod is `not_permitted` on both permission axes pending written permission.
+
+## Outreach record
+
+| Field | Value |
+|---|---|
+| Status | **Sent, awaiting response** |
+| Date sent | 13 September 2026, 15:05 UTC |
+| Channel | Email |
+| To | `help@runpod.io` |
+| Copied | `legal@runpod.io` |
+| Recipient team | Not individually identified. `help@runpod.io` is the address the Terms of Service designate in their Contact Us section for *"any questions ... regarding the Service or to receive further information regarding use of the Service"*. `legal@runpod.io` is the address the same document uses for legal notices, and was copied because the request seeks written permission under two specific clauses. |
+| Subject | Request for written permission — automated catalog retrieval and derived index use (Urdais) |
+| Sender | Bryceson Jones, Urdais, https://urdais.com, brycesonshui@gmail.com |
+| Provider reference ID | None issued. No ticket or case number was returned at submission. |
+| Message identifier | Gmail message and thread `1a09b4ce294d8be3` |
+| Response as at this writing | None received |
+
+**Why this route rather than the phone line or support portal.** Runpod's contact page offers a sales telephone number and a support portal at `contact.runpod.io`, which returned HTTP 403 to an unauthenticated request. Neither produces the written record this request needs. The Terms of Service themselves designate an email address for questions about use of the Service, and that address is a first-party published route, so it was used in preference to a phone call that would leave no auditable trace.
+
+**Deviation from the draft below.** One substantive change and one omission. The sent message names both recipients and explains why each was chosen, which the draft did not. The signature omits a role or job title, because none is recorded anywhere in the project and inventing one in a request to a legal department would have been a fabrication. Name, company, site and reply address were used instead. Nothing in the legal or commercial substance of the request was altered.
+
+**What this does not change.** Sending a request is not permission. Runpod remains `not_permitted` on both axes, `production_blocked`, with `written_agreement_required` true. The registry was deliberately not modified by this outreach. Runpod may move toward approval only on written evidence granting both axes; an acknowledgement, a verbal yes, API credentials, or support confirming the endpoint works are each insufficient.
+
+---
+
+## Original draft, as prepared and reviewed
 
 ## Why a request rather than a clarification
 
@@ -12,7 +38,9 @@ Both clauses name their own remedy. The ask is therefore for permission and appr
 
 The Terms direct questions about use of the Service to Runpod, Inc., 329 Bryant St #4D, San Francisco, CA 94107. The published email address is obfuscated in the page source and was not captured, so the address should be taken from the live page or the site's Contact Sales channel before sending. A commercial or partnerships contact is the right first recipient, since the request concerns approved commercial use rather than support.
 
-## Draft message
+## Draft message, as sent
+
+The message below was sent on 13 September 2026 with the placeholders resolved as recorded above.
 
 **Subject:** Request for written permission — automated catalog retrieval and derived index use
 
