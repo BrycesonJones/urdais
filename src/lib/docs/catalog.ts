@@ -54,6 +54,13 @@ export const docPages: readonly DocPage[] = [
     section: "Methodology",
     file: "methodology/ucpi.md",
   },
+  {
+    slug: "methodology/ucpi-h100-sxm",
+    title: "UCPI-H100-SXM",
+    description: "Proposed first child specification of the UCPI family: H100 SXM hardware identity, topology and procurement class, and an empirical market study of the family's open parameters.",
+    section: "Methodology",
+    file: "methodology/ucpi-h100-sxm.md",
+  },
 ];
 
 export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];

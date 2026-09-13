@@ -8,7 +8,7 @@ This proposal follows the principles of the [Urdais methodology framework](/docs
 
 The Urdais Compute Price Index family measures what a precisely defined unit of market-accessible accelerated compute costs. It is a family, not a single index: each child instrument fixes one compute product and one commercial context, and this document defines the rules every child inherits.
 
-This methodology owns the observation model, the identity framework for compute products and sellers, the source hierarchy, the normalization rules, the availability and eligibility framework, the aggregation architecture, the diagnostics, the publication statuses, corrections, lineage, and versioning. It does not define any particular piece of hardware. The first child, UCPI-H100-SXM, will be specified separately and will serve as the first empirical test of this architecture.
+This methodology owns the observation model, the identity framework for compute products and sellers, the source hierarchy, the normalization rules, the availability and eligibility framework, the aggregation architecture, the diagnostics, the publication statuses, corrections, lineage, and versioning. It does not define any particular piece of hardware. The first child, [UCPI-H100-SXM](/docs/methodology/ucpi-h100-sxm), is specified separately and serves as the first empirical test of this architecture.
 
 ## Product Family Architecture
 
