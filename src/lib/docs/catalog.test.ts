@@ -24,6 +24,31 @@ describe("shared methodology pages", () => {
   });
 });
 
+describe("compute price methodology", () => {
+  const ucpi = findDoc("methodology/ucpi");
+  const uavi = findDoc("methodology/uavi");
+
+  it("registers UCPI under Methodology, after the equity outputs", () => {
+    expect(ucpi).toMatchObject({ section: "Methodology", file: "methodology/ucpi.md" });
+    expect(docPages[docPages.indexOf(uavi!) + 1]).toBe(ucpi);
+    expect(docHref(ucpi!.slug)).toBe("/docs/methodology/ucpi");
+  });
+
+  it("links UCPI to the framework and is linked from the overview", () => {
+    const read = (file: string) => readFileSync(path.join(process.cwd(), "docs", file), "utf8");
+    const ucpiDoc = read(ucpi!.file);
+    expect(ucpiDoc).toContain("](/docs/methodology)");
+    expect(ucpiDoc.match(/^# /gm)).toHaveLength(1);
+    expect(read("methodology.md")).toContain(`](${docHref(ucpi!.slug)})`);
+  });
+
+  it("is a family parent, not a child instrument specification", () => {
+    const ucpiDoc = readFileSync(path.join(process.cwd(), "docs", ucpi!.file), "utf8");
+    expect(ucpiDoc).toContain("0.1.0-draft");
+    expect(ucpiDoc).not.toMatch(/^#+ .*UCPI-H100/m);
+  });
+});
+
 describe("output methodology pages", () => {
   const ugai = findDoc("methodology/ugai");
   const uavi = findDoc("methodology/uavi");

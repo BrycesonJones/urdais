@@ -68,6 +68,7 @@ Copy these headings when developing an individual output. Leave unresolved decis
 The following categories are reserved for future output-specific methodologies. None is defined by this framework.
 
 - **Indices:** to be developed one output at a time. The first proposed index methodology is [UGAI](/docs/methodology/ugai), the Urdais Global AI Index, which consumes the shared AI Equity Universe. [UAVI](/docs/methodology/uavi), the Urdais AI Volatility Index, is a proposed sibling output that consumes the same universe and measures 30-day option-implied volatility across its option-eligible members.
+- **Compute prices:** [UCPI](/docs/methodology/ucpi), the Urdais Compute Price Index family, is a separate shared methodology for measuring what a defined unit of market-accessible accelerated compute costs. It is a parent for per-instrument children rather than a single index, and it does not consume the AI Equity Universe.
 - **Markets:** to be developed one output at a time.
 - **Market Analytics:** to be developed one output at a time.
 - **Maps:** to be developed one output at a time.
