@@ -372,7 +372,7 @@ Version history: **0.1.0-draft, 12 September 2026**, initial research-backed pro
 
 ## Relationship to UAVI
 
-UAVI, the future Urdais AI Volatility Index, is a sibling output. It inherits constituent base weights from the parent AI Equity Universe snapshot, applies its own options-eligibility filter, and renormalizes the surviving base weights, exactly as the parent methodology specifies. UAVI inherits the canonical AI Equity Universe base weights, not UGAI's index shares or as-of (drifted) weights. UAVI does not consume UGAI's as-of weights, index shares, divisor, or price series unless a future UAVI methodology explicitly decides otherwise. UGAI is not an input to UAVI, and UGAI's daily price movements must not become an implicit dependency of UAVI through shared data structures. No options methodology is defined here.
+[UAVI](/docs/methodology/uavi), the proposed Urdais AI Volatility Index, is a sibling output. It inherits constituent base weights from the parent AI Equity Universe snapshot, applies its own options-eligibility filter, and renormalizes the surviving base weights, exactly as the parent methodology specifies. UAVI inherits the canonical AI Equity Universe base weights, not UGAI's index shares or as-of (drifted) weights. UAVI does not consume UGAI's as-of weights, index shares, divisor, or price series unless a future UAVI methodology explicitly decides otherwise. UGAI is not an input to UAVI, and UGAI's daily price movements must not become an implicit dependency of UAVI through shared data structures. No options methodology is defined here.
 
 ## Open Questions / Empirical Validation Required
 
