@@ -1,6 +1,36 @@
-# Lambda Permission Request — Draft
+# Lambda Permission Request — Sent 13 September 2026
 
-**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Prepared 13 September 2026. This is a **draft for review and has not been sent.** It supports the classification recorded in the H100 Source Terms Review, where Lambda is `under_review` on collection, `not_permitted` on data use, and `production_blocked`.
+**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Prepared 13 September 2026. **Sent 13 September 2026; awaiting a response.** It supports the classification recorded in the H100 Source Terms Review, where Lambda is `under_review` on collection, `not_permitted` on data use, and `production_blocked`.
+
+## Outreach record
+
+| Field | Value |
+|---|---|
+| Status | **Sent, awaiting response** |
+| Date sent | 13 September 2026, 15:24 UTC |
+| Channel | Email |
+| To | `legal@lambdal.com` |
+| Copied | None |
+| Recipient team | Not individually identified. The Cloud Terms of Service designate this address for notices, alongside *"Lambda, Inc., Attn: Legal Department, 2510 Zanker Rd. San Jose, CA 95131"*. The message offers to be redirected if a commercial team is the better owner. |
+| Subject | Request for written permission under the Cloud Terms — market-data use of published instance pricing |
+| Sender | Bryceson Jones, Urdais, https://urdais.com |
+| Sending account | `bryceson.jones17@gmail.com` |
+| Signature address | `bryceson.jones17@gmail.com` — **matches the sending account** |
+| Provider reference ID | None issued |
+| Message identifier | Gmail message and thread `1a09b5dfdba9b13d` |
+| Response as at this writing | None received |
+
+**Sender block resolved correctly.** The Runpod request was signed with an address that did not match the account it was sent from. That was checked before sending here, and the signature carries the actual sending account.
+
+**Why this route.** Lambda publishes no partnerships or data-licensing address. Support at `lambda.ai/support` is the wrong route for a contractual question, and the sales route at `lambda.ai/talk-to-an-engineer` would reach people who cannot vary the agreement. The Cloud Terms name a notice address, and that is what a request to permit something the agreement otherwise restricts should use.
+
+**One addition to the reviewed draft.** The sent message opens by saying why this address was chosen and offering to be redirected to a commercial owner. Nothing in the legal or commercial substance was changed.
+
+**What this does not change.** Sending a request is not permission. Lambda remains `under_review` on collection, `not_permitted` on data use, `production_blocked`, with `written_agreement_required` true. The registry was deliberately not modified by this outreach. Be alert that a reply confirming the API is available to customers answers the wrong question: API availability is not the carve-out, because clause (iv) restricts the purpose rather than the access.
+
+---
+
+## Original draft, as prepared and reviewed
 
 ## What is being asked for, and why it is asked this way
 
@@ -18,7 +48,9 @@ Lambda's contact page offers a sales route at `lambda.ai/talk-to-an-engineer` an
 
 **Recommended: `legal@lambdal.com`, the address the Cloud Terms designate.** A parallel note through the sales route is optional and would be about the Order rather than the interpretation.
 
-## Draft message
+## Draft message, as sent
+
+The message below was sent on 13 September 2026 with the sender block resolved as recorded above.
 
 **Subject:** Request for written permission under the Cloud Terms — market-data use of published instance pricing
 
