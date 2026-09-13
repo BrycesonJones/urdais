@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -69,9 +69,40 @@ describe("compute price child specifications", () => {
 
   it("is a draft that states its launch is blocked and labels research prices", () => {
     const childDoc = readFileSync(path.join(process.cwd(), "docs", child!.file), "utf8");
-    expect(childDoc).toContain("0.1.0-draft");
+    expect(childDoc).toContain("version 0.1.1-draft");
     expect(childDoc).toContain("Launch blocked");
     expect(childDoc).toContain("Research snapshot only");
+    expect(childDoc).toContain("0.1.0-draft, 12 September 2026");
+  });
+
+  it("keeps parameter decisions in the child and leaves the parent family unedited", () => {
+    const read = (file: string) => readFileSync(path.join(process.cwd(), "docs", file), "utf8");
+    const childDoc = read(child!.file);
+    expect(childDoc).toContain("Stage Criteria: P0, P1, and P2");
+    expect(childDoc).toContain("Ingestion Field Contract");
+    expect(read(ucpi!.file)).toContain("0.1.0-draft");
+  });
+});
+
+describe("internal research artifacts", () => {
+  const researchDir = path.join(process.cwd(), "docs", "research");
+
+  it("are never registered in the public docs catalog", () => {
+    const routed = docPages.map((page) => page.file);
+    expect(routed.some((file) => file.startsWith("research/"))).toBe(false);
+    for (const file of readdirSync(researchDir)) {
+      expect(routed).not.toContain(`research/${file}`);
+    }
+  });
+
+  it("exist, are markdown, and each carries a single title marking it unrouted", () => {
+    const files = readdirSync(researchDir).filter((file) => file.endsWith(".md"));
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
+      const doc = readFileSync(path.join(researchDir, file), "utf8");
+      expect(doc.match(/^# /gm)).toHaveLength(1);
+      expect(doc).toContain("not registered in the docs catalog");
+    }
   });
 });
 

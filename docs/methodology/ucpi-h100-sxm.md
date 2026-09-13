@@ -1,10 +1,14 @@
 # UCPI-H100-SXM Child Specification
 
-**Status: proposed child specification, version 0.1.0-draft. Launch blocked.** Prepared 12 September 2026. No production value, price series, provider list, or history is established by this document. Every price appearing here is research evidence gathered to test the methodology, never a published value.
+**Status: proposed child specification, version 0.1.1-draft. Launch blocked.** Prepared 12 September 2026, amended 13 September 2026. No production value, price series, provider list, or history is established by this document. Every price appearing here is research evidence gathered to test the methodology, never a published value.
 
 This is the first child of the [Urdais Compute Price Index family](/docs/methodology/ucpi) and the first application of that family methodology to a real compute product. It is therefore two things at once: a specification for measuring one product, and an empirical test of whether the family's architecture survives contact with the market.
 
-**The headline result of that test is that the architecture holds and the data does not.** The family's rules proved sound and, in several places, decisive. But the public price surfaces on which this study was conducted do not carry the region, availability, minimum-topology, multi-offer, or operator information the family requires, so several launch parameters cannot be resolved from this evidence and are recorded as unresolved with the experiment each one needs. This child does not claim launch readiness.
+**The 0.1.0-draft result was that the architecture holds and the data does not.** The public price surfaces on which that study was conducted do not carry the region, availability, minimum-topology, multi-offer, or operator information the family requires.
+
+**This amendment closes most of that gap, and launch remains blocked for narrower and better-understood reasons.** Two research passes since the first draft studied provider APIs, catalogs and ordering interfaces, and then ran the first H100-specific empirical experiment. The fields the price surfaces lack are, for most sellers, carried by machine-readable interfaces. The child can now state deterministic rules for region, availability evidence, minimum topology, tenancy evidence, operator fallback, price and availability freshness, mandatory fees, and the three-stage eligibility criteria, together with the exact fields a future ingestion system must produce. What remains open is a small, named set of numerical parameters that require observation over time rather than at one instant, plus the bundle envelope level and the seller-reduction rule.
+
+**Three states are distinguished throughout and are not the same thing**: methodology-defined, backend-implementable, and launch-ready. This child is now the first two and is not the third.
 
 **Evidence is reported in three separate populations**, because the first draft of this study mixed them and drew statistics across the mixture. See [Evidence Populations](#docs-evidence-populations).
 
@@ -12,11 +16,12 @@ This is the first child of the [Urdais Compute Price Index family](/docs/methodo
 
 This specification inherits the family methodology and adds only what H100 SXM requires. It does not restate parent rules, and it does not modify them: where the research suggested a parent rule needs revision, that is recorded in [Findings for the Parent Methodology](#docs-findings-for-the-parent-methodology) rather than worked around here.
 
-**Inherited unchanged**: the economic object and the exact statistic; the capacity-source identity and collapse rule; seller-level reduction as a concept; the regional median and its even-`N` convention; the source-quality and observation-type framework; availability semantics; reconfirmation semantics; the procurement taxonomy; bundle and topology principles; the prohibition on synthetic decomposition and on fractional normalization; price-component principles; the aggregation population for percentiles; publication statuses; corrections; lineage; and versioning.
+**Inherited unchanged**: the economic object and the exact statistic; the capacity-source identity and collapse rule; seller-level reduction as a concept; the regional median and its even-`N` convention; the source-quality and observation-type framework; availability semantics and the availability state vocabulary; reconfirmation semantics and the three freshness dimensions; the procurement taxonomy; bundle and topology principles; the prohibition on synthetic decomposition and on fractional normalization; price-component principles; the aggregation population for percentiles; publication statuses; corrections; lineage; and versioning.
 
-**Fixed by this child**: hardware identity and the evidence required to establish it; topology class; procurement mode; tenancy requirement; the service dimensions that are requirements rather than metadata; index currency; and the percentile interpolation convention.
+**Fixed by this child**: hardware identity and the evidence required to establish it; topology class and the minimum-topology observation rule; procurement mode; the tenancy requirement and which evidence grades satisfy it; the service dimensions that are requirements rather than metadata; index currency; the percentile interpolation convention; the canonical region taxonomy and its mapping contract; the availability evidence scale and the minimum grade; the separation of the economic, source-observable and calculable populations; the price and availability freshness architecture; the carry rule per dimension; the tax-basis and mandatory-fee rules; the operator-attribution fallback; the three-stage eligibility criteria; the exclusion and diagnostic vocabulary; and the ingestion field contract.
 
-**Unresolved after this research**: the region taxonomy; the availability evidence minimum; **minimum purchasable topology for the sellers it could not be established for**; the seller-reduction rule; freshness and carry limits; the bundle envelope; all numerical publication gates; and operator attribution. Each is listed in [Launch Blockers](#docs-launch-blockers) with the specific study required.
+**Unresolved after this research**: the bundle envelope level; the seller-reduction rule; the numerical freshness ages and the price carry limit; the cross-time stability of the marketplace seller identifier; and four numerical publication gates. Each is listed in [Launch Blockers](#docs-launch-blockers) with the specific study required.
+
 
 ## Primary Question
 
@@ -74,7 +79,22 @@ Applying the minimum-topology rule to the research sample produced a material co
 
 **The first draft's topology subgroup statistic is withdrawn.** That figure, a per-accelerator median of $3.67 against $3.99 for whole-node products and a difference of 8.7%, was computed by classifying sellers on their quoted denominator rather than on minimum purchasable topology. The classification was wrong, so the number is withdrawn rather than restated, and no replacement is computed: with three confirmed per-accelerator sellers and one confirmed whole-node seller, no defensible comparison exists.
 
-**Minimum purchasable topology is therefore a third data gap of the same character as region and availability**: it is an ordering-interface attribute that the price surface frequently does not expose.
+**Minimum purchasable topology is an ordering-interface attribute that the price surface frequently does not expose.** The later research established that it is nonetheless recoverable in machine-readable form for most sellers, and the rule below states exactly what must be observed.
+
+### The minimum-topology observation rule
+
+For a P2-eligible observation the minimum purchasable GPU count must be **established from a source field, never derived from the quoted denominator**. The observable shapes, each verified in a provider's own interface or published specification, are: the smallest accelerator count among the offers a marketplace machine actually lists; the smallest GPU count among the seller's instance types for this accelerator; an explicit minimum-pod-GPU-count field; and a stock-keeping-unit definition that fixes the count.
+
+Where the minimum cannot be established from such a field, the observation is `MINIMUM_TOPOLOGY_UNKNOWN` and is **not P2 eligible**. A per-GPU presentation of price is never treated as evidence that one accelerator may be rented, and a quantity is never inferred from the denominator of a quoted rate.
+
+### A machine fraction is not a device fraction
+
+The research identified an ingestion trap severe enough to record in the specification, because reading it wrongly would silently exclude most of one venue under the family's fractional-accelerator prohibition.
+
+One marketplace exposes a field giving the **fraction of a machine's accelerators** that an offer comprises. Tested arithmetically, the offer's accelerator count divided by that fraction reproduced the machine's total accelerator count **exactly for all 35 machines observed, with no inconsistency**, and every one of the 116 offers reported the full 80GB of device memory.
+
+**A fraction below one therefore means whole accelerators taken from a larger machine. It does not mean a partitioned accelerator.** The family's prohibition on fractional and shared devices is a prohibition on sub-device partitions, and it is tested against device memory and the identity attributes, never against a machine-occupancy ratio. An offer taking one whole accelerator from an eight-accelerator host is a full device by this child's identity rule, and its tenancy is assessed separately under the rule below.
+
 
 ## Procurement Mode
 
@@ -96,65 +116,198 @@ The child makes requirements of: full-device exclusivity; non-preemptibility; an
 
 That division is deliberately conservative, because **the research cannot yet show which service dimensions move price**. Separating the effect of inter-node InfiniBand from the effect of seller pricing strategy requires observations that vary one dimension at a time, which a single-day snapshot across ten sellers does not provide. Promoting any of these to a requirement without that evidence would discard offers on a guess.
 
+### Which tenancy grades are eligible
+
+**Explicit and Documented are P2 eligible. Ambiguous, Unknown, and Shared or fractional are not**, and are excluded with reason `TENANCY_UNRESOLVED` for the first two and `FRACTIONAL_OR_SHARED_DEVICE` for the third.
+
+The rule is deterministic for a future ingestion system: exclusivity is established from a seller statement or from official product documentation, both of which are retained as evidence on the observation, and **it is never inferred from price level, from the accelerator being sold singly, or from the absence of a statement that the device is shared**.
+
+The research applied this to the one venue with the strongest availability data and the result is worth recording, because it went against the child's interest in coverage. That venue's security documentation establishes container-level isolation between clients in detail, describing separate namespaces and control groups, network, file-system and process isolation. **It does not state that an accelerator is exclusively assigned to one renter.** The machine-fraction arithmetic and the uniform full device memory are strong evidence that accelerators are allocated in whole units, but exclusivity between concurrent renters on one machine is an inference from that evidence rather than a published statement.
+
+**That venue therefore grades Ambiguous and is not P2 eligible on tenancy at present.** What would change it is narrow and nameable: a statement in the venue's own documentation that an accelerator allocated to an instance is not concurrently shared with another client. Launch is already blocked, and lowering this standard to admit the venue would trade the child's central comparability requirement for coverage.
+
+
 ## Bundle Envelope
 
-Host bundles were recorded where sellers disclose them. Per accelerator, virtual CPU counts ranged from 16 to 26, a factor of 1.62, and host memory from 125GB to 256GB, a factor of 2.05. Four of ten sellers did not disclose the bundle on the price surface at all.
+**The form of the envelope is now resolved. Its level is not, and remains a launch blocker.**
 
-**No bundle envelope is fixed.** The observed virtual CPU range is tight enough that an envelope looks feasible, but the memory range is not, and with 40% of the sample not disclosing bundles at all, any envelope would be drawn through a fog. Setting one now would exclude sellers on the basis of what they happen to publish rather than what they supply.
+The family requires a child to declare the host-resource envelope it treats as ordinary, makes offers outside it ineligible rather than adjusted, and prohibits synthetic decomposition.
 
-The child therefore accepts bundle heterogeneity within the per-accelerator allocation class as **named accepted heterogeneity** for research purposes, publishes the bundle dispersion of every observation, and records the envelope as unresolved pending a study that obtains bundles for the non-disclosing sellers. Synthetic decomposition remains prohibited: no imputed price is subtracted for CPU, memory, storage, or network.
+### The envelope is a floor, not a band
 
-**The family requires a child to declare a bundle envelope, so this is a launch requirement rather than an optional refinement.** It does not block merging this draft, and it does block launch. The first draft classified it as non-blocking, which conflated the two.
+**The child's bundle envelope takes the form of a minimum host-resource allocation per accelerator, not a two-sided range.**
+
+The reasoning is economic rather than statistical. A host bundle too small to keep an H100 SXM supplied changes what the buyer can do with the accelerator, so an inadequate bundle is a genuine product difference. An unusually generous bundle does not make the accelerator a different product for a buyer who wants the accelerator; it makes the offer better value. **A two-sided band would exclude the generous offer for no economic reason**, and the family's requirement is that the envelope describe what is ordinary for the instrument, not that it describe the middle of whatever sample happened to be collected.
+
+The evidence supports the form directly. Applying the specialist-cloud host-resource range observed in the first draft as a two-sided band to the marketplace admits **2 of 23 eligible offers, 9%**, and host memory rather than virtual CPU count is the binding constraint. The offers it removes are overwhelmingly removed for having *less* than the band, not more.
+
+### The level is not set, and the reason is the reason it matters
+
+Host-resource dispersion per accelerator across the marketplace's eligible offers spans a factor of **7.0 in virtual CPUs, 18.3 in host memory, and 8.7 in local storage**, against factors of 1.62 and 2.05 for virtual CPUs and memory among the disclosing specialist clouds of the first draft. **The marketplace segment is roughly an order of magnitude more heterogeneous than the specialist-cloud segment**, so the envelope level is the boundary that decides whether that segment is measured at all.
+
+The sensitivity is direct. A floor at 8 virtual CPUs and 16GB per accelerator removes almost nothing. A floor at 16 virtual CPUs and 125GB reduces the marketplace's participating hosts from eight to two and takes the one country that reached the family's structural floor down to a single participant, at which the family publishes no value.
+
+**Choosing the level would therefore be choosing whether this child publishes, which is the one reason the family forbids for choosing a parameter.** The level requires evidence of what host allocation is actually required to use an H100 SXM for ordinary workloads, which is a hardware and workload question this research did not ask and cannot answer from price data.
+
+Until then the child accepts bundle heterogeneity within the per-accelerator allocation class as **named accepted heterogeneity** for research purposes, publishes the bundle dispersion of every observation, and records the level as unresolved. Synthetic decomposition remains prohibited: no imputed price is subtracted for virtual CPUs, memory, storage, or network.
+
+**The family requires a child to declare an envelope before launch, so this is a launch requirement rather than an optional refinement.** It does not block merging this draft.
+
 
 ## Geographic Taxonomy
 
-**This is the first launch blocker, and it is a data problem rather than a design problem.**
+**This was the first launch blocker. It is now resolved.**
 
-The family makes regional series primary. Resolving a region taxonomy requires knowing which region each observation belongs to, and three different questions must be separated.
+The family makes regional series primary, represents geography as a hierarchy from facility through seller region label, metropolitan area and country to the canonical UCPI region, and requires that seller labels never be aggregated directly.
 
-**Does the price surface carry a region-specific price?** For two of the examined venues, yes: one publishes separate United States and Europe price tables, and the marketplace exposes per-listing geography. The rest publish a single rate with no region dimension.
+### The canonical region is the country
 
-**Do official documents reveal where the product exists?** Frequently yes, and this study did not systematically audit them. Several sellers advertise presence in many regions while publishing one rate, and provider documentation and console region lists were not examined. A single advertised rate applied across regions is **not** the same as region unknown, and the first draft's wording did not draw that line clearly enough.
+**The canonical UCPI region for this child is the country in which the capacity is located, identified by its ISO 3166-1 alpha-2 code.**
 
-**Is current regional availability recoverable?** This requires the ordering interface, and is the same gap as availability.
+Country is chosen because it is the finest level that can be mapped consistently from every region-exposing source in this market, and the choice was tested rather than assumed.
 
-The blocking finding is therefore narrower than the first draft implied: **region is not recoverable from the public price surface for most sellers, and whether it is recoverable from documentation and ordering interfaces has not been tested.** That test is part of the required experiment.
+**A finer taxonomy is not constructible.** On the venue with the best-populated geography data, a genuine subnational identifier was present on 9 of 116 H100 SXM offers, **7.8%**; the other 92.2% resolve to a country and no further. The venue's own documented query filter for location is a two-letter country code, and its integer location code proved one-to-one with country. A metropolitan taxonomy would therefore be unmappable for nine offers in ten at the one source that exposes availability at all.
 
-A region-blind price cannot be assigned to a region without inventing the assignment, and inventing it would put a fabricated attribute into the identity of the observation. Three responses were considered. Publishing a region-blind series would contradict the family's regional-first architecture and would silently average across regions with different economics. Assigning region by seller headquarters or by guess would fabricate. Restricting the child to region-exposing sellers would leave two participants, which the family's own structural gate already rejects as not a market.
+**A coarser taxonomy is refused even though it would help.** Moving from country to a macro region takes the number of regions reaching the family's two-participant structural floor from one to three in the tested sample. That is precisely the move the family forbids, and the merge is not cosmetic: a European macro region would combine an observed German price of $2.0022 with a Czech price of $2.6170, **31% apart**, into a single figure. Region breadth is not chosen to satisfy participant gates.
 
-**No region taxonomy is adopted.** The experiment required is a study of seller APIs and consoles rather than marketing pages, because region is frequently a parameter of the ordering interface even where it is absent from the price table. Until that study establishes that region is recoverable for a workable majority of sellers, this child cannot publish.
+Country is also the level at which a genuine economic boundary operates. Data-residency and sovereignty obligations, which are among the reasons a buyer cannot freely substitute capacity across geographies, are country-level legal constraints.
+
+**The finest geography a source discloses is always retained**, as the family requires, so that a finer series can be built later without re-collection.
+
+### The region mapping contract
+
+Each provider's native region identifier is mapped to a canonical country through a **versioned mapping that records the native identifier, the provider, the geographic evidence supporting the mapping, the canonical target, a confidence grade, and the effective interval**. Seller labels are never aggregated directly and a mapping is never inferred from the label's spelling alone.
+
+The native shapes this child must accept, each verified during the research, are: a hyperscaler region code with an accompanying location description; a region code paired with a human-readable description naming a state and country; a location string plus an integer country code; a datacenter identifier; and a price-table heading.
+
+**The mapping contract has an explicit refusal case, and it is load-bearing.** Where a source publishes only a supra-national grouping, such as a continental price table heading, **the observation is `REGION_UNRESOLVED` and is not assigned to any country.** It is never allocated to a representative or most-likely country, because that would place a fabricated attribute in the identity of the observation. A grouping that is coarser than the canonical region cannot be refined by Urdais without inventing the refinement.
+
+Where a mapping changes, the change carries an effective interval and applies prospectively; a published historical value never moves because a mapping was later corrected, which follows the family's lineage rule.
+
 
 ## Availability Evidence
 
-**This is the second launch blocker, and it is more serious than the first.**
+**This was the second and most serious launch blocker. The evidence scale and the minimum grade are now resolved.**
 
-The family requires that an eligible observation be accessible, not merely advertised. Across the eleven venues examined, **one exposed a live capacity signal**, and it is the marketplace whose per-offer listings carry availability. Every one of the nine individual sellers published a price with no indication whatsoever of whether anything was available at it, and one published no price at all, offering "contact for pricing" across every tier, which the family already makes ineligible as quote-required.
+The family requires that an eligible observation be accessible rather than merely advertised, grades how availability was established, and leaves the minimum acceptable grade to the child.
 
-The evidence grades observed were therefore: live allocatable capacity visible, one venue; explicit seller availability statement, none; price published with no capacity signal, nine sellers; price absent and quote required, one seller.
+### The discriminating test
 
-Requiring the strongest grade admits essentially no individual seller. Accepting the weakest grade admits nine, but that grade is precisely "a price appeared on a page", which is the advertised-price object the family explicitly rejected as a target. **The child cannot adopt either, and so adopts neither.**
+The first draft framed the problem as granularity and could not find a defensible line, because requiring the strongest grade admitted almost nobody while accepting the weakest admitted the advertised-price object the family rejects.
 
-The experiment required is an API and ordering-interface study to determine, per seller, whether an availability or capacity signal is obtainable at all, and whether an order for the specified configuration would be accepted. If that study finds that most of the market cannot evidence availability, the honest conclusion may be that a compute price benchmark on this product measures advertised prices or measures nothing, and the family would then need to decide which of those it is willing to publish. That is a parent-level question and is flagged as one.
+The research supplies a better line, and it is not about granularity at all.
+
+> **An availability signal is admissible only if the same field, from the same source, can express that the specified product is not obtainable.**
+
+A signal that can only ever say "present" carries no information about accessibility. A stock-keeping unit does not disappear from a price catalog when capacity runs out, and a price page does not blank itself when a product sells out. A per-offer state that is false for most offers, a region list that omits regions without capacity, and an ordinal capacity level whose lowest value is "none" all carry that information. The test is **provider-neutral, reproducible from the source's own schema, and empirically checkable**, because a non-discriminating field can be identified by the fact that it never takes a negative value.
+
+### The evidence grades
+
+Ordered from strongest, drawn from what providers were observed to expose rather than from a hypothetical scale.
+
+- **Grade 1, order-acceptance confirmation**: a programmatic confirmation that an order for the specified configuration would be accepted. **Not obtainable at any researched seller without an account**, and therefore currently theoretical.
+- **Grade 2, offer-addressable capacity state**: a per-offer state naming whether that specific offer can be taken now. Verified at one marketplace, where the field was false for the large majority of observed offers.
+- **Grade 3, product-and-region capacity assertion**: the seller asserts, for the specified product, the regions or datacenters in which capacity is currently available, or an ordinal capacity level whose lowest value denotes none. Verified in the published specifications of two specialist clouds.
+- **Grade 4, catalog or price-interface presence**: the product exists in a machine-readable catalog or price interface with no capacity signal. **Non-discriminating.**
+- **Grade 5, price-surface presence**: a price appears on a page. **Non-discriminating.**
+- **Grade 6, absent or quote-required**: no price is transactable without negotiation.
+
+### The minimum grade for the headline
+
+**The minimum availability evidence grade for a P2-eligible observation is Grade 3.**
+
+Grade 3 is the weakest grade that passes the discriminating test, and the line falls there for reasons that do not depend on which provider happens to be most transparent. Setting the minimum at Grade 2 would restrict the headline to the single venue that exposes offer-level state, which would make the measure a description of one marketplace rather than of a market. Setting it at Grade 4 would admit exactly the advertised-price object the family rejected as a target, since neither Grade 4 nor Grade 5 can ever report absence.
+
+**This has an uncomfortable and deliberate consequence, stated rather than hidden.** The two best-structured price sources found in the whole research programme, both unauthenticated, both region-resolved, both carrying price effective dates, expose no capacity signal at all. They are Grade 4. **They are therefore not eligible for the headline**, and under the family's taxonomy their observations are advertised non-accessible prices. Source quality did not decide this; the economic object did, exactly as the family's separation of the two requires.
+
+Where a source's availability is conditional on the requested quantity, as one specialist cloud's documented interface is, **the availability answer must be obtained at this child's minimum topology**, because an answer about a different quantity is an answer about a different product.
+
+### Raw signals mapped to the family's availability states
+
+The family's states are Available, Limited, Waitlisted, Sold out, Quote required, and Unknown. This child maps observed source shapes to them as follows, and the mapping is part of the specification rather than an implementation detail.
+
+- An offer-level state reporting that the offer can be taken now maps to **Available** at Grade 2.
+- An offer-level state reporting that it cannot maps to **Sold out** at Grade 2, because no capacity is offered through that offer.
+- The specified product's region appearing in the seller's list of regions with capacity available maps to **Available** at Grade 3, for that region only.
+- The product existing in the seller's catalog while its region is absent from that list maps to **Sold out** at Grade 3, for that region.
+- An ordinal capacity level at or above the middle of the seller's scale, obtained at the child's minimum topology, maps to **Available** at Grade 3; the lowest non-zero level maps to **Limited**; a level denoting none maps to **Sold out**.
+- Catalog or price-interface presence with no capacity signal maps to **Unknown** at Grade 4.
+- A price page alone maps to **Unknown** at Grade 5.
+- An explicit queue or waitlist maps to **Waitlisted**; "contact for pricing" maps to **Quote required**.
+
+**Limited is admitted to the headline by this child**, because an ordinal level reported by the seller at the child's own minimum topology is a positive assertion that capacity exists under a stated constraint, which is what the family's Limited state means. The share of eligible observations resting on Limited is published, and a gate on that share is named below.
+
+Availability is **never** inferred from the absence of a sold-out indication, from the existence of a price, or from the fact that a catalog contains the product.
+
 
 ## Seller-Level Reduction
 
-The family permits three candidate reduction rules and asks the first child to compare the seller minimum, the seller median, and a canonical-zone selection. Testing them requires multiple qualifying prices **inside one fully comparable cell**, meaning the same region, service tier, procurement mode and topology class for one seller.
+**The experiment the family asked for has now been run for the first time. It did not settle the rule, and the reason it did not is itself a finding.**
 
-**The first draft stated that every seller published exactly one qualifying price and that the test was therefore impossible. That claim was too strong and is corrected.** Several sellers do publish multiple catalogue offers: one lists one, two, four and eight-accelerator configurations of the same product; several publish on-demand beside preemptible and reserved rates; one publishes two differently operated cloud tiers. Those are multiple offers, but they are not multiple offers inside one comparable cell, because each differs on a dimension the child or the family uses to define the cell.
+The family permits the seller minimum, the seller median, and a canonical selection, adopts the minimum as a provisional default, records a catalogue-breadth bias against it, and asks the first child to compare them on real data.
 
-The corrected finding is narrower and still blocking: **the public market exposes multiple catalogue offers for some sellers, but this study did not recover multiple prices inside a single fully comparable region, service, mode and topology cell, so the family's seller-reduction rule remains unsettled.** The multi-configuration seller is the most promising case, and its per-size prices could not be extracted from the rendered price surface, which is the same ordering-interface gap that blocks region, availability and minimum topology.
+### The cell, defined exactly
 
-The rule therefore remains the family default, the seller minimum, **provisionally and unratified**. No sensitivity between minimum and median could be computed, because no real cell containing both was recovered.
+A comparable cell is one capacity source, one canonical region, one instrument, one service tier, one procurement mode, one topology class, and one calculation date. For this child the topology class is the per-accelerator allocation class as a whole, so a seller's one, two and four-accelerator offers of the same product in the same country **are inside one cell**; they are quantity variants within a fixed class, not different products.
+
+### What the experiment found
+
+The first draft could not recover a single comparable multi-price cell. An H100-filtered study of one marketplace recovered **six**.
+
+**The seller median stood above the seller minimum by up to 18.95%, with a mean of 3.71% across the six cells.** The dispersion splits cleanly into two patterns that must not be conflated. Where several offers come from one machine they are quantity partitions priced almost exactly linearly, and minimum and median differ by less than 0.2%. Where offers come from **different machines** they are genuinely distinct capacity, and the within-cell spread reached 27.7% and 60.6%.
+
+**The catalogue-breadth bias the family recorded is confirmed, and its driver in a marketplace is machine count rather than zone count.** The host listing three machines produced a minimum 19% below its own median; the host listing two machines in two different states produced no dispersion at all. Within-cell price dispersion was **not** explained by bundle quality in a consistent direction: in both large-spread cells the cheapest machine carried the most host memory per accelerator, so the minimum was not systematically selecting an inferior bundle, but price was not tracking the bundle either.
+
+### The reduction rule did not move the published statistic, and that proves nothing
+
+Only one country reached the family's two-participant structural floor. There, with three participants, the regional median was **identical under the seller minimum, the seller median, and even a seller maximum**.
+
+**This is coincidence, not robustness, and it is recorded as coincidence.** With three participants the median is the middle participant, and that participant published a single offer, so no reduction rule could have moved the result. The rule moved the extreme participants by up to 19% without touching the outcome. A different participant count, or a multi-offer participant in the middle, would give a different answer.
+
+### A new argument against the minimum, from enumeration
+
+The study established something about the venue's interface that bears directly on the rule. **The interface does not return a complete or stable result set.** It caps responses at 64 records regardless of the requested limit, reports its own truncation flag as false while doing so, returns 22 different records out of 64 when only the ordering changes, and omitted seven genuinely available offers from a query filtered to return exactly those. Per-offer content was perfectly consistent across nine responses, with no disagreement on price or availability state, so this is incompleteness in the interface rather than volatility in the data.
+
+The consequence for the rule is structural. **A minimum over an incompletely enumerated offer set is biased in one direction**: an offer that was not retrieved can only have raised the observed minimum, never lowered it, so the observed value is an upper bound on the true minimum and the size of the error depends on how much of the set the collector happened to receive. A median over the same partial set carries no such fixed-direction bias and is less sensitive to which subset arrived.
+
+This is a consideration the family did not have when it recorded the minimum as its provisional default. It is not by itself sufficient to overturn it.
+
+### The decision
+
+**The seller minimum is retained as the family default, provisionally and still unratified.** Six cells, at one venue, at one instant, in one country that reached the structural floor, are not grounds for ratifying a family-level rule, and ratifying on them would be the arbitrary precision this programme exists to avoid.
+
+The ratification study must now compare the minimum, the median, and a canonical selection across **several venues and several days**, must include specialist-cloud cells rather than marketplace cells alone, and must **measure enumeration completeness per venue**, because a rule that selects an extremum cannot be evaluated on a source whose population is unknown.
+
+**A venue whose enumeration completeness has not been established carries the diagnostic `ENUMERATION_INCOMPLETE` on every observation derived from it**, and that diagnostic is published. It does not by itself make an observation ineligible, because no source in this market is known to guarantee completeness, but a measure whose participant prices are extrema over partial sets must say so.
+
 
 ## Capacity-Source Attribution
 
 The family makes the capacity source the aggregation participant: the infrastructure operator where reliably determinable, the seller otherwise.
 
-**No seller in the research sample disclosed its infrastructure operator on its price surface.** The operator attribution rate from this source class is zero, no collapse events were observed, and the undetermined-operator share is 100%.
+**No researched seller disclosed its infrastructure operator, at any of the thirteen sellers and venues examined across both research passes.** The operator attribution rate is zero, no collapse events were observed, and the undetermined-operator share is 100%. That is a real result rather than a failure of effort: specialist clouds present themselves as the operator, and whether they own, lease, or resell the underlying hardware is not published. The family's prohibition on inferring operator identity from price, geography, or configuration similarity means this cannot be closed by analysis.
 
-That is a real result rather than a failure of effort: specialist clouds present themselves as the operator, and whether they own, lease, or resell the underlying hardware is not published. The family's prohibition on inferring operator identity from price, geography, or configuration similarity means this cannot be closed by analysis.
+The later research added one nuance. One marketplace operates a certified-datacenter programme requiring an active information-security certificate, ownership by a registered business, a signed hosting agreement, and verified owner identity. **The venue therefore knows the identity of its certified operators and does not publish it.** The gap is one of disclosure, not of the market lacking operators, and it is not closable by Urdais.
 
-**Counts are reported by stage, and a seller that has already failed topology or service classification is not called a capacity source.** From the research: eleven sellers and venues were examined; one published no price and is ineligible as quote-required; one is a marketplace whose treatment is below; nine produced identity-qualified seller observations forming P0; three of those are confirmed-eligible P1 candidates with four unresolved and two excluded; zero infrastructure operators were determined; and **zero final UCPI-eligible capacity sources exist**, because P2 is empty.
+### Operator attribution is a diagnostic, never a gate
+
+**Seller fallback is the default capacity-source identity for this child, and operator attribution is a published diagnostic rather than a publication gate.**
+
+The family already provides the fallback, and this child now states plainly why it does not additionally adopt a maximum undetermined-operator share. With zero of thirteen sellers attributable, any such gate would be an impossible gate: it would guarantee that no value is ever published, not because the measure is unrepresentative but because the market does not publish a field. **A methodology must not create a publication gate on information the market does not expose.**
+
+The cost of that decision is stated rather than hidden. Where one operator sells through several sellers, this child **cannot detect the duplication**, and the affected capacity would carry more than one participant weight. The child publishes the undetermined-operator share, which is expected to be 100% at launch, and carries a standing limitation that its participant count is a count of sellers and may overstate the number of distinct capacity pools.
+
+Where an operator attribution is later established on evidence, it applies **prospectively** from the date it becomes known, as new knowledge rather than a historical error, exactly as the family requires. Only an attribution that was demonstrably wrong on the evidence available at the time is handled as a correction.
+
+### Marketplace seller identity
+
+A marketplace host identifier is a candidate for the seller-fallback identity, and the research examined it directly rather than assuming it.
+
+The venue documents its host identifier as a host user identifier, states that hosting requires its own separate account, and confirms that one host account may operate several machines. **Within a single session the identifier was stable**: the same eighteen hosts appeared in every unfiltered response, the identifier was constant per machine, and a host-level attribute was constant per host.
+
+Three questions remain open, and they are the ones that matter for a daily series. **Stability over time was not tested.** Whether one commercial seller can hold several host accounts was not established. Whether an identifier survives a change of hardware was not established.
+
+**The identifier may serve as the marketplace seller-fallback key provisionally**, and the child records `MARKETPLACE_SELLER_ID_STABILITY_UNRESOLVED` until a repeated-observation study establishes cross-time stability. The reason this blocks marketplace participation rather than merely qualifying it is specific: in a daily series, an identifier that churns is **indistinguishable from participants entering and leaving**, so composition disclosure would report market structure changing when only an identifier changed.
 
 ### Marketplace Treatment
 
@@ -172,23 +325,88 @@ The normalized unit is **United States dollars per H100 SXM accelerator-hour**, 
 
 **Every qualifying price observed was denominated in USD.** No non-USD qualifying observation was found, so no conversion arises in the current sample. The child nevertheless states the family requirement: native price and currency are always retained, and any future non-USD observation is converted under an approved rate convention which remains unresolved because no observation yet requires one.
 
-Billing granularity varied and converts cleanly within the product: sellers billed per hour, per minute, and per second, and one serverless seller published a per-second rate that converts to $3.95 per accelerator-hour. Per-second and per-minute billing are unit changes, not product changes, and are admitted.
+Billing granularity varied and converts cleanly within the product: sellers billed per hour, per minute, and per second. Per-second and per-minute billing are unit changes, not product changes, and are admitted.
 
-Tax basis is a genuine gap. One seller stated explicitly that prices exclude sales tax, value-added tax, and goods-and-services tax. Most stated nothing. The family requires prices exclusive of transaction taxes, so an observation whose basis cannot be established is flagged and its share published; whether an unestablished basis should be disqualifying is unresolved, and the share in this sample is too large to answer by assumption.
+Where a source publishes a price for an instance rather than for an accelerator, the per-accelerator figure is obtained by dividing by the instance's stated accelerator count. That is a unit conversion **inside the declared topology class** and is permitted only there; it is never used to bring a whole-node product into this child.
 
-No mandatory fixed fee was found that would prevent clean hourly comparison within the specified class. No one-time activation or setup charge appeared on any qualifying offer, so the family's amortization prohibition did not bind. That is a finding about this class rather than a general one.
+### Mandatory fees and what enters the price
+
+The family separates usage-proportional mandatory charges, which enter the hourly figure, from fixed or one-time mandatory charges, which are never silently amortized, and excludes charges depending on how the buyer uses the product.
+
+The research verified this against a real source composition. At the one venue publishing a decomposed price, the advertised hourly total equalled the base rate plus the cost of the included storage allocation **exactly, with a maximum absolute deviation of zero across all 116 observed offers**, while network transfer was priced separately per gigabyte.
+
+The rules that follow are deterministic:
+
+- The **included storage allocation** that a seller bundles into its hourly rate is a usage-proportional mandatory charge and is **inside** the normalized price.
+- **Network transfer priced per unit of data** depends on how the buyer uses the product and is **outside** the price, retained as a diagnostic.
+- An **interruptible or bid price** published alongside the on-demand rate is a different procurement mode and is never the observation.
+- **Promotional fields**, including a discount rate, a discounted total, or a maximum credit discount, are recorded and counted as a diagnostic. The ordinary commercial rate is the observation, and a discounted figure is never used.
+
+**No one-time activation or setup charge was found on any qualifying offer at any researched seller**, so the family's amortization prohibition did not bind. That is a finding about this class rather than a general one, and the ingestion contract still captures fixed charges and any minimum spend so that the rule can be applied if one appears.
+
+### Tax basis
+
+The family requires prices exclusive of transaction taxes and requires that an observation whose basis cannot be established be flagged with its share published. The research found one seller stating explicitly that prices exclude sales tax, value-added tax and goods-and-services tax, and most sellers stating nothing.
+
+The child adopts **evidence by general terms**, and the rule has three branches.
+
+- A source's tax basis may be established from the seller's **general billing or terms documentation**, not only from the price surface. A basis established that way is as good as one printed beside the price.
+- Where the basis is positively established as **inclusive of transaction tax**, the observation is **ineligible** with reason `TAX_BASIS_INCLUSIVE`. It is never adjusted to an exclusive figure, because that would require inventing a jurisdiction and a rate.
+- Where the basis cannot be established from either source, the observation is flagged `TAX_BASIS_UNRESOLVED` and **remains P2 eligible**, with the unresolved share published and subject to a publication gate whose numerical value is unresolved.
+
+**Silence is not treated as evidence of a pre-tax basis.** The unresolved flag says exactly that the basis is unknown. Disqualifying on silence was rejected because it would exclude most of the market on a documentation convention rather than an economic difference, and because transaction taxes in this market are generally jurisdiction-specific and applied at billing rather than embedded in a published rate. The risk that an unresolved observation is in fact tax-inclusive is real, is not removable by analysis, and is what the published share and the gate exist to bound.
+
 
 ## Temporal Rules, Freshness, and Carry
 
-The family proposes daily calculation, and nothing found here contradicts it, but nothing found here confirms it either.
+The family proposes daily calculation, distinguishes the observation, effective, cutoff and publication times, and separates price freshness, availability freshness and reference-data freshness as three dimensions a child may govern differently.
 
-**No freshness parameter can be set from this evidence.** A single snapshot cannot measure how often a price changes. Sellers largely do not expose price-effective timestamps, and the distinction the family draws between price freshness and availability freshness is exactly the distinction this sample cannot measure, since nine of ten sellers expose no availability state to age.
+**The architecture is now resolved. The numerical ages are not.**
 
-The experiment required is a repeated observation study over a period long enough to characterise update cadence per seller, distinguishing sellers whose prices are genuinely static from sellers whose prices are stale, and separately measuring how quickly availability changes where it is visible at all. The marketplace observation suggests those two rates differ by orders of magnitude: its prices move continuously while several static price pages showed no sign of recent change.
+### Source-effective time and observed time are never substituted for one another
 
-`price_max_age`, `availability_max_age`, `reference_data_max_age`, and the carry policy are all **unresolved**. No value is proposed, because any value proposed now would be invented.
+Two times are recorded on every observation and they answer different questions. The **source-effective time** is when the source itself says the price took effect. The **observed time** is when Urdais retrieved it.
 
-Whether weekends should produce observations is likewise unresolved and depends on the same study: if provider pages are static across weekends while the marketplace moves, a weekend value would mix a live signal with eight unchanged ones, and whether that is a price or an artifact is an empirical question.
+The research measured how rare the first is. Only two sources in thirteen expose anything of the kind: one hyperscaler price interface carries a per-meter effective date, and one bulk price catalog carries a whole-catalog publication timestamp and a dated version path. **Every specialist cloud in the child's confirmed candidate set exposes none.**
+
+**Where a source states no effective time, the observation records the source-effective time as absent.** It is never defaulted to the retrieval time. A collection timestamp is evidence of when Urdais looked, and carries no information about when the seller last changed the price; substituting one for the other would manufacture a precision the source does not provide and would make an unchanged page indistinguishable from a freshly confirmed one.
+
+### Availability freshness rests on re-observation, and says so
+
+**No researched seller exposes an availability-change timestamp.** The last remaining candidate was eliminated by this research: the marketplace date fields on an offer are the offer's own expiry, documented as the date until which the offer accepts new rentals, which is a forward-looking limit rather than a record of when availability changed.
+
+The child therefore defines:
+
+> **`availability_observed_at` is the time at which Urdais last directly re-observed the availability evidence. It is not, and is never presented as, the time at which availability changed.**
+
+**This is methodologically acceptable, and the reason is specific rather than a concession.** The family's Reconfirmed state already requires that every eligibility-relevant field, availability included, be re-established at each collection cycle rather than inferred from a timestamp. Availability is therefore established by direct observation in the first place, and the observation time is the correct age to attach to it. The semantics are recorded explicitly on the observation so that no downstream user can read it as a seller event time.
+
+### What the evidence does and does not bound
+
+One genuine measurement of price dynamics was obtained without a repeated study, because a source that publishes the effective date of its current price reveals how long that price has stood. Across 138 H100 meters at one hyperscaler, **every currently effective price had been in force for at least 196 days, the median for 955 days, and every effective date fell on the first of a month**.
+
+Against that, the marketplace's per-offer prices and availability states move continuously. **The two dimensions differ by orders of magnitude, which vindicates the family's decision to govern them separately.**
+
+It does **not** yield a numerical limit for this child. The measurement covers one source class that is not headline-eligible on availability, the specialist clouds that form the child's confirmed candidates publish no effective dates at all, and availability cadence was observed at a single instant.
+
+`price_max_age`, `availability_max_age` and `reference_data_max_age` therefore remain **unresolved**. No value is proposed, because any value proposed now would be invented.
+
+One **ordering constraint** is supported by the evidence and is adopted, because it constrains the eventual choice without inventing a number:
+
+> **`availability_max_age` must not exceed `price_max_age`.**
+
+Availability was shown to be the only dimension that is offer-addressable and can change without any accompanying price change, while published prices at the most timestamped source move on month boundaries. A parameter set permitting availability evidence to age longer than price evidence would contradict the family's rule that a recent price paired with stale availability is not a current accessible offer.
+
+### Carry, per dimension
+
+- **Reference data**, meaning hardware identity, product definitions, region mappings and bundle definitions, may be carried while its version and effective interval remain valid, as the family permits.
+- **Price** may be carried within `price_max_age`, which is unresolved. A carried price is never presented as current, its age is recorded, and the carried share is published.
+- **An Available state is not carried.** Where the availability evidence was not re-observed in a cycle, the observation does not enter the headline, regardless of how recent its price is.
+
+The availability rule is the conservative branch of a choice the family leaves open, and it is proposed rather than asserted as the only possibility. Its justification is that carrying an accessibility claim through a cycle in which accessibility was not observed asserts something for which there is no evidence, and the family's own carry rule already refuses a fresh price paired with stale availability. Its operational cost is real and is stated: a single collection failure removes the affected participants from that day's coverage, and a region below its participant gate produces no value rather than a value resting on yesterday's accessibility. **Whether a short bounded availability carry is defensible instead requires the cadence study**, and until that study exists the child does not assume one.
+
+Whether weekends should produce observations is likewise unresolved and depends on the same study.
+
 
 ## Regional Aggregation and Dispersion
 
@@ -206,23 +424,215 @@ taking `Q(q) = x_N` when `f + 1 = N`. This is the Hyndman and Fan type 7 definit
 
 ## Publication Gates
 
-**No numerical gate is adopted.** Every gate the family requires depends on quantities this research could not measure: participant counts per region depend on the unresolved region taxonomy; operator coverage is zero from this source class; carried and stale shares depend on unresolved freshness limits; and the availability evidence composition is the unresolved second blocker.
+**Four gates the family requires are now closed structurally, because the eligibility rules already exclude every observation that would fail them. Four remain open numerically.**
 
-The one gate that can be examined is the minimum participant count, and the research gives a partial answer. Across the full sample of ten participants, removing any single participant moved the median by 0.63%, which indicates that at ten the statistic is robust. That result does not extend downward: with three participants the median is the middle observation and removing one moves it to an endpoint, and with two the family already refuses to publish. The sample offers no evidence distinguishing a minimum of three from four or five, because the region taxonomy that would produce regional participant counts does not exist yet.
+That distinction matters for the backend: a structurally closed gate is an invariant the calculation can assert, not a threshold it must carry a parameter for.
 
-The child therefore proposes no minimum above the family's structural floor and records that setting one requires regional participant counts from the region study. Choosing a number now would be choosing it for the reason the family explicitly forbids.
+### Closed by construction
+
+- **Maximum Unknown-availability share: zero.** The availability minimum is Grade 3, and every Unknown observation is Grade 4 or weaker, so no Unknown observation reaches P2.
+- **Maximum unresolved-tenancy share: zero.** Only Explicit and Documented grades are P2 eligible.
+- **Maximum topology-unknown share: zero.** An observation whose minimum purchasable topology is not established is `MINIMUM_TOPOLOGY_UNKNOWN` and is not P2 eligible.
+- **Maximum out-of-envelope bundle share: zero**, once the envelope level exists, because an offer outside the envelope is ineligible rather than adjusted under the family's rule.
+
+### Structural, from the family, and unchanged
+
+A region with no eligible participant has no value. **A region with exactly one has no market price.** The research gives no reason to weaken that and several to respect it: at country level, five of the six regions observed on the one venue exposing availability had exactly one participant.
+
+### Open, and numerical
+
+- **Minimum final participant count above the structural floor.** Unresolved. The only measurement available is that leaving one participant out of a nine-observation research population moves the median by at most 0.62%, which measures the robustness of a nine-observation median and says nothing about a threshold. **Regional participant counts do not yet exist**, because no production collection has run; the single region that reached the structural floor in the marketplace experiment had three participants, which is one region on one venue at one instant. Setting a number now would be choosing it for the reason the family forbids.
+- **Maximum share resting on the weakest admitted availability grade.** Unresolved. Now well defined, because the grade scale exists: it is the share of eligible observations at Grade 3 rather than Grade 2, together with the share whose state is Limited rather than Available.
+- **Maximum carried share.** Unresolved, and now narrower in scope: since an Available state is not carried, this is a price-carry share only.
+- **Maximum `TAX_BASIS_UNRESOLVED` share.** Unresolved, and required, because this is the gate that bounds the risk accepted by not disqualifying on an unestablished basis.
+
+**Operator attribution is not a gate**, for the reason given in [Capacity-Source Attribution](#docs-capacity-source-attribution). Its share is published as a diagnostic.
+
+**No numerical value is chosen for any open gate**, and none may be chosen from a sample assembled to test the methodology. Each requires regional participant counts and grade compositions from repeated production collection.
+
 
 ## Composition Changes
 
-The family requires composition disclosure, and this research suggests it will matter here. The participant sets are small, and the hardware-identity rule alone moves the identity-qualified median by 6.2% depending on which grades are admitted. A benchmark with that sensitivity must show users when its composition changed.
+The family requires composition disclosure. This research shows it will matter here: participant sets are small, and the hardware-identity rule alone moves the identity-qualified median by 6.2% depending on which grades are admitted.
 
-The child adopts the family requirement and adds that **a daily percentage change must be annotated where the participant set changed**, where the prior observation was Delayed or Unavailable, or where the specification version changed. A composition-driven move is not presented as a market-price move.
+### What counts as a composition change
+
+Six events, each recorded on the observation with the date it took effect:
+
+- a capacity source **entered** the eligible population;
+- a capacity source **left** it, including by its source becoming unavailable;
+- two or more sellers **collapsed** into one capacity source on a newly evidenced operator attribution, or a previous collapse was undone;
+- a **marketplace seller identifier changed** for a participant that is otherwise continuing;
+- a **region mapping version changed**, moving observations between canonical regions;
+- the **child specification version changed**.
+
+### How percentage change is treated
+
+The family makes percentage change the headline change signal. This child fixes when it is published, annotated, or withheld, and the rule is deterministic.
+
+**Published** where the immediately preceding observation for the same child and region has status Published, and none of the six events above occurred between the two dates.
+
+**Published with a composition annotation** where a capacity source entered or left, or where a collapse changed the participant set. The level and the change are still published, with the change marked as reflecting a composition move as well as a price move. **A composition-driven move is never presented as a market-price move.**
+
+**Withheld** in three cases, each because no meaningful percentage change exists rather than as a matter of caution:
+
+- the prior observation was **Delayed or Unavailable**, so there is no prior published level to compare against;
+- the **child specification version changed** between the two dates, so the two levels were computed under different rules and their difference is not a price change;
+- the **region mapping version changed** in a way that moved observations into or out of this region, so the two levels describe different populations.
+
+A marketplace seller identifier changing for an otherwise continuing participant is annotated rather than withheld, and is flagged separately from a genuine entry or exit, because until identifier stability is established the two are not reliably distinguishable and the disclosure must say which one Urdais actually observed.
+
+
+## Source Observability and Eligibility
+
+The research raised a question the first draft did not pose, because it only arises once the data is known to exist somewhere: **can a seller be included when Urdais cannot obtain the fields that establish its eligibility?**
+
+Three populations are distinguished, and conflating any two of them would misdescribe the market.
+
+- The **economic universe** is every seller that commercially offers the child-specified product. Membership depends on what the seller sells, and on nothing else.
+- The **source-observable universe** is the subset for which Urdais has a permitted and reproducible collection path that yields the fields P2 requires.
+- The **P2 calculation population** is the subset of those whose current observation satisfies every parent and child rule on the calculation date.
+
+**Access is never an economic attribute.** A seller that does not publish a machine-readable interface, or whose interface requires a key Urdais does not hold, has not stopped being part of the market. It has stopped being observable by Urdais, which is a statement about Urdais.
+
+A seller in the economic universe but outside the source-observable universe is excluded with reason `SOURCE_INSUFFICIENT`, and **the count of such sellers is published as an observability-gap diagnostic** alongside every observation. That diagnostic exists so that a user can distinguish a measure covering most of a market from one covering the part of a market that happens to publish an API, and so that the child cannot quietly claim completeness it does not have.
+
+This is not a hypothetical distinction. **Three of the richest sources found require provider API keys**, and without them availability cannot be evidenced at all for much of the specialist-cloud segment that forms this child's confirmed candidate set. The practical consequence is recorded in [Launch Blockers](#docs-launch-blockers) as an operational prerequisite rather than a methodological one.
+
+**Source access class is recorded as source-registry metadata, not as an eligibility attribute.** The classes observed are: public unauthenticated; authenticated API; authenticated console only; documentation only; and sales only. They describe how a source is reached and they bear on operational feasibility and on licensing, never on whether an offer is economically eligible. The one place access touches eligibility is indirect and already covered: if the required fields cannot be obtained, the observation fails on the missing field, under that field's own rule.
+
+## Stage Criteria: P0, P1, and P2
+
+The three evidence populations are defined above. This section states the criteria mechanically, so that a future ingestion system can evaluate them without interpretation. Every failure names an exclusion reason from the vocabulary below.
+
+### P0, identity qualification
+
+An observation is P0 when the accelerator's identity is established: vendor NVIDIA, architecture Hopper, model H100, **form factor SXM**, device memory 80GB, and a full physical device rather than a partition, each under the graded evidence rule in [Hardware Identity](#docs-hardware-identity).
+
+Fields required: the seller's product designation, the stated form factor or an official designation that maps to it, the stated device memory, and the identity evidence grade.
+
+Failures: `WRONG_HARDWARE` where the accelerator is a different model or generation; `HARDWARE_VARIANT_UNRESOLVED` where the form factor cannot be established, including a bare model name with no form factor and any label that does not distinguish SXM from an NVL-based system; `FRACTIONAL_OR_SHARED_DEVICE` where the offer is a sub-device partition.
+
+### P1, selected-product eligibility
+
+A P0 observation is P1 when it additionally satisfies the child's resolved product requirements.
+
+Fields required: the service product; the procurement mode and preemptibility; the minimum purchasable accelerator count; and the tenancy evidence grade.
+
+Criteria: the product is a **persistent full-device rental**, not serverless execution, a managed inference endpoint, or another service product; the procurement mode is **on-demand and non-preemptible**, and the price is not a promotional, trial or subsidized rate; the **minimum purchasable topology is established from a source field** and the offer falls in the per-accelerator allocation class; and the tenancy grade is **Explicit or Documented**.
+
+Failures: `WRONG_SERVICE_PRODUCT`; `WRONG_PROCUREMENT_MODE`; `PREEMPTIBLE`; `PROMOTIONAL_PRICE`; `MINIMUM_TOPOLOGY_UNKNOWN`; `WHOLE_NODE_REQUIRED`; `TENANCY_UNRESOLVED`.
+
+### P2, headline eligibility
+
+A P1 observation is P2 when it additionally satisfies every remaining parent and child requirement on the calculation date.
+
+Fields required: the canonical region; the availability state with its evidence grade and observation time; the price with its currency, billing unit and source-effective time where stated; the mandatory fee components; the tax basis; the host bundle; the capacity-source identity with its attribution basis; and the source grade and observation type.
+
+Criteria: the native region **maps to a canonical country** under a current versioned mapping; the availability state is **Available, or Limited**, established at **Grade 3 or stronger**, and at this child's minimum topology where the source's answer is quantity-conditional; the price and availability evidence are **within their permitted ages**, with availability re-observed this cycle; the normalized price is built from mandatory components only; the tax basis is **not established as inclusive**; the bundle satisfies the envelope once its level exists; the observation resolves to exactly one capacity source; and the observation type is a **current accessible offer**.
+
+Failures: `REGION_UNRESOLVED`; `AVAILABILITY_UNKNOWN`; `UNAVAILABLE`; `WAITLISTED`; `QUOTE_REQUIRED`; `AVAILABILITY_EVIDENCE_INSUFFICIENT`; `PRICE_STALE`; `AVAILABILITY_STALE`; `BUNDLE_OUT_OF_ENVELOPE`; `TAX_BASIS_INCLUSIVE`; `SOURCE_INSUFFICIENT`; `SOURCE_CONFLICT`.
+
+**P2 is currently empty**, which is what launch blocked means.
+
+## Exclusion, Status, and Diagnostic Vocabulary
+
+Three kinds of label are kept separate, because collapsing them is how a benchmark loses the ability to explain itself. An **exclusion reason** says why an observation did not enter a population. A **status** describes the observation or the published value. A **diagnostic** records a quality or coverage property of something that was not excluded.
+
+### Exclusion reasons
+
+Identity: `WRONG_HARDWARE`, `HARDWARE_VARIANT_UNRESOLVED`, `FRACTIONAL_OR_SHARED_DEVICE`.
+
+Product and commercial form: `WRONG_SERVICE_PRODUCT`, `WRONG_PROCUREMENT_MODE`, `PREEMPTIBLE`, `PROMOTIONAL_PRICE`, `MINIMUM_TOPOLOGY_UNKNOWN`, `WHOLE_NODE_REQUIRED`, `TENANCY_UNRESOLVED`.
+
+Region: `REGION_UNRESOLVED`.
+
+Availability: `AVAILABILITY_UNKNOWN`, `UNAVAILABLE`, `WAITLISTED`, `QUOTE_REQUIRED`, `AVAILABILITY_EVIDENCE_INSUFFICIENT`.
+
+Freshness: `PRICE_STALE`, `AVAILABILITY_STALE`.
+
+Price integrity: `BUNDLE_OUT_OF_ENVELOPE`, `TAX_BASIS_INCLUSIVE`, `UNIT_UNRESOLVED`, `CURRENCY_RATE_UNAVAILABLE`.
+
+Source: `SOURCE_INSUFFICIENT`, `SOURCE_UNRETRIEVABLE`, `SOURCE_CONFLICT`, `COLLECTION_NOT_PERMITTED`.
+
+### Statuses
+
+Observation and published-value statuses are inherited from the family unchanged: **Published**, **Delayed**, **Unavailable**, **Corrected**, **Superseded** for a published date; and **Valid**, **Stale**, **Ineligible**, **Unavailable**, **Conflicted** for an input.
+
+### Diagnostics
+
+`TAX_BASIS_UNRESOLVED`, on an observation that remains eligible. `OPERATOR_UNDETERMINED`, expected on every observation at launch. `ENUMERATION_INCOMPLETE`, on any observation from a venue whose population cannot be fully enumerated. `MARKETPLACE_SELLER_ID_STABILITY_UNRESOLVED`, on any marketplace observation until a cross-time study closes it. `AVAILABILITY_GRADE_3`, distinguishing a region-level capacity assertion from an offer-level state. `SOURCE_EFFECTIVE_TIME_ABSENT`, where the source states no effective time. `PRICE_CARRIED`, with the carry age.
+
+A diagnostic never silently removes an observation. Where a diagnostic's share is gated, the gate is named in [Publication Gates](#docs-publication-gates) and failing it produces a Delayed or Unavailable value with the failing gate named, never a value computed from the residual set.
+
+## Ingestion Field Contract
+
+This is the conceptual field contract a future ingestion system must satisfy. **It is not a schema, and no database table, type, or migration is defined here.** Its purpose is to state, before any backend exists, which facts must be stored so that the rules above can be evaluated and so that the unresolved parameters can later be measured without redesigning the system.
+
+Each field carries one classification. **Required raw** must be produced by collection. **Required derived** is calculated during normalization from raw fields and its inputs are retained. **Optional diagnostic** is useful and never determines eligibility. **Nullable by methodology** may be absent with no consequence. **Nullable but blocks P2** may be absent in raw data, and P2 cannot proceed while it is.
+
+**Identity and provenance.** Source identity, required raw. Source class and access class, required raw. Provider identity, required raw. Seller identity, required raw. Marketplace identity, nullable by methodology. Operator identity, **nullable by methodology**, with its attribution basis and evidence; its absence is a diagnostic and never blocks P2. Provider offer identifier, required raw. Provider product or stock-keeping-unit identifier, required raw. Raw source reference sufficient to re-examine the source, required raw.
+
+**Time.** Collection timestamp, required raw. Source-effective timestamp, **nullable by methodology**, never defaulted to the collection timestamp. Availability observation timestamp, **required derived**, defined as the time the availability evidence was re-observed. Calculation date, required derived.
+
+**Price.** Native price, required raw. Native currency, required raw. Billing unit and granularity, required raw. Normalized price in index currency per accelerator-hour, required derived. Mandatory fee components itemized, required raw where the source decomposes them and nullable otherwise. Usage-dependent charges, optional diagnostic. Minimum spend or commitment, nullable by methodology. Promotional indicators, optional diagnostic. Tax basis, **nullable but flagged**; an established inclusive basis blocks P2 while an unestablished basis does not.
+
+**Hardware.** Accelerator vendor, model and architecture, required raw. Form factor, **nullable but blocks P2**. Device memory, **nullable but blocks P2**. Identity evidence grade, required derived. Accelerator count in the offer, required raw.
+
+**Topology.** Minimum purchasable accelerator count, **nullable but blocks P2**. Machine or node accelerator total, optional diagnostic. Whole-node requirement flag, required derived. Machine-occupancy fraction where a source exposes one, optional diagnostic, **never read as a device fraction**.
+
+**Geography.** Native region identifier, **nullable but blocks P2**. Finest disclosed geography, nullable by methodology and always retained where present. Canonical region, required derived. Region mapping version and confidence, required derived.
+
+**Availability.** Raw availability signal as the source expressed it, **nullable but blocks P2**. Canonical availability state, required derived. Availability evidence grade, required derived. Quantity at which availability was established, required derived where the source's answer is quantity-conditional.
+
+**Commercial form.** Procurement mode, **nullable but blocks P2**. Preemptibility, **nullable but blocks P2**. Price formation, optional diagnostic. Service product, **nullable but blocks P2**. Tenancy evidence and its grade, **nullable but blocks P2**.
+
+**Bundle.** Virtual CPU allocation, host memory, local storage, and intra-node and inter-node interconnect, each per accelerator: **nullable but blocks P2 once the envelope level exists**, and optional diagnostic until then.
+
+**Derived participant records.** Seller-level representative price with the reduction rule applied and the eligible offer set considered, required derived. Capacity-source identity with attribution status, contributing seller observations, and the collapse rule applied, required derived. Input status and exclusion reason, required derived.
+
+**Two methodology requirements still have no reliable observable counterpart, and the contract represents both as absences rather than inventing values.** A seller-stated availability-change time exists nowhere and is not a field. A source-effective price time exists at two sources in thirteen and is nullable.
+
+## Lineage Requirements
+
+The family requires that every published value be traceable. This child states what must be retained for an H100 observation to be reproduced later, given that the sources are not archival and expose no price history.
+
+The chain to be reconstructible is: the published value, to the calculation run, to the final capacity-source observations, to the seller-level observations, to the normalized offers, to the raw offers, to the source retrieval, to the retained source evidence.
+
+For any historical date it must be answerable which hardware identity rule and evidence grade applied to each observation; **which region mapping version was in force, with the evidence and confidence for the specific native identifier**; which availability evidence grade and raw signal supported each observation, and at what quantity the availability answer was obtained; how minimum topology was established and from which field; which tenancy evidence established exclusivity; which seller-reduction rule was applied and over exactly which eligible offer set, **including whether that set was known to be complete**; how sellers resolved into capacity sources and under which attribution basis; which mandatory components entered the price and which charges were excluded; what the tax basis was and how it was established; and which family and child versions and parameter set governed the result.
+
+Three retention requirements follow specifically from this research. **The eligible offer set behind every seller-level reduction is retained**, not only the selected price, because a reduction rule cannot be re-evaluated against alternatives otherwise and the ratification study depends on it. **The enumeration-completeness status of the source is retained** with each such set. **The raw availability signal is retained in the source's own vocabulary** alongside the canonical state, because a future change to the mapping must not be able to rewrite what the seller actually said.
+
+A historical value never changes because a mapping, a taxonomy, or a parameter changed later. Any series computed for dates before first live publication is labelled reconstructed research history, and this research suggests such a reconstruction is **not feasible** for this child: price surfaces are not archival, and the one archival structure found is a dated catalog at a source that is not headline-eligible on availability.
+
+## Source Classes
+
+The classes a future ingestion system must model, drawn from what was actually observed rather than from a general taxonomy. This is conceptual; no registry is implemented here.
+
+- **Offer interface**: returns individual offers with per-offer price, quantity, location and availability state. Preferred for availability, multi-offer structure and marketplace seller identity.
+- **Catalog and price interface**: returns products with prices, often region-resolved, sometimes with effective dates. Preferred for price, currency, billing unit and region. Cannot evidence availability.
+- **Availability interface**: returns capacity by region or datacenter, sometimes conditional on quantity. Preferred for availability at Grade 3.
+- **Product reference documentation**: establishes bundle composition, topology and stock-keeping-unit definitions. Preferred for minimum topology where no field exists.
+- **Hardware reference documentation**: establishes accelerator identity independently of any seller's naming. Preferred for identity, and the only admissible basis for it.
+- **Provider terms and billing documentation**: establishes tax basis, mandatory fees and tenancy statements. Preferred for those three.
+- **Price surface**: a published page. For this child, **discovery and corroboration only**, since it cannot meet the availability minimum.
+
+Each methodology requirement has a preferred class, and an observation records which class supplied each field so that the source-quality distribution the family requires can be computed.
+
+## Whole-Node Sibling
+
+The research established that the two best-structured, unauthenticated, region-resolved price sources in this market publish H100 capacity as **whole eight-accelerator instances**, one of them across 24 regions with per-meter effective dates, the other across a 106-region dated catalog. A third seller publishes a whole-node price with the accelerator count stated.
+
+**A separate whole-node child would be well supported by data that this per-accelerator child cannot use.** Dividing a node price by eight is arithmetic, not comparability, and the family prohibits crossing a topology class.
+
+**Researching a whole-node sibling is recommended as future work. It is not created here**, and no part of this child is widened to absorb those sources. Naming it now matters only so that the decision is recorded as deliberate: the hyperscaler segment is excluded from this child because it sells a different product, not because it was overlooked.
 
 ## Published Surface
 
 The future published surface, with no values:
 
-UCPI-H100-SXM, for a canonical region: price in USD per H100 SXM accelerator-hour; one-day percentage change with a composition-changed annotation where applicable; procurement mode on-demand; topology per-accelerator allocation; service tier as specified; the capacity-source participant count; the availability evidence composition; the price distribution; the carried share; the as-of date; the status; and the family and child versions.
+UCPI-H100-SXM, for a canonical country region: price in United States dollars per H100 SXM accelerator-hour; one-day percentage change, annotated or withheld under the rule in [Composition Changes](#docs-composition-changes); procurement mode on-demand; topology per-accelerator allocation; service tier as specified; the capacity-source participant count; the availability evidence-grade composition and the Available-versus-Limited split; the observability-gap count of economically present but unobservable sellers; the undetermined-operator share; the price distribution; the carried price share; the unresolved-tax-basis share; the enumeration-completeness status of contributing sources; the as-of date; the status; and the family and child versions with the parameter set.
+
 
 ## Research Market Snapshot
 
@@ -276,42 +686,72 @@ The family methodology was not modified by this work. **No parent amendment is c
 
 A broad advertised-price H100 series may well be useful in its own right. It would be a **different output measuring a different economic object**, and its usefulness would not justify quietly redefining UCPI. It is not designed here.
 
+**Re-tested after the source and parameter-closure studies: still no parent amendment required.** Every decision in this amendment was expressible within the family methodology as written, and in several places the parent's existing rules decided the answer rather than merely permitting it. The separation of source quality from observation type is what made it possible to exclude the two best-structured price sources from the headline without calling them poor sources. The availability state vocabulary absorbed every observed source shape. The three freshness dimensions were vindicated by a measured difference of orders of magnitude between price and availability dynamics. The capacity-source definition with seller fallback is what makes a market with zero operator disclosure measurable at all. The structural floor and the prohibition on choosing region breadth to satisfy gates together settled the region taxonomy against the child's own interest in coverage.
+
+**One observation is offered without requesting an amendment.** The family's seller-reduction discussion assumes the set of eligible offers within a cell is known. This research found a venue where it demonstrably is not: the interface caps its own responses, misreports truncation, and returns different subsets for different orderings. The child handles this with a source diagnostic and by retaining the eligible offer set behind every reduction. If incomplete enumeration proves common across venues rather than particular to one, the family may wish to address estimator bias under partial enumeration directly at its next amendment. **That is a suggestion for future family work, not a defect requiring one now**, and no parent rule was worked around to accommodate it.
+
+**Executability: the amendment the first draft contemplated is not needed.** That draft warned that if availability proved structurally unrecoverable, the family would have to decide whether it publishes advertised prices or nothing. The research resolved the question in the family's favour: availability is recoverable, in discriminating machine-readable form, at several sellers. The binding constraint is access, which is operational, not the economic object, which is intact.
+
 ## Decision Matrix
 
 Each entry records the evidence, the decision, confidence, and two separate questions: whether it blocks **merging this draft** and whether it blocks **launching the child**. Those are different, and the first draft's single blocker column conflated them. Nothing below blocks merging.
 
-- **Hardware identity.** Evidence: NVIDIA specifies H100 SXM at 80GB with HGX and DGX server platforms, distinct from NVL at 94GB on partner systems. Decision: resolved. Confidence: high. Merge blocker: no. Launch blocker: no.
-- **Grade B, HGX designation.** Evidence: NVIDIA reference architecture documentation states eight H100 SXM GPUs sit on an H100 baseboard, mapping HGX H100 to SXM directly rather than by inference. Decision: resolved, an official HGX H100 designation qualifies. Confidence: high, upgraded from the first draft's indirect derivation. Merge blocker: no. Launch blocker: no. Sensitivity: admitting Grade B moves the P0 median 6.2% and doubles coverage.
-- **Topology class.** Evidence: classification must use minimum purchasable topology, not the quoted denominator; on that basis three of nine sellers are confirmed per-accelerator, one whole-node, one serverless, and four unclassifiable from the price surface. Decision: per-accelerator class specified; the first draft's 8.7% subgroup statistic is withdrawn as wrongly classified. Confidence: the rule is high, the classification coverage is low. Merge blocker: no. Launch blocker: **yes**, for the four unclassified sellers.
-- **Service product.** Evidence: a serverless product bills only for active compute and a managed inference endpoint prices the same hardware 41% above the seller's own rental. Decision: resolved, full-device rental only. Confidence: high. Merge blocker: no. Launch blocker: no.
-- **Procurement mode.** Evidence: on-demand present across every price-publishing seller; interruptible roughly half price at one; reserved spanning 20% across four tiers at another. Decision: resolved, on-demand non-preemptible. Confidence: high. Merge blocker: no. Launch blocker: no.
-- **Tenancy.** Evidence: exclusive full-device access delivered through virtual machines across most of the market. Decision: resolved in rule, full-device exclusivity required without requiring bare metal; per-observation evidence grading is specified below. Confidence: medium. Merge blocker: no. Launch blocker: **yes**, until exclusivity is evidenced per observation rather than assumed.
-- **Marketplace treatment.** Evidence: venue documentation states hosts sell the resources, set the prices, and that a rental contract arises when a client accepts a host's offer. Decision: resolved, a platform median is an aggregate and not a participant; the first draft's inclusion is corrected. Confidence: high. Merge blocker: no. Launch blocker: **yes** if marketplace listings are to contribute, since host-level mapping is required first.
-- **Bundle envelope.** Evidence: 16 to 26 virtual CPUs and 125GB to 256GB per accelerator among disclosing sellers, with 40% not disclosing. Decision: unresolved; the family requires a child to declare one. Confidence: low. Merge blocker: no. Launch blocker: **yes**.
-- **Region.** Evidence: two of the examined venues carry region-specific prices; official documentation and consoles were not audited; a single advertised rate across regions is not the same as region unknown. Decision: unresolved. Confidence: high in the price-surface finding, untested beyond it. Merge blocker: no. Launch blocker: **yes**.
-- **Availability evidence.** Evidence: one venue exposes a live capacity signal; the rest publish price with none; one is quote-only. Decision: unresolved, neither the strong nor the weak grade is adoptable. Confidence: high. Merge blocker: no. Launch blocker: **yes, the most serious**.
-- **Seller reduction.** Evidence: multiple catalogue offers exist for several sellers, but none inside one fully comparable cell; the most promising multi-configuration seller does not expose per-size prices on the rendered page. Decision: unsettled; family default retained provisionally and not ratified. Confidence: none, by construction. Merge blocker: no. Launch blocker: **yes**.
-- **Operator attribution.** Evidence: no seller disclosed its operator; attribution rate zero, undetermined share 100%. Decision: unresolved. Confidence: high in the finding. Merge blocker: no. Launch blocker: **yes** for any gate depending on operator coverage.
-- **Freshness and carry.** Evidence: a single snapshot cannot measure update cadence; most sellers expose no price-effective timestamp. Decision: unresolved, no value proposed. Confidence: none. Merge blocker: no. Launch blocker: **yes**.
-- **Publication gates.** Evidence: each depends on a quantity above. The only partial result is that a nine-observation P0 median moves at most 0.62% on leave-one-out, which says nothing about a threshold. Decision: unresolved above the family's structural floor. Merge blocker: no. Launch blocker: **yes**.
-- **Tax basis.** Evidence: one seller states an exclusive-of-tax convention; most are silent, and silence was not confirmed to mean pre-tax. Decision: family rule applies, unestablished basis flagged; whether it disqualifies is unresolved. Confidence: medium. Merge blocker: no. Launch blocker: **yes** if the flagged share stays material.
-- **Currency.** Evidence: every identity-qualified observation was USD. Decision: resolved for this sample, USD index currency. Confidence: high for the sample. Merge blocker: no. Launch blocker: no.
-- **Percentile convention.** Evidence: a methodology choice. Decision: resolved, Hyndman and Fan type 7 stated in closed form over the final participant population. Confidence: high. Merge blocker: no. Launch blocker: no.
-- **Composition handling.** Evidence: the identity rule alone moves the P0 median 6.2%; participant sets are small. Decision: resolved, composition disclosure required and percentage change annotated. Confidence: high. Merge blocker: no. Launch blocker: no.
+- **Hardware identity.** Evidence: NVIDIA specifies H100 SXM at 80GB with HGX and DGX server platforms, distinct from NVL at 94GB on partner systems. Decision: resolved. Confidence: high. Launch blocker: no.
+- **Grade B, HGX designation.** Evidence: NVIDIA reference architecture documentation states eight H100 SXM GPUs sit on an H100 baseboard, mapping HGX H100 to SXM directly rather than by inference. Decision: resolved, an official HGX H100 designation qualifies. Confidence: high. Launch blocker: no. Sensitivity: admitting Grade B moves the P0 median 6.2% and doubles coverage.
+- **Machine-readable identity.** Evidence: one specialist cloud's published specification exposes a product description naming SXM5 and 80GB directly. Decision: the strongest identity grade is satisfiable from a machine-readable field, not only from prose. Confidence: high. Launch blocker: no.
+- **Topology class and the minimum-topology rule.** Evidence: minimum purchasable quantity is recoverable from a source field at most sellers, through a marketplace's per-machine minimum, an instance type's accelerator count, an explicit minimum-pod field, or a stock-keeping-unit definition. Decision: resolved as a rule; the count must come from a field and never from the quoted denominator. Confidence: high. Launch blocker: **no as a rule**, yes for any seller where no such field is obtained.
+- **Machine fraction versus device fraction.** Evidence: an offer's accelerator count divided by the machine-occupancy fraction reproduced the machine total exactly for 35 of 35 machines, with uniform 80GB device memory throughout. Decision: resolved, a machine fraction is never read as a fractional device. Confidence: high. Launch blocker: no.
+- **Service product.** Evidence: a serverless product bills only for active compute and a managed inference endpoint prices the same hardware 41% above the seller's own rental. Decision: resolved, full-device rental only. Confidence: high. Launch blocker: no.
+- **Procurement mode.** Evidence: on-demand present across every price-publishing seller; the marketplace exposes an explicit bid flag distinguishing interruptible offers. Decision: resolved, on-demand non-preemptible, and directly observable at the venue tested. Confidence: high. Launch blocker: no.
+- **Tenancy.** Evidence: the venue with the best availability data documents container isolation in detail and does not state device exclusivity. Decision: resolved as a rule, Explicit and Documented grades only; that venue currently grades Ambiguous. Confidence: high on the rule, and the classification is now determinate rather than unknown. Launch blocker: **yes**, for marketplace participation specifically.
+- **Region taxonomy.** Evidence: 7.8% of marketplace offers carry a genuine subnational identifier; the venue's documented location filter is a country code; country is derivable at every other region-exposing source; a macro taxonomy would take publishable regions from one to three while merging prices 31% apart. Decision: **resolved, country by ISO 3166-1 alpha-2**. Confidence: high. Launch blocker: **no**.
+- **Region mapping.** Evidence: five distinct native shapes observed, one of which publishes only a continental grouping. Decision: resolved, a versioned mapping with evidence, confidence and effective interval, and an explicit refusal case producing `REGION_UNRESOLVED`. Confidence: high. Launch blocker: **no**.
+- **Availability evidence scale.** Evidence: six classes observed across thirteen sellers, of which three can express absence and two structurally cannot. Decision: **resolved**, a six-grade scale ordered by the discriminating test. Confidence: high. Launch blocker: **no**.
+- **Availability minimum.** Evidence: Grade 2 exists at one venue only; Grades 4 and 5 can never report absence. Decision: **resolved at Grade 3**, admitting Limited with its share published. Confidence: medium-high. Launch blocker: **no**. Consequence: the two best-structured price sources in the market are not headline-eligible.
+- **Source access and eligibility.** Evidence: three of the richest sources are key-gated. Decision: resolved, three populations separated; access is never an economic attribute; an observability-gap diagnostic is published. Confidence: high. Launch blocker: no methodologically; **yes operationally**.
+- **Seller reduction.** Evidence: six comparable cells recovered for the first time; median above minimum by up to 18.95% and 3.71% on average; the regional value was unchanged in the one region reaching the structural floor, which is coincidence at three participants; catalogue-breadth bias confirmed with machine count as its driver; the venue's interface cannot enumerate its own population, which biases any minimum upward. Decision: **family default retained, provisionally and unratified**, with a new enumeration diagnostic. Confidence: none on the rule, by construction; high on the findings. Launch blocker: **yes**.
+- **Bundle envelope.** Evidence: marketplace dispersion of 7.0, 18.3 and 8.7 times against 1.62 and 2.05 among disclosing specialist clouds; a two-sided band drawn from the latter admits 9% of the former; a floor at 16 virtual CPUs and 125GB takes the one qualifying country to a single participant. Decision: **form resolved as a one-sided floor with an economic rationale; level unresolved**. Confidence: medium on form, none on level. Launch blocker: **yes**.
+- **Operator attribution.** Evidence: zero of thirteen sellers disclose an operator; one venue demonstrably knows its certified operators and does not publish them. Decision: **resolved, a published diagnostic and never a gate**, with the double-counting risk disclosed as a standing limitation. Confidence: high. Launch blocker: **no**.
+- **Marketplace seller identifier.** Evidence: documented as a host user identifier on a separate account, one account may hold several machines; stable across every response within one session; cross-time stability untested. Decision: provisional fallback key with `MARKETPLACE_SELLER_ID_STABILITY_UNRESOLVED`. Confidence: medium. Launch blocker: **yes**, for marketplace participation.
+- **Price freshness architecture.** Evidence: two sources in thirteen expose an effective time; the rest expose none. Decision: resolved, source-effective and observed times distinguished, absence recorded as absence and never defaulted to retrieval time. Confidence: high. Launch blocker: **no**.
+- **Availability freshness architecture.** Evidence: no availability-change timestamp exists anywhere; the last candidate proved to be a forward-looking offer expiry. Decision: resolved, re-observation time with its semantics stated explicitly. Confidence: high. Launch blocker: **no**.
+- **Numerical freshness ages.** Evidence: 100% of one hyperscaler's current H100 prices had stood at least 196 days, median 955 days, changing only on month boundaries; specialist clouds expose no effective dates; availability observed at one instant. Decision: **unresolved**, with one ordering constraint adopted. Confidence: none on the values. Launch blocker: **yes**.
+- **Carry.** Evidence: availability can change with no price change, and is offer-addressable. Decision: reference data carried on version; price carried within an unresolved limit; **an Available state is not carried**, proposed conservatively with its operational cost stated. Confidence: medium. Launch blocker: **yes** for the price limit.
+- **Tax basis.** Evidence: one explicit exclusive-of-tax statement, most sellers silent. Decision: resolved, evidence by general terms; an established inclusive basis is disqualifying; an unestablished basis is flagged and eligible, with its share gated. Confidence: medium. Launch blocker: **yes** for the gate value only.
+- **Mandatory fees.** Evidence: a venue's advertised hourly total equalled base plus included storage exactly, deviation zero across 116 offers, with transfer priced per gigabyte. Decision: resolved, included storage in, usage-dependent transfer out, promotional and bid fields never used. Confidence: high. Launch blocker: **no**.
+- **Publication gates.** Evidence: four gates are satisfied by construction once the eligibility rules above apply; the remaining four need regional participant counts and grade compositions that no production collection has yet produced. Decision: four closed structurally, four unresolved numerically. Confidence: high on the structural four. Launch blocker: **yes** for the numeric four.
+- **Percentage change and composition.** Evidence: participant sets are small and the identity rule alone moves the median 6.2%. Decision: resolved, six composition events enumerated, with publication, annotation and withholding conditions fixed. Confidence: high. Launch blocker: no.
+- **Currency.** Evidence: every identity-qualified observation was USD. Decision: resolved for this sample, USD index currency. Confidence: high for the sample. Launch blocker: no.
+- **Percentile convention.** Evidence: a methodology choice. Decision: resolved, Hyndman and Fan type 7 stated in closed form. Confidence: high. Launch blocker: no.
+- **Whole-node sibling.** Evidence: two unauthenticated, region-resolved, timestamped hyperscaler price sources publish only eight-accelerator instances. Decision: recommended as future research; not created, and not absorbed into this child. Confidence: high. Launch blocker: no.
+
 
 ## Launch Blockers
 
-**Resolved for this draft**: hardware identity and its evidence grades, with the HGX mapping now resting on direct NVIDIA documentation; topology class as a rule, classified by minimum purchasable topology; service-product boundary excluding serverless and managed inference; procurement mode; the tenancy rule; index currency; billing-granularity conversion; the exact percentile convention; and composition disclosure.
+**Resolved for this draft**: hardware identity and its evidence grades, including that the strongest grade is satisfiable from a machine-readable field; topology class and the minimum-topology observation rule; the distinction between a machine fraction and a device fraction; the service-product boundary; procurement mode; the tenancy rule and which grades are eligible; **the canonical region taxonomy and its mapping contract**; **the availability evidence scale and the minimum grade**, with the raw-to-canonical state mapping; the separation of the economic, source-observable and calculable populations; operator attribution as a diagnostic rather than a gate; the price and availability freshness architecture; the carry rule for reference data and availability; the mandatory-fee rules; the tax-basis rule; index currency; billing-granularity conversion; the exact percentile convention; the composition-change events and the percentage-change rule; four publication gates closed by construction; the three-stage eligibility criteria; the exclusion, status and diagnostic vocabulary; the ingestion field contract; and the lineage retention requirements.
 
-**Requires further empirical observation before launch**: minimum purchasable topology for the four sellers it could not be established for; the region taxonomy, and whether region is recoverable from documentation and ordering interfaces rather than price pages; the availability evidence minimum; per-observation tenancy exclusivity evidence; the seller-reduction rule, still unsettled because no fully comparable multi-price cell was recovered; freshness limits for price, availability and reference data, and the carry policy; the bundle envelope, which the family requires a child to declare; operator attribution; host-level mapping if marketplace listings are to contribute; the tax-basis disqualification rule; and every numerical publication gate.
+**Requires further empirical observation before launch**, each with the study that would close it:
 
-**Requires licensing and operational work**: lawful collection and retention terms per seller; ordering-interface or API access; and whether historical reconstruction is feasible at all, which this research suggests it is not, since price surfaces are not archival and expose no price history.
+- **The seller-reduction rule.** Requires the minimum, the median and a canonical selection compared across several venues and several days, including specialist-cloud cells, with enumeration completeness measured per venue.
+- **The bundle envelope level.** Requires evidence of the host allocation actually needed to use an H100 SXM for ordinary workloads. This is a hardware and workload question, not a price question, and it cannot be answered from the price data alone.
+- **Numerical freshness ages and the price carry limit.** Requires repeated observation at a stated cadence over a stated period, per seller and per dimension, distinguishing genuinely static prices from stale ones and separately measuring how quickly availability changes.
+- **Cross-time stability of the marketplace seller identifier.** Requires repeated observation of the same venue over days, testing whether an identifier persists, whether one seller holds several, and whether one survives a hardware change.
+- **Four numerical publication gates**: the minimum participant count above the structural floor, the maximum share on the weakest admitted availability grade, the maximum carried price share, and the maximum unresolved-tax-basis share. Each requires regional participant counts and grade compositions from production collection.
+- **Per-observation tenancy evidence for the marketplace**, which turns on a single documentary statement about device exclusivity rather than on a study.
+- **Minimum purchasable topology for the specific sellers where no source field has yet been obtained**, three of which are key-gated and four of which remain unresearched.
 
-**Requires a parent decision**: none at present. Both amendments requested in the first draft are withdrawn, for the reasons in [Findings for the Parent Methodology](#docs-findings-for-the-parent-methodology).
+**Requires licensing and operational work**:
 
-**Study limitation worth stating plainly.** The researched sample is predominantly specialist GPU clouds plus one marketplace. Hyperscaler offerings were examined but not normalized into the sample, because extracting a comparable per-accelerator figure from them requires resolving instance composition, quantity, topology, region and commitment structure. P0 and P1 should therefore be described as **researched public specialist-cloud price surfaces**, not as the H100 market. Hyperscalers may form a materially different price and product island, and testing that is further work.
+- **Provider API access.** Three of the richest sources require keys, and without them availability cannot be evidenced for much of the specialist-cloud segment.
+- **A permitted and reproducible collection path per source.** **No source enters production until Urdais has one**, and no seller is named as a production constituent before that prerequisite is met. This is an operational launch prerequisite, and the methodology takes no position on any provider's terms.
+- **Historical reconstruction**, which this research suggests is not feasible: price surfaces are not archival, and the single archival structure found belongs to a source that is not headline-eligible on availability.
 
-**This child does not claim launch readiness.** The single most valuable experiment remains an ordering-interface and API study across the researched sellers, because region, availability, minimum topology, multi-offer structure and bundle composition are all recoverable from the same place, and five blockers move together.
+**Requires a parent decision**: none.
+
+**Study limitation worth stating plainly.** The empirical work in this amendment rests on **one marketplace at one instant**, plus published specifications and unauthenticated catalog interfaces at four other providers. The marketplace's hosts are individual accounts rather than companies, its bundles are far more heterogeneous than the specialist-cloud segment, and its interface cannot enumerate its own population. Findings drawn from it are stated as findings about one venue, and none is presented as a market-wide rate.
+
+**This child does not claim launch readiness.** It does now claim that its rules are defined and implementable, which is a different and weaker claim, and the two are kept apart deliberately.
+
 
 ## Sources and Evidence
 
@@ -349,6 +789,34 @@ Third-party comparison sites and search results were used only to identify selle
 
 **Sources re-opened for this correction** were the NVIDIA HGX reference architecture components page, the Vast.ai hosting documentation, the Modal pricing page, and the Lambda, CoreWeave, Hyperstack, Nebius, DigitalOcean and RunPod price surfaces. Each correction above rests on a source read during this pass rather than on the independent review's summary of it.
 
+### Sources added by the 0.1.1 amendment
+
+Every source below was retrieved and read on **13 September 2026**. The amendment rests on these directly, not on the research documents' paraphrase of them.
+
+**Verified by direct call.** A marketplace offer search endpoint, thirteen unauthenticated requests all returning HTTP 200, including an accelerator-filtered query returning 64 records, an availability-filtered query returning 16, and eight quantity-partitioned queries. These established the comparable cells, the machine-fraction arithmetic, the price composition, the geographic resolution, and the interface's inability to enumerate its own population. A hyperscaler retail price interface, HTTP 200 unauthenticated, returning 138 H100 meters across 24 regions with per-meter effective dates, which supplied the only measurement of how long a published price stands. A bulk price catalog index, HTTP 200, 106 regions under a single dated catalog version with a whole-catalog publication timestamp. A specialist cloud's published interface specification, HTTP 200 unauthenticated, read for its instance-type schema; and that same provider's live endpoint, **HTTP 401**, confirming the documented key requirement, which was recorded and not satisfied.
+
+**Documentation read.** The marketplace's offer-search reference, for its field definitions, its country-code location filter, and the absence of any documented result limit or pagination mechanism. Its hosting documentation, for host accounts, the host-to-machine relationship, and the meaning of an offer's end date. Its security documentation, for container-level isolation and the absence of a device-exclusivity statement. Its certified-datacenter documentation, for the requirements that programme imposes. A second specialist cloud's catalog reference, for its availability expansion, its four ordinal availability values, its product contexts, and its quantity parameter.
+
+**Not retrieved, and recorded as limitations.** Three providers' interfaces require API keys that Urdais does not hold, and no attempt was made to obtain or bypass them. Four providers from the first source study remain without an established H100-bearing endpoint. Region values for one key-gated catalog were not obtained.
+
+**Research artifacts.** Two internal research documents accompany this specification and are held alongside it rather than published: the UCPI-H100-SXM Production Data Source Study, and the UCPI-H100-SXM Launch-Parameter Closure Study. They contain the full query records, the per-cell price tables, the sensitivity computations, and the field-semantics tests summarized above. Neither is a methodology page and neither is routed.
+
 ## Version History
 
+**0.1.1-draft, 13 September 2026**: launch-parameter closure. Following two research passes, a source study of provider APIs and ordering interfaces and then the first H100-specific empirical experiment, this amendment closes the majority of the child's open parameters and narrows the remainder.
+
+Resolved: the canonical region taxonomy at country level, with a versioned mapping contract carrying an explicit refusal case; the availability evidence scale, ordered by whether a signal can express absence rather than by granularity, with the minimum set at a product-and-region capacity assertion and the raw-to-canonical state mapping fixed; the separation of the economic, source-observable and calculable populations, with access established as never an economic attribute; the minimum-topology observation rule, and the ingestion trap that a machine-occupancy fraction is not a device fraction; which tenancy evidence grades are eligible; operator attribution as a published diagnostic rather than a publication gate, with the double-counting risk disclosed; the price and availability freshness architecture, including that a source-effective time is recorded as absent rather than defaulted to retrieval time, and that an availability observation time means re-observation and not a seller event; the carry rule per dimension; the mandatory-fee and tax-basis rules; the composition-change events and the conditions under which percentage change is published, annotated or withheld; four publication gates closed by construction; the bundle envelope's form as a one-sided floor; and, newly added, deterministic P0, P1 and P2 criteria, an exclusion, status and diagnostic vocabulary, a conceptual ingestion field contract, lineage retention requirements, source classes, and a recommendation to research a whole-node sibling separately.
+
+Retained as unresolved, deliberately: the bundle envelope level, because setting it would decide whether the child publishes; the seller-reduction rule, now tested for the first time on six comparable cells and still unratified; the numerical freshness ages and the price carry limit; the cross-time stability of the marketplace seller identifier; and four numerical publication gates.
+
+Findings that went against coverage were kept: the two best-structured price sources in the market are not headline-eligible because they cannot evidence availability, and the venue with the strongest availability data is not eligible on tenancy because its documentation does not state device exclusivity.
+
+The family methodology was re-tested and **not modified**, and no parent amendment is requested. Launch remains blocked. No production effective date.
+
 **0.1.0-draft, 12 September 2026**: initial child specification and empirical market study, amended the same day following independent review. The review found no fault in the UCPI architecture or in the launch-blocked conclusion, and identified a real defect in the empirical record: the first draft computed statistics across a single ten-row population that mixed a marketplace platform aggregate, whole-node products, a serverless product and per-accelerator rentals. The amendment separates evidence into three populations; removes the platform aggregate as a participant, which collapses the reported spread from 3.05 to 1.93 times; classifies topology by minimum purchasable quantity rather than quoted denominator, withdrawing the 8.7% subgroup statistic as wrongly classified; excludes serverless and managed-inference products on service-product grounds; corrects the identity-rule sensitivity from 12.5% to 6.2%; softens the untestable seller-reduction claim to unsettled; upgrades the Grade B rule to direct NVIDIA documentation; narrows the single-GPU-server wording; fixes an exact percentile convention; and withdraws both requested parent amendments. Launch remains blocked. No production effective date.
+
+### Research history
+
+Recorded in full rather than smoothed, because how a specification reached its conclusions is part of what makes it auditable.
+
+The initial broad price-page study established the three-stage evidence structure and concluded that the public price surface does not carry the required fields. Independent review then corrected the population semantics of that study, separating a platform aggregate from participant observations and reclassifying topology by minimum purchasable quantity. A source study of provider APIs and ordering interfaces found that the missing fields largely exist in machine-readable form and moved the binding constraint from discovery to access. That study was itself corrected before merge: an unfiltered 64-row marketplace sample had been treated as H100 evidence when it contained two H100 SXM rows, so the availability rate, multi-offer count and operator-identity claim drawn from it were withdrawn and the venue's host identifier was reclassified as a seller identifier rather than operator identity. This amendment then performed the targeted H100-filtered experiment that the corrected study named as its own prerequisite.
