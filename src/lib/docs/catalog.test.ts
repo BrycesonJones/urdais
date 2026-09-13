@@ -87,27 +87,43 @@ describe("compute price child specifications", () => {
 describe("internal research and architecture artifacts", () => {
   const internalDirs = ["research", "architecture"] as const;
 
-  it("are never registered in the public docs catalog", () => {
+  /** Every markdown file under `dir`, recursively, as a docs-relative path. */
+  const markdownUnder = (dir: string): string[] => {
+    const walk = (relative: string): string[] =>
+      readdirSync(path.join(process.cwd(), "docs", relative), { withFileTypes: true }).flatMap((entry) => {
+        const child = `${relative}/${entry.name}`;
+        if (entry.isDirectory()) return walk(child);
+        return entry.name.endsWith(".md") ? [child] : [];
+      });
+    return walk(dir);
+  };
+
+  it("are never registered in the public docs catalog, at any depth", () => {
     const routed = docPages.map((page) => page.file);
     for (const dir of internalDirs) {
       expect(routed.some((file) => file.startsWith(`${dir}/`))).toBe(false);
-      for (const file of readdirSync(path.join(process.cwd(), "docs", dir))) {
-        expect(routed).not.toContain(`${dir}/${file}`);
+      for (const file of markdownUnder(dir)) {
+        expect(routed).not.toContain(file);
       }
     }
   });
 
   it("exist, are markdown, and each carries a single title marking it unrouted", () => {
     for (const dir of internalDirs) {
-      const absolute = path.join(process.cwd(), "docs", dir);
-      const files = readdirSync(absolute).filter((file) => file.endsWith(".md"));
+      const files = markdownUnder(dir);
       expect(files.length).toBeGreaterThan(0);
       for (const file of files) {
-        const doc = readFileSync(path.join(absolute, file), "utf8");
+        const doc = readFileSync(path.join(process.cwd(), "docs", file), "utf8");
         expect(doc.match(/^# /gm)).toHaveLength(1);
         expect(doc).toContain("not registered in the docs catalog");
       }
     }
+  });
+
+  it("covers nested internal documents, not only top-level files", () => {
+    const all = internalDirs.flatMap((dir) => markdownUnder(dir));
+    expect(all).toContain("architecture/sources/terms-review.md");
+    expect(all.some((file) => file.split("/").length > 2)).toBe(true);
   });
 });
 
