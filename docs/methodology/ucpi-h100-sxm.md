@@ -16,7 +16,7 @@ This specification inherits the family methodology and adds only what H100 SXM r
 
 **Fixed by this child**: hardware identity and the evidence required to establish it; topology class; procurement mode; tenancy requirement; the service dimensions that are requirements rather than metadata; index currency; and the percentile interpolation convention.
 
-**Unresolved after this research**: the region taxonomy; the availability evidence minimum; the seller-reduction rule; freshness and carry limits; the bundle envelope; all numerical publication gates; and operator attribution. Each is listed in [Launch Blockers](#docs-launch-blockers) with the specific study required.
+**Unresolved after this research**: the region taxonomy; the availability evidence minimum; **minimum purchasable topology for the sellers it could not be established for**; the seller-reduction rule; freshness and carry limits; the bundle envelope; all numerical publication gates; and operator attribution. Each is listed in [Launch Blockers](#docs-launch-blockers) with the specific study required.
 
 ## Primary Question
 
@@ -50,7 +50,7 @@ H200, GH200, H100 NVL, H100 PCIe, and any partitioned H100 are different instrum
 
 A seller's label alone is frequently insufficient, so the child defines a graded evidence rule.
 
-**Grade A, explicit designation**: the seller states SXM or SXM5. Observed for five of ten researched sellers.
+**Grade A, explicit designation**: the seller states SXM or SXM5. P0 contains four Grade A observations.
 
 **Grade B, HGX designation mapped by NVIDIA documentation**: the seller states NVIDIA HGX H100. NVIDIA's enterprise reference architecture documentation states directly that an HGX baseboard carries "Eight H100, H200 or B200 SXM GPUs on a H100, H200 or B200 baseboard", so an HGX H100 system contains H100 SXM GPUs as a matter of documented system composition rather than inference. The rule is therefore: **an official seller designation of NVIDIA HGX H100 qualifies as H100 SXM, because NVIDIA primary documentation maps HGX H100 directly to H100 SXM GPUs.** A vague or marketing use of "HGX" without the H100 designation does not qualify.
 
