@@ -26,6 +26,28 @@ begin
      and m.slug = 'ucpi' and mv.version = '0.1.0-draft';
   if n <> 1 then raise exception 'expected H100 0.1.1-draft referencing UCPI 0.1.0-draft, found %', n; end if;
 
+  -- The market-breadth amendment: both new drafts exist, the child references
+  -- the amended parent, and the earlier versions remain for lineage.
+  select count(*) into n from reference.methodology_versions mv
+    join reference.methodologies m on m.id = mv.methodology_id
+   where m.slug = 'ucpi' and mv.version = '0.1.1-draft' and mv.status = 'draft';
+  if n <> 1 then raise exception 'expected UCPI 0.1.1-draft, found %', n; end if;
+
+  select count(*) into n from reference.instrument_spec_versions sv
+    join reference.instruments i on i.id = sv.instrument_id
+    join reference.methodology_versions mv on mv.id = sv.methodology_version_id
+    join reference.methodologies m on m.id = mv.methodology_id
+   where i.symbol = 'UCPI-H100-SXM' and sv.version = '0.1.2-draft' and sv.status = 'draft'
+     and m.slug = 'ucpi' and mv.version = '0.1.1-draft';
+  if n <> 1 then raise exception 'expected H100 0.1.2-draft referencing UCPI 0.1.1-draft, found %', n; end if;
+
+  select count(*) into n from reference.methodology_versions mv
+    join reference.methodologies m on m.id = mv.methodology_id where m.slug = 'ucpi';
+  if n <> 2 then raise exception 'expected exactly two UCPI versions, found %', n; end if;
+  select count(*) into n from reference.instrument_spec_versions sv
+    join reference.instruments i on i.id = sv.instrument_id where i.symbol = 'UCPI-H100-SXM';
+  if n <> 2 then raise exception 'expected exactly two H100 spec versions, found %', n; end if;
+
   -- No draft anywhere carries an effective date.
   select count(*) into n from reference.methodology_versions where status = 'draft' and (effective_from is not null or effective_to is not null);
   if n <> 0 then raise exception 'a draft methodology version carries an effective date'; end if;

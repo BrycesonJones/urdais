@@ -1,6 +1,6 @@
 # UCPI-H100-SXM Child Specification
 
-**Status: proposed child specification, version 0.1.1-draft. Launch blocked.** Prepared 12 September 2026, amended 13 September 2026. No production value, price series, provider list, or history is established by this document. Every price appearing here is research evidence gathered to test the methodology, never a published value.
+**Status: proposed child specification, version 0.1.2-draft. Launch blocked.** Prepared 12 September 2026, amended 13 September 2026. No production value, price series, provider list, or history is established by this document. Every price appearing here is research evidence gathered to test the methodology, never a published value.
 
 This is the first child of the [Urdais Compute Price Index family](/docs/methodology/ucpi) and the first application of that family methodology to a real compute product. It is therefore two things at once: a specification for measuring one product, and an empirical test of whether the family's architecture survives contact with the market.
 
@@ -16,11 +16,11 @@ This is the first child of the [Urdais Compute Price Index family](/docs/methodo
 
 This specification inherits the family methodology and adds only what H100 SXM requires. It does not restate parent rules, and it does not modify them: where the research suggested a parent rule needs revision, that is recorded in [Findings for the Parent Methodology](#docs-findings-for-the-parent-methodology) rather than worked around here.
 
-**Inherited unchanged**: the economic object and the exact statistic; the capacity-source identity and collapse rule; seller-level reduction as a concept; the regional median and its even-`N` convention; the source-quality and observation-type framework; availability semantics and the availability state vocabulary; reconfirmation semantics and the three freshness dimensions; the procurement taxonomy; bundle and topology principles; the prohibition on synthetic decomposition and on fractional normalization; price-component principles; the aggregation population for percentiles; publication statuses; corrections; lineage; and versioning.
+**Inherited unchanged**: the economic object and the exact statistic; the capacity-source identity and collapse rule; seller-level reduction as a concept; the regional median and its even-`N` convention; the source-quality and observation-type framework; availability semantics and the availability state vocabulary; reconfirmation semantics and the three freshness dimensions; the procurement taxonomy; bundle and topology principles; the prohibition on synthetic decomposition and on fractional normalization; price-component principles; the aggregation population for percentiles; publication statuses; the market-breadth qualifier and the participant-count rule that produces it; corrections; lineage; and versioning.
 
 **Fixed by this child**: hardware identity and the evidence required to establish it; topology class and the minimum-topology observation rule; procurement mode; the tenancy requirement and which evidence grades satisfy it; the service dimensions that are requirements rather than metadata; index currency; the percentile interpolation convention; the canonical region taxonomy and its mapping contract; the availability evidence scale and the minimum grade; the separation of the economic, source-observable and calculable populations; the price and availability freshness architecture; the carry rule per dimension; the tax-basis and mandatory-fee rules; the operator-attribution fallback; the three-stage eligibility criteria; the exclusion and diagnostic vocabulary; and the ingestion field contract.
 
-**Unresolved after this research**: the bundle envelope level; the seller-reduction rule; the numerical freshness ages and the price carry limit; the cross-time stability of the marketplace seller identifier; and four numerical publication gates. Each is listed in [Launch Blockers](#docs-launch-blockers) with the specific study required.
+**Unresolved after this research**: the bundle envelope level; the seller-reduction rule; the numerical freshness ages and the price carry limit; the cross-time stability of the marketplace seller identifier; and three numerical publication gates. Each is listed in [Launch Blockers](#docs-launch-blockers) with the specific study required.
 
 
 ## Primary Question
@@ -428,9 +428,11 @@ and the quantile is
 
 taking `Q(q) = x_N` when `f + 1 = N`. This is the Hyndman and Fan type 7 definition, equivalently the conventional linear interpolation used by common numerical libraries. It is computed over the same final participant population that produces the median, on unrounded normalized prices. The convention is fixed now and is not to be changed to alter a published number.
 
+At Minimum market breadth the quantiles are computed and retained for lineage but are not published, because with two participants every quantile is a point on the segment between the two participant prices and the family withholds dispersion there. The convention itself is unchanged.
+
 ## Publication Gates
 
-**Four gates the family requires are now closed structurally, because the eligibility rules already exclude every observation that would fail them. Four remain open numerically.**
+**Four gates the family requires are closed by construction, because the eligibility rules already exclude every observation that would fail them. The participant count is closed structurally by the family's market-breadth rule. Three remain open numerically.**
 
 That distinction matters for the backend: a structurally closed gate is an invariant the calculation can assert, not a threshold it must carry a parameter for.
 
@@ -441,13 +443,18 @@ That distinction matters for the backend: a structurally closed gate is an invar
 - **Maximum topology-unknown share: zero.** An observation whose minimum purchasable topology is not established is `MINIMUM_TOPOLOGY_UNKNOWN` and is not P2 eligible.
 - **Maximum out-of-envelope bundle share: zero**, once the envelope level exists, because an offer outside the envelope is ineligible rather than adjusted under the family's rule.
 
-### Structural, from the family, and unchanged
+### Structural, from the family
 
 A region with no eligible participant has no value. **A region with exactly one has no market price.** The research gives no reason to weaken that and several to respect it: at country level, five of the six regions observed on the one venue exposing availability had exactly one participant.
 
+**A region with exactly two independent capacity sources publishes at Minimum market breadth, and one with three or more at Normal breadth**, under the family's participant-count rule as amended in UCPI 0.1.1-draft. This child adopts the rule as the family states it and adds nothing to it. In this child's terms: the participants are capacity sources after seller-level reduction and any determinable collapse, which at launch means sellers by legal identity, since no operator is attributable; a seller's tiers, datacenters and quantity variants within one country are one participant; and the two participants at Minimum breadth must be distinct legal entities, neither observed on evidence to be reselling the other's capacity. The one country that reached the floor in the marketplace experiment had three participants and would have published at Normal breadth; a country with two would have published at Minimum breadth rather than not at all. Neither is a production value.
+
+At Minimum breadth this child publishes the level, the participant count, the qualifier, the diagnostic `MARKET_BREADTH_MINIMUM`, and the statement that both participants are pivotal, and it withholds the percentile distribution and the interquartile range, which with two observations are the two participant prices under another name. Whether a contributing source's terms permit its individual price to be shown is recorded in the source registry and is not decided here.
+
+The minimum participant count above the structural floor, which the 0.1.1 draft listed as an open numerical gate, is therefore no longer one. The observation that prompted caution there, that leaving one participant out of a nine-observation research population moves the median by at most 0.62%, still says nothing about a threshold, and no threshold was set from it; the boundaries at two and three come from the arithmetic of the median, as the family explains.
+
 ### Open, and numerical
 
-- **Minimum final participant count above the structural floor.** Unresolved. The only measurement available is that leaving one participant out of a nine-observation research population moves the median by at most 0.62%, which measures the robustness of a nine-observation median and says nothing about a threshold. **Regional participant counts do not yet exist**, because no production collection has run; the single region that reached the structural floor in the marketplace experiment had three participants, which is one region on one venue at one instant. Setting a number now would be choosing it for the reason the family forbids.
 - **Maximum share resting on the weakest admitted availability grade.** Unresolved. Now well defined, because the grade scale exists: it is the share of eligible observations at Grade 3 rather than Grade 2, together with the share whose state is Limited rather than Available.
 - **Maximum carried share.** Unresolved, and now narrower in scope: since an Available state is not carried, this is a price-carry share only.
 - **Maximum `TAX_BASIS_UNRESOLVED` share.** Unresolved, and required, because this is the gate that bounds the risk accepted by not disqualifying on an unestablished basis.
@@ -487,6 +494,8 @@ The family makes percentage change the headline change signal. This child fixes 
 - the **region mapping version changed** in a way that moved observations into or out of this region, so the two levels describe different populations.
 
 A marketplace seller identifier changing for an otherwise continuing participant is annotated rather than withheld, and is flagged separately from a genuine entry or exit, because until identifier stability is established the two are not reliably distinguishable and the disclosure must say which one Urdais actually observed.
+
+**Market breadth changes with the participant count and is disclosed with it.** A move between Normal and Minimum breadth is always a capacity-source entry or exit, so it is already annotated under the rule above; the annotation additionally states the breadth before and after. A move from Minimum breadth to Unavailable is a participant leaving a two-participant region, and the next published value's percentage change is withheld because its predecessor was Unavailable. No hysteresis or waiting period applies, per the family: the qualifier describes the calculation date it is published for.
 
 
 ## Source Observability and Eligibility
@@ -563,11 +572,11 @@ Source: `SOURCE_INSUFFICIENT`, `SOURCE_UNRETRIEVABLE`, `SOURCE_CONFLICT`, `COLLE
 
 ### Statuses
 
-Observation and published-value statuses are inherited from the family unchanged: **Published**, **Delayed**, **Unavailable**, **Corrected**, **Superseded** for a published date; and **Valid**, **Stale**, **Ineligible**, **Unavailable**, **Conflicted** for an input.
+Observation and published-value statuses are inherited from the family unchanged: **Published**, **Delayed**, **Unavailable**, **Corrected**, **Superseded** for a published date; and **Valid**, **Stale**, **Ineligible**, **Unavailable**, **Conflicted** for an input. A value that is Unavailable on the family's structural participant rule names the condition: `NO_ELIGIBLE_PARTICIPANT` or `SINGLE_PARTICIPANT`. Market breadth is not a status; a value at Minimum breadth has status Published.
 
 ### Diagnostics
 
-`TAX_BASIS_UNRESOLVED`, on an observation that remains eligible. `OPERATOR_UNDETERMINED`, expected on every observation at launch. `ENUMERATION_INCOMPLETE`, on any observation from a venue whose population cannot be fully enumerated. `MARKETPLACE_SELLER_ID_STABILITY_UNRESOLVED`, on any marketplace observation until a cross-time study closes it. `AVAILABILITY_GRADE_3`, distinguishing a region-level capacity assertion from an offer-level state. `SOURCE_EFFECTIVE_TIME_ABSENT`, where the source states no effective time. `PRICE_CARRIED`, with the carry age.
+`MARKET_BREADTH_MINIMUM`, on a published regional value resting on exactly two independent capacity sources; it is a property of the value rather than of an observation, is always accompanied by the participant count, and is the diagnostic a user-facing surface explains as minimum market breadth, meaning that the value is calculated from two independent eligible capacity sources, the smallest number that constitutes a market under this methodology. `TAX_BASIS_UNRESOLVED`, on an observation that remains eligible. `OPERATOR_UNDETERMINED`, expected on every observation at launch. `ENUMERATION_INCOMPLETE`, on any observation from a venue whose population cannot be fully enumerated. `MARKETPLACE_SELLER_ID_STABILITY_UNRESOLVED`, on any marketplace observation until a cross-time study closes it. `AVAILABILITY_GRADE_3`, distinguishing a region-level capacity assertion from an offer-level state. `SOURCE_EFFECTIVE_TIME_ABSENT`, where the source states no effective time. `PRICE_CARRIED`, with the carry age.
 
 A diagnostic never silently removes an observation. Where a diagnostic's share is gated, the gate is named in [Publication Gates](#docs-publication-gates) and failing it produces a Delayed or Unavailable value with the failing gate named, never a value computed from the residual set.
 
@@ -637,7 +646,7 @@ The research established that the two best-structured, unauthenticated, region-r
 
 The future published surface, with no values:
 
-UCPI-H100-SXM, for a canonical country region: price in United States dollars per H100 SXM accelerator-hour; one-day percentage change, annotated or withheld under the rule in [Composition Changes](#docs-composition-changes); procurement mode on-demand; topology per-accelerator allocation; service tier as specified; the capacity-source participant count; the availability evidence-grade composition and the Available-versus-Limited split; the observability-gap count of economically present but unobservable sellers; the undetermined-operator share; the price distribution; the carried price share; the unresolved-tax-basis share; the enumeration-completeness status of contributing sources; the as-of date; the status; and the family and child versions with the parameter set.
+UCPI-H100-SXM, for a canonical country region: price in United States dollars per H100 SXM accelerator-hour; one-day percentage change, annotated or withheld under the rule in [Composition Changes](#docs-composition-changes); procurement mode on-demand; topology per-accelerator allocation; service tier as specified; the capacity-source participant count; the market-breadth qualifier, with `MARKET_BREADTH_MINIMUM` and the pivotal-participant statement where breadth is Minimum; the contributing-source count and the largest-source participant share; the availability evidence-grade composition and the Available-versus-Limited split; the observability-gap count of economically present but unobservable sellers; the undetermined-operator share; the price distribution, withheld at Minimum breadth; the carried price share; the unresolved-tax-basis share; the enumeration-completeness status of contributing sources; the as-of date; the status; and the family and child versions with the parameter set.
 
 
 ## Research Market Snapshot
@@ -684,7 +693,9 @@ A seller publishing "contact for pricing" across every tier, ineligible as quote
 
 ## Findings for the Parent Methodology
 
-The family methodology was not modified by this work. **No parent amendment is currently required.** The first draft requested two, and re-reading the parent shows that neither is a gap in its rules.
+**0.1.2-draft: one parent amendment was made, and it was made in the parent.** The buildability reassessment that followed the 0.1.1 draft found that the family governed participants but had never set the participant count above its structural floor, so no child could say whether two independent capacity sources were a market. That is a family-level question about the aggregation architecture, and it was answered at family level in UCPI 0.1.1-draft rather than worked around here. This child adopts the answer and adds nothing to it. The paragraphs below describe the 0.1.1 research and remain as written: that research required no parent amendment, and the amendment arose from a later question.
+
+The family methodology was not modified by the 0.1.1 research. **No parent amendment was required by it.** The first draft requested two, and re-reading the parent shows that neither is a gap in its rules.
 
 **Marketplace participant identity: amendment withdrawn.** The first draft claimed the family does not say whether a marketplace contributes one participant or many. It does. The family already defines a marketplace as a venue rather than a participant, and defines the capacity source as the operator where determinable and the seller otherwise. A venue is neither. The real problem is narrower and is a **data-resolution requirement**: individual host offers must be mapped to seller or operator identities before marketplace listings can participate. That is work, not ambiguity, and the request for an amendment is withdrawn.
 
@@ -725,7 +736,8 @@ Each entry records the evidence, the decision, confidence, and two separate ques
 - **Carry.** Evidence: availability can change with no price change, and is offer-addressable. Decision: reference data carried on version; price carried within an unresolved limit; **an Available state is not carried**, proposed conservatively with its operational cost stated. Confidence: medium. Launch blocker: **yes** for the price limit.
 - **Tax basis.** Evidence: one explicit exclusive-of-tax statement, most sellers silent. Decision: resolved, evidence by general terms; an established inclusive basis is disqualifying; an unestablished basis is flagged and eligible, with its share gated. Confidence: medium. Launch blocker: **yes** for the gate value only.
 - **Mandatory fees.** Evidence: a venue's advertised hourly total equalled base plus included storage exactly, deviation zero across 116 offers, with transfer priced per gigabyte. Decision: resolved, included storage in, usage-dependent transfer out, promotional and bid fields never used. Confidence: high. Launch blocker: **no**.
-- **Publication gates.** Evidence: four gates are satisfied by construction once the eligibility rules above apply; the remaining four need regional participant counts and grade compositions that no production collection has yet produced. Decision: four closed structurally, four unresolved numerically. Confidence: high on the structural four. Launch blocker: **yes** for the numeric four.
+- **Publication gates.** Evidence: four gates are satisfied by construction once the eligibility rules above apply; the participant count is resolved structurally by the family's market-breadth rule; the remaining three need regional participant counts and grade compositions that no production collection has yet produced. Decision: four closed by construction, one closed structurally, three unresolved numerically. Confidence: high on the five. Launch blocker: **yes** for the numeric three.
+- **Market breadth.** Evidence: the median of two observations is their mean, so the family's rationale for a median first holds at three; in the marketplace experiment one country reached the floor with three participants and five others had exactly one. Decision: the family's rule adopted as stated, two independent capacity sources publish at Minimum breadth with dispersion withheld and both participants disclosed as pivotal, three or more at Normal breadth. Confidence: high on the rule. Launch blocker: no.
 - **Percentage change and composition.** Evidence: participant sets are small and the identity rule alone moves the median 6.2%. Decision: resolved, six composition events enumerated, with publication, annotation and withholding conditions fixed. Confidence: high. Launch blocker: no.
 - **Currency.** Evidence: every identity-qualified observation was USD. Decision: resolved for this sample, USD index currency. Confidence: high for the sample. Launch blocker: no.
 - **Percentile convention.** Evidence: a methodology choice. Decision: resolved, Hyndman and Fan type 7 stated in closed form. Confidence: high. Launch blocker: no.
@@ -742,7 +754,7 @@ Each entry records the evidence, the decision, confidence, and two separate ques
 - **The bundle envelope level.** Requires evidence of the host allocation actually needed to use an H100 SXM for ordinary workloads. This is a hardware and workload question, not a price question, and it cannot be answered from the price data alone.
 - **Numerical freshness ages and the price carry limit.** Requires repeated observation at a stated cadence over a stated period, per seller and per dimension, distinguishing genuinely static prices from stale ones and separately measuring how quickly availability changes.
 - **Cross-time stability of the marketplace seller identifier.** Requires repeated observation of the same venue over days, testing whether an identifier persists, whether one seller holds several, and whether one survives a hardware change.
-- **Four numerical publication gates**: the minimum participant count above the structural floor, the maximum share on the weakest admitted availability grade, the maximum carried price share, and the maximum unresolved-tax-basis share. Each requires regional participant counts and grade compositions from production collection.
+- **Three numerical publication gates**: the maximum share on the weakest admitted availability grade, the maximum carried price share, and the maximum unresolved-tax-basis share. Each requires regional participant counts and grade compositions from production collection. The minimum participant count is no longer among them; the family resolved it structurally, as recorded in [Publication Gates](#docs-publication-gates).
 - **Minimum purchasable topology for the specific sellers where no source field has yet been obtained**, three of which are key-gated and four of which remain unresearched.
 
 **Requires licensing and operational work**:
@@ -751,7 +763,7 @@ Each entry records the evidence, the decision, confidence, and two separate ques
 - **A permitted and reproducible collection path per source.** **No source enters production until Urdais has one**, and no seller is named as a production constituent before that prerequisite is met. This is an operational launch prerequisite, and the methodology takes no position on any provider's terms.
 - **Historical reconstruction**, which this research suggests is not feasible: price surfaces are not archival, and the single archival structure found belongs to a source that is not headline-eligible on availability.
 
-**Requires a parent decision**: none.
+**Requires a parent decision**: none further. The market-breadth rule was decided at family level in UCPI 0.1.1-draft and is adopted above.
 
 **Study limitation worth stating plainly.** The empirical work in this amendment rests on **one marketplace at one instant**, plus published specifications and unauthenticated catalog interfaces at four other providers. The marketplace's hosts are individual accounts rather than companies, its bundles are far more heterogeneous than the specialist-cloud segment, and its interface cannot enumerate its own population. Findings drawn from it are stated as findings about one venue, and none is presented as a market-wide rate.
 
@@ -807,6 +819,8 @@ Every source below was retrieved and read on **13 September 2026**. The amendmen
 **Research artifacts.** Two internal research documents accompany this specification and are held alongside it rather than published: the UCPI-H100-SXM Production Data Source Study, and the UCPI-H100-SXM Launch-Parameter Closure Study. They contain the full query records, the per-cell price tables, the sensitivity computations, and the field-semantics tests summarized above. Neither is a methodology page and neither is routed.
 
 ## Version History
+
+**0.1.2-draft, 13 September 2026**: market-breadth adoption. Adopts the family's 0.1.1-draft participant-count rule without addition: a country with exactly two independent capacity sources publishes at Minimum market breadth with the diagnostic `MARKET_BREADTH_MINIMUM`, the pivotal-participant statement, and dispersion withheld; a country with three or more publishes at Normal breadth, subject to every other gate. States the rule in this child's terms, with participants as sellers by legal identity at launch and a seller's tiers, datacenters and quantity variants within one country as one participant. Removes the minimum participant count from the numerical launch blockers, leaving three, and adds the market-breadth qualifier, the contributing-source count and the largest-source participant share to the published surface. Records that breadth transitions are disclosed through the existing composition annotation without hysteresis. No provider is named, approved or reclassified; P2 remains empty; launch remains blocked on the remaining blockers. No production effective date.
 
 **0.1.1-draft, 13 September 2026**: launch-parameter closure. Following two research passes, a source study of provider APIs and ordering interfaces and then the first H100-specific empirical experiment, this amendment closes the majority of the child's open parameters and narrows the remainder.
 

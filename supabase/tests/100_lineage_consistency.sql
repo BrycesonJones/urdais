@@ -21,7 +21,7 @@ insert into reference.instruments (id, symbol, name, category, methodology_id, o
 values ('33333333-0000-4000-8000-000000000001', 'UCPI-TEST-OTHER', 'Test other instrument', 'compute_price', '11111111-0000-4000-8000-000000000001', 'USD / accelerator-hour', 'USD', 'proposed');
 insert into reference.instrument_spec_versions (id, instrument_id, methodology_version_id, version, status, document_path)
 values ('33333333-0000-4000-8000-000000000101', '33333333-0000-4000-8000-000000000001', '11111111-0000-4000-8000-000000000101', '0.1.0-draft', 'draft', 'x.md'),
-       ('22222222-0000-4000-8000-000000000102', '22222222-0000-4000-8000-000000000001', '11111111-0000-4000-8000-000000000101', '0.1.2-draft', 'draft', 'docs/methodology/ucpi-h100-sxm.md');
+       ('22222222-0000-4000-8000-000000000102', '22222222-0000-4000-8000-000000000001', '11111111-0000-4000-8000-000000000101', '9.9.0-draft', 'draft', 'docs/methodology/ucpi-h100-sxm.md');
 
 do $$
 declare

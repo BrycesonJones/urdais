@@ -97,6 +97,8 @@ But the methodology has **no rule about the window**. It never asks how many ind
 
 Under that shape, Runpod plus Lambda would still be one participant each and would not qualify. **Marketplaces or partner networks are structurally necessary, not merely convenient.**
 
+**Superseded in part, 13 September 2026.** The family resolved this question differently in UCPI 0.1.1-draft: two independent capacity sources publish at **Minimum** market breadth with mandatory disclosure, three or more at Normal breadth, and the interface count is disclosed as a diagnostic rather than gated. Under that rule Runpod plus Lambda, if both were permitted, could publish a labelled Minimum-breadth value where their eligible countries overlap. The evaluation is in [ucpi-market-breadth-amendment.md](ucpi-market-breadth-amendment.md). The structural analysis above stands; the two recommended thresholds do not.
+
 ## 4. Whole-node sibling
 
 The whole-node market is coherent. `8 × H100 SXM` is close to a de facto standard configuration: Azure `Standard_ND96isr_H100_v5`, AWS `p5.48xlarge`, CoreWeave's HGX H100 eight-GPU node and Lambda's `gpu_8x_h100_sxm5` are the same physical product sold four ways. Azure exposes it across 24 regions with per-meter effective dates, unauthenticated; AWS across a 106-region dated catalog, unauthenticated. Both have a **settled collection permission**, which no per-accelerator source has.
@@ -194,6 +196,8 @@ The product definition is sound and the economic question is measurable. What is
 6. Then the unresolved parameters the child already names: bundle envelope level, seller-reduction ratification, freshness ages, four numerical gates.
 
 Conditions 1 to 3 are new to this reassessment. The rest were already recorded as launch blockers.
+
+**Revised by the market-breadth amendment, 13 September 2026.** Conditions 1 and 2 were not adopted as gates. The methodology now publishes two independent capacity sources at Minimum breadth and discloses the contributing-source count instead of gating on it, so the minimum launch state is two permitted, independent, Grade-3 sources overlapping in at least one country, labelled accordingly. Condition 3 and the remaining launch blockers stand. See [ucpi-market-breadth-amendment.md](ucpi-market-breadth-amendment.md).
 
 ### Whole-node sibling: **warrants further research**
 
