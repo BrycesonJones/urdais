@@ -1,6 +1,39 @@
-# Vast.ai Agreement Request — Draft
+# Vast.ai Agreement Request — Sent 13 September 2026
 
-**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Prepared 13 September 2026. This is a **draft for review and has not been sent.** It supports the classification recorded in the H100 Source Terms Review, where Vast is `not_permitted` on both permission axes and `production_blocked`.
+**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Prepared 13 September 2026. **Sent 13 September 2026; awaiting a response.** It supports the classification recorded in the H100 Source Terms Review, where Vast is `not_permitted` on both permission axes and `production_blocked`.
+
+## Outreach record
+
+| Field | Value |
+|---|---|
+| Status | **Sent, awaiting response** |
+| Date sent | 13 September 2026, 20:47 UTC |
+| Channel | Email |
+| To | `contact@vast.ai` |
+| Copied | None |
+| Recipient team | Not individually identified. This is the only address the Terms of Use designate: *"In order to resolve a complaint regarding the Company Services or to receive further information regarding use of the Company Services, please contact Company as set forth below. Vast.ai Inc. Email: contact@vast.ai"*. The message asks to be routed to data licensing or business development. |
+| Subject | Request for a written data agreement — market-data use of marketplace pricing |
+| Sender | Bryceson Jones, Urdais, https://urdais.com |
+| Sending account | `bryceson.jones17@gmail.com` |
+| Signature address | `bryceson.jones17@gmail.com` — **matches the sending account** |
+| Provider reference ID | None issued |
+| Message identifier | Gmail message and thread `1a09c8688829c39c` |
+| Response as at this writing | None received |
+
+**Sent as drafted.** The placeholders were resolved to the actual sending account; no other change was made to the substance.
+
+**What this does not change.** Sending a request is not permission. Vast remains `not_permitted` on both axes, `production_blocked`, with `written_agreement_required` true. The registry was deliberately not modified by this outreach.
+
+**Two independent gates, not one.** Even a full licensing yes leaves Vast outside UCPI until the enumeration question is answered. The message asks it directly and flags that the answer may matter more than the licence does. Both gates must pass before any collector work:
+
+1. contractual permission on **both** axes;
+2. a satisfactory answer on complete and reproducible enumeration.
+
+If either fails, Vast stays out of UCPI.
+
+---
+
+## Original draft, as prepared and reviewed
 
 ## Read this before deciding whether to send it
 
@@ -30,7 +63,9 @@ The Agreement designates one route: *"In order to resolve a complaint regarding 
 
 Vast publishes no separate legal, partnerships or data-licensing address, and no API terms, acceptable-use policy or data licence exists as a separate document. **Recommended: `contact@vast.ai`**, with the request explicitly asking to be routed to whoever can execute a data agreement, since a general contact address is unlikely to be the right owner.
 
-## Draft message
+## Draft message, as sent
+
+The message below was sent on 13 September 2026 with the sender block resolved as recorded above.
 
 **Subject:** Request for a written data agreement — market-data use of marketplace pricing
 
