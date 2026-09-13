@@ -14,7 +14,9 @@ Two findings are worth stating on their own.
 
 **One Lambda endpoint returns price, GPU count, host bundle, and the list of regions with capacity available.** `GET /api/v1/instance-types` addresses four of the eight launch blockers for one seller in a single call. Sources of that shape are what the ingestion contract should be built around.
 
-**One marketplace endpoint produced the study's only direct measurements of the three hardest blockers.** A single unauthenticated page of 64 Vast.ai offers showed that **9 were rentable and 55 were not**, that the 64 offers came from **41 distinct hosts with one host publishing 6 offers**, and that every offer carries an operator-level `host_id`. Those are, respectively, the first quantified advertised-versus-accessible gap, the first real multi-offer cells for the seller-reduction experiment, and the only operator identity found anywhere in thirteen sellers.
+**One marketplace endpoint exposes, per offer, the field structure the methodology needs.** An unauthenticated page of 64 Vast.ai offers carries `rentable`, `host_id`, `machine_id`, `geolocation` and `num_gpus` on every record, which means availability, participant identity, region and topology are all structurally present at offer level rather than absent.
+
+**That sample is source-structure evidence only, not H100 evidence.** The request was unfiltered, so the 64 rows are a mixed and mostly consumer-grade population: 13 RTX 5090, 11 Tesla V100, and **2 H100 SXM**. No H100-specific rate, gap or distribution can be computed from it, and none is claimed below.
 
 ## Method and Evidence Standard
 
@@ -32,6 +34,12 @@ Search results were used only to locate provider documentation and are never cit
 | `cloud.vast.ai/api/v0/bundles/` | Docs say key; **plain GET succeeded** | **HTTP 200 unauthenticated, verified**, then 403 on repeated filtered calls | **64 per-offer records with the full field set, read directly** |
 | `api.digitalocean.com/v2/sizes` | Bearer key | **HTTP 401, verified** | Size catalog, fields known from docs |
 
+## Counting Convention
+
+One convention is used for every count in this document, including the matrices, the blocker table and the summary.
+
+**The denominator is always the 13 researched sellers and venues.** A field is counted as *recoverable* when a named source exposes it, and the source tier is reported separately rather than folded into the count. The tiers are: **unauthenticated** and verified by call; **key-gated**, documented but requiring a provider API key; **documentation**, established from official product or SKU documentation; and **price surface**, present only on a public pricing page. "Unknown" means no source was established for that provider within this study, which is a coverage limitation rather than evidence of absence.
+
 ## Provider Source Matrix
 
 Statuses: **YES** recoverable from a named source; **AUTH** recoverable but requires a provider API key; **PARTIAL** some but not all; **NO** not found; **UNKNOWN** not established.
@@ -39,7 +47,7 @@ Statuses: **YES** recoverable from a named source; **AUTH** recoverable but requ
 | Provider | Best source | Region | Availability | Min topology | Multi-offer | Bundle | Tenancy | Access | Suitability |
 |---|---|---|---|---|---|---|---|---|---|
 | **Lambda** | `GET /api/v1/instance-types` | AUTH | **AUTH, capacity list** | AUTH (`specs.gpus`) | AUTH | AUTH | Docs | API key | **Strong, with conditions** |
-| **Vast.ai** | `GET /api/v0/bundles/` | **YES (`geolocation`)** | **YES (`rentable`)** | **YES (`num_gpus`)** | **YES, per-offer, verified** | YES | Docs | Inconsistent, see below | **Strongest single source found** |
+| **Vast.ai** | `GET /api/v0/bundles/` | **YES (`geolocation`)** | **YES (`rentable`)** | **YES (`num_gpus`)** | **YES, structure per offer** | YES | Docs | Inconsistent, see below | **Richest field structure found** |
 | **RunPod** | GPU types + `AVAILABILITY` expansion | AUTH (`DataCenter`) | **AUTH** | AUTH (`minPodGpuCount`) | AUTH (tiers) | AUTH | Docs | API key | **Strong, with conditions** |
 | **Azure** | Retail Prices API | **YES** | NO | Docs (SKU) | YES (price types) | Docs | Docs | **None** | **Strong, whole-node sibling only** |
 | **AWS** | Bulk price list + regional table | **YES** | PARTIAL | Docs (SKU) | YES | YES | Docs | **None** | **Strong, whole-node sibling only** |
@@ -62,20 +70,21 @@ For each field the merged methodology needs, where it can be obtained across the
 |---|---|---|---|---|---|---|
 | Native price | 2 | 4 | 2 | 9 | **Nearly all** | Quote-only sellers |
 | Currency and billing unit | 2 | 4 | 3 | 9 | **Nearly all** | — |
-| **Region** | **3, verified** | **4** | several | 2 | **7 confirmed** | 4 follow-up sellers |
-| **Availability / capacity** | **1, verified** | **3** | 0 | 1 | **4 confirmed** | Still the hardest field |
-| **Minimum GPU count** | **3, verified** | **4** | several | 2 | **7 confirmed** | 4 follow-up sellers |
-| Multi-offer structure | 2 | **4** | — | 3 | **6 confirmed** | — |
+| **Region** | 2 unauth + 1 verified | 3 key-gated | several | 1 price surface | **7 of 13** | 4 unknown, 2 none/out of scope |
+| **Availability / capacity** | 1 verified | 3 key-gated | 0 | 0 | **4 of 13** | Still the hardest field |
+| **Minimum GPU count** | 2 unauth + 1 verified | 3 key-gated | 2 via SKU | 1 price surface | **7 of 13** | 4 unknown, 2 none/out of scope |
+| Multi-offer structure | 1 verified | 3 key-gated | — | 2 price surface | **6 of 13** | Structure only; no H100 cell sampled |
 | vCPU / RAM / storage | 2 | **4** | several | 6 | **Most** | — |
 | Interconnect / fabric | 0 | 1 | several | 2 | **Docs-only** | Rarely machine-readable |
 | Tenancy / exclusivity | 0 | 0 | most | 0 | **Docs-only** | No machine-readable field found |
-| Operator identity | **1, verified** (`host_id`) | 0 | 0 | 0 | **1 of 13** | **Unrecoverable for the other 12** |
+| Host / seller identifier | 1 verified (`host_id`) | 0 | 0 | 0 | **1 of 13** | Marketplace only |
+| **Operator identity** | 0 | 0 | 0 | 0 | **0 of 13** | **No direct operator evidence found anywhere** |
 | Price timestamp | **2** | 0 | 0 | 0 | **2** | Specialist clouds expose none |
 | Availability timestamp | **1, partial** | 0 | 0 | 0 | **1, semantics unverified** | No price-effective or availability-change timestamp found for any other seller |
 | Tax basis | 0 | 0 | 2 | 1 | **3** | Mostly silent |
 | Mandatory fees | 0 | 0 | few | few | **PARTIAL** | — |
 
-The row that barely moved is **operator identity**, found in exactly one source of thirteen. **Availability timestamps** remain absent for every seller except the one marketplace, which carries `start_date`, `end_date` and `duration` fields whose semantics were not verified in this study.
+Two rows did not move. **Operator identity** was found nowhere: the one identifier discovered is a marketplace host identifier, which is not the same thing, for the reasons in the next section. **Availability timestamps** remain absent for every seller except the one marketplace, which carries `start_date`, `end_date` and `duration` fields whose semantics were not verified.
 
 ## Provider Source Stacks
 
@@ -91,13 +100,23 @@ One call therefore yields product identity, price, **minimum topology via `specs
 
 Fields verified present on every record, by reading the response rather than the documentation: `id`, `bundle_id`, `machine_id`, **`host_id`**, **`geolocation`** and `geolocode`, **`num_gpus`**, `gpu_name`, `gpu_total_ram`, `dph_total`, `min_bid`, **`rentable`** and `rented`, `reliability2`, `start_date`, `end_date`, `duration`, `cpu_cores`, `cpu_ram`, `disk_bw`, `bw_nvlink`, `static_ip`, `cluster_id`.
 
-Three measurements from that single page, each bearing directly on a launch blocker:
+### What this sample does and does not establish
 
-- **Availability is real and mostly negative.** Of 64 listed offers, **9 were `rentable: true` and 55 were not**. Roughly **86% of listed offers were not currently obtainable**, which is the first direct quantification Urdais has of the advertised-versus-accessible gap the parent requires be published as a diagnostic.
-- **Multi-offer cells exist and are visible.** The 64 offers came from **41 distinct `host_id` values**, with the busiest host publishing **6 separate offers**. This is exactly the structure the seller-reduction experiment needs and could not previously find.
-- **Operator-level identity is exposed.** `host_id` and `machine_id` are per-offer, so offers can be attributed to a capacity source without inference. **Whether `host_id` is stable over time remains unverified and is a Phase 2 prerequisite.**
+**The request was unfiltered, so the sample is not an H100 sample.** Of the 64 rows, 13 were RTX 5090, 11 Tesla V100, and the rest a spread of consumer and workstation cards. **Exactly 2 rows were H100 SXM**, plus 1 H100 NVL which this child excludes.
 
-Expected collector count: **one endpoint**, paginated, with rate-limit handling.
+**It establishes source structure**, which is what was being tested:
+
+- **Availability is present at offer level.** Every record carries a boolean `rentable` and a separate `rented`. Across the mixed population 9 were rentable and 55 were not. **That ratio describes a mostly consumer-grade population and is not an H100 figure**; it is reported only to show that the field is populated and discriminating rather than always true.
+- **The data shape supports multi-offer cells.** The 64 rows came from 41 distinct `host_id` values, and one host published 6 rows. **No H100 comparable cell was sampled**: the two H100 SXM rows share a single `host_id` and a single `machine_id`, differing only in `num_gpus` of 1 and 2 at $1.4689 and $2.9356, which is one machine partitioned linearly rather than competing offers.
+- **A stable-looking participant identifier exists.** `host_id` and `machine_id` are present on every record.
+
+Expected collector count: **one endpoint**, paginated, with rate-limit handling. An H100-filtered sample across multiple pages is a Phase 2 prerequisite before any H100 rate is computed.
+
+### `host_id` is a host identifier, not operator identity
+
+The parent defines the capacity source as **the infrastructure operator where reliably determinable, and the seller otherwise**. `host_id` identifies the party that listed the offer on the marketplace and set its price. That makes it a **marketplace host and seller identifier**, and therefore a candidate for the parent's **seller-fallback** capacity-source identity. It is **not** evidence of who owns or operates the underlying hardware, and the parent forbids inferring operator identity from configuration, geography or price similarity.
+
+**Operator attribution therefore remains unresolved**, and this study found no direct operator evidence at any of the thirteen sellers. Two further questions are open: whether `host_id` is stable over time, which was not verified, and whether one host can list under several identifiers, which would break even the seller-fallback use.
 
 ### RunPod
 
@@ -119,12 +138,12 @@ The bulk price list `region_index.json` returned **HTTP 200** listing **106 regi
 
 | Blocker | Prior state | New source evidence | Classification | Coverage | Phase 2 decision needed |
 |---|---|---|---|---|---|
-| **Region** | Unresolved from price pages | Azure `armRegionName` (unauth), AWS 106-region index (unauth), Lambda `regions_with_capacity_available`, Vast `geolocation`, RunPod `DataCenter` | **PARTIALLY RESOLVABLE** | 6 of 13 confirmed | Canonical taxonomy and mapping rules |
-| **Availability** | Unresolved, 1 of 11 venues | **Vast `rentable` read directly, 9 of 64 true**; Lambda capacity-by-region list; RunPod `AVAILABILITY` expansion | **PARTIALLY RESOLVABLE**, one source verified without credentials | 4 confirmed, 3 API-key | Evidence grade scale and minimum |
-| **Minimum topology** | Unclassifiable for 4 of 9 | Lambda `specs.gpus`, RunPod `minPodGpuCount`, Vast `num_gpus`, hyperscaler SKUs | **PARTIALLY RESOLVABLE** | 6 of 13 confirmed | None; rule already exists |
-| **Seller reduction** | Untested, no comparable cell | **Vast: 41 hosts across 64 offers, busiest host with 6 offers, verified**; RunPod tier prices; Lambda size variants | **RESOLVABLE**, real multi-offer cells now observed | 3 sellers can yield real cells | **Yes**, the rule itself |
+| **Region** | Unresolved from price pages | Azure `armRegionName` (unauth), AWS 106-region index (unauth), Vast `geolocation` (verified), Lambda `regions_with_capacity_available`, RunPod `DataCenter`, DigitalOcean sizes (all key-gated), CoreWeave price surface | **PARTIALLY RESOLVABLE** | **7 of 13** | Canonical taxonomy and mapping rules |
+| **Availability** | Unresolved, 1 of 11 venues | Vast per-offer `rentable` field verified present; Lambda capacity-by-region list; RunPod `AVAILABILITY` expansion | **PARTIALLY RESOLVABLE**; field structure confirmed, **no H100 availability rate measured** | 4 of 13, 3 key-gated | Evidence grade scale and minimum |
+| **Minimum topology** | Unclassifiable for 4 of 9 | Vast `num_gpus` (verified), Lambda `specs.gpus`, RunPod `minPodGpuCount`, DigitalOcean sizes (key-gated), Azure and AWS SKU definitions, CoreWeave price surface | **PARTIALLY RESOLVABLE** | **7 of 13** | None; rule already exists |
+| **Seller reduction** | Untested, no comparable cell | Vast data shape supports multiple offers per host; RunPod tier prices; Lambda size variants | **DATA STRUCTURE EXISTS; H100 EMPIRICAL TEST STILL REQUIRED** — the two H100 SXM rows sampled share one host and one machine | 3 sellers could yield cells | **Yes**, the rule itself |
 | **Bundle envelope** | Unresolved, 40% undisclosed | Lambda `specs`, Azure and AWS SKU definitions, RunPod specs | **PARTIALLY RESOLVABLE** | Most sellers | **Yes**, the envelope |
-| **Operator attribution** | 0%, undetermined 100% | Vast `host_id` and `machine_id`, verified per offer | **NOT RECOVERABLE** for 12 of 13; **resolvable for the marketplace** | 1 of 13 | **Yes**, whether to require it |
+| **Operator attribution** | 0%, undetermined 100% | No direct operator evidence found; Vast `host_id` is a host and seller identifier, usable only as the parent's seller fallback | **NOT RECOVERABLE**, 0 of 13 | 0 of 13 | **Yes**, whether to require it at all |
 | **Freshness** | Unresolved | Azure `effectiveStartDate`, AWS dated catalog version; **no availability timestamp anywhere** | **PARTIALLY RESOLVABLE** | 2 for price, 0 for availability | **Yes**, all limits |
 | **Tax basis** | Mostly silent | One explicit exclusive-of-tax statement; provider terms not systematically audited | **METHODOLOGY DECISION STILL REQUIRED** | 3 of 13 | **Yes**, disqualification rule |
 
@@ -148,10 +167,10 @@ Candidate join keys observed: `instance_type` / `name`, `armSkuName`, `armRegion
 | Instance type and region code | AWS | **Stable documented** |
 | Instance type `name` | Lambda | **Likely stable** |
 | GPU type identifier | RunPod | **Likely stable** |
-| `host_id`, `machine_id` | Vast.ai | **Unknown, and it matters most**; both verified present per offer |
+| `host_id`, `machine_id` | Vast.ai | **Unknown, and it matters most**; present per offer, but a host identifier rather than operator identity |
 | `bundle_id`, offer `id` | Vast.ai | **Likely ephemeral** |
 
-`host_id` stability is the single most consequential unknown in this study, because operator attribution for the only source that exposes it depends on it.
+`host_id` stability is the single most consequential unknown in this study, because the marketplace's seller-fallback capacity-source identity would depend on it. It does not bear on operator attribution, which no source supports.
 
 ## Source Dynamics
 
@@ -172,7 +191,7 @@ Conceptual only. No schema, types, or migrations. The purpose is to expose wheth
 
 `source_id`, `provider_id`, `seller_id`, `operator_id` (nullable, observed for one venue), `marketplace_id` (nullable), `provider_offer_id`, `provider_sku`, `observed_at`, `source_effective_at` (nullable, observed for two providers), `native_price`, `native_currency`, `billing_unit`, `gpu_model`, `gpu_form_factor`, `gpu_memory`, `gpu_count`, `minimum_gpu_count`, `region_native`, `availability_state_raw`, `capacity_raw` (nullable), `procurement_mode_raw`, `preemptibility`, `tenancy_raw`, `vcpu`, `ram`, `storage`, `network`, `tax_basis`, `mandatory_fee_components`, `raw_source_reference`.
 
-**Two methodology requirements have no reliable observable counterpart across the market.** `availability_observed_at` has no source at any seller, and only the marketplace carries date fields at all, whose semantics were not verified; availability freshness will therefore rest on collection time and a documented staleness assumption. `operator_id` is observable at one venue only, so capacity-source collapse falls back to seller identity for twelve of thirteen.
+**Two methodology requirements have no reliable observable counterpart.** `availability_observed_at` has no source at any seller, and only the marketplace carries date fields at all, whose semantics were not verified; availability freshness will therefore rest on collection time and a documented staleness assumption. **`operator_id` has no source at all**: the one identifier found is a host and seller identifier, so capacity-source collapse falls back to seller identity across the whole market, exactly as the parent's fallback anticipates.
 
 ## Access and Licensing Constraints
 
@@ -211,7 +230,7 @@ Whether Vast `host_id` is stable over time. Whether the four follow-up providers
 
 All retrieved 13 September 2026. Primary provider documentation and endpoints only.
 
-**Verified by direct call**: [Azure Retail Prices API](https://prices.azure.com/api/retail/prices), HTTP 200 unauthenticated, returning the ND96isr H100 v5 SKU with region, price, meter type and effective date. [AWS EC2 bulk price list region index](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/region_index.json), HTTP 200, 106 regions with dated version URLs. [AWS regional services table](https://api.regional-table.region-services.aws.a2z.com/), HTTP 200. [Vast.ai bundles search](https://cloud.vast.ai/api/v0/bundles/), **HTTP 200 unauthenticated on a plain GET returning 64 per-offer records**, read directly for the field list, host distribution and `rentable` counts reported above, with HTTP 403 on subsequent filtered calls. [DigitalOcean sizes](https://api.digitalocean.com/v2/sizes), HTTP 401, confirming authentication.
+**Verified by direct call**: [Azure Retail Prices API](https://prices.azure.com/api/retail/prices), HTTP 200 unauthenticated, returning the ND96isr H100 v5 SKU with region, price, meter type and effective date. [AWS EC2 bulk price list region index](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/region_index.json), HTTP 200, 106 regions with dated version URLs. [AWS regional services table](https://api.regional-table.region-services.aws.a2z.com/), HTTP 200. [Vast.ai bundles search](https://cloud.vast.ai/api/v0/bundles/), **HTTP 200 unauthenticated on a plain GET returning 64 per-offer records**, read directly for the field list. The request was unfiltered, so the sample is a mixed, mostly consumer-grade population containing only 2 H100 SXM rows, and it is used as source-structure evidence only. HTTP 403 followed on subsequent filtered calls. [DigitalOcean sizes](https://api.digitalocean.com/v2/sizes), HTTP 401, confirming authentication.
 
 **Documentation read**: [Lambda Cloud API](https://docs.lambda.ai/api/cloud), for the instance-types endpoint, its full response schema including `regions_with_capacity_available` and `specs.gpus`, and its API-key authentication. [Vast.ai search offers reference](https://docs.vast.ai/api-reference/search/search-offers), for query operators and response fields including `host_id`, `geolocation` and `num_gpus`. [Vast.ai developer overview](https://vast.ai/developers/api), for the authentication requirement. [RunPod list GPU types](https://docs.runpod.io/api-reference-v2/catalog/list-gpu-types), for the `AVAILABILITY` expansion, availability contexts and `gpuCount` parameter. [RunPod GraphQL specification](https://graphql-spec.runpod.io/), for `gpuTypes` fields including `minPodGpuCount` and per-tier prices. [Azure Retail Prices overview](https://learn.microsoft.com/en-us/rest/api/cost-management/retail-prices/azure-retail-prices), for filter parameters and the unauthenticated design.
 
@@ -219,4 +238,12 @@ All retrieved 13 September 2026. Primary provider documentation and endpoints on
 
 ## Research History
 
-**13 September 2026**: initial source study following the merged UCPI-H100-SXM child specification. Conclusion Path B: most blockers become partially resolvable and the binding constraint moves from discovery to access. During the study one finding was corrected before publication: a Vast.ai request first recorded as an authentication failure was a query-syntax error, and a plain unauthenticated call succeeded, yielding the only direct measurements in the study of live availability, multi-offer structure and operator-level identity. Operator attribution remains unrecoverable for twelve of thirteen sellers, and no availability timestamp exists for any seller.
+**13 September 2026**: initial source study following the merged UCPI-H100-SXM child specification. Conclusion Path B: most blockers become partially resolvable and the binding constraint moves from discovery to access.
+
+Two findings were corrected before this study was finalized, both in the direction of claiming less.
+
+First, a Vast.ai request initially recorded as an authentication failure was a query-syntax error on my part; a plain unauthenticated call succeeded and its records were read directly.
+
+Second, and more importantly, the resulting 64-row sample was **unfiltered**, so it is a mixed and mostly consumer-grade population containing only 2 H100 SXM rows. It was briefly treated as H100 evidence and yielded an availability rate, a multi-offer count and an operator-identity claim. All three are withdrawn. The sample is **source-structure evidence only**: it shows that `rentable`, `host_id`, `machine_id`, `geolocation` and `num_gpus` are populated per offer, which is what was being tested, and it supports no H100-specific rate or distribution. `host_id` is reclassified as a marketplace host and seller identifier and therefore a candidate for the parent's seller fallback, not as operator identity. Seller reduction is reclassified from resolvable to **data structure exists, H100 empirical test still required**, since the two H100 SXM rows sampled share one host and one machine.
+
+Operator attribution is unresolved with no direct evidence at any of the thirteen sellers, and no availability timestamp exists for any seller.
