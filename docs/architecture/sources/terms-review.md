@@ -28,7 +28,7 @@ All documents were retrieved and read on 13 September 2026. Verbatim clauses are
 | Source | Collection | Data use | Production state | Written agreement needed |
 |---|---|---|---|---|
 | Vast.ai offer search | **not permitted** | **not permitted** | blocked | Yes, for both |
-| Runpod GPU types | **not permitted** | **not permitted** | blocked | Yes, for both |
+| Runpod catalog GPU types | under review | under review | review pending | Undetermined |
 | Lambda instance types | under review | **not permitted** | blocked | Yes, for data use |
 | DigitalOcean sizes | under review | under review | review pending | Undetermined |
 | Azure Retail Prices | **permitted** | under review | review pending | Undetermined |
@@ -46,17 +46,21 @@ On data use, addressing Authorized Data, which the same document describes as in
 
 The current API reference also states that *"All endpoints require `Authorization: Bearer $VAST_API_KEY`"*, which is a change from the unauthenticated behaviour observed during Phase 2 research.
 
-**No further live retrieval.** The research already gathered in Phases 1 and 2 stands as research and is not withdrawn, and the interface's field shape may inform synthetic test fixtures. Nothing from this venue may enter a published UCPI value without a separate written agreement.
+**No further retrieval.** The Phase 1 and Phase 2 research artifacts remain part of Urdais's research history, and this review makes no determination about prior activity. The interface's field shape may inform synthetic test fixtures. Nothing from this venue may enter a published UCPI value, and no further retrieval may occur, without a separate written agreement satisfying the current terms.
 
-### Runpod — prohibited on both axes
+### Runpod — unresolved, because its own primary sources conflict
 
-Terms of Service, Last Updated 24 March 2026.
+Two Runpod primary sources point in different directions, and neither settles the question Urdais needs answered.
 
-On collection: *"access or use the Site or the Service through automated or non-human means, whether through a bot, script or otherwise"*, and *"Except as may be the result of standard search engine or Internet browser usage, use, launch, develop, or distribute any automated system, including without limitation, any spider, robot, cheat utility, scraper, or offline reader that accesses the Site"*.
+The **Terms of Service**, Last Updated 24 March 2026, restrict automated access in general terms: *"access or use the Site or the Service through automated or non-human means, whether through a bot, script or otherwise"*, and *"Except as may be the result of standard search engine or Internet browser usage, use, launch, develop, or distribute any automated system, including without limitation, any spider, robot, cheat utility, scraper, or offline reader that accesses the Site"*. On compilation: *"Systematically retrieve data or other content from the Site to create or compile, directly or indirectly, a collection, compilation, database, or directory without written permission from us."* And separately: *"Use the Service as part of any effort to compete with us."*
 
-On data use: *"Systematically retrieve data or other content from the Site to create or compile, directly or indirectly, a collection, compilation, database, or directory without written permission from us."* And separately: *"Use the Service as part of any effort to compete with us."*
+The **official API documentation** affirmatively provides the opposite capability. The API v2 overview states: *"The Runpod REST API v2 provides programmatic access to all Runpod compute resources. Integrate GPU infrastructure into your applications, workflows, and automation systems."* It describes the API as being for use *"without using the console"*, and requires that *"All requests require a Runpod API key in the request headers."*
 
-This is the source with the strongest availability shape found anywhere: a four-level per-datacenter signal conditional on requested GPU count, which is exactly what the child's Grade 3 minimum contemplates. It is nonetheless unavailable without written permission.
+**These primary sources are in tension, and this review does not resolve which governs.** The API documentation establishes that some automated, non-human access is intentionally supported and provided for, which the general Terms language read alone would appear to restrict. Neither source settles the separate question Urdais actually needs answered: whether pricing and availability data retrieved through that documented API may be used to construct, calculate or publish an external index.
+
+Both axes are therefore recorded as **under review**, and `written_agreement_required` is left undetermined rather than asserted, because neither source states that a written agreement is specifically required for the use Urdais intends. The conservative reading is that clarification is needed, not that permission is absent.
+
+This is the source with the strongest availability shape found anywhere: a four-level per-datacenter signal conditional on requested GPU count and country, which is exactly what the child's Grade 3 minimum contemplates. That combination of technical fit and resolvable ambiguity is why it heads the clarification list below. Note that REST API v1 is deprecated and retires on 15 November 2026; the catalog endpoint recorded in the registry is the v2 path, `GET /v2/catalog/gpus` on `https://api.runpod.io`.
 
 ### Lambda — collection arguable, data use prohibited
 
@@ -100,9 +104,9 @@ The two sources with a settled collection permission are the two that cannot ser
 
 Phase 2 established that Azure and AWS sell H100 capacity as **whole eight-accelerator instances** and expose **no capacity signal at all**, placing them at availability Grade 4, below the child's Grade 3 minimum. Dividing a node price by eight is arithmetic, not comparability, and the family prohibits crossing a topology class. Their data is excellent and describes a different product.
 
-The sources that match the per-accelerator child, carry discriminating availability, and expose seller-level structure are exactly the three whose terms prohibit the use: the marketplace on both axes, Runpod on both axes, Lambda on data use.
+The sources that match the per-accelerator child, carry discriminating availability and expose seller-level structure are the three whose terms currently stand in the way, though not all in the same manner. Two are settled prohibitions: the marketplace on both axes, and Lambda on the data-use axis. One is an unresolved conflict between a provider's own documents: Runpod, where the Terms restrict automated access while the API documentation provides it, and where neither source addresses index construction.
 
-**Phase 4 for UCPI-H100-SXM is therefore operationally blocked by source licensing.** This is not a methodology failure. The methodology already anticipated it: *"A source cannot enter production unless Urdais has a permitted and reproducible collection path"*, and the child lists that prerequisite among its launch blockers. The review has now established which sources fail it and why.
+**No source is currently production-approved for UCPI-H100-SXM, so Phase 4 remains operationally blocked.** The per-accelerator sources available are either expressly blocked for the required use or remain unresolved pending written clarification. This is not a methodology failure. The methodology already anticipated it: *"A source cannot enter production unless Urdais has a permitted and reproducible collection path"*, and the child lists that prerequisite among its launch blockers. The review has now established which sources fail it and why.
 
 ## What this does not mean
 
@@ -110,13 +114,17 @@ It does not mean the methodology should change. Weakening the availability minim
 
 It does not mean Phases 1 to 3 were wasted. The schema, the eligibility vocabulary and the lineage model are unaffected; what is missing is permission to fill them for this particular child.
 
-It does not mean the collected research is tainted. Phases 1 and 2 were bounded research reads, not automated production collection, and their conclusions stand as research.
+It does not require discarding the existing research. The Phase 1 and Phase 2 artifacts remain part of Urdais's research history and their findings still inform the methodology. **This review does not make a determination about prior research activity**; it establishes what the current published terms say and what they mean for future collection and production use.
 
 ## Recommended paths
 
 Three, in the order they could be pursued. Each is a decision for the owner, not for an implementation phase.
 
-**Seek written permission.** The three sources that fit the child all condition the permission Urdais needs on a written agreement, and all three name that route explicitly. A benchmark administrator approaching a venue for index-construction rights is an ordinary commercial conversation, and the IOSCO-informed governance already documented in the family methodology is the kind of thing such a request rests on. This is the only path that unblocks the per-accelerator child as specified.
+**Seek written clarification or permission, in this order.** A benchmark administrator approaching a venue for index-construction rights is an ordinary commercial conversation, and the IOSCO-informed governance already documented in the family methodology is the kind of thing such a request rests on. This is the only path that unblocks the per-accelerator child as specified. The order below reflects both how resolvable each case looks and how useful the source would be.
+
+1. **Runpod, first.** Its availability structure is the strongest found for this child, its official API documentation affirmatively supports programmatic automation, and the obstacle is a conflict between the provider's own documents rather than a clause aimed at what Urdais wants to do. That may be resolvable by written clarification rather than a bespoke data licence.
+2. **Lambda, second.** Excellent source shape, and a single endpoint that answers four of the child's requirements. But the benchmark prohibition is directly on point and would need an express carve-out rather than a clarification.
+3. **Vast.ai, third.** It blocks both automation and index use absent a written agreement, in clauses that name indices and benchmarks explicitly, and the venue also carries the enumeration-incompleteness limitation Phase 2 measured.
 
 **Research the whole-node sibling.** Phase 2 already recommended it as future work, on product grounds. The terms review strengthens that recommendation independently: Azure and AWS have the settled collection permission, publish region-resolved prices with effective dates, and sell exactly the whole eight-accelerator product such a sibling would measure. Its data-use axis would still need confirmation, and its availability problem is unchanged, so it is not a shortcut to publication. It is the one place where permitted collection and available product currently overlap.
 

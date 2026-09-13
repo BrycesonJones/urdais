@@ -8,6 +8,7 @@ declare
   ok boolean;
   n integer;
   vast uuid := '55555555-0000-4000-8000-000000000001';
+  runpod uuid := '55555555-0000-4000-8000-000000000003';
   azure uuid := '55555555-0000-4000-8000-000000000005';
 begin
   -- Six providers and six interfaces were reviewed and recorded.
@@ -33,6 +34,31 @@ begin
      or (select written_agreement_required from reference.source_interfaces where id = vast) is not true then
     raise exception 'the marketplace interface is not recorded as blocked on both axes';
   end if;
+
+  -- Runpod is unresolved on both axes, not prohibited: its Terms restrict automated
+  -- access while its official API documentation provides a programmatic interface,
+  -- and neither source settles index use. Ambiguity is recorded as ambiguity.
+  if (select terms_review_state from reference.source_interfaces where id = runpod) <> 'under_review'
+     or (select data_use_terms_state from reference.source_interfaces where id = runpod) <> 'under_review'
+     or (select production_access_state from reference.source_interfaces where id = runpod) <> 'production_review_pending' then
+    raise exception 'Runpod is not recorded as unresolved on both axes';
+  end if;
+  -- No written agreement is asserted, because neither source states one is required.
+  if (select written_agreement_required from reference.source_interfaces where id = runpod) is not null then
+    raise exception 'Runpod records a written-agreement requirement the evidence does not establish';
+  end if;
+  -- Both sides of the conflict are retained so it stays auditable.
+  if (select terms_evidence->>'conflict' from reference.source_interfaces where id = runpod) is null then
+    raise exception 'Runpod evidence does not record the conflict between its primary sources';
+  end if;
+  select count(*) into n from reference.source_interfaces,
+       lateral jsonb_array_elements(terms_evidence->'documents') d
+   where id = runpod and d->>'title' ilike '%API%';
+  if n = 0 then raise exception 'Runpod evidence retains no API documentation source'; end if;
+  select count(*) into n from reference.source_interfaces,
+       lateral jsonb_array_elements(terms_evidence->'documents') d
+   where id = runpod and d->>'title' ilike '%Terms of Service%';
+  if n = 0 then raise exception 'Runpod evidence lost its Terms of Service source'; end if;
 
   -- The two axes genuinely differ somewhere: retrieval permitted, index use not settled.
   if (select terms_review_state from reference.source_interfaces where id = azure) <> 'permitted'
@@ -84,6 +110,14 @@ begin
   exception when check_violation then ok := true;
   end;
   if not ok then raise exception 'invented data-use state was accepted'; end if;
+
+  -- Exactly the settled prohibitions are blocked: the marketplace on both axes and
+  -- Lambda on data use. An unresolved source is review-pending, never blocked.
+  select count(*) into n from reference.source_interfaces where production_access_state = 'production_blocked';
+  if n <> 2 then raise exception 'expected 2 blocked interfaces (settled prohibitions only), found %', n; end if;
+  select count(*) into n from reference.source_interfaces
+   where terms_review_state = 'under_review' or data_use_terms_state = 'under_review';
+  if n < 4 then raise exception 'expected at least 4 interfaces with an unresolved axis, found %', n; end if;
 
   -- Registry rows are not market participants: no entity, role or observation was created.
   select count(*) into n from reference.market_entities;
