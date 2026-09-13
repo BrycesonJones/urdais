@@ -26,6 +26,7 @@ describe("shared methodology pages", () => {
 
 describe("output methodology pages", () => {
   const ugai = findDoc("methodology/ugai");
+  const uavi = findDoc("methodology/uavi");
   const universe = findDoc("methodology/ai-equity-universe");
 
   it("registers UGAI under Methodology, directly after its parent universe", () => {
@@ -42,5 +43,23 @@ describe("output methodology pages", () => {
     expect(ugaiDoc.match(/^# /gm)).toHaveLength(1);
     expect(read(universe!.file)).toContain(`](${docHref(ugai!.slug)})`);
     expect(read("methodology.md")).toContain(`](${docHref(ugai!.slug)})`);
+  });
+
+  it("registers UAVI under Methodology, directly after its sibling UGAI", () => {
+    expect(uavi).toMatchObject({ section: "Methodology", file: "methodology/uavi.md" });
+    expect(docPages[docPages.indexOf(ugai!) + 1]).toBe(uavi);
+    expect(docHref(uavi!.slug)).toBe("/docs/methodology/uavi");
+  });
+
+  it("links UAVI to its parent universe, its sibling, and the framework", () => {
+    const read = (file: string) => readFileSync(path.join(process.cwd(), "docs", file), "utf8");
+    const uaviDoc = read(uavi!.file);
+    expect(uaviDoc).toContain(`](${docHref(universe!.slug)})`);
+    expect(uaviDoc).toContain(`](${docHref(ugai!.slug)})`);
+    expect(uaviDoc).toContain("](/docs/methodology)");
+    expect(uaviDoc.match(/^# /gm)).toHaveLength(1);
+    expect(read(universe!.file)).toContain(`](${docHref(uavi!.slug)})`);
+    expect(read(ugai!.file)).toContain(`](${docHref(uavi!.slug)})`);
+    expect(read("methodology.md")).toContain(`](${docHref(uavi!.slug)})`);
   });
 });

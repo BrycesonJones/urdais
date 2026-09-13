@@ -40,6 +40,13 @@ export const docPages: readonly DocPage[] = [
     section: "Methodology",
     file: "methodology/ugai.md",
   },
+  {
+    slug: "methodology/uavi",
+    title: "UAVI",
+    description: "Proposed methodology for the Urdais AI Volatility Index: options reference securities, 30-day VIX-style implied constituent variance, and aggregation over the AI Equity Universe.",
+    section: "Methodology",
+    file: "methodology/uavi.md",
+  },
 ];
 
 export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];
