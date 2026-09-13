@@ -9,6 +9,7 @@ declare
   n integer;
   vast uuid := '55555555-0000-4000-8000-000000000001';
   runpod uuid := '55555555-0000-4000-8000-000000000003';
+  lambda uuid := '55555555-0000-4000-8000-000000000002';
   azure uuid := '55555555-0000-4000-8000-000000000005';
 begin
   -- Six providers and six interfaces were reviewed and recorded.
@@ -69,6 +70,32 @@ begin
        lateral jsonb_array_elements(terms_evidence->'documents') d
    where id = runpod and d->>'title' ilike '%Terms of Service%';
   if n = 0 then raise exception 'Runpod evidence lost its Terms of Service source'; end if;
+
+  -- Lambda: classification unchanged by the terms investigation, evidence expanded.
+  -- The act of retrieval is not independently prohibited, so collection stays
+  -- under review while data use stays prohibited on the purpose-based clause.
+  if (select terms_review_state from reference.source_interfaces where id = lambda) <> 'under_review'
+     or (select data_use_terms_state from reference.source_interfaces where id = lambda) <> 'not_permitted'
+     or (select production_access_state from reference.source_interfaces where id = lambda) <> 'production_blocked'
+     or (select written_agreement_required from reference.source_interfaces where id = lambda) is not true then
+    raise exception 'Lambda classification is not as the investigation left it';
+  end if;
+  -- The carve-out is the whole basis of the outreach and must survive.
+  select count(*) into n from reference.source_interfaces,
+       lateral jsonb_array_elements(terms_evidence->'documents') d,
+       lateral jsonb_array_elements(d->'clauses') c
+   where id = lambda and c->>'text' like '%expressly permitted%Order%';
+  if n = 0 then raise exception 'Lambda evidence lost the express carve-out clause'; end if;
+  -- Scope: the Authorized APIs are the Services, which is why the clause reaches the endpoint.
+  select count(*) into n from reference.source_interfaces,
+       lateral jsonb_array_elements(terms_evidence->'documents') d,
+       lateral jsonb_array_elements(d->'clauses') c
+   where id = lambda and c->>'axis' = 'scope' and c->>'text' like '%Authorized APIs%';
+  if n = 0 then raise exception 'Lambda evidence lost the scope clause'; end if;
+  -- The interpretive question is recorded as open rather than silently decided.
+  if (select terms_evidence->>'open_question' from reference.source_interfaces where id = lambda) is null then
+    raise exception 'Lambda evidence does not record the open benchmarking question';
+  end if;
 
   -- The two axes genuinely differ somewhere: retrieval permitted, index use not settled.
   if (select terms_review_state from reference.source_interfaces where id = azure) <> 'permitted'

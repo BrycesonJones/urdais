@@ -13,7 +13,9 @@
 | Copied | `legal@runpod.io` |
 | Recipient team | Not individually identified. `help@runpod.io` is the address the Terms of Service designate in their Contact Us section for *"any questions ... regarding the Service or to receive further information regarding use of the Service"*. `legal@runpod.io` is the address the same document uses for legal notices, and was copied because the request seeks written permission under two specific clauses. |
 | Subject | Request for written permission — automated catalog retrieval and derived index use (Urdais) |
-| Sender | Bryceson Jones, Urdais, https://urdais.com, brycesonshui@gmail.com |
+| Sender | Bryceson Jones, Urdais, https://urdais.com |
+| Sending account | `bryceson.jones17@gmail.com` (the connected Gmail account) |
+| Signature address | `brycesonshui@gmail.com` — **does not match the sending account; see the correction note below** |
 | Provider reference ID | None issued. No ticket or case number was returned at submission. |
 | Message identifier | Gmail message and thread `1a09b4ce294d8be3` |
 | Response as at this writing | None received |
@@ -21,6 +23,8 @@
 **Why this route rather than the phone line or support portal.** Runpod's contact page offers a sales telephone number and a support portal at `contact.runpod.io`, which returned HTTP 403 to an unauthenticated request. Neither produces the written record this request needs. The Terms of Service themselves designate an email address for questions about use of the Service, and that address is a first-party published route, so it was used in preference to a phone call that would leave no auditable trace.
 
 **Deviation from the draft below.** One substantive change and one omission. The sent message names both recipients and explains why each was chosen, which the draft did not. The signature omits a role or job title, because none is recorded anywhere in the project and inventing one in a request to a legal department would have been a fabrication. Name, company, site and reply address were used instead. Nothing in the legal or commercial substance of the request was altered.
+
+**Correction: the signature address does not match the sending account.** The message was signed with `brycesonshui@gmail.com`, taken from the project context, but it was sent from `bryceson.jones17@gmail.com`, which is the connected Gmail account. This was discovered on 13 September 2026 when the thread was read back. The practical risk is low, because a reply sent with Reply reaches the sending account regardless, and both addresses belong to the same person. The risk is not zero: a recipient who types the address from the signature would reach a different inbox, and a legal correspondence should not carry an inconsistency about who to answer. **Whether to send a one-line correction is a decision for the owner, and has not been made.** It is recorded here rather than quietly fixed because the message as sent cannot be altered.
 
 **What this does not change.** Sending a request is not permission. Runpod remains `not_permitted` on both axes, `production_blocked`, with `written_agreement_required` true. The registry was deliberately not modified by this outreach. Runpod may move toward approval only on written evidence granting both axes; an acknowledgement, a verbal yes, API credentials, or support confirming the endpoint works are each insufficient.
 

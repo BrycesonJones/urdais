@@ -30,6 +30,8 @@ All documents were retrieved and read on 13 September 2026. Verbatim clauses are
 | Vast.ai offer search | **not permitted** | **not permitted** | blocked | Yes, for both |
 | Runpod catalog GPU types | **not permitted** | **not permitted** | blocked | Yes, for both |
 | Lambda instance types | under review | **not permitted** | blocked | Yes, for data use |
+
+Lambda's position was re-examined in a dedicated investigation on 13 September 2026. The four classification values are unchanged; what changed is the evidence behind them. See the Lambda section below.
 | DigitalOcean sizes | under review | under review | review pending | Undetermined |
 | Azure Retail Prices | **permitted** | under review | review pending | Undetermined |
 | AWS Price List Bulk | **permitted** | under review | review pending | Undetermined |
@@ -72,15 +74,25 @@ Both axes are therefore recorded as **not permitted**, with `written_agreement_r
 
 **This makes Runpod more actionable, not less.** The obstacle is a stated prohibition with a stated remedy rather than an unresolved ambiguity, so the commercial approach is a permission request rather than a clarification question. Runpod still heads the outreach order: its clause is a generic anti-compilation term rather than one aimed at indices, its Terms contemplate written permission as the ordinary cure, and its availability data remains the strongest found anywhere. Note that REST API v1 is deprecated and retires on 15 November 2026; the endpoint recorded in the registry is the v2 path, `GET /v2/catalog/gpus` on `https://api.runpod.io`.
 
-### Lambda — collection arguable, data use prohibited
+### Lambda — one purpose-based clause, with its own carve-out
 
-Terms of service, Last updated August 2025.
+Terms of service, Last updated August 2025. Six documents are published together; the **Cloud Terms of Service** govern the Services and the Authorized APIs.
 
-The Acceptable Use Policy's prohibited list includes *"web crawling which is not restricted to a rate so as not to impair or otherwise disrupt the servers being crawled"*. The prohibition attaches to **unrestricted** crawling, so rate-limited retrieval is not forbidden by that clause, and the Cloud Terms require only that *"Customer shall use the Authorized APIs in accordance with the Documentation"*. The collection axis is therefore arguable rather than settled, and is recorded as under review.
+**Scope is settled.** The Cloud Terms define *"Services"* as *"the software services and platform provided by Lambda, including (i) the web and other user interfaces, applications, and software provided to Users, **(ii) the Authorized APIs** and (iii) any modifications..."*. The restrictions therefore reach `cloud.lambda.ai/api/v1/instance-types` directly.
 
-The data-use axis is not arguable. The Cloud Terms of Service prohibit the customer from: *"access any portion of the Services for the purpose of building a similar or competitive product or service, or **monitor the Services for any benchmarking or competitive purpose**"*.
+**Only one clause reaches Urdais, and it restricts purpose rather than activity.** The Cloud Terms provide that the customer will not *"(iv) access any portion of the Services for the purpose of building a similar or competitive product or service, or **monitor the Services for any benchmarking or competitive purpose**"*.
 
-UCPI is a benchmark, and a collector polling Lambda's instance-types endpoint daily is monitoring the Services for a benchmarking purpose. API access additionally requires being a customer bound by those terms; a live unauthenticated call returned HTTP 401. This is the source Phase 1 called the reference shape, and its own terms exclude the use Urdais intends.
+**A negative finding matters as much as that clause.** There is no anti-scraping provision, no prohibition on systematic retrieval, and no prohibition on compiling a collection, compilation, database or directory anywhere in Lambda's documents. The Acceptable Use Policy bars only *"web crawling which is not restricted to a rate so as not to impair or otherwise disrupt the servers being crawled"*, and the Website Terms of Use contain no automated-access language at all. Clause (ii) contemplates use *"in accordance with the Documentation"*. **Nothing independently prohibits the act of retrieval.** This distinguishes Lambda sharply from the marketplace and from Runpod, where an anti-compilation clause is the basis of the block.
+
+The consequence is that both axes turn on one question, not two: whether Urdais's purpose is caught by clause (iv).
+
+**Is a published price index "benchmarking" here? Genuinely arguable.** For coverage: Urdais would poll the Services on a schedule, which is monitoring; the clause says *"any"* benchmarking purpose; and Urdais's own methodology describes its output as a benchmark and is framed on the IOSCO Principles for Financial Benchmarks. Against coverage: in cloud agreements "benchmarking" conventionally means performance evaluation and the publication of comparative performance results, the clause sits among load tests, penetration tests, reverse engineering and competitive product development, and Urdais measures published prices rather than the performance or capability of Lambda's compute.
+
+The reading leans toward coverage, mostly because it would be awkward for Urdais to argue it is not benchmarking while publishing an IOSCO-framed benchmark methodology. But it is not settled, and this review does not settle it. The conservative reading is retained: **data use stays prohibited, collection stays under review** because the act is otherwise permitted and only its purpose is in doubt.
+
+**The clause carries its own remedy, which is why this matters less than it appears.** The prohibited-use list opens *"**Except for uses that are expressly permitted (for example, in the Documentation or in an Order)**"*, and an *"Order"* is defined as *"an order for the Services that has been accepted by Customer (if online) or otherwise mutually agreed to by the Parties"*. Lambda has written down how a prohibited use becomes permitted. That is a more concrete route than a generic reference to written permission, and it makes the interpretive question secondary: the carve-out is worth asking for whether or not the clause applies.
+
+API access requires being a customer bound by these terms; a live unauthenticated call returned HTTP 401. The Cloud Terms designate a notice route: *"Lambda, Inc., Attn: Legal Department, 2510 Zanker Rd. San Jose, CA 95131, with a copy to legal@lambdal.com."*
 
 ### DigitalOcean — unsettled on both axes
 
@@ -133,7 +145,7 @@ Three, in the order they could be pursued. Each is a decision for the owner, not
 **Seek written clarification or permission, in this order.** A benchmark administrator approaching a venue for index-construction rights is an ordinary commercial conversation, and the IOSCO-informed governance already documented in the family methodology is the kind of thing such a request rests on. This is the only path that unblocks the per-accelerator child as specified. The order below reflects both how resolvable each case looks and how useful the source would be.
 
 1. **Runpod, first. Request sent 13 September 2026, awaiting a response.** Its availability structure is the strongest found for this child, its official API documentation affirmatively supports programmatic automation for account holders, and its blocking clause is a generic anti-compilation term rather than one aimed at indices. The Terms name written permission as the ordinary remedy and contemplate commercial use that is *"specifically endorsed or approved by us"*, so this is a permission request rather than a bespoke data licence. The request, the route chosen and the evidence of sending are recorded in the Runpod Permission Request document held alongside this one. **Sending a request is not permission**: Runpod remains prohibited on both axes until written evidence says otherwise.
-2. **Lambda, second.** Excellent source shape, and a single endpoint that answers four of the child's requirements. But the benchmark prohibition is directly on point and would need an express carve-out rather than a clarification.
+2. **Lambda, second. Request drafted 13 September 2026, not yet sent.** Excellent source shape, and a single endpoint that answers four of the child's requirements. The benchmark prohibition is on point, but the clause carries an express carve-out for uses permitted *"in the Documentation or in an Order"*, so there is a named contractual route rather than an open-ended ask. Lambda is also the only blocked source with **no** anti-scraping or anti-compilation clause, so only its purpose restriction stands in the way. The draft and the recommended route are in the Lambda Permission Request document held alongside this one.
 3. **Vast.ai, third.** It blocks both automation and index use absent a written agreement, in clauses that name indices and benchmarks explicitly, and the venue also carries the enumeration-incompleteness limitation Phase 2 measured.
 
 **Research the whole-node sibling.** Phase 2 already recommended it as future work, on product grounds. The terms review strengthens that recommendation independently: Azure and AWS have the settled collection permission, publish region-resolved prices with effective dates, and sell exactly the whole eight-accelerator product such a sibling would measure. Its data-use axis would still need confirmation, and its availability problem is unchanged, so it is not a shortcut to publication. It is the one place where permitted collection and available product currently overlap.
