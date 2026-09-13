@@ -149,7 +149,7 @@ The normalized fields a future collector for either candidate must produce, mapp
 | Enumeration | `enumeration_assessment` = `complete` for both catalogs | ✓ |
 | Seller-level reduction record and eligible offer set | No table yet | Phase 6 publication layer, by design |
 
-Three small amendments, none applied here: they belong with the first collector, when a market entity and a retrieval actually exist to carry them.
+**Applied in the implementation-readiness slice, 13 September 2026**: all three gaps are closed by `20260913140000_production_ingestion_fields.sql`, and the publication layer (seller-level, capacity-source and regional observation tables, calculation runs, publications) by `20260913150000_publication_layer.sql`. See [ucpi-implementation-readiness.md](../ucpi-implementation-readiness.md).
 
 ## 11. Amendment classification
 

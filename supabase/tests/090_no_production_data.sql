@@ -17,7 +17,13 @@ declare
     'reference.native_identifiers',
     'pipeline.source_retrievals', 'pipeline.raw_offers', 'pipeline.normalized_observations',
     'pipeline.observation_evidence', 'pipeline.eligibility_assessments',
-    'pipeline.eligibility_exclusions', 'pipeline.eligibility_diagnostics'
+    'pipeline.eligibility_exclusions', 'pipeline.eligibility_diagnostics',
+    -- Implementation readiness: the publication layer exists and holds nothing.
+    'reference.permission_grants',
+    'pipeline.calculation_runs', 'pipeline.seller_observations', 'pipeline.seller_observation_candidates',
+    'pipeline.capacity_source_observations', 'pipeline.capacity_source_members',
+    'pipeline.regional_observations', 'pipeline.regional_observation_participants',
+    'pipeline.regional_publications'
   ];
 begin
   foreach tbl in array must_be_empty loop
@@ -40,11 +46,16 @@ begin
    where terms_review_state = 'permitted' and data_use_terms_state = 'permitted';
   if n <> 0 then raise exception '% source(s) already cleared on both terms axes without review', n; end if;
 
-  -- No publication-layer tables exist yet; that is Phase 6.
-  if exists (select 1 from information_schema.tables where table_schema in ('reference', 'pipeline')
-             and table_name ~ '(calculation|participant|publication|series|ucpi_observation)') then
-    raise exception 'a publication-layer table exists ahead of Phase 6';
+  -- The publication layer exists (implementation readiness) and no value has been published.
+  if not exists (select 1 from information_schema.tables where table_schema = 'pipeline' and table_name = 'regional_observations') then
+    raise exception 'the publication layer is missing';
   end if;
+  select count(*) into n from pipeline.regional_publications;
+  if n <> 0 then raise exception 'a UCPI value has been published'; end if;
+
+  -- No production retrieval and no permission grant exist.
+  select count(*) into n from pipeline.source_retrievals where retrieval_purpose = 'production';
+  if n <> 0 then raise exception 'a production retrieval exists'; end if;
 
   raise notice 'no production data: ok';
 end $$;
