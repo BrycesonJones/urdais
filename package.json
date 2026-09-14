@@ -16,6 +16,7 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
+    "tokens:ingest": "tsx scripts/tokens/ingest.ts",
     "db:start": "scripts/db/local.sh start",
     "db:stop": "scripts/db/local.sh stop",
     "db:reset": "scripts/db/local.sh reset",
@@ -51,6 +52,7 @@
     "eslint-config-next": "16.3.4",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",
+    "tsx": "^4.20.5",
     "typescript": "^5",
     "vitest": "^4.1.11"
   }

@@ -14,8 +14,9 @@ declare
   -- Launch enablement seeds stable reference data (legal entities, seller roles, canonical
   -- countries, product identifiers, evidenced region mappings). Those tables are checked in
   -- 140_provider_reference_data.sql; everything observed or permissive must still be empty.
+  -- Wave-1 token-pricing seeds stable model identities and aliases (checked in
+  -- 190_token_pricing_wave1.sql). Those are catalog rows, not observations.
   must_be_empty text[] := array[
-    'reference.models', 'reference.model_aliases',
     'pipeline.source_retrievals', 'pipeline.raw_offers', 'pipeline.normalized_observations',
     'pipeline.observation_evidence', 'pipeline.eligibility_assessments',
     'pipeline.eligibility_exclusions', 'pipeline.eligibility_diagnostics',

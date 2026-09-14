@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>OpenAI API pricing fixture</title></head>
+<body>
+<h1>Pricing</h1>
+<p>Prices per 1M tokens.</p>
+<h2>Standard</h2>
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="4">Short context</th>
+      <th colspan="4">Long context</th>
+    </tr>
+    <tr>
+      <th>Model</th>
+      <th>Input</th>
+      <th>Cached input</th>
+      <th>Cache writes</th>
+      <th>Output</th>
+      <th>Input</th>
+      <th>Cached input</th>
+      <th>Cache writes</th>
+      <th>Output</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>gpt-6-astra</td>
+      <td>$10.00</td><td>$1.00</td><td>$12.50</td><td>$50.00</td>
+      <td>$20.00</td><td>$2.00</td><td>$25.00</td><td>$75.00</td>
+    </tr>
+    <tr>
+      <td>gpt-5.6-sol</td>
+      <td>$4.00</td><td>$0.40</td><td>$5.00</td><td>$20.00</td>
+      <td>$8.00</td><td>$0.80</td><td>$10.00</td><td>$30.00</td>
+    </tr>
+    <tr>
+      <td>gpt-5.6-terra</td>
+      <td>$2.00</td><td>$0.20</td><td>$2.50</td><td>$12.00</td>
+      <td>$4.00</td><td>$0.40</td><td>$5.00</td><td>$18.00</td>
+    </tr>
+    <tr>
+      <td>gpt-5.6-luna</td>
+      <td>$0.20</td><td>$0.02</td><td>$0.25</td><td>$1.20</td>
+      <td>$0.40</td><td>$0.04</td><td>$0.50</td><td>$1.80</td>
+    </tr>
+    <tr>
+      <td>gpt-5.6-cyber</td>
+      <td>$12.50</td><td>$1.25</td><td>$15.625</td><td>$75.00</td>
+      <td>-</td><td>-</td><td>-</td><td>-</td>
+    </tr>
+  </tbody>
+</table>
+<p>The exact token cutoff between short context and long context is not published in this table; those column labels are preserved without inventing a threshold.</p>
+<p><code>gpt-daybreak-blue-latest</code> and <code>gpt-daybreak-red-latest</code> are aliases that currently point to <code>gpt-5.6-sol</code> and <code>gpt-5.6-cyber</code>, respectively.</p>
+<p>Regional processing (data residency) endpoints are charged a 10% uplift for models released on or after March 5, 2026, that are eligible for data residency. Per-model release dates are not on this table.</p>
+<p>Priority processing was renamed Fast mode on July 30, 2026. You can use either service_tier: "priority" or service_tier: "fast".</p>
+<h2>Batch</h2>
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="4">Short context</th>
+      <th colspan="4">Long context</th>
+    </tr>
+    <tr>
+      <th>Model</th>
+      <th>Input</th>
+      <th>Cached input</th>
+      <th>Cache writes</th>
+      <th>Output</th>
+      <th>Input</th>
+      <th>Cached input</th>
+      <th>Cache writes</th>
+      <th>Output</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>gpt-6-astra</td>
+      <td>$5.00</td><td>$0.50</td><td>$6.25</td><td>$25.00</td>
+      <td>$10.00</td><td>$1.00</td><td>$12.50</td><td>$37.50</td>
+    </tr>
+    <tr>
+      <td>gpt-5.6-sol</td>
+      <td>$2.00</td><td>$0.20</td><td>$2.50</td><td>$10.00</td>
+      <td>$4.00</td><td>$0.40</td><td>$5.00</td><td>$15.00</td>
+    </tr>
+    <tr>
+      <td>gpt-5.6-terra</td>
+      <td>$1.00</td><td>$0.10</td><td>$1.25</td><td>$6.00</td>
+      <td>$2.00</td><td>$0.20</td><td>$2.50</td><td>$9.00</td>
+    </tr>
+    <tr>
+      <td>gpt-5.6-luna</td>
+      <td>$0.10</td><td>$0.01</td><td>$0.125</td><td>$0.60</td>
+      <td>$0.20</td><td>$0.02</td><td>$0.25</td><td>$0.90</td>
+    </tr>
+  </tbody>
+</table>
+<h2>Fast mode</h2>
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th colspan="4">Short context</th>
+      <th colspan="4">Long context</th>
+    </tr>
+    <tr>
+      <th>Model</th>
+      <th>Input</th>
+      <th>Cached input</th>
+      <th>Cache writes</th>
+      <th>Output</th>
+      <th>Input</th>
+      <th>Cached input</th>
+      <th>Cache writes</th>
+      <th>Output</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>gpt-6-astra</td>
+      <td>$20.00</td><td>$2.00</td><td>$25.00</td><td>$100.00</td>
+      <td>$40.00</td><td>$4.00</td><td>$50.00</td><td>$150.00</td>
+    </tr>
+    <tr>
+      <td>gpt-5.6-sol</td>
+      <td>$8.00</td><td>$0.80</td><td>$10.00</td><td>$40.00</td>
+      <td>$16.00</td><td>$1.60</td><td>$20.00</td><td>$60.00</td>
+    </tr>
+    <tr>
+      <td>gpt-5.6-terra</td>
+      <td>$4.00</td><td>$0.40</td><td>$5.00</td><td>$24.00</td>
+      <td>$8.00</td><td>$0.80</td><td>$10.00</td><td>$36.00</td>
+    </tr>
+    <tr>
+      <td>gpt-5.6-luna</td>
+      <td>$0.40</td><td>$0.04</td><td>$0.50</td><td>$2.40</td>
+      <td>$0.80</td><td>$0.08</td><td>$1.00</td><td>$3.60</td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>
