@@ -76,8 +76,10 @@ begin
 
   -- Positive control: service_role reads reference and pipeline tables.
   set local role service_role;
+  -- Positive control is readability, not a row count: the UCPI family and the reusable listed-GPU specification both live here.
   select count(*) into n from reference.methodologies;
-  if n <> 1 then raise exception 'service_role could not read reference.methodologies'; end if;
+  if n < 1 then raise exception 'service_role could not read reference.methodologies'; end if;
+  if not exists (select 1 from reference.methodologies where slug = 'ucpi') then raise exception 'the UCPI family methodology is missing'; end if;
   select count(*) into n from pipeline.raw_offers;
   reset role;
 

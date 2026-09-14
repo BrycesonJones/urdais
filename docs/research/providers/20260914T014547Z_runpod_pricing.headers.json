@@ -1,0 +1,28 @@
+{
+  "url": "https://www.runpod.io/pricing",
+  "status": 200,
+  "retrievedAt": "2026-09-14T01:47:16.390Z",
+  "headers": {
+    "age": "1116",
+    "cf-cache-status": "DYNAMIC",
+    "cf-ray": "a3abb9033d63b0e7-ATL",
+    "connection": "keep-alive",
+    "content-encoding": "br",
+    "content-security-policy": "frame-ancestors 'self'",
+    "content-type": "text/html; charset=utf-8",
+    "date": "Mon, 14 Sep 2026 01:47:16 GMT",
+    "last-modified": "Mon, 14 Sep 2026 01:30:19 GMT",
+    "link": "<https://cdn.prod.website-files.com>; rel=preconnect; crossorigin, <https://cdn.prod.website-files.com/69ce570adca53340abab8376/css/runpod-staging.shared.69eb07e5e1c81d5f8796d7fb.fb9dc201b.min.css>; rel=preload; as=style; crossorigin; integrity=\"sha384-+53CAbjhaApYt4Pzwd7eBZcSzyPmeDYK3roT+0oOQLh/lxGUFwBdzub2k/GDiRPB\", <https://d3e54v103j8qbb.cloudfront.net>; rel=preconnect; crossorigin",
+    "o2o-cache-status": "HIT",
+    "server": "cloudflare",
+    "set-cookie": "_cfuvid=lEkKfJkuVgPFa87O.cQOxiQYH5jwiEujAFqFcoeI5hw-1789350436.3816035-1.0.1.1-qWlPWB0rGWxhVqACkGge0INEt8pAVPVgRh3uj9Htxhw; HttpOnly; SameSite=None; Secure; Path=/; Domain=www.runpod.io",
+    "strict-transport-security": "max-age=31536000",
+    "surrogate-control": "max-age=432000",
+    "surrogate-key": "www.runpod.io 69ce570adca53340abab8376 pageId:69eb07e5e1c81d5f8796d7fb 69e1c0852d51d777f9de26b6 69e1c084a726055d8413aaad 69eb0b699309eda501aab964 69e865ba5fa1528ff38bd34c 69e86610c8f0de324bbecfa9 69e3576de319d999cf5555c7",
+    "transfer-encoding": "chunked",
+    "vary": "accept-encoding",
+    "x-frame-options": "SAMEORIGIN",
+    "x-lambda-id": "5709cec9-4594-4321-a79c-773cc15ef435",
+    "x-wf-region": "us-east-1"
+  }
+}

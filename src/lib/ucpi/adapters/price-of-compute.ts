@@ -53,13 +53,21 @@ export const PRICE_OF_COMPUTE_DAILY_LIMIT = 1000;
  * the per-accelerator allocation class, what kind of party it is, and the
  * evidence. A seller absent here has MINIMUM_TOPOLOGY_UNKNOWN.
  */
+/** Urdais's evidence about how one seller sells one upstream SKU: its minimum quantity and where that was read. */
+export type PocSellerTopology = {
+  /** Smallest quantity the seller sells the product in; null where Urdais has not established it. */
+  minimumGpuCount: number | null;
+  evidence: string | null;
+  /** True when the seller's price differs by instance quantity, so a provider-level figure may not be the canonical-quantity price. */
+  quantityTiered?: boolean;
+};
+
 export type PocSellerProfile = {
   /** Urdais market entity id. */
   entityId: string;
   kind: "vertically_integrated_cloud" | "marketplace_aggregate" | "reseller" | "hyperscaler";
-  /** Per-accelerator allocation class established by Urdais evidence; null where unknown. */
-  minimumGpuCount: number | null;
-  topologyEvidence: string | null;
+  /** Topology evidence per upstream SKU (e.g. "H100-SXM"). A SKU absent here has MINIMUM_TOPOLOGY_UNKNOWN for this seller. */
+  topology: ReadonlyMap<string, PocSellerTopology>;
   tenancyGrade: NormalizedObservation["tenancyGrade"];
   tenancyEvidence: string | null;
   legalNameEvidenced: boolean;
@@ -110,7 +118,7 @@ export const priceOfComputeAdapter: ProviderAdapter<PocRequestParams, PocPricesR
         nativePreemptible: row.pricing_type === "spot" ? true : row.pricing_type === "on_demand" ? false : null,
         nativeTenancyFields: null,
         nativeGpuCount: null,
-        nativeMinimumGpuCount: profile?.minimumGpuCount ?? null,
+        nativeMinimumGpuCount: profile?.topology.get(response.sku)?.minimumGpuCount ?? null,
         nativeRegion: row.region,
         nativeGeolocation: null,
         nativeAvailabilityValue: null,
@@ -128,6 +136,8 @@ export const priceOfComputeAdapter: ProviderAdapter<PocRequestParams, PocPricesR
     const profile = raw.nativeSellerId === null ? undefined : profiles.get(raw.nativeSellerId);
     const sku = raw.nativeGpuModel ?? "";
     const identity = identifyPocSku(sku);
+    const topo = profile?.topology.get(sku);
+    const minimumGpuCount = topo?.minimumGpuCount ?? null;
     const procurement = mapPocPricingType(raw.nativeProcurementMode);
     const isAggregate = profile?.kind === "marketplace_aggregate";
     const regionMapping = raw.nativeRegion === null ? undefined : ctx.regionMappings.get(`${PRICE_OF_COMPUTE_SLUG}|${raw.nativeRegion}`);
@@ -162,11 +172,11 @@ export const priceOfComputeAdapter: ProviderAdapter<PocRequestParams, PocPricesR
       formFactor: identity.formFactor,
       gpuMemoryGb: identity.memoryGb,
       fullDevice: identity.fullDevice,
-      gpuCount: profile?.minimumGpuCount ?? null,
-      minimumGpuCount: profile?.minimumGpuCount ?? null,
-      minimumTopologySourceField: profile?.minimumGpuCount == null ? null : `Urdais seller evidence: ${profile.topologyEvidence ?? "unstated"}`,
-      wholeNodeRequired: profile?.minimumGpuCount == null ? null : profile.minimumGpuCount >= 8,
-      topologyClass: profile?.minimumGpuCount == null ? "unknown" : profile.minimumGpuCount >= 8 ? "whole_node" : "per_accelerator_allocation",
+      gpuCount: minimumGpuCount,
+      minimumGpuCount,
+      minimumTopologySourceField: minimumGpuCount === null ? null : `Urdais seller evidence: ${topo?.evidence ?? "unstated"}`,
+      wholeNodeRequired: minimumGpuCount === null ? null : minimumGpuCount >= 8,
+      topologyClass: minimumGpuCount === null ? "unknown" : minimumGpuCount >= 8 ? "whole_node" : "per_accelerator_allocation",
       procurementMode: procurement,
       preemptible: raw.nativePreemptible,
       serviceProduct: isAggregate ? "other" : "full_device_rental",
@@ -183,6 +193,7 @@ export const priceOfComputeAdapter: ProviderAdapter<PocRequestParams, PocPricesR
       observationType: "indicative_or_list_price",
       sourceQualityGrade: 6,
       sourceAttribution: PRICE_OF_COMPUTE_ATTRIBUTION,
+      sellerPricesByQuantityTier: topo?.quantityTiered ?? null,
       enumerationAssessment: retrieval.enumerationAssessment,
     };
   },
@@ -202,12 +213,33 @@ export function mapPocPricingType(value: string | null): ProcurementMode {
   }
 }
 
-/** Identity from the vendor's canonical SKU. SXM and PCIe are separate SKUs upstream; the H100 SXM is an 80 GB device. */
+/**
+ * Identity from the vendor's canonical SKU. The vendor separates SXM, PCIe and NVL
+ * and memory classes as distinct SKUs; Urdais admits that as Grade C identity
+ * and records device memory from NVIDIA's specification of the part. A SKU
+ * absent here is unsupported: grade insufficient, so it fails identity.
+ */
+export type PocSkuIdentity = { vendor: "NVIDIA"; model: string; formFactor: "SXM" | "PCIe" | "NVL"; memoryGb: number | null };
+
+export const POC_SKU_IDENTITY: Readonly<Record<string, PocSkuIdentity>> = {
+  "H100-SXM": { vendor: "NVIDIA", model: "H100", formFactor: "SXM", memoryGb: 80 },
+  "H100-PCIE": { vendor: "NVIDIA", model: "H100", formFactor: "PCIe", memoryGb: 80 },
+  "H100-NVL": { vendor: "NVIDIA", model: "H100", formFactor: "NVL", memoryGb: 94 },
+  "H200-SXM": { vendor: "NVIDIA", model: "H200", formFactor: "SXM", memoryGb: 141 },
+  "H200-NVL": { vendor: "NVIDIA", model: "H200", formFactor: "NVL", memoryGb: 141 },
+  // HGX B200 module (SXM6). Sellers label the same part 180 GB or 192 GB; the instrument does not gate memory.
+  "B200": { vendor: "NVIDIA", model: "B200", formFactor: "SXM", memoryGb: 180 },
+  "B300": { vendor: "NVIDIA", model: "B300", formFactor: "SXM", memoryGb: 288 },
+  "A100-SXM-80GB": { vendor: "NVIDIA", model: "A100", formFactor: "SXM", memoryGb: 80 },
+  "A100-SXM-40GB": { vendor: "NVIDIA", model: "A100", formFactor: "SXM", memoryGb: 40 },
+  "A100-PCIE-80GB": { vendor: "NVIDIA", model: "A100", formFactor: "PCIe", memoryGb: 80 },
+  "A100-PCIE-40GB": { vendor: "NVIDIA", model: "A100", formFactor: "PCIe", memoryGb: 40 },
+  // A consumer card on a PCIe board, rented as a whole device.
+  "RTX-5090": { vendor: "NVIDIA", model: "RTX 5090", formFactor: "PCIe", memoryGb: 32 },
+};
+
 export function identifyPocSku(sku: string): { grade: "C" | "insufficient"; vendor: string | null; model: string | null; formFactor: "SXM" | "PCIe" | "NVL" | null; memoryGb: number | null; fullDevice: boolean } {
-  const upper = sku.toUpperCase();
-  const isH100 = upper.startsWith("H100");
-  const formFactor: "SXM" | "PCIe" | "NVL" | null = upper.endsWith("-SXM") ? "SXM" : upper.endsWith("-PCIE") ? "PCIe" : upper.endsWith("-NVL") ? "NVL" : null;
-  // NVIDIA specifies the H100 SXM at 80 GB; the vendor's canonical SKU separates SXM from PCIe and NVL.
-  const memoryGb = isH100 && formFactor === "SXM" ? 80 : isH100 && formFactor === "PCIe" ? 80 : isH100 && formFactor === "NVL" ? 94 : null;
-  return { grade: isH100 && formFactor !== null ? "C" : "insufficient", vendor: upper.startsWith("H") || upper.startsWith("B") || upper.startsWith("A") || upper.startsWith("L") || upper.startsWith("RTX") ? "NVIDIA" : null, model: isH100 ? "H100" : upper.split("-")[0] || null, formFactor, memoryGb, fullDevice: true };
+  const known = POC_SKU_IDENTITY[sku.toUpperCase()];
+  if (known) return { grade: "C", vendor: known.vendor, model: known.model, formFactor: known.formFactor, memoryGb: known.memoryGb, fullDevice: true };
+  return { grade: "insufficient", vendor: null, model: sku === "" ? null : sku.split("-")[0] || null, formFactor: null, memoryGb: null, fullDevice: true };
 }

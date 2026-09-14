@@ -151,7 +151,7 @@ begin
 
   -- Vocabulary counts match the methodology.
   select count(*) into n from reference.exclusion_reasons; if n <> 27 then raise exception 'expected 27 exclusion reasons, found %', n; end if;
-  select count(*) into n from reference.diagnostic_codes; if n <> 7 then raise exception 'expected 7 diagnostic codes, found %', n; end if;
+  select count(*) into n from reference.diagnostic_codes; if n <> 8 then raise exception 'expected 8 diagnostic codes, found %', n; end if;
   select count(*) into n from reference.exclusion_reasons where stage = 'P0'; if n <> 3 then raise exception 'expected 3 P0 reasons, found %', n; end if;
   select count(*) into n from reference.exclusion_reasons where stage = 'P1'; if n <> 8 then raise exception 'expected 8 P1 reasons, found %', n; end if;
   select count(*) into n from reference.exclusion_reasons where stage = 'P2'; if n <> 16 then raise exception 'expected 16 P2 reasons, found %', n; end if;

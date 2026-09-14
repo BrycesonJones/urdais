@@ -68,6 +68,41 @@ export const docPages: readonly DocPage[] = [
     section: "Methodology",
     file: "methodology/ucpi-h100-sxm-listed.md",
   },
+  {
+    slug: "methodology/ucpi-listed-gpu",
+    title: "UCPI-LISTED-GPU",
+    description: "Proposed reusable specification for listed on-demand GPU price siblings: the shared rules every listed GPU child inherits.",
+    section: "Methodology",
+    file: "methodology/ucpi-listed-gpu.md",
+  },
+  {
+    slug: "methodology/ucpi-h200-sxm-listed",
+    title: "UCPI-H200-SXM-LISTED",
+    description: "Proposed child specification: listed on-demand H200 SXM price across independent legal sellers.",
+    section: "Methodology",
+    file: "methodology/ucpi-h200-sxm-listed.md",
+  },
+  {
+    slug: "methodology/ucpi-b200-listed",
+    title: "UCPI-B200-LISTED",
+    description: "Proposed child specification: listed on-demand B200 (HGX, SXM6) price across independent legal sellers.",
+    section: "Methodology",
+    file: "methodology/ucpi-b200-listed.md",
+  },
+  {
+    slug: "methodology/ucpi-a100-sxm4-80gb-listed",
+    title: "UCPI-A100-SXM4-80GB-LISTED",
+    description: "Proposed child specification: listed on-demand A100 SXM4 80 GB price across independent legal sellers.",
+    section: "Methodology",
+    file: "methodology/ucpi-a100-sxm4-80gb-listed.md",
+  },
+  {
+    slug: "methodology/ucpi-rtx-5090-listed",
+    title: "UCPI-RTX-5090-LISTED",
+    description: "Proposed child specification: listed on-demand RTX 5090 whole-device rental price; unavailable on first retrieval.",
+    section: "Methodology",
+    file: "methodology/ucpi-rtx-5090-listed.md",
+  },
 ];
 
 export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];

@@ -1,0 +1,126 @@
+{
+  "retrieval": {
+    "id": "39368c0e-aabf-4270-904b-0711aac84477",
+    "requestedAt": "2026-09-14T02:04:34.585Z",
+    "completedAt": "2026-09-14T02:04:34.835Z",
+    "responseStatus": 200,
+    "request": {
+      "method": "GET",
+      "url": "https://priceofcompute.com/api/v1/prices/a100-sxm-80gb",
+      "parameters": {},
+      "requiredHeaders": []
+    },
+    "responseHash": "8ddcbeb4b45d6ca63516224a82d2cb2dbb40822ad1c15951a658c8e37822b28e",
+    "responseByteLength": 1850,
+    "recordCount": 12,
+    "retrievalPurpose": "production",
+    "permissionGrantId": "77777777-0000-4000-8000-000000000101",
+    "collectorIdentity": "ucpi-listed-print/collect/UCPI-A100-SXM4-80GB-LISTED"
+  },
+  "response": {
+    "sku": "A100-SXM-80GB",
+    "day": "2026-09-14",
+    "prices": {
+      "spot": {
+        "usd_per_gpu_hr": 0.961597,
+        "providers": 2
+      },
+      "on_demand": {
+        "usd_per_gpu_hr": 1.85,
+        "providers": 7
+      },
+      "community": {
+        "usd_per_gpu_hr": 1.39,
+        "providers": 1
+      }
+    },
+    "providers": [
+      {
+        "provider": "datacrunch",
+        "pricing_type": "spot",
+        "usd_per_gpu_hr": 0.868,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:35.461Z"
+      },
+      {
+        "provider": "vast",
+        "pricing_type": "spot",
+        "usd_per_gpu_hr": 0.893333,
+        "region": "CZ",
+        "observed_at": "2026-09-13T18:11:21.869Z"
+      },
+      {
+        "provider": "vast",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 0.946667,
+        "region": "CZ",
+        "observed_at": "2026-09-13T18:11:21.869Z"
+      },
+      {
+        "provider": "azure",
+        "pricing_type": "spot",
+        "usd_per_gpu_hr": 1.055194,
+        "region": "eastus",
+        "observed_at": "2026-09-14T01:02:39.122Z"
+      },
+      {
+        "provider": "massedcompute",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 1.38,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:47.310Z"
+      },
+      {
+        "provider": "runpod",
+        "pricing_type": "community",
+        "usd_per_gpu_hr": 1.39,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:34.070Z"
+      },
+      {
+        "provider": "runpod",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 1.59,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:34.070Z"
+      },
+      {
+        "provider": "datacrunch",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 1.736,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:35.461Z"
+      },
+      {
+        "provider": "hyperstack",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 1.85,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:43.556Z"
+      },
+      {
+        "provider": "denvr",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 2.45,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:47.866Z"
+      },
+      {
+        "provider": "lambda",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 2.79,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:49.240Z"
+      },
+      {
+        "provider": "azure",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 4.09625,
+        "region": "eastus",
+        "observed_at": "2026-09-14T01:02:39.122Z"
+      }
+    ],
+    "updated_at": "2026-09-14T01:02:49.240Z",
+    "attribution": "Data: Price of Compute \u2014 priceofcompute.com"
+  }
+}

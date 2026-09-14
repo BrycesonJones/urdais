@@ -8,9 +8,17 @@
 
 import type { RegionalObservation } from "@/lib/ucpi/aggregation";
 import { publicationStatus } from "@/lib/ucpi/calculation-window";
+import { instrumentPresentation } from "@/lib/ucpi/listed/instruments";
 
 export type UcpiSeriesPoint = {
   instrument: string;
+  /** Human name of the instrument, e.g. "UCPI H100 SXM Listed". */
+  displayName: string;
+  /** The hardware the instrument measures; never a participant. */
+  gpu: { vendor: string; model: string; formFactor: string; memoryGb: number | null; label: string };
+  /** listed: a listed on-demand price (Grade 5). accessible: a current accessible offer (Grade >= 3). */
+  observationType: "listed" | "accessible";
+  procurementMode: "on_demand";
   /** country for a country series; listed_provider_wide for the region-unspecified listed series. */
   regionScope: "country" | "listed_provider_wide";
   /** ISO country, or null for the listed series. */
@@ -40,12 +48,14 @@ export type UcpiSeriesPoint = {
 
 /** Every key a public series point may carry, at the top level. Anything else is a schema violation. */
 export const PUBLIC_SERIES_POINT_KEYS: readonly (keyof UcpiSeriesPoint)[] = [
-  "instrument", "regionScope", "country", "attributions", "calculationDate", "status", "priceLevel", "currency", "unit", "percentageChange1d", "changeDisposition",
+  "instrument", "displayName", "gpu", "observationType", "procurementMode",
+  "regionScope", "country", "attributions", "calculationDate", "status", "priceLevel", "currency", "unit", "percentageChange1d", "changeDisposition",
   "marketBreadth", "structuralCondition", "participantCount", "contributingSourceCount", "largestSourceParticipantShare", "dispersion",
   "reasonCodes", "freshness", "methodologyVersion", "instrumentSpecVersion", "calculatedAt", "publishedAt",
 ];
 
 const NESTED_KEYS: Readonly<Record<string, readonly string[]>> = {
+  gpu: ["vendor", "model", "formFactor", "memoryGb", "label"],
   dispersion: ["p10", "p50", "p90", "iqr"],
   freshness: ["windowStart", "cutoff", "allInputsWithinWindow"],
 };
@@ -96,8 +106,13 @@ export function validatePublicResponseShape(json: unknown): string[] {
 
 export function toSeriesPoint(obs: RegionalObservation, run: { calculatedAt: string; publishedAt: string | null }): UcpiSeriesPoint {
   const status = publicationStatus({ calculationDate: obs.calculationDate, publishedAt: run.publishedAt, producible: obs.outcome === "value" });
+  const presentation = instrumentPresentation(obs.instrument);
   return {
     instrument: obs.instrument,
+    displayName: presentation.displayName,
+    gpu: presentation.gpu,
+    observationType: presentation.observationType,
+    procurementMode: presentation.procurementMode,
     regionScope: obs.regionScope,
     country: obs.regionScope === "country" ? obs.canonicalRegionCode : null,
     attributions: obs.sourceAttributions,

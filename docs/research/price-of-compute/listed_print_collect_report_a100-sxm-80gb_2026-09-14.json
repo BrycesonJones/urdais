@@ -1,0 +1,411 @@
+{
+  "instrument": "UCPI-A100-SXM4-80GB-LISTED",
+  "specVersion": "0.1.0-draft",
+  "sku": "A100-SXM-80GB",
+  "calculationDate": "2026-09-14",
+  "vendorHeadline": {
+    "spot": {
+      "usd_per_gpu_hr": 0.961597,
+      "providers": 2
+    },
+    "on_demand": {
+      "usd_per_gpu_hr": 1.85,
+      "providers": 7
+    },
+    "community": {
+      "usd_per_gpu_hr": 1.39,
+      "providers": 1
+    }
+  },
+  "providerRows": 12,
+  "onDemandRows": 8,
+  "rows": [
+    {
+      "seller": "datacrunch",
+      "pricingType": "spot",
+      "price": 0.868,
+      "eligible": false,
+      "exclusions": [
+        "WRONG_PROCUREMENT_MODE",
+        "PREEMPTIBLE"
+      ],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    },
+    {
+      "seller": "vast",
+      "pricingType": "spot",
+      "price": 0.893333,
+      "eligible": false,
+      "exclusions": [
+        "WRONG_SERVICE_PRODUCT",
+        "WRONG_PROCUREMENT_MODE",
+        "PREEMPTIBLE",
+        "MINIMUM_TOPOLOGY_UNKNOWN",
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED",
+        "MARKETPLACE_SELLER_ID_STABILITY_UNRESOLVED"
+      ]
+    },
+    {
+      "seller": "vast",
+      "pricingType": "on_demand",
+      "price": 0.946667,
+      "eligible": false,
+      "exclusions": [
+        "WRONG_SERVICE_PRODUCT",
+        "MINIMUM_TOPOLOGY_UNKNOWN",
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED",
+        "MARKETPLACE_SELLER_ID_STABILITY_UNRESOLVED"
+      ]
+    },
+    {
+      "seller": "azure",
+      "pricingType": "spot",
+      "price": 1.055194,
+      "eligible": false,
+      "exclusions": [
+        "WRONG_PROCUREMENT_MODE",
+        "PREEMPTIBLE",
+        "WHOLE_NODE_REQUIRED",
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    },
+    {
+      "seller": "massedcompute",
+      "pricingType": "on_demand",
+      "price": 1.38,
+      "eligible": false,
+      "exclusions": [
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    },
+    {
+      "seller": "runpod",
+      "pricingType": "community",
+      "price": 1.39,
+      "eligible": false,
+      "exclusions": [
+        "WRONG_PROCUREMENT_MODE"
+      ],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    },
+    {
+      "seller": "runpod",
+      "pricingType": "on_demand",
+      "price": 1.59,
+      "eligible": true,
+      "exclusions": [],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    },
+    {
+      "seller": "datacrunch",
+      "pricingType": "on_demand",
+      "price": 1.736,
+      "eligible": true,
+      "exclusions": [],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    },
+    {
+      "seller": "hyperstack",
+      "pricingType": "on_demand",
+      "price": 1.85,
+      "eligible": true,
+      "exclusions": [],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    },
+    {
+      "seller": "denvr",
+      "pricingType": "on_demand",
+      "price": 2.45,
+      "eligible": false,
+      "exclusions": [
+        "WHOLE_NODE_REQUIRED",
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    },
+    {
+      "seller": "lambda",
+      "pricingType": "on_demand",
+      "price": 2.79,
+      "eligible": false,
+      "exclusions": [
+        "WHOLE_NODE_REQUIRED"
+      ],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    },
+    {
+      "seller": "azure",
+      "pricingType": "on_demand",
+      "price": 4.09625,
+      "eligible": false,
+      "exclusions": [
+        "WHOLE_NODE_REQUIRED",
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    }
+  ],
+  "candidate": {
+    "outcome": "value",
+    "structuralCondition": null,
+    "priceLevel": 1.736,
+    "participantCount": 3,
+    "participants": [
+      {
+        "seller": "runpod",
+        "price": 1.59
+      },
+      {
+        "seller": "hyperstack",
+        "price": 1.85
+      },
+      {
+        "seller": "datacrunch",
+        "price": 1.736
+      }
+    ],
+    "marketBreadth": "normal",
+    "contributingSourceCount": 1,
+    "largestSourceParticipantShare": 1,
+    "dispersion": {
+      "p10": 1.6192,
+      "p50": 1.736,
+      "p90": 1.8272000000000002,
+      "iqr": 0.13000000000000012
+    },
+    "attributions": [
+      "Data: Price of Compute \u2014 priceofcompute.com"
+    ],
+    "publicSeriesPoint": {
+      "instrument": "UCPI-A100-SXM4-80GB-LISTED",
+      "displayName": "UCPI A100 SXM4 80GB Listed",
+      "gpu": {
+        "vendor": "NVIDIA",
+        "model": "A100",
+        "formFactor": "SXM",
+        "memoryGb": 80,
+        "label": "A100 SXM4 80GB"
+      },
+      "observationType": "listed",
+      "procurementMode": "on_demand",
+      "regionScope": "listed_provider_wide",
+      "country": null,
+      "attributions": [
+        "Data: Price of Compute \u2014 priceofcompute.com"
+      ],
+      "calculationDate": "2026-09-14",
+      "status": "delayed",
+      "priceLevel": 1.736,
+      "currency": "USD",
+      "unit": "accelerator_hour",
+      "percentageChange1d": null,
+      "changeDisposition": "withheld",
+      "marketBreadth": "normal",
+      "structuralCondition": null,
+      "participantCount": 3,
+      "contributingSourceCount": 1,
+      "largestSourceParticipantShare": 1,
+      "dispersion": {
+        "p10": 1.6192,
+        "p50": 1.736,
+        "p90": 1.8272000000000002,
+        "iqr": 0.13000000000000012
+      },
+      "reasonCodes": [],
+      "freshness": {
+        "windowStart": "2026-09-14T00:00:00.000Z",
+        "cutoff": "2026-09-15T00:00:00.000Z",
+        "allInputsWithinWindow": true
+      },
+      "methodologyVersion": "0.1.2-draft",
+      "instrumentSpecVersion": "0.1.0-draft",
+      "calculatedAt": "2026-09-14T02:04:34.853Z",
+      "publishedAt": null
+    }
+  },
+  "retrieval": {
+    "id": "39368c0e-aabf-4270-904b-0711aac84477",
+    "requestedAt": "2026-09-14T02:04:34.585Z",
+    "completedAt": "2026-09-14T02:04:34.835Z",
+    "status": 200,
+    "responseHash": "8ddcbeb4b45d6ca63516224a82d2cb2dbb40822ad1c15951a658c8e37822b28e",
+    "bytes": 1850,
+    "records": 12,
+    "purpose": "production"
+  },
+  "events": [
+    {
+      "type": "provider_request_started",
+      "source": "price-of-compute-prices",
+      "attempt": 1,
+      "url": "https://priceofcompute.com/api/v1/prices/a100-sxm-80gb"
+    },
+    {
+      "type": "provider_request_succeeded",
+      "source": "price-of-compute-prices",
+      "attempt": 1,
+      "status": 200,
+      "bytes": 1850,
+      "durationMs": 250
+    },
+    {
+      "type": "retrieval_persisted",
+      "source": "price-of-compute-prices",
+      "retrievalId": "39368c0e-aabf-4270-904b-0711aac84477",
+      "purpose": "production",
+      "recordCount": 12,
+      "duplicateOfRetrievalId": null
+    },
+    {
+      "type": "source_excluded",
+      "source": "price-of-compute-prices",
+      "observationId": "n:39368c0e-aabf-4270-904b-0711aac84477:0",
+      "exclusions": [
+        "WRONG_PROCUREMENT_MODE",
+        "PREEMPTIBLE"
+      ]
+    },
+    {
+      "type": "source_excluded",
+      "source": "price-of-compute-prices",
+      "observationId": "n:39368c0e-aabf-4270-904b-0711aac84477:1",
+      "exclusions": [
+        "WRONG_SERVICE_PRODUCT",
+        "WRONG_PROCUREMENT_MODE",
+        "PREEMPTIBLE",
+        "MINIMUM_TOPOLOGY_UNKNOWN",
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ]
+    },
+    {
+      "type": "source_excluded",
+      "source": "price-of-compute-prices",
+      "observationId": "n:39368c0e-aabf-4270-904b-0711aac84477:2",
+      "exclusions": [
+        "WRONG_SERVICE_PRODUCT",
+        "MINIMUM_TOPOLOGY_UNKNOWN",
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ]
+    },
+    {
+      "type": "source_excluded",
+      "source": "price-of-compute-prices",
+      "observationId": "n:39368c0e-aabf-4270-904b-0711aac84477:3",
+      "exclusions": [
+        "WRONG_PROCUREMENT_MODE",
+        "PREEMPTIBLE",
+        "WHOLE_NODE_REQUIRED",
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ]
+    },
+    {
+      "type": "source_excluded",
+      "source": "price-of-compute-prices",
+      "observationId": "n:39368c0e-aabf-4270-904b-0711aac84477:4",
+      "exclusions": [
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ]
+    },
+    {
+      "type": "source_excluded",
+      "source": "price-of-compute-prices",
+      "observationId": "n:39368c0e-aabf-4270-904b-0711aac84477:5",
+      "exclusions": [
+        "WRONG_PROCUREMENT_MODE"
+      ]
+    },
+    {
+      "type": "observation_eligible",
+      "source": "price-of-compute-prices",
+      "observationId": "n:39368c0e-aabf-4270-904b-0711aac84477:6",
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    },
+    {
+      "type": "observation_eligible",
+      "source": "price-of-compute-prices",
+      "observationId": "n:39368c0e-aabf-4270-904b-0711aac84477:7",
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    },
+    {
+      "type": "observation_eligible",
+      "source": "price-of-compute-prices",
+      "observationId": "n:39368c0e-aabf-4270-904b-0711aac84477:8",
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    },
+    {
+      "type": "source_excluded",
+      "source": "price-of-compute-prices",
+      "observationId": "n:39368c0e-aabf-4270-904b-0711aac84477:9",
+      "exclusions": [
+        "WHOLE_NODE_REQUIRED",
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ]
+    },
+    {
+      "type": "source_excluded",
+      "source": "price-of-compute-prices",
+      "observationId": "n:39368c0e-aabf-4270-904b-0711aac84477:10",
+      "exclusions": [
+        "WHOLE_NODE_REQUIRED"
+      ]
+    },
+    {
+      "type": "source_excluded",
+      "source": "price-of-compute-prices",
+      "observationId": "n:39368c0e-aabf-4270-904b-0711aac84477:11",
+      "exclusions": [
+        "WHOLE_NODE_REQUIRED",
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ]
+    }
+  ]
+}

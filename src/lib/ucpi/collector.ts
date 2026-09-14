@@ -76,6 +76,8 @@ export type PipelineInput = {
   spec?: import("@/lib/ucpi/eligibility").InstrumentSpec;
   /** Country series (default) or one region-unspecified listed series. */
   regionScope?: import("@/lib/ucpi/aggregation").RegionScope;
+  /** The hardware the instrument measures; the founding H100 SXM child by default. */
+  identity?: import("@/lib/ucpi/listed/instruments").GpuIdentityRequirement;
   calculationDate: string;
   methodologyVersion: string;
   instrumentSpecVersion: string;
@@ -126,7 +128,7 @@ export function runPipeline(input: PipelineInput): PipelineResult {
 
   const spec = input.spec ?? "accessible";
   const regionScope = input.regionScope ?? "country";
-  const assessments = inWindow.map((o) => assessEligibility(o, { calculationDate: input.calculationDate, registry, entities, spec }));
+  const assessments = inWindow.map((o) => assessEligibility(o, { calculationDate: input.calculationDate, registry, entities, spec, identity: input.identity }));
   const eligibleIds = new Set(assessments.filter((a) => a.p2).map((a) => a.observationId));
   const eligible = inWindow.filter((o) => eligibleIds.has(o.id));
 

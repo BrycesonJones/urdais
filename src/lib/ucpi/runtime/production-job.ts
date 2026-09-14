@@ -19,6 +19,7 @@ import { calculationWindow } from "@/lib/ucpi/calculation-window";
 import { runPipeline, type PipelineResult } from "@/lib/ucpi/collector";
 import type { MarketEntity } from "@/lib/ucpi/domain";
 import type { InstrumentSpec } from "@/lib/ucpi/eligibility";
+import type { GpuIdentityRequirement } from "@/lib/ucpi/listed/instruments";
 import type { SourceRegistryState } from "@/lib/ucpi/permission-gate";
 import type { RunMode } from "@/lib/ucpi/runtime/config";
 import { collectSource, type SourceCollectionResult, type SourceRuntimeInput } from "@/lib/ucpi/runtime/collector-runtime";
@@ -85,6 +86,8 @@ export async function runCalculationPhase(input: {
   spec?: InstrumentSpec;
   /** Country series by default; the LISTED sibling publishes one provider-wide series. */
   regionScope?: RegionScope;
+  /** The hardware the instrument measures; the founding H100 SXM child by default. */
+  identity?: GpuIdentityRequirement;
 }): Promise<CalculationPhaseResult> {
   const window = calculationWindow(input.calculationDate);
   const now = input.clock();
@@ -121,6 +124,7 @@ export async function runCalculationPhase(input: {
     seriesRegions: input.seriesRegions,
     spec: input.spec,
     regionScope,
+    identity: input.identity,
   });
 
   const run: CalculationRunRow = {

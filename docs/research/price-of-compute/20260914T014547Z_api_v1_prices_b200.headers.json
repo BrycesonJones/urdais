@@ -1,0 +1,29 @@
+{
+  "url": "https://priceofcompute.com/api/v1/prices/b200",
+  "status": 200,
+  "retrievedAt": "2026-09-14T01:45:50.139Z",
+  "headers": {
+    "access-control-allow-headers": "content-type",
+    "access-control-allow-methods": "GET, OPTIONS",
+    "access-control-allow-origin": "*",
+    "cache-control": "public, max-age=3600",
+    "connection": "keep-alive",
+    "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+    "content-type": "application/json",
+    "date": "Mon, 14 Sep 2026 01:45:50 GMT",
+    "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "server": "railway-hikari",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
+    "transfer-encoding": "chunked",
+    "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+    "x-hikari-trace": "atl1.1v22",
+    "x-railway-edge": "atl1",
+    "x-railway-request-id": "_oPIt340Se-y884gHn5Ytg",
+    "x-ratelimit-limit": "1000",
+    "x-ratelimit-remaining": "994",
+    "x-ratelimit-reset": "2026-09-15T00:00:00.000Z"
+  }
+}
