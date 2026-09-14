@@ -13,7 +13,7 @@
  */
 
 import { calculationDateOf, isWithinWindow } from "@/lib/ucpi/calculation-window";
-import { calculateRegion, collapseCapacitySources, reduceSellers, type CapacitySourceObservation, type RegionalObservation, type SellerObservation } from "@/lib/ucpi/aggregation";
+import { calculateRegion, collapseCapacitySources, LISTED_SCOPE_KEY, reduceSellers, type CapacitySourceObservation, type RegionalObservation, type SellerObservation } from "@/lib/ucpi/aggregation";
 import type { EligibilityAssessment, MarketEntity, NormalizedObservation, RawOffer, RequestSpec, Retrieval } from "@/lib/ucpi/domain";
 import { assessEligibility } from "@/lib/ucpi/eligibility";
 import type { PriorObservation } from "@/lib/ucpi/calculation-window";
@@ -39,6 +39,8 @@ export type NormalizationContext = {
   regionMappings: ReadonlyMap<string, RegionMapping>;
   /** Tenancy evidence per provider slug, where a statement exists. Absent means the adapter's own default, which may be ambiguous. */
   tenancyEvidence: ReadonlyMap<string, TenancyEvidence>;
+  /** For aggregator sources: what Urdais knows about each underlying seller from its own evidence, keyed by the source-native provider slug. */
+  sellerProfiles?: ReadonlyMap<string, import("@/lib/ucpi/adapters/price-of-compute").PocSellerProfile>;
 };
 
 export function regionMappingKey(sourceInterfaceSlug: string, nativeRegion: string): string {
@@ -68,6 +70,10 @@ export function authorizeProductionRequest(request: RequestSpec, registry: Sourc
 
 export type PipelineInput = {
   instrument: string;
+  /** Which child's eligibility applies: the accessible-offer child (default) or the listed-price sibling. */
+  spec?: import("@/lib/ucpi/eligibility").InstrumentSpec;
+  /** Country series (default) or one region-unspecified listed series. */
+  regionScope?: import("@/lib/ucpi/aggregation").RegionScope;
   calculationDate: string;
   methodologyVersion: string;
   instrumentSpecVersion: string;
@@ -116,14 +122,19 @@ export function runPipeline(input: PipelineInput): PipelineResult {
     inWindow.push(o);
   }
 
-  const assessments = inWindow.map((o) => assessEligibility(o, { calculationDate: input.calculationDate, registry }));
+  const spec = input.spec ?? "accessible";
+  const regionScope = input.regionScope ?? "country";
+  const assessments = inWindow.map((o) => assessEligibility(o, { calculationDate: input.calculationDate, registry, spec }));
   const eligibleIds = new Set(assessments.filter((a) => a.p2).map((a) => a.observationId));
   const eligible = inWindow.filter((o) => eligibleIds.has(o.id));
 
-  const sellerObservations = reduceSellers(eligible);
+  const sellerObservations = reduceSellers(eligible, regionScope);
   const capacitySources = collapseCapacitySources(sellerObservations, entities);
 
-  const regions = [...new Set([...eligible.map((o) => o.canonicalRegionCode!), ...(input.priorByRegion ? [...input.priorByRegion.keys()] : []), ...(input.seriesRegions ?? [])])].sort();
+  const regions =
+    regionScope === "listed_provider_wide"
+      ? [LISTED_SCOPE_KEY]
+      : [...new Set([...eligible.map((o) => o.canonicalRegionCode!), ...(input.priorByRegion ? [...input.priorByRegion.keys()] : []), ...(input.seriesRegions ?? [])])].sort();
   const regional = regions.map((region) => {
     const prior = input.priorByRegion?.get(region) ?? null;
     return calculateRegion({
@@ -135,6 +146,7 @@ export function runPipeline(input: PipelineInput): PipelineResult {
       participants: capacitySources.filter((c) => c.canonicalRegionCode === region),
       prior,
       priorParticipantIds: prior?.participantIds,
+      regionScope,
     });
   });
 

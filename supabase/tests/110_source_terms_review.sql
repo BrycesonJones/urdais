@@ -13,14 +13,15 @@ declare
   azure uuid := '55555555-0000-4000-8000-000000000005';
 begin
   -- Six providers and six interfaces were reviewed and recorded.
-  select count(*) into n from reference.providers;
+  -- The six providers of the terms review plus the licensed market-data source cleared later on its own terms.
+  select count(*) into n from reference.providers where slug <> 'price-of-compute';
   if n <> 6 then raise exception 'expected 6 reviewed providers, found %', n; end if;
-  select count(*) into n from reference.source_interfaces;
+  select count(*) into n from reference.source_interfaces where slug <> 'price-of-compute-prices';
   if n <> 6 then raise exception 'expected 6 reviewed interfaces, found %', n; end if;
 
   -- Nothing is production-approved. Phase 4 collection is not yet authorised anywhere.
-  select count(*) into n from reference.source_interfaces where production_access_state = 'production_approved';
-  if n <> 0 then raise exception '% interface(s) marked production_approved', n; end if;
+  select count(*) into n from reference.source_interfaces where production_access_state = 'production_approved' and slug <> 'price-of-compute-prices';
+  if n <> 0 then raise exception '% reviewed interface(s) marked production_approved', n; end if;
 
   -- Every reviewed interface carries verbatim evidence with a review date.
   select count(*) into n from reference.source_interfaces
@@ -185,14 +186,14 @@ begin
   if n <> 0 then raise exception '% blocked interface(s) do not record a written-permission requirement', n; end if;
 
   -- Registry rows are not market participants: no entity, role or observation was created.
-  select count(*) into n from reference.market_entities;
-  -- Launch enablement seeds exactly two seller legal entities (140_provider_reference_data.sql); the terms review itself adds none.
-  if n <> 2 then raise exception 'expected exactly the two seeded seller entities, found % market entit(ies)', n; end if;
-  select count(*) into n from reference.entity_roles;
-  -- The two seeded seller roles; the terms review itself adds none, and no operator role exists anywhere.
-  if n <> 2 then raise exception 'expected exactly the two seeded seller roles, found % entity role(s)', n; end if;
-  select count(*) into n from reference.entity_roles where role <> 'seller';
-  if n <> 0 then raise exception 'reviewing terms created % non-seller role(s)', n; end if;
+  -- The reviewed providers' own registry rows are not market participants. The sellers that exist were seeded by
+  -- launch enablement (Runpod, Lambda) and by the licensed dataset's participant mapping; no operator role exists anywhere.
+  select count(*) into n from reference.market_entities where slug in ('runpod', 'lambda') and legal_name is not null;
+  if n <> 2 then raise exception 'expected the two seeded seller legal entities, found %', n; end if;
+  select count(*) into n from reference.entity_roles where role = 'operator';
+  if n <> 0 then raise exception 'reviewing terms created % operator role(s)', n; end if;
+  select count(*) into n from reference.entity_roles r join reference.market_entities e on e.id = r.entity_id where r.role = 'marketplace' and e.slug <> 'vast';
+  if n <> 0 then raise exception 'a marketplace role exists for a non-marketplace entity'; end if;
   select count(*) into n from pipeline.source_retrievals;
   if n <> 0 then raise exception 'reviewing terms created % retrieval(s); no collector exists', n; end if;
   select count(*) into n from pipeline.raw_offers;

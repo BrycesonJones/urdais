@@ -16,9 +16,9 @@
 import type { NormalizationContext, ProviderAdapter } from "@/lib/ucpi/collector";
 import { calculationWindow } from "@/lib/ucpi/calculation-window";
 import type { EligibilityAssessment, NormalizedObservation, RawOffer, Retrieval } from "@/lib/ucpi/domain";
-import { assessEligibility } from "@/lib/ucpi/eligibility";
+import { assessEligibility, type InstrumentSpec } from "@/lib/ucpi/eligibility";
 import { productionCollectionPermitted, type SourceRegistryState } from "@/lib/ucpi/permission-gate";
-import { hasCredential, readCredential, type EnvRecord, type ProviderSlug, type RunMode } from "@/lib/ucpi/runtime/config";
+import { CREDENTIAL_VARIABLES, credentialRequired, hasCredential, readCredential, type EnvRecord, type ProviderSlug, type RunMode } from "@/lib/ucpi/runtime/config";
 import type { EventSink } from "@/lib/ucpi/runtime/events";
 import { executeWithPolicy, parseJsonBody, type Clock, type HttpClient, type HttpPolicy, type Random, type Sleep } from "@/lib/ucpi/runtime/http";
 import { sha256Hex, type Persistence, type RetrievalRow } from "@/lib/ucpi/runtime/persistence";
@@ -68,6 +68,8 @@ export type SourceRuntimeInput<TParams, TResponse, TCompanion> = {
   fixtureResponse?: TResponse;
   collectorIdentity: string;
   idFactory: () => string;
+  /** Which instrument specification assesses the observations at collection time; accessible by default. */
+  spec?: InstrumentSpec;
 };
 
 export type SourceCollectionResult = {
@@ -116,8 +118,8 @@ export function preflight(input: {
     input.events.emit({ type: "permission_preflight_failed", source, reason: "grant not in force" });
     throw new PreflightError("PERMISSION_GRANT_NOT_IN_FORCE", `grant ${input.grant.id} is not in force at ${input.now.toISOString()}`);
   }
-  if (!hasCredential(input.env, input.providerSlug)) {
-    const variable = readCredentialVariable(input.providerSlug);
+  if (credentialRequired(input.providerSlug) && !hasCredential(input.env, input.providerSlug)) {
+    const variable = CREDENTIAL_VARIABLES[input.providerSlug] ?? "(unknown)";
     input.events.emit({ type: "credentials_missing", source, variable });
     throw new PreflightError("CREDENTIALS_MISSING", `${source}: ${variable} is not set`);
   }
@@ -125,10 +127,6 @@ export function preflight(input: {
   if (t < Date.parse(window.windowStart) || t >= Date.parse(window.cutoff)) {
     throw new PreflightError("OUTSIDE_WINDOW", `${source}: ${input.now.toISOString()} is outside the collection window for ${input.calculationDate}`);
   }
-}
-
-function readCredentialVariable(provider: ProviderSlug): string {
-  return provider === "runpod" ? "RUNPOD_API_KEY" : "LAMBDA_API_KEY";
 }
 
 export async function collectSource<TParams, TResponse, TCompanion>(input: SourceRuntimeInput<TParams, TResponse, TCompanion>): Promise<SourceCollectionResult> {
@@ -153,7 +151,7 @@ export async function collectSource<TParams, TResponse, TCompanion>(input: Sourc
     bodyText = JSON.stringify(response);
     status = 200;
   } else {
-    const credential = readCredential(input.env, input.providerSlug);
+    const credential = request.requiredHeaders.includes("Authorization") ? readCredential(input.env, input.providerSlug) : null;
     const out = await executeWithPolicy({
       request,
       credential,
@@ -198,7 +196,7 @@ export async function collectSource<TParams, TResponse, TCompanion>(input: Sourc
   retrieval.recordCount = rawOffers.length;
   const observations = rawOffers.map((raw) => input.adapter.normalize(raw, retrieval as Retrieval, input.context));
   const registry = new Map([[source, input.registry]]);
-  const assessments = observations.map((o) => assessEligibility(o, { calculationDate: input.calculationDate, registry }));
+  const assessments = observations.map((o) => assessEligibility(o, { calculationDate: input.calculationDate, registry, spec: input.spec }));
 
   await input.persistence.transaction(async () => {
     await input.persistence.insertRetrieval(retrieval);

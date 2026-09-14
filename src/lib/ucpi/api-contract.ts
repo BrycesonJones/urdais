@@ -11,7 +11,12 @@ import { publicationStatus } from "@/lib/ucpi/calculation-window";
 
 export type UcpiSeriesPoint = {
   instrument: string;
-  country: string;
+  /** country for a country series; listed_provider_wide for the region-unspecified listed series. */
+  regionScope: "country" | "listed_provider_wide";
+  /** ISO country, or null for the listed series. */
+  country: string | null;
+  /** Attribution lines required by upstream sources, e.g. "Data: Price of Compute — priceofcompute.com". */
+  attributions: readonly string[];
   calculationDate: string;
   status: "published" | "delayed" | "unavailable";
   priceLevel: number | null;
@@ -35,7 +40,7 @@ export type UcpiSeriesPoint = {
 
 /** Every key a public series point may carry, at the top level. Anything else is a schema violation. */
 export const PUBLIC_SERIES_POINT_KEYS: readonly (keyof UcpiSeriesPoint)[] = [
-  "instrument", "country", "calculationDate", "status", "priceLevel", "currency", "unit", "percentageChange1d", "changeDisposition",
+  "instrument", "regionScope", "country", "attributions", "calculationDate", "status", "priceLevel", "currency", "unit", "percentageChange1d", "changeDisposition",
   "marketBreadth", "structuralCondition", "participantCount", "contributingSourceCount", "largestSourceParticipantShare", "dispersion",
   "reasonCodes", "freshness", "methodologyVersion", "instrumentSpecVersion", "calculatedAt", "publishedAt",
 ];
@@ -93,7 +98,9 @@ export function toSeriesPoint(obs: RegionalObservation, run: { calculatedAt: str
   const status = publicationStatus({ calculationDate: obs.calculationDate, publishedAt: run.publishedAt, producible: obs.outcome === "value" });
   return {
     instrument: obs.instrument,
-    country: obs.canonicalRegionCode,
+    regionScope: obs.regionScope,
+    country: obs.regionScope === "country" ? obs.canonicalRegionCode : null,
+    attributions: obs.sourceAttributions,
     calculationDate: obs.calculationDate,
     status,
     priceLevel: obs.priceLevel,

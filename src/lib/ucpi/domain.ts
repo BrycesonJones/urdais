@@ -150,6 +150,8 @@ export type NormalizedObservation = {
   observationType: ObservationType;
   sourceQualityGrade: number;
   enumerationAssessment: Retrieval["enumerationAssessment"];
+  /** Attribution the upstream source requires wherever its data is used; null for first-party sources. */
+  sourceAttribution?: string | null;
 };
 
 /** The child's exclusion vocabulary. Mirrors reference.exclusion_reasons. */

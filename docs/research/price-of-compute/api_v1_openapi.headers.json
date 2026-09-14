@@ -1,0 +1,25 @@
+{
+  "url": "https://priceofcompute.com/api/v1/openapi.json",
+  "requestedAt": "2026-09-14T00:44:35.381Z",
+  "completedAt": "2026-09-14T00:44:35.438Z",
+  "status": 200,
+  "headers": {
+    "access-control-allow-origin": "*",
+    "cache-control": "public, max-age=86400",
+    "connection": "keep-alive",
+    "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+    "content-type": "application/json",
+    "date": "Mon, 14 Sep 2026 00:44:35 GMT",
+    "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "server": "railway-hikari",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
+    "transfer-encoding": "chunked",
+    "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+    "x-hikari-trace": "atl1.mwdw",
+    "x-railway-edge": "atl1",
+    "x-railway-request-id": "mqqgq0UIRbSk6v-h8u2xcg"
+  }
+}

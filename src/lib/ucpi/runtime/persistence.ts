@@ -336,17 +336,77 @@ export class SqlPersistence {
     };
   }
 
-  regionalStatement(row: StoredRegionalObservation): SqlStatement {
+  normalizedObservationStatement(o: NormalizedObservation, ids: { entityIdFor: (domainId: string) => string | null }): SqlStatement {
     return {
       text:
-        "insert into pipeline.regional_observations (id, run_id, instrument_id, calculation_date, canonical_region_code, outcome, structural_condition, market_breadth, price_level, currency, unit, participant_count, contributing_source_count, largest_source_participant_share, dispersion_published, p10, p50, p90, iqr, percentage_change_1d, change_disposition) " +
-        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)",
+        "insert into pipeline.normalized_observations (id, raw_offer_id, instrument_id, instrument_spec_version_id, methodology_version_id, seller_entity_id, operator_entity_id, operator_attribution_basis, marketplace_entity_id, canonical_region_code, observed_at, source_effective_at, availability_observed_at, normalized_price, normalized_currency, normalized_unit, price_conversion, tax_basis, mandatory_fee_interpretation, promotional_indicators, hardware_identity_grade, full_device, gpu_count, minimum_gpu_count, minimum_topology_source_field, whole_node_required, topology_class, procurement_mode, preemptible, service_product, tenancy_grade, availability_state, availability_evidence_grade, availability_quantity, vcpu_per_accelerator, host_memory_gb_per_accelerator, storage_gb_per_accelerator, service_tier, observation_type, source_quality_grade) " +
+        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17::jsonb, $18, $19::jsonb, $20::jsonb, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38::jsonb, $39, $40)",
+      params: [
+        o.id, o.rawOfferId, this.lineage.instrumentId, this.lineage.instrumentSpecVersionId, this.lineage.methodologyVersionId,
+        ids.entityIdFor(o.sellerEntityId), o.operatorEntityId === null ? null : ids.entityIdFor(o.operatorEntityId), o.operatorAttributionBasis, o.marketplaceEntityId === null ? null : ids.entityIdFor(o.marketplaceEntityId),
+        o.canonicalRegionCode, o.observedAt, o.sourceEffectiveAt, o.availabilityObservedAt,
+        o.normalizedPrice, o.normalizedCurrency, o.normalizedUnit, JSON.stringify(o.priceConversion), o.taxBasis, JSON.stringify(o.mandatoryFeeInterpretation), JSON.stringify({ promotional: o.promotional }),
+        o.hardwareIdentityGrade, o.fullDevice, o.gpuCount, o.minimumGpuCount, o.minimumTopologySourceField, o.wholeNodeRequired, o.topologyClass,
+        o.procurementMode, o.preemptible, o.serviceProduct, o.tenancyGrade, o.availabilityState, o.availabilityEvidenceGrade, o.availabilityQuantity,
+        o.vcpuPerAccelerator, o.hostMemoryGbPerAccelerator, o.storageGbPerAccelerator, JSON.stringify(o.serviceTier), o.observationType, o.sourceQualityGrade,
+      ],
+    };
+  }
+
+  assessmentStatements(a: EligibilityAssessment, id: string): SqlStatement[] {
+    const out: SqlStatement[] = [
+      {
+        text: "insert into pipeline.eligibility_assessments (id, normalized_observation_id, instrument_spec_version_id, methodology_version_id, evaluator_identity, assessed_at, calculation_date, p0, p1, p2, input_status) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
+        params: [id, a.observationId, this.lineage.instrumentSpecVersionId, this.lineage.methodologyVersionId, "ucpi-eligibility", new Date().toISOString(), a.calculationDate, a.p0, a.p1, a.p2, a.inputStatus],
+      },
+    ];
+    for (const code of a.exclusions) out.push({ text: "insert into pipeline.eligibility_exclusions (assessment_id, reason_code) values ($1, $2)", params: [id, code] });
+    for (const code of a.diagnostics) out.push({ text: "insert into pipeline.eligibility_diagnostics (assessment_id, diagnostic_code) values ($1, $2)", params: [id, code] });
+    return out;
+  }
+
+  sellerObservationStatements(runId: string, s: SellerObservation, id: string, ids: { entityIdFor: (domainId: string) => string | null }): SqlStatement[] {
+    const scope = s.canonicalRegionCode === "LISTED" ? "listed_provider_wide" : "country";
+    const out: SqlStatement[] = [
+      {
+        text: "insert into pipeline.seller_observations (id, run_id, seller_entity_id, canonical_region_code, region_scope, canonical_quantity, representative_price, selected_normalized_observation_id, considered_count, canonical_count) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+        params: [id, runId, ids.entityIdFor(s.sellerEntityId), scope === "country" ? s.canonicalRegionCode : null, scope, s.canonicalQuantity, s.representativePrice, s.selectedObservationId, s.consideredCount, s.canonicalCount],
+      },
+    ];
+    for (const c of s.candidates) out.push({ text: "insert into pipeline.seller_observation_candidates (seller_observation_id, normalized_observation_id, at_canonical_quantity, selected) values ($1, $2, $3, $4)", params: [id, c.observationId, c.atCanonicalQuantity, c.selected] });
+    return out;
+  }
+
+  capacitySourceStatements(runId: string, c: CapacitySourceObservation, id: string, ids: { entityIdFor: (domainId: string) => string | null }, memberSellerObservationIds: readonly string[]): SqlStatement[] {
+    const scope = c.canonicalRegionCode === "LISTED" ? "listed_provider_wide" : "country";
+    const out: SqlStatement[] = [
+      {
+        text: "insert into pipeline.capacity_source_observations (id, run_id, capacity_source_entity_id, canonical_region_code, region_scope, representative_price, attribution_status, source_interface_count) values ($1, $2, $3, $4, $5, $6, $7, $8)",
+        params: [id, runId, ids.entityIdFor(c.capacitySourceEntityId), scope === "country" ? c.canonicalRegionCode : null, scope, c.representativePrice, c.attributionStatus, c.sourceInterfaceCount],
+      },
+    ];
+    for (const m of memberSellerObservationIds) out.push({ text: "insert into pipeline.capacity_source_members (capacity_source_observation_id, seller_observation_id) values ($1, $2)", params: [id, m] });
+    return out;
+  }
+
+  regionalParticipantStatements(regionalObservationId: string, capacitySourceObservationIds: readonly string[]): SqlStatement[] {
+    return capacitySourceObservationIds.map((c) => ({ text: "insert into pipeline.regional_observation_participants (regional_observation_id, capacity_source_observation_id) values ($1, $2)", params: [regionalObservationId, c] }));
+  }
+
+  regionalStatement(row: StoredRegionalObservation): SqlStatement {
+    const scope = row.regionScope;
+    return {
+      text:
+        "insert into pipeline.regional_observations (id, run_id, instrument_id, calculation_date, canonical_region_code, region_scope, source_attributions, outcome, structural_condition, market_breadth, price_level, currency, unit, participant_count, contributing_source_count, largest_source_participant_share, dispersion_published, p10, p50, p90, iqr, percentage_change_1d, change_disposition) " +
+        "values ($1, $2, $3, $4, $5, $6, $7::text[], $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)",
       params: [
         row.id,
         row.runId,
         this.lineage.instrumentId,
         row.calculationDate,
-        row.canonicalRegionCode,
+        scope === "country" ? row.canonicalRegionCode : null,
+        scope,
+        row.sourceAttributions,
         row.outcome,
         row.structuralCondition,
         row.marketBreadth,

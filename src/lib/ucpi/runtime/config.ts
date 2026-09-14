@@ -10,10 +10,10 @@
 
 export type RunMode = "simulation" | "validation" | "production";
 
-export type ProviderSlug = "runpod" | "lambda";
+export type ProviderSlug = "runpod" | "lambda" | "price-of-compute";
 
-/** The environment variable that carries each provider's API key. Names only; never values. */
-export const CREDENTIAL_VARIABLES: Readonly<Record<ProviderSlug, string>> = {
+/** The environment variable that carries each provider's API key. Names only; never values. A source with no key has no entry. */
+export const CREDENTIAL_VARIABLES: Readonly<Partial<Record<ProviderSlug, string>>> = {
   runpod: "RUNPOD_API_KEY",
   lambda: "LAMBDA_API_KEY",
 };
@@ -22,7 +22,13 @@ export const CREDENTIAL_VARIABLES: Readonly<Record<ProviderSlug, string>> = {
 export const BASE_URL_VARIABLES: Readonly<Record<ProviderSlug, string>> = {
   runpod: "UCPI_RUNPOD_BASE_URL",
   lambda: "UCPI_LAMBDA_BASE_URL",
+  "price-of-compute": "UCPI_PRICE_OF_COMPUTE_BASE_URL",
 };
+
+/** Whether a provider needs a credential at all. */
+export function credentialRequired(provider: ProviderSlug): boolean {
+  return CREDENTIAL_VARIABLES[provider] !== undefined;
+}
 
 export const RUN_MODE_VARIABLE = "UCPI_RUN_MODE";
 
@@ -75,13 +81,16 @@ export function readRunMode(env: EnvRecord): RunMode {
 /** Reads a provider credential. Throws a clear, value-free error when absent or blank. */
 export function readCredential(env: EnvRecord, provider: ProviderSlug): Credential {
   const variable = CREDENTIAL_VARIABLES[provider];
+  if (variable === undefined) throw new MissingConfigurationError(`${provider} takes no credential`);
   const value = env[variable];
   if (value === undefined || value.trim() === "") throw new MissingCredentialError(provider, variable);
   return new Credential(provider, value.trim());
 }
 
 export function hasCredential(env: EnvRecord, provider: ProviderSlug): boolean {
-  const value = env[CREDENTIAL_VARIABLES[provider]];
+  const variable = CREDENTIAL_VARIABLES[provider];
+  if (variable === undefined) return true;
+  const value = env[variable];
   return value !== undefined && value.trim() !== "";
 }
 

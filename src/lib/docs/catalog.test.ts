@@ -121,6 +121,29 @@ describe("compute price child specifications", () => {
   });
 });
 
+describe("compute price sibling specifications", () => {
+  const listed = findDoc("methodology/ucpi-h100-sxm-listed");
+  const child = findDoc("methodology/ucpi-h100-sxm");
+  const ucpi = findDoc("methodology/ucpi");
+
+  it("registers UCPI-H100-SXM-LISTED under Methodology, directly after the child it is a sibling of", () => {
+    expect(listed).toMatchObject({ section: "Methodology", file: "methodology/ucpi-h100-sxm-listed.md" });
+    expect(docPages[docPages.indexOf(child!) + 1]).toBe(listed);
+  });
+
+  it("links to the parent and the child, states it is a different economic object, and is not launched", () => {
+    const doc = readFileSync(path.join(process.cwd(), "docs", listed!.file), "utf8");
+    expect(doc).toContain(`](${docHref(ucpi!.slug)})`);
+    expect(doc).toContain(`](${docHref(child!.slug)})`);
+    expect(doc.match(/^# /gm)).toHaveLength(1);
+    expect(doc).toContain("version 0.1.0-draft");
+    expect(doc).toContain("different economic object");
+    expect(doc).toContain("listed prices, not guaranteed availability");
+    expect(doc).toContain("never a participant");
+    expect(doc).toContain("listed, provider-wide");
+  });
+});
+
 describe("internal research and architecture artifacts", () => {
   const internalDirs = ["research", "architecture"] as const;
 

@@ -60,6 +60,7 @@ describe("capacity-source collapse", () => {
     reductionRule: "canonical_quantity_then_minimum" as const,
     candidates: [],
     sourceInterfaceSlugs: slugs,
+    sourceAttributions: [],
     operatorEntityId,
   });
 
@@ -105,6 +106,7 @@ describe("regional calculation", () => {
     memberSellerEntityIds: [id],
     sourceInterfaceSlugs: slugs,
     sourceInterfaceCount: slugs.length,
+    sourceAttributions: [],
   });
   const base = { instrument: VERSIONS.instrument, canonicalRegionCode: "US", calculationDate: "2026-09-13", methodologyVersion: VERSIONS.methodologyVersion, instrumentSpecVersion: VERSIONS.instrumentSpecVersion, prior: null };
 

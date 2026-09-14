@@ -10,8 +10,18 @@ import type { DiagnosticCode, EligibilityAssessment, ExclusionReason, InputStatu
 import { HOST_MEMORY_FLOOR_GB_PER_ACCELERATOR, bundleEnvelope, freshnessOnCalculationDate } from "@/lib/ucpi/launch-parameters";
 import { productionCollectionPermitted, type SourceRegistryState } from "@/lib/ucpi/permission-gate";
 
+/**
+ * Which instrument's rules apply. `accessible` is UCPI-H100-SXM: a current accessible offer at Grade >= 3,
+ * country-resolved, tenancy Explicit or Documented, bundle within the envelope. `listed` is the
+ * UCPI-H100-SXM-LISTED sibling: a listed on-demand price from a licensed source, per-accelerator class
+ * established by Urdais evidence, independence and freshness as the family requires, with availability,
+ * tenancy, bundle and geography recorded as metadata rather than gated.
+ */
+export type InstrumentSpec = "accessible" | "listed";
+
 export type EligibilityContext = {
   calculationDate: string;
+  spec?: InstrumentSpec;
   /** Registry state per source interface slug. A source absent here is treated as not permitted. */
   registry: ReadonlyMap<string, SourceRegistryState>;
   /** The index currency. Anything else needs a conversion the child has not yet approved. */
@@ -24,6 +34,7 @@ export function assessEligibility(obs: NormalizedObservation, ctx: EligibilityCo
   const exclusions = new Set<ExclusionReason>();
   const diagnostics = new Set<DiagnosticCode>();
   const indexCurrency = ctx.indexCurrency ?? "USD";
+  const listed = (ctx.spec ?? "accessible") === "listed";
 
   // P0: identity qualification -------------------------------------------------
   if (obs.fullDevice === false || obs.tenancyGrade === "shared_or_fractional") exclusions.add("FRACTIONAL_OR_SHARED_DEVICE");
@@ -44,12 +55,22 @@ export function assessEligibility(obs: NormalizedObservation, ctx: EligibilityCo
   if (obs.promotional) exclusions.add("PROMOTIONAL_PRICE");
   if (obs.minimumGpuCount === null || obs.minimumTopologySourceField === null) exclusions.add("MINIMUM_TOPOLOGY_UNKNOWN");
   if (obs.topologyClass === "whole_node" || obs.wholeNodeRequired === true) exclusions.add("WHOLE_NODE_REQUIRED");
-  if (obs.tenancyGrade === "ambiguous" || obs.tenancyGrade === "unknown") exclusions.add("TENANCY_UNRESOLVED");
+  // The listed sibling records tenancy as metadata; the accessible child requires Explicit or Documented.
+  if (!listed && (obs.tenancyGrade === "ambiguous" || obs.tenancyGrade === "unknown")) exclusions.add("TENANCY_UNRESOLVED");
+  // An observation whose seller could not be identified has no participant to belong to.
+  if (obs.sellerEntityId.startsWith("unmapped:")) exclusions.add("SOURCE_INSUFFICIENT");
   const p1 = p0 && exclusions.size === 0;
 
   // P2: headline eligibility ----------------------------------------------------
-  if (obs.canonicalRegionCode === null) exclusions.add("REGION_UNRESOLVED");
+  // The listed sibling publishes one region-unspecified series; the accessible child requires a country.
+  if (!listed && obs.canonicalRegionCode === null) exclusions.add("REGION_UNRESOLVED");
 
+  if (listed) {
+    // Listed presence is the object: Grade 5 is expected and recorded, not gated.
+    if (obs.observationType !== "indicative_or_list_price" && obs.observationType !== "advertised_non_accessible_price" && obs.observationType !== "current_accessible_offer") {
+      exclusions.add("SOURCE_INSUFFICIENT");
+    }
+  } else {
   switch (obs.availabilityState) {
     case "unknown":
       exclusions.add("AVAILABILITY_UNKNOWN");
@@ -71,11 +92,13 @@ export function assessEligibility(obs: NormalizedObservation, ctx: EligibilityCo
   } else if (obs.availabilityEvidenceGrade === MINIMUM_AVAILABILITY_GRADE) {
     diagnostics.add("AVAILABILITY_GRADE_3");
   }
+  }
 
+  // The listed sibling has no availability evidence to age; its freshness is the price observation alone.
   const fresh = freshnessOnCalculationDate({
     calculationDate: ctx.calculationDate,
     priceObservedOn: calculationDateOf(obs.observedAt),
-    availabilityObservedOn: obs.availabilityObservedAt === null ? null : calculationDateOf(obs.availabilityObservedAt),
+    availabilityObservedOn: listed ? calculationDateOf(obs.observedAt) : obs.availabilityObservedAt === null ? null : calculationDateOf(obs.availabilityObservedAt),
   });
   if (fresh === "PRICE_STALE") exclusions.add("PRICE_STALE");
   if (fresh === "AVAILABILITY_STALE") exclusions.add("AVAILABILITY_STALE");
@@ -85,13 +108,13 @@ export function assessEligibility(obs: NormalizedObservation, ctx: EligibilityCo
   if (obs.normalizedCurrency !== indexCurrency && obs.priceConversion === null) exclusions.add("CURRENCY_RATE_UNAVAILABLE");
   if (obs.normalizedUnit !== "accelerator_hour") exclusions.add("UNIT_UNRESOLVED");
 
+  // The envelope gates the accessible child; the listed sibling cannot observe bundles through a vendor feed and records that.
   switch (bundleEnvelope(obs.hostMemoryGbPerAccelerator)) {
     case "outside":
       exclusions.add("BUNDLE_OUT_OF_ENVELOPE");
       break;
     case "unknown":
-      // Host memory is nullable but blocks P2 now that the floor is declared.
-      exclusions.add("SOURCE_INSUFFICIENT");
+      if (!listed) exclusions.add("SOURCE_INSUFFICIENT");
       break;
     default:
       break;
@@ -100,7 +123,7 @@ export function assessEligibility(obs: NormalizedObservation, ctx: EligibilityCo
   if (obs.taxBasis === "inclusive") exclusions.add("TAX_BASIS_INCLUSIVE");
   if (obs.taxBasis === "unresolved") diagnostics.add("TAX_BASIS_UNRESOLVED");
 
-  if (obs.observationType !== "current_accessible_offer") exclusions.add("SOURCE_INSUFFICIENT");
+  if (!listed && obs.observationType !== "current_accessible_offer") exclusions.add("SOURCE_INSUFFICIENT");
 
   const registry = ctx.registry.get(obs.sourceInterfaceSlug);
   if (registry === undefined || !productionCollectionPermitted(registry).permitted) exclusions.add("COLLECTION_NOT_PERMITTED");

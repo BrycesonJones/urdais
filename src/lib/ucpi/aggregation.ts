@@ -15,6 +15,14 @@ import type { MarketEntity, NormalizedObservation } from "@/lib/ucpi/domain";
 import { sellerRepresentativePrice, type CellOffer } from "@/lib/ucpi/launch-parameters";
 import { decideBreadth, regionalMedian, type MarketBreadth, type StructuralCondition } from "@/lib/ucpi/market-breadth";
 
+// Region scope --------------------------------------------------------------------
+
+/** Country series (the accessible child) or one region-unspecified series of listed prices (the LISTED sibling). */
+export type RegionScope = "country" | "listed_provider_wide";
+
+/** The in-memory region key of the listed series; persisted as a null country with scope listed_provider_wide. */
+export const LISTED_SCOPE_KEY = "LISTED";
+
 // Seller-level reduction ---------------------------------------------------------
 
 export type SellerObservation = {
@@ -31,14 +39,17 @@ export type SellerObservation = {
   sourceInterfaceSlugs: readonly string[];
   /** The selected observation's operator, if determinable. */
   operatorEntityId: string | null;
+  /** Attributions required by the sources the candidates came through. */
+  sourceAttributions: readonly string[];
 };
 
-/** Groups P2-eligible observations into cells of one seller in one country and reduces each. */
-export function reduceSellers(eligible: readonly NormalizedObservation[]): SellerObservation[] {
+/** Groups P2-eligible observations into cells of one seller in one country (or one listed cell per seller) and reduces each. */
+export function reduceSellers(eligible: readonly NormalizedObservation[], scope: RegionScope = "country"): SellerObservation[] {
   const cells = new Map<string, NormalizedObservation[]>();
   for (const o of eligible) {
-    if (o.canonicalRegionCode === null) throw new Error(`observation ${o.id} reached seller reduction without a canonical region`);
-    const key = `${o.sellerEntityId}|${o.canonicalRegionCode}`;
+    if (scope === "country" && o.canonicalRegionCode === null) throw new Error(`observation ${o.id} reached seller reduction without a canonical region`);
+    const region = scope === "country" ? o.canonicalRegionCode! : LISTED_SCOPE_KEY;
+    const key = `${o.sellerEntityId}|${region}`;
     const cell = cells.get(key) ?? [];
     cell.push(o);
     cells.set(key, cell);
@@ -54,7 +65,7 @@ export function reduceSellers(eligible: readonly NormalizedObservation[]): Selle
     const first = cell[0]!;
     out.push({
       sellerEntityId: first.sellerEntityId,
-      canonicalRegionCode: first.canonicalRegionCode!,
+      canonicalRegionCode: scope === "country" ? first.canonicalRegionCode! : LISTED_SCOPE_KEY,
       canonicalQuantity: r.canonicalQuantity,
       representativePrice: r.representativePrice,
       selectedObservationId: selected.id,
@@ -68,6 +79,7 @@ export function reduceSellers(eligible: readonly NormalizedObservation[]): Selle
       })),
       sourceInterfaceSlugs: [...new Set(cell.map((o) => o.sourceInterfaceSlug))].sort(),
       operatorEntityId: selected.operatorEntityId,
+      sourceAttributions: [...new Set(cell.map((o) => o.sourceAttribution ?? null).filter((x): x is string => x !== null))].sort(),
     });
   }
   return out.sort((a, b) => a.canonicalRegionCode.localeCompare(b.canonicalRegionCode) || a.sellerEntityId.localeCompare(b.sellerEntityId));
@@ -86,6 +98,7 @@ export type CapacitySourceObservation = {
   memberSellerEntityIds: readonly string[];
   sourceInterfaceSlugs: readonly string[];
   sourceInterfaceCount: number;
+  sourceAttributions: readonly string[];
 };
 
 /**
@@ -131,6 +144,7 @@ export function collapseCapacitySources(sellers: readonly SellerObservation[], e
       memberSellerEntityIds: g.members.map((m) => m.sellerEntityId).sort(),
       sourceInterfaceSlugs: slugs,
       sourceInterfaceCount: slugs.length,
+      sourceAttributions: [...new Set(g.members.flatMap((m) => m.sourceAttributions))].sort(),
     });
   }
   return out.sort((a, b) => a.canonicalRegionCode.localeCompare(b.canonicalRegionCode) || a.capacitySourceEntityId.localeCompare(b.capacitySourceEntityId));
@@ -142,6 +156,8 @@ export type Dispersion = { p10: number; p50: number; p90: number; iqr: number };
 
 export type RegionalObservation = {
   instrument: string;
+  regionScope: RegionScope;
+  /** ISO country for a country series; LISTED_SCOPE_KEY for the listed series (persisted as null). */
   canonicalRegionCode: string;
   calculationDate: string;
   windowStart: string;
@@ -164,6 +180,8 @@ export type RegionalObservation = {
   changeDisposition: "published" | "annotated" | "withheld" | null;
   diagnostics: readonly string[];
   participants: readonly CapacitySourceObservation[];
+  /** Attributions that must appear wherever this value is shown. */
+  sourceAttributions: readonly string[];
 };
 
 /** Hyndman and Fan type 7, the child's fixed quantile convention. */
@@ -187,6 +205,7 @@ export type RegionalInput = {
   prior: (PriorObservation & { priceLevel?: number | null }) | null;
   /** Ids of participants that were also present on the preceding date, used for the composition annotation. */
   priorParticipantIds?: readonly string[];
+  regionScope?: RegionScope;
 };
 
 export function calculateRegion(input: RegionalInput): RegionalObservation {
@@ -195,7 +214,9 @@ export function calculateRegion(input: RegionalInput): RegionalObservation {
   const breadth = decideBreadth(n);
   const base = {
     instrument: input.instrument,
+    regionScope: input.regionScope ?? "country",
     canonicalRegionCode: input.canonicalRegionCode,
+    sourceAttributions: [...new Set(input.participants.flatMap((p) => p.sourceAttributions))].sort(),
     calculationDate: input.calculationDate,
     windowStart: window.windowStart,
     cutoff: window.cutoff,

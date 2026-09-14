@@ -210,6 +210,7 @@ export function eligibleObservation(overrides: Partial<NormalizedObservation> = 
     observationType: "current_accessible_offer",
     sourceQualityGrade: 2,
     enumerationAssessment: "complete",
+    sourceAttribution: null,
     ...overrides,
   };
 }
