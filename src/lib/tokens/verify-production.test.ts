@@ -14,7 +14,11 @@ import { tokenReadCatalogFromStore } from "@/lib/tokens/read/load";
 import { observationIsPublicable, observationIsVisible } from "@/lib/tokens/read/publication";
 import { listVisibleTokenSeries } from "@/lib/tokens/read/series";
 import { InMemoryTokenPricingStore } from "@/lib/tokens/store";
-import { TokenPermissionError, WAVE1_PROVIDERS, type ManualVerification, type Wave1Provider } from "@/lib/tokens/types";
+import { TokenPermissionError, type ManualVerification, type Wave1Provider } from "@/lib/tokens/types";
+import { benchmarkProviders } from "@/lib/tokens/read/benchmark";
+
+/** Providers with a designation today. A withheld provider has none by design. */
+const DESIGNATED = benchmarkProviders() as Wave1Provider[];
 import { loadPricingFixture } from "@/lib/tokens/fixtures";
 import { seedWave1ResearchPreview } from "@/lib/tokens/preview-seed";
 import { VerificationMismatchError, verifyProviderProduction } from "@/lib/tokens/verify-production";
@@ -27,7 +31,7 @@ const VERIFICATION: Omit<ManualVerification, "sourceUrl"> = {
 
 function verifyAll(expectations: Partial<Record<Wave1Provider, { input: number; output: number }>> = {}) {
   const store = new InMemoryTokenPricingStore();
-  const legs = WAVE1_PROVIDERS.map((provider) => {
+  const legs = DESIGNATED.map((provider) => {
     const source = WAVE1_SOURCE_INTERFACES[provider];
     return {
       provider,
@@ -48,7 +52,7 @@ describe("manual verification publishes a verified fact", () => {
     const catalog = tokenReadCatalogFromStore(store);
     const production = listVisibleTokenSeries(catalog, "production");
     expect(production.length).toBeGreaterThan(0);
-    expect(new Set(production.map((row) => row.providerSlug))).toEqual(new Set(["anthropic", "openai", "xai"]));
+    expect(new Set(production.map((row) => row.providerSlug))).toEqual(new Set(DESIGNATED));
   });
 
   it("reads the benchmark legs from the artifact rather than seeding them", () => {
@@ -68,7 +72,9 @@ describe("manual verification publishes a verified fact", () => {
     const { store } = verifyAll();
     const rows = publishableBenchmarks(listVisibleTokenSeries(tokenReadCatalogFromStore(store), "production"), "2026-09-14");
     expect(rows.map((row) => [row.providerSlug, row.priceUsdPer1m])).toEqual([
+      ["alibaba", 4],
       ["anthropic", 30],
+      ["google", 7],
       ["openai", 30],
       ["xai", 4],
     ]);
@@ -102,7 +108,7 @@ describe("manual verification publishes a verified fact", () => {
     // empty row into an append-only table, and still reported "nothing inserted".
     const store = new InMemoryTokenPricingStore();
     const verifyAt = (verifiedAt: string) =>
-      WAVE1_PROVIDERS.map((provider) =>
+      DESIGNATED.map((provider) =>
         verifyProviderProduction({
           provider,
           verification: { ...VERIFICATION, verifiedAt, sourceUrl: WAVE1_SOURCE_INTERFACES[provider].canonicalUrl },
@@ -111,14 +117,14 @@ describe("manual verification publishes a verified fact", () => {
       );
 
     const first = verifyAt("2026-09-14T06:00:00Z");
-    expect(store.retrievals).toHaveLength(WAVE1_PROVIDERS.length);
+    expect(store.retrievals).toHaveLength(DESIGNATED.length);
     expect(first.reduce((total, row) => total + row.observationsInserted, 0)).toBeGreaterThan(0);
 
     const later = verifyAt("2026-09-15T09:30:00Z");
     expect(later.reduce((total, row) => total + row.observationsInserted, 0)).toBe(0);
     expect(later.every((row) => row.alreadyPresentForRetrieval)).toBe(true);
     // The point of the test: no second retrieval, a day later, for the same artifact.
-    expect(store.retrievals).toHaveLength(WAVE1_PROVIDERS.length);
+    expect(store.retrievals).toHaveLength(DESIGNATED.length);
   });
 
   it("still records a separate retrieval when the artifact itself changed", () => {
@@ -151,7 +157,7 @@ describe("manual verification publishes a verified fact", () => {
   it("is idempotent: verifying the same artifact again adds no observation", () => {
     const store = new InMemoryTokenPricingStore();
     const run = () =>
-      WAVE1_PROVIDERS.map((provider) =>
+      DESIGNATED.map((provider) =>
         verifyProviderProduction({
           provider,
           verification: { ...VERIFICATION, sourceUrl: WAVE1_SOURCE_INTERFACES[provider].canonicalUrl },
@@ -167,9 +173,9 @@ describe("manual verification publishes a verified fact", () => {
 
 describe("manual verification is not a collection permission", () => {
   it("leaves every Wave-1 registry row exactly as it was", () => {
-    const before = WAVE1_PROVIDERS.map((provider) => ({ ...WAVE1_SOURCE_INTERFACES[provider].registry }));
+    const before = DESIGNATED.map((provider) => ({ ...WAVE1_SOURCE_INTERFACES[provider].registry }));
     verifyAll();
-    const after = WAVE1_PROVIDERS.map((provider) => WAVE1_SOURCE_INTERFACES[provider].registry);
+    const after = DESIGNATED.map((provider) => WAVE1_SOURCE_INTERFACES[provider].registry);
     expect(after).toEqual(before);
     for (const registry of after) {
       expect(registry.productionAccessState).toBe("research_usable");
@@ -179,7 +185,7 @@ describe("manual verification is not a collection permission", () => {
   });
 
   it("still refuses an automated production retrieval from an unresolved source", () => {
-    for (const provider of WAVE1_PROVIDERS) {
+    for (const provider of DESIGNATED) {
       const registry = WAVE1_SOURCE_INTERFACES[provider].registry;
       expect(() => assertTokenIngestPermitted("production", registry)).toThrow(TokenPermissionError);
       expect(() => assertTokenIngestPermitted("production", registry, "automated")).toThrow(TokenPermissionError);

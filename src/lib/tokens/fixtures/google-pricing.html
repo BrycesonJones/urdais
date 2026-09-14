@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Gemini Developer API pricing fixture</title></head>
+<body>
+<h1>Gemini Developer API pricing</h1>
+<p>Paid tier, per 1M tokens in USD. Output prices include thinking tokens at the output rate. Free-tier rates are not list prices and are not reproduced. This is the Gemini Developer API price list; Vertex AI is a separate surface with its own list.</p>
+<h2>Standard</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Model ID</th>
+      <th>Input price</th>
+      <th>Output price</th>
+      <th>Input price, prompts &gt; 200k tokens</th>
+      <th>Output price, prompts &gt; 200k tokens</th>
+      <th>Scheduled change</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Gemini 3.1 Pro Preview</td>
+      <td>gemini-3.1-pro-preview</td>
+      <td>$2.00</td>
+      <td>$12.00</td>
+      <td>$4.00</td>
+      <td>$18.00</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>Gemini 2.5 Pro</td>
+      <td>gemini-2.5-pro</td>
+      <td>$1.25</td>
+      <td>$10.00</td>
+      <td>$2.50</td>
+      <td>$15.00</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>Gemini 3.8 Flash</td>
+      <td>gemini-3.8-flash</td>
+      <td>$0.75</td>
+      <td>$3.75</td>
+      <td>-</td>
+      <td>-</td>
+      <td>$1.50 input and $7.50 output starting January 1, 2027</td>
+    </tr>
+    <tr>
+      <td>Gemini 3.7 Flash</td>
+      <td>gemini-3.7-flash</td>
+      <td>$0.75</td>
+      <td>$3.75</td>
+      <td>-</td>
+      <td>-</td>
+      <td>$1.50 input and $7.50 output starting January 1, 2027</td>
+    </tr>
+    <tr>
+      <td>Gemini 3.6 Flash</td>
+      <td>gemini-3.6-flash</td>
+      <td>$0.75</td>
+      <td>$3.75</td>
+      <td>-</td>
+      <td>-</td>
+      <td>$1.50 input and $7.50 output starting January 1, 2027</td>
+    </tr>
+    <tr>
+      <td>Gemini 3.5 Flash</td>
+      <td>gemini-3.5-flash</td>
+      <td>$1.50</td>
+      <td>$9.00</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>Gemini 3.5 Flash-Lite</td>
+      <td>gemini-3.5-flash-lite</td>
+      <td>$0.30</td>
+      <td>$2.50</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+    </tr>
+  </tbody>
+</table>
+<p>The prices above through December 31, 2026 for the rows carrying a scheduled change. Promotional rates are reproduced as published; the rate in force on the retrieval date is the one listed in the price columns.</p>
+<p>Models whose standard paid price is published per modality rather than as one token rate, and models priced per minute of audio, are omitted from this excerpt: Gemini 3.1 Flash-Lite, Gemini 2.5 Flash, Gemini 2.5 Flash-Lite, Gemini 3 Flash Preview, Gemini 3.1 Flash Live Preview, Gemini 3.5 Live Translate, Gemini 3.5 Transcribe, Gemini 3.5 Transcribe Live, Gemini 2.5 Flash Native Audio. Urdais has no modality facet and does not collapse a per-modality split into a single rate.</p>
+<h2>Batch</h2>
+<p>Batch is published at half the standard rate for the rows above. Batch is a separate service tier and is not part of the standardized workload.</p>
+<h2>Context caching</h2>
+<p>Context caching is published separately per model, plus a storage price per 1,000,000 tokens per hour. Storage is charged per hour rather than per token and is out of the per-1M-token unit.</p>
+</body>
+</html>

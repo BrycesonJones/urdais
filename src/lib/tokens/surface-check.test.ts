@@ -8,9 +8,10 @@ import { describe, expect, it } from "vitest";
 import { checkTokenSurfaces, formattedPrice, visibleText, type Fetcher } from "@/lib/tokens/surface-check";
 
 const BENCHMARKS = [
-  { providerName: "Anthropic", priceUsdPer1m: 30 },
-  { providerName: "OpenAI", priceUsdPer1m: 30 },
-  { providerName: "xAI", priceUsdPer1m: 4 },
+  { providerSlug: "alibaba", providerName: "Alibaba Cloud", priceUsdPer1m: 4 },
+  { providerSlug: "anthropic", providerName: "Anthropic", priceUsdPer1m: 30 },
+  { providerSlug: "openai", providerName: "OpenAI", priceUsdPer1m: 30 },
+  { providerSlug: "xai", providerName: "xAI", priceUsdPer1m: 4 },
 ];
 
 function site(options: { api?: unknown; apiStatus?: number; html?: string; pageStatus?: number } = {}): Fetcher {
@@ -27,7 +28,7 @@ describe("public surface check", () => {
     const report = await checkTokenSurfaces("https://example.invalid/", site());
     expect(report.ok).toBe(true);
     expect(report.findings).toEqual([]);
-    expect(report.benchmarks).toHaveLength(3);
+    expect(report.benchmarks).toHaveLength(4);
     expect(report.pages.every((page) => page.ok)).toBe(true);
     expect(report.origin).toBe("https://example.invalid");
   });
@@ -139,5 +140,25 @@ describe("each surface is asked for what it actually renders", () => {
     const finding = report.findings.find((row) => row.code === "PAGE_MISSING_VALUE")!;
     expect(finding.detail).toContain("Tokens family");
     expect(finding.remedy).toContain("family hydration");
+  });
+});
+
+describe("the value page is checked for what it actually opens on", () => {
+  it("looks for the designated default provider, not the API's first row", async () => {
+    // Alibaba Cloud sorts first in the API payload; the page opens on Anthropic.
+    // Checking the first row would fail a page that is working correctly.
+    const rendered = "<html><body><h1>Anthropic</h1><p>$30.00 per 1M tokens</p></body></html>";
+    const report = await checkTokenSurfaces("https://example.invalid", site({ html: rendered }), [
+      { path: "/markets/model-economics", expects: "value" },
+    ]);
+    expect(report.ok).toBe(true);
+  });
+
+  it("still fails a page that shows no benchmark at all", async () => {
+    const report = await checkTokenSurfaces("https://example.invalid", site({ html: "<html><body><h1>Tokens</h1></body></html>" }), [
+      { path: "/markets/model-economics", expects: "value" },
+    ]);
+    expect(report.ok).toBe(false);
+    expect(report.findings.some((row) => row.code === "PAGE_MISSING_VALUE")).toBe(true);
   });
 });

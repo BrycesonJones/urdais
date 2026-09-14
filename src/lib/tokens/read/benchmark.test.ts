@@ -70,7 +70,7 @@ describe("methodology registry", () => {
     expect(TOKEN_PRICE_WORKLOAD.inputTokens + TOKEN_PRICE_WORKLOAD.outputTokens).toBe(1_000_000);
     expect(V11.inputWeight + V11.outputWeight).toBe(1);
     expect(TOKEN_PRICE_UNIT_CAPTION).toBe("per 1M tokens");
-    expect(TOKEN_PRICE_METHODOLOGY_VERSION).toBe("1.1");
+    expect(TOKEN_PRICE_METHODOLOGY_VERSION).toBe("1.2");
   });
 
   it("applies the exact formula of the version in force, without rounding first", () => {
@@ -81,7 +81,7 @@ describe("methodology registry", () => {
 
   it("is effective-dated, so no version applies before the first", () => {
     expect(methodologyInForce("2026-09-13")).toBeUndefined();
-    expect(methodologyInForce(TODAY)?.version).toBe("1.1");
+    expect(methodologyInForce(TODAY)?.version).toBe("1.2");
     for (const row of TOKEN_PRICE_METHODOLOGY_VERSIONS) expect(row.effectiveFrom).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });
@@ -116,7 +116,9 @@ describe("eligible legs", () => {
 
 describe("constituent selection", () => {
   it("designates each provider's broadly available flagship frontier model", () => {
-    expect(benchmarkProviders()).toEqual(["anthropic", "openai", "xai"]);
+    expect(benchmarkProviders()).toEqual(["alibaba", "anthropic", "google", "openai", "xai"]);
+    // DeepSeek is collected but deliberately undesignated; see TOKEN_BENCHMARK_WITHHELD.
+    expect(benchmarkProviders()).not.toContain("deepseek");
     expect(constituentInForce("anthropic", TODAY)?.providerModelId).toBe("claude-fable-5-1");
     expect(constituentInForce("openai", TODAY)?.providerModelId).toBe("gpt-6-astra");
     expect(constituentInForce("xai", TODAY)?.providerModelId).toBe("grok-4.6");
@@ -220,6 +222,7 @@ describe("history across designation and methodology changes", () => {
       providerSlug: "anthropic",
       providerModelId: "claude-fable-6",
       baseContextTier: null,
+      baseRegion: null,
       effectiveFrom: "2026-11-01",
       methodologyVersion: "1.1",
       rationale: "Hypothetical successor designation used to prove history is not rewritten.",
@@ -291,7 +294,7 @@ describe("history across designation and methodology changes", () => {
     const future = { version: "2.0", effectiveFrom: "2026-12-01", inputTokens: 250_000, outputTokens: 750_000, inputWeight: 0.25, outputWeight: 0.75 };
     expect(tokenBenchmarkPrice(10, 50, future)).toBe(40);
     // The point dated 2026-09-14 is still computed with the version in force then.
-    expect(methodologyInForce("2026-09-14")!.version).toBe("1.1");
+    expect(methodologyInForce("2026-09-14")!.version).toBe("1.2");
     expect(tokenBenchmarkPrice(10, 50, methodologyInForce("2026-09-14")!)).toBe(30);
     const after = providerBenchmark("anthropic", series, "2026-12-15").series!;
     expect(after.history[0]!.priceUsdPer1m).toBe(30);
@@ -328,7 +331,7 @@ describe("Wave-1 benchmark values", () => {
     expect(row.series!.benchmarkModelId).toBe(modelId);
     expect(row.series!.priceUsdPer1m).toBeCloseTo(tokenBenchmarkPrice(input, output, V11), 10);
     expect(row.series!.priceUsdPer1m).toBeCloseTo(expected, 10);
-    expect(row.series!.methodologyVersion).toBe("1.1");
+    expect(row.series!.methodologyVersion).toBe("1.2");
   });
 
   it("carries a real retrieval timestamp, not a date boundary", () => {
@@ -354,10 +357,11 @@ describe("Wave-1 benchmark values", () => {
 
   it("builds one market per provider, comparing benchmark against benchmark", () => {
     const instruments = benchmarkInstrumentsFromSeries(publishableBenchmarks(series, TODAY));
-    expect(instruments.map((row) => row.symbol).sort()).toEqual(["Anthropic", "OpenAI", "xAI"]);
+    expect(instruments.map((row) => row.symbol).sort()).toEqual(["Alibaba Cloud", "Anthropic", "Google", "OpenAI", "xAI"]);
     expect(instruments.every((row) => row.benchmarkIdentity !== undefined && row.tokenIdentity === undefined)).toBe(true);
     expect(instruments.every((row) => row.unit === TOKEN_PRICE_UNIT_CAPTION)).toBe(true);
-    expect(instruments.every((row) => row.comparisons.length === 2)).toBe(true);
+    // Each market compares against every other provider: five providers, four comparisons.
+    expect(instruments.every((row) => row.comparisons.length === 4)).toBe(true);
   });
 });
 
@@ -366,7 +370,7 @@ describe("rights gating is unchanged", () => {
     const store = new InMemoryTokenPricingStore();
     seedWave1ResearchPreview(store);
     const catalog = tokenReadCatalogFromStore(store);
-    expect(visibleTokenBenchmarks(catalog, { NODE_ENV: "development" })).toHaveLength(3);
+    expect(visibleTokenBenchmarks(catalog, { NODE_ENV: "development" })).toHaveLength(5);
     expect(visibleTokenBenchmarks(catalog, { NODE_ENV: "production" })).toEqual([]);
     expect(await loadVisibleTokenInstruments({ NODE_ENV: "production" })).toEqual([]);
   });
@@ -424,14 +428,14 @@ describe("frozen benchmark observations", () => {
   it("freezes one row per provider with its full lineage", async () => {
     const sql = memoryBenchmarkSql();
     const { inserted, points } = await persistProviderBenchmarks(sql, catalog(), "research_preview", TODAY);
-    expect(inserted).toBe(3);
-    expect(points).toHaveLength(3);
+    expect(inserted).toBe(5);
+    expect(points).toHaveLength(5);
     for (const point of points) {
       expect(point.inputObservationId).toBeTruthy();
       expect(point.outputObservationId).toBeTruthy();
       expect(point.inputPriceUsdPer1m).toBeGreaterThan(0);
       expect(point.outputPriceUsdPer1m).toBeGreaterThan(0);
-      expect(point.methodologyVersion).toBe("1.1");
+      expect(point.methodologyVersion).toBe("1.2");
       expect(point.time).not.toMatch(/T00:00:00\.000Z$/);
     }
   });
@@ -443,10 +447,10 @@ describe("frozen benchmark observations", () => {
     const first = await persistProviderBenchmarks(sql, same, "research_preview", TODAY);
     const second = await persistProviderBenchmarks(sql, same, "research_preview", TODAY);
     const third = await persistProviderBenchmarks(sql, same, "research_preview", TODAY);
-    expect(first.inserted).toBe(3);
+    expect(first.inserted).toBe(5);
     expect(second.inserted).toBe(0);
     expect(third.inserted).toBe(0);
-    expect(sql.rows.size).toBe(3);
+    expect(sql.rows.size).toBe(5);
     // Only inserts and transaction control; nothing updates a frozen row.
     expect(sql.statements.some((row) => /^\s*UPDATE|^\s*DELETE/i.test(row))).toBe(false);
   });
@@ -456,7 +460,7 @@ describe("frozen benchmark observations", () => {
     await persistProviderBenchmarks(sql, catalog(), "research_preview", TODAY);
     const frozen = await loadPersistedBenchmarks(sql);
     const series = persistedBenchmarks(frozen);
-    expect(series.map((row) => row.providerSlug)).toEqual(["anthropic", "openai", "xai"]);
+    expect(series.map((row) => row.providerSlug)).toEqual(["alibaba", "anthropic", "google", "openai", "xai"]);
     expect(series.find((row) => row.providerSlug === "anthropic")!.priceUsdPer1m).toBe(30);
     expect(series.find((row) => row.providerSlug === "xai")!.priceUsdPer1m).toBe(4);
     for (const row of series) expect(validatePublicTokenBenchmark(JSON.parse(JSON.stringify(row)))).toEqual([]);

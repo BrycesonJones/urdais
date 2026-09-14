@@ -43,12 +43,26 @@ begin
   select count(*) into n from pipeline.token_price_observations;
   if n <> 0 then raise exception 'token prices were seeded'; end if;
 
+  -- Every token-pricing source, both waves. A source added without its rights
+  -- being covered here is a source nobody is watching.
   select count(*) into n from reference.source_interfaces
-    where slug in ('anthropic-api-pricing-docs', 'xai-models-docs', 'openai-api-pricing-docs')
+    where slug in ('anthropic-api-pricing-docs', 'xai-models-docs', 'openai-api-pricing-docs',
+                   'google-gemini-api-pricing-docs', 'deepseek-api-pricing-docs', 'alibaba-model-studio-pricing-docs')
       and production_access_state = 'research_usable'
       and terms_review_state = 'under_review'
       and data_use_terms_state = 'under_review';
-  if n <> 3 then raise exception 'wave-1 source rights drifted, found % matching rows', n; end if;
+  if n <> 6 then raise exception 'token source rights drifted, found % matching rows', n; end if;
+
+  -- Wave-2 identities exist and are attached to the right providers.
+  select count(*) into n from reference.models m join reference.providers p on p.id = m.provider_id
+   where p.slug = 'google' and m.provider_model_id = 'gemini-3.1-pro-preview';
+  if n <> 1 then raise exception 'the designated Google benchmark model is missing'; end if;
+  select count(*) into n from reference.models m join reference.providers p on p.id = m.provider_id
+   where p.slug = 'alibaba' and m.provider_model_id = 'qwen3.8-max';
+  if n <> 1 then raise exception 'the designated Alibaba benchmark model is missing'; end if;
+  select count(*) into n from reference.models m join reference.providers p on p.id = m.provider_id
+   where p.slug = 'deepseek' and m.provider_model_id = 'deepseek-v4-pro';
+  if n <> 1 then raise exception 'the DeepSeek model is missing; it is collected even though its benchmark is withheld'; end if;
 
   select id into iface from reference.source_interfaces where slug = 'anthropic-api-pricing-docs';
 

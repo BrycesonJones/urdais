@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>DeepSeek API pricing fixture</title></head>
+<body>
+<h1>Models &amp; Pricing</h1>
+<p>The prices listed below are in units of per 1M tokens. Billing is based on the total number of input and output tokens.</p>
+<p>Off-peak rates are half of the peak rates. Peak hours are 01:00 - 04:00 and 06:00 - 10:00 UTC, Monday through Friday (all other hours are off-peak).</p>
+<p>There is no standard, peak-neutral rate on this table. Every published price is a peak rate or an off-peak rate.</p>
+<h2>Model details</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Model version</th>
+      <th>Context length</th>
+      <th>Max output</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>deepseek-flash</td>
+      <td>DeepSeek-V4.1-Flash</td>
+      <td>1M</td>
+      <td>384K</td>
+    </tr>
+    <tr>
+      <td>deepseek-v4-pro</td>
+      <td>DeepSeek-V4-Pro-0813</td>
+      <td>1M</td>
+      <td>384K</td>
+    </tr>
+  </tbody>
+</table>
+<h2>Pricing</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Pricing dimension</th>
+      <th>Off-peak price</th>
+      <th>Peak price</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>deepseek-flash</td>
+      <td>1M input tokens (cache hit)</td>
+      <td>$0.003</td>
+      <td>$0.006</td>
+    </tr>
+    <tr>
+      <td>deepseek-flash</td>
+      <td>1M input tokens (cache miss)</td>
+      <td>$0.15</td>
+      <td>$0.3</td>
+    </tr>
+    <tr>
+      <td>deepseek-flash</td>
+      <td>1M output tokens</td>
+      <td>$0.6</td>
+      <td>$1.2</td>
+    </tr>
+    <tr>
+      <td>deepseek-v4-pro</td>
+      <td>1M input tokens (cache hit)</td>
+      <td>$0.022</td>
+      <td>$0.044</td>
+    </tr>
+    <tr>
+      <td>deepseek-v4-pro</td>
+      <td>1M input tokens (cache miss)</td>
+      <td>$0.66</td>
+      <td>$1.32</td>
+    </tr>
+    <tr>
+      <td>deepseek-v4-pro</td>
+      <td>1M output tokens</td>
+      <td>$1.98</td>
+      <td>$3.96</td>
+    </tr>
+  </tbody>
+</table>
+<p>The legacy names deepseek-v4-flash and deepseek-v4-flash-vision-exp are still accepted, but the corresponding models have been retired; their requests are served by DeepSeek-V4.1-Flash and billed at the Flash price.</p>
+<p>Thinking mode is supported in both non-thinking and thinking modes and is not separately priced. There is no batch table on this page.</p>
+</body>
+</html>

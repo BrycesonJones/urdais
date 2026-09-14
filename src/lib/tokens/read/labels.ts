@@ -4,6 +4,7 @@
  */
 
 import type { CacheTtl, ServiceTier, SourcePricingDimension } from "@/lib/tokens/dimensions";
+import { isWave1Provider } from "@/lib/tokens/read/publication";
 import type { Wave1Provider } from "@/lib/tokens/types";
 
 export const TOKEN_CHART_UNIT = "$/1M tokens";
@@ -12,6 +13,9 @@ export const WAVE1_PROVIDER_NAMES: Record<Wave1Provider, string> = {
   anthropic: "Anthropic",
   openai: "OpenAI",
   xai: "xAI",
+  google: "Google",
+  deepseek: "DeepSeek",
+  alibaba: "Alibaba Cloud",
 };
 
 const DIMENSION_LABELS: Record<SourcePricingDimension, string> = {
@@ -41,8 +45,9 @@ const SERVICE_TIER_LABELS: Record<ServiceTier, string> = {
 };
 
 export function providerDisplayName(slug: string): string {
-  if (slug === "anthropic" || slug === "openai" || slug === "xai") return WAVE1_PROVIDER_NAMES[slug];
-  return slug;
+  // Membership, not three literals: a provider missing from this test renders
+  // as its raw slug in every chart label and instrument name.
+  return isWave1Provider(slug) ? WAVE1_PROVIDER_NAMES[slug] : slug;
 }
 
 export function pricingDimensionLabel(dimension: SourcePricingDimension): string {

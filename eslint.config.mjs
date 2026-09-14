@@ -14,6 +14,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // MapLibre worker modules copied from node_modules at dev/build time.
     "public/vendor/**",
+    // Worktrees created by concurrent agent sessions. They hold another
+    // session's branch and its build output; the default ".next/**" ignore is
+    // rooted and does not reach a nested one.
+    ".claude/**",
   ]),
 ]);
 
