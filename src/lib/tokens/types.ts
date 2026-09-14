@@ -15,6 +15,29 @@ export type Wave1Provider = (typeof WAVE1_PROVIDERS)[number];
 
 export type TokenIngestMode = "research" | "production";
 
+/**
+ * How an artifact was acquired, which is a different question from whether
+ * Urdais may publish what it says.
+ *
+ *   automated        a machine fetched it; the source's production collection
+ *                    gate applies unchanged
+ *   manual_verified  a person read the provider's own published page, retained
+ *                    the artifact and recorded what they checked. A verified
+ *                    fact may be published; it is never a claim that automated
+ *                    retrieval is permitted.
+ */
+export type TokenAcquisitionMode = "automated" | "manual_verified";
+
+/** What a person checked, where, and when. Required to publish a manually verified price. */
+export type ManualVerification = {
+  verifiedBy: string;
+  /** The first-party surface read, as a URL. */
+  sourceUrl: string;
+  verifiedAt: string;
+  /** What the verifier checked, in their own words. */
+  evidence: string;
+};
+
 export class MalformedPricingSourceError extends Error {
   constructor(detail: string) {
     super(`malformed pricing source: ${detail}`);
@@ -70,6 +93,9 @@ export type TokenSourceRetrieval = {
   enumerationEvidence: string;
   collectorIdentity: string;
   retrievalPurpose: TokenIngestMode;
+  acquisitionMode: TokenAcquisitionMode;
+  /** Required when acquisitionMode is manual_verified; null otherwise. */
+  verificationEvidence: string | null;
   permissionGrantId: null;
   parserId: string;
 };

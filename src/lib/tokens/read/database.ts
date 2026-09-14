@@ -54,7 +54,7 @@ type GlobalTokenPool = {
   __urdaisTokenPool?: { url: string; query: TokenSqlExecutor["query"]; end: () => Promise<void> };
 };
 
-async function tokenSqlExecutor(url: string): Promise<TokenSqlExecutor & { end?: () => Promise<void> }> {
+export async function tokenSqlExecutor(url: string): Promise<TokenSqlExecutor & { end?: () => Promise<void> }> {
   const globalForPool = globalThis as typeof globalThis & GlobalTokenPool;
   if (globalForPool.__urdaisTokenPool?.url === url) return globalForPool.__urdaisTokenPool;
 

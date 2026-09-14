@@ -20,7 +20,7 @@ export default async function MarketIndexPage({ params }: PageProps) {
   if (!found) notFound();
   const market = await hydrateMarketWithTokenPrices(found);
   const researchPreview =
-    tokenResearchPreviewActive() &&
+    (await tokenResearchPreviewActive()) &&
     (market.families.find((family) => family.id === "tokens")?.instruments.length ?? 0) > 0;
 
   return (

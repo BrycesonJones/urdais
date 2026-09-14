@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 /** The Model Economics analytical market: not an index route, so it has no symbol. */
 export default async function ModelEconomicsRoute() {
   const tokenInstruments = await loadVisibleTokenInstruments();
-  const researchPreview = tokenResearchPreviewActive() && tokenInstruments.length > 0;
+  const researchPreview = (await tokenResearchPreviewActive()) && tokenInstruments.length > 0;
   return (
     <>
       <SiteHeader />

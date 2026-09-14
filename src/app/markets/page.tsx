@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Information Markets" };
 export default async function MarketsPage() {
   const market = await hydrateMarketWithTokenPrices(findMarket(DEFAULT_MARKET_SYMBOL)!);
   const researchPreview =
-    tokenResearchPreviewActive() &&
+    (await tokenResearchPreviewActive()) &&
     (market.families.find((family) => family.id === "tokens")?.instruments.length ?? 0) > 0;
   return (
     <>
