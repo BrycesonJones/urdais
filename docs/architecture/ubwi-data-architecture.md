@@ -178,3 +178,69 @@ Unchanged from the Phase 1 proposal, and reconfirmed: no market breadth, no sell
 4. Denominator, with the per-economy model above and the coverage-ceiling constraint.
 5. `ubwi_calculations`, simulation runs only.
 6. Publication, after methodology approval, an effective date, and a coverage share that clears the ceiling.
+
+---
+
+## Phase 2B Amendment — rights are per-country, dates are not years, and routes disagree
+
+Added 14 September 2026 alongside [the Phase 2B study](../research/ubwi-phase2b-coverage-expansion.md) and [the China source study](../research/ubwi-china-source-study.md). **Still no migration, and still none should be.** The per-economy model proposed in the Phase 2A amendment is preserved unchanged; what follows are three revisions it could not have anticipated and one sequencing change, each forced by a specific finding rather than by design preference.
+
+### What changed
+
+Phase 2A's rights position was that four of five sources had terms nobody had read. Phase 2B read them. **Rights-cleared coverage went from 0 % to 47.66 % of world GDP with no outreach sent**, and the OECD interface is now eligible for `production_approved` on both axes. The Phase 2A sequencing note — *"resolve coverage before rights"* — was right, and it was right for a reason that has now been demonstrated twice: the rights work was cheap, and finishing it did not move the coverage number at all.
+
+### `source_interfaces.terms_state` cannot be a single value per interface
+
+**Eurostat licenses the same dataset differently by country.** Its copyright notice authorises commercial reuse with attribution and requires no written licence, then excludes from commercial reuse *"data for countries other than: Member States of the European Union (EU), Member States of the European Free Trade Association (EFTA), official EU acceding and candidate countries"*.
+
+One `nama_10_nfa_bs` extract therefore contains rows Urdais may publish commercially and rows it may not, distinguished by `geo`. A single interface-level `data_use_terms_state` would have to be set to the most restrictive value and would block France to protect the United Kingdom, or be set to the most permissive and would be wrong.
+
+**Proposed:** `reference.source_interfaces` keeps the interface-level pair as the default, and gains an optional child table of **per-dimension terms exceptions** — interface, dimension name, value set, and the two axis states for that subset. The reconciliation rule is that a component's effective rights state is the most restrictive of the interface default and any exception matching its dimension values. The existing constraint refusing `production_approved` unless both axes read `permitted` then operates on the *effective* state, which is where it should have been operating all along.
+
+### `reference_date` must be a date, not a year
+
+**Australia's national balance sheet is as at 30 June.** Every other economy in the observed set is a calendar year-end. A `reference_year` integer would force one of two silent errors: treating a 30 June stock as a 31 December stock, or selecting the wrong end-period FX fixing for it — and Phase 2B measured the FX selection error at up to 6.6 % per country.
+
+**Proposed:** `pipeline.wealth_vintage_components.reference_date` is a `date`, and the FX record carries `fx_fixing_date` alongside `fx_basis`, `fx_source` and `fx_rate`, with a constraint that `fx_fixing_date` is the last quoted fixing at or before `reference_date` when `fx_basis = 'end_period'`. The vintage's own stated reference date remains the latest year for which the observed set is complete, and the per-economy date is displayed rather than harmonised away.
+
+### A component must record its interface, because two routes can disagree
+
+**France's net foreign position differs by €379 bn between the OECD and Eurostat** — −52,518 against −431,822 EUR million for 2022 — while the two agree to 1.5 % on the non-financial asset stock. Harmonised sources are not automatically consistent sources.
+
+**Proposed:** `source_interface_id` is **required, not optional**, on every component row, and the schema permits at most one `selected` component per `(vintage, economy, component)` while allowing others to be stored as `superseded` with a reason. That turns a disagreement into a visible, queryable artifact instead of an arbitrary choice made once inside a script. It is the same discipline as the Phase 2A rule that the registry carries the series identifier rather than the concept name, applied one level up.
+
+### Fields the per-economy record needs, consolidated
+
+Carried from the Phase 2A amendment and extended. Each is a required field on `pipeline.wealth_vintage_components`, and each exists because a specific finding would otherwise be invisible:
+
+| Field | Forced by |
+|---|---|
+| `observation_status` (`observed` / `imputed`) | 38 % of the candidate denominator is a model |
+| `rights_status` (`cleared` / `under_review` / `blocked`) | Germany and Italy are observed but not cleared; the three coverage figures must never collapse |
+| `source_type` (`primary` / `harmonized`) | OECD and Eurostat are harmonisation layers over national compilers |
+| `source_interface_id` (**required**) | France's two routes disagree |
+| `reference_date` (**date**) | Australia is at 30 June |
+| `valuation_basis` | US corporates are valued from equity prices; others from perpetual inventory |
+| `land_treatment` (`included` / `partially_included` / `excluded`) | Land is 47 % of Australian non-financial assets and 0 % of US public land |
+| `nfa_treatment` | The net-foreign-position term has a route-dependent value |
+| `consumer_durables_treatment` + stripped amount | US includes them; ABS, CBS, Eurostat and Destatis do not |
+| `is_estimated`, `estimation_rule_version` | The imputation rule is versioned reference data, not code |
+| `coverage_weight` | Needed to compute all three coverage shares from the components themselves |
+
+`pipeline.wealth_vintages` carries **three** coverage columns, not one: `observed_gdp_coverage_share`, `rights_cleared_gdp_coverage_share` and `imputed_share_of_total`. A constraint that refuses publication above a configured imputed-share ceiling should read the **rights-cleared** figure, because that is the one that describes what Urdais may actually publish.
+
+### The publication gate belongs in the schema, and is not ready to be written
+
+[Phase 2B proposes a gate](../research/ubwi-phase2b-coverage-expansion.md) — imputed share ≤ 25 %, rights-cleared observed coverage ≥ 70 %, composition band ≤ 10 pp, maximum vintage age and dispersion ≤ 4 years, and every economy above 3 % of world GDP observed. **It proposes it and does not adopt it**, and the schema should not encode it yet, for one reason and one only: the gate would block publication today and would go on blocking it indefinitely, so writing it into a constraint buys nothing and freezes a set of thresholds the evidence describes as a smooth curve rather than a cliff.
+
+What *is* settled enough to record now is the **shape**: the gate is a bound on the imputed share and on the published uncertainty band, plus a named-economy requirement — not a single coverage percentage. Phase 2B re-tested a coverage percentage at seven levels and found no natural break at any of them.
+
+### Revised sequencing
+
+1. **Rights: done for the routes that matter**, and the interface records can be written when the slice arrives — World Bank, Federal Reserve, OECD, Eurostat (with per-country exceptions), ABS, CBS and Istat all `permitted` on both axes.
+2. **Close the two remaining rights gaps by retrieval, not outreach**: Germany from GENESIS-Online under DL-DE/BY-2.0, Italy's financial leg from Banca d'Italia's AgID open data. Neither needs a message sent.
+3. **Coverage is the blocker and it has a ceiling.** 62.93 % of world GDP without China, against a proposed 70 % gate. No amount of schema work changes this, and no slice should be built on the assumption that it will change.
+4. Numerator only: `btc_market_observations` and `btc_venue_quotes`. Unchanged across three phases — still independently useful, still no licensing dependency, still exercisable against real data today. **This remains the only part of UBWI that is ready to build.**
+5. Denominator, with the per-economy model above.
+6. `ubwi_calculations`, simulation runs only.
+7. Publication, after methodology approval, an effective date, and a gate the evidence supports.
