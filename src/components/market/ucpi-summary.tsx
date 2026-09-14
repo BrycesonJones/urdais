@@ -52,14 +52,14 @@ export function UcpiSummary({ index, snapshot, series }: UcpiSummaryProps) {
         {/* Explicit spaces keep the text readable when announced or copied. */}
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 tabular-nums">
           <span className="text-3xl font-semibold tracking-tight text-neutral-50">
-            {formatNumber(snapshot.value)}
+            {formatNumber(snapshot.value ?? 0)}
           </span>{" "}
           <span className="text-sm text-neutral-400">{index.unit}</span>{" "}
-          <span className={`text-sm font-medium ${movementClass(snapshot.changePercent)}`}>
-            {formatPercent(snapshot.changePercent)}
+          <span className={`text-sm font-medium ${movementClass(snapshot.changePercent ?? 0)}`}>
+            {formatPercent(snapshot.changePercent ?? 0)}
           </span>{" "}
           <span className="text-xs text-neutral-400">
-            1D · as of {formatTimestamp(snapshot.asOf, true)}
+            1D · as of {formatTimestamp(snapshot.asOf ?? 0, true)}
           </span>
         </p>
       </header>

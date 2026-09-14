@@ -41,6 +41,8 @@ export type ListedGpuInstrument = {
 /** Behaviour shared by every listed GPU instrument; the family specification, not the child, owns these. */
 export const LISTED_FAMILY = {
   methodology: "UCPI-LISTED-GPU",
+  /** Routed family specification document. */
+  docSlug: "methodology/ucpi-listed-gpu",
   observationType: "indicative_or_list_price",
   procurementModes: ["on_demand"],
   regionScope: "listed_provider_wide",
@@ -48,6 +50,12 @@ export const LISTED_FAMILY = {
   fullDeviceRequired: true,
   topologyClass: "per_accelerator_allocation",
 } as const;
+
+/** Copy shown wherever a listed price is presented. */
+export const LISTED_AVAILABILITY_CAVEAT = "Listed prices do not guarantee current capacity availability.";
+
+/** The family's structural floor: fewer than two independent participants is not a market price. */
+export const LISTED_MINIMUM_PARTICIPANTS = 2;
 
 export const LISTED_GPU_INSTRUMENTS: readonly ListedGpuInstrument[] = [
   {

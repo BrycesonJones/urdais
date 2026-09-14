@@ -23,11 +23,11 @@ export function IndexRow({ index }: { index: IndexSnapshot }) {
       </div>
       <div className="shrink-0 text-right tabular-nums">
         <p className="text-sm font-medium text-neutral-50">
-          {formatNumber(index.value)}{" "}
+          {formatNumber(index.value ?? 0)}{" "}
           <span className="text-xs font-normal text-neutral-400">{index.unit}</span>
         </p>
-        <p className={`text-xs font-medium ${movementClass(index.changePercent)}`}>
-          {formatPercent(index.changePercent)}
+        <p className={`text-xs font-medium ${movementClass(index.changePercent ?? 0)}`}>
+          {formatPercent(index.changePercent ?? 0)}
         </p>
       </div>
       </Link>

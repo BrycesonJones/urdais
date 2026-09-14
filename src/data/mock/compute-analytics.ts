@@ -104,7 +104,7 @@ function curveShape(oneYearChangePercent: number): CurveShape {
 export const FORWARD_CURVES: ForwardCurve[] = COMPUTE_INSTRUMENTS.map((instrument) => {
   const factors = FORWARD_FACTORS[instrument.id];
   if (!factors) throw new Error(`No forward factors for ${instrument.id}`);
-  const spot = instrument.snapshot.value;
+  const spot = instrument.snapshot.value ?? 0;
   const marks: ForwardMark[] = TENORS.map((tenor) => {
     const price = round4(spot * factors[tenor]);
     return { instrumentId: instrument.id, tenor, tenorMonths: TENOR_MONTHS[tenor], forwardPricePerGpuHour: price, changeVsSpotPercent: (price / spot - 1) * 100 };

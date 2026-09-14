@@ -27,18 +27,18 @@ export function UtviSection() {
         subtitle="Observed model consumption over time"
         aside={
           <p className="text-xs text-neutral-500">
-            <span className="font-semibold text-neutral-300">UTVI</span> · {UTVI.name} · updated {formatUpdatedAt(UTVI.snapshot.asOf)}
+            <span className="font-semibold text-neutral-300">UTVI</span> · {UTVI.name} · updated {formatUpdatedAt(UTVI.snapshot.asOf ?? 0)}
           </p>
         }
       />
 
       <p className="mt-5 flex flex-wrap items-baseline gap-x-3 tabular-nums">
         <span className="text-4xl font-semibold tracking-tight text-neutral-50 md:text-5xl">
-          {formatCompact(UTVI.snapshot.value)}
+          {formatCompact(UTVI.snapshot.value ?? 0)}
         </span>{" "}
         <span className="text-sm text-neutral-400">{UTVI.unit}</span>{" "}
-        <span className={`text-sm font-medium ${movementClass(UTVI.snapshot.changePercent)}`}>
-          {formatPercent(UTVI.snapshot.changePercent, 1)}
+        <span className={`text-sm font-medium ${movementClass(UTVI.snapshot.changePercent ?? 0)}`}>
+          {formatPercent(UTVI.snapshot.changePercent ?? 0, 1)}
         </span>{" "}
         <span className="text-xs text-neutral-500">1M</span>
       </p>

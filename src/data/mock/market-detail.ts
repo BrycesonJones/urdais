@@ -65,7 +65,7 @@ function buildInstrument(spec: InstrumentSpec, comparisons: ComparisonOption[]):
     unit: spec.unit,
     snapshot,
     series,
-    availableRanges: availableRanges(series, snapshot.asOf),
+    availableRanges: availableRanges(series, snapshot.asOf ?? 0),
     comparisons,
   };
 }

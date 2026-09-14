@@ -3,12 +3,14 @@
 import { useState } from "react";
 
 import { DetailedMarketChart } from "@/components/charts/detailed-market-chart";
+import { ListedMarketList } from "@/components/market-detail/listed-market-list";
+import { ListedMarketMeta } from "@/components/market-detail/listed-market-meta";
 import { MarketHeader } from "@/components/market-detail/market-header";
 import { MarketSelectors } from "@/components/market-detail/market-selectors";
 import { PeriodPerformance } from "@/components/market-detail/period-performance";
 import { MAX_COMPARISONS, useInstrumentChart } from "@/components/market-detail/use-instrument-chart";
 import { defaultInstrument, findInstrument, findInstrumentById, findMarketOfInstrument } from "@/data/mock/market-detail";
-import type { MarketDetail } from "@/types/market";
+import type { MarketDetail, MarketInstrumentDetail } from "@/types/market";
 
 /**
  * Shared Information Markets detail experience for every routed market.
@@ -19,7 +21,11 @@ import type { MarketDetail } from "@/types/market";
 export function MarketDetailPage({ market }: { market: MarketDetail }) {
   const [instrumentId, setInstrumentId] = useState(market.defaultInstrumentId);
   const instrument = findInstrument(market, instrumentId) ?? defaultInstrument(market);
-  const chart = useInstrumentChart(instrument, findInstrumentById, { market, homeMarketOf: findMarketOfInstrument });
+  const resolve = (id: string) => findInstrument(market, id) ?? findInstrumentById(id);
+  const homeMarketOf = (candidate: MarketInstrumentDetail) =>
+    findInstrument(market, candidate.id) ? market : findMarketOfInstrument(candidate);
+  const chart = useInstrumentChart(instrument, resolve, { market, homeMarketOf });
+  const listedFamily = market.families.find((family) => family.instruments.some((candidate) => candidate.listed));
 
   function handleInstrumentChange(nextId: string) {
     setInstrumentId(nextId);
@@ -43,12 +49,17 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
           />
         </div>
 
+        {listedFamily && (
+          <ListedMarketList instruments={listedFamily.instruments} selectedId={instrument.id} onSelect={handleInstrumentChange} />
+        )}
+
         <DetailedMarketChart
           primary={chart.primarySeries}
           comparisons={chart.comparisonSeries}
           basis={chart.basis}
           intraday={chart.intraday}
           label={chart.label}
+          emptyState={instrument.listed ? "Historical series begins after the first recorded Urdais calculation." : undefined}
           // Substantial but not the whole fold: on desktop the height follows the
           // viewport between a usable floor and a cap, so the timeframe strip
           // beneath stays discoverable on a typical laptop window.
@@ -61,6 +72,8 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
           onSelect={chart.setRange}
           className="mt-3 border-t border-white/10 pt-3"
         />
+
+        <ListedMarketMeta instrument={instrument} />
       </div>
     </main>
   );

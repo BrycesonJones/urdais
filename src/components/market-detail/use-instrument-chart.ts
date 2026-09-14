@@ -77,7 +77,7 @@ export function useInstrumentChart(
   const effectiveRange = instrument.availableRanges.includes(range)
     ? range
     : (instrument.availableRanges[instrument.availableRanges.length - 1] ?? "1D");
-  const asOf = instrument.snapshot.asOf;
+  const asOf = instrument.snapshot.asOf ?? 0;
   const intraday = isIntradayRange(effectiveRange);
 
   // Windows are memoised so the chart's hover state, which is keyed on the
