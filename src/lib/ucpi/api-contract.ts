@@ -33,6 +33,62 @@ export type UcpiSeriesPoint = {
   publishedAt: string | null;
 };
 
+/** Every key a public series point may carry, at the top level. Anything else is a schema violation. */
+export const PUBLIC_SERIES_POINT_KEYS: readonly (keyof UcpiSeriesPoint)[] = [
+  "instrument", "country", "calculationDate", "status", "priceLevel", "currency", "unit", "percentageChange1d", "changeDisposition",
+  "marketBreadth", "structuralCondition", "participantCount", "contributingSourceCount", "largestSourceParticipantShare", "dispersion",
+  "reasonCodes", "freshness", "methodologyVersion", "instrumentSpecVersion", "calculatedAt", "publishedAt",
+];
+
+const NESTED_KEYS: Readonly<Record<string, readonly string[]>> = {
+  dispersion: ["p10", "p50", "p90", "iqr"],
+  freshness: ["windowStart", "cutoff", "allInputsWithinWindow"],
+};
+
+/**
+ * Fields that name a constituent, its price, its lineage or a secret. Forbidden
+ * anywhere in a public response, at any depth and at any participant count.
+ * The check is structural: a public aggregate is allowed to equal a constituent
+ * price numerically, which happens whenever participants quote the same price.
+ */
+export const CONSTITUENT_FIELDS: readonly string[] = [
+  "participants", "participant", "participantPrices", "representativePrice", "memberSellerEntityIds", "capacitySourceEntityId",
+  "sellerEntityId", "operatorEntityId", "selectedObservationId", "candidates", "rawPayload", "responseBody", "retrievalId",
+  "permissionGrantId", "authorization", "apiKey", "credential", "normalizedPrice", "nativePrice",
+];
+
+/** Returns reason codes; an empty array means the shape is publishable. */
+export function validatePublicResponseShape(json: unknown): string[] {
+  const reasons: string[] = [];
+  if (typeof json !== "object" || json === null || Array.isArray(json)) return ["PUBLIC_RESPONSE_NOT_OBJECT"];
+  const walk = (value: unknown, path: string): void => {
+    if (Array.isArray(value)) {
+      value.forEach((v, i) => walk(v, `${path}[${i}]`));
+      return;
+    }
+    if (typeof value !== "object" || value === null) return;
+    for (const [key, v] of Object.entries(value)) {
+      if (CONSTITUENT_FIELDS.includes(key)) reasons.push(`CONSTITUENT_FIELD_EXPOSED:${path ? `${path}.` : ""}${key}`);
+      walk(v, path ? `${path}.${key}` : key);
+    }
+  };
+  walk(json, "");
+  const top = json as Record<string, unknown>;
+  for (const key of Object.keys(top)) {
+    if (!(PUBLIC_SERIES_POINT_KEYS as readonly string[]).includes(key)) reasons.push(`PUBLIC_RESPONSE_UNKNOWN_FIELD:${key}`);
+  }
+  for (const key of PUBLIC_SERIES_POINT_KEYS) {
+    if (!(key in top)) reasons.push(`PUBLIC_RESPONSE_MISSING_FIELD:${key}`);
+  }
+  for (const [parent, allowed] of Object.entries(NESTED_KEYS)) {
+    const nested = top[parent];
+    if (typeof nested === "object" && nested !== null && !Array.isArray(nested)) {
+      for (const key of Object.keys(nested)) if (!allowed.includes(key)) reasons.push(`PUBLIC_RESPONSE_UNKNOWN_FIELD:${parent}.${key}`);
+    }
+  }
+  return [...new Set(reasons)];
+}
+
 export function toSeriesPoint(obs: RegionalObservation, run: { calculatedAt: string; publishedAt: string | null }): UcpiSeriesPoint {
   const status = publicationStatus({ calculationDate: obs.calculationDate, publishedAt: run.publishedAt, producible: obs.outcome === "value" });
   return {

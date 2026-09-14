@@ -161,7 +161,6 @@ export async function runCalculationPhase(input: {
       inputRetrievals: retrievals.filter((r) => participantRetrievalIds.has(r.id)),
       publishAt,
       exposedJson: JSON.stringify(toSeriesPoint(row, { calculatedAt: run.calculatedAt, publishedAt: publishAt.toISOString() })),
-      participantPrices: row.participants.map((p) => p.representativePrice),
     });
     if (!gate.ok) {
       input.events.emit({ type: "publication_blocked", region: row.canonicalRegionCode, calculationDate: row.calculationDate, reasons: gate.reasons });

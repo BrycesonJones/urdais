@@ -6,6 +6,8 @@ import { CollectingSink } from "@/lib/ucpi/runtime/events";
 import { InMemoryPersistence } from "@/lib/ucpi/runtime/persistence";
 import { runCalculationPhase, runCollectionPhase, type SourceJob } from "@/lib/ucpi/runtime/production-job";
 import { validateForPublication } from "@/lib/ucpi/runtime/publication-gate";
+import { RUNPOD_CATALOG_FIXTURE } from "@/lib/ucpi/fixtures";
+import { toSeriesPoint, validatePublicResponseShape } from "@/lib/ucpi/api-contract";
 import { jsonResponse, lambdaInput, runpodInput, scriptedClient, sequentialIds, TestClock } from "@/lib/ucpi/runtime/test-support";
 
 const BOTH_PERMITTED = [permitted("runpod-gpu-types"), permitted("lambda-instance-types")];
@@ -154,20 +156,59 @@ describe("publication gate", () => {
     const { calculation, persistence } = await collectAndCalculate();
     const obs = calculation.regional[0]!.observation;
     const retrievals = persistence.retrievals;
-    const clean = validateForPublication({ regional: obs, run: calculation.run, expected: VERSIONS, inputRetrievals: retrievals, publishAt: new Date("2026-09-14T00:05:00Z"), exposedJson: "{}", participantPrices: [2.69, 4.29] });
+    const point = (publishedAt: string) => JSON.stringify(toSeriesPoint(obs, { calculatedAt: calculation.run.calculatedAt, publishedAt }));
+    const clean = validateForPublication({ regional: obs, run: calculation.run, expected: VERSIONS, inputRetrievals: retrievals, publishAt: new Date("2026-09-14T00:05:00Z"), exposedJson: point("2026-09-14T00:05:00Z") });
     expect(clean).toEqual({ ok: true, status: "published" });
-    const dirty = validateForPublication({ regional: obs, run: calculation.run, expected: VERSIONS, inputRetrievals: retrievals.map((r) => ({ ...r, retrievalPurpose: "research" as const, permissionGrantId: null })), publishAt: new Date("2026-09-14T00:05:00Z"), exposedJson: "{}", participantPrices: [] });
+    const dirty = validateForPublication({ regional: obs, run: calculation.run, expected: VERSIONS, inputRetrievals: retrievals.map((r) => ({ ...r, retrievalPurpose: "research" as const, permissionGrantId: null })), publishAt: new Date("2026-09-14T00:05:00Z"), exposedJson: point("2026-09-14T00:05:00Z") });
     expect(dirty.ok).toBe(false);
     if (!dirty.ok) expect(dirty.reasons.some((r) => r.startsWith("INPUT_NOT_PRODUCTION"))).toBe(true);
-    const leaking = validateForPublication({ regional: obs, run: calculation.run, expected: VERSIONS, inputRetrievals: retrievals, publishAt: new Date("2026-09-14T00:05:00Z"), exposedJson: JSON.stringify({ level: 3.49, participants: [2.69] }), participantPrices: [2.69, 4.29] });
-    expect(leaking.ok).toBe(false);
-    if (!leaking.ok) expect(leaking.reasons).toContain("PARTICIPANT_PRICE_EXPOSED_AT_N2");
-    const wrongVersion = validateForPublication({ regional: obs, run: { ...calculation.run, methodologyVersion: "0.9.9-draft" }, expected: VERSIONS, inputRetrievals: retrievals, publishAt: new Date("2026-09-14T00:05:00Z"), exposedJson: "{}", participantPrices: [] });
+    const wrongVersion = validateForPublication({ regional: obs, run: { ...calculation.run, methodologyVersion: "0.9.9-draft" }, expected: VERSIONS, inputRetrievals: retrievals, publishAt: new Date("2026-09-14T00:05:00Z"), exposedJson: point("2026-09-14T00:05:00Z") });
     expect(wrongVersion.ok).toBe(false);
     if (!wrongVersion.ok) expect(wrongVersion.reasons).toContain("METHODOLOGY_VERSION_MISMATCH");
-    const late = validateForPublication({ regional: obs, run: calculation.run, expected: VERSIONS, inputRetrievals: retrievals, publishAt: new Date("2026-09-15T00:00:00Z"), exposedJson: "{}", participantPrices: [] });
+    const late = validateForPublication({ regional: obs, run: calculation.run, expected: VERSIONS, inputRetrievals: retrievals, publishAt: new Date("2026-09-15T00:00:00Z"), exposedJson: point("2026-09-15T00:00:00Z") });
     expect(late).toEqual({ ok: true, status: "delayed" });
-    const sim = validateForPublication({ regional: obs, run: { ...calculation.run, runKind: "simulation" }, expected: VERSIONS, inputRetrievals: retrievals, publishAt: new Date("2026-09-14T00:05:00Z"), exposedJson: "{}", participantPrices: [] });
+    const sim = validateForPublication({ regional: obs, run: { ...calculation.run, runKind: "simulation" }, expected: VERSIONS, inputRetrievals: retrievals, publishAt: new Date("2026-09-14T00:05:00Z"), exposedJson: point("2026-09-14T00:05:00Z") });
     expect(sim.ok).toBe(false);
+  });
+
+  it("regression: an explicit participant or member price field in the public response blocks publication, whatever its value", async () => {
+    const { calculation, persistence } = await collectAndCalculate();
+    const obs = calculation.regional[0]!.observation;
+    const base = { regional: obs, run: calculation.run, expected: VERSIONS, inputRetrievals: persistence.retrievals, publishAt: new Date("2026-09-14T00:05:00Z") };
+    const good = JSON.parse(JSON.stringify(toSeriesPoint(obs, { calculatedAt: calculation.run.calculatedAt, publishedAt: "2026-09-14T00:05:00Z" }))) as Record<string, unknown>;
+
+    const withParticipants = validateForPublication({ ...base, exposedJson: JSON.stringify({ ...good, participants: [{ capacitySourceEntityId: "ent-runpod", representativePrice: 2.69 }] }) });
+    expect(withParticipants.ok).toBe(false);
+    if (!withParticipants.ok) expect(withParticipants.reasons).toEqual(expect.arrayContaining(["CONSTITUENT_FIELD_EXPOSED:participants", "CONSTITUENT_FIELD_EXPOSED:participants[0].representativePrice", "PUBLIC_RESPONSE_UNKNOWN_FIELD:participants"]));
+
+    const nestedPrice = validateForPublication({ ...base, exposedJson: JSON.stringify({ ...good, freshness: { ...(good.freshness as object), memberSellerEntityIds: ["ent-runpod"] } }) });
+    expect(nestedPrice.ok).toBe(false);
+    if (!nestedPrice.ok) expect(nestedPrice.reasons).toContain("CONSTITUENT_FIELD_EXPOSED:freshness.memberSellerEntityIds");
+
+    const unknownField = validateForPublication({ ...base, exposedJson: JSON.stringify({ ...good, sellerPrices: [2.69, 4.29] }) });
+    expect(unknownField.ok).toBe(false);
+    if (!unknownField.ok) expect(unknownField.reasons).toContain("PUBLIC_RESPONSE_UNKNOWN_FIELD:sellerPrices");
+
+    const notJson = validateForPublication({ ...base, exposedJson: "not json" });
+    expect(notJson.ok).toBe(false);
+    if (!notJson.ok) expect(notJson.reasons).toContain("PUBLIC_RESPONSE_NOT_OBJECT");
+  });
+
+  it("regression: two participants quoting the same price publish at N=2, the aggregate equalling both, with no constituent fields", async () => {
+    const clock = new TestClock("2026-09-13T10:00:00Z");
+    // Runpod's Community tier priced identically to Lambda's 1x, so the midpoint equals every participant price.
+    const equal = { ...RUNPOD_CATALOG_FIXTURE, gpus: RUNPOD_CATALOG_FIXTURE.gpus.map((g) => ({ ...g, price: { ...g.price, community: 4.29, secure: 4.29 } })) };
+    const sources = jobs(clock, { runpod: { http: scriptedClient([jsonResponse(equal)]) } });
+    const { calculation, persistence } = await collectAndCalculate({ clock, sources });
+    const us = calculation.regional[0]!;
+    expect(us.observation.participants.map((p) => p.representativePrice)).toEqual([4.29, 4.29]);
+    expect(us.observation.priceLevel).toBeCloseTo(4.29, 10);
+    expect(us.status).toBe("published");
+    expect(us.gate).toEqual({ ok: true, status: "published" });
+    expect(persistence.publications).toHaveLength(1);
+    const point = await getLatestPoint(persistence, VERSIONS.instrument, "US");
+    expect(point!.priceLevel).toBeCloseTo(4.29, 10);
+    expect(validatePublicResponseShape(JSON.parse(JSON.stringify(point)))).toEqual([]);
+    expect(Object.keys(point!)).not.toEqual(expect.arrayContaining(["participants", "representativePrice"]));
   });
 });

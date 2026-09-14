@@ -4,7 +4,7 @@
  * participant prices, no raw payloads, no permission documents, no secrets.
  */
 
-import { toSeriesPoint, type UcpiSeriesPoint } from "@/lib/ucpi/api-contract";
+import { CONSTITUENT_FIELDS, toSeriesPoint, validatePublicResponseShape, type UcpiSeriesPoint } from "@/lib/ucpi/api-contract";
 import type { Persistence } from "@/lib/ucpi/runtime/persistence";
 
 export type SeriesFilter = { instrument: string; country?: string; from?: string; to?: string };
@@ -25,12 +25,11 @@ export async function getLatestPoint(persistence: Pick<Persistence, "loadRegiona
   return points.length === 0 ? null : points[points.length - 1]!;
 }
 
-/** Keys that must never appear on a series point, checked in tests and usable as a response guard. */
-export const FORBIDDEN_RESPONSE_KEYS = ["participants", "rawPayload", "responseBody", "permissionGrantId", "authorization", "apiKey", "representativePrice", "memberSellerEntityIds"] as const;
+/** Keys that must never appear on a series point; the same list the publication gate enforces. */
+export const FORBIDDEN_RESPONSE_KEYS = CONSTITUENT_FIELDS;
 
+/** Structural guard for anything about to leave the read path: contract keys only, no constituent fields at any depth. */
 export function assertSafeToExpose(point: UcpiSeriesPoint): void {
-  const json = JSON.stringify(point);
-  for (const key of FORBIDDEN_RESPONSE_KEYS) {
-    if (json.includes(`"${key}"`)) throw new Error(`series point exposes forbidden key ${key}`);
-  }
+  const reasons = validatePublicResponseShape(JSON.parse(JSON.stringify(point)) as unknown);
+  if (reasons.length > 0) throw new Error(`series point is not publishable: ${reasons.join(", ")}`);
 }
