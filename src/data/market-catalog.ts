@@ -39,7 +39,13 @@ export const MARKET_CATALOG: MarketCatalogEntry[] = [
   entry("UPPI", "Urdais Photonics Price Index"),
   entry("UEPI", "Urdais Energy & Power Index"),
   entry(CHIP_ACCELERATOR_INDEX.symbol, CHIP_ACCELERATOR_INDEX.name, { description: CHIP_ACCELERATOR_INDEX.description, question: CHIP_ACCELERATOR_INDEX.question }),
-  entry("UBWI", "Bitcoin Wealth Index"),
+  entry("UBWI", "Urdais Bitcoin Wealth Index", {
+    // Unit and definition are taken verbatim from the approved methodology draft,
+    // /docs/methodology/ubwi. UBWI is a percentage, not an index level: it has no
+    // base date, no base value, and is never expressed in points.
+    description: "Bitcoin market capitalization as a percentage of Total Global Wealth, measured as consolidated world net worth on the national-accounts identity and excluding human capital.",
+    question: "What share of all presently existing global wealth is represented by Bitcoin?",
+  }),
 ];
 
 /** An analytical market page that is not an index: discoverable in search under "Markets". */
