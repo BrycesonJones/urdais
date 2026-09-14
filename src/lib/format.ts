@@ -12,6 +12,11 @@ export function formatNumber(value: number, fractionDigits = 2): string {
   }).format(value);
 }
 
+/** Listed GPU prices: two or three decimals as the candidate carries them (3.74, 4.395). */
+export function formatListedPrice(value: number): string {
+  return new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 3 }).format(value);
+}
+
 /** Always-signed number, e.g. "+0.06" or "−0.90". Zero renders without a sign. */
 export function formatSigned(value: number, fractionDigits = 2): string {
   const magnitude = formatNumber(Math.abs(value), fractionDigits);

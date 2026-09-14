@@ -25,6 +25,7 @@ export function isHeadlineInstrument(market: MarketDetail, instrument: MarketIns
  * bare index symbol.
  */
 export function instrumentDisplaySymbol(market: MarketDetail, instrument: MarketInstrumentDetail): string {
+  if (instrument.displaySymbol) return instrument.displaySymbol;
   if (!isHeadlineInstrument(market, instrument)) return instrument.symbol;
   if (instrument.symbol === market.symbol) return market.symbol;
   return `${market.symbol}-${instrument.benchmarkCode ?? instrument.symbol}`;

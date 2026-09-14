@@ -75,10 +75,10 @@ export function TokenPriceSection() {
       />
 
       <p className="mt-5 flex flex-wrap items-baseline gap-x-3 tabular-nums">
-        <span className="text-3xl font-semibold tracking-tight text-neutral-50">{formatNumber(instrument.snapshot.value)}</span>{" "}
+        <span className="text-3xl font-semibold tracking-tight text-neutral-50">{formatNumber(instrument.snapshot.value ?? 0)}</span>{" "}
         <span className="text-sm text-neutral-400">{instrument.unit}</span>{" "}
-        <span className={`text-sm font-medium ${movementClass(instrument.snapshot.changePercent)}`}>
-          {formatPercent(instrument.snapshot.changePercent)}
+        <span className={`text-sm font-medium ${movementClass(instrument.snapshot.changePercent ?? 0)}`}>
+          {formatPercent(instrument.snapshot.changePercent ?? 0)}
         </span>{" "}
         <span className="text-xs text-neutral-500">today · {instrument.shortLabel}</span>
       </p>

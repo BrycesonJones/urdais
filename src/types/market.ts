@@ -41,10 +41,10 @@ export type MarketIndex = {
  * different units and scales comparable, so no absolute delta is modelled.
  */
 export type MarketSnapshot = {
-  value: number;
-  changePercent: number;
-  /** Unix timestamp in seconds (UTC) of the observation. */
-  asOf: number;
+  value: number | null;
+  changePercent: number | null;
+  /** Unix timestamp in seconds (UTC) of the observation; null when none exists yet. */
+  asOf: number | null;
 };
 
 export type IndexSnapshot = MarketIndex & MarketSnapshot;
@@ -86,11 +86,33 @@ export type ComparisonOption = {
   basis: ComparisonBasis;
 };
 
+/** Publication/coverage metadata for a listed GPU instrument. Absent on demo series. */
+export type ListedInstrumentMeta = {
+  economicObject: "Listed On-Demand Price";
+  status: "candidate" | "published" | "delayed" | "unavailable" | "no_calculation";
+  statusLabel: string;
+  breadth: "minimum" | "normal" | null;
+  participantCount: number;
+  minimumParticipants: number;
+  technicalSourceCount: number;
+  largestSourceShare: number | null;
+  attributions: readonly string[];
+  familyMethodologyHref: string;
+  childMethodologyHref: string;
+  caveat: string;
+  unavailableReason: "NO_ELIGIBLE_PARTICIPANT" | "SINGLE_PARTICIPANT" | null;
+  isCandidate: boolean;
+  isPublished: boolean;
+  asOfDate: string | null;
+};
+
 export type MarketInstrumentDetail = MarketIndex & {
   /** Stable id used for selection and comparison lookups, e.g. "ucpi-h100". */
   id: string;
   /** Concise label for selectors within a family, e.g. "H100 SXM". */
   shortLabel: string;
+  /** Header identity when it should not carry the index/benchmark prefix. */
+  displaySymbol?: string;
   /**
    * Short code used when this instrument is the market's headline
    * benchmark, e.g. "H100" so the headline reads "UCPI-H100". Defaults to
@@ -114,6 +136,7 @@ export type MarketInstrumentDetail = MarketIndex & {
   /** Ranges the history is long enough to support; others are shown disabled. */
   availableRanges: DetailRange[];
   comparisons: ComparisonOption[];
+  listed?: ListedInstrumentMeta;
 };
 
 /** A group of instruments that belong together, e.g. the Compute family of UCPI. */

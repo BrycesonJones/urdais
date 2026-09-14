@@ -32,6 +32,8 @@ type DetailedMarketChartProps = {
   compact?: boolean;
   /** Accessible name of the chart, e.g. "H100 SXM chart for the Urdais Compute Price Index, 1 month range". */
   label: string;
+  /** Shown instead of a line when the series is shorter than two points. */
+  emptyState?: string;
   className?: string;
 };
 
@@ -105,6 +107,7 @@ export function DetailedMarketChart({
   intraday,
   compact = false,
   label,
+  emptyState = "Historical series begins after the first recorded Urdais calculation.",
   className,
 }: DetailedMarketChartProps) {
   const { ref: containerRef, size } = useContainerSize<HTMLDivElement>();
@@ -303,6 +306,11 @@ export function DetailedMarketChart({
       </ul>
 
       <div ref={containerRef} className="relative min-h-0 flex-1">
+        {primary.points.length < 2 && (
+          <p role="status" className="absolute inset-0 z-10 flex items-center justify-center px-6 text-center text-sm text-neutral-500">
+            {emptyState}
+          </p>
+        )}
         {geometry && size && lastPrimary && (
           <svg
             role="img"
