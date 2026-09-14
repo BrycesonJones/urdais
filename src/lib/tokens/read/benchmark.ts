@@ -158,6 +158,16 @@ export const TOKEN_BENCHMARK_CONSTITUENTS: readonly TokenBenchmarkConstituent[] 
     rationale:
       "Alibaba's current flagship commercial Qwen, quoted under the International deployment scope. Every row in the Model Studio catalog states a scope and the scopes differ in price: the same model is $1.65 and $4.951 under China (Beijing) against $2 and $6 under International. International is designated because it is the scope the English catalog quotes in USD and the one the international endpoint serves; it is named on the designation rather than silently treated as the global rate. The published band 0<Token≤1M covers the model's whole window, so there is no context surcharge to exclude. Batch at 50%, context-cache discounts and the Singapore free quota are all excluded.",
   },
+  {
+    providerSlug: "moonshot",
+    providerModelId: "kimi-k3",
+    baseContextTier: null,
+    baseRegion: "international",
+    effectiveFrom: "2026-09-14",
+    methodologyVersion: "1.2",
+    rationale:
+      "Moonshot's current general-purpose Kimi. The platform banner announces K3 as launched and the pricing table carries it with a 1,048,576-token window, the largest in the family. The two K2.7 entries are coding builds by name and one is a speed variant of the other, so neither represents the general-purpose frontier; K2.6 is the previous general-purpose generation. The input leg is the published cache-miss rate, which is what a request pays when nothing is reused; the cache-hit rate is a cache dimension and is excluded. The base region is International because Moonshot publishes two first-party lists at different numbers, this one in USD and a China list in CNY, and neither is a global rate. One rate covers the whole window, so there is no context surcharge to exclude.",
+  },
 ];
 
 /**

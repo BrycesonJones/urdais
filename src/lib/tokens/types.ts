@@ -10,7 +10,7 @@ import type { CacheTtl, ServiceTier, SourcePricingDimension } from "@/lib/tokens
 import type { ModelIdentity } from "@/lib/tokens/identity";
 import type { TokenPriceQuote } from "@/lib/tokens/observation";
 
-export const WAVE1_PROVIDERS = ["anthropic", "xai", "openai", "google", "deepseek", "alibaba"] as const;
+export const WAVE1_PROVIDERS = ["anthropic", "xai", "openai", "google", "deepseek", "alibaba", "moonshot"] as const;
 export type Wave1Provider = (typeof WAVE1_PROVIDERS)[number];
 
 export type TokenIngestMode = "research" | "production";

@@ -47,11 +47,17 @@ begin
   -- being covered here is a source nobody is watching.
   select count(*) into n from reference.source_interfaces
     where slug in ('anthropic-api-pricing-docs', 'xai-models-docs', 'openai-api-pricing-docs',
-                   'google-gemini-api-pricing-docs', 'deepseek-api-pricing-docs', 'alibaba-model-studio-pricing-docs')
+                   'google-gemini-api-pricing-docs', 'deepseek-api-pricing-docs', 'alibaba-model-studio-pricing-docs',
+                   'moonshot-kimi-api-pricing-docs')
       and production_access_state = 'research_usable'
       and terms_review_state = 'under_review'
       and data_use_terms_state = 'under_review';
-  if n <> 6 then raise exception 'token source rights drifted, found % matching rows', n; end if;
+  if n <> 7 then raise exception 'token source rights drifted, found % matching rows', n; end if;
+
+  -- The designated Wave-3 benchmark model exists.
+  select count(*) into n from reference.models m join reference.providers p on p.id = m.provider_id
+   where p.slug = 'moonshot' and m.provider_model_id = 'kimi-k3';
+  if n <> 1 then raise exception 'the designated Moonshot benchmark model is missing'; end if;
 
   -- Wave-2 identities exist and are attached to the right providers.
   select count(*) into n from reference.models m join reference.providers p on p.id = m.provider_id

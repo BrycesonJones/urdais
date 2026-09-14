@@ -85,6 +85,16 @@ const META: Record<Wave1Provider, Omit<PricingFixture, "body">> = {
     provenance:
       "Structural HTML excerpt of the first-party Alibaba Cloud Model Studio commercial Qwen text rows under the International deployment scope, retrieved 2026-09-14 from alibabacloud.com/help/en/model-studio/model-pricing (HTTP 200, 437525 bytes, sha256 3c837f3653c3e792a6bae5d6f53d0961c6cb4494d48f9bbd544c8a39503b7a0d). Not a full page snapshot. Other deployment scopes are named for comparison and not reproduced as rows. The qwen-plus, omni, vl and realtime families carry extra published columns and are omitted. No secrets.",
   },
+  moonshot: {
+    provider: "moonshot",
+    sourceUrl: "https://platform.moonshot.ai/docs/pricing",
+    retrievedAt: "2026-09-14T22:02:42Z",
+    contentType: "text/html; charset=utf-8",
+    bodyFile: "moonshot-pricing.html",
+    sha256: "73c54b7c7e32ded5c6b75b43c25f3c51980b9eff6a3a78cf1e563f869dcce480",
+    provenance:
+      "Structural HTML excerpt of the first-party Kimi API Platform model pricing table, retrieved 2026-09-14 from platform.moonshot.ai/docs/pricing, which serves platform.kimi.ai/docs/pricing/chat (HTTP 200, 240449 bytes, sha256 8ac1ff56855668e820b2030487aa4e81fc251267a06fd535c6bd1f8ff973c532). The page renders its table client-side; the values here are those the platform also publishes as first-party markdown at the same path with a .md suffix (3243 bytes). Not a full page snapshot. The China list is named for comparison and not reproduced as rows. No secrets.",
+  },
 };
 
 export function loadPricingFixture(provider: Wave1Provider): PricingFixture {

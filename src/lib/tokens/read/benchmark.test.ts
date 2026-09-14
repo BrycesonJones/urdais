@@ -116,7 +116,7 @@ describe("eligible legs", () => {
 
 describe("constituent selection", () => {
   it("designates each provider's broadly available flagship frontier model", () => {
-    expect(benchmarkProviders()).toEqual(["alibaba", "anthropic", "google", "openai", "xai"]);
+    expect(benchmarkProviders()).toEqual(["alibaba", "anthropic", "google", "moonshot", "openai", "xai"]);
     // DeepSeek is collected but deliberately undesignated; see TOKEN_BENCHMARK_WITHHELD.
     expect(benchmarkProviders()).not.toContain("deepseek");
     expect(constituentInForce("anthropic", TODAY)?.providerModelId).toBe("claude-fable-5-1");
@@ -357,11 +357,11 @@ describe("Wave-1 benchmark values", () => {
 
   it("builds one market per provider, comparing benchmark against benchmark", () => {
     const instruments = benchmarkInstrumentsFromSeries(publishableBenchmarks(series, TODAY));
-    expect(instruments.map((row) => row.symbol).sort()).toEqual(["Alibaba Cloud", "Anthropic", "Google", "OpenAI", "xAI"]);
+    expect(instruments.map((row) => row.symbol).sort()).toEqual(["Alibaba Cloud", "Anthropic", "Google", "Moonshot AI", "OpenAI", "xAI"]);
     expect(instruments.every((row) => row.benchmarkIdentity !== undefined && row.tokenIdentity === undefined)).toBe(true);
     expect(instruments.every((row) => row.unit === TOKEN_PRICE_UNIT_CAPTION)).toBe(true);
     // Each market compares against every other provider: five providers, four comparisons.
-    expect(instruments.every((row) => row.comparisons.length === 4)).toBe(true);
+    expect(instruments.every((row) => row.comparisons.length === 5)).toBe(true);
   });
 });
 
@@ -370,7 +370,7 @@ describe("rights gating is unchanged", () => {
     const store = new InMemoryTokenPricingStore();
     seedWave1ResearchPreview(store);
     const catalog = tokenReadCatalogFromStore(store);
-    expect(visibleTokenBenchmarks(catalog, { NODE_ENV: "development" })).toHaveLength(5);
+    expect(visibleTokenBenchmarks(catalog, { NODE_ENV: "development" })).toHaveLength(6);
     expect(visibleTokenBenchmarks(catalog, { NODE_ENV: "production" })).toEqual([]);
     expect(await loadVisibleTokenInstruments({ NODE_ENV: "production" })).toEqual([]);
   });
@@ -428,8 +428,8 @@ describe("frozen benchmark observations", () => {
   it("freezes one row per provider with its full lineage", async () => {
     const sql = memoryBenchmarkSql();
     const { inserted, points } = await persistProviderBenchmarks(sql, catalog(), "research_preview", TODAY);
-    expect(inserted).toBe(5);
-    expect(points).toHaveLength(5);
+    expect(inserted).toBe(6);
+    expect(points).toHaveLength(6);
     for (const point of points) {
       expect(point.inputObservationId).toBeTruthy();
       expect(point.outputObservationId).toBeTruthy();
@@ -447,10 +447,10 @@ describe("frozen benchmark observations", () => {
     const first = await persistProviderBenchmarks(sql, same, "research_preview", TODAY);
     const second = await persistProviderBenchmarks(sql, same, "research_preview", TODAY);
     const third = await persistProviderBenchmarks(sql, same, "research_preview", TODAY);
-    expect(first.inserted).toBe(5);
+    expect(first.inserted).toBe(6);
     expect(second.inserted).toBe(0);
     expect(third.inserted).toBe(0);
-    expect(sql.rows.size).toBe(5);
+    expect(sql.rows.size).toBe(6);
     // Only inserts and transaction control; nothing updates a frozen row.
     expect(sql.statements.some((row) => /^\s*UPDATE|^\s*DELETE/i.test(row))).toBe(false);
   });
@@ -460,7 +460,7 @@ describe("frozen benchmark observations", () => {
     await persistProviderBenchmarks(sql, catalog(), "research_preview", TODAY);
     const frozen = await loadPersistedBenchmarks(sql);
     const series = persistedBenchmarks(frozen);
-    expect(series.map((row) => row.providerSlug)).toEqual(["alibaba", "anthropic", "google", "openai", "xai"]);
+    expect(series.map((row) => row.providerSlug)).toEqual(["alibaba", "anthropic", "google", "moonshot", "openai", "xai"]);
     expect(series.find((row) => row.providerSlug === "anthropic")!.priceUsdPer1m).toBe(30);
     expect(series.find((row) => row.providerSlug === "xai")!.priceUsdPer1m).toBe(4);
     for (const row of series) expect(validatePublicTokenBenchmark(JSON.parse(JSON.stringify(row)))).toEqual([]);

@@ -157,7 +157,7 @@ describe("a provider can be collected and deliberately not published", () => {
   });
 
   it("publishes five providers, which is a decision about the sixth rather than a gap", () => {
-    expect(benchmarkProviders()).toEqual(["alibaba", "anthropic", "google", "openai", "xai"]);
+    expect(benchmarkProviders()).toEqual(["alibaba", "anthropic", "google", "moonshot", "openai", "xai"]);
     expect(TOKEN_BENCHMARK_WITHHELD.map((row) => row.providerSlug)).toEqual(["deepseek"]);
   });
 
@@ -220,13 +220,13 @@ describe("a rulebook edit must not add a point to a published series", () => {
     const { store } = verifyAllProviders();
     const catalog = tokenReadCatalogFromStore(store);
     const first = await persistProviderBenchmarks(sql, catalog, "production", TODAY);
-    expect(first.inserted).toBe(5);
+    expect(first.inserted).toBe(6);
     expect(first.conflicts).toEqual([]);
 
     // Re-freezing the identical state writes nothing, whatever the label says.
     const second = await persistProviderBenchmarks(sql, catalog, "production", TODAY);
     expect(second.inserted).toBe(0);
-    expect(rows).toHaveLength(5);
+    expect(rows).toHaveLength(6);
   });
 });
 
@@ -243,7 +243,7 @@ describe("the surfaces open on a designated provider, not on an ordering acciden
       publishableBenchmarks(listVisibleTokenSeries(tokenReadCatalogFromStore(store), "production"), TODAY),
     );
     // The selector itself stays deterministic and alphabetical.
-    expect(instruments.map((row) => row.shortLabel)).toEqual(["Alibaba Cloud", "Anthropic", "Google", "OpenAI", "xAI"]);
+    expect(instruments.map((row) => row.shortLabel)).toEqual(["Alibaba Cloud", "Anthropic", "Google", "Moonshot AI", "OpenAI", "xAI"]);
     expect(pickDefaultTokenInstrument(instruments)!.benchmarkIdentity!.providerSlug).toBe("anthropic");
   });
 

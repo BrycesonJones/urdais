@@ -16,6 +16,7 @@ export const WAVE1_PROVIDER_NAMES: Record<Wave1Provider, string> = {
   google: "Google",
   deepseek: "DeepSeek",
   alibaba: "Alibaba Cloud",
+  moonshot: "Moonshot AI",
 };
 
 const DIMENSION_LABELS: Record<SourcePricingDimension, string> = {
