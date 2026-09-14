@@ -6,7 +6,7 @@
  *     ↓
  *   Models (MODEL_ROSTER: family, access class, blended price, capability)
  *     ↓
- *   Token price observations   → Token Price (TOKEN_INSTRUMENTS, shared with UCPI)
+ *   Token price observations   → Token Price (canonical public read model)
  *   Token volume observations  → UTVI, Market Share, Open-weight volume share,
  *                                Model Frontier point size
  *   Capability + access class  → Model Frontier, Open-weight capability and price gaps

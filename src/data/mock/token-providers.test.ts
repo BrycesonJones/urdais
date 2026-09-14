@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { TOKEN_INSTRUMENTS } from "@/data/mock/market-detail";
 import { MODEL_ROSTER } from "@/data/mock/model-economics";
 import {
   findTokenLab,
@@ -23,16 +22,6 @@ describe("token provider catalog", () => {
     expect(xai).toMatchObject({ id: "xai", name: "xAI", modelFamily: "Grok" });
     expect(TOKEN_LABS.some((lab) => lab.name === "Grok")).toBe(false);
     expect(tokenInstrumentId("xai")).toBe("tokens-xai");
-  });
-
-  it("exposes an xAI token-price instrument on the shared Tokens family", () => {
-    const instrument = TOKEN_INSTRUMENTS.find((entry) => entry.id === "tokens-xai");
-    expect(instrument).toMatchObject({
-      id: "tokens-xai",
-      shortLabel: "xAI",
-      symbol: "xAI",
-      unit: "$/1M tokens",
-    });
   });
 });
 

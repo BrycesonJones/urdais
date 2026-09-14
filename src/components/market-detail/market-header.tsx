@@ -5,7 +5,9 @@ import type { MarketDetail, MarketInstrumentDetail } from "@/types/market";
 
 type MarketHeaderProps = {
   market: MarketDetail;
-  instrument: MarketInstrumentDetail;
+  instrument: MarketInstrumentDetail | null;
+  /** Family label used when the selected family has no instruments yet. */
+  emptyFamilyLabel?: string;
 };
 
 /**
@@ -16,11 +18,25 @@ type MarketHeaderProps = {
  * the page with the day's move beneath it as a percentage. The page opens
  * directly on this; the instrument itself is the context. The move is the
  * current-session change and does not follow the chart range; historical
- * returns live under the chart.
+ * returns live under the chart. Percentage change is withheld when the
+ * series has no prior comparable observation.
  */
-export function MarketHeader({ market, instrument }: MarketHeaderProps) {
+export function MarketHeader({ market, instrument, emptyFamilyLabel }: MarketHeaderProps) {
+  if (!instrument) {
+    return (
+      <div className="min-w-0">
+        <h1 className="text-2xl font-semibold tracking-tight text-neutral-50 md:text-3xl">
+          {emptyFamilyLabel ?? market.symbol}
+        </h1>
+      </div>
+    );
+  }
+
   const { snapshot } = instrument;
-  const movement = movementClass(snapshot.changePercent);
+  const token = instrument.tokenIdentity;
+  const unitCaption = token?.unitCaption ?? instrument.unit;
+  const showDemoBadge = token === undefined;
+  const movement = snapshot.changePercent === null ? null : movementClass(snapshot.changePercent);
 
   return (
     <div className="min-w-0">
@@ -28,9 +44,11 @@ export function MarketHeader({ market, instrument }: MarketHeaderProps) {
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-50 md:text-3xl">
           {instrumentDisplaySymbol(market, instrument)}
         </h1>
-        <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
-          Demo data
-        </span>
+        {showDemoBadge && (
+          <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+            Demo data
+          </span>
+        )}
       </div>
       <p className="mt-1 text-sm text-neutral-400 md:text-base">
         {instrument.name}
@@ -47,14 +65,16 @@ export function MarketHeader({ market, instrument }: MarketHeaderProps) {
       {/* Explicit spaces keep the text readable when announced or copied. */}
       <p className="mt-6 flex flex-wrap items-baseline gap-x-3 tabular-nums">
         <span className="text-6xl font-semibold leading-none tracking-tight text-neutral-50 sm:text-7xl lg:text-8xl">
-          {formatNumber(snapshot.value)}
+          {token ? `$${formatNumber(snapshot.value)}` : formatNumber(snapshot.value)}
         </span>{" "}
-        <span className="text-base text-neutral-400 sm:text-lg">{instrument.unit}</span>
+        <span className="text-base text-neutral-400 sm:text-lg">{unitCaption}</span>
       </p>
-      <p className={`mt-3 flex flex-wrap items-baseline gap-x-3 text-lg font-medium tabular-nums sm:text-xl ${movement}`}>
-        <span>{formatPercent(snapshot.changePercent)}</span>{" "}
-        <span className="text-sm font-normal text-neutral-500">today</span>
-      </p>
+      {snapshot.changePercent !== null && movement && (
+        <p className={`mt-3 flex flex-wrap items-baseline gap-x-3 text-lg font-medium tabular-nums sm:text-xl ${movement}`}>
+          <span>{formatPercent(snapshot.changePercent)}</span>{" "}
+          <span className="text-sm font-normal text-neutral-500">today</span>
+        </p>
+      )}
     </div>
   );
 }

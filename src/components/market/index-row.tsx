@@ -26,9 +26,11 @@ export function IndexRow({ index }: { index: IndexSnapshot }) {
           {formatNumber(index.value)}{" "}
           <span className="text-xs font-normal text-neutral-400">{index.unit}</span>
         </p>
-        <p className={`text-xs font-medium ${movementClass(index.changePercent)}`}>
-          {formatPercent(index.changePercent)}
-        </p>
+        {index.changePercent !== null && (
+          <p className={`text-xs font-medium ${movementClass(index.changePercent)}`}>
+            {formatPercent(index.changePercent)}
+          </p>
+        )}
       </div>
       </Link>
     </li>

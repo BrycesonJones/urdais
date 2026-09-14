@@ -1,8 +1,8 @@
 /**
- * The token-provider catalog: the AI labs whose provider-level token
- * pricing Urdais tracks, with the seeded parameters for each deterministic
- * demo price history. This is the single source for both the UCPI Tokens
- * family and the Model Economics Token Price view, so the two never drift.
+ * Lab catalog for Model Economics roster, volume, share, and frontier demo
+ * views. Canonical token prices for the UCPI Tokens family and Token Price
+ * section come from the public token-price read model, not from these demo
+ * series.
  *
  * Provider-level token pricing semantics are provisional. These are generic
  * per-provider demo series in $/1M tokens that exist to exercise the family

@@ -49,13 +49,30 @@ export class InMemoryTokenPricingStore implements TokenPricingStore {
   readonly retrievals: TokenSourceRetrieval[] = [];
   readonly observations: TokenPriceObservationRow[] = [];
   private readonly models: Wave1ModelSeed[];
+  private readonly interfaces: Record<Wave1Provider, TokenSourceInterface>;
 
-  constructor(private readonly providers: readonly Wave1Provider[] = ["anthropic", "xai", "openai"]) {
+  constructor(
+    private readonly providers: readonly Wave1Provider[] = ["anthropic", "xai", "openai"],
+    interfaceOverrides: Partial<Record<Wave1Provider, TokenSourceInterface>> = {},
+  ) {
     this.models = this.providers.flatMap((provider) => modelsFor(provider));
+    this.interfaces = { ...WAVE1_SOURCE_INTERFACES };
+    for (const provider of this.providers) {
+      const override = interfaceOverrides[provider];
+      if (override) this.interfaces[provider] = override;
+    }
   }
 
   sourceInterface(provider: Wave1Provider): TokenSourceInterface {
-    return WAVE1_SOURCE_INTERFACES[provider];
+    return this.interfaces[provider];
+  }
+
+  sourceInterfaces(): TokenSourceInterface[] {
+    return this.providers.map((provider) => this.interfaces[provider]);
+  }
+
+  allModels(): Wave1ModelSeed[] {
+    return [...this.models];
   }
 
   model(providerSlug: string, providerModelId: string): Wave1ModelSeed | undefined {
