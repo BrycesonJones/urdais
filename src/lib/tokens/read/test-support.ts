@@ -8,7 +8,7 @@ import { observationKey } from "@/lib/tokens/observation";
 import { modelIdentityKey } from "@/lib/tokens/identity";
 import type { TokenReadCatalog } from "@/lib/tokens/read/series";
 import type {
-  TokenIngestMode,
+  TokenAcquisitionMode, TokenIngestMode,
   TokenPriceObservationRow,
   TokenSourceInterface,
   TokenSourceRetrieval,
@@ -42,6 +42,9 @@ export type SeedQuote = {
   purpose?: TokenIngestMode;
   approved?: boolean;
   sourceEffectiveAt?: string | null;
+  /** How the artifact was acquired; manual_verified publishes without the automated gate. */
+  acquisitionMode?: TokenAcquisitionMode;
+  verificationEvidence?: string | null;
 };
 
 function modelOf(provider: string, providerModelId: string): Wave1ModelSeed {
@@ -82,6 +85,8 @@ export function seedTokenReadCatalog(quotes: readonly SeedQuote[]): TokenReadCat
         enumerationAssessment: "unknown",
         enumerationEvidence: "test",
         collectorIdentity: "tokens-read-test",
+        acquisitionMode: quote.acquisitionMode ?? "automated",
+        verificationEvidence: quote.verificationEvidence ?? null,
         retrievalPurpose: purpose,
         permissionGrantId: null,
         parserId: source.parserId,

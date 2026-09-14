@@ -9,9 +9,20 @@ import {
   productionCollectionPermitted,
   type SourceRegistryState,
 } from "@/lib/ucpi/permission-gate";
-import { TokenPermissionError, type TokenIngestMode } from "@/lib/tokens/types";
+import { TokenPermissionError, type TokenAcquisitionMode, type TokenIngestMode } from "@/lib/tokens/types";
 
-export function assertTokenIngestPermitted(mode: TokenIngestMode, registry: SourceRegistryState): void {
+/**
+ * Manual verification publishes a fact a person checked on the provider's own
+ * page. It asks nothing of the source's collection rights, so the automated
+ * gate does not apply; it is also never a substitute for that gate, which
+ * still governs every automated retrieval.
+ */
+export function assertTokenIngestPermitted(
+  mode: TokenIngestMode,
+  registry: SourceRegistryState,
+  acquisition: TokenAcquisitionMode = "automated",
+): void {
+  if (mode === "production" && acquisition === "manual_verified") return;
   if (mode === "research") {
     if (registry.productionAccessState === "production_blocked") {
       throw new TokenPermissionError(`${registry.slug}: production_blocked; research retrieval refused`);

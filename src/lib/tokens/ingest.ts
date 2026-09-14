@@ -20,7 +20,9 @@ import { parseXaiPricing } from "@/lib/tokens/providers/xai";
 import type { TokenPricingStore } from "@/lib/tokens/store";
 import type { TokenPriceQuote } from "@/lib/tokens/observation";
 import type {
+  ManualVerification,
   ProviderParseResult,
+  TokenAcquisitionMode,
   TokenIngestMode,
   TokenIngestReport,
   TokenPriceObservationRow,
@@ -44,6 +46,12 @@ export type IngestInput = {
   artifact: RetrievedArtifact;
   store: TokenPricingStore;
   idFactory?: () => string;
+  /**
+   * Present only for a manually verified acquisition, and only when the caller
+   * states that intent explicitly. Ordinary research ingestion never becomes
+   * production-publicable by accident.
+   */
+  verification?: ManualVerification;
 };
 
 function parseProvider(provider: Wave1Provider, body: string, retrievedAt: string): ProviderParseResult {
@@ -86,7 +94,16 @@ function observationRow(
 
 export function ingestTokenPricing(input: IngestInput): TokenIngestReport {
   const source = WAVE1_SOURCE_INTERFACES[input.provider];
-  assertTokenIngestPermitted(input.mode, source.registry);
+  const acquisition: TokenAcquisitionMode = input.verification ? "manual_verified" : "automated";
+  if (acquisition === "manual_verified") {
+    if (input.mode !== "production") throw new Error("a manual verification is a production acquisition; pass mode production");
+    if (input.artifact.method !== undefined && input.artifact.method !== "manual_read") {
+      throw new Error("a manual verification is read by a person, not fetched; method must be manual_read");
+    }
+    if (input.verification!.evidence.trim().length === 0) throw new Error("a manual verification must record what was verified");
+    if (input.verification!.sourceUrl.trim().length === 0) throw new Error("a manual verification must record the first-party source URL");
+  }
+  assertTokenIngestPermitted(input.mode, source.registry, acquisition);
 
   const requestedAt = input.artifact.requestedAt ?? input.artifact.retrievedAt;
   const completedAt = input.artifact.retrievedAt;
@@ -110,6 +127,10 @@ export function ingestTokenPricing(input: IngestInput): TokenIngestReport {
     responseHash,
     responseByteLength: new TextEncoder().encode(input.artifact.body).length,
     responseBody: { contentType: input.artifact.contentType, body: input.artifact.body },
+    acquisitionMode: acquisition,
+    verificationEvidence: input.verification
+      ? `${input.verification.evidence} (verified by ${input.verification.verifiedBy} at ${input.verification.verifiedAt}, source ${input.verification.sourceUrl})`
+      : null,
     recordCount: null,
     enumerationAssessment: "unknown",
     enumerationEvidence: "Wave-1 parser reads the retained retrieval body; completeness of the public docs page is not claimed.",

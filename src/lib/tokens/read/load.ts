@@ -107,6 +107,22 @@ export async function hydrateMarketWithTokenPrices(
   return withTokenInstruments(market, await loadVisibleTokenInstruments(env));
 }
 
-export function tokenResearchPreviewActive(env: ProcessEnvLike = process.env): boolean {
-  return tokenVisibilityMode(env) === "research_preview";
+/**
+ * True only while the visible token values are research-only. A manually
+ * verified production observation is not a preview, so once one exists for a
+ * provider its market carries no preview badge. In a production runtime this
+ * is always false, because research observations are never visible there.
+ */
+export async function tokenResearchPreviewActive(env: ProcessEnvLike = process.env): Promise<boolean> {
+  if (tokenVisibilityMode(env) === "production") return false;
+  const visible = await loadVisibleTokenBenchmarks(env);
+  if (visible.length === 0) return false;
+  const productionProviders = await productionPublishableProviders(env);
+  return visible.some((row) => !productionProviders.has(row.providerSlug));
+}
+
+/** Providers whose benchmark rests on production-publicable observations. */
+async function productionPublishableProviders(env: ProcessEnvLike): Promise<Set<string>> {
+  const catalog = await loadTokenReadCatalog(env);
+  return new Set(publishableBenchmarks(listVisibleTokenSeries(catalog, "production")).map((row) => row.providerSlug));
 }

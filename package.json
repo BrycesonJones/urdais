@@ -27,7 +27,8 @@
     "db:types": "scripts/db/local.sh types",
     "db:check-types": "scripts/db/local.sh check-types",
     "db:ci": "scripts/db/local.sh ci",
-    "tokens:verify": "tsx scripts/tokens/verify.ts"
+    "tokens:verify": "tsx scripts/tokens/verify.ts",
+    "tokens:verify-production": "tsx scripts/tokens/verify-production.ts"
   },
   "dependencies": {
     "github-slugger": "^2.0.0",

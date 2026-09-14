@@ -198,6 +198,8 @@ function mapRetrieval(row: Record<string, unknown>, providerByInterface: Readonl
       enumerationAssessment: "unknown",
       enumerationEvidence: asNullString(row.enumeration_evidence) ?? "",
       collectorIdentity: asNullString(row.collector_identity) ?? "",
+      acquisitionMode: asNullString(row.acquisition_mode) === "manual_verified" ? "manual_verified" : "automated",
+      verificationEvidence: asNullString(row.verification_evidence),
       retrievalPurpose: purpose,
       permissionGrantId: null,
       parserId: parserIdFor(providerSlug, sourceInterfaceSlug, parameters),
@@ -302,7 +304,8 @@ const RETRIEVALS_SQL = `
 SELECT r.id, r.source_interface_id, r.idempotency_key, r.requested_at, r.completed_at, r.request_method,
        r.request_url, r.request_parameters, r.response_status, r.response_content_type, r.response_hash,
        r.response_byte_length, r.response_body, r.record_count, r.enumeration_assessment, r.enumeration_evidence,
-       r.collector_identity, r.retrieval_purpose, r.permission_grant_id, si.slug AS source_interface_slug
+       r.collector_identity, r.retrieval_purpose, r.acquisition_mode, r.verification_evidence,
+       r.permission_grant_id, si.slug AS source_interface_slug
   FROM pipeline.source_retrievals r
   JOIN reference.source_interfaces si ON si.id = r.source_interface_id
  WHERE r.id = ANY($1::uuid[])
@@ -313,9 +316,9 @@ INSERT INTO pipeline.source_retrievals (
   id, source_interface_id, idempotency_key, requested_at, completed_at, request_method, request_url,
   request_parameters, response_status, response_content_type, response_hash, response_byte_length,
   response_body, record_count, enumeration_assessment, enumeration_evidence, collector_identity,
-  retrieval_purpose, permission_grant_id
+  retrieval_purpose, acquisition_mode, verification_evidence, permission_grant_id
 ) VALUES (
-  $1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13::jsonb, $14, $15, $16, $17, $18, $19
+  $1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13::jsonb, $14, $15, $16, $17, $18, $19, $20, $21
 )
 ON CONFLICT (idempotency_key) DO NOTHING
 RETURNING id
@@ -403,6 +406,8 @@ export async function persistTokenReadCatalog(
         retrieval.enumerationEvidence,
         retrieval.collectorIdentity,
         retrieval.retrievalPurpose,
+        retrieval.acquisitionMode,
+        retrieval.verificationEvidence,
         retrieval.permissionGrantId,
       ]);
       if (result.rows.length > 0) retrievalsInserted += 1;

@@ -44,8 +44,14 @@ export function observationIsPublicable(
   if (source.id !== observation.sourceInterfaceId) return false;
   if (retrieval.retrievalPurpose !== "production") return false;
   if (!isWave1Provider(observation.providerSlug)) return false;
-  if (!tokenProductionCollectionPermitted(source.registry)) return false;
-  return Number.isFinite(observation.canonicalPriceUsdPer1m);
+  if (!Number.isFinite(observation.canonicalPriceUsdPer1m)) return false;
+  // A price a person read from the provider's own published page and retained
+  // with provenance is publishable. It grants nothing about automated retrieval,
+  // which still has to pass the collection gate below.
+  if (retrieval.acquisitionMode === "manual_verified") {
+    return typeof retrieval.verificationEvidence === "string" && retrieval.verificationEvidence.trim().length > 0;
+  }
+  return tokenProductionCollectionPermitted(source.registry);
 }
 
 export function observationIsResearchPreviewable(
