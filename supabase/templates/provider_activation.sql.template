@@ -1,0 +1,101 @@
+-- TEMPLATE: provider activation migration. Not a migration; lives outside
+-- supabase/migrations and is never applied as-is.
+--
+-- Copy to supabase/migrations/<timestamp>_activate_<provider>.sql when, and only
+-- when, written provider evidence exists for every value below. Replace each
+-- {{PLACEHOLDER}}. Every statement is guarded on the intended prior state so a
+-- second application, or an application against a state that has moved, fails
+-- rather than silently overwriting. Commit no fabricated evidence: the
+-- evidence text must quote or precisely identify the provider's reply.
+--
+-- What this migration does, in order, each reviewable:
+--   1. asserts the interface's current two-axis state is what the reviewer expects
+--   2. records the permission grant with its reference and evidence
+--   3. moves the collection axis and the index-use axis on that evidence
+--   4. approves production, which the registry CHECK permits only when both axes are permitted
+--   5. optionally records a tenancy statement as observation-level evidence metadata on the
+--      source interface, for the normalizer to cite (the per-observation evidence rows are
+--      written at collection time)
+--   6. re-asserts invariants
+-- It does NOT enable a collector. Activation of the runtime is a deployment
+-- change (UCPI_RUN_MODE) after first authenticated validation passes.
+
+do $$
+declare
+  iface uuid;
+  n integer;
+begin
+  select id into iface from reference.source_interfaces where slug = '{{SOURCE_INTERFACE_SLUG}}';
+  if iface is null then raise exception 'source interface {{SOURCE_INTERFACE_SLUG}} not found'; end if;
+
+  -- 1. Intended prior state. Fill from the registry at review time.
+  if not exists (
+    select 1 from reference.source_interfaces
+     where id = iface
+       and terms_review_state = '{{PRIOR_TERMS_REVIEW_STATE}}'
+       and data_use_terms_state = '{{PRIOR_DATA_USE_STATE}}'
+       and production_access_state = '{{PRIOR_PRODUCTION_STATE}}'
+  ) then
+    raise exception 'source {{SOURCE_INTERFACE_SLUG}} is not in the expected prior state; review before activating';
+  end if;
+
+  -- No grant may already exist for this interface unless this migration supersedes it explicitly.
+  select count(*) into n from reference.permission_grants where source_interface_id = iface and effective_to is null;
+  if n <> 0 then raise exception 'an open-ended grant already exists for {{SOURCE_INTERFACE_SLUG}}'; end if;
+
+  -- 2. The permission basis. reference identifies the reply or agreement; evidence quotes it.
+  insert into reference.permission_grants (id, source_interface_id, grant_kind, reference, covers_collection, covers_index_use, granted_on, effective_from, effective_to, evidence)
+  values (
+    '{{GRANT_UUID}}',
+    iface,
+    '{{GRANT_KIND}}',                         -- written_permission | agreement | order | provider_terms
+    '{{GRANT_REFERENCE}}',                    -- e.g. Gmail message id, agreement number, terms version + URL
+    {{COVERS_COLLECTION}},                    -- true | false, exactly as the reply states
+    {{COVERS_INDEX_USE}},                     -- true | false, exactly as the reply states
+    '{{GRANTED_ON}}',                         -- date of the reply
+    '{{EFFECTIVE_FROM}}',                     -- timestamptz; not earlier than the reply
+    {{EFFECTIVE_TO_OR_NULL}},                 -- 'timestamptz' or null
+    $evidence${{EVIDENCE_VERBATIM}}$evidence$ -- the decisive sentences, quoted
+  );
+
+  -- 3. Terms axes move only as far as the evidence supports. Leave an axis unchanged if the reply is silent on it.
+  update reference.source_interfaces
+     set terms_review_state   = '{{NEW_TERMS_REVIEW_STATE}}',   -- permitted only if COVERS_COLLECTION is true
+         data_use_terms_state = '{{NEW_DATA_USE_STATE}}',       -- permitted only if COVERS_INDEX_USE is true
+         terms_evidence = coalesce(terms_evidence, '{}'::jsonb) || jsonb_build_object(
+           'activation', jsonb_build_object(
+             'granted_on', '{{GRANTED_ON}}',
+             'reference', '{{GRANT_REFERENCE}}',
+             'attribution', '{{ATTRIBUTION_RULE}}',
+             'caching', '{{CACHING_RULE}}',
+             'retention', '{{RETENTION_RULE}}',
+             'raw_redistribution', '{{RAW_REDISTRIBUTION_RULE}}',
+             'aggregate_publication', '{{AGGREGATE_PUBLICATION_RULE}}',
+             'individual_price_display', '{{INDIVIDUAL_PRICE_DISPLAY_RULE}}',
+             'reconstruction_risk', '{{RECONSTRUCTION_RISK_STATEMENT}}'
+           ))
+   where id = iface;
+
+  -- 4. Production approval. The registry CHECK refuses this unless both axes are permitted.
+  update reference.source_interfaces
+     set production_access_state = '{{NEW_PRODUCTION_STATE}}'   -- production_approved only when both axes are permitted
+   where id = iface;
+
+  -- 5. Tenancy statement, only where the reply supplies one. Delete this block otherwise.
+  update reference.source_interfaces
+     set metadata = metadata || jsonb_build_object('tenancy_statement', jsonb_build_object(
+           'grade', '{{TENANCY_GRADE}}',          -- explicit | documented
+           'statement', $tenancy${{TENANCY_STATEMENT_VERBATIM}}$tenancy$,
+           'reference', '{{TENANCY_REFERENCE}}',
+           'stated_on', '{{TENANCY_DATE}}'))
+   where id = iface;
+
+  -- 6. Invariants.
+  if exists (select 1 from reference.source_interfaces where id = iface and production_access_state = 'production_approved'
+             and not (terms_review_state = 'permitted' and data_use_terms_state = 'permitted')) then
+    raise exception 'approval without both axes permitted';
+  end if;
+  select count(*) into n from pipeline.source_retrievals where retrieval_purpose <> 'research';
+  if n <> 0 then raise exception 'live retrievals exist before activation completed'; end if;
+end
+$$;

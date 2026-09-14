@@ -11,10 +11,10 @@ declare
   -- source exists is not observing it, and is not constituency. Everything that
   -- would represent an observation, a market participant or an adopted region
   -- must still be empty.
+  -- Launch enablement seeds stable reference data (legal entities, seller roles, canonical
+  -- countries, product identifiers, evidenced region mappings). Those tables are checked in
+  -- 140_provider_reference_data.sql; everything observed or permissive must still be empty.
   must_be_empty text[] := array[
-    'reference.market_entities',
-    'reference.entity_roles', 'reference.canonical_regions', 'reference.region_mappings',
-    'reference.native_identifiers',
     'pipeline.source_retrievals', 'pipeline.raw_offers', 'pipeline.normalized_observations',
     'pipeline.observation_evidence', 'pipeline.eligibility_assessments',
     'pipeline.eligibility_exclusions', 'pipeline.eligibility_diagnostics',
@@ -53,9 +53,14 @@ begin
   select count(*) into n from pipeline.regional_publications;
   if n <> 0 then raise exception 'a UCPI value has been published'; end if;
 
-  -- No production retrieval and no permission grant exist.
-  select count(*) into n from pipeline.source_retrievals where retrieval_purpose = 'production';
-  if n <> 0 then raise exception 'a production retrieval exists'; end if;
+  -- No production or validation retrieval and no permission grant exist.
+  select count(*) into n from pipeline.source_retrievals where retrieval_purpose <> 'research';
+  if n <> 0 then raise exception 'a non-research retrieval exists'; end if;
+  select count(*) into n from reference.permission_grants;
+  if n <> 0 then raise exception 'a permission grant exists'; end if;
+  -- No operator attribution and no tenancy evidence were seeded.
+  select count(*) into n from reference.entity_roles where role = 'operator';
+  if n <> 0 then raise exception 'an operator role exists'; end if;
 
   raise notice 'no production data: ok';
 end $$;

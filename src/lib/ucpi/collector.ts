@@ -77,6 +77,8 @@ export type PipelineInput = {
   registry: readonly SourceRegistryState[];
   /** Prior observation per country, for the percentage-change disposition. */
   priorByRegion?: ReadonlyMap<string, PriorObservation & { priceLevel?: number | null; participantIds?: readonly string[] }>;
+  /** Countries the child publishes series for; each gets a regional observation even with no eligible participant. */
+  seriesRegions?: readonly string[];
 };
 
 export type PipelineResult = {
@@ -121,7 +123,7 @@ export function runPipeline(input: PipelineInput): PipelineResult {
   const sellerObservations = reduceSellers(eligible);
   const capacitySources = collapseCapacitySources(sellerObservations, entities);
 
-  const regions = [...new Set([...eligible.map((o) => o.canonicalRegionCode!), ...(input.priorByRegion ? [...input.priorByRegion.keys()] : [])])].sort();
+  const regions = [...new Set([...eligible.map((o) => o.canonicalRegionCode!), ...(input.priorByRegion ? [...input.priorByRegion.keys()] : []), ...(input.seriesRegions ?? [])])].sort();
   const regional = regions.map((region) => {
     const prior = input.priorByRegion?.get(region) ?? null;
     return calculateRegion({

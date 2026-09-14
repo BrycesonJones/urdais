@@ -12,7 +12,7 @@ values ('cccccccc-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-0000000
        ('cccccccc-0000-4000-8000-000000000002', 'bbbbbbbb-0000-4000-8000-000000000012', 'test:concepts', '2026-09-13T05:00:00Z', 'GET', 'https://example.invalid/concepts', 200, repeat('c', 64), null, 'complete');
 insert into reference.market_entities (id, slug, name) values ('99999999-0000-4000-8000-000000000001', 'host-68137', 'Marketplace host 68137');
 insert into reference.entity_roles (entity_id, role) values ('99999999-0000-4000-8000-000000000001', 'seller'), ('99999999-0000-4000-8000-000000000001', 'marketplace_host');
-insert into reference.canonical_regions (code, name) values ('FR', 'France');
+insert into reference.canonical_regions (code, name) values ('FR', 'France') on conflict (code) do nothing;
 insert into reference.region_mappings (id, source_interface_id, native_region_value, canonical_region_code, mapping_status, confidence, evidence, effective_from)
 values ('88888888-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000011', 'France, FR', 'FR', 'mapped', 'high', 'Two-letter country code in the native value.', '2026-09-13T00:00:00Z');
 insert into pipeline.raw_offers (id, retrieval_id, row_ordinal, record_hash, raw_payload, observed_at, availability_observed_at,

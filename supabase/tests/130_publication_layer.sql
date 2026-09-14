@@ -4,13 +4,18 @@
 -- the deadline, simulations are never published, rows are append-only.
 begin;
 
-insert into reference.canonical_regions (code, name) values ('US', 'United States');
+insert into reference.canonical_regions (code, name) values ('US', 'United States') on conflict (code) do nothing;
 insert into reference.providers (id, slug, name, provider_kind)
 values ('bbbbbbbb-0000-4000-8000-000000000001', 'test-provider', 'Test Provider', 'cloud_provider');
 insert into reference.source_interfaces (id, provider_id, slug, name, source_class, canonical_url, is_machine_readable, access_class)
 values ('bbbbbbbb-0000-4000-8000-000000000011', 'bbbbbbbb-0000-4000-8000-000000000001', 'test-catalog', 'Test catalog', 'catalog_price_interface', 'https://example.invalid/catalog', true, 'api_key');
-insert into pipeline.source_retrievals (id, source_interface_id, idempotency_key, requested_at, request_method, request_url, response_status, response_hash, enumeration_assessment)
-values ('cccccccc-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000011', 'q:1', '2026-09-13T10:00:00Z', 'GET', 'https://example.invalid/catalog', 200, repeat('a', 64), 'complete');
+-- The test interface is approved under a full grant so the production run's candidates have production lineage.
+update reference.source_interfaces set terms_review_state = 'permitted', data_use_terms_state = 'permitted', production_access_state = 'production_approved'
+ where id = 'bbbbbbbb-0000-4000-8000-000000000011';
+insert into reference.permission_grants (id, source_interface_id, grant_kind, reference, covers_collection, covers_index_use, effective_from, evidence)
+values ('77777777-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000011', 'written_permission', 'test-thread', true, true, '2026-09-01T00:00:00Z', 'test');
+insert into pipeline.source_retrievals (id, source_interface_id, idempotency_key, requested_at, request_method, request_url, response_status, response_hash, enumeration_assessment, retrieval_purpose, permission_grant_id)
+values ('cccccccc-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000011', 'q:1', '2026-09-13T10:00:00Z', 'GET', 'https://example.invalid/catalog', 200, repeat('a', 64), 'complete', 'production', '77777777-0000-4000-8000-000000000001');
 insert into pipeline.raw_offers (id, retrieval_id, row_ordinal, record_hash, raw_payload, observed_at)
 values ('dddddddd-0000-4000-8000-000000000001', 'cccccccc-0000-4000-8000-000000000001', 0, repeat('b', 64), '{}', '2026-09-13T10:00:01Z'),
        ('dddddddd-0000-4000-8000-000000000002', 'cccccccc-0000-4000-8000-000000000001', 1, repeat('c', 64), '{}', '2026-09-13T10:00:01Z');
@@ -176,7 +181,7 @@ begin
   values (ro_sim, sim, inst, '2026-09-13', 'US', 'unavailable', 'NO_ELIGIBLE_PARTICIPANT', 0, 0, false)
   on conflict do nothing;
   -- (the unique index blocks a second current US/2026-09-13 row, so use a different country for the simulation)
-  insert into reference.canonical_regions (code, name) values ('DE', 'Germany');
+  insert into reference.canonical_regions (code, name) values ('DE', 'Germany') on conflict (code) do nothing;
   insert into pipeline.regional_observations (id, run_id, instrument_id, calculation_date, canonical_region_code, outcome, structural_condition, participant_count, contributing_source_count, dispersion_published)
   values ('aaaaaaaa-4444-4000-8000-000000000004', sim, inst, '2026-09-13', 'DE', 'unavailable', 'NO_ELIGIBLE_PARTICIPANT', 0, 0, false);
   ok := false;

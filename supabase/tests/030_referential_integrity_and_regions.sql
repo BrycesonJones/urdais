@@ -5,7 +5,7 @@ insert into reference.providers (id, slug, name, provider_kind)
 values ('bbbbbbbb-0000-4000-8000-000000000001', 'test-provider', 'Test Provider', 'cloud_provider');
 insert into reference.source_interfaces (id, provider_id, slug, name, source_class, canonical_url, access_class)
 values ('bbbbbbbb-0000-4000-8000-000000000011', 'bbbbbbbb-0000-4000-8000-000000000001', 'test-prices', 'Test prices', 'price_surface', 'https://example.invalid/pricing', 'documentation');
-insert into reference.canonical_regions (code, name) values ('US', 'United States'), ('DE', 'Germany');
+insert into reference.canonical_regions (code, name) values ('US', 'United States'), ('DE', 'Germany') on conflict (code) do nothing;
 
 do $$
 declare
@@ -44,7 +44,7 @@ begin
   -- "EU" can never be a canonical region.
   ok := false;
   begin
-    insert into reference.canonical_regions (code, name) values ('EU', 'European Union');
+    insert into reference.canonical_regions (code, name) values ('EU', 'European Union') on conflict (code) do nothing;
   exception when check_violation then ok := true;
   end;
   if not ok then raise exception 'EU was accepted as a canonical region'; end if;
@@ -52,13 +52,13 @@ begin
   -- Neither can a user-assigned code, a malformed one, or a well-formed pair
   -- that ISO has simply never assigned.
   ok := false;
-  begin insert into reference.canonical_regions (code, name) values ('XX', 'x'); exception when check_violation then ok := true; end;
+  begin insert into reference.canonical_regions (code, name) values ('XX', 'x') on conflict (code) do nothing; exception when check_violation then ok := true; end;
   if not ok then raise exception 'XX was accepted as a canonical region'; end if;
   ok := false;
-  begin insert into reference.canonical_regions (code, name) values ('ZQ', 'x'); exception when foreign_key_violation then ok := true; end;
+  begin insert into reference.canonical_regions (code, name) values ('ZQ', 'x') on conflict (code) do nothing; exception when foreign_key_violation then ok := true; end;
   if not ok then raise exception 'unassigned code ZQ was accepted as a canonical region'; end if;
   ok := false;
-  begin insert into reference.canonical_regions (code, name) values ('us', 'x'); exception when check_violation then ok := true; end;
+  begin insert into reference.canonical_regions (code, name) values ('us', 'x') on conflict (code) do nothing; exception when check_violation then ok := true; end;
   if not ok then raise exception 'lowercase code was accepted as a canonical region'; end if;
 
   -- A mapping to a country that has not been adopted fails the FK.

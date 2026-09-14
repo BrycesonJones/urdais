@@ -101,13 +101,13 @@ begin
   -- A well-formed, non-reserved, but unassigned pair cannot become a canonical region.
   ok := false;
   begin
-    insert into reference.canonical_regions (code, name) values ('ZQ', 'not a country');
+    insert into reference.canonical_regions (code, name) values ('ZQ', 'not a country') on conflict (code) do nothing;
   exception when foreign_key_violation then ok := true;
   end;
   if not ok then raise exception 'unassigned code ZQ was adopted as a canonical region'; end if;
 
   -- A real country can.
-  insert into reference.canonical_regions (code, name) values ('US', 'United States');
+  insert into reference.canonical_regions (code, name) values ('US', 'United States') on conflict (code) do nothing;
 
   raise notice 'lineage consistency: ok';
 end $$;
