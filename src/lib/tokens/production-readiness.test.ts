@@ -291,6 +291,23 @@ describe("frozen lineage is proved, not inferred", () => {
     expect(report.findings.some((row) => row.code === "BENCHMARK_NOT_PRODUCTION")).toBe(true);
   });
 
+  it("passes when the provider also has a research-derived row, and says what else is there", async () => {
+    const { catalog, researchFrozen, productionStore } = storeWithResearchThenProduction();
+    const productionFrozen = frozenRowsFrom(productionStore, "production", ["anthropic"]);
+    const report = await checkTokenProductionReadiness({
+      sql: readOnlySql({ frozen: [...researchFrozen, ...productionFrozen] }),
+      migrationFiles: MIGRATIONS,
+      loadCatalog: async () => catalog,
+      onDate: "2026-09-14",
+    });
+    const anthropic = report.providers.find((row) => row.providerSlug === "anthropic")!;
+    // Production filters the research-derived row out, so it is a note and not a blocker.
+    expect(anthropic.productionVisible).toBe(true);
+    expect(report.findings.some((row) => row.code === "BENCHMARK_NOT_PRODUCTION" && row.detail.includes("anthropic"))).toBe(false);
+    expect(report.notes.join(" ")).toContain(researchFrozen[0]!.id);
+    expect(anthropic.priceUsdPer1m).toBe(productionFrozen[0]!.price_usd_per_1m);
+  });
+
   it("does not recalculate or replace a frozen row while checking it", async () => {
     const store = verifiedStore(["anthropic"]);
     const rows = frozenRowsFor(store, ["anthropic"]);

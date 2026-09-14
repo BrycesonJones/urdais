@@ -14,6 +14,7 @@ import { detectObservationChanges, quotesToInsert } from "@/lib/tokens/change-de
 import { WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
 import { sha256Hex } from "@/lib/tokens/hash";
 import { assertTokenIngestPermitted } from "@/lib/tokens/permission";
+import { observationIsPublicable } from "@/lib/tokens/read/publication";
 import { parseAnthropicPricing } from "@/lib/tokens/providers/anthropic";
 import { parseOpenAiPricing } from "@/lib/tokens/providers/openai";
 import { parseXaiPricing } from "@/lib/tokens/providers/xai";
@@ -185,7 +186,13 @@ export function ingestTokenPricing(input: IngestInput): TokenIngestReport {
   const parsed = parseProvider(input.provider, input.artifact.body, completedAt);
 
   const latest = input.store.latestByObservationKey(input.provider);
-  const decisions = detectObservationChanges(parsed.quotes, latest);
+  const decisions = detectObservationChanges(parsed.quotes, latest, {
+    acquisition,
+    mode: input.mode,
+    // Whether an already recorded observation is itself production-publicable,
+    // resolved through its own retrieval and source, not assumed from the provider.
+    isProduction: (row) => observationIsPublicable(row, input.store.findRetrieval(row.retrievalId), source),
+  });
   const toInsert = quotesToInsert(decisions);
   const rows = toInsert.map((quote) => {
     const nativeId = quote.identityKey.split("::")[1];

@@ -44,6 +44,8 @@ async function main(): Promise<void> {
     console.log(`  ${provider.providerSlug.padEnd(10)} ${String(provider.designatedModelId).padEnd(18)} ${state.padEnd(13)} ${value}`);
   }
 
+  for (const note of report.notes) console.log(`  note: ${note}`);
+
   if (report.ready) {
     console.log("ready: every designated provider has a production-visible frozen Token Price benchmark.");
     return;

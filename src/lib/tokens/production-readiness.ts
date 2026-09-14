@@ -18,9 +18,9 @@
  */
 
 import { benchmarkProviders, constituentInForce } from "@/lib/tokens/read/benchmark";
-import { loadPersistedBenchmarks, persistedBenchmarks, type BenchmarkSqlExecutor, type PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
+import { loadPersistedBenchmarks, persistedBenchmarks, type BenchmarkSqlExecutor } from "@/lib/tokens/read/benchmark-store";
 import { tokenReadCatalogFromStore } from "@/lib/tokens/read/load";
-import { observationIsPublicable } from "@/lib/tokens/read/publication";
+import { productionFrozenRows, researchDerivedFrozenRows } from "@/lib/tokens/read/lineage";
 import type { TokenReadCatalog } from "@/lib/tokens/read/series";
 
 export type ReadinessFailureCode =
@@ -50,6 +50,8 @@ export type ReadinessReport = {
     updatedAt: string | null;
   }[];
   findings: ReadinessFinding[];
+  /** Observations worth printing that do not block a deployment. */
+  notes: string[];
 };
 
 const REQUIRED_TABLES = ["pipeline.token_price_observations", "pipeline.token_price_benchmarks"] as const;
@@ -81,31 +83,11 @@ export type ReadinessInput = {
 };
 
 /**
- * Is this exact canonical observation production-publicable, resolved through
- * its own retrieval and source interface under the ordinary publication rules?
- *
- * The frozen row names the two observations it consumed, so the question can be
- * answered about that row rather than about the provider. A provider having
- * some production observation today says nothing about the lineage of a row
- * frozen from research legs last month.
+ * The frozen row names the two observations it consumed, so the question is
+ * answered about that row rather than about the provider. The predicate lives
+ * in read/lineage.ts and is the same one the production read path uses, so the
+ * two can never disagree about the same row.
  */
-function observationIsProduction(catalog: TokenReadCatalog, observationId: string | null): boolean {
-  if (observationId === null) return false;
-  const observation = catalog.observations.find((row) => row.id === observationId);
-  if (!observation) return false;
-  const retrieval = catalog.retrievals.find((row) => row.id === observation.retrievalId);
-  const source = catalog.sourceInterfaces.find((row) => row.id === observation.sourceInterfaceId);
-  return observationIsPublicable(observation, retrieval, source);
-}
-
-/** Frozen rows whose own legs do not resolve as production-publicable. */
-function researchDerivedRows(catalog: TokenReadCatalog, rows: readonly PersistedBenchmarkRow[]): PersistedBenchmarkRow[] {
-  return rows.filter(
-    (row) =>
-      row.calculationStatus === "value" &&
-      !(observationIsProduction(catalog, row.inputObservationId) && observationIsProduction(catalog, row.outputObservationId)),
-  );
-}
 
 async function schemaFindings(sql: BenchmarkSqlExecutor, migrationFiles: readonly string[]): Promise<{
   findings: ReadinessFinding[];
@@ -188,50 +170,55 @@ export async function checkTokenProductionReadiness(input: ReadinessInput): Prom
   // An outdated database cannot be interrogated further: the catalog loader
   // reads columns a pending migration may not have added. Report and stop.
   if (findings.some((row) => row.code === "SCHEMA_MISSING")) {
-    return { ready: false, appliedMigrations: applied, pendingMigrations: pending, findings, providers: emptyProviders() };
+    return { ready: false, appliedMigrations: applied, pendingMigrations: pending, findings, notes: [], providers: emptyProviders() };
   }
 
   const frozen = await loadPersistedBenchmarks(input.sql);
   const catalog = await input.loadCatalog();
-  const frozenSeries = persistedBenchmarks(frozen);
-  const frozenByProvider = new Map(frozenSeries.map((row) => [row.providerSlug, row]));
+  const notes: string[] = [];
 
   const providers = benchmarkProviders().map((providerSlug) => {
-    const series = frozenByProvider.get(providerSlug);
     const rows = frozen.filter((row) => row.providerSlug === providerSlug);
     // Ask the frozen rows themselves, not the provider. A row frozen from
     // research legs stays research-derived however many production
-    // observations the provider has acquired since.
-    const researchDerived = researchDerivedRows(catalog, rows);
-    const productionVisible = series !== undefined && researchDerived.length === 0;
+    // observations the provider has acquired since, and the production read
+    // path filters by exactly this predicate.
+    const serveable = productionFrozenRows(catalog, rows);
+    const researchDerived = researchDerivedFrozenRows(catalog, rows);
+    const served = persistedBenchmarks(serveable).find((row) => row.providerSlug === providerSlug);
 
-    if (!series) {
+    if (rows.length === 0) {
       findings.push({
         code: "BENCHMARK_MISSING",
         detail: `${providerSlug} has no frozen Token Price benchmark`,
         remedy: "run the operator verification against this database: npm run tokens:verify-production -- --verified-by <name> --evidence <what you checked>",
       });
-    } else if (researchDerived.length > 0) {
+    } else if (serveable.length === 0) {
       const offending = researchDerived.map((row) => `${row.id} (calculated ${row.calculatedAt})`).join(", ");
       findings.push({
         code: "BENCHMARK_NOT_PRODUCTION",
-        detail: `${providerSlug} has ${researchDerived.length} frozen benchmark row(s) whose own leg observations are not production-publicable: ${offending}`,
+        detail: `${providerSlug} has ${rows.length} frozen benchmark row(s), none of whose leg observations are production-publicable: ${offending}`,
         remedy:
-          "run the operator verification so the legs are manually verified production observations; a frozen row is never recalculated, so supersede the research-derived row if it must not be served",
+          "run the operator verification so the legs are manually verified production observations; a frozen row is never recalculated, so a research-derived row is never promoted",
       });
+    } else if (researchDerived.length > 0) {
+      // Not a blocker: production filters these out by the same predicate.
+      notes.push(
+        `${providerSlug} also has ${researchDerived.length} research-derived frozen row(s), which production does not serve: ${researchDerived.map((row) => row.id).join(", ")}`,
+      );
     }
 
     return {
       providerSlug,
       designatedModelId: constituentInForce(providerSlug, onDate)?.providerModelId ?? null,
-      frozen: series !== undefined,
-      productionVisible,
-      priceUsdPer1m: series?.priceUsdPer1m ?? null,
-      updatedAt: series?.updatedAt ?? null,
+      frozen: rows.length > 0,
+      productionVisible: serveable.length > 0,
+      priceUsdPer1m: served?.priceUsdPer1m ?? null,
+      updatedAt: served?.updatedAt ?? null,
     };
   });
 
-  if (providers.length > 0 && frozenSeries.length === 0) {
+  if (providers.length > 0 && frozen.length === 0) {
     findings.push({
       code: "READ_PATH_EMPTY",
       detail: "the read path loaded no Token Price benchmark at all",
@@ -239,7 +226,7 @@ export async function checkTokenProductionReadiness(input: ReadinessInput): Prom
     });
   }
 
-  return { ready: findings.length === 0, appliedMigrations: applied, pendingMigrations: pending, findings, providers };
+  return { ready: findings.length === 0, appliedMigrations: applied, pendingMigrations: pending, findings, notes, providers };
 }
 
 /** Convenience for tests and scripts that already hold a store rather than a database. */

@@ -15,6 +15,7 @@ import { observationIsPublicable, observationIsVisible } from "@/lib/tokens/read
 import { listVisibleTokenSeries } from "@/lib/tokens/read/series";
 import { InMemoryTokenPricingStore } from "@/lib/tokens/store";
 import { TokenPermissionError, WAVE1_PROVIDERS, type ManualVerification, type Wave1Provider } from "@/lib/tokens/types";
+import { loadPricingFixture } from "@/lib/tokens/fixtures";
 import { seedWave1ResearchPreview } from "@/lib/tokens/preview-seed";
 import { VerificationMismatchError, verifyProviderProduction } from "@/lib/tokens/verify-production";
 
@@ -184,5 +185,76 @@ describe("manual verification is not a collection permission", () => {
       const iface = catalog.sourceInterfaces.find((row) => row.id === observation.sourceInterfaceId);
       expect(observationIsVisible(observation, retrieval, iface, "production")).toBe(false);
     }
+  });
+});
+
+describe("a verified price is recorded even when research saw the same number first", () => {
+  function anthropicStore() {
+    const store = new InMemoryTokenPricingStore();
+    seedWave1ResearchPreview(store);
+    return store;
+  }
+
+  function verifyAnthropic(store: InMemoryTokenPricingStore) {
+    return verifyProviderProduction({
+      provider: "anthropic",
+      verification: { ...VERIFICATION, sourceUrl: WAVE1_SOURCE_INTERFACES.anthropic.canonicalUrl },
+      store,
+    });
+  }
+
+  it("inserts a production observation for an unchanged price and leaves the research row alone", () => {
+    const store = anthropicStore();
+    const researchRows = tokenReadCatalogFromStore(store).observations.filter((row) => row.providerSlug === "anthropic");
+    expect(researchRows.length).toBeGreaterThan(0);
+    const researchSnapshot = JSON.stringify(researchRows);
+
+    const { report } = verifyAnthropic(store);
+    expect(report.observationsInserted).toBeGreaterThan(0);
+    expect(report.decisions.some((row) => row.kind === "provenance_promoted")).toBe(true);
+
+    const after = tokenReadCatalogFromStore(store).observations.filter((row) => row.providerSlug === "anthropic");
+    // Append-only: the research rows are untouched and the production rows are additional.
+    expect(after.length).toBeGreaterThan(researchRows.length);
+    expect(JSON.stringify(after.filter((row) => researchRows.some((old) => old.id === row.id)))).toBe(researchSnapshot);
+  });
+
+  it("makes the provider production-publishable, at the same number", () => {
+    const store = anthropicStore();
+    expect(listVisibleTokenSeries(tokenReadCatalogFromStore(store), "production")).toEqual([]);
+
+    const { legs } = verifyAnthropic(store);
+    expect(legs).toMatchObject({ providerModelId: "claude-fable-5-1", input: 10, output: 50, benchmark: 30 });
+
+    const production = publishableBenchmarks(listVisibleTokenSeries(tokenReadCatalogFromStore(store), "production"), "2026-09-14");
+    expect(production.map((row) => [row.providerSlug, row.priceUsdPer1m])).toEqual([["anthropic", 30]]);
+  });
+
+  it("stays idempotent: a second identical verification inserts nothing", () => {
+    const store = anthropicStore();
+    const first = verifyAnthropic(store).report;
+    const second = verifyAnthropic(store).report;
+    const third = verifyAnthropic(store).report;
+    expect(first.observationsInserted).toBeGreaterThan(0);
+    expect(second.observationsInserted).toBe(0);
+    expect(third.observationsInserted).toBe(0);
+    expect(second.decisions.some((row) => row.kind === "provenance_promoted")).toBe(false);
+  });
+
+  it("does not promote anything on an ordinary research ingestion", () => {
+    const store = anthropicStore();
+    const report = ingestTokenPricing({
+      provider: "anthropic",
+      mode: "research",
+      artifact: {
+        body: loadPricingFixture("anthropic").body,
+        contentType: "text/html",
+        url: WAVE1_SOURCE_INTERFACES.anthropic.canonicalUrl,
+        retrievedAt: "2026-09-15T06:00:00Z",
+      },
+      store,
+    });
+    expect(report.decisions.some((row) => row.kind === "provenance_promoted")).toBe(false);
+    expect(report.observationsInserted).toBe(0);
   });
 });

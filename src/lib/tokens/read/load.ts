@@ -9,6 +9,7 @@
 import { WAVE1_MODELS, WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
 import { publishableBenchmarks } from "@/lib/tokens/read/benchmark-series";
 import { persistedBenchmarks, type PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
+import { productionFrozenRows } from "@/lib/tokens/read/lineage";
 import type { PublicTokenBenchmarkSeries } from "@/lib/tokens/read/api-contract";
 import { benchmarkInstrumentsFromSeries, withTokenInstruments } from "@/lib/tokens/read/instruments";
 import { publicTokenPricesResponse, type PublicTokenPricesResponse } from "@/lib/tokens/read/api-contract";
@@ -77,15 +78,31 @@ export async function loadVisibleTokenInstruments(env: ProcessEnvLike = process.
  * running without a database.
  */
 export async function loadVisibleTokenBenchmarks(env: ProcessEnvLike = process.env): Promise<PublicTokenBenchmarkSeries[]> {
+  const mode = tokenVisibilityMode(env);
   const frozen = await loadFrozenBenchmarks(env);
+
+  if (mode === "production") {
+    // Frozen rows are the authoritative record, and production serves only the
+    // ones whose own two leg observations are production-publicable. A row
+    // frozen from research legs is not promoted by later production
+    // observations, and a raw leg corrected after the freeze does not move the
+    // published value, which is the point of freezing it.
+    if (frozen.length > 0) {
+      const catalog = await loadTokenReadCatalog(env);
+      const serveable = productionFrozenRows(catalog, frozen);
+      if (serveable.length > 0) return persistedBenchmarks(serveable);
+    }
+    // Nothing eligible has been frozen yet: fall back to the calculator, which
+    // is itself restricted to production-publicable observations.
+    return visibleTokenBenchmarks(await loadTokenReadCatalog(env), env);
+  }
+
+  // Research preview may serve research-derived frozen rows as well.
   if (frozen.length > 0) return persistedBenchmarks(frozen);
-  const catalog = await loadTokenReadCatalog(env);
-  return visibleTokenBenchmarks(catalog, env);
+  return visibleTokenBenchmarks(await loadTokenReadCatalog(env), env);
 }
 
 async function loadFrozenBenchmarks(env: ProcessEnvLike): Promise<PersistedBenchmarkRow[]> {
-  // Production publishes nothing until rights permit it, frozen or not.
-  if (tokenVisibilityMode(env) === "production") return [];
   try {
     const { loadFrozenBenchmarksFromDatabase } = await import("@/lib/tokens/read/database");
     return (await loadFrozenBenchmarksFromDatabase(env)) ?? [];
