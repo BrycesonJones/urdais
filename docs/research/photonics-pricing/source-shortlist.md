@@ -218,6 +218,8 @@ Chinese optical-communications industry portal that publishes **China Telecom an
 
 **Not assessed:** robots.txt not fetched, terms not read, and it is unconfirmed whether any price index is published. Flagged as the most promising unexplored lead in this vertical.
 
+**Now assessed — see `iccsz-tender-pricing.md` in this directory.** Summary of what changed: ICCSZ publishes **no** price index (question closed); it is a reporter, never the publisher of record, since carrier awards are compelled statutory disclosure by the buyer under 《招标投标法实施条例》第五十四条; robots.txt and terms are **still unread** because `iccsz.com` did not resolve from the research environment, so nothing was fetched from the domain and both axes stay `not_reviewed`. Fourteen procurement events were traced: **zero carry an explicit optical-module unit price**, one carries a defensibly derivable blended value (China Telecom Guangdong 2026–27, 164,098 只 at 77.64 元/只 不含税), and the channel carries **no 800G, no 1.6T and no ZR coherent optics at all** — those go to hyperscalers by private direct purchase. Recommendation: **discovery-and-validation only**, not an index constituent.
+
 ### 21. Foundries — no price surface
 
 Tower Semiconductor, GlobalFoundries (Fotonix), imec, CompoundTek, Sivers: MPW shuttle and NRE pricing is quote-based and under NDA. No public wafer-price data.
