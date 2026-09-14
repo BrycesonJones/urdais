@@ -299,13 +299,35 @@ diagnostic behind every rejection, plus any source that failed outright. No
 secret is printed and the database URL is never echoed. A run in which every
 source failed exits non-zero.
 
-**Scheduling is deliberately not built.** Urdais has no deployed application, so
-a scheduler for news would mean adopting an infrastructure platform for news
-alone. The boundary is this command: whatever runs the deployed application
-invokes it on an interval and reads its exit code. It is safe to run repeatedly,
-which is the property a scheduler needs and the reason one is not required to
-prove the architecture. Hourly is ample for feeds that publish a few items a
-day.
+### The scheduler boundary
+
+**Scheduling is deliberately not built, and no new infrastructure is needed to
+add it.** Urdais deploys on Vercel and `urdais.com` went live on 14 September
+2026, so the platform already has a scheduler: Vercel Cron. It invokes an HTTP
+route rather than a shell command, so wiring it means adding one authenticated
+route that calls `ingestNewsSources` and `persistNewsRun` — the same two
+functions `scripts/news/ingest.ts` calls — plus a shared secret and a decision
+about cadence. Hourly is ample for feeds that publish a few items a day.
+
+That route is Phase 1B work, not because the platform is missing but because an
+unauthenticated ingestion trigger on a public origin is a worse thing to ship
+than a command an operator runs. What Phase 1A guarantees is the property the
+scheduler will depend on: the run is safe to repeat, so a cron that fires twice,
+retries, or overlaps writes nothing extra.
+
+### After this merges
+
+The Compute rail will render "Compute news is unavailable right now." on
+`urdais.com` until two things are true, in this order:
+
+1. The deployed application has a `DATABASE_URL` for UrdaisProd. Without one the
+   read path returns `available: false` — which is the correct fail-closed
+   behaviour, not a bug.
+2. `npm run news:ingest -- --mode production --live --write` has been run
+   against UrdaisProd at least once, by an operator or by the Phase 1B route.
+
+Neither is done by this pull request. See
+`docs/operations/production-environments.md`.
 
 ---
 
