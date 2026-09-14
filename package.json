@@ -2,7 +2,7 @@
   "name": "urdais",
   "version": "0.1.0",
   "private": true,
-  "description": "Urdais — an information and market-data platform for the Information Age.",
+  "description": "Urdais \u2014 an information and market-data platform for the Information Age.",
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
@@ -17,6 +17,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "tokens:ingest": "tsx scripts/tokens/ingest.ts",
+    "tokens:preview:seed": "tsx scripts/tokens/preview-seed.ts",
     "db:start": "scripts/db/local.sh start",
     "db:stop": "scripts/db/local.sh stop",
     "db:reset": "scripts/db/local.sh reset",
@@ -25,13 +26,15 @@
     "db:replay": "scripts/db/local.sh replay",
     "db:types": "scripts/db/local.sh types",
     "db:check-types": "scripts/db/local.sh check-types",
-    "db:ci": "scripts/db/local.sh ci"
+    "db:ci": "scripts/db/local.sh ci",
+    "tokens:verify": "tsx scripts/tokens/verify.ts"
   },
   "dependencies": {
     "github-slugger": "^2.0.0",
     "maplibre-gl": "^6.9.0",
     "mdast-util-to-string": "^4.0.0",
     "next": "16.3.4",
+    "pg": "^8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-markdown": "^10.1.0",
@@ -45,6 +48,7 @@
     "@testing-library/react": "^16.3.3",
     "@types/geojson": "^7946.0.16",
     "@types/node": "^24",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.1.1",

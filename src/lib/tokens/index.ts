@@ -47,5 +47,6 @@ export { parseOpenAiPricing, OPENAI_PARSER_ID } from "@/lib/tokens/providers/ope
 export { loadPricingFixture, type PricingFixture } from "@/lib/tokens/fixtures";
 export { WAVE1_MODELS, WAVE1_ALIASES, WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
 export { InMemoryTokenPricingStore } from "@/lib/tokens/store";
+export { seedWave1ResearchPreview, seedWave1ResearchPreviewDatabase } from "@/lib/tokens/preview-seed";
 export { assertTokenIngestPermitted } from "@/lib/tokens/permission";
 export { WAVE1_PROVIDERS, MalformedPricingSourceError, TokenPermissionError, type Wave1Provider, type TokenIngestMode } from "@/lib/tokens/types";

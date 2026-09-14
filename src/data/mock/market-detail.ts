@@ -13,7 +13,6 @@
  */
 
 import { catalogEntry, MARKET_CATALOG } from "@/data/market-catalog";
-import { DEFAULT_TOKEN_LAB_ID, TOKEN_LABS_SORTED, TOKEN_UNIT, tokenInstrumentId } from "@/data/mock/token-providers";
 import { buildDailySeries, buildIntradaySeries } from "@/data/mock/series-generator";
 import type { DailySeriesConfig, IntradaySeriesConfig } from "@/data/mock/series-generator";
 import { MOCK_AS_OF, UCPI_DAILY_CONFIG, UCPI_INDEX, UCPI_INTRADAY_CONFIG } from "@/data/mock/ucpi";
@@ -134,23 +133,6 @@ const COMPUTE_SPECS: InstrumentSpec[] = [
   ),
 ];
 
-/* ---------- UCPI: token pricing ---------- */
-
-/**
- * Provider-level token pricing built from the shared lab catalog in
- * token-providers.ts; see that module for the provisional semantics. The
- * same instruments back the Model Economics Token Price view.
- */
-const TOKEN_SPECS: InstrumentSpec[] = TOKEN_LABS_SORTED.map((lab) => ({
-  id: tokenInstrumentId(lab.id),
-  shortLabel: lab.name,
-  symbol: lab.name,
-  name: "Token price benchmark · demo provider series",
-  unit: TOKEN_UNIT,
-  daily: { ...lab.price, asOf: MOCK_AS_OF },
-  intraday: lab.intraday,
-}));
-
 /** Instruments in one family share a unit, so each may be compared with the others on absolute values. */
 function buildFamilyInstruments(specs: InstrumentSpec[]): MarketInstrumentDetail[] {
   return specs.map((spec) =>
@@ -163,9 +145,13 @@ function buildFamilyInstruments(specs: InstrumentSpec[]): MarketInstrumentDetail
   );
 }
 
-/** Every lab's token-price instrument, alphabetical, each comparable with the others. */
-export const TOKEN_INSTRUMENTS: MarketInstrumentDetail[] = buildFamilyInstruments(TOKEN_SPECS);
+/* ---------- UCPI: token pricing ---------- */
 
+/**
+ * The Tokens family is a taxonomy slot on UCPI. Instruments come from the
+ * canonical token-price read model at the page boundary
+ * (`hydrateMarketWithTokenPrices`). This module does not seed demo prices.
+ */
 const UCPI_MARKET: MarketDetail = {
   ...UCPI_INDEX,
   defaultInstrumentId: "ucpi-h100-sxm",
@@ -180,8 +166,8 @@ const UCPI_MARKET: MarketDetail = {
     {
       id: "tokens",
       label: "Tokens",
-      instruments: TOKEN_INSTRUMENTS,
-      defaultInstrumentId: tokenInstrumentId(DEFAULT_TOKEN_LAB_ID),
+      instruments: [],
+      defaultInstrumentId: "",
       explore: { label: "Explore Model Economics", href: MODEL_ECONOMICS_HREF },
     },
   ],

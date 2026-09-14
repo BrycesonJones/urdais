@@ -3,6 +3,7 @@ import { ModelFrontierChart } from "@/components/model-economics/model-frontier-
 import { OpenWeightAnalysis } from "@/components/model-economics/open-weight-analysis";
 import { TokenPriceSection } from "@/components/model-economics/token-price-section";
 import { UtviSection } from "@/components/model-economics/utvi-section";
+import type { MarketInstrumentDetail } from "@/types/market";
 
 const SECTIONS = [
   { id: "price", label: "Price" },
@@ -16,10 +17,16 @@ const SECTIONS = [
  * Model Economics: the deeper analytical view of the model economy. Five
  * derived views of one deterministic demo data graph, stacked as full-width
  * sections separated by hairlines, with anchor navigation beneath the
- * introduction. The quick provider-level token-price view remains inside
+ * introduction. The quick model-level token-price view remains inside
  * UCPI; this page is its deeper destination.
  */
-export function ModelEconomicsPage() {
+export function ModelEconomicsPage({
+  tokenInstruments = [],
+  researchPreview = false,
+}: {
+  tokenInstruments?: readonly MarketInstrumentDetail[];
+  researchPreview?: boolean;
+}) {
   return (
     <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-6 text-neutral-50 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-screen-2xl">
@@ -52,7 +59,7 @@ export function ModelEconomicsPage() {
         </nav>
 
         <div className="mt-10 flex flex-col gap-14">
-          <TokenPriceSection />
+          <TokenPriceSection instruments={tokenInstruments} researchPreview={researchPreview} />
           <UtviSection />
           <MarketShareChart />
           <ModelFrontierChart />

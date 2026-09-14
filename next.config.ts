@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["pg"],
   images: {
     // Mock-development thumbnails only (see src/data/mock/news.ts). Urdais
     // stores provider thumbnail URLs rather than image bytes; the production

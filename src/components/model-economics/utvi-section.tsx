@@ -37,9 +37,11 @@ export function UtviSection() {
           {formatCompact(UTVI.snapshot.value)}
         </span>{" "}
         <span className="text-sm text-neutral-400">{UTVI.unit}</span>{" "}
-        <span className={`text-sm font-medium ${movementClass(UTVI.snapshot.changePercent)}`}>
-          {formatPercent(UTVI.snapshot.changePercent, 1)}
-        </span>{" "}
+        {UTVI.snapshot.changePercent !== null && (
+          <span className={`text-sm font-medium ${movementClass(UTVI.snapshot.changePercent)}`}>
+            {formatPercent(UTVI.snapshot.changePercent, 1)}
+          </span>
+        )}{" "}
         <span className="text-xs text-neutral-500">1M</span>
       </p>
 

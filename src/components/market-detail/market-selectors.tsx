@@ -3,14 +3,16 @@
 import Link from "next/link";
 
 import { MultiSelectMenu, SELECTOR_FOCUS, SELECTOR_SURFACE, SelectMenu } from "@/components/market-detail/select-menu";
-import type { MarketDetail, MarketInstrumentDetail } from "@/types/market";
+import type { MarketDetail, MarketFamily, MarketInstrumentDetail } from "@/types/market";
 
 type MarketSelectorsProps = {
   market: MarketDetail;
-  instrument: MarketInstrumentDetail;
+  family: MarketFamily;
+  instrument: MarketInstrumentDetail | null;
   comparisonIds: string[];
   /** Most comparison series that may be shown at once alongside the primary. */
   maxComparisons: number;
+  onFamilyChange: (familyId: string) => void;
   onInstrumentChange: (instrumentId: string) => void;
   onToggleComparison: (instrumentId: string) => void;
   onClearComparisons: () => void;
@@ -27,22 +29,22 @@ type MarketSelectorsProps = {
  */
 export function MarketSelectors({
   market,
+  family,
   instrument,
   comparisonIds,
   maxComparisons,
+  onFamilyChange,
   onInstrumentChange,
   onToggleComparison,
   onClearComparisons,
 }: MarketSelectorsProps) {
-  const family = market.families.find((candidate) =>
-    candidate.instruments.some((candidate) => candidate.id === instrument.id),
-  );
   const showFamilies = market.families.length > 1;
-  const showInstruments = (family?.instruments.length ?? 0) > 1;
-  const comparisons = instrument.comparisons;
+  const showInstruments = family.instruments.length > 1;
+  const comparisons = instrument?.comparisons ?? [];
   const showComparison = comparisons.length > 0;
+  const showPrimary = showFamilies || showInstruments;
 
-  if (!showFamilies && !showInstruments && !showComparison) return null;
+  if (!showPrimary && !showComparison && !family.explore) return null;
 
   const selectedLabels = comparisonIds
     .map((id) => comparisons.find((option) => option.instrumentId === id)?.label)
@@ -50,8 +52,8 @@ export function MarketSelectors({
 
   return (
     <div className="flex w-full flex-col gap-2 lg:w-auto">
-      {(showFamilies || showInstruments) && (
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      {showPrimary && (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
           {showFamilies && (
             <div
               role="group"
@@ -59,14 +61,14 @@ export function MarketSelectors({
               className={`inline-flex items-center p-0.5 ${SELECTOR_SURFACE} hover:bg-[#111111]`}
             >
               {market.families.map((option) => {
-                const selected = option.id === family?.id;
+                const selected = option.id === family.id;
                 return (
                   <button
                     key={option.id}
                     type="button"
                     aria-pressed={selected}
                     onClick={() => {
-                      if (!selected) onInstrumentChange(option.defaultInstrumentId);
+                      if (!selected) onFamilyChange(option.id);
                     }}
                     className={`flex h-full flex-1 items-center justify-center rounded-[2px] px-3.5 text-sm font-medium transition-colors sm:flex-none ${
                       selected ? "bg-white/[0.09] text-neutral-50" : "text-neutral-500 hover:text-neutral-200"
@@ -79,21 +81,21 @@ export function MarketSelectors({
             </div>
           )}
 
-          {showInstruments && family && (
+          {showInstruments && (
             <SelectMenu
               label="Instrument"
               options={family.instruments.map((option) => ({ id: option.id, label: option.shortLabel }))}
-              value={instrument.id}
+              value={instrument?.id ?? family.defaultInstrumentId}
               onChange={onInstrumentChange}
               className="sm:min-w-40"
             >
-              {instrument.shortLabel}
+              {instrument?.shortLabel ?? family.label}
             </SelectMenu>
           )}
         </div>
       )}
 
-      {showComparison && (
+      {showComparison && instrument && (
         <MultiSelectMenu
           label="Compare with"
           options={comparisons.map((option) => ({ id: option.instrumentId, label: option.label }))}
@@ -114,7 +116,7 @@ export function MarketSelectors({
         </MultiSelectMenu>
       )}
 
-      {family?.explore && (
+      {family.explore && (
         <Link
           href={family.explore.href}
           className={`group inline-flex items-center gap-1.5 self-start rounded-sm text-sm text-neutral-400 transition-colors hover:text-neutral-100 ${SELECTOR_FOCUS}`}

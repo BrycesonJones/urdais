@@ -21,7 +21,8 @@ declare
     'pipeline.calculation_runs', 'pipeline.seller_observations', 'pipeline.seller_observation_candidates',
     'pipeline.capacity_source_observations', 'pipeline.capacity_source_members',
     'pipeline.regional_observations', 'pipeline.regional_observation_participants',
-    'pipeline.regional_publications', 'pipeline.token_price_observations'
+    'pipeline.regional_publications', 'pipeline.token_price_observations',
+    'pipeline.token_price_benchmarks'
   ];
   n integer;
 begin

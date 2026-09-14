@@ -36,15 +36,53 @@ export type MarketIndex = {
 };
 
 /**
- * Latest value and its percentage change versus the previous daily close.
- * Movement is expressed only as a percentage: it is what makes markets with
- * different units and scales comparable, so no absolute delta is modelled.
+ * Latest value and its percentage change versus the previous comparable
+ * observation. Movement is expressed only as a percentage: it is what makes
+ * markets with different units and scales comparable, so no absolute delta
+ * is modelled. Null when the series has no prior observation — never a
+ * fabricated 0%.
  */
 export type MarketSnapshot = {
   value: number;
-  changePercent: number;
+  changePercent: number | null;
   /** Unix timestamp in seconds (UTC) of the observation. */
   asOf: number;
+};
+
+/**
+ * The Urdais Token Price benchmark behind a product market. The designated
+ * model is named for transparency; it is methodology, not a control, and no
+ * surface offers a way to change it.
+ */
+export type BenchmarkInstrumentIdentity = {
+  providerSlug: string;
+  providerName: string;
+  benchmarkName: string;
+  benchmarkModelId: string;
+  benchmarkModelName: string;
+  methodologyVersion: string;
+  unitCaption: string;
+};
+
+/**
+ * Canonical token-price identity for one model-level facet series: a single
+ * published rate such as an input or output price. Internal to calculation
+ * and developer verification; the product does not navigate by these.
+ */
+export type TokenInstrumentIdentity = {
+  providerSlug: string;
+  providerName: string;
+  providerModelId: string;
+  displayName: string;
+  modelFamily: string;
+  pricingDimension: string;
+  dimensionLabel: string;
+  facetLabel: string;
+  serviceTier: string;
+  contextTier: string | null;
+  cacheTtl: string | null;
+  region: string | null;
+  unitCaption: string;
 };
 
 export type IndexSnapshot = MarketIndex & MarketSnapshot;
@@ -109,6 +147,13 @@ export type MarketInstrumentDetail = MarketIndex & {
    * keyed by the market entity, never by its region.
    */
   regionLabel?: string;
+  /**
+   * Present on canonical token facet instruments, which are internal. The
+   * product market carries `benchmarkIdentity` instead.
+   */
+  tokenIdentity?: TokenInstrumentIdentity;
+  /** Present on the Urdais Token Price benchmark market. */
+  benchmarkIdentity?: BenchmarkInstrumentIdentity;
   snapshot: MarketSnapshot;
   series: DetailedSeries;
   /** Ranges the history is long enough to support; others are shown disabled. */
@@ -122,7 +167,7 @@ export type MarketFamily = {
   label: string;
   /** Empty when the family exists in the taxonomy but has no instruments yet. */
   instruments: MarketInstrumentDetail[];
-  /** Instrument selected when the family is switched to, e.g. HBM3E for HBM, Anthropic for Tokens. */
+  /** Instrument selected when the family is switched to, e.g. HBM3E for HBM. Empty when the family has no instruments. */
   defaultInstrumentId: string;
   /** A deeper analytical destination for this family, offered as a contextual link. */
   explore?: { label: string; href: string };

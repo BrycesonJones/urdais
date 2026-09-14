@@ -55,9 +55,11 @@ export function UcpiSummary({ index, snapshot, series }: UcpiSummaryProps) {
             {formatNumber(snapshot.value)}
           </span>{" "}
           <span className="text-sm text-neutral-400">{index.unit}</span>{" "}
-          <span className={`text-sm font-medium ${movementClass(snapshot.changePercent)}`}>
-            {formatPercent(snapshot.changePercent)}
-          </span>{" "}
+          {snapshot.changePercent !== null && (
+            <span className={`text-sm font-medium ${movementClass(snapshot.changePercent)}`}>
+              {formatPercent(snapshot.changePercent)}
+            </span>
+          )}{" "}
           <span className="text-xs text-neutral-400">
             1D · as of {formatTimestamp(snapshot.asOf, true)}
           </span>
