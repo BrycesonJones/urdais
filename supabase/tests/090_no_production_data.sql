@@ -25,7 +25,9 @@ declare
     'pipeline.capacity_source_observations', 'pipeline.capacity_source_members',
     'pipeline.regional_observations', 'pipeline.regional_observation_participants',
     'pipeline.regional_publications',
-    'pipeline.token_price_observations'
+    'pipeline.token_price_observations',
+    -- News articles come from ingestion. A bootstrapped database has none.
+    'pipeline.news_articles'
   ];
 begin
   foreach tbl in array must_be_empty loop
@@ -41,12 +43,17 @@ begin
   select count(*) into n from reference.instrument_spec_versions where status <> 'draft';
   if n <> 0 then raise exception 'a non-draft spec version exists'; end if;
 
-  -- Exactly one source is cleared for production collection: the licensed
-  -- Price of Compute dataset, on written terms. No direct provider interface is.
-  select count(*) into n from reference.source_interfaces where production_access_state = 'production_approved';
-  if n <> 1 then raise exception 'expected exactly one production-approved source, found %', n; end if;
+  -- Exactly one compute-market source is cleared for production collection: the
+  -- licensed Price of Compute dataset, on written terms. No direct provider
+  -- interface is. News feeds are a separate population with a separate data-use
+  -- question, reviewed in 220_news_ingestion.sql; they are excluded here so this
+  -- assertion keeps saying what it has always said about the compute market.
   select count(*) into n from reference.source_interfaces
-   where terms_review_state = 'permitted' and data_use_terms_state = 'permitted' and slug <> 'price-of-compute-prices';
+   where production_access_state = 'production_approved' and source_class <> 'news_feed';
+  if n <> 1 then raise exception 'expected exactly one production-approved compute source, found %', n; end if;
+  select count(*) into n from reference.source_interfaces
+   where terms_review_state = 'permitted' and data_use_terms_state = 'permitted'
+     and slug <> 'price-of-compute-prices' and source_class <> 'news_feed';
   if n <> 0 then raise exception '% direct source(s) cleared on both terms axes without review', n; end if;
 
   -- The publication layer exists (implementation readiness) and no value has been published.
@@ -60,7 +67,8 @@ begin
   select count(*) into n from pipeline.source_retrievals where retrieval_purpose <> 'research';
   if n <> 0 then raise exception 'a non-research retrieval exists'; end if;
   select count(*) into n from reference.permission_grants g join reference.source_interfaces si on si.id = g.source_interface_id
-   where si.slug <> 'price-of-compute-prices' or g.grant_kind <> 'provider_terms';
+   where si.source_class <> 'news_feed'
+     and (si.slug <> 'price-of-compute-prices' or g.grant_kind <> 'provider_terms');
   if n <> 0 then raise exception 'a permission grant exists for a direct provider interface'; end if;
   -- No operator attribution and no tenancy evidence were seeded.
   select count(*) into n from reference.entity_roles where role = 'operator';

@@ -22,7 +22,8 @@ declare
     'pipeline.capacity_source_observations', 'pipeline.capacity_source_members',
     'pipeline.regional_observations', 'pipeline.regional_observation_participants',
     'pipeline.regional_publications', 'pipeline.token_price_observations',
-    'pipeline.token_price_benchmarks'
+    'pipeline.token_price_benchmarks',
+    'reference.news_sources', 'pipeline.news_articles'
   ];
   n integer;
 begin
