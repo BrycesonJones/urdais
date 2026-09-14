@@ -14,13 +14,14 @@ declare
     'reference.market_entities', 'reference.entity_roles', 'reference.canonical_regions',
     'reference.region_mappings', 'reference.native_identifiers', 'reference.exclusion_reasons',
     'reference.diagnostic_codes', 'reference.iso_countries', 'reference.permission_grants',
+    'reference.models', 'reference.model_aliases',
     'pipeline.source_retrievals', 'pipeline.raw_offers', 'pipeline.normalized_observations',
     'pipeline.observation_evidence', 'pipeline.eligibility_assessments',
     'pipeline.eligibility_exclusions', 'pipeline.eligibility_diagnostics',
     'pipeline.calculation_runs', 'pipeline.seller_observations', 'pipeline.seller_observation_candidates',
     'pipeline.capacity_source_observations', 'pipeline.capacity_source_members',
     'pipeline.regional_observations', 'pipeline.regional_observation_participants',
-    'pipeline.regional_publications'
+    'pipeline.regional_publications', 'pipeline.token_price_observations'
   ];
   n integer;
 begin
