@@ -229,9 +229,17 @@ export async function checkTokenProductionReadiness(input: ReadinessInput): Prom
   // A provider Urdais collects but deliberately does not publish is neither a
   // failure nor an absence. Readiness names it, so that "five providers" is
   // read as a decision about the sixth rather than an oversight.
+  // A provider Urdais has studied and is not publishing is neither a failure nor
+  // an absence. Readiness names it, and names which of the two conditions it is
+  // in, because "we cannot measure this" and "we can measure this and are
+  // waiting on one fact" call for completely different next steps.
   for (const row of TOKEN_BENCHMARK_WITHHELD) {
     if (!withholdingFor(row.providerSlug, onDate)) continue;
-    notes.push(`${row.providerSlug} is collected but deliberately not published (${row.reason}); it is not expected to have a frozen benchmark and its absence is not a failure`);
+    notes.push(
+      row.state === "designated_publication_blocked"
+        ? `${row.providerSlug} is designated on ${row.designatedModel ?? "an undisclosed model"} and its price is methodology-compatible, but publication is blocked (${row.reason}); it is not expected to have a frozen benchmark and its absence is not a failure`
+        : `${row.providerSlug} is collected but deliberately not published (${row.reason}); it is not expected to have a frozen benchmark and its absence is not a failure`,
+    );
   }
 
   return { ready: findings.length === 0, appliedMigrations: applied, pendingMigrations: pending, findings, notes, providers };

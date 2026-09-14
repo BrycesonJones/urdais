@@ -2,7 +2,7 @@
 
 **Version 1.2, 14 September 2026.** Status: in production.
 
-Urdais publishes Token Price for Anthropic, OpenAI and xAI, computed under version 1.1 and live since 14 September 2026. Google and Alibaba Cloud are verified and enter under this version. DeepSeek is collected but withheld, for the reason recorded below.
+Urdais publishes Token Price for Anthropic, OpenAI and xAI, computed under version 1.1 and live since 14 September 2026. Google, Alibaba Cloud and Moonshot AI are verified and enter under this version. DeepSeek is collected but withheld, for the reason recorded below.
 
 Every published value rests on a manually verified reading of the provider's own published pricing page, retained with its hash and the verifier's statement. That is a basis for publishing a fact, not a licence to collect: no token-pricing source is cleared for automated production retrieval, and every one of them remains under terms review. A value's own methodology version is the one in force on its calculation date, so values published under 1.1 stay 1.1.
 
@@ -63,6 +63,7 @@ Version 1.2 designates:
 - **xAI**: Grok 4.6 (`grok-4.6`). The highest current general-purpose Grok in the qualified roster. Grok Build 0.1 is coding-specific, the Grok 4.20 multi-agent build is agent-specific, and the 4.20 reasoning and non-reasoning entries are mode-specific variants of an earlier version.
 - **Google**: Gemini 3.1 Pro Preview (`gemini-3.1-pro-preview`). Google's current Pro-class model, described on the first-party pricing page retrieved 14 September 2026 as "Our 3rd generation Pro model". Google publishes no generally available 3.x Pro: the generally available 3.x rows are Flash class, and the newest of those carries a promotional rate with a scheduled increase on 1 January 2027, which would put a step change into the benchmark for reasons unrelated to the market. Gemini 2.5 Pro is generally available but two generations behind. The preview label is a caveat on stability, not on availability: any paid-tier developer can call it, which is what separates it from a model restricted to vetted organisations. This designation is revisited when a generally available 3.x Pro ships.
 - **Alibaba Cloud**: Qwen3.8-Max (`qwen3.8-max`), International scope. Alibaba's current flagship commercial Qwen. Its base region is declared explicitly; see the region rule below.
+- **Moonshot AI**: Kimi K3 (`kimi-k3`), International scope. Moonshot's current general-purpose Kimi: the platform announces K3 as launched and it carries the largest context window in the family. The two K2.7 entries are coding builds and K2.6 is the previous general-purpose generation. The input leg is the published cache-miss rate, which is what a request pays when nothing is reused; the cache-hit rate is a cache dimension. Moonshot publishes an international list in USD and a China list in CNY at different numbers for the same models, so its base region is declared for the same reason Alibaba's is.
 
 Each designation is effective-dated. A designation records the date from which it applies, a provider may have several over time, and the designation in force on a calculation's own date is the one that produced its value.
 

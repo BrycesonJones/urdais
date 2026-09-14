@@ -107,6 +107,7 @@ describe("production readiness", () => {
       ["alibaba", true, 4],
       ["anthropic", true, 30],
       ["google", true, 7],
+      ["moonshot", true, 9],
       ["openai", true, 30],
       ["xai", true, 4],
     ]);
@@ -351,7 +352,7 @@ describe("schema checks run before the schema-dependent catalog load", () => {
     expect(missing.map((row) => row.detail).join(" ")).toContain("verification_evidence");
     for (const finding of missing) expect(finding.remedy).toContain("apply the outstanding migrations");
     // The report still names every designated provider, with nothing claimed about them.
-    expect(report.providers.map((row) => row.providerSlug)).toEqual(["alibaba", "anthropic", "google", "openai", "xai"]);
+    expect(report.providers.map((row) => row.providerSlug)).toEqual(["alibaba", "anthropic", "google", "moonshot", "openai", "xai"]);
     expect(report.providers.every((row) => !row.frozen && !row.productionVisible)).toBe(true);
   });
 

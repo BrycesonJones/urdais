@@ -30,7 +30,7 @@ describe("GET /api/tokens/prices", () => {
     const store = new InMemoryTokenPricingStore();
     seedWave1ResearchPreview(store);
     const rows = publishableBenchmarks(listVisibleTokenSeries(tokenReadCatalogFromStore(store), "research_preview"), "2026-09-14");
-    expect(rows).toHaveLength(5);  // six providers ingested, DeepSeek withheld
+    expect(rows).toHaveLength(6);  // six providers ingested, DeepSeek withheld
     for (const row of rows) {
       expect(validatePublicTokenBenchmark(JSON.parse(JSON.stringify(row)))).toEqual([]);
       expect(Object.keys(row)).not.toContain("pricingDimension");

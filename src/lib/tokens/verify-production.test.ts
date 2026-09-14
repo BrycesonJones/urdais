@@ -75,6 +75,7 @@ describe("manual verification publishes a verified fact", () => {
       ["alibaba", 4],
       ["anthropic", 30],
       ["google", 7],
+      ["moonshot", 9],
       ["openai", 30],
       ["xai", 4],
     ]);

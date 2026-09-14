@@ -18,6 +18,7 @@ import { parseAlibabaPricing } from "@/lib/tokens/providers/alibaba";
 import { parseAnthropicPricing } from "@/lib/tokens/providers/anthropic";
 import { parseDeepSeekPricing } from "@/lib/tokens/providers/deepseek";
 import { parseGooglePricing } from "@/lib/tokens/providers/google";
+import { parseMoonshotPricing } from "@/lib/tokens/providers/moonshot";
 import { parseOpenAiPricing } from "@/lib/tokens/providers/openai";
 import { parseXaiPricing } from "@/lib/tokens/providers/xai";
 import type { ProviderParseResult, Wave1Provider } from "@/lib/tokens/types";
@@ -36,6 +37,7 @@ export const PROVIDER_PARSERS: Record<Wave1Provider, ProviderParser> = {
   google: parseGooglePricing,
   deepseek: parseDeepSeekPricing,
   alibaba: parseAlibabaPricing,
+  moonshot: parseMoonshotPricing,
 };
 
 export class UnknownProviderParserError extends Error {

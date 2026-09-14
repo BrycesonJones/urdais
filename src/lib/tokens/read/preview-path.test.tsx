@@ -360,7 +360,7 @@ describe("Token Price benchmark on the product surfaces", () => {
 
   it("compares provider benchmark against provider benchmark, capped at four series", () => {
     const instruments = benchmarkInstruments();
-    expect(instruments).toHaveLength(5);  // six providers ingested, DeepSeek withheld
+    expect(instruments).toHaveLength(6);  // six providers ingested, DeepSeek withheld
     expect(MAX_COMPARISONS).toBe(3);
     for (const instrument of instruments) {
       expect(instrument.comparisons.map((row) => row.label).sort()).toEqual(
@@ -381,7 +381,7 @@ describe("Token Price benchmark on the product surfaces", () => {
 
   it("publishes no benchmark in production even with research observations present", () => {
     expect(visibleTokenBenchmarks(previewCatalog(), { NODE_ENV: "production" })).toEqual([]);
-    expect(visibleTokenBenchmarks(previewCatalog(), { NODE_ENV: "development" })).toHaveLength(5);
+    expect(visibleTokenBenchmarks(previewCatalog(), { NODE_ENV: "development" })).toHaveLength(6);
   });
 });
 

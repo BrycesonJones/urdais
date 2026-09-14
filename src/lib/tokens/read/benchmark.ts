@@ -158,29 +158,85 @@ export const TOKEN_BENCHMARK_CONSTITUENTS: readonly TokenBenchmarkConstituent[] 
     rationale:
       "Alibaba's current flagship commercial Qwen, quoted under the International deployment scope. Every row in the Model Studio catalog states a scope and the scopes differ in price: the same model is $1.65 and $4.951 under China (Beijing) against $2 and $6 under International. International is designated because it is the scope the English catalog quotes in USD and the one the international endpoint serves; it is named on the designation rather than silently treated as the global rate. The published band 0<Token≤1M covers the model's whole window, so there is no context surcharge to exclude. Batch at 50%, context-cache discounts and the Singapore free quota are all excluded.",
   },
+  {
+    providerSlug: "moonshot",
+    providerModelId: "kimi-k3",
+    baseContextTier: null,
+    baseRegion: "international",
+    effectiveFrom: "2026-09-14",
+    methodologyVersion: "1.2",
+    rationale:
+      "Moonshot's current general-purpose Kimi. The platform banner announces K3 as launched and the pricing table carries it with a 1,048,576-token window, the largest in the family. The two K2.7 entries are coding builds by name and one is a speed variant of the other, so neither represents the general-purpose frontier; K2.6 is the previous general-purpose generation. The input leg is the published cache-miss rate, which is what a request pays when nothing is reused; the cache-hit rate is a cache dimension and is excluded. The base region is International because Moonshot publishes two first-party lists at different numbers, this one in USD and a China list in CNY, and neither is a global rate. One rate covers the whole window, so there is no context surcharge to exclude.",
+  },
 ];
 
 /**
- * Providers Urdais collects but deliberately does not publish a headline value
- * for, with the reason. A provider is absent from the benchmark for one of two
- * reasons, and they are not the same: nobody has looked at it yet, or someone
- * looked and concluded it cannot be expressed. This records the second, so that
- * a missing series is a decision on the record rather than an omission.
+ * Why a provider Urdais has studied is not publishing a value.
+ *
+ * These are not the same condition and must never be reported as one:
+ *
+ *   collected_not_publishable      The prices are in hand and the methodology
+ *                                  cannot express them. There is no designation
+ *                                  to make, and making one would require a
+ *                                  methodology change.
+ *
+ *   designated_publication_blocked The model is chosen and its price is
+ *                                  methodology-compatible. Something outside
+ *                                  the methodology stops publication, and the
+ *                                  value is known and stated here.
+ *
+ * Collapsing them would turn "we cannot measure this" and "we can measure this
+ * and are waiting on one fact" into the same sentence, and they call for
+ * completely different next steps.
+ */
+export type TokenBenchmarkExclusionState = "collected_not_publishable" | "designated_publication_blocked";
+
+/**
+ * A provider that is absent from the benchmark by decision rather than by
+ * oversight, with the reason on the record. A missing series should never leave
+ * a reader guessing whether anyone looked.
  */
 export type TokenBenchmarkWithholding = {
   providerSlug: string;
+  providerName: string;
+  state: TokenBenchmarkExclusionState;
   since: string;
   reason: string;
   detail: string;
+  /**
+   * For a blocked designation: the model chosen, by display name. There is no
+   * provider-native id here on purpose. The absence of a stable one is the
+   * blocker itself, and writing a plausible id would manufacture the very fact
+   * that is missing.
+   */
+  designatedModel?: string;
+  /** The mutable pointer the source publishes, recorded so it is never mistaken for an identity. */
+  mutableAliasObserved?: string;
+  /** What the benchmark would be, once the blocker clears. Not published anywhere. */
+  expectedPriceUsdPer1m?: number;
 };
 
 export const TOKEN_BENCHMARK_WITHHELD: readonly TokenBenchmarkWithholding[] = [
   {
     providerSlug: "deepseek",
+    providerName: "DeepSeek",
+    state: "collected_not_publishable",
     since: "2026-09-14",
     reason: "NO_STANDARD_SERVICE_TIER",
     detail:
       "DeepSeek publishes no standard rate. Every price is a peak or an off-peak rate, and peak covers 35 of the 168 hours in a week, so off-peak is the majority condition rather than a discount window. Selecting either would publish a number that is wrong most of the time or wrong during business hours, and averaging them needs a time-weighting rule the methodology does not contain. Both tiers are collected as canonical observations; the headline value is withheld until the methodology has a principled treatment for providers with no standard tier.",
+  },
+  {
+    providerSlug: "mistral",
+    providerName: "Mistral AI",
+    state: "designated_publication_blocked",
+    since: "2026-09-14",
+    reason: "NO_IMMUTABLE_MODEL_IDENTITY",
+    designatedModel: "Mistral Large 3",
+    mutableAliasObserved: "mistral-large-latest",
+    expectedPriceUsdPer1m: 1,
+    detail:
+      "Mistral Large 3 is designated: Mistral's own pages call it a general-purpose flagship, which is the criterion, while Mistral Medium 3.5 describes itself as optimized for agentic and coding use cases, a specialization the methodology excludes. Its published rates of $0.50 input and $1.50 output are fully methodology-compatible and would give $1.00. Publication is blocked on identity, not on price: the pricing surface publishes only the mutable pointer mistral-large-latest, and a benchmark frozen against a moving alias would claim a lineage it does not have. The dated identity must be read from the designated model's own first-party page; it is not inferred from a naming pattern. Nothing is collected, seeded or published until then.",
   },
 ];
 
