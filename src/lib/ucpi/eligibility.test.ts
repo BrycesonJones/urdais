@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import type { NormalizedObservation } from "@/lib/ucpi/domain";
 import { assessEligibility, type EligibilityContext } from "@/lib/ucpi/eligibility";
-import { eligibleObservation, permitted } from "@/lib/ucpi/fixtures";
+import { eligibleObservation, permitted, ENTITY_MAP } from "@/lib/ucpi/fixtures";
 
 const D = "2026-09-13";
-const ctx: EligibilityContext = { calculationDate: D, registry: new Map([["synthetic-interface", permitted("synthetic-interface")]]) };
+const ctx: EligibilityContext = { calculationDate: D, entities: ENTITY_MAP, registry: new Map([["synthetic-interface", permitted("synthetic-interface")]]) };
 
 describe("H100 child eligibility", () => {
   it("passes a fully qualifying observation through P0, P1 and P2 as a valid input", () => {
@@ -55,7 +55,7 @@ describe("H100 child eligibility", () => {
   }
 
   it("excludes a source the registry has not permitted, whatever the observation looks like", () => {
-    const a = assessEligibility(eligibleObservation(), { calculationDate: D, registry: new Map() });
+    const a = assessEligibility(eligibleObservation(), { calculationDate: D, entities: ENTITY_MAP, registry: new Map() });
     expect(a.exclusions).toEqual(["COLLECTION_NOT_PERMITTED"]);
     expect(a.p2).toBe(false);
   });
@@ -79,5 +79,24 @@ describe("H100 child eligibility", () => {
   it("names every failure, not just the first", () => {
     const a = assessEligibility(eligibleObservation({ tenancyGrade: "ambiguous", canonicalRegionCode: null, hostMemoryGbPerAccelerator: 32 }), ctx);
     expect(a.exclusions).toEqual(expect.arrayContaining(["TENANCY_UNRESOLVED", "REGION_UNRESOLVED", "BUNDLE_OUT_OF_ENVELOPE"]));
+  });
+});
+
+describe("seller legal identity", () => {
+  it("a seller whose legal identity is not established is excluded, whatever its price", () => {
+    const entities = new Map(ENTITY_MAP);
+    entities.set("ent-c", { ...ENTITY_MAP.get("ent-c")!, legalName: null });
+    const a = assessEligibility(eligibleObservation(), { ...ctx, entities });
+    expect(a.p2).toBe(false);
+    expect(a.exclusions).toContain("SELLER_LEGAL_IDENTITY_UNRESOLVED");
+  });
+
+  it("fails closed: a seller absent from the entity map is excluded", () => {
+    const a = assessEligibility(eligibleObservation(), { ...ctx, entities: new Map() });
+    expect(a.exclusions).toContain("SELLER_LEGAL_IDENTITY_UNRESOLVED");
+  });
+
+  it("a seller with an evidenced legal name passes the rule", () => {
+    expect(assessEligibility(eligibleObservation(), ctx).exclusions).not.toContain("SELLER_LEGAL_IDENTITY_UNRESOLVED");
   });
 });

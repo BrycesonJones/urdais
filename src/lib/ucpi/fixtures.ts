@@ -23,6 +23,8 @@ export const ENTITIES: readonly MarketEntity[] = [
   { id: "ent-c-brand", slug: "cloud-c-brand", name: "C Brand", legalName: "C Brand LLC", legalIdentifier: null, controllingEntityId: "ent-c" },
 ];
 
+export const ENTITY_MAP: ReadonlyMap<string, MarketEntity> = new Map(ENTITIES.map((e) => [e.id, e]));
+
 /** The registry as recorded; neither candidate is permitted. */
 export const REGISTRY_TODAY: readonly SourceRegistryState[] = REGISTRY_SNAPSHOT_2026_09_13;
 
@@ -136,6 +138,7 @@ export function normalizationContext(overrides: Partial<NormalizationContext> = 
     ]),
     regionMappings: regionMappings(),
     tenancyEvidence: new Map(),
+    entities: ENTITY_MAP,
     ...overrides,
   };
 }
@@ -210,6 +213,7 @@ export function eligibleObservation(overrides: Partial<NormalizedObservation> = 
     observationType: "current_accessible_offer",
     sourceQualityGrade: 2,
     enumerationAssessment: "complete",
+    sourceAttribution: null,
     ...overrides,
   };
 }

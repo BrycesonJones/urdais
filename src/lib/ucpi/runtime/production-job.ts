@@ -13,11 +13,12 @@
  * Nothing here schedules anything. A caller decides when each phase runs.
  */
 
-import type { RegionalObservation } from "@/lib/ucpi/aggregation";
+import { LISTED_SCOPE_KEY, type RegionalObservation, type RegionScope } from "@/lib/ucpi/aggregation";
 import { toSeriesPoint } from "@/lib/ucpi/api-contract";
 import { calculationWindow } from "@/lib/ucpi/calculation-window";
 import { runPipeline, type PipelineResult } from "@/lib/ucpi/collector";
 import type { MarketEntity } from "@/lib/ucpi/domain";
+import type { InstrumentSpec } from "@/lib/ucpi/eligibility";
 import type { SourceRegistryState } from "@/lib/ucpi/permission-gate";
 import type { RunMode } from "@/lib/ucpi/runtime/config";
 import { collectSource, type SourceCollectionResult, type SourceRuntimeInput } from "@/lib/ucpi/runtime/collector-runtime";
@@ -80,6 +81,10 @@ export async function runCalculationPhase(input: {
   supersessionReason?: string;
   /** Countries the child publishes series for. */
   seriesRegions?: readonly string[];
+  /** The specification assessing eligibility; accessible by default. */
+  spec?: InstrumentSpec;
+  /** Country series by default; the LISTED sibling publishes one provider-wide series. */
+  regionScope?: RegionScope;
 }): Promise<CalculationPhaseResult> {
   const window = calculationWindow(input.calculationDate);
   const now = input.clock();
@@ -95,7 +100,8 @@ export async function runCalculationPhase(input: {
   }
 
   const { observations, retrievals } = await input.persistence.loadObservationsForDate(input.calculationDate);
-  const regionsSeen = [...new Set([...observations.map((o) => o.canonicalRegionCode).filter((r): r is string => r !== null), ...(input.seriesRegions ?? [])])];
+  const regionScope = input.regionScope ?? "country";
+  const regionsSeen = regionScope === "listed_provider_wide" ? [LISTED_SCOPE_KEY] : [...new Set([...observations.map((o) => o.canonicalRegionCode).filter((r): r is string => r !== null), ...(input.seriesRegions ?? [])])];
   const priorByRegion = new Map<string, Awaited<ReturnType<Persistence["loadPriorRegional"]>> & object>();
   for (const region of regionsSeen) {
     const prior = await input.persistence.loadPriorRegional(input.instrument, region, input.calculationDate);
@@ -113,6 +119,8 @@ export async function runCalculationPhase(input: {
     registry: input.registry,
     priorByRegion,
     seriesRegions: input.seriesRegions,
+    spec: input.spec,
+    regionScope,
   });
 
   const run: CalculationRunRow = {
@@ -153,7 +161,7 @@ export async function runCalculationPhase(input: {
       continue;
     }
     const publishAt = input.clock();
-    const participantRetrievalIds = new Set(row.participants.flatMap((p) => p.memberSellerEntityIds).flatMap((seller) => observations.filter((o) => o.sellerEntityId === seller && o.canonicalRegionCode === row.canonicalRegionCode).map((o) => o.retrievalId)));
+    const participantRetrievalIds = new Set(row.participants.flatMap((p) => p.memberSellerEntityIds).flatMap((seller) => observations.filter((o) => o.sellerEntityId === seller && (row.regionScope === "listed_provider_wide" || o.canonicalRegionCode === row.canonicalRegionCode)).map((o) => o.retrievalId)));
     const gate = validateForPublication({
       regional: row,
       run,

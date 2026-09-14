@@ -61,6 +61,13 @@ export const docPages: readonly DocPage[] = [
     section: "Methodology",
     file: "methodology/ucpi-h100-sxm.md",
   },
+  {
+    slug: "methodology/ucpi-h100-sxm-listed",
+    title: "UCPI-H100-SXM-LISTED",
+    description: "Proposed sibling specification measuring the listed on-demand H100 SXM price across independent sellers from licensed market-data sources; a different economic object from UCPI-H100-SXM.",
+    section: "Methodology",
+    file: "methodology/ucpi-h100-sxm-listed.md",
+  },
 ];
 
 export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];

@@ -150,6 +150,8 @@ export type NormalizedObservation = {
   observationType: ObservationType;
   sourceQualityGrade: number;
   enumerationAssessment: Retrieval["enumerationAssessment"];
+  /** Attribution the upstream source requires wherever its data is used; null for first-party sources. */
+  sourceAttribution?: string | null;
 };
 
 /** The child's exclusion vocabulary. Mirrors reference.exclusion_reasons. */
@@ -162,6 +164,7 @@ export type ExclusionReason =
   | "PREEMPTIBLE"
   | "PROMOTIONAL_PRICE"
   | "MINIMUM_TOPOLOGY_UNKNOWN"
+  | "SELLER_LEGAL_IDENTITY_UNRESOLVED"
   | "WHOLE_NODE_REQUIRED"
   | "TENANCY_UNRESOLVED"
   | "REGION_UNRESOLVED"

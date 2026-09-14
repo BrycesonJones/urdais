@@ -12,6 +12,7 @@ import {
   permitted,
   RUNPOD_CATALOG_FIXTURE,
   RUNPOD_DETAILS_FIXTURE,
+  ENTITY_MAP,
 } from "@/lib/ucpi/fixtures";
 
 const D = "2026-09-13";
@@ -60,7 +61,7 @@ describe("Runpod adapter", () => {
       hostMemoryGbPerAccelerator: 125,
     });
     expect(obs.serviceTier).toMatchObject({ tier_label: "COMMUNITY", operator_class: "community_host" });
-    const a = assessEligibility(obs, { calculationDate: D, registry: new Map([["runpod-gpu-types", permitted("runpod-gpu-types")]]) });
+    const a = assessEligibility(obs, { calculationDate: D, entities: ENTITY_MAP, registry: new Map([["runpod-gpu-types", permitted("runpod-gpu-types")]]) });
     expect(a.p2).toBe(true);
     expect(a.diagnostics).toEqual(expect.arrayContaining(["OPERATOR_UNDETERMINED", "AVAILABILITY_GRADE_3", "SOURCE_EFFECTIVE_TIME_ABSENT"]));
   });
@@ -78,7 +79,7 @@ describe("Runpod adapter", () => {
     const raws = runpodAdapter.parse(retrieval, RUNPOD_CATALOG_FIXTURE, RUNPOD_DETAILS_FIXTURE);
     const pcie = runpodAdapter.normalize(raws[2]!, retrieval, normalizationContext());
     expect(pcie.formFactor).toBe("PCIe");
-    const a = assessEligibility(pcie, { calculationDate: D, registry: new Map([["runpod-gpu-types", permitted("runpod-gpu-types")]]) });
+    const a = assessEligibility(pcie, { calculationDate: D, entities: ENTITY_MAP, registry: new Map([["runpod-gpu-types", permitted("runpod-gpu-types")]]) });
     expect(a.p0).toBe(false);
     expect(a.exclusions).toContain("WRONG_HARDWARE");
   });
@@ -129,7 +130,7 @@ describe("Lambda adapter", () => {
   it("is Ambiguous on tenancy by default and therefore excluded with TENANCY_UNRESOLVED, even when everything else qualifies", () => {
     const obs = lambdaAdapter.normalize(raws.find((r) => r.sourceNativeProductId === "gpu_1x_h100_sxm5" && r.nativeRegion === "us-west-1")!, retrieval, normalizationContext());
     expect(obs.tenancyGrade).toBe("ambiguous");
-    const a = assessEligibility(obs, { calculationDate: D, registry: new Map([["lambda-instance-types", permitted("lambda-instance-types")]]) });
+    const a = assessEligibility(obs, { calculationDate: D, entities: ENTITY_MAP, registry: new Map([["lambda-instance-types", permitted("lambda-instance-types")]]) });
     expect(a.p0).toBe(true);
     expect(a.p1).toBe(false);
     expect(a.exclusions).toEqual(["TENANCY_UNRESOLVED"]);
@@ -139,7 +140,7 @@ describe("Lambda adapter", () => {
     const ctx = normalizationContext({ tenancyEvidence: new Map([["lambda", LAMBDA_TENANCY_DOCUMENTED_SYNTHETIC]]) });
     const obs = lambdaAdapter.normalize(raws.find((r) => r.sourceNativeProductId === "gpu_1x_h100_sxm5" && r.nativeRegion === "us-west-1")!, retrieval, ctx);
     expect(obs.tenancyGrade).toBe("documented");
-    const a = assessEligibility(obs, { calculationDate: D, registry: new Map([["lambda-instance-types", permitted("lambda-instance-types")]]) });
+    const a = assessEligibility(obs, { calculationDate: D, entities: ENTITY_MAP, registry: new Map([["lambda-instance-types", permitted("lambda-instance-types")]]) });
     expect(a.p2).toBe(true);
   });
 
@@ -147,14 +148,14 @@ describe("Lambda adapter", () => {
     const ctx = normalizationContext({ tenancyEvidence: new Map([["lambda", LAMBDA_TENANCY_DOCUMENTED_SYNTHETIC]]) });
     const obs = lambdaAdapter.normalize(raws.find((r) => r.sourceNativeProductId === "gpu_1x_h100_sxm5" && r.nativeRegion === "europe-central-1")!, retrieval, ctx);
     expect(obs).toMatchObject({ availabilityState: "sold_out", canonicalRegionCode: "DE", observationType: "advertised_non_accessible_price" });
-    const a = assessEligibility(obs, { calculationDate: D, registry: new Map([["lambda-instance-types", permitted("lambda-instance-types")]]) });
+    const a = assessEligibility(obs, { calculationDate: D, entities: ENTITY_MAP, registry: new Map([["lambda-instance-types", permitted("lambda-instance-types")]]) });
     expect(a.exclusions).toContain("UNAVAILABLE");
   });
 
   it("excludes the GH200 type as wrong hardware", () => {
     const obs = lambdaAdapter.normalize(raws.find((r) => r.sourceNativeProductId === "gpu_1x_gh200")!, retrieval, normalizationContext());
     expect(identifyLambdaInstance("1x GH200 (96 GB)", "GH200 (96 GB)").model).toBe("GH200");
-    const a = assessEligibility(obs, { calculationDate: D, registry: new Map([["lambda-instance-types", permitted("lambda-instance-types")]]) });
+    const a = assessEligibility(obs, { calculationDate: D, entities: ENTITY_MAP, registry: new Map([["lambda-instance-types", permitted("lambda-instance-types")]]) });
     expect(a.exclusions).toContain("WRONG_HARDWARE");
   });
 });

@@ -15,10 +15,10 @@ begin
   -- Legal entities with legal names, seller roles only.
   select count(*) into n from reference.market_entities where slug in ('runpod', 'lambda') and legal_name is not null;
   if n <> 2 then raise exception 'expected two seller legal entities, found %', n; end if;
-  select count(*) into n from reference.entity_roles where role = 'seller';
-  if n <> 2 then raise exception 'expected two seller roles, found %', n; end if;
-  select count(*) into n from reference.entity_roles where role <> 'seller';
-  if n <> 0 then raise exception 'a non-seller role was seeded'; end if;
+  select count(*) into n from reference.entity_roles r join reference.market_entities e on e.id = r.entity_id where r.role = 'seller' and e.slug in ('runpod', 'lambda');
+  if n <> 2 then raise exception 'expected two seller roles for the direct candidates, found %', n; end if;
+  select count(*) into n from reference.entity_roles where role not in ('seller', 'marketplace');
+  if n <> 0 then raise exception 'an operator role was seeded'; end if;
   select count(*) into n from reference.market_entities where controlling_entity_id is not null;
   if n <> 0 then raise exception 'common control was seeded without evidence'; end if;
 
@@ -49,11 +49,11 @@ begin
   select count(*) into n from reference.canonical_regions;
   if n <> 5 then raise exception 'expected 5 canonical countries, found %', n; end if;
 
-  -- Nothing permissive or dynamic.
-  select count(*) into n from reference.permission_grants;
-  if n <> 0 then raise exception 'a permission grant exists'; end if;
-  select count(*) into n from reference.source_interfaces where production_access_state = 'production_approved';
-  if n <> 0 then raise exception 'a source is production-approved'; end if;
+  -- Nothing permissive or dynamic for the direct interfaces.
+  select count(*) into n from reference.permission_grants g where g.source_interface_id in (runpod_iface, lambda_iface);
+  if n <> 0 then raise exception 'a permission grant exists for a direct interface'; end if;
+  select count(*) into n from reference.source_interfaces where production_access_state = 'production_approved' and id in (runpod_iface, lambda_iface);
+  if n <> 0 then raise exception 'a direct interface is production-approved'; end if;
   select count(*) into n from pipeline.observation_evidence;
   if n <> 0 then raise exception 'tenancy or other evidence rows exist without an observation'; end if;
 

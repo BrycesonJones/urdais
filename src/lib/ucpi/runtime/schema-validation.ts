@@ -5,6 +5,7 @@
  */
 
 import type { LambdaInstanceTypesResponse } from "@/lib/ucpi/adapters/lambda";
+import type { PocPricesResponse } from "@/lib/ucpi/adapters/price-of-compute";
 import type { RunpodCatalogResponse } from "@/lib/ucpi/adapters/runpod";
 import { SchemaDriftError } from "@/lib/ucpi/runtime/http";
 
@@ -78,4 +79,32 @@ export function validateLambdaInstanceTypes(json: unknown): LambdaInstanceTypesR
     });
   }
   return json as LambdaInstanceTypesResponse;
+}
+
+export function validatePocPrices(json: unknown): PocPricesResponse {
+  expect(isRecord(json), "$", "expected an object");
+  const o = json as Record<string, unknown>;
+  expect(typeof o.sku === "string" && o.sku.length > 0, "$.sku", "expected a non-empty string");
+  expect(typeof o.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(o.day), "$.day", "expected YYYY-MM-DD");
+  expect(isRecord(o.prices), "$.prices", "expected an object keyed by pricing type");
+  for (const [k, v] of Object.entries(o.prices as Record<string, unknown>)) {
+    expect(isRecord(v), `$.prices.${k}`, "expected an object");
+    const t = v as Record<string, unknown>;
+    expect(typeof t.usd_per_gpu_hr === "number" && t.usd_per_gpu_hr >= 0, `$.prices.${k}.usd_per_gpu_hr`, "expected a non-negative number");
+    expect(typeof t.providers === "number", `$.prices.${k}.providers`, "expected a number");
+  }
+  expect(Array.isArray(o.providers), "$.providers", "expected an array of provider rows");
+  (o.providers as unknown[]).forEach((r, i) => {
+    const q = `$.providers[${i}]`;
+    expect(isRecord(r), q, "expected an object");
+    const row = r as Record<string, unknown>;
+    expect(typeof row.provider === "string" && row.provider.length > 0, `${q}.provider`, "expected a non-empty string");
+    expect(typeof row.pricing_type === "string", `${q}.pricing_type`, "expected a string");
+    expect(typeof row.usd_per_gpu_hr === "number" && row.usd_per_gpu_hr > 0, `${q}.usd_per_gpu_hr`, "expected a positive number");
+    expect(row.region === null || typeof row.region === "string", `${q}.region`, "expected a string or null");
+    expect(typeof row.observed_at === "string" && !Number.isNaN(Date.parse(row.observed_at)), `${q}.observed_at`, "expected an ISO timestamp");
+  });
+  expect(typeof o.updated_at === "string", "$.updated_at", "expected a string");
+  expect(typeof o.attribution === "string" && /Price of Compute/.test(o.attribution), "$.attribution", "expected the attribution string");
+  return json as PocPricesResponse;
 }
