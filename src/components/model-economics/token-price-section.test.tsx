@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/components/charts/detailed-market-chart", () => ({ DetailedMarketChart: () => null }));
 
 import { TokenPriceSection } from "@/components/model-economics/token-price-section";
+import { TOKEN_BENCHMARK_PENDING_NOTE } from "@/lib/tokens/read/benchmark";
 import { MAX_COMPARISONS, useInstrumentChart } from "@/components/market-detail/use-instrument-chart";
 import { tokenInstrumentsFromSeries } from "@/lib/tokens/read/instruments";
 import { listPublicTokenSeries } from "@/lib/tokens/read/series";
@@ -47,13 +48,19 @@ describe("TokenPriceSection", () => {
     expect(screen.queryByText("Anthropic")).toBeNull();
   });
 
-  it("shows provider, model, and dimension selectors for canonical series", () => {
+  it("keeps the section and states the benchmark blocker when nothing is publishable", () => {
+    render(<TokenPriceSection instruments={[]} />);
+    expect(screen.getByRole("heading", { name: "Token Price" })).toBeInTheDocument();
+    expect(screen.getByText(TOKEN_BENCHMARK_PENDING_NOTE)).toBeInTheDocument();
+  });
+
+  it("offers one lab selector and no model, dimension or cache menus", () => {
     render(<TokenPriceSection instruments={fiveSeries()} />);
-    expect(screen.getByRole("button", { name: /Provider/ })).toHaveTextContent("Anthropic");
-    expect(screen.getByRole("button", { name: /Model/ })).toHaveTextContent("Claude Fable 5.1");
-    expect(screen.getByRole("button", { name: /Pricing dimension/ })).toHaveTextContent("Input");
-    expect(screen.getByText("$10.00")).toBeInTheDocument();
-    expect(screen.getByText("per 1M input tokens")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Provider/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Model/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Pricing dimension/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Cache/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Service tier|Context/ })).toBeNull();
   });
 });
 

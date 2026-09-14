@@ -3,7 +3,6 @@
 import Link from "next/link";
 
 import { MultiSelectMenu, SELECTOR_FOCUS, SELECTOR_SURFACE, SelectMenu } from "@/components/market-detail/select-menu";
-import { TokenSeriesSelectors } from "@/components/market-detail/token-series-selectors";
 import type { MarketDetail, MarketFamily, MarketInstrumentDetail } from "@/types/market";
 
 type MarketSelectorsProps = {
@@ -40,12 +39,10 @@ export function MarketSelectors({
   onClearComparisons,
 }: MarketSelectorsProps) {
   const showFamilies = market.families.length > 1;
-  const isTokens = family.id === "tokens";
-  const showTokenSelectors = isTokens && Boolean(instrument?.tokenIdentity) && family.instruments.length > 0;
-  const showInstruments = !isTokens && family.instruments.length > 1;
+  const showInstruments = family.instruments.length > 1;
   const comparisons = instrument?.comparisons ?? [];
   const showComparison = comparisons.length > 0;
-  const showPrimary = showFamilies || showInstruments || showTokenSelectors;
+  const showPrimary = showFamilies || showInstruments;
 
   if (!showPrimary && !showComparison && !family.explore) return null;
 
@@ -82,10 +79,6 @@ export function MarketSelectors({
                 );
               })}
             </div>
-          )}
-
-          {showTokenSelectors && instrument && (
-            <TokenSeriesSelectors instruments={family.instruments} instrument={instrument} onInstrumentChange={onInstrumentChange} />
           )}
 
           {showInstruments && (

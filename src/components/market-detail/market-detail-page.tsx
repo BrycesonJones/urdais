@@ -8,6 +8,7 @@ import { MarketSelectors } from "@/components/market-detail/market-selectors";
 import { PeriodPerformance } from "@/components/market-detail/period-performance";
 import { MAX_COMPARISONS, useInstrumentChart } from "@/components/market-detail/use-instrument-chart";
 import { findInstrument, findInstrumentById, findMarketOfInstrument } from "@/data/mock/market-detail";
+import { TOKEN_BENCHMARK_PENDING_NOTE } from "@/lib/tokens/read/benchmark";
 import type { MarketDetail, MarketFamily, MarketInstrumentDetail } from "@/types/market";
 
 function familyOf(market: MarketDetail, instrumentId: string): MarketFamily | undefined {
@@ -60,7 +61,13 @@ export function MarketDetailPage({
       <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-6 text-neutral-50 sm:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-screen-2xl">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-            <MarketHeader market={market} instrument={null} emptyFamilyLabel={family.label} researchPreview={false} />
+            <MarketHeader
+              market={market}
+              instrument={null}
+              emptyFamilyLabel={family.label}
+              emptyNote={family.id === "tokens" ? TOKEN_BENCHMARK_PENDING_NOTE : undefined}
+              researchPreview={false}
+            />
             <MarketSelectors
               market={market}
               family={family}

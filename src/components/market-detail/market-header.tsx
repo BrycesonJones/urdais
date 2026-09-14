@@ -9,6 +9,8 @@ type MarketHeaderProps = {
   instrument: MarketInstrumentDetail | null;
   /** Family label used when the selected family has no instruments yet. */
   emptyFamilyLabel?: string;
+  /** One line saying why a family that exists has nothing to publish yet. */
+  emptyNote?: string;
   /** Server-computed Wave-1 research-preview flag. Never true in production. */
   researchPreview?: boolean;
 };
@@ -24,13 +26,14 @@ type MarketHeaderProps = {
  * returns live under the chart. Percentage change is withheld when the
  * series has no prior comparable observation.
  */
-export function MarketHeader({ market, instrument, emptyFamilyLabel, researchPreview = false }: MarketHeaderProps) {
+export function MarketHeader({ market, instrument, emptyFamilyLabel, emptyNote, researchPreview = false }: MarketHeaderProps) {
   if (!instrument) {
     return (
       <div className="min-w-0">
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-50 md:text-3xl">
           {emptyFamilyLabel ?? market.symbol}
         </h1>
+        {emptyNote && <p className="mt-2 max-w-2xl text-sm text-neutral-400">{emptyNote}</p>}
       </div>
     );
   }

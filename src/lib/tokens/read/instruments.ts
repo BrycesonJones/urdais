@@ -3,6 +3,11 @@
  * History is the recorded observations only; no synthetic daily or intraday
  * points. Percentage change is already withheld by the read model when a
  * series has a single observation.
+ *
+ * This is a mapper, not a publication policy. One canonical series becomes
+ * one instrument shape. Whether any of them may be shown as a product market
+ * is decided at the publication boundary in load.ts, which withholds every
+ * token market while the lab-level benchmark is undefined.
  */
 
 import { availableRanges } from "@/lib/market-ranges";

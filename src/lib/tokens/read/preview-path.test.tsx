@@ -9,7 +9,9 @@ import { findMarket } from "@/data/mock/market-detail";
 import { seedWave1ResearchPreview, seedWave1ResearchPreviewDatabase } from "@/lib/tokens/preview-seed";
 import { validatePublicTokenPricesResponse } from "@/lib/tokens/read/api-contract";
 import { WAVE1_MODELS, WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
+import { TOKEN_BENCHMARK_PENDING_NOTE } from "@/lib/tokens/read/benchmark";
 import { tokenInstrumentsFromSeries, withTokenInstruments } from "@/lib/tokens/read/instruments";
+import { tokenVerificationReports } from "@/lib/tokens/read/verification";
 import { tokenReadCatalogFromStore, visibleTokenPricesResponse } from "@/lib/tokens/read/load";
 import {
   isProductionRuntime,
@@ -239,35 +241,38 @@ describe("research-preview mode cannot activate in production", () => {
 });
 
 describe("Tokens and Model Economics preview UI", () => {
-  it("renders Wave-1 providers, models, and fixture prices on Tokens", () => {
-    const instruments = tokenInstrumentsFromSeries(listVisibleTokenSeries(previewCatalog(), "research_preview"));
-    expect(instruments.every((row) => row.tokenIdentity)).toBe(true);
-    expect(instruments.some((row) => row.id === "tokens-anthropic" || row.shortLabel === "Anthropic")).toBe(false);
+  it("ingests Wave-1 canonical observations for every provider, without publishing a market", () => {
+    const series = listVisibleTokenSeries(previewCatalog(), "research_preview");
+    expect(series.length).toBeGreaterThan(0);
+    const reports = tokenVerificationReports(series);
+    expect(reports.map((row) => row.providerSlug).sort()).toEqual(["anthropic", "openai", "xai"]);
+    expect(reports.every((row) => row.models > 0 && row.observations > 0)).toBe(true);
+    // Recorded observations only: one point per series, no synthetic intraday.
+    const instruments = tokenInstrumentsFromSeries(series);
     expect(instruments.every((row) => row.series.daily.length === 1 && row.series.intraday.length === 0)).toBe(true);
-    const market = withTokenInstruments(findMarket("ucpi")!, instruments);
-    render(<MarketDetailPage market={market} researchPreview={true} />);
-    fireEvent.click(screen.getByRole("button", { name: "Tokens" }));
-    expect(screen.getByText("Research preview")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Provider/ })).toHaveTextContent("Anthropic");
-    fireEvent.click(screen.getByRole("button", { name: /Provider/ }));
-    expect(screen.getByRole("option", { name: "xAI" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "OpenAI" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Model/ })).toHaveTextContent("Claude Fable 5.1");
-    expect(screen.getByText("$10.00")).toBeInTheDocument();
-    expect(screen.queryByText("$9.00")).toBeNull();
-    expect(screen.queryByText("Demo data")).toBeNull();
+    expect(instruments.some((row) => row.id === "tokens-anthropic" || row.shortLabel === "Anthropic")).toBe(false);
   });
 
-  it("renders the Model Economics Token Price section from preview observations", () => {
-    const instruments = tokenInstrumentsFromSeries(listVisibleTokenSeries(previewCatalog(), "research_preview"));
-    render(<TokenPriceSection instruments={instruments} researchPreview={true} />);
-    expect(screen.getByRole("heading", { name: "Token Price" })).toBeInTheDocument();
-    expect(screen.getByText("Research preview")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Provider/ })).toHaveTextContent("Anthropic");
-    expect(screen.getByRole("button", { name: /Model/ })).toHaveTextContent("Claude Fable 5.1");
-    expect(screen.getByText("$10.00")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Compare with/ })).toBeInTheDocument();
+  it("shows the Tokens family with the benchmark blocker and no model or dimension menus", () => {
+    const market = withTokenInstruments(findMarket("ucpi")!, []);
+    render(<MarketDetailPage market={market} researchPreview={true} />);
+    fireEvent.click(screen.getByRole("button", { name: "Tokens" }));
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Tokens");
+    expect(screen.getByText(TOKEN_BENCHMARK_PENDING_NOTE)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Model/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Pricing dimension/ })).toBeNull();
+    expect(screen.queryByText(/· Input$/)).toBeNull();
+    expect(screen.queryByText("per 1M input tokens")).toBeNull();
+    expect(screen.queryByText("Demo data")).toBeNull();
     expect(screen.queryByText("$9.00")).toBeNull();
+  });
+
+  it("keeps the Model Economics Token Price section rendered with the blocker rather than pricing controls", () => {
+    render(<TokenPriceSection instruments={[]} researchPreview={true} />);
+    expect(screen.getByRole("heading", { name: "Token Price" })).toBeInTheDocument();
+    expect(screen.getByText(TOKEN_BENCHMARK_PENDING_NOTE)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Model/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Pricing dimension/ })).toBeNull();
   });
 
   it("does not show the research-preview indicator when the flag is off", () => {

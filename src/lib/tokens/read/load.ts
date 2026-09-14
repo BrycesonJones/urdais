@@ -7,6 +7,7 @@
  */
 
 import { WAVE1_MODELS, WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
+import { tokenBenchmarkIsDefined } from "@/lib/tokens/read/benchmark";
 import { tokenInstrumentsFromSeries, withTokenInstruments } from "@/lib/tokens/read/instruments";
 import { publicTokenPricesResponse, type PublicTokenPricesResponse } from "@/lib/tokens/read/api-contract";
 import { tokenVisibilityMode, type ProcessEnvLike } from "@/lib/tokens/read/publication";
@@ -50,7 +51,19 @@ export function visibleTokenPricesResponse(
   return publicTokenPricesResponse(listVisibleTokenSeries(catalog, tokenVisibilityMode(env)));
 }
 
+/**
+ * Token markets for a product surface.
+ *
+ * The product publishes one token price per lab. Deriving that from a lab's
+ * canonical input, output and cache prices is a methodology decision Urdais
+ * has not taken, so while the benchmark is undefined this returns nothing and
+ * the Tokens family renders as a family with no published market. It does not
+ * promote one pricing dimension, average dimensions, or fall back to the
+ * retired demo series. Canonical observations remain readable through
+ * `visibleTokenPricesResponse` and the verification path.
+ */
 export async function loadVisibleTokenInstruments(env: ProcessEnvLike = process.env): Promise<MarketInstrumentDetail[]> {
+  if (!tokenBenchmarkIsDefined()) return [];
   const catalog = await loadTokenReadCatalog(env);
   return tokenInstrumentsFromSeries(listVisibleTokenSeries(catalog, tokenVisibilityMode(env)));
 }

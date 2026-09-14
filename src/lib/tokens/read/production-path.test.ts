@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -23,7 +23,6 @@ const PRODUCTION_TOKEN_PATHS = [
   "src/components/market-detail/market-detail-page.tsx",
   "src/components/market-detail/market-header.tsx",
   "src/components/market-detail/market-selectors.tsx",
-  "src/components/market-detail/token-series-selectors.tsx",
   "src/components/model-economics/token-price-section.tsx",
   "src/data/mock/market-detail.ts",
   "src/lib/tokens/read/load.ts",
@@ -38,6 +37,13 @@ const PRODUCTION_TOKEN_PATHS = [
 ];
 
 describe("production Tokens path", () => {
+  it("has no provider/model/pricing-dimension cascade component", () => {
+    expect(existsSync(path.join(ROOT, "src/components/market-detail/token-series-selectors.tsx"))).toBe(false);
+    for (const file of PRODUCTION_TOKEN_PATHS) {
+      expect(readSrc(file), file).not.toMatch(/TokenSeriesSelectors/);
+    }
+  });
+
   it("does not import demo token pricing", () => {
     for (const file of PRODUCTION_TOKEN_PATHS) {
       const source = readSrc(file);

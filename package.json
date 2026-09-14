@@ -2,7 +2,7 @@
   "name": "urdais",
   "version": "0.1.0",
   "private": true,
-  "description": "Urdais — an information and market-data platform for the Information Age.",
+  "description": "Urdais \u2014 an information and market-data platform for the Information Age.",
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
@@ -26,7 +26,8 @@
     "db:replay": "scripts/db/local.sh replay",
     "db:types": "scripts/db/local.sh types",
     "db:check-types": "scripts/db/local.sh check-types",
-    "db:ci": "scripts/db/local.sh ci"
+    "db:ci": "scripts/db/local.sh ci",
+    "tokens:verify": "tsx scripts/tokens/verify.ts"
   },
   "dependencies": {
     "github-slugger": "^2.0.0",
