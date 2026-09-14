@@ -15,6 +15,7 @@ declare
   -- countries, product identifiers, evidenced region mappings). Those tables are checked in
   -- 140_provider_reference_data.sql; everything observed or permissive must still be empty.
   must_be_empty text[] := array[
+    'reference.models', 'reference.model_aliases',
     'pipeline.source_retrievals', 'pipeline.raw_offers', 'pipeline.normalized_observations',
     'pipeline.observation_evidence', 'pipeline.eligibility_assessments',
     'pipeline.eligibility_exclusions', 'pipeline.eligibility_diagnostics',
@@ -22,7 +23,8 @@ declare
     'pipeline.calculation_runs', 'pipeline.seller_observations', 'pipeline.seller_observation_candidates',
     'pipeline.capacity_source_observations', 'pipeline.capacity_source_members',
     'pipeline.regional_observations', 'pipeline.regional_observation_participants',
-    'pipeline.regional_publications'
+    'pipeline.regional_publications',
+    'pipeline.token_price_observations'
   ];
 begin
   foreach tbl in array must_be_empty loop

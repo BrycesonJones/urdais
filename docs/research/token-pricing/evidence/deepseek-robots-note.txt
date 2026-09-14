@@ -1,0 +1,1 @@
+HTTP 200 from https://api-docs.deepseek.com/robots.txt on 2026-09-14 returned the Docusaurus homepage HTML, not a robots.txt document.
