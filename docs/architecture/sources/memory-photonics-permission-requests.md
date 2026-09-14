@@ -309,6 +309,52 @@ Urdais · https://urdais.com
 
 ---
 
+## 9. ICCSZ (讯石光通讯网) — automated retrieval of the news index, for discovery only
+
+**To:** none published · **UNVERIFIED.** Only `0755-82960080` was located, and it is the 企联荟 membership line. Recipient status: **not ready to send — no address, and one prerequisite outstanding.**
+
+**Two prerequisites, both blocking.**
+
+1. **Read `https://iccsz.com/robots.txt` in a browser on an unfiltered connection.** It was never read during the study behind `docs/research/photonics-pricing/iccsz-tender-pricing.md` — the domain did not resolve from that environment, so nothing at all was fetched from it. If the file names ClaudeBot, Claude-Web, Claude-User or anthropic-ai, **say so in the first paragraph**, exactly as the Omdia and LightCounting drafts above do.
+2. **Retrieve an email address from the domain.** Do not guess one and do not take one from an aggregator.
+
+**Why this ask is unusually small.** Urdais does not want to license ICCSZ's content. The tender facts it reports are compelled public disclosure by China Mobile, China Telecom and China Unicom under 《招标投标法实施条例》第五十四条, and they belong to the buyer's notice rather than to the outlet reporting it. What Urdais would want is only to *read the index* in order to learn that an award happened, and then go to the primary notice. Ask for that, and nothing more. Asking for a content licence here would be asking for the wrong thing and would probably get a deserved no.
+
+**Subject:** 关于自动检索贵网新闻索引的许可咨询 / Permission enquiry — automated retrieval of the ICCSZ news index
+
+您好，
+
+Urdais 正在为信息时代建设市场数据与指数产品，涵盖算力、AI 模型经济、存储、光通信、能源及相关基础设施。我们公开发布每一项指数背后的方法论。
+
+Urdais is building market data and indices for the Information Age, covering compute, AI model economics, memory, photonics, energy, and related infrastructure, and we publish the methodology behind every figure openly.
+
+我们希望咨询一个范围很小的问题。
+
+**我们想做的事。** 定期读取讯石光通讯网的新闻索引与检索页面，用于**发现**运营商集采（招标公告、中标候选人公示）的发生时间与项目名称。发现之后，我们会前往采购人自己的官方采购平台获取原始公告，并以该原始公告作为唯一的数据来源。
+
+**我们不想做的事。** 我们不打算转载贵网的文章，不打算使用贵网的分析、月报或产研院报告，也不打算把贵网内容作为价格数据的来源。我们理解这些属于贵公司的版权内容与会员权益。
+
+**因此我们要问的是：**
+
+- 贵网是否允许自动化程序按合理频率读取新闻列表页与检索结果页，仅用于发现文章标题、日期与链接？
+- 如果允许，贵网希望的访问频率、时段或 User-Agent 标识是什么？
+- 在我们发布的方法论文档中提及"通过讯石光通讯网发现该次集采公告"是否需要贵方书面许可？如需要，希望使用何种措辞？
+- 若贵网 robots.txt 已明确禁止此类访问，请直接告知，我们会遵守并停止。
+
+In short: may an automated client read your news listing and search pages at a modest rate, solely to discover article titles, dates and links, so that we can then go to the buyer's own procurement portal for the underlying notice? We would not reproduce your articles, would not use your analysis, monthly reports or 产研院 research, and would not treat your content as a price data source. We would also like to know whether crediting ICCSZ as the discovery route in our published methodology requires your written permission, and in what wording.
+
+在收到贵方明确答复之前，我们不会进行任何自动化访问。如果答复是"不可以"，那也是一个完整的答复，我们会记录并停止。
+
+We will not retrieve anything before you tell us it is permitted. If the answer is no, that is a complete answer and we will record it and stop.
+
+顺颂商祺。
+
+[Sender name]
+Urdais · https://urdais.com
+[Reply address — must match the sending account]
+
+---
+
 ## Sending checklist
 
 | # | Provider | Recipient | Ready to send? |
@@ -321,5 +367,6 @@ Urdais · https://urdais.com
 | 6 | Cignal AI | none published | **No** — channel decision needed (web form or LinkedIn) |
 | 7 | FS.com | none published | **No** — channel decision needed (web form or LinkedIn) |
 | 8 | US Census | `eid.international.trade.data@census.gov` | **Yes** — verified, and optional |
+| 9 | ICCSZ (讯石) | none published | **No** — no address, and `iccsz.com/robots.txt` must be read in a browser first |
 
 Korea Customs, and the Micron / SK hynix / Nanya / Accelink / Innolight / Eoptolink filings, have no draft because they need no permission ask. The open question on Korea Customs is reading its copyright policy, not writing to anyone.
