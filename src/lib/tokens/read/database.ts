@@ -9,6 +9,7 @@
 import pg from "pg";
 
 import { isProductionRuntime, type ProcessEnvLike } from "@/lib/tokens/read/publication";
+import { loadPersistedBenchmarks, type PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
 import { loadTokenReadCatalogFromSql, type TokenSqlExecutor } from "@/lib/tokens/read/sql";
 import type { TokenReadCatalog } from "@/lib/tokens/read/series";
 
@@ -85,6 +86,23 @@ export async function createTokenSqlExecutor(url: string): Promise<TokenSqlExecu
       await client.end();
     },
   };
+}
+
+/** Frozen Urdais Token Price rows, the authoritative history once written. */
+export async function loadFrozenBenchmarksFromDatabase(
+  env: ProcessEnvLike = process.env,
+): Promise<PersistedBenchmarkRow[] | null> {
+  const allowLocalDefault = env.NODE_ENV === "development";
+  const url = resolveTokenDatabaseUrl(env, { allowLocalDefault });
+  if (!url) return null;
+  try {
+    const sql = await tokenSqlExecutor(url);
+    return await loadPersistedBenchmarks(sql);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.warn(`token benchmarks: database unavailable (${detail}); falling back to calculation`);
+    return null;
+  }
 }
 
 export async function loadTokenReadCatalogFromDatabase(

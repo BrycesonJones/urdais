@@ -118,6 +118,25 @@ export function listVisibleTokenSeries(catalog: TokenReadCatalog, mode: TokenVis
   return series.sort(compareSeriesIdentity);
 }
 
+/**
+ * Which canonical observation produced each point of each series, keyed
+ * `seriesId|time`. Internal: observation ids are lineage, never public. A
+ * frozen benchmark records the two rows it consumed, so the value stays
+ * explicable if a leg is later superseded.
+ */
+export function legObservationIndex(catalog: TokenReadCatalog, mode: TokenVisibilityMode): Map<string, string> {
+  const retrievals = new Map(catalog.retrievals.map((row) => [row.id, row]));
+  const sources = new Map(catalog.sourceInterfaces.map((row) => [row.id, row]));
+  const models = new Map(catalog.models.map((row) => [modelKey(row.providerSlug, row.providerModelId), row]));
+  const index = new Map<string, string>();
+  for (const observation of catalog.observations) {
+    if (!observationIsVisible(observation, retrievals.get(observation.retrievalId), sources.get(observation.sourceInterfaceId), mode)) continue;
+    if (!models.has(modelKey(observation.providerSlug, observation.providerModelId))) continue;
+    index.set(`${tokenSeriesId(observation)}|${observation.retrievedAt}`, observation.id);
+  }
+  return index;
+}
+
 /** Production publication filter. Research observations are excluded. */
 export function listPublicTokenSeries(catalog: TokenReadCatalog): PublicTokenSeries[] {
   return listVisibleTokenSeries(catalog, "production");

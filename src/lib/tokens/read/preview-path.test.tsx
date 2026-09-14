@@ -63,14 +63,17 @@ function interfaceRows() {
 function memorySql(): TokenSqlExecutor & {
   retrievals: Map<string, unknown[]>;
   observations: Map<string, unknown[]>;
+  benchmarks: Map<string, unknown[]>;
   statements: string[];
 } {
   const retrievals = new Map<string, unknown[]>();
   const observations = new Map<string, unknown[]>();
+  const benchmarks = new Map<string, unknown[]>();
   const statements: string[] = [];
   return {
     retrievals,
     observations,
+    benchmarks,
     statements,
     async query(text, params) {
       statements.push(text);
@@ -146,6 +149,35 @@ function memorySql(): TokenSqlExecutor & {
                 source_interface_slug: source?.slug,
               };
             }),
+        };
+      }
+      if (sql.includes("INSERT INTO pipeline.token_price_benchmarks")) {
+        // Idempotent by lineage, exactly as the unique index makes it in Postgres.
+        const key = [params[0], params[1], params[2], params[6] ?? "", params[7] ?? ""].join("|");
+        if (benchmarks.has(key)) return { rows: [] };
+        benchmarks.set(key, [...params]);
+        return { rows: [{ id: `bench-${benchmarks.size}` }] };
+      }
+      if (sql.includes("FROM pipeline.token_price_benchmarks")) {
+        return {
+          rows: [...benchmarks.entries()].map(([key, row], index) => ({
+            id: `bench-${index + 1}`,
+            provider_slug: row[0],
+            methodology_version: row[1],
+            provider_model_id: row[2],
+            display_name: String(row[2]),
+            calculation_status: row[3],
+            withheld_reason: row[4],
+            price_usd_per_1m: row[5],
+            input_observation_id: row[6],
+            output_observation_id: row[7],
+            input_price_usd_per_1m: row[8],
+            output_price_usd_per_1m: row[9],
+            input_observed_at: row[10],
+            output_observed_at: row[11],
+            calculated_at: row[12],
+            lineage_key: key,
+          })),
         };
       }
       throw new Error(`unexpected SQL: ${sql}`);

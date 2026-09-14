@@ -41,6 +41,7 @@ import {
 import { providerDisplayName } from "@/lib/tokens/read/labels";
 
 export type BenchmarkPoint = {
+  providerSlug: string;
   /** The later of the two leg observation times used. A real source timestamp. */
   time: string;
   priceUsdPer1m: number;
@@ -50,6 +51,11 @@ export type BenchmarkPoint = {
   /** The leg observations that produced it, for lineage and verification. */
   inputAt: string;
   outputAt: string;
+  inputPriceUsdPer1m: number;
+  outputPriceUsdPer1m: number;
+  /** Canonical observation ids when a lineage index was supplied; null otherwise. */
+  inputObservationId: string | null;
+  outputObservationId: string | null;
 };
 
 export type BenchmarkCurrentStatus =
@@ -65,7 +71,10 @@ export type ProviderBenchmark = {
   current: BenchmarkCurrentStatus;
 };
 
-type LegPoint = { time: string; price: number };
+type LegPoint = { time: string; price: number; observationId: string | null };
+
+/** `seriesId|time` to canonical observation id, so a frozen point names its legs. */
+export type LegLineageIndex = ReadonlyMap<string, string>;
 
 function dayOf(iso: string): string {
   return iso.slice(0, 10);
@@ -77,12 +86,18 @@ function percentageChange(previous: number, current: number): number | null {
 }
 
 /** Every observation of one leg, in time order, deduplicated by timestamp. */
-function legPoints(series: readonly PublicTokenSeries[]): LegPoint[] {
-  const byTime = new Map<string, number>();
+function legPoints(series: readonly PublicTokenSeries[], lineage?: LegLineageIndex): LegPoint[] {
+  const byTime = new Map<string, LegPoint>();
   for (const row of series) {
-    for (const point of row.history) byTime.set(point.time, point.priceUsdPer1m);
+    for (const point of row.history) {
+      byTime.set(point.time, {
+        time: point.time,
+        price: point.priceUsdPer1m,
+        observationId: lineage?.get(`${row.seriesId}|${point.time}`) ?? null,
+      });
+    }
   }
-  return [...byTime.entries()].map(([time, price]) => ({ time, price })).sort((a, b) => a.time.localeCompare(b.time));
+  return [...byTime.values()].sort((a, b) => a.time.localeCompare(b.time));
 }
 
 /** The newest leg value at or before a moment; undefined when the leg was not yet known. */
@@ -107,6 +122,7 @@ function segmentPoints(
   inputs: readonly LegPoint[],
   outputs: readonly LegPoint[],
   benchmarkModelName: string,
+  providerSlug: string,
 ): BenchmarkPoint[] {
   const events = [...new Set([...inputs, ...outputs].map((point) => point.time))]
     .filter((time) => dayOf(time) >= from && (until === null || dayOf(time) < until))
@@ -131,6 +147,7 @@ function segmentPoints(
       continue;
     }
     points.push({
+      providerSlug,
       // The later of the two legs used is the moment both supported this value.
       time: input.time.localeCompare(output.time) >= 0 ? input.time : output.time,
       priceUsdPer1m: price,
@@ -139,16 +156,20 @@ function segmentPoints(
       methodologyVersion: methodology.version,
       inputAt: input.time,
       outputAt: output.time,
+      inputPriceUsdPer1m: input.price,
+      outputPriceUsdPer1m: output.price,
+      inputObservationId: input.observationId,
+      outputObservationId: output.observationId,
     });
   }
   return points;
 }
 
-function legsFor(series: readonly PublicTokenSeries[], constituent: TokenBenchmarkConstituent) {
+function legsFor(series: readonly PublicTokenSeries[], constituent: TokenBenchmarkConstituent, lineage?: LegLineageIndex) {
   const eligible = series.filter((row) => isEligibleLeg(row, constituent));
   return {
-    inputs: legPoints(eligible.filter((row) => row.pricingDimension === "input")),
-    outputs: legPoints(eligible.filter((row) => row.pricingDimension === "output")),
+    inputs: legPoints(eligible.filter((row) => row.pricingDimension === "input"), lineage),
+    outputs: legPoints(eligible.filter((row) => row.pricingDimension === "output"), lineage),
     displayName: eligible[0]?.displayName ?? constituent.providerModelId,
   };
 }
@@ -178,6 +199,7 @@ export function providerBenchmark(
   providerSlug: string,
   series: readonly PublicTokenSeries[],
   onDate: string,
+  lineage?: LegLineageIndex,
 ): ProviderBenchmark {
   const providerName = providerDisplayName(providerSlug);
   const current = currentStatus(providerSlug, series, onDate);
@@ -185,9 +207,9 @@ export function providerBenchmark(
   const points: BenchmarkPoint[] = [];
   for (const segment of constituentSegments(providerSlug)) {
     if (segment.from > onDate) continue;
-    const { inputs, outputs, displayName } = legsFor(series, segment.constituent);
+    const { inputs, outputs, displayName } = legsFor(series, segment.constituent, lineage);
     const until = segment.until === null ? null : segment.until;
-    points.push(...segmentPoints(segment.constituent, segment.from, until, inputs, outputs, displayName));
+    points.push(...segmentPoints(segment.constituent, segment.from, until, inputs, outputs, displayName, providerSlug));
   }
   points.sort((a, b) => a.time.localeCompare(b.time));
 
@@ -226,8 +248,30 @@ export function providerBenchmark(
 export function providerBenchmarks(
   series: readonly PublicTokenSeries[],
   onDate: string = new Date().toISOString().slice(0, 10),
+  lineage?: LegLineageIndex,
 ): ProviderBenchmark[] {
-  return benchmarkProviders().map((provider) => providerBenchmark(provider, series, onDate));
+  return benchmarkProviders().map((provider) => providerBenchmark(provider, series, onDate, lineage));
+}
+
+/**
+ * Every calculation point across every provider, with lineage. This is what a
+ * freeze writes; the engine stays the calculator and the frozen rows become
+ * the authoritative history.
+ */
+export function benchmarkPoints(
+  series: readonly PublicTokenSeries[],
+  onDate: string = new Date().toISOString().slice(0, 10),
+  lineage?: LegLineageIndex,
+): BenchmarkPoint[] {
+  const points: BenchmarkPoint[] = [];
+  for (const provider of benchmarkProviders()) {
+    for (const segment of constituentSegments(provider)) {
+      if (segment.from > onDate) continue;
+      const { inputs, outputs, displayName } = legsFor(series, segment.constituent, lineage);
+      points.push(...segmentPoints(segment.constituent, segment.from, segment.until, inputs, outputs, displayName, provider));
+    }
+  }
+  return points.sort((a, b) => a.time.localeCompare(b.time) || a.providerSlug.localeCompare(b.providerSlug, "en"));
 }
 
 /** Providers with a value to show, which is the last successfully calculated one. */

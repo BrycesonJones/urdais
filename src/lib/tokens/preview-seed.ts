@@ -10,6 +10,7 @@ import { loadPricingFixture } from "@/lib/tokens/fixtures";
 import { ingestTokenPricing } from "@/lib/tokens/ingest";
 import { tokenReadCatalogFromStore } from "@/lib/tokens/read/load";
 import { persistTokenReadCatalog, loadTokenReadCatalogFromSql, type TokenSqlExecutor } from "@/lib/tokens/read/sql";
+import { persistProviderBenchmarks } from "@/lib/tokens/read/benchmark-store";
 import { InMemoryTokenPricingStore, type TokenPricingStore } from "@/lib/tokens/store";
 import type { TokenIngestReport } from "@/lib/tokens/types";
 import type { TokenReadCatalog } from "@/lib/tokens/read/series";
@@ -38,6 +39,7 @@ export async function seedWave1ResearchPreviewDatabase(sql: TokenSqlExecutor): P
   reports: TokenIngestReport[];
   written: { retrievalsInserted: number; observationsInserted: number };
   catalog: TokenReadCatalog;
+  benchmarks: { inserted: number; points: unknown[] };
 }> {
   const existing = await loadTokenReadCatalogFromSql(sql);
   const store = new InMemoryTokenPricingStore(["anthropic", "xai", "openai"], {}, {
@@ -47,5 +49,7 @@ export async function seedWave1ResearchPreviewDatabase(sql: TokenSqlExecutor): P
   const reports = seedWave1ResearchPreview(store);
   const catalog = tokenReadCatalogFromStore(store);
   const written = await persistTokenReadCatalog(sql, catalog);
-  return { reports, written, catalog };
+  // Freeze the derived benchmarks too, so the preview runs the same path production will.
+  const benchmarks = await persistProviderBenchmarks(sql, catalog, "research_preview");
+  return { reports, written, catalog, benchmarks };
 }

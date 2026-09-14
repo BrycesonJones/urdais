@@ -21,6 +21,7 @@ import {
   tokenBenchmarkPrice,
 } from "@/lib/tokens/read/benchmark";
 import { providerBenchmark, providerBenchmarks, publishableBenchmarks } from "@/lib/tokens/read/benchmark-series";
+import { loadPersistedBenchmarks, persistProviderBenchmarks, persistedBenchmarks, type PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
 import { validatePublicTokenBenchmark, type PublicTokenSeries } from "@/lib/tokens/read/api-contract";
 import { benchmarkInstrumentsFromSeries } from "@/lib/tokens/read/instruments";
 import { loadVisibleTokenInstruments, tokenReadCatalogFromStore, visibleTokenBenchmarks } from "@/lib/tokens/read/load";
@@ -368,5 +369,165 @@ describe("rights gating is unchanged", () => {
     expect(visibleTokenBenchmarks(catalog, { NODE_ENV: "development" })).toHaveLength(3);
     expect(visibleTokenBenchmarks(catalog, { NODE_ENV: "production" })).toEqual([]);
     expect(await loadVisibleTokenInstruments({ NODE_ENV: "production" })).toEqual([]);
+  });
+});
+
+describe("frozen benchmark observations", () => {
+  function catalog() {
+    const store = new InMemoryTokenPricingStore();
+    seedWave1ResearchPreview(store);
+    return tokenReadCatalogFromStore(store);
+  }
+
+  /** A minimal executor with the same lineage idempotence the unique index enforces. */
+  function memoryBenchmarkSql() {
+    const rows = new Map<string, unknown[]>();
+    const statements: string[] = [];
+    return {
+      rows,
+      statements,
+      async query(text: string, params: readonly unknown[]) {
+        statements.push(text.trim().split("\n")[0]!);
+        if (/^\s*(begin|commit|rollback)\s*$/i.test(text)) return { rows: [] };
+        if (text.includes("INSERT INTO pipeline.token_price_benchmarks")) {
+          const key = [params[0], params[1], params[2], params[6] ?? "", params[7] ?? ""].join("|");
+          if (rows.has(key)) return { rows: [] };
+          rows.set(key, [...params]);
+          return { rows: [{ id: `bench-${rows.size}` }] };
+        }
+        if (text.includes("FROM pipeline.token_price_benchmarks")) {
+          return {
+            rows: [...rows.values()].map((row, index) => ({
+              id: `bench-${index + 1}`,
+              provider_slug: row[0],
+              methodology_version: row[1],
+              provider_model_id: row[2],
+              display_name: String(row[2]),
+              calculation_status: row[3],
+              withheld_reason: row[4],
+              price_usd_per_1m: row[5],
+              input_observation_id: row[6],
+              output_observation_id: row[7],
+              input_price_usd_per_1m: row[8],
+              output_price_usd_per_1m: row[9],
+              input_observed_at: row[10],
+              output_observed_at: row[11],
+              calculated_at: row[12],
+            })),
+          };
+        }
+        throw new Error(`unexpected SQL: ${text}`);
+      },
+    };
+  }
+
+  it("freezes one row per provider with its full lineage", async () => {
+    const sql = memoryBenchmarkSql();
+    const { inserted, points } = await persistProviderBenchmarks(sql, catalog(), "research_preview", TODAY);
+    expect(inserted).toBe(3);
+    expect(points).toHaveLength(3);
+    for (const point of points) {
+      expect(point.inputObservationId).toBeTruthy();
+      expect(point.outputObservationId).toBeTruthy();
+      expect(point.inputPriceUsdPer1m).toBeGreaterThan(0);
+      expect(point.outputPriceUsdPer1m).toBeGreaterThan(0);
+      expect(point.methodologyVersion).toBe("1.1");
+      expect(point.time).not.toMatch(/T00:00:00\.000Z$/);
+    }
+  });
+
+  it("is idempotent: recalculating the same state writes nothing new", async () => {
+    const sql = memoryBenchmarkSql();
+    // The same catalog, as a re-run against the database would see: the same observation rows.
+    const same = catalog();
+    const first = await persistProviderBenchmarks(sql, same, "research_preview", TODAY);
+    const second = await persistProviderBenchmarks(sql, same, "research_preview", TODAY);
+    const third = await persistProviderBenchmarks(sql, same, "research_preview", TODAY);
+    expect(first.inserted).toBe(3);
+    expect(second.inserted).toBe(0);
+    expect(third.inserted).toBe(0);
+    expect(sql.rows.size).toBe(3);
+    // Only inserts and transaction control; nothing updates a frozen row.
+    expect(sql.statements.some((row) => /^\s*UPDATE|^\s*DELETE/i.test(row))).toBe(false);
+  });
+
+  it("serves the frozen rows as the authoritative history", async () => {
+    const sql = memoryBenchmarkSql();
+    await persistProviderBenchmarks(sql, catalog(), "research_preview", TODAY);
+    const frozen = await loadPersistedBenchmarks(sql);
+    const series = persistedBenchmarks(frozen);
+    expect(series.map((row) => row.providerSlug)).toEqual(["anthropic", "openai", "xai"]);
+    expect(series.find((row) => row.providerSlug === "anthropic")!.priceUsdPer1m).toBe(30);
+    expect(series.find((row) => row.providerSlug === "xai")!.priceUsdPer1m).toBe(4);
+    for (const row of series) expect(validatePublicTokenBenchmark(JSON.parse(JSON.stringify(row)))).toEqual([]);
+  });
+
+  it("a frozen value does not change when a raw leg is later corrected", async () => {
+    const sql = memoryBenchmarkSql();
+    await persistProviderBenchmarks(sql, catalog(), "research_preview", TODAY);
+    const before = persistedBenchmarks(await loadPersistedBenchmarks(sql)).find((row) => row.providerSlug === "anthropic")!;
+    expect(before.priceUsdPer1m).toBe(30);
+
+    // The raw catalog is rebuilt with a different input price, as an upstream correction would.
+    const corrected = catalog();
+    const rewritten = {
+      ...corrected,
+      observations: corrected.observations.map((row) =>
+        row.providerModelId === "claude-fable-5-1" && row.pricingDimension === "input"
+          ? { ...row, canonicalPriceUsdPer1m: 99 }
+          : row,
+      ),
+    };
+    const recalculated = publishableBenchmarks(listVisibleTokenSeries(rewritten, "research_preview"), TODAY);
+    expect(recalculated.find((row) => row.providerSlug === "anthropic")!.priceUsdPer1m).not.toBe(30);
+
+    // The frozen record is unmoved, and reading it again returns the published number.
+    const after = persistedBenchmarks(await loadPersistedBenchmarks(sql)).find((row) => row.providerSlug === "anthropic")!;
+    expect(after.priceUsdPer1m).toBe(30);
+    expect(after.updatedAt).toBe(before.updatedAt);
+  });
+
+  it("withholds percentage change across a frozen constituent change", () => {
+    const rows: PersistedBenchmarkRow[] = [
+      {
+        id: "b1", providerSlug: "anthropic", methodologyVersion: "1.1", benchmarkModelId: "claude-fable-5-1", benchmarkModelName: "Claude Fable 5.1",
+        calculationStatus: "value", withheldReason: null, priceUsdPer1m: 30, inputObservationId: "i1", outputObservationId: "o1",
+        inputPriceUsdPer1m: 10, outputPriceUsdPer1m: 50, inputObservedAt: "2026-09-14T03:10:00Z", outputObservedAt: "2026-09-14T03:10:00Z",
+        calculatedAt: "2026-09-14T03:10:00Z",
+      },
+      {
+        id: "b2", providerSlug: "anthropic", methodologyVersion: "1.1", benchmarkModelId: "claude-fable-6", benchmarkModelName: "Claude Fable 6",
+        calculationStatus: "value", withheldReason: null, priceUsdPer1m: 36, inputObservationId: "i2", outputObservationId: "o2",
+        inputPriceUsdPer1m: 12, outputPriceUsdPer1m: 60, inputObservedAt: "2026-11-02T03:10:00Z", outputObservedAt: "2026-11-02T03:10:00Z",
+        calculatedAt: "2026-11-02T03:10:00Z",
+      },
+    ];
+    const series = persistedBenchmarks(rows)[0]!;
+    // Both points survive; the change across the boundary is withheld.
+    expect(series.history.map((point) => point.priceUsdPer1m)).toEqual([30, 36]);
+    expect(series.percentageChange).toBeNull();
+    expect(series.benchmarkModelId).toBe("claude-fable-6");
+  });
+
+  it("keeps a withheld calculation in the record without making it a point", () => {
+    const rows: PersistedBenchmarkRow[] = [
+      {
+        id: "b1", providerSlug: "xai", methodologyVersion: "1.1", benchmarkModelId: "grok-4.6", benchmarkModelName: "Grok 4.6",
+        calculationStatus: "value", withheldReason: null, priceUsdPer1m: 4, inputObservationId: "i1", outputObservationId: "o1",
+        inputPriceUsdPer1m: 2, outputPriceUsdPer1m: 6, inputObservedAt: "2026-09-14T03:10:00Z", outputObservedAt: "2026-09-14T03:10:00Z",
+        calculatedAt: "2026-09-14T03:10:00Z",
+      },
+      {
+        id: "b2", providerSlug: "xai", methodologyVersion: "1.1", benchmarkModelId: "grok-5", benchmarkModelName: "Grok 5",
+        calculationStatus: "withheld", withheldReason: "OUTPUT_LEG_UNAVAILABLE", priceUsdPer1m: null, inputObservationId: null, outputObservationId: null,
+        inputPriceUsdPer1m: null, outputPriceUsdPer1m: null, inputObservedAt: null, outputObservedAt: null,
+        calculatedAt: "2026-12-01T00:00:00Z",
+      },
+    ];
+    const series = persistedBenchmarks(rows)[0]!;
+    // Last known good survives the withheld successor.
+    expect(series.priceUsdPer1m).toBe(4);
+    expect(series.history).toHaveLength(1);
+    expect(series.updatedAt).toBe("2026-09-14T03:10:00Z");
   });
 });

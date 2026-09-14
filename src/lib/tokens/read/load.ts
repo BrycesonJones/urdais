@@ -8,6 +8,8 @@
 
 import { WAVE1_MODELS, WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
 import { publishableBenchmarks } from "@/lib/tokens/read/benchmark-series";
+import { persistedBenchmarks, type PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
+import type { PublicTokenBenchmarkSeries } from "@/lib/tokens/read/api-contract";
 import { benchmarkInstrumentsFromSeries, withTokenInstruments } from "@/lib/tokens/read/instruments";
 import { publicTokenPricesResponse, type PublicTokenPricesResponse } from "@/lib/tokens/read/api-contract";
 import { tokenVisibilityMode, type ProcessEnvLike } from "@/lib/tokens/read/publication";
@@ -62,11 +64,37 @@ export function visibleTokenPricesResponse(
  * missing either leg is withheld rather than approximated.
  */
 export async function loadVisibleTokenInstruments(env: ProcessEnvLike = process.env): Promise<MarketInstrumentDetail[]> {
-  const catalog = await loadTokenReadCatalog(env);
-  return benchmarkInstrumentsFromSeries(publishableBenchmarks(listVisibleTokenSeries(catalog, tokenVisibilityMode(env))));
+  return benchmarkInstrumentsFromSeries(await loadVisibleTokenBenchmarks(env));
 }
 
-/** The benchmark rows themselves, for an API surface or a verification report. */
+/**
+ * The authoritative benchmark rows.
+ *
+ * Frozen rows win. Once a calculation has been written to
+ * `pipeline.token_price_benchmarks` it is the record, and a later correction
+ * to a raw leg cannot change it. The calculator is the fallback only where
+ * nothing has been frozen yet, which is the case in a research preview
+ * running without a database.
+ */
+export async function loadVisibleTokenBenchmarks(env: ProcessEnvLike = process.env): Promise<PublicTokenBenchmarkSeries[]> {
+  const frozen = await loadFrozenBenchmarks(env);
+  if (frozen.length > 0) return persistedBenchmarks(frozen);
+  const catalog = await loadTokenReadCatalog(env);
+  return visibleTokenBenchmarks(catalog, env);
+}
+
+async function loadFrozenBenchmarks(env: ProcessEnvLike): Promise<PersistedBenchmarkRow[]> {
+  // Production publishes nothing until rights permit it, frozen or not.
+  if (tokenVisibilityMode(env) === "production") return [];
+  try {
+    const { loadFrozenBenchmarksFromDatabase } = await import("@/lib/tokens/read/database");
+    return (await loadFrozenBenchmarksFromDatabase(env)) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** Calculated benchmarks from a catalog, used to freeze and as the pre-freeze fallback. */
 export function visibleTokenBenchmarks(catalog: TokenReadCatalog, env: ProcessEnvLike = process.env) {
   return publishableBenchmarks(listVisibleTokenSeries(catalog, tokenVisibilityMode(env)));
 }
