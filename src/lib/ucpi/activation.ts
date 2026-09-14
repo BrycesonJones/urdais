@@ -135,6 +135,63 @@ export const RUNPOD_ACTIVATION_2026_09_13: ActivationInputs = {
   },
 };
 
+/**
+ * Runpod as at 14 September 2026: the permission request was answered, and refused.
+ *
+ * Kept alongside the 13 September record rather than replacing it, because the
+ * question and the answer are both part of the provenance. Every item that was
+ * waiting on Runpod's reply is now a fail rather than a pending: the reply came,
+ * and it refused systematic retrieval for the purpose of building a compilation
+ * and use of the data in a commercial market-data product. The product findings
+ * stay as they were; they were true when gathered and are simply unusable.
+ *
+ * Nothing in this checklist can reach pass again without a materially different
+ * intended use and a fresh written approval from Runpod.
+ */
+export const RUNPOD_ACTIVATION_2026_09_14: ActivationInputs = {
+  provider: "runpod",
+  collectionRights: "fail",
+  indexUseRights: "fail",
+  writtenPermissionOrAgreement: "fail",
+  attributionRule: "fail",
+  cachingRule: "fail",
+  retentionRule: "fail",
+  rawRedistributionRule: "fail",
+  aggregatePublicationRule: "fail",
+  reconstructionRiskAccepted: "fail",
+  productId: "pass",
+  canonicalQuantity: "fail",
+  tenancy: "pass",
+  availabilityGrade3: "pass",
+  countryMapping: "pass",
+  legalEntitySeeded: "pass",
+  permissionGrantSeeded: "fail",
+  credentialsAvailable: "fail",
+  authenticatedValidationPassed: "fail",
+  collectorEnabled: "fail",
+  notes: {
+    collectionRights: "Refused in writing 2026-09-14: Runpod is not approving systematic retrieval of catalog, pricing and availability data for the purpose of building a compilation",
+    indexUseRights: "Refused in writing 2026-09-14: Runpod is not approving use of that data as an input to a commercial market-data product",
+    writtenPermissionOrAgreement: "Requested 2026-09-13, refused 2026-09-14 (thread 1a09b4ce294d8be3, message 1a0a01a2456e600d, provider reference MM1GD7-PVV4K)",
+    attributionRule: "Not answered; the request was refused before the practical questions were reached",
+    cachingRule: "Not answered; and cached copies are named as a route that does not cure the refusal",
+    retentionRule: "Not answered; nothing may be retained because nothing may be retrieved",
+    rawRedistributionRule: "Not answered",
+    aggregatePublicationRule: "Refused: aggregate publication was the stated use, and it is the use that was declined",
+    reconstructionRiskAccepted: "Moot; no Urdais value may rest on Runpod data",
+    productId: "NVIDIA H100 80GB HBM3, display H100 SXM, 80 GB (Grade A). True when gathered, and unusable",
+    canonicalQuantity: "minPodGpuCount requires an authenticated call that may not be made",
+    tenancy: "Documented: a running Pod's GPU is exclusively reserved for the renter",
+    availabilityGrade3: "NONE/LOW/MEDIUM/HIGH per datacenter at count=1, per cloud tier",
+    countryMapping: "countryCodes filter is the first-party route; requires a call that may not be made",
+    legalEntitySeeded: "Runpod, Inc. seeded as the seller entity",
+    permissionGrantSeeded: "None exists and none may be seeded: a denial is not a grant",
+    credentialsAvailable: "An API key must not be obtained or used for this purpose",
+    authenticatedValidationPassed: "No authenticated call may be made",
+    collectorEnabled: "Blocked by the registry and the database gate, and now refused by the provider",
+  },
+};
+
 /** Lambda as at 13 September 2026: no reply to the permission request or the tenancy addendum. */
 export const LAMBDA_ACTIVATION_2026_09_13: ActivationInputs = {
   provider: "lambda",

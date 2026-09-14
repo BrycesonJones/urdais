@@ -86,6 +86,19 @@ begin
    where id = runpod and c->>'axis' = 'scope' and c->>'text' like '%subdomains%';
   if n = 0 then raise exception 'Runpod evidence lost the scope clause that reaches the API subdomain'; end if;
   -- The superseded assessment is retained so the revision stays auditable.
+  -- The answer, not just the question. A record that still reads as an open
+  -- request after the provider has refused invites the wrong next move.
+  if (select terms_evidence->'permission_outcome'->>'status' from reference.source_interfaces where id = runpod) <> 'denied' then
+    raise exception 'Runpod permission outcome is not recorded as denied';
+  end if;
+  if (select terms_evidence->'permission_outcome'->>'verbatim' from reference.source_interfaces where id = runpod) not like '%approving the systematic retrieval of catalog, pricing and availability data for the purpose of building a compilation%' then
+    raise exception 'the Runpod refusal was paraphrased out of the record';
+  end if;
+  select count(*) into n
+    from reference.source_interfaces, lateral jsonb_array_elements(terms_evidence->'correspondence') c
+   where id = runpod and c->>'outcome' = 'denied';
+  if n <> 1 then raise exception 'the Runpod decision message is not recorded in correspondence'; end if;
+
   if (select terms_evidence->'prior_assessment'->>'terms_review_state' from reference.source_interfaces where id = runpod) <> 'under_review' then
     raise exception 'Runpod evidence does not retain its prior assessment';
   end if;
