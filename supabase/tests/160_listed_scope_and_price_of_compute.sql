@@ -50,6 +50,15 @@ begin
     join reference.methodology_versions mv on mv.id = sv.methodology_version_id
    where sv.instrument_id = inst and sv.version = '0.1.0-draft' and sv.status = 'draft' and mv.version = '0.1.2-draft' and sv.content_hash ~ '^[0-9a-f]{64}$';
   if spec is null then raise exception 'sibling spec 0.1.0-draft under UCPI 0.1.2-draft missing'; end if;
+  -- The identity amendment: 0.1.1-draft exists under the same parent, with its own hash, and the new exclusion code is in the vocabulary.
+  select count(*) into n from reference.instrument_spec_versions sv join reference.methodology_versions mv on mv.id = sv.methodology_version_id
+   where sv.instrument_id = inst and sv.version = '0.1.1-draft' and sv.status = 'draft' and mv.version = '0.1.2-draft' and sv.content_hash ~ '^[0-9a-f]{64}$'
+     and sv.content_hash <> (select content_hash from reference.instrument_spec_versions where id = spec);
+  if n <> 1 then raise exception 'sibling spec 0.1.1-draft missing or hash unchanged'; end if;
+  if not exists (select 1 from reference.exclusion_reasons where code = 'SELLER_LEGAL_IDENTITY_UNRESOLVED' and stage = 'P1') then
+    raise exception 'SELLER_LEGAL_IDENTITY_UNRESOLVED missing from the vocabulary'; end if;
+  if not exists (select 1 from reference.market_entities where slug = 'nebius' and legal_name is null and notes like '%Nebius B.V.%') then
+    raise exception 'Nebius legal identity was asserted, or the evidence note is missing'; end if;
 
   -- Direct interfaces unchanged.
   if not exists (select 1 from reference.source_interfaces where slug = 'runpod-gpu-types' and production_access_state = 'production_blocked' and terms_review_state = 'not_permitted') then raise exception 'Runpod moved'; end if;

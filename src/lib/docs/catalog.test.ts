@@ -136,7 +136,8 @@ describe("compute price sibling specifications", () => {
     expect(doc).toContain(`](${docHref(ucpi!.slug)})`);
     expect(doc).toContain(`](${docHref(child!.slug)})`);
     expect(doc.match(/^# /gm)).toHaveLength(1);
-    expect(doc).toContain("version 0.1.0-draft");
+    expect(doc).toContain("version 0.1.1-draft");
+    expect(doc).toContain("SELLER_LEGAL_IDENTITY_UNRESOLVED");
     expect(doc).toContain("different economic object");
     expect(doc).toContain("listed prices, not guaranteed availability");
     expect(doc).toContain("never a participant");

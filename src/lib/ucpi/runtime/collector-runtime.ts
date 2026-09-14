@@ -196,7 +196,7 @@ export async function collectSource<TParams, TResponse, TCompanion>(input: Sourc
   retrieval.recordCount = rawOffers.length;
   const observations = rawOffers.map((raw) => input.adapter.normalize(raw, retrieval as Retrieval, input.context));
   const registry = new Map([[source, input.registry]]);
-  const assessments = observations.map((o) => assessEligibility(o, { calculationDate: input.calculationDate, registry, spec: input.spec }));
+  const assessments = observations.map((o) => assessEligibility(o, { calculationDate: input.calculationDate, registry, entities: input.context.entities, spec: input.spec }));
 
   await input.persistence.transaction(async () => {
     await input.persistence.insertRetrieval(retrieval);

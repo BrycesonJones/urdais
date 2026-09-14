@@ -6,7 +6,7 @@
  */
 
 import { calculationDateOf } from "@/lib/ucpi/calculation-window";
-import type { DiagnosticCode, EligibilityAssessment, ExclusionReason, InputStatus, NormalizedObservation } from "@/lib/ucpi/domain";
+import type { DiagnosticCode, EligibilityAssessment, ExclusionReason, InputStatus, NormalizedObservation, MarketEntity } from "@/lib/ucpi/domain";
 import { HOST_MEMORY_FLOOR_GB_PER_ACCELERATOR, bundleEnvelope, freshnessOnCalculationDate } from "@/lib/ucpi/launch-parameters";
 import { productionCollectionPermitted, type SourceRegistryState } from "@/lib/ucpi/permission-gate";
 
@@ -24,6 +24,12 @@ export type EligibilityContext = {
   spec?: InstrumentSpec;
   /** Registry state per source interface slug. A source absent here is treated as not permitted. */
   registry: ReadonlyMap<string, SourceRegistryState>;
+  /**
+   * Market entities by id. Seller identity is legal identity: a seller whose contracting legal
+   * entity Urdais has not established, or that is absent here, is SELLER_LEGAL_IDENTITY_UNRESOLVED.
+   * Fails closed: an empty map excludes every seller.
+   */
+  entities: ReadonlyMap<string, MarketEntity>;
   /** The index currency. Anything else needs a conversion the child has not yet approved. */
   indexCurrency?: string;
 };
@@ -59,6 +65,11 @@ export function assessEligibility(obs: NormalizedObservation, ctx: EligibilityCo
   if (!listed && (obs.tenancyGrade === "ambiguous" || obs.tenancyGrade === "unknown")) exclusions.add("TENANCY_UNRESOLVED");
   // An observation whose seller could not be identified has no participant to belong to.
   if (obs.sellerEntityId.startsWith("unmapped:")) exclusions.add("SOURCE_INSUFFICIENT");
+  // Seller identity is legal identity (family rule). A brand whose contracting entity is unknown, or
+  // varies by customer jurisdiction so one listed price cannot be tied to one entity, cannot be shown
+  // independent of any other participant and is not counted. Never inferred from a brand name.
+  const seller = ctx.entities.get(obs.sellerEntityId);
+  if (seller === undefined || seller.legalName === null) exclusions.add("SELLER_LEGAL_IDENTITY_UNRESOLVED");
   const p1 = p0 && exclusions.size === 0;
 
   // P2: headline eligibility ----------------------------------------------------

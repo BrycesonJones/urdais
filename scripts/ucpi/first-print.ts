@@ -8,6 +8,10 @@
  *              (as SQL to apply) and reports the in-process candidate value.
  *   emit       re-renders the collection SQL from the saved retrieval, without
  *              a second request; parsing and assessment are deterministic.
+ *              With --reinterpret, re-normalizes the saved raw offers under the
+ *              current specification version as new observations (the earlier
+ *              interpretation stays current under its own version) and emits
+ *              only the observation and assessment rows.
  *   calculate  after the date's cutoff only. Rebuilds the calculation from the
  *              saved collection and emits the run, seller, capacity-source and
  *              regional rows. Never a publication: that needs approved versions.
@@ -41,12 +45,12 @@ import { validatePocPrices } from "@/lib/ucpi/runtime/schema-validation";
 // Identifiers as seeded by supabase/migrations/20260914000100_price_of_compute_source.sql.
 const IDS = {
   instrument: "22222222-0000-4000-8000-000000000002",
-  instrumentSpecVersion: "22222222-0000-4000-8000-000000000201",
+  instrumentSpecVersion: "22222222-0000-4000-8000-000000000202",
   methodologyVersion: "11111111-0000-4000-8000-000000000112",
   sourceInterface: "55555555-0000-4000-8000-000000000007",
   grant: "77777777-0000-4000-8000-000000000101",
 } as const;
-const VERSIONS = { instrument: "UCPI-H100-SXM-LISTED", methodologyVersion: "0.1.2-draft", instrumentSpecVersion: "0.1.0-draft" } as const;
+const VERSIONS = { instrument: "UCPI-H100-SXM-LISTED", methodologyVersion: "0.1.2-draft", instrumentSpecVersion: "0.1.1-draft" } as const;
 const ENTITY_ID_BY_SLUG = new Map<string, string>([
   ["runpod", "66666666-0000-4000-8000-000000000001"],
   ["lambda", "66666666-0000-4000-8000-000000000002"],
@@ -113,6 +117,7 @@ function renderBatched(statements: readonly SqlStatement[], idMap: ReadonlyMap<s
 }
 
 const entities: MarketEntity[] = [...ENTITY_ID_BY_SLUG].map(([slug, id]) => ({ id, slug, name: slug, legalName: LEGAL_NAMES.get(slug) ?? null, legalIdentifier: null, controllingEntityId: null }));
+const entityMap: ReadonlyMap<string, MarketEntity> = new Map(entities.map((e) => [e.id, e]));
 const sql = new SqlPersistence({ query: async () => ({ rows: [] }) }, { instrumentId: IDS.instrument, instrumentSpecVersionId: IDS.instrumentSpecVersion, methodologyVersionId: IDS.methodologyVersion, sourceInterfaceIdBySlug: new Map([[PRICE_OF_COMPUTE_SLUG, IDS.sourceInterface]]) });
 const entityIdFor = (domainId: string): string | null => (ENTITY_ID_BY_SLUG.has(domainId) ? domainId : [...ENTITY_ID_BY_SLUG.values()].includes(domainId) ? domainId : null);
 
@@ -135,14 +140,39 @@ function collectionSql(retrieval: RetrievalRow, rawOffers: readonly RawOffer[], 
 }
 
 /** Re-renders the collection SQL from the saved retrieval. Parsing and assessment are pure, so the rows are the ones the runtime produced. */
-function emit(calculationDate: string, out: string): void {
+function emit(calculationDate: string, out: string, reinterpret: boolean): void {
   const saved = JSON.parse(readFileSync(path.join(out, "collection.json"), "utf8")) as SavedCollection;
   const idMap = new Map(Object.entries(saved.idMap));
+  if (reinterpret) {
+    // A new interpretation of the same raw offers under the current specification version. Raw never changes;
+    // the earlier observations stay current under their own version, as the reprocessing rules require.
+    const profiles = pocSellerProfiles(ENTITY_ID_BY_SLUG, POC_SELLER_EVIDENCE_2026_09_14);
+    const rawOffers = saved.rawOffers ?? priceOfComputeAdapter.parse(saved.retrieval as Retrieval, saved.retrieval.responseBody as PocPricesResponse, profiles);
+    const context = { instrumentSpecVersion: VERSIONS.instrumentSpecVersion, methodologyVersion: VERSIONS.methodologyVersion, sellerEntityIdByProvider: new Map<string, string>(), regionMappings: new Map(), tenancyEvidence: new Map(), entities: entityMap, sellerProfiles: profiles };
+    const observations = rawOffers.map((raw) => priceOfComputeAdapter.normalize(raw, saved.retrieval as Retrieval, context));
+    for (const o of observations) idMap.set(o.id, randomUUID());
+    const assessments = observations.map((o) => assessEligibility(o, { calculationDate, registry: new Map([[PRICE_OF_COMPUTE_SLUG, REGISTRY]]), entities: entityMap, spec: "listed" }));
+    const statements: SqlStatement[] = observations.map((o) => sql.normalizedObservationStatement(o, { entityIdFor }));
+    const heads: SqlStatement[] = [];
+    const codes: SqlStatement[] = [];
+    for (const a of assessments) {
+      const [head, ...rest] = sql.assessmentStatements(a, randomUUID());
+      heads.push(head!);
+      codes.push(...rest);
+    }
+    statements.push(...heads, ...codes.filter((c) => c.text.includes("eligibility_exclusions")), ...codes.filter((c) => c.text.includes("eligibility_diagnostics")));
+    writeFileSync(path.join(out, `reinterpret.${VERSIONS.instrumentSpecVersion}.sql`), ["begin;", ...renderBatched(statements, idMap), "commit;"].join("\n") + "\n");
+    const updated: SavedCollection = { retrieval: saved.retrieval, rawOffers, observations, assessments, idMap: Object.fromEntries(idMap) };
+    writeFileSync(path.join(out, "collection.json"), JSON.stringify(updated));
+    const regional = candidate(calculationDate, saved.retrieval as Retrieval, observations).regional[0]!;
+    console.log(JSON.stringify({ spec: VERSIONS.instrumentSpecVersion, observations: observations.length, eligible: assessments.filter((a) => a.p2).length, excluded: assessments.filter((a) => !a.p2).map((a) => ({ seller: [...ENTITY_ID_BY_SLUG].find(([, id]) => id === observations.find((o) => o.id === a.observationId)!.sellerEntityId)?.[0], codes: a.exclusions })), candidate: { outcome: regional.outcome, priceLevel: regional.priceLevel, participantCount: regional.participantCount, marketBreadth: regional.marketBreadth } }, null, 2));
+    return;
+  }
   if (saved.rawOffers === undefined || saved.assessments === undefined) {
     // A collection saved before raw offers and assessments were persisted: rebuild them deterministically.
     const profiles = pocSellerProfiles(ENTITY_ID_BY_SLUG, POC_SELLER_EVIDENCE_2026_09_14);
     saved.rawOffers = priceOfComputeAdapter.parse(saved.retrieval as Retrieval, saved.retrieval.responseBody as PocPricesResponse, profiles);
-    saved.assessments = saved.observations.map((o) => assessEligibility(o, { calculationDate, registry: new Map([[PRICE_OF_COMPUTE_SLUG, REGISTRY]]), spec: "listed" }));
+    saved.assessments = saved.observations.map((o) => assessEligibility(o, { calculationDate, registry: new Map([[PRICE_OF_COMPUTE_SLUG, REGISTRY]]), entities: entityMap, spec: "listed" }));
   }
   writeFileSync(path.join(out, "collect.sql"), collectionSql(saved.retrieval, saved.rawOffers, saved.observations, saved.assessments, idMap).join("\n") + "\n");
   console.log(JSON.stringify({ retrieval: saved.retrieval.id, rawOffers: saved.rawOffers.length, observations: saved.observations.length, eligible: saved.assessments.filter((a) => a.p2).length }));
@@ -171,7 +201,7 @@ async function collect(calculationDate: string, out: string): Promise<void> {
     sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
     persistence,
     events,
-    context: { instrumentSpecVersion: VERSIONS.instrumentSpecVersion, methodologyVersion: VERSIONS.methodologyVersion, sellerEntityIdByProvider: new Map(), regionMappings: new Map(), tenancyEvidence: new Map(), sellerProfiles: profiles },
+    context: { instrumentSpecVersion: VERSIONS.instrumentSpecVersion, methodologyVersion: VERSIONS.methodologyVersion, sellerEntityIdByProvider: new Map(), regionMappings: new Map(), tenancyEvidence: new Map(), entities: entityMap, sellerProfiles: profiles },
     validateResponse: validatePocPrices,
     collectorIdentity: "ucpi-first-print/collect",
     idFactory: randomUUID,
@@ -252,7 +282,7 @@ async function main(): Promise<void> {
   const date = arg("date");
   const out = arg("out");
   if (phase === "collect") await collect(date, out);
-  else if (phase === "emit") emit(date, out);
+  else if (phase === "emit") emit(date, out, process.argv.includes("--reinterpret"));
   else if (phase === "calculate") calculate(date, out, arg("run-kind", "simulation") as "simulation" | "production");
   else throw new Error("phase must be collect or calculate");
 }

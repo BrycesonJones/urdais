@@ -39,6 +39,8 @@ export type NormalizationContext = {
   regionMappings: ReadonlyMap<string, RegionMapping>;
   /** Tenancy evidence per provider slug, where a statement exists. Absent means the adapter's own default, which may be ambiguous. */
   tenancyEvidence: ReadonlyMap<string, TenancyEvidence>;
+  /** Market entities by id, so collection-time eligibility can apply the legal-identity rule. */
+  entities: ReadonlyMap<string, MarketEntity>;
   /** For aggregator sources: what Urdais knows about each underlying seller from its own evidence, keyed by the source-native provider slug. */
   sellerProfiles?: ReadonlyMap<string, import("@/lib/ucpi/adapters/price-of-compute").PocSellerProfile>;
 };
@@ -124,7 +126,7 @@ export function runPipeline(input: PipelineInput): PipelineResult {
 
   const spec = input.spec ?? "accessible";
   const regionScope = input.regionScope ?? "country";
-  const assessments = inWindow.map((o) => assessEligibility(o, { calculationDate: input.calculationDate, registry, spec }));
+  const assessments = inWindow.map((o) => assessEligibility(o, { calculationDate: input.calculationDate, registry, entities, spec }));
   const eligibleIds = new Set(assessments.filter((a) => a.p2).map((a) => a.observationId));
   const eligible = inWindow.filter((o) => eligibleIds.has(o.id));
 

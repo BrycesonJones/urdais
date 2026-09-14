@@ -24,7 +24,8 @@ const PAYLOAD = validatePocPrices(JSON.parse(readFileSync(path.join(process.cwd(
 const ENTITY_IDS = new Map(POC_SELLER_EVIDENCE_2026_09_14.map((e) => [e.slug, `ent-${e.slug}`]));
 const PROFILES = pocSellerProfiles(ENTITY_IDS);
 const ENTITIES: MarketEntity[] = [...ENTITY_IDS].map(([slug, id]) => ({ id, slug, name: slug, legalName: PROFILES.get(slug)?.legalNameEvidenced ? `${slug} legal` : null, legalIdentifier: null, controllingEntityId: null }));
-const LISTED_VERSIONS = { methodologyVersion: "0.1.2-draft", instrumentSpecVersion: "0.1.0-draft", instrument: "UCPI-H100-SXM-LISTED" };
+const ENTITY_MAP: ReadonlyMap<string, MarketEntity> = new Map(ENTITIES.map((e) => [e.id, e]));
+const LISTED_VERSIONS = { methodologyVersion: "0.1.2-draft", instrumentSpecVersion: "0.1.1-draft", instrument: "UCPI-H100-SXM-LISTED" };
 const REGISTRY = [...REGISTRY_TODAY, permitted(PRICE_OF_COMPUTE_SLUG)];
 
 const retrieval: Retrieval = {
@@ -40,7 +41,7 @@ const retrieval: Retrieval = {
 };
 
 function normalizeAll() {
-  const ctx = normalizationContext({ ...LISTED_VERSIONS, sellerProfiles: PROFILES });
+  const ctx = normalizationContext({ ...LISTED_VERSIONS, sellerProfiles: PROFILES, entities: ENTITY_MAP });
   const raws = priceOfComputeAdapter.parse(retrieval, PAYLOAD, PROFILES);
   return { raws, observations: raws.map((r) => priceOfComputeAdapter.normalize(r, retrieval, ctx)) };
 }
@@ -113,12 +114,12 @@ describe("normalization: nothing invented", () => {
   });
 
   it("an unknown provider slug becomes an unmapped pseudo-seller that can never participate", () => {
-    const ctx = normalizationContext({ ...LISTED_VERSIONS, sellerProfiles: PROFILES });
+    const ctx = normalizationContext({ ...LISTED_VERSIONS, sellerProfiles: PROFILES, entities: ENTITY_MAP });
     const stranger = { ...PAYLOAD, providers: [{ provider: "newcloud", pricing_type: "on_demand", usd_per_gpu_hr: 1.5, region: null, observed_at: "2026-09-13T20:00:00Z" }] };
     const [raw] = priceOfComputeAdapter.parse(retrieval, stranger, PROFILES);
     const obs = priceOfComputeAdapter.normalize(raw!, retrieval, ctx);
     expect(obs.sellerEntityId).toBe("unmapped:newcloud");
-    const a = assessEligibility(obs, { calculationDate: "2026-09-14", registry: new Map([[PRICE_OF_COMPUTE_SLUG, permitted(PRICE_OF_COMPUTE_SLUG)]]), spec: "listed" });
+    const a = assessEligibility(obs, { calculationDate: "2026-09-14", entities: ENTITY_MAP, registry: new Map([[PRICE_OF_COMPUTE_SLUG, permitted(PRICE_OF_COMPUTE_SLUG)]]), spec: "listed" });
     expect(a.p2).toBe(false);
     expect(a.exclusions).toContain("SOURCE_INSUFFICIENT");
   });
@@ -129,10 +130,10 @@ describe("UCPI-H100-SXM-LISTED eligibility, row by row", () => {
   const registry = new Map([[PRICE_OF_COMPUTE_SLUG, permitted(PRICE_OF_COMPUTE_SLUG)]]);
   const assess = (slug: string, type: string) => {
     const o = observations.find((x) => x.sellerEntityId === `ent-${slug}` && x.serviceTier?.tier_label === type)!;
-    return assessEligibility(o, { calculationDate: "2026-09-14", registry, spec: "listed" });
+    return assessEligibility(o, { calculationDate: "2026-09-14", entities: ENTITY_MAP, registry, spec: "listed" });
   };
 
-  it.each(["voltagepark", "runpod", "hyperstack", "lambda", "nebius"])("%s on-demand is eligible without any availability, tenancy or geography gate", (slug) => {
+  it.each(["voltagepark", "runpod", "hyperstack", "lambda"])("%s on-demand is eligible without any availability, tenancy or geography gate", (slug) => {
     const a = assess(slug, "on_demand");
     expect(a.exclusions).toEqual([]);
     expect(a.p2).toBe(true);
@@ -144,6 +145,12 @@ describe("UCPI-H100-SXM-LISTED eligibility, row by row", () => {
 
   it.each(["massedcompute", "datacrunch", "denvr"])("%s on-demand is excluded as MINIMUM_TOPOLOGY_UNKNOWN until Urdais evidences its class", (slug) => {
     expect(assess(slug, "on_demand").exclusions).toContain("MINIMUM_TOPOLOGY_UNKNOWN");
+  });
+
+  it("Nebius is excluded as SELLER_LEGAL_IDENTITY_UNRESOLVED: no single contracting entity stands behind the listed price", () => {
+    const a = assess("nebius", "on_demand");
+    expect(a.p2).toBe(false);
+    expect(a.exclusions).toEqual(["SELLER_LEGAL_IDENTITY_UNRESOLVED"]);
   });
 
   it("the Vast platform figure is excluded as a service-product mismatch", () => {
@@ -162,7 +169,7 @@ describe("UCPI-H100-SXM-LISTED eligibility, row by row", () => {
 
   it("the same observations are refused by the accessible child on its own terms", () => {
     const o = observations.find((x) => x.sellerEntityId === "ent-voltagepark")!;
-    const a = assessEligibility(o, { calculationDate: "2026-09-14", registry, spec: "accessible" });
+    const a = assessEligibility(o, { calculationDate: "2026-09-14", entities: ENTITY_MAP, registry, spec: "accessible" });
     expect(a.p2).toBe(false);
     // The child wants a current accessible offer in a country from a tenancy-resolved seller; the listed price is none of those.
     expect(a.exclusions).toEqual(expect.arrayContaining(["TENANCY_UNRESOLVED", "REGION_UNRESOLVED", "AVAILABILITY_UNKNOWN", "AVAILABILITY_EVIDENCE_INSUFFICIENT", "SOURCE_INSUFFICIENT"]));
@@ -171,7 +178,7 @@ describe("UCPI-H100-SXM-LISTED eligibility, row by row", () => {
   it("a source that is not permitted produces no eligible observation whatever the payload says", () => {
     const blocked = new Map([[PRICE_OF_COMPUTE_SLUG, { ...permitted(PRICE_OF_COMPUTE_SLUG), productionAccessState: "production_blocked" as const }]]);
     const o = observations.find((x) => x.sellerEntityId === "ent-voltagepark")!;
-    expect(assessEligibility(o, { calculationDate: "2026-09-14", registry: blocked, spec: "listed" }).p2).toBe(false);
+    expect(assessEligibility(o, { calculationDate: "2026-09-14", entities: ENTITY_MAP, registry: blocked, spec: "listed" }).p2).toBe(false);
   });
 });
 
@@ -188,12 +195,13 @@ describe("the first candidate print", () => {
     regionScope: "listed_provider_wide",
   });
 
-  it("five independent sellers survive and the median is 3.99 at Normal breadth, through one technical source", () => {
-    expect(result.sellerObservations.map((s) => s.sellerEntityId).sort()).toEqual(["ent-hyperstack", "ent-lambda", "ent-nebius", "ent-runpod", "ent-voltagepark"]);
+  it("four independent legal sellers survive and the even-N median is 3.74 at Normal breadth, through one technical source", () => {
+    expect(result.sellerObservations.map((s) => s.sellerEntityId).sort()).toEqual(["ent-hyperstack", "ent-lambda", "ent-runpod", "ent-voltagepark"]);
     expect(result.sellerObservations.every((s) => s.canonicalRegionCode === LISTED_SCOPE_KEY)).toBe(true);
     expect(result.regional).toHaveLength(1);
     const r = result.regional[0]!;
-    expect(r).toMatchObject({ outcome: "value", priceLevel: 3.99, participantCount: 5, marketBreadth: "normal", contributingSourceCount: 1, largestSourceParticipantShare: 1, regionScope: "listed_provider_wide", canonicalRegionCode: LISTED_SCOPE_KEY });
+    expect(r).toMatchObject({ outcome: "value", participantCount: 4, marketBreadth: "normal", contributingSourceCount: 1, largestSourceParticipantShare: 1, regionScope: "listed_provider_wide", canonicalRegionCode: LISTED_SCOPE_KEY });
+    expect(r.priceLevel).toBeCloseTo((3.49 + 3.99) / 2);
     expect(r.sourceAttributions).toEqual([PRICE_OF_COMPUTE_ATTRIBUTION]);
     expect(r.dispersionPublished).toBe(true);
   });
@@ -209,19 +217,20 @@ describe("the first candidate print", () => {
 
   it("the public series point carries the scope, a null country and the attribution, and leaks no constituent", () => {
     const point = toSeriesPoint(result.regional[0]!, { calculatedAt: "2026-09-15T00:01:00Z", publishedAt: null });
-    expect(point).toMatchObject({ regionScope: "listed_provider_wide", country: null, attributions: [PRICE_OF_COMPUTE_ATTRIBUTION], priceLevel: 3.99 });
+    expect(point).toMatchObject({ regionScope: "listed_provider_wide", country: null, attributions: [PRICE_OF_COMPUTE_ATTRIBUTION] });
+    expect(point.priceLevel).toBeCloseTo(3.74);
     expect(validatePublicResponseShape(JSON.parse(JSON.stringify(point)))).toEqual([]);
   });
 
   it("with only two per-accelerator sellers evidenced the print is Minimum breadth with dispersion withheld; with one it is Unavailable", () => {
     const two = pocSellerProfiles(ENTITY_IDS, POC_SELLER_EVIDENCE_2026_09_14.filter((e) => e.slug !== "runpod" && e.slug !== "lambda" && e.slug !== "nebius"));
-    const ctx = normalizationContext({ ...LISTED_VERSIONS, sellerProfiles: two });
+    const ctx = normalizationContext({ ...LISTED_VERSIONS, sellerProfiles: two, entities: ENTITY_MAP });
     const obs = priceOfComputeAdapter.parse(retrieval, PAYLOAD, two).map((r) => priceOfComputeAdapter.normalize(r, retrieval, ctx));
     const r2 = runPipeline({ ...LISTED_VERSIONS, calculationDate: "2026-09-14", observations: obs, retrievals: [retrieval], entities: ENTITIES, registry: REGISTRY, spec: "listed", regionScope: "listed_provider_wide" }).regional[0]!;
     expect(r2).toMatchObject({ outcome: "value", participantCount: 2, marketBreadth: "minimum", dispersionPublished: false });
     expect(r2.priceLevel).toBeCloseTo((1.99 + 3.99) / 2);
     const one = pocSellerProfiles(ENTITY_IDS, POC_SELLER_EVIDENCE_2026_09_14.filter((e) => e.slug === "voltagepark"));
-    const ctx1 = normalizationContext({ ...LISTED_VERSIONS, sellerProfiles: one });
+    const ctx1 = normalizationContext({ ...LISTED_VERSIONS, sellerProfiles: one, entities: ENTITY_MAP });
     const obs1 = priceOfComputeAdapter.parse(retrieval, PAYLOAD, one).map((r) => priceOfComputeAdapter.normalize(r, retrieval, ctx1));
     const r1 = runPipeline({ ...LISTED_VERSIONS, calculationDate: "2026-09-14", observations: obs1, retrievals: [retrieval], entities: ENTITIES, registry: REGISTRY, spec: "listed", regionScope: "listed_provider_wide" }).regional[0]!;
     expect(r1).toMatchObject({ outcome: "unavailable", structuralCondition: "SINGLE_PARTICIPANT" });
