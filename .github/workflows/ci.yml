@@ -46,6 +46,39 @@ jobs:
       - name: Build
         run: npm run build
 
+  # Production readiness for Token Price. A deployment verifies that the data is
+  # ready; it never manufactures the human verification that produced it, so this
+  # job only reads. It runs when a production database URL is configured for the
+  # repository and is skipped otherwise, because there is nothing to check.
+  token-production-readiness:
+    name: token production readiness
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check that production Token Price benchmarks exist
+        env:
+          DATABASE_URL: ${{ secrets.URDAIS_PRODUCTION_DATABASE_URL }}
+        run: |
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "no production database configured for this repository; skipping the readiness check."
+            echo "set the URDAIS_PRODUCTION_DATABASE_URL secret to enforce it before deployment."
+            exit 0
+          fi
+          npm run tokens:production:check
+
   # Database foundation: migrations bootstrap from zero on a real PostgreSQL 17
   # (matching the hosted engine), pass the database tests, and replay
   # deterministically. No hosted project and no secrets are involved; CI never

@@ -1,0 +1,199 @@
+/**
+ * Production readiness for Token Price.
+ *
+ * A deployment should verify that the production data is ready. It must never
+ * manufacture the verification event itself: `manual_verified` means a person
+ * read the provider's published page, and a deploy hook that fabricated that
+ * would empty the word of meaning.
+ *
+ * So this module only reads. It answers four questions:
+ *
+ *   1. is the schema current, or are migrations outstanding
+ *   2. does every designated provider have a frozen Token Price benchmark
+ *   3. can the read path actually load them
+ *   4. is any of them resting on research-only observations
+ *
+ * Anything unready is reported with the operator action that fixes it, and the
+ * caller exits nonzero. Nothing is written, ever.
+ */
+
+import type { PublicTokenBenchmarkSeries } from "@/lib/tokens/read/api-contract";
+import { benchmarkProviders, constituentInForce } from "@/lib/tokens/read/benchmark";
+import { publishableBenchmarks } from "@/lib/tokens/read/benchmark-series";
+import { loadPersistedBenchmarks, persistedBenchmarks, type BenchmarkSqlExecutor, type PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
+import { tokenReadCatalogFromStore } from "@/lib/tokens/read/load";
+import { listVisibleTokenSeries, type TokenReadCatalog } from "@/lib/tokens/read/series";
+
+export type ReadinessFailureCode =
+  | "SCHEMA_OUTDATED"
+  | "SCHEMA_MISSING"
+  | "BENCHMARK_MISSING"
+  | "BENCHMARK_NOT_PRODUCTION"
+  | "READ_PATH_EMPTY";
+
+export type ReadinessFinding = {
+  code: ReadinessFailureCode;
+  detail: string;
+  /** What an operator should do about it. */
+  remedy: string;
+};
+
+export type ReadinessReport = {
+  ready: boolean;
+  appliedMigrations: number;
+  pendingMigrations: string[];
+  providers: {
+    providerSlug: string;
+    designatedModelId: string | null;
+    frozen: boolean;
+    productionVisible: boolean;
+    priceUsdPer1m: number | null;
+    updatedAt: string | null;
+  }[];
+  findings: ReadinessFinding[];
+};
+
+const REQUIRED_TABLES = ["pipeline.token_price_observations", "pipeline.token_price_benchmarks"] as const;
+const REQUIRED_COLUMNS: readonly { table: string; column: string }[] = [
+  { table: "source_retrievals", column: "acquisition_mode" },
+  { table: "source_retrievals", column: "verification_evidence" },
+];
+
+/** Migration versions the repository expects, newest last. */
+export function expectedMigrationVersions(filenames: readonly string[]): string[] {
+  return filenames
+    .filter((name) => name.endsWith(".sql"))
+    .map((name) => name.split("_")[0]!)
+    .sort();
+}
+
+export type ReadinessInput = {
+  sql: BenchmarkSqlExecutor;
+  /** Migration filenames from the repository, so the check knows what should be applied. */
+  migrationFiles: readonly string[];
+  /** The canonical catalog, used to tell a production benchmark from a research-only one. */
+  catalog: TokenReadCatalog;
+  onDate?: string;
+};
+
+async function schemaFindings(sql: BenchmarkSqlExecutor, migrationFiles: readonly string[]): Promise<{
+  findings: ReadinessFinding[];
+  applied: number;
+  pending: string[];
+}> {
+  const findings: ReadinessFinding[] = [];
+
+  const tables = await sql.query(
+    `select table_schema || '.' || table_name as name from information_schema.tables where table_schema in ('reference','pipeline')`,
+    [],
+  );
+  const present = new Set(tables.rows.map((row) => String(row.name)));
+  for (const table of REQUIRED_TABLES) {
+    if (!present.has(table)) {
+      findings.push({
+        code: "SCHEMA_MISSING",
+        detail: `${table} does not exist`,
+        remedy: "apply the outstanding migrations to this database before deploying",
+      });
+    }
+  }
+
+  const columns = await sql.query(
+    `select table_name, column_name from information_schema.columns where table_schema = 'pipeline' and table_name = 'source_retrievals'`,
+    [],
+  );
+  const columnSet = new Set(columns.rows.map((row) => `${String(row.table_name)}.${String(row.column_name)}`));
+  for (const required of REQUIRED_COLUMNS) {
+    if (!columnSet.has(`${required.table}.${required.column}`)) {
+      findings.push({
+        code: "SCHEMA_MISSING",
+        detail: `pipeline.${required.table}.${required.column} is missing`,
+        remedy: "apply the outstanding migrations to this database before deploying",
+      });
+    }
+  }
+
+  // The migration ledger is Supabase's. Where it exists, compare it with the repository.
+  let applied = 0;
+  let pending: string[] = [];
+  try {
+    const ledger = await sql.query(`select version from supabase_migrations.schema_migrations order by version`, []);
+    const appliedVersions = new Set(ledger.rows.map((row) => String(row.version)));
+    applied = appliedVersions.size;
+    pending = expectedMigrationVersions(migrationFiles).filter((version) => !appliedVersions.has(version));
+    if (pending.length > 0) {
+      findings.push({
+        code: "SCHEMA_OUTDATED",
+        detail: `${pending.length} migration(s) not applied: ${pending.join(", ")}`,
+        remedy: "apply the outstanding migrations through the existing Supabase migration path, then re-run this check",
+      });
+    }
+  } catch {
+    // No ledger, which is the case for a locally replayed database. The object
+    // checks above still establish that the schema carries what is required.
+  }
+
+  return { findings, applied, pending };
+}
+
+/**
+ * Reads the database and reports whether Token Price may be served in
+ * production. Performs no writes.
+ */
+export async function checkTokenProductionReadiness(input: ReadinessInput): Promise<ReadinessReport> {
+  const onDate = input.onDate ?? new Date().toISOString().slice(0, 10);
+  const { findings, applied, pending } = await schemaFindings(input.sql, input.migrationFiles);
+
+  let frozen: PersistedBenchmarkRow[] = [];
+  if (!findings.some((row) => row.code === "SCHEMA_MISSING")) {
+    frozen = await loadPersistedBenchmarks(input.sql);
+  }
+  const frozenSeries = persistedBenchmarks(frozen);
+  const frozenByProvider = new Map<string, PublicTokenBenchmarkSeries>(frozenSeries.map((row) => [row.providerSlug, row]));
+
+  // A benchmark is production-serveable when the legs behind it are production-publicable.
+  const productionProviders = new Set(
+    publishableBenchmarks(listVisibleTokenSeries(input.catalog, "production"), onDate).map((row) => row.providerSlug),
+  );
+
+  const providers = benchmarkProviders().map((providerSlug) => {
+    const series = frozenByProvider.get(providerSlug);
+    const productionVisible = productionProviders.has(providerSlug);
+    if (!series) {
+      findings.push({
+        code: "BENCHMARK_MISSING",
+        detail: `${providerSlug} has no frozen Token Price benchmark`,
+        remedy: "run the operator verification against this database: npm run tokens:verify-production -- --verified-by <name> --evidence <what you checked>",
+      });
+    } else if (!productionVisible) {
+      findings.push({
+        code: "BENCHMARK_NOT_PRODUCTION",
+        detail: `${providerSlug} has a frozen benchmark, but it rests on research-only observations`,
+        remedy: "run the operator verification so the legs are manually verified production observations",
+      });
+    }
+    return {
+      providerSlug,
+      designatedModelId: constituentInForce(providerSlug, onDate)?.providerModelId ?? null,
+      frozen: series !== undefined,
+      productionVisible,
+      priceUsdPer1m: series?.priceUsdPer1m ?? null,
+      updatedAt: series?.updatedAt ?? null,
+    };
+  });
+
+  if (providers.length > 0 && frozenSeries.length === 0 && !findings.some((row) => row.code === "SCHEMA_MISSING")) {
+    findings.push({
+      code: "READ_PATH_EMPTY",
+      detail: "the read path loaded no Token Price benchmark at all",
+      remedy: "run the operator verification against this database before deploying",
+    });
+  }
+
+  return { ready: findings.length === 0, appliedMigrations: applied, pendingMigrations: pending, findings, providers };
+}
+
+/** Convenience for tests and scripts that already hold a store rather than a database. */
+export function catalogFromStore(store: Parameters<typeof tokenReadCatalogFromStore>[0]): TokenReadCatalog {
+  return tokenReadCatalogFromStore(store);
+}
