@@ -29,8 +29,13 @@ async function main(): Promise<void> {
 
   const migrationFiles = readdirSync(path.join(process.cwd(), "supabase", "migrations"));
   const sql = await tokenSqlExecutor(url);
-  const catalog = await loadTokenReadCatalogFromSql(sql);
-  const report = await checkTokenProductionReadiness({ sql, migrationFiles, catalog });
+  // The catalog loader reads columns a pending migration may not have added, so
+  // it is deferred: the readiness check calls it only once the schema checks pass.
+  const report = await checkTokenProductionReadiness({
+    sql,
+    migrationFiles,
+    loadCatalog: () => loadTokenReadCatalogFromSql(sql),
+  });
 
   console.log(`migrations applied: ${report.appliedMigrations}${report.pendingMigrations.length > 0 ? `; pending: ${report.pendingMigrations.join(", ")}` : ""}`);
   for (const provider of report.providers) {

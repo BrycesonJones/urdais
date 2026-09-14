@@ -17,12 +17,11 @@
  * caller exits nonzero. Nothing is written, ever.
  */
 
-import type { PublicTokenBenchmarkSeries } from "@/lib/tokens/read/api-contract";
 import { benchmarkProviders, constituentInForce } from "@/lib/tokens/read/benchmark";
-import { publishableBenchmarks } from "@/lib/tokens/read/benchmark-series";
 import { loadPersistedBenchmarks, persistedBenchmarks, type BenchmarkSqlExecutor, type PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
 import { tokenReadCatalogFromStore } from "@/lib/tokens/read/load";
-import { listVisibleTokenSeries, type TokenReadCatalog } from "@/lib/tokens/read/series";
+import { observationIsPublicable } from "@/lib/tokens/read/publication";
+import type { TokenReadCatalog } from "@/lib/tokens/read/series";
 
 export type ReadinessFailureCode =
   | "SCHEMA_OUTDATED"
@@ -71,10 +70,42 @@ export type ReadinessInput = {
   sql: BenchmarkSqlExecutor;
   /** Migration filenames from the repository, so the check knows what should be applied. */
   migrationFiles: readonly string[];
-  /** The canonical catalog, used to tell a production benchmark from a research-only one. */
-  catalog: TokenReadCatalog;
+  /**
+   * The canonical catalog, loaded lazily. The loader reads columns that a
+   * migration may not have applied yet, so it is called only after the schema
+   * checks pass: an outdated database should produce a finding and a remedy,
+   * not a raw SQL error from a loader that assumed the schema.
+   */
+  loadCatalog: () => Promise<TokenReadCatalog>;
   onDate?: string;
 };
+
+/**
+ * Is this exact canonical observation production-publicable, resolved through
+ * its own retrieval and source interface under the ordinary publication rules?
+ *
+ * The frozen row names the two observations it consumed, so the question can be
+ * answered about that row rather than about the provider. A provider having
+ * some production observation today says nothing about the lineage of a row
+ * frozen from research legs last month.
+ */
+function observationIsProduction(catalog: TokenReadCatalog, observationId: string | null): boolean {
+  if (observationId === null) return false;
+  const observation = catalog.observations.find((row) => row.id === observationId);
+  if (!observation) return false;
+  const retrieval = catalog.retrievals.find((row) => row.id === observation.retrievalId);
+  const source = catalog.sourceInterfaces.find((row) => row.id === observation.sourceInterfaceId);
+  return observationIsPublicable(observation, retrieval, source);
+}
+
+/** Frozen rows whose own legs do not resolve as production-publicable. */
+function researchDerivedRows(catalog: TokenReadCatalog, rows: readonly PersistedBenchmarkRow[]): PersistedBenchmarkRow[] {
+  return rows.filter(
+    (row) =>
+      row.calculationStatus === "value" &&
+      !(observationIsProduction(catalog, row.inputObservationId) && observationIsProduction(catalog, row.outputObservationId)),
+  );
+}
 
 async function schemaFindings(sql: BenchmarkSqlExecutor, migrationFiles: readonly string[]): Promise<{
   findings: ReadinessFinding[];
@@ -144,34 +175,52 @@ export async function checkTokenProductionReadiness(input: ReadinessInput): Prom
   const onDate = input.onDate ?? new Date().toISOString().slice(0, 10);
   const { findings, applied, pending } = await schemaFindings(input.sql, input.migrationFiles);
 
-  let frozen: PersistedBenchmarkRow[] = [];
-  if (!findings.some((row) => row.code === "SCHEMA_MISSING")) {
-    frozen = await loadPersistedBenchmarks(input.sql);
-  }
-  const frozenSeries = persistedBenchmarks(frozen);
-  const frozenByProvider = new Map<string, PublicTokenBenchmarkSeries>(frozenSeries.map((row) => [row.providerSlug, row]));
+  const emptyProviders = () =>
+    benchmarkProviders().map((providerSlug) => ({
+      providerSlug,
+      designatedModelId: constituentInForce(providerSlug, onDate)?.providerModelId ?? null,
+      frozen: false,
+      productionVisible: false,
+      priceUsdPer1m: null,
+      updatedAt: null,
+    }));
 
-  // A benchmark is production-serveable when the legs behind it are production-publicable.
-  const productionProviders = new Set(
-    publishableBenchmarks(listVisibleTokenSeries(input.catalog, "production"), onDate).map((row) => row.providerSlug),
-  );
+  // An outdated database cannot be interrogated further: the catalog loader
+  // reads columns a pending migration may not have added. Report and stop.
+  if (findings.some((row) => row.code === "SCHEMA_MISSING")) {
+    return { ready: false, appliedMigrations: applied, pendingMigrations: pending, findings, providers: emptyProviders() };
+  }
+
+  const frozen = await loadPersistedBenchmarks(input.sql);
+  const catalog = await input.loadCatalog();
+  const frozenSeries = persistedBenchmarks(frozen);
+  const frozenByProvider = new Map(frozenSeries.map((row) => [row.providerSlug, row]));
 
   const providers = benchmarkProviders().map((providerSlug) => {
     const series = frozenByProvider.get(providerSlug);
-    const productionVisible = productionProviders.has(providerSlug);
+    const rows = frozen.filter((row) => row.providerSlug === providerSlug);
+    // Ask the frozen rows themselves, not the provider. A row frozen from
+    // research legs stays research-derived however many production
+    // observations the provider has acquired since.
+    const researchDerived = researchDerivedRows(catalog, rows);
+    const productionVisible = series !== undefined && researchDerived.length === 0;
+
     if (!series) {
       findings.push({
         code: "BENCHMARK_MISSING",
         detail: `${providerSlug} has no frozen Token Price benchmark`,
         remedy: "run the operator verification against this database: npm run tokens:verify-production -- --verified-by <name> --evidence <what you checked>",
       });
-    } else if (!productionVisible) {
+    } else if (researchDerived.length > 0) {
+      const offending = researchDerived.map((row) => `${row.id} (calculated ${row.calculatedAt})`).join(", ");
       findings.push({
         code: "BENCHMARK_NOT_PRODUCTION",
-        detail: `${providerSlug} has a frozen benchmark, but it rests on research-only observations`,
-        remedy: "run the operator verification so the legs are manually verified production observations",
+        detail: `${providerSlug} has ${researchDerived.length} frozen benchmark row(s) whose own leg observations are not production-publicable: ${offending}`,
+        remedy:
+          "run the operator verification so the legs are manually verified production observations; a frozen row is never recalculated, so supersede the research-derived row if it must not be served",
       });
     }
+
     return {
       providerSlug,
       designatedModelId: constituentInForce(providerSlug, onDate)?.providerModelId ?? null,
@@ -182,7 +231,7 @@ export async function checkTokenProductionReadiness(input: ReadinessInput): Prom
     };
   });
 
-  if (providers.length > 0 && frozenSeries.length === 0 && !findings.some((row) => row.code === "SCHEMA_MISSING")) {
+  if (providers.length > 0 && frozenSeries.length === 0) {
     findings.push({
       code: "READ_PATH_EMPTY",
       detail: "the read path loaded no Token Price benchmark at all",
