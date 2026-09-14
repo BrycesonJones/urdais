@@ -178,6 +178,37 @@ describe("listed GPU family specifications", () => {
   });
 });
 
+describe("Bitcoin wealth index methodology", () => {
+  const ubwi = findDoc("methodology/ubwi");
+  const tokenPrice = findDoc("methodology/token-price");
+
+  it("registers UBWI under Methodology, after the token price benchmark", () => {
+    expect(ubwi).toMatchObject({ section: "Methodology", file: "methodology/ubwi.md" });
+    expect(docPages[docPages.indexOf(tokenPrice!) + 1]).toBe(ubwi);
+    expect(docHref(ubwi!.slug)).toBe("/docs/methodology/ubwi");
+  });
+
+  it("links to the framework and is linked from the methodology overview", () => {
+    const read = (file: string) => readFileSync(path.join(process.cwd(), "docs", file), "utf8");
+    const doc = read(ubwi!.file);
+    expect(doc).toContain("](/docs/methodology)");
+    expect(doc.match(/^# /gm)).toHaveLength(1);
+    expect(read("methodology.md")).toContain(`](${docHref(ubwi!.slug)})`);
+  });
+
+  it("is a draft that states its unit, its exclusions and why it cannot publish", () => {
+    const doc = readFileSync(path.join(process.cwd(), "docs", ubwi!.file), "utf8");
+    expect(doc).toContain("version 0.1.0-draft");
+    expect(doc).toContain("Total Global Wealth");
+    // The term is named once, only to prohibit it, and never used as a label.
+    expect(doc.match(/global wealth supply/gi)).toHaveLength(1);
+    expect(doc).toContain('"Global wealth supply" is not used anywhere in Urdais');
+    expect(doc).toContain("Human capital is excluded");
+    expect(doc).toContain("Asset-class market values are never summed");
+    expect(doc).toContain("labelled candidate");
+  });
+});
+
 describe("internal research and architecture artifacts", () => {
   const internalDirs = ["research", "architecture"] as const;
 
