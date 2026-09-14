@@ -1,6 +1,6 @@
 # Token pricing Phase 1
 
-**Status: internal research artifact. Not a methodology page, not routed publicly, not registered in the docs catalog.** Prepared 14 September 2026. This folder is research and schema design only. No frontend change, no collector, and no fabricated history are included.
+**Status: internal research artifact. Not a methodology page, not routed publicly, not registered in the docs catalog.** Prepared 14 September 2026. Phase 1 is research and schema design. Wave-1 ingestion for Anthropic, xAI, and OpenAI lives in `src/lib/tokens/` and does not change the Tokens UI.
 
 Urdais token pricing is the **current published first-party API token price for a specific model**, expressed in **USD per 1 million tokens**. Provider-level demo series such as Anthropic `$9.00 / 1M tokens` are not source quotes and are not preserved as canonical data.
 

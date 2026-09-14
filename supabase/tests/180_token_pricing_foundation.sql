@@ -24,7 +24,7 @@ begin
       and si.data_use_terms_state = 'under_review';
   if n <> 6 then raise exception 'expected 6 research-usable token pricing interfaces, found %', n; end if;
   select count(*) into n from reference.models;
-  if n <> 0 then raise exception 'models were seeded'; end if;
+  if n <> 18 then raise exception 'expected 18 wave-1 models, found %', n; end if;
   select count(*) into n from pipeline.token_price_observations;
   if n <> 0 then raise exception 'token prices were seeded'; end if;
 
@@ -32,7 +32,7 @@ begin
 
   -- latest pointers cannot be models; they belong on model_aliases.
   insert into reference.models (id, provider_id, provider_model_id, display_name, model_family, version, lifecycle_status)
-  values ('99999999-0000-4000-8000-000000000001', provider, 'claude-sonnet-5', 'Claude Sonnet 5', 'Claude', '5', 'current')
+  values ('99999999-0000-4000-8000-000000000001', provider, 'claude-foundation-test', 'Claude foundation test', 'Claude', 'test', 'current')
   returning id into model;
 
   insert into reference.model_aliases (provider_id, alias, target_model_id, alias_kind)
@@ -49,7 +49,7 @@ begin
   ok := false;
   begin
     insert into reference.models (provider_id, provider_model_id, display_name, model_family, lifecycle_status)
-    values (provider, 'claude-sonnet-5', 'Claude Sonnet', 'Claude', 'current');
+    values (provider, 'claude-foundation-test', 'Claude Sonnet', 'Claude', 'current');
   exception when unique_violation then ok := true;
   end;
   if not ok then raise exception 'duplicate native model id was accepted'; end if;

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Anthropic Claude API pricing fixture</title></head>
+<body>
+<h1>Model pricing</h1>
+<p>All prices are in USD. MTok = Million tokens.</p>
+<table>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Base input tokens</th>
+      <th>5m cache writes</th>
+      <th>1h cache writes</th>
+      <th>Cache hits and refreshes</th>
+      <th>Output tokens</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Claude Fable 5.1</td>
+      <td>$10 / MTok</td>
+      <td>$12.50 / MTok</td>
+      <td>$20 / MTok</td>
+      <td>$0.25 / MTok</td>
+      <td>$50 / MTok</td>
+    </tr>
+    <tr>
+      <td>Claude Opus 5</td>
+      <td>$5 / MTok</td>
+      <td>$6.25 / MTok</td>
+      <td>$10 / MTok</td>
+      <td>$0.50 / MTok</td>
+      <td>$25 / MTok</td>
+    </tr>
+    <tr>
+      <td>Claude Sonnet 5</td>
+      <td>$2 / MTok</td>
+      <td>$2.50 / MTok</td>
+      <td>$4 / MTok</td>
+      <td>$0.20 / MTok</td>
+      <td>$10 / MTok</td>
+    </tr>
+    <tr>
+      <td>Claude Haiku 4.5</td>
+      <td>$1 / MTok</td>
+      <td>$1.25 / MTok</td>
+      <td>$2 / MTok</td>
+      <td>$0.10 / MTok</td>
+      <td>$5 / MTok</td>
+    </tr>
+  </tbody>
+</table>
+<p>For Claude 4.6 and later models, specifying US-only inference through the inference_geo parameter incurs a 1.1x multiplier on all token pricing categories, including input tokens, output tokens, cache writes, and cache reads. Global routing (the default) uses standard pricing. Earlier models do not support the inference_geo parameter.</p>
+<p>Claude 4.6 and later models include the full 1M token context window at standard pricing.</p>
+<h2>Fast mode pricing</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Input</th>
+      <th>Output</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Claude Opus 5</td>
+      <td>$10 / MTok</td>
+      <td>$50 / MTok</td>
+    </tr>
+  </tbody>
+</table>
+<p>Fast mode is not available with the Batch API. Data residency multipliers apply on top of fast mode pricing.</p>
+<h2>Batch processing</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Batch input</th>
+      <th>Batch output</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Claude Fable 5.1</td>
+      <td>$5 / MTok</td>
+      <td>$25 / MTok</td>
+    </tr>
+    <tr>
+      <td>Claude Opus 5</td>
+      <td>$2.50 / MTok</td>
+      <td>$12.50 / MTok</td>
+    </tr>
+    <tr>
+      <td>Claude Sonnet 5</td>
+      <td>$1 / MTok</td>
+      <td>$5 / MTok</td>
+    </tr>
+    <tr>
+      <td>Claude Haiku 4.5</td>
+      <td>$0.50 / MTok</td>
+      <td>$2.50 / MTok</td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>xAI models pricing fixture</title></head>
+<body>
+<h1>Models</h1>
+<h2>Text API Pricing</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Context</th>
+      <th>Input / 1M tokens</th>
+      <th>Cached input / 1M tokens</th>
+      <th>Output / 1M tokens</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>grok-4.6 (&lt; 200k prompt tokens)</td>
+      <td>500k</td>
+      <td>$2.00</td>
+      <td>$0.50</td>
+      <td>$6.00</td>
+    </tr>
+    <tr>
+      <td>grok-4.6 (≥ 200k prompt tokens)</td>
+      <td>500k</td>
+      <td>$4.00</td>
+      <td>$1.00</td>
+      <td>$12.00</td>
+    </tr>
+    <tr>
+      <td>grok-4.5 (&lt; 200k prompt tokens)</td>
+      <td>500k</td>
+      <td>$2.00</td>
+      <td>$0.30</td>
+      <td>$6.00</td>
+    </tr>
+    <tr>
+      <td>grok-4.5 (≥ 200k prompt tokens)</td>
+      <td>500k</td>
+      <td>$4.00</td>
+      <td>$0.60</td>
+      <td>$12.00</td>
+    </tr>
+    <tr>
+      <td>grok-4.3 (&lt; 200k prompt tokens)</td>
+      <td>1M</td>
+      <td>$1.25</td>
+      <td>$0.20</td>
+      <td>$2.50</td>
+    </tr>
+    <tr>
+      <td>grok-4.3 (≥ 200k prompt tokens)</td>
+      <td>1M</td>
+      <td>$2.50</td>
+      <td>$0.40</td>
+      <td>$5.00</td>
+    </tr>
+    <tr>
+      <td>grok-4.20-0309-reasoning (&lt; 200k prompt tokens)</td>
+      <td>1M</td>
+      <td>$1.25</td>
+      <td>$0.20</td>
+      <td>$2.50</td>
+    </tr>
+    <tr>
+      <td>grok-4.20-0309-reasoning (≥ 200k prompt tokens)</td>
+      <td>1M</td>
+      <td>$2.50</td>
+      <td>$0.40</td>
+      <td>$5.00</td>
+    </tr>
+    <tr>
+      <td>grok-4.20-0309-non-reasoning (&lt; 200k prompt tokens)</td>
+      <td>1M</td>
+      <td>$1.25</td>
+      <td>$0.20</td>
+      <td>$2.50</td>
+    </tr>
+    <tr>
+      <td>grok-4.20-0309-non-reasoning (≥ 200k prompt tokens)</td>
+      <td>1M</td>
+      <td>$2.50</td>
+      <td>$0.40</td>
+      <td>$5.00</td>
+    </tr>
+    <tr>
+      <td>grok-build-0.1 (&lt; 200k prompt tokens)</td>
+      <td>256k</td>
+      <td>$1.00</td>
+      <td>$0.20</td>
+      <td>$2.00</td>
+    </tr>
+    <tr>
+      <td>grok-build-0.1 (≥ 200k prompt tokens)</td>
+      <td>256k</td>
+      <td>$2.00</td>
+      <td>$0.40</td>
+      <td>$4.00</td>
+    </tr>
+    <tr>
+      <td>grok-4.20-multi-agent-0309 (&lt; 200k prompt tokens)</td>
+      <td>1M</td>
+      <td>$1.25</td>
+      <td>$0.20</td>
+      <td>$2.50</td>
+    </tr>
+    <tr>
+      <td>grok-4.20-multi-agent-0309 (≥ 200k prompt tokens)</td>
+      <td>1M</td>
+      <td>$2.50</td>
+      <td>$0.40</td>
+      <td>$5.00</td>
+    </tr>
+  </tbody>
+</table>
+<p>Prices shown per million tokens. Models listed with two rows use long context pricing: requests whose prompt reaches the listed token threshold are billed at the higher rate for all tokens in the request.</p>
+<p>Batch API: Not every model accepts Batch API requests. See Details on each model page.</p>
+<h2>Imagine Pricing</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Cost</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>grok-imagine-image</td>
+      <td>$0.02 / image</td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>
