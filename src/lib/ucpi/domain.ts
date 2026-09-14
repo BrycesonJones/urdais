@@ -26,7 +26,7 @@ export type Retrieval = {
   responseStatus: number | null;
   request: RequestSpec;
   enumerationAssessment: "complete" | "incomplete" | "unknown" | "claimed_complete_observed_incomplete";
-  retrievalPurpose: "research" | "production";
+  retrievalPurpose: "research" | "validation" | "production";
   permissionGrantId: string | null;
 };
 

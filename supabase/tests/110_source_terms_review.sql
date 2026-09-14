@@ -186,9 +186,13 @@ begin
 
   -- Registry rows are not market participants: no entity, role or observation was created.
   select count(*) into n from reference.market_entities;
-  if n <> 0 then raise exception 'reviewing terms created % market entit(ies)', n; end if;
+  -- Launch enablement seeds exactly two seller legal entities (140_provider_reference_data.sql); the terms review itself adds none.
+  if n <> 2 then raise exception 'expected exactly the two seeded seller entities, found % market entit(ies)', n; end if;
   select count(*) into n from reference.entity_roles;
-  if n <> 0 then raise exception 'reviewing terms created % entity role(s)', n; end if;
+  -- The two seeded seller roles; the terms review itself adds none, and no operator role exists anywhere.
+  if n <> 2 then raise exception 'expected exactly the two seeded seller roles, found % entity role(s)', n; end if;
+  select count(*) into n from reference.entity_roles where role <> 'seller';
+  if n <> 0 then raise exception 'reviewing terms created % non-seller role(s)', n; end if;
   select count(*) into n from pipeline.source_retrievals;
   if n <> 0 then raise exception 'reviewing terms created % retrieval(s); no collector exists', n; end if;
   select count(*) into n from pipeline.raw_offers;
