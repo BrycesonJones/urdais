@@ -23,6 +23,7 @@ import {
 import { loadTokenReadCatalogFromSql, persistTokenReadCatalog, type TokenSqlExecutor } from "@/lib/tokens/read/sql";
 import { listPublicTokenSeries, listVisibleTokenSeries } from "@/lib/tokens/read/series";
 import { InMemoryTokenPricingStore } from "@/lib/tokens/store";
+import { sha256Hex } from "@/lib/tokens/hash";
 import { resolveTokenDatabaseUrl } from "@/lib/tokens/read/database";
 
 function previewCatalog() {
@@ -135,6 +136,7 @@ function memorySql(): TokenSqlExecutor & {
                 response_content_type: row[9],
                 response_hash: row[10],
                 response_byte_length: row[11],
+                response_body: row[12],
                 record_count: row[13],
                 enumeration_assessment: row[14],
                 enumeration_evidence: row[15],
@@ -308,9 +310,9 @@ describe("Token Price benchmark on the product surfaces", () => {
     render(<MarketDetailPage market={market} researchPreview={true} />);
     fireEvent.click(screen.getByRole("button", { name: "Tokens" }));
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Anthropic");
-    expect(screen.getByText("$6.00")).toBeInTheDocument();
+    expect(screen.getByText("$30.00")).toBeInTheDocument();
     expect(screen.getByText("per 1M tokens")).toBeInTheDocument();
-    expect(screen.getByText(/Urdais Token Price · Claude Sonnet 5/)).toBeInTheDocument();
+    expect(screen.getByText(/Urdais Token Price · Claude Fable 5.1/)).toBeInTheDocument();
     expect(screen.getByText("Research preview")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Model/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /Pricing dimension/ })).toBeNull();
@@ -335,7 +337,7 @@ describe("Token Price benchmark on the product surfaces", () => {
     render(<TokenPriceSection instruments={benchmarkInstruments()} researchPreview={true} />);
     expect(screen.getByRole("heading", { name: "Token Price" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Provider/ })).toHaveTextContent("Anthropic");
-    expect(screen.getByText("$6.00")).toBeInTheDocument();
+    expect(screen.getByText("$30.00")).toBeInTheDocument();
     expect(screen.getByText("per 1M tokens")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Model/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /Pricing dimension/ })).toBeNull();
@@ -344,5 +346,33 @@ describe("Token Price benchmark on the product surfaces", () => {
   it("publishes no benchmark in production even with research observations present", () => {
     expect(visibleTokenBenchmarks(previewCatalog(), { NODE_ENV: "production" })).toEqual([]);
     expect(visibleTokenBenchmarks(previewCatalog(), { NODE_ENV: "development" })).toHaveLength(3);
+  });
+});
+
+describe("raw retrieval evidence", () => {
+  it("retains the reviewed artifact in the database, so a parser run is reproducible from it", async () => {
+    const sql = memorySql();
+    await seedWave1ResearchPreviewDatabase(sql);
+    const catalog = await loadTokenReadCatalogFromSql(sql);
+    expect(catalog.retrievals.length).toBeGreaterThan(0);
+    for (const retrieval of catalog.retrievals) {
+      // The stored body is the artifact itself, not just a hash of it.
+      expect(retrieval.responseBody.body.length).toBeGreaterThan(100);
+      expect(retrieval.responseBody.contentType).toMatch(/html|json|text/);
+      expect(sha256Hex(retrieval.responseBody.body)).toBe(retrieval.responseHash);
+    }
+    // Wave-1 sources are public pricing pages; no credential is retained with them.
+    const bodies = catalog.retrievals.map((row) => row.responseBody.body).join("");
+    expect(bodies).not.toMatch(/authorization|api[_-]?key|bearer /i);
+  });
+
+  it("re-parses the retained artifact into the same canonical prices", () => {
+    const store = new InMemoryTokenPricingStore();
+    seedWave1ResearchPreview(store);
+    const first = listVisibleTokenSeries(tokenReadCatalogFromStore(store), "research_preview");
+    const second = new InMemoryTokenPricingStore();
+    seedWave1ResearchPreview(second);
+    const again = listVisibleTokenSeries(tokenReadCatalogFromStore(second), "research_preview");
+    expect(again.map((row) => [row.seriesId, row.priceUsdPer1m])).toEqual(first.map((row) => [row.seriesId, row.priceUsdPer1m]));
   });
 });

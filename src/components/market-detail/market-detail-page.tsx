@@ -135,7 +135,7 @@ function LoadedMarketDetail({
           <MarketHeader
             market={market}
             instrument={instrument}
-            researchPreview={researchPreview && Boolean(instrument.tokenIdentity)}
+            researchPreview={researchPreview && Boolean(instrument.benchmarkIdentity ?? instrument.tokenIdentity)}
           />
           <MarketSelectors
             market={market}

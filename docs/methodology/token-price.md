@@ -1,6 +1,6 @@
 # Urdais Token Price Methodology
 
-**Version 1.0, 14 September 2026.** Status: proposed. No production value has been published under this document; Wave-1 sources are not yet cleared for production collection, so every value computed under it today is a labelled research preview.
+**Version 1.1, 14 September 2026.** Status: proposed. No production value has been published under this document; Wave-1 sources are not yet cleared for production collection, so every value computed under it today is a labelled research preview.
 
 ## Why this exists
 
@@ -29,21 +29,36 @@ For a provider on a calculation date, with both eligible legs in United States d
 
 which is the arithmetic mean of the two legs. Weights are fixed at one half each by this version of the methodology and are not configurable per provider. No rounding is applied before the calculation; the published value carries the precision of its inputs, and display rounding is a presentation concern.
 
+**Weights are a property of a methodology version, and a methodology version is effective-dated.** A value is computed with the weights in force on its own calculation date. Changing the weights in a later version therefore cannot alter an earlier value; it can only produce different values from its own effective date onward.
+
+### Calculation events and leg state
+
+A provider's two legs are published independently and change independently. Urdais records a canonical observation only when a source price changes, so an unchanged output rate produces no new row on the day an input rate moves. The benchmark therefore does not require both legs to be observed on the same date.
+
+A **calculation event** is an eligible leg observation. At each event Urdais computes the benchmark from the newest eligible input observation and the newest eligible output observation known as of that event. Both legs keep their own source timestamps, and no observation is fabricated for the leg that did not change.
+
+If an input rate moves from two dollars to three while the output rate stays at ten, the benchmark moves from six dollars to six dollars fifty at the moment the input observation is recorded, using the output observation that is still current.
+
 The unit is **USD per 1M tokens**. The product shows the value as a dollar amount followed by *per 1M tokens*, never as *per 1M input tokens* or *per 1M output tokens*, because the benchmark is neither.
 
 ## Benchmark model
 
-Each provider has exactly one designated benchmark model, chosen by Urdais and named in this methodology. It is never selected dynamically. Urdais does not use a latest-pointer alias, the newest model, the cheapest model, the most expensive model, or whatever an ordering happens to return first.
+Urdais measures the frontier. The designated model for a provider is **the provider's current, broadly available flagship frontier model: the one the provider positions as its leading general-purpose capability**. It is not the provider's cheapest model, not the tier a typical workload happens to run on, and not whichever model is most used.
 
-The model is a current general-purpose flagship. Coding-specific, agent-specific, image-specific, research-only and other narrow specialist models are not eligible while a general-purpose flagship exists.
+Selection is explicit and never dynamic. Urdais does not follow a latest-pointer alias, take the newest identifier automatically, or accept whatever an ordering returns first.
 
-Version 1.0 designates:
+Two classes are ineligible however capable they are:
 
-- **Anthropic**: Claude Sonnet 5 (`claude-sonnet-5`). The current general-purpose flagship of the Claude family in the qualified roster. Opus 5 and Fable 5.1 sit above it and Haiku 4.5 below; Sonnet is the general-purpose tier a normal workload runs on.
-- **xAI**: Grok 4.6 (`grok-4.6`). The highest current general-purpose Grok in the qualified roster. Grok Build 0.1 is coding-specific, the Grok 4.20 multi-agent build is agent-specific, and the 4.20 reasoning and non-reasoning entries are mode-specific variants of an earlier version; none is eligible while a general-purpose flagship exists.
-- **OpenAI**: GPT-5.6 Sol (`gpt-5.6-sol`). The current general-purpose flagship in the qualified roster. GPT-5.3 Codex is coding-specific and GPT-Rosalind Research is research-only, so neither is eligible; GPT-6 Astra, Terra, Luna and Cyber sit at other points of the range.
+- **Narrow specialists.** Coding-specific, agent-specific, image-specific, research-only and similarly scoped models do not represent a provider's general-purpose frontier.
+- **Access-restricted models.** A model available only to vetted organisations or under a trusted-access programme is not broadly available, so it does not represent what the provider sells to the market.
 
-Each designation is effective-dated. A designation records the date from which it applies, and a provider may have several designations over time.
+Version 1.1 designates:
+
+- **Anthropic**: Claude Fable 5.1 (`claude-fable-5-1`). Anthropic's own product page, retrieved 14 September 2026, states "Claude Fable 5.1 is our most capable generally available model" and describes it as available to Pro, Max, Team and Enterprise users and to developers through the Claude Platform and major cloud providers. Claude Mythos 5.1 is more permissive in restricted domains but is limited to vetted organisations through trusted-access programmes, so it is not broadly available and is not eligible. Opus 5, Sonnet 5 and Haiku 4.5 sit below Fable 5.1 in capability.
+- **OpenAI**: GPT-6 Astra (`gpt-6-astra`). The highest generation general-purpose model in the qualified roster and the most expensive of its general-purpose models, which is the frontier signal the reviewed pricing artifact carries. GPT-5.3 Codex is coding-specific and GPT-Rosalind Research is research-only, so neither is eligible; GPT-5.6 Cyber is domain-scoped and carries no long-context rate. Evidence limitation: the reviewed first-party artifact is a pricing table with no positioning statement, so this designation rests on generation and price tier within the qualified roster. If first-party positioning evidence contradicts it, the designation changes with a new effective date and earlier values are not recomputed.
+- **xAI**: Grok 4.6 (`grok-4.6`). The highest current general-purpose Grok in the qualified roster. Grok Build 0.1 is coding-specific, the Grok 4.20 multi-agent build is agent-specific, and the 4.20 reasoning and non-reasoning entries are mode-specific variants of an earlier version.
+
+Each designation is effective-dated. A designation records the date from which it applies, a provider may have several over time, and the designation in force on a calculation's own date is the one that produced its value.
 
 ## Eligible legs
 
@@ -65,9 +80,11 @@ A withheld benchmark does not erase what came before it. Where a previously vali
 
 ## History and updates
 
-A benchmark observation exists for a date only where both eligible legs were observed on that date. Urdais does not interpolate, backfill, carry a value forward as a new point, or synthesize history. A series with one observation has one point.
+A benchmark point exists only at a real calculation event, that is, at an eligible leg observation with both legs known. Urdais does not interpolate, backfill, carry a value forward as a new point, or synthesize history. A series with one calculation event has one point.
 
-A new benchmark observation is recorded when an eligible leg's price changes. A retrieval that returns the same prices as the last one does not create a new observation; it confirms the existing one.
+A point carries the timestamp of the calculation that produced it: **the later of the two eligible leg observations used**, which is the moment at which the state of both legs first supported that value. It is never rounded to midnight or to a date boundary.
+
+A retrieval that returns the same prices as the last one produces no new point; it confirms the existing one. Where consecutive events would produce the same value from the same designated model under the same methodology version, only the first is kept.
 
 Percentage change compares a benchmark value with the previous benchmark value **in the same constituent lineage**, that is, computed from the same designated model under the same methodology version. Where no such prior value exists, percentage change is withheld. It is never shown as zero to fill the space.
 
@@ -75,7 +92,9 @@ Percentage change compares a benchmark value with the previous benchmark value *
 
 Changing a provider's benchmark model is a methodology change and is versioned explicitly. It never rewrites history.
 
-When a designation changes, values dated before the new designation's effective date remain those computed from the previous model, and values from the effective date onward use the new one. Urdais does not recompute past observations with a newly designated model. The change is recorded in the version history of this document, and the constituent record carries the effective date that produced each value.
+When a designation changes, values dated before the new designation's effective date remain those computed from the previous model, and values from the effective date onward use the new one. Urdais does not recompute past observations with a newly designated model. A provider's published history is assembled designation by designation: each segment is computed from the model and methodology version in force during that segment, and the segments are concatenated in time order.
+
+If a newly effective designation does not yet have both eligible legs, the provider's last successfully calculated benchmark continues to be shown with its own original timestamp, and the fact that the current designation cannot yet be calculated is reported separately. A withheld current calculation never erases a previously valid value and never manufactures a new point.
 
 Because a constituent change breaks the comparability of a percentage change across the boundary, percentage change is withheld across it rather than computed between two different economic objects.
 
@@ -84,5 +103,7 @@ Because a constituent change breaks the comparability of a percentage change acr
 Publication requires an approved version of this methodology and source rights permitting production collection and index use for the provider. Wave-1 providers are not cleared, so the benchmark is visible only in the development research preview, labelled as such. Production remains fail-closed: where the requirements are not met, no value is published and no substitute is shown.
 
 ## Version history
+
+**1.1, 14 September 2026**: corrects the constituent-selection criterion from a representative general-purpose model to the provider's current, broadly available flagship frontier model, and excludes access-restricted models explicitly. Redesignates Anthropic to Claude Fable 5.1 and OpenAI to GPT-6 Astra on that criterion; xAI stays Grok 4.6. Defines calculation events and leg state so a change in one leg recalculates against the current state of the other, fixes the point timestamp as the later of the two leg observations used, makes methodology weights effective-dated so a later version cannot alter an earlier value, states that history is assembled per designation segment, and adds the last-known-good rule across a designation transition.
 
 **1.0, 14 September 2026**: initial methodology. Fixes the standardized 500,000 input and 500,000 output token workload, the equal weights, the eligible legs and exclusions, the designated benchmark models for Anthropic, xAI and OpenAI, the effective-dated constituent rule, the withholding rules and the publication requirements. No production effective date.

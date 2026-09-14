@@ -16,7 +16,7 @@ import type { CacheTtl, ServiceTier, SourcePricingDimension } from "@/lib/tokens
 import { pickDefaultTokenSeries } from "@/lib/tokens/read/default-selection";
 import { TOKEN_CHART_UNIT, pricingDimensionLabel, tokenFacetLabel, tokenSeriesLabel, tokenUnitCaption } from "@/lib/tokens/read/labels";
 import type { PublicTokenSeries } from "@/lib/tokens/read/api-contract";
-import { TOKEN_PRICE_BENCHMARK_NAME, TOKEN_PRICE_UNIT_CAPTION } from "@/lib/tokens/read/benchmark";
+import { TOKEN_PRICE_UNIT_CAPTION } from "@/lib/tokens/read/benchmark";
 import type { PublicTokenBenchmarkSeries } from "@/lib/tokens/read/api-contract";
 import type { MarketDetail, MarketInstrumentDetail, TokenInstrumentIdentity } from "@/types/market";
 
@@ -87,19 +87,13 @@ export function benchmarkInstrumentsFromSeries(benchmarks: readonly PublicTokenB
       symbol: row.providerName,
       name: `${row.benchmarkName} · ${row.benchmarkModelName}`,
       unit: TOKEN_PRICE_UNIT_CAPTION,
-      tokenIdentity: {
+      benchmarkIdentity: {
         providerSlug: row.providerSlug,
         providerName: row.providerName,
-        providerModelId: row.benchmarkModelId,
-        displayName: row.benchmarkModelName,
-        modelFamily: "",
-        pricingDimension: "blended",
-        dimensionLabel: TOKEN_PRICE_BENCHMARK_NAME,
-        facetLabel: TOKEN_PRICE_BENCHMARK_NAME,
-        serviceTier: "standard",
-        contextTier: null,
-        cacheTtl: null,
-        region: null,
+        benchmarkName: row.benchmarkName,
+        benchmarkModelId: row.benchmarkModelId,
+        benchmarkModelName: row.benchmarkModelName,
+        methodologyVersion: row.methodologyVersion,
         unitCaption: TOKEN_PRICE_UNIT_CAPTION,
       },
       snapshot: { value: row.priceUsdPer1m, changePercent: row.percentageChange, asOf: latest.time },

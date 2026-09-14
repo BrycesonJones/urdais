@@ -189,7 +189,11 @@ function mapRetrieval(row: Record<string, unknown>, providerByInterface: Readonl
       responseContentType: asNullString(row.response_content_type) ?? "text/html",
       responseHash: asNullString(row.response_hash) ?? "",
       responseByteLength: asInt(row.response_byte_length, 0),
-      responseBody: { contentType: asNullString(row.response_content_type) ?? "text/html", body: "" },
+      // The reviewed artifact, read back so a parser run is reproducible from the database alone.
+      responseBody: {
+        contentType: asNullString(row.response_content_type) ?? "text/html",
+        body: retrievalArtifactBody(row.response_body),
+      },
       recordCount: row.record_count == null ? null : asInt(row.record_count, 0),
       enumerationAssessment: "unknown",
       enumerationEvidence: asNullString(row.enumeration_evidence) ?? "",
@@ -278,10 +282,26 @@ SELECT o.id, o.model_id, o.pricing_dimension, o.source_native_price, o.source_na
  ORDER BY o.retrieved_at, o.id
 `;
 
+/** The retained source artifact from a persisted `response_body`, or empty when a row predates retention. */
+function retrievalArtifactBody(value: unknown): string {
+  const parsed = typeof value === "string" ? safeJson(value) : value;
+  if (typeof parsed !== "object" || parsed === null) return "";
+  const body = (parsed as Record<string, unknown>).body;
+  return typeof body === "string" ? body : "";
+}
+
+function safeJson(value: string): unknown {
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return null;
+  }
+}
+
 const RETRIEVALS_SQL = `
 SELECT r.id, r.source_interface_id, r.idempotency_key, r.requested_at, r.completed_at, r.request_method,
        r.request_url, r.request_parameters, r.response_status, r.response_content_type, r.response_hash,
-       r.response_byte_length, r.record_count, r.enumeration_assessment, r.enumeration_evidence,
+       r.response_byte_length, r.response_body, r.record_count, r.enumeration_assessment, r.enumeration_evidence,
        r.collector_identity, r.retrieval_purpose, r.permission_grant_id, si.slug AS source_interface_slug
   FROM pipeline.source_retrievals r
   JOIN reference.source_interfaces si ON si.id = r.source_interface_id
@@ -375,7 +395,9 @@ export async function persistTokenReadCatalog(
         retrieval.responseContentType,
         retrieval.responseHash,
         retrieval.responseByteLength,
-        JSON.stringify({ contentType: retrieval.responseBody.contentType, sha256: retrieval.responseHash }),
+        // The reviewed artifact itself, so a parser run is reproducible from the database
+        // alone. Wave-1 sources are public pricing pages and carry no credential.
+        JSON.stringify({ contentType: retrieval.responseBody.contentType, sha256: retrieval.responseHash, body: retrieval.responseBody.body }),
         retrieval.recordCount,
         retrieval.enumerationAssessment,
         retrieval.enumerationEvidence,

@@ -34,12 +34,12 @@ async function main(): Promise<void> {
   }
   console.log(`\n${TOKEN_PRICE_BENCHMARK_NAME} v${TOKEN_PRICE_METHODOLOGY_VERSION}`);
   for (const row of providerBenchmarks(response.series)) {
-    if (row.status === "value") {
-      const change = row.series.percentageChange === null ? "change withheld" : `${row.series.percentageChange}%`;
-      console.log(`  ${row.providerName.padEnd(12)} ${row.series.benchmarkModelName.padEnd(20)} $${row.series.priceUsdPer1m.toFixed(2).padStart(8)} ${TOKEN_PRICE_UNIT_CAPTION}   (${row.series.history.length} point(s), ${change})`);
-    } else {
-      console.log(`  ${row.providerName.padEnd(12)} withheld: ${row.reason}${row.providerModelId ? ` (${row.providerModelId})` : ""}`);
-    }
+    const value = row.series
+      ? `$${row.series.priceUsdPer1m.toFixed(2).padStart(8)} ${TOKEN_PRICE_UNIT_CAPTION}  ${row.series.benchmarkModelName} (${row.series.history.length} point(s), updated ${row.series.updatedAt}, ${row.series.percentageChange === null ? "change withheld" : `${row.series.percentageChange}%`})`
+      : "no value ever calculated";
+    const current = row.current.ok ? "current designation calculable" : `current designation withheld: ${row.current.reason}${row.current.providerModelId ? ` (${row.current.providerModelId})` : ""}`;
+    console.log(`  ${row.providerName.padEnd(12)} ${value}`);
+    console.log(`  ${"".padEnd(12)} ${current}`);
   }
 }
 

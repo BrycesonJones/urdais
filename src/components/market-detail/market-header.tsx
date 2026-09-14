@@ -39,7 +39,7 @@ export function MarketHeader({ market, instrument, emptyFamilyLabel, emptyNote, 
   }
 
   const { snapshot } = instrument;
-  const token = instrument.tokenIdentity;
+  const token = instrument.benchmarkIdentity ?? instrument.tokenIdentity;
   const unitCaption = token?.unitCaption ?? instrument.unit;
   const showDemoBadge = token === undefined;
   const movement = snapshot.changePercent === null ? null : movementClass(snapshot.changePercent);

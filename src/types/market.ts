@@ -49,7 +49,26 @@ export type MarketSnapshot = {
   asOf: number;
 };
 
-/** Canonical token-price identity for Provider → Model → pricing-dimension selection. */
+/**
+ * The Urdais Token Price benchmark behind a product market. The designated
+ * model is named for transparency; it is methodology, not a control, and no
+ * surface offers a way to change it.
+ */
+export type BenchmarkInstrumentIdentity = {
+  providerSlug: string;
+  providerName: string;
+  benchmarkName: string;
+  benchmarkModelId: string;
+  benchmarkModelName: string;
+  methodologyVersion: string;
+  unitCaption: string;
+};
+
+/**
+ * Canonical token-price identity for one model-level facet series: a single
+ * published rate such as an input or output price. Internal to calculation
+ * and developer verification; the product does not navigate by these.
+ */
 export type TokenInstrumentIdentity = {
   providerSlug: string;
   providerName: string;
@@ -129,10 +148,12 @@ export type MarketInstrumentDetail = MarketIndex & {
    */
   regionLabel?: string;
   /**
-   * Present on canonical token-price instruments. Absent on demo GPU and
-   * other non-token series. Selects Provider → Model → pricing dimension.
+   * Present on canonical token facet instruments, which are internal. The
+   * product market carries `benchmarkIdentity` instead.
    */
   tokenIdentity?: TokenInstrumentIdentity;
+  /** Present on the Urdais Token Price benchmark market. */
+  benchmarkIdentity?: BenchmarkInstrumentIdentity;
   snapshot: MarketSnapshot;
   series: DetailedSeries;
   /** Ranges the history is long enough to support; others are shown disabled. */
