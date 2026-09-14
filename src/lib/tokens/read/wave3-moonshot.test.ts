@@ -1,6 +1,7 @@
 /**
- * Wave 3: Moonshot enters under the existing methodology, and Mistral does not
- * enter at all until its designation is decided.
+ * Wave 3: Moonshot enters under the existing methodology. Mistral Large 3 is
+ * designated but does not enter, because no immutable first-party identity for
+ * it has been verified and a benchmark must not be frozen against an alias.
  */
 
 import { describe, expect, it } from "vitest";
@@ -14,6 +15,7 @@ import {
   methodologyInForce,
   TOKEN_PRICE_METHODOLOGY_VERSION,
   tokenBenchmarkPrice,
+  withholdingFor,
 } from "@/lib/tokens/read/benchmark";
 import { providerParser } from "@/lib/tokens/providers";
 import { publishableBenchmarks } from "@/lib/tokens/read/benchmark-series";
@@ -151,13 +153,50 @@ describe("Moonshot publishes alongside the existing roster without disturbing it
   });
 });
 
-describe("Mistral is researched but not seeded", () => {
-  it("is absent from the roster until its designation is decided", () => {
+describe("Mistral is designated but not seeded", () => {
+  it("is absent from the roster while publication is blocked", () => {
     expect(WAVE1_PROVIDERS as readonly string[]).not.toContain("mistral");
     expect(benchmarkProviders()).not.toContain("mistral");
   });
 
   it("has no parser registered, so nothing can ingest it by accident", () => {
     expect(() => providerParser("mistral")).toThrow(/no pricing parser is registered/);
+  });
+});
+
+describe("Mistral is designated but blocked, and that is a different state from DeepSeek's", () => {
+  const mistral = withholdingFor("mistral", TODAY)!;
+  const deepseek = withholdingFor("deepseek", TODAY)!;
+
+  it("records the designation, the compatible price and the expected value", () => {
+    expect(mistral.state).toBe("designated_publication_blocked");
+    expect(mistral.designatedModel).toBe("Mistral Large 3");
+    expect(mistral.expectedPriceUsdPer1m).toBe(1);
+  });
+
+  it("names the blocker as identity, not pricing", () => {
+    expect(mistral.reason).toBe("NO_IMMUTABLE_MODEL_IDENTITY");
+    expect(mistral.detail).toContain("blocked on identity, not on price");
+  });
+
+  it("records the mutable alias so it is never mistaken for an identity", () => {
+    expect(mistral.mutableAliasObserved).toBe("mistral-large-latest");
+    // The absence of a stable id is the blocker; no dated id is asserted.
+    expect(mistral.designatedModel).not.toMatch(/\d{4}$/);
+  });
+
+  it("keeps the two blockers distinct rather than overloading one label", () => {
+    expect(deepseek.state).toBe("collected_not_publishable");
+    expect(deepseek.reason).toBe("NO_STANDARD_SERVICE_TIER");
+    expect(mistral.state).not.toBe(deepseek.state);
+    expect(mistral.reason).not.toBe(deepseek.reason);
+  });
+
+  it("publishes neither, and leaves the public roster at six", () => {
+    expect(benchmarkProviders()).toEqual(["alibaba", "anthropic", "google", "moonshot", "openai", "xai"]);
+    for (const slug of ["mistral", "deepseek"]) {
+      expect(benchmarkProviders()).not.toContain(slug);
+      expect(constituentInForce(slug, TODAY)).toBeUndefined();
+    }
   });
 });

@@ -12,10 +12,13 @@
 -- exactly as it does for the others. Publication of a manually verified reading
 -- is a separate question and is unaffected.
 --
--- Mistral AI is deliberately absent. Its pricing was researched in the same
--- pass and its designation is an open decision, so seeding identities for it
--- would record a choice nobody has made. See
--- docs/research/token-pricing/wave3-moonshot-mistral.md.
+-- Mistral AI is deliberately absent. Its designation is settled, Mistral Large 3,
+-- and its published rates are methodology-compatible at an expected $1.00. What
+-- is missing is an immutable identity: the pricing surface publishes only the
+-- mutable pointer mistral-large-latest, and seeding a model row would have to
+-- name an id that no first-party page states. The assertion below keeps that
+-- absence deliberate rather than letting it drift into publication unnoticed.
+-- See docs/research/token-pricing/wave3-moonshot-mistral.md.
 
 insert into reference.providers (id, slug, name, provider_kind, website) values
   ('77777777-0000-4000-8000-000000000007', 'moonshot', 'Moonshot AI', 'model_api_provider', 'https://www.moonshot.ai')
@@ -75,8 +78,8 @@ begin
    where p.provider_kind = 'model_api_provider' and si.production_access_state = 'production_approved';
   if n <> 0 then raise exception 'a model-api source was production-approved'; end if;
 
-  -- Mistral is researched, not seeded: its designation is undecided.
+  -- Mistral is designated but blocked on identity: nothing is seeded for it.
   select count(*) into n from reference.providers where slug = 'mistral';
-  if n <> 0 then raise exception 'mistral was seeded before its designation was decided'; end if;
+  if n <> 0 then raise exception 'mistral was seeded before an immutable model identity was verified'; end if;
 end
 $$;

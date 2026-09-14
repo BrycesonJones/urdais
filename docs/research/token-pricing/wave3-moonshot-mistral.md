@@ -1,6 +1,6 @@
 # Wave 3 Token Price research — Moonshot AI and Mistral AI
 
-**Status: internal research artifact. Not a methodology page, not routed publicly, not registered in the docs catalog.** Prepared 14 September 2026. Moonshot enters the benchmark on the strength of what follows. Mistral does not: its pricing is recorded here in full, and its designation is an open decision that this document puts back rather than settles.
+**Status: internal research artifact. Not a methodology page, not routed publicly, not registered in the docs catalog.** Prepared 14 September 2026, decision recorded the same day. Moonshot enters the benchmark on the strength of what follows. Mistral's designation is settled and its publication is not: Urdais designates Mistral Large 3 as the Mistral Token Price model, and publication is blocked until a first-party immutable model identity can be verified.
 
 ## What was retrieved
 
@@ -56,7 +56,7 @@ Unchanged from every other token source, and not inferred from the page being re
 - Publishing a manually verified reading of the first-party page: permitted, and that is how the value below is produced.
 - Automated retrieval: **unresolved**. The interface enters at `research_usable` with terms and data-use both `under_review`, and the database trigger refuses a production retrieval from it. Moonshot stays manual-verification-only. No outreach was sent in this phase.
 
-## Mistral AI — researched, designation returned
+## Mistral AI — designated Mistral Large 3, publication blocked
 
 ### Published rates, API list, USD per 1M tokens
 
@@ -69,27 +69,37 @@ Unchanged from every other token source, and not inferred from the page being re
 
 Mistral also publishes a cached-input rate of $0.14 for GLM 5.2, states that batch processing reduces price by 50%, and states that cached input reduces input cost by up to 90%. All three are excluded dimensions or tiers under the existing rules. An Enterprise API tier is offered at 75% above list pricing and is likewise not the standard rate.
 
-### Why this is not settled here
+### Designation: Mistral Large 3
 
-Two candidates survive the exclusions, and they differ by a factor of 4.5. That is not a rounding question; it decides what Urdais would publish about Mistral for as long as the designation stands, and a frozen value cannot be withdrawn afterwards.
+Urdais designates **Mistral Large 3**. Two candidates survived the exclusions and they differ by a factor of 4.5, so the reasoning is recorded rather than assumed.
 
 **The case for Mistral Large 3.** Mistral's own words match the criterion almost exactly: the pricing page calls it "general-purpose, flagship" and the models page calls it "a state-of-the-art, open-weight, general-purpose multimodal model". The criterion asks for the model the provider positions as its leading general-purpose capability, and that is the sentence.
 
 **The case against.** Large 3 is version 25.12 and Medium 3.5 is version 26.04, so the designation would sit a generation behind the newest flagship-class release. Medium 3.5 is more than twice the input price and five times the output price, which is usually where a frontier sits. Mistral's own FAQ answers "Which model should I use?" with "For most tasks and coding: Mistral Medium."
 
-**The case against Medium 3.5.** Its own description is "optimized for agentic and coding use cases". The methodology excludes coding specialists and agent-specific models by name, and that sentence is the provider describing a specialization.
+**The case against Medium 3.5.** Its own description is "optimized for agentic and coding use cases". The methodology excludes coding specialists and agent-specific models by name, and that sentence is the provider describing a specialization. A newer generation and a higher price do not override the criterion; they are evidence about capability tiers, not about how the provider positions its general-purpose frontier.
 
-A second obstacle stands in the way of either choice. **Mistral's pricing surface publishes only `-latest` pointers**, and the methodology refuses to follow a latest-pointer alias as an identity. The dated identity behind the designated model must be read from that model's own page before anything can be seeded; the ids visible in this pass were all pointers, and the only dated ids on the models page belong to deprecated releases. Inventing one by pattern would be fabricating an identity.
+**Mistral Large 3 is therefore the designated model, at $0.50 input and $1.50 output, giving an expected Token Price of $1.00 per 1M tokens.** That value is recorded and is not published.
+
+### Publication blocker: no immutable model identity
+
+Publication is blocked, and the blocker is identity rather than price. Mistral's pricing surface publishes only the mutable pointer `mistral-large-latest`, and the methodology refuses to follow a latest-pointer alias as an identity. Freezing a benchmark against a moving alias would claim a lineage the record does not have: the pointer can be retargeted at any time, and every historical point would silently come to mean a different model.
+
+The dated identity behind Mistral Large 3 must be read from that model's own first-party page before anything is seeded. The ids visible in this pass were all pointers, and the only dated ids on the models page belong to deprecated releases. Inventing one from the naming pattern would fabricate exactly the fact that is missing.
+
+**This is not DeepSeek's situation and is not recorded as if it were.** DeepSeek is `collected_not_publishable`: the prices are in hand and the methodology cannot express them, so there is no designation to make. Mistral is `designated_publication_blocked`: the model is chosen, the price is methodology-compatible, the value is known, and one external fact is outstanding. The two carry different reason codes, `NO_STANDARD_SERVICE_TIER` and `NO_IMMUTABLE_MODEL_IDENTITY`, and readiness reports them in different words.
 
 ### What this means for the wave
 
-Mistral is **not** in the provider roster, has no parser registered, and has no seeded identities. That is deliberate: a provider present in the code with no designation would record a choice nobody made, and the migration asserts its absence so this cannot drift in unnoticed. It is not "withheld" in the Wave 2 sense either, because nothing about Mistral's pricing is incompatible with the methodology. The pricing is expressible; the question is which model expresses it.
+Mistral is **not** in the provider roster, has no parser registered, has no seeded identities, no constituent row and no frozen benchmark, and does not appear on any public surface. The migration asserts its absence so the state cannot drift into publication unnoticed.
 
-Implementing Mistral once the designation is decided is a small job: a fixture, a parser, four seeds and one constituent row, plus reading the dated identity from the designated model's page.
+What the repository does record is the decision: the designation, the compatible price, the expected value, the mutable alias that must never be used as a canonical identity, and the blocker. That lives in `TOKEN_BENCHMARK_WITHHELD` under the `designated_publication_blocked` state.
+
+Publishing Mistral, once a dated identity is verified from its own first-party page, is a small job: a fixture, a parser, the seeds and one constituent row.
 
 ### Rights posture
 
-Same posture as every other token source, and unchanged by this research. Publication of a manually verified reading would be permitted; automated retrieval is unresolved; no registry row exists yet and none should be created before the designation is settled. No outreach was sent.
+Same posture as every other token source, and unchanged by this research. Publication of a manually verified reading would be permitted; automated retrieval is unresolved; no registry row exists yet and none should be created until a dated identity is verified. No outreach was sent.
 
 ### Open-weight status
 

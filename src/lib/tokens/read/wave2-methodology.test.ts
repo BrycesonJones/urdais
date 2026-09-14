@@ -156,9 +156,13 @@ describe("a provider can be collected and deliberately not published", () => {
     expect(constituentInForce("deepseek", TODAY)).toBeUndefined();
   });
 
-  it("publishes five providers, which is a decision about the sixth rather than a gap", () => {
+  it("publishes the designated providers, and records every unpublished one as a decision", () => {
     expect(benchmarkProviders()).toEqual(["alibaba", "anthropic", "google", "moonshot", "openai", "xai"]);
-    expect(TOKEN_BENCHMARK_WITHHELD.map((row) => row.providerSlug)).toEqual(["deepseek"]);
+    // Both are decisions on the record, for different reasons; neither is a gap.
+    expect(TOKEN_BENCHMARK_WITHHELD.map((row) => [row.providerSlug, row.state])).toEqual([
+      ["deepseek", "collected_not_publishable"],
+      ["mistral", "designated_publication_blocked"],
+    ]);
   });
 
   it("would not select a peak or off-peak leg even if one were designated", () => {
