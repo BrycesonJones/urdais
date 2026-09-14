@@ -7,8 +7,13 @@
  * operator action that fixes it.
  *
  * Usage:
- *   npm run tokens:production:check              against the resolved database
- *   npm run tokens:production:check -- --local   allow the local development database
+ *   npm run tokens:production:check                     against the resolved database
+ *   npm run tokens:production:check -- --local          allow the local development database
+ *   npm run tokens:production:check -- --url <origin>   also check what the running site serves
+ *
+ * The --url form is the one that would have caught a blank public surface: it
+ * asks the API for the benchmarks and then asks each page whether those values
+ * appear in the HTML it served.
  */
 
 import { readdirSync } from "node:fs";
@@ -17,6 +22,7 @@ import path from "node:path";
 import { loadTokenReadCatalogFromSql } from "@/lib/tokens/read/sql";
 import { resolveTokenDatabaseUrl, tokenSqlExecutor } from "@/lib/tokens/read/database";
 import { checkTokenProductionReadiness } from "@/lib/tokens/production-readiness";
+import { checkTokenSurfaces, formattedPrice } from "@/lib/tokens/surface-check";
 
 async function main(): Promise<void> {
   const allowLocalDefault = process.argv.includes("--local");
@@ -46,9 +52,34 @@ async function main(): Promise<void> {
 
   for (const note of report.notes) console.log(`  note: ${note}`);
 
+  const originIndex = process.argv.indexOf("--url");
+  const origin = originIndex >= 0 ? process.argv[originIndex + 1] : undefined;
+
   if (report.ready) {
     console.log("ready: every designated provider has a production-visible frozen Token Price benchmark.");
-    return;
+    if (!origin) return;
+
+    // The database being ready is not the same as the public surface showing it.
+    const surfaces = await checkTokenSurfaces(origin, (url) => fetch(url));
+    console.log(`\nsurfaces at ${surfaces.origin}`);
+    for (const benchmark of surfaces.benchmarks) console.log(`  api: ${benchmark.providerName} ${formattedPrice(benchmark.priceUsdPer1m)} per 1M tokens`);
+    for (const page of surfaces.pages) {
+      // Say what was asserted: the market page opens on Compute and switches
+      // families in the browser, so the price is not in its first response.
+      const asserted = page.expects === "value" ? "renders the price" : "offers the Tokens family";
+      const missing = page.missing.length > 0 ? ` (missing ${page.missing.join(", ")})` : "";
+      console.log(`  ${page.ok ? "ok   " : "BLANK"} ${page.path} ${asserted}${missing}`);
+    }
+    if (surfaces.ok) {
+      console.log("ready: the public surfaces render the production benchmarks.");
+      return;
+    }
+    console.error("\nnot ready:");
+    for (const finding of surfaces.findings) {
+      console.error(`  [${finding.code}] ${finding.detail}`);
+      console.error(`      remedy: ${finding.remedy}`);
+    }
+    process.exit(1);
   }
 
   console.error("\nnot ready:");
