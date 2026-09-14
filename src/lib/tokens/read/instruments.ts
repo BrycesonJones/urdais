@@ -4,10 +4,11 @@
  * points. Percentage change is already withheld by the read model when a
  * series has a single observation.
  *
- * This is a mapper, not a publication policy. One canonical series becomes
- * one instrument shape. Whether any of them may be shown as a product market
- * is decided at the publication boundary in load.ts, which withholds every
- * token market while the lab-level benchmark is undefined.
+ * This is a mapper, not a publication policy. The product market is the
+ * provider-level Urdais Token Price benchmark; the canonical per-facet
+ * series map to instruments only for internal use and verification, never as
+ * product navigation. Whether a benchmark may be shown is decided at the
+ * publication boundary in load.ts.
  */
 
 import { availableRanges } from "@/lib/market-ranges";
@@ -15,6 +16,8 @@ import type { CacheTtl, ServiceTier, SourcePricingDimension } from "@/lib/tokens
 import { pickDefaultTokenSeries } from "@/lib/tokens/read/default-selection";
 import { TOKEN_CHART_UNIT, pricingDimensionLabel, tokenFacetLabel, tokenSeriesLabel, tokenUnitCaption } from "@/lib/tokens/read/labels";
 import type { PublicTokenSeries } from "@/lib/tokens/read/api-contract";
+import { TOKEN_PRICE_BENCHMARK_NAME, TOKEN_PRICE_UNIT_CAPTION } from "@/lib/tokens/read/benchmark";
+import type { PublicTokenBenchmarkSeries } from "@/lib/tokens/read/api-contract";
 import type { MarketDetail, MarketInstrumentDetail, TokenInstrumentIdentity } from "@/types/market";
 
 function toUnix(iso: string): number {
@@ -65,6 +68,49 @@ function toInstrument(series: PublicTokenSeries, comparisons: MarketInstrumentDe
     availableRanges: availableRanges(detailed, latest.time),
     comparisons,
   };
+}
+
+/**
+ * The product market: one Urdais Token Price benchmark per provider. The
+ * designated model is named in the subtitle because it is methodology, not a
+ * control; there is no model, dimension, cache, tier or region selector.
+ */
+export function benchmarkInstrumentsFromSeries(benchmarks: readonly PublicTokenBenchmarkSeries[]): MarketInstrumentDetail[] {
+  const label = (row: PublicTokenBenchmarkSeries) => row.providerName;
+  return benchmarks.map((row) => {
+    const daily = row.history.map((point) => ({ time: toUnix(point.time), value: point.priceUsdPer1m }));
+    const latest = daily[daily.length - 1]!;
+    const detailed = { daily, intraday: [] };
+    return {
+      id: row.seriesId,
+      shortLabel: row.providerName,
+      symbol: row.providerName,
+      name: `${row.benchmarkName} · ${row.benchmarkModelName}`,
+      unit: TOKEN_PRICE_UNIT_CAPTION,
+      tokenIdentity: {
+        providerSlug: row.providerSlug,
+        providerName: row.providerName,
+        providerModelId: row.benchmarkModelId,
+        displayName: row.benchmarkModelName,
+        modelFamily: "",
+        pricingDimension: "blended",
+        dimensionLabel: TOKEN_PRICE_BENCHMARK_NAME,
+        facetLabel: TOKEN_PRICE_BENCHMARK_NAME,
+        serviceTier: "standard",
+        contextTier: null,
+        cacheTtl: null,
+        region: null,
+        unitCaption: TOKEN_PRICE_UNIT_CAPTION,
+      },
+      snapshot: { value: row.priceUsdPer1m, changePercent: row.percentageChange, asOf: latest.time },
+      series: detailed,
+      availableRanges: availableRanges(detailed, latest.time),
+      // Provider benchmark against provider benchmark; never a raw leg.
+      comparisons: benchmarks
+        .filter((other) => other.seriesId !== row.seriesId)
+        .map((other) => ({ instrumentId: other.seriesId, label: label(other), basis: "absolute" as const })),
+    };
+  });
 }
 
 export function tokenInstrumentsFromSeries(series: readonly PublicTokenSeries[]): MarketInstrumentDetail[] {

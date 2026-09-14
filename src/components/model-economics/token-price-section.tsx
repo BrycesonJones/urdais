@@ -34,7 +34,7 @@ export function TokenPriceSection({
   if (instruments.length === 0) {
     return (
       <section id="price" aria-labelledby="price-heading" className="scroll-mt-24">
-        <SectionHeading id="price-heading" title="Token Price" subtitle="Current lab-level token pricing" />
+        <SectionHeading id="price-heading" title="Token Price" subtitle="Cost of a standardized 1M-token workload" />
         <p className="mt-5 max-w-2xl text-sm text-neutral-400">{TOKEN_BENCHMARK_PENDING_NOTE}</p>
       </section>
     );
@@ -67,7 +67,7 @@ function TokenPriceChart({
       <SectionHeading
         id="price-heading"
         title="Token Price"
-        subtitle="Current lab-level token pricing"
+        subtitle="Cost of a standardized 1M-token workload"
         badge={researchPreview ? <ResearchPreviewBadge /> : undefined}
         aside={
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">

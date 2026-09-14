@@ -7,8 +7,8 @@
  */
 
 import { WAVE1_MODELS, WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
-import { tokenBenchmarkIsDefined } from "@/lib/tokens/read/benchmark";
-import { tokenInstrumentsFromSeries, withTokenInstruments } from "@/lib/tokens/read/instruments";
+import { publishableBenchmarks } from "@/lib/tokens/read/benchmark-series";
+import { benchmarkInstrumentsFromSeries, withTokenInstruments } from "@/lib/tokens/read/instruments";
 import { publicTokenPricesResponse, type PublicTokenPricesResponse } from "@/lib/tokens/read/api-contract";
 import { tokenVisibilityMode, type ProcessEnvLike } from "@/lib/tokens/read/publication";
 import { listVisibleTokenSeries, type TokenReadCatalog } from "@/lib/tokens/read/series";
@@ -52,20 +52,23 @@ export function visibleTokenPricesResponse(
 }
 
 /**
- * Token markets for a product surface.
+ * Token markets for a product surface: one Urdais Token Price benchmark per
+ * provider, derived under docs/methodology/token-price.md from the canonical
+ * standard input and output rates of that provider's designated model.
  *
- * The product publishes one token price per lab. Deriving that from a lab's
- * canonical input, output and cache prices is a methodology decision Urdais
- * has not taken, so while the benchmark is undefined this returns nothing and
- * the Tokens family renders as a family with no published market. It does not
- * promote one pricing dimension, average dimensions, or fall back to the
- * retired demo series. Canonical observations remain readable through
- * `visibleTokenPricesResponse` and the verification path.
+ * Visibility is applied to the canonical rows first, so production stays
+ * fail-closed: a provider whose source rights do not permit production
+ * collection contributes no legs, and therefore no benchmark. A provider
+ * missing either leg is withheld rather than approximated.
  */
 export async function loadVisibleTokenInstruments(env: ProcessEnvLike = process.env): Promise<MarketInstrumentDetail[]> {
-  if (!tokenBenchmarkIsDefined()) return [];
   const catalog = await loadTokenReadCatalog(env);
-  return tokenInstrumentsFromSeries(listVisibleTokenSeries(catalog, tokenVisibilityMode(env)));
+  return benchmarkInstrumentsFromSeries(publishableBenchmarks(listVisibleTokenSeries(catalog, tokenVisibilityMode(env))));
+}
+
+/** The benchmark rows themselves, for an API surface or a verification report. */
+export function visibleTokenBenchmarks(catalog: TokenReadCatalog, env: ProcessEnvLike = process.env) {
+  return publishableBenchmarks(listVisibleTokenSeries(catalog, tokenVisibilityMode(env)));
 }
 
 export async function hydrateMarketWithTokenPrices(

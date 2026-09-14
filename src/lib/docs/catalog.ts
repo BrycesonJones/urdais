@@ -103,6 +103,13 @@ export const docPages: readonly DocPage[] = [
     section: "Methodology",
     file: "methodology/ucpi-rtx-5090-listed.md",
   },
+  {
+    slug: "methodology/token-price",
+    title: "Urdais Token Price",
+    description: "The derived benchmark that reduces a provider's model-level input and output prices to one cost for a standardized 1M-token workload.",
+    section: "Methodology",
+    file: "methodology/token-price.md",
+  },
 ];
 
 export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];

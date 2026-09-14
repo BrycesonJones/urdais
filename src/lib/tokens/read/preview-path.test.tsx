@@ -10,9 +10,11 @@ import { seedWave1ResearchPreview, seedWave1ResearchPreviewDatabase } from "@/li
 import { validatePublicTokenPricesResponse } from "@/lib/tokens/read/api-contract";
 import { WAVE1_MODELS, WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
 import { TOKEN_BENCHMARK_PENDING_NOTE } from "@/lib/tokens/read/benchmark";
-import { tokenInstrumentsFromSeries, withTokenInstruments } from "@/lib/tokens/read/instruments";
+import { benchmarkInstrumentsFromSeries, tokenInstrumentsFromSeries, withTokenInstruments } from "@/lib/tokens/read/instruments";
+import { publishableBenchmarks } from "@/lib/tokens/read/benchmark-series";
+import { MAX_COMPARISONS } from "@/components/market-detail/use-instrument-chart";
 import { tokenVerificationReports } from "@/lib/tokens/read/verification";
-import { tokenReadCatalogFromStore, visibleTokenPricesResponse } from "@/lib/tokens/read/load";
+import { tokenReadCatalogFromStore, visibleTokenBenchmarks, visibleTokenPricesResponse } from "@/lib/tokens/read/load";
 import {
   isProductionRuntime,
   observationIsPublicable,
@@ -293,5 +295,54 @@ describe("source registry is unchanged", () => {
     });
     expect(WAVE1_SOURCE_INTERFACES.xai.registry.productionAccessState).toBe("research_usable");
     expect(WAVE1_SOURCE_INTERFACES.openai.registry.productionAccessState).toBe("research_usable");
+  });
+});
+
+describe("Token Price benchmark on the product surfaces", () => {
+  function benchmarkInstruments() {
+    return benchmarkInstrumentsFromSeries(publishableBenchmarks(listVisibleTokenSeries(previewCatalog(), "research_preview"), "2026-09-14"));
+  }
+
+  it("shows one provider benchmark market with no model, dimension, cache, tier or region control", () => {
+    const market = withTokenInstruments(findMarket("ucpi")!, benchmarkInstruments());
+    render(<MarketDetailPage market={market} researchPreview={true} />);
+    fireEvent.click(screen.getByRole("button", { name: "Tokens" }));
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Anthropic");
+    expect(screen.getByText("$6.00")).toBeInTheDocument();
+    expect(screen.getByText("per 1M tokens")).toBeInTheDocument();
+    expect(screen.getByText(/Urdais Token Price · Claude Sonnet 5/)).toBeInTheDocument();
+    expect(screen.getByText("Research preview")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Model/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Pricing dimension/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Cache|Service tier|Context|Region/ })).toBeNull();
+    expect(screen.queryByText("per 1M input tokens")).toBeNull();
+    expect(screen.queryByText("per 1M output tokens")).toBeNull();
+    expect(screen.queryByText("Demo data")).toBeNull();
+  });
+
+  it("compares provider benchmark against provider benchmark, capped at four series", () => {
+    const instruments = benchmarkInstruments();
+    expect(instruments).toHaveLength(3);
+    expect(MAX_COMPARISONS).toBe(3);
+    for (const instrument of instruments) {
+      expect(instrument.comparisons.map((row) => row.label).sort()).toEqual(
+        instruments.filter((row) => row.id !== instrument.id).map((row) => row.shortLabel).sort(),
+      );
+    }
+  });
+
+  it("gives Model Economics the same provider benchmark values, with only a lab selector", () => {
+    render(<TokenPriceSection instruments={benchmarkInstruments()} researchPreview={true} />);
+    expect(screen.getByRole("heading", { name: "Token Price" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Provider/ })).toHaveTextContent("Anthropic");
+    expect(screen.getByText("$6.00")).toBeInTheDocument();
+    expect(screen.getByText("per 1M tokens")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Model/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Pricing dimension/ })).toBeNull();
+  });
+
+  it("publishes no benchmark in production even with research observations present", () => {
+    expect(visibleTokenBenchmarks(previewCatalog(), { NODE_ENV: "production" })).toEqual([]);
+    expect(visibleTokenBenchmarks(previewCatalog(), { NODE_ENV: "development" })).toHaveLength(3);
   });
 });

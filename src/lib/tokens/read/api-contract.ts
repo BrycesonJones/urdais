@@ -33,6 +33,68 @@ export type PublicTokenSeries = {
   history: readonly PublicTokenHistoryPoint[];
 };
 
+/**
+ * The Urdais Token Price benchmark as the product API returns it: a derived
+ * provider-level value, minimal and allowlisted. It names the designated
+ * model and the methodology version that produced it, because the number is
+ * Urdais's and not a provider quote, and carries nothing about rights state,
+ * retrievals, parsers or internal ids.
+ */
+export type PublicTokenBenchmarkSeries = {
+  seriesId: string;
+  providerSlug: string;
+  providerName: string;
+  benchmarkName: string;
+  benchmarkModelId: string;
+  benchmarkModelName: string;
+  methodologyVersion: string;
+  priceUsdPer1m: number;
+  currency: "USD";
+  unit: "USD / 1M tokens";
+  updatedAt: string;
+  percentageChange: number | null;
+  history: readonly PublicTokenHistoryPoint[];
+};
+
+export const PUBLIC_TOKEN_BENCHMARK_KEYS: readonly (keyof PublicTokenBenchmarkSeries)[] = [
+  "seriesId",
+  "providerSlug",
+  "providerName",
+  "benchmarkName",
+  "benchmarkModelId",
+  "benchmarkModelName",
+  "methodologyVersion",
+  "priceUsdPer1m",
+  "currency",
+  "unit",
+  "updatedAt",
+  "percentageChange",
+  "history",
+];
+
+/** Returns reason codes; empty means the benchmark shape may leave the read path. */
+export function validatePublicTokenBenchmark(value: unknown): string[] {
+  const reasons: string[] = [];
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return ["BENCHMARK_NOT_OBJECT"];
+  const row = value as Record<string, unknown>;
+  for (const key of Object.keys(row)) {
+    if (!(PUBLIC_TOKEN_BENCHMARK_KEYS as readonly string[]).includes(key)) reasons.push(`BENCHMARK_UNKNOWN_FIELD:${key}`);
+  }
+  for (const key of PUBLIC_TOKEN_BENCHMARK_KEYS) {
+    if (!(key in row)) reasons.push(`BENCHMARK_MISSING_FIELD:${key}`);
+  }
+  const history = row.history;
+  if (Array.isArray(history)) {
+    for (const point of history) {
+      if (typeof point !== "object" || point === null) continue;
+      for (const key of Object.keys(point as Record<string, unknown>)) {
+        if (key !== "time" && key !== "priceUsdPer1m") reasons.push(`BENCHMARK_UNKNOWN_FIELD:history.${key}`);
+      }
+    }
+  }
+  return [...new Set(reasons)];
+}
+
 export type PublicTokenPricesResponse = {
   series: readonly PublicTokenSeries[];
 };
