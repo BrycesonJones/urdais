@@ -342,13 +342,13 @@ describe("Token Price benchmark on the product surfaces", () => {
     const market = withTokenInstruments(findMarket("ucpi")!, benchmarkInstruments());
     render(<MarketDetailPage market={market} researchPreview={true} />);
     fireEvent.click(screen.getByRole("button", { name: "Tokens" }));
-    // The default is the first provider by identity, never a quality ranking:
-    // pickDefaultTokenSeries tie-breaks on provider slug, so the roster's
-    // alphabetical head is what opens. Adding a provider can move it.
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Alibaba Cloud");
-    expect(screen.getByText("$4.00")).toBeInTheDocument();
+    // The surface opens on the designated default provider, which is an
+    // explicit product choice. Adding a provider whose slug sorts earlier must
+    // not change what a reader sees first.
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Anthropic");
+    expect(screen.getByText("$30.00")).toBeInTheDocument();
     expect(screen.getByText("per 1M tokens")).toBeInTheDocument();
-    expect(screen.getByText(/Urdais Token Price · Qwen3.8-Max/)).toBeInTheDocument();
+    expect(screen.getByText(/Urdais Token Price · Claude Fable 5.1/)).toBeInTheDocument();
     expect(screen.getByText("Research preview")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Model/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /Pricing dimension/ })).toBeNull();
@@ -372,8 +372,8 @@ describe("Token Price benchmark on the product surfaces", () => {
   it("gives Model Economics the same provider benchmark values, with only a lab selector", () => {
     render(<TokenPriceSection instruments={benchmarkInstruments()} researchPreview={true} />);
     expect(screen.getByRole("heading", { name: "Token Price" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Provider/ })).toHaveTextContent("Alibaba Cloud");
-    expect(screen.getByText("$4.00")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Provider/ })).toHaveTextContent("Anthropic");
+    expect(screen.getByText("$30.00")).toBeInTheDocument();
     expect(screen.getByText("per 1M tokens")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Model/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /Pricing dimension/ })).toBeNull();

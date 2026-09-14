@@ -18,6 +18,23 @@ export const TOKEN_PRICE_UNIT = "USD / 1M tokens" as const;
 /** What the product prints beside the value. Never "per 1M input tokens". */
 export const TOKEN_PRICE_UNIT_CAPTION = "per 1M tokens" as const;
 export const TOKEN_PRICE_BENCHMARK_NAME = "Urdais Token Price" as const;
+
+/**
+ * The provider a Token Price surface opens on.
+ *
+ * An explicit product choice, not an ordering accident. Selection among series
+ * is deliberately identity-ordered and refuses to rank providers by quality,
+ * which is right for choosing between rows but leaves the opening view to
+ * whichever slug sorts first. That made adding Alibaba Cloud silently change
+ * what every reader saw first, for no reason a reader could infer.
+ *
+ * Anthropic is the anchor because it was the surface's default through Wave 1
+ * and a stable opening view is worth more than an alphabetical one. Changing it
+ * should be a decision someone makes, which is what naming it here requires.
+ *
+ * Ordering of the selector itself is untouched and stays alphabetical.
+ */
+export const TOKEN_PRICE_DEFAULT_PROVIDER = "anthropic" as const;
 export const TOKEN_PRICE_METHODOLOGY_DOC = "docs/methodology/token-price.md" as const;
 
 /**

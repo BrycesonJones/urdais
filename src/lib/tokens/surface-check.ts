@@ -13,7 +13,10 @@
  * tags are stripped first, then whitespace collapsed.
  */
 
+import { TOKEN_PRICE_DEFAULT_PROVIDER } from "@/lib/tokens/read/benchmark";
+
 export type SurfaceExpectation = {
+  providerSlug: string;
   providerName: string;
   priceUsdPer1m: number;
 };
@@ -88,7 +91,7 @@ export async function checkTokenSurfaces(
         remedy: "check that the deployment is running and can reach its database",
       });
     } else {
-      const body = JSON.parse(await response.text()) as { benchmarks?: { providerName?: string; priceUsdPer1m?: number }[] };
+      const body = JSON.parse(await response.text()) as { benchmarks?: { providerSlug?: string; providerName?: string; priceUsdPer1m?: number }[] };
       if (!Array.isArray(body.benchmarks)) {
         findings.push({ code: "API_SHAPE", detail: "the response carries no benchmarks array", remedy: "the API contract changed; reconcile it with the read model" });
       } else if (body.benchmarks.length === 0) {
@@ -100,7 +103,7 @@ export async function checkTokenSurfaces(
       } else {
         benchmarks = body.benchmarks.flatMap((row) =>
           typeof row.providerName === "string" && typeof row.priceUsdPer1m === "number"
-            ? [{ providerName: row.providerName, priceUsdPer1m: row.priceUsdPer1m }]
+            ? [{ providerSlug: typeof row.providerSlug === "string" ? row.providerSlug : "", providerName: row.providerName, priceUsdPer1m: row.priceUsdPer1m }]
             : [],
         );
       }
@@ -135,11 +138,14 @@ export async function checkTokenSurfaces(
 
       const missing: string[] = [];
       if (expects === "value") {
-        // Only the first benchmark needs to be on the page; the others sit behind the selector.
-        const first = benchmarks[0];
-        if (first) {
-          if (!html.includes(first.providerName)) missing.push(first.providerName);
-          if (!html.includes(formattedPrice(first.priceUsdPer1m))) missing.push(formattedPrice(first.priceUsdPer1m));
+        // The page opens on the designated default provider and keeps the rest
+        // behind the selector, so that is the value to look for. Checking the
+        // API's first row instead would fail the moment a provider sorts ahead
+        // of the default, which says nothing about whether the page works.
+        const shown = benchmarks.find((row) => row.providerSlug === TOKEN_PRICE_DEFAULT_PROVIDER) ?? benchmarks[0];
+        if (shown) {
+          if (!html.includes(shown.providerName)) missing.push(shown.providerName);
+          if (!html.includes(formattedPrice(shown.priceUsdPer1m))) missing.push(formattedPrice(shown.priceUsdPer1m));
         }
       } else if (!html.includes("Tokens")) {
         // The market page opens on Compute and switches families client-side, so

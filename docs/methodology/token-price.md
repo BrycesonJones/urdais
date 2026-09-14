@@ -1,6 +1,10 @@
 # Urdais Token Price Methodology
 
-**Version 1.2, 14 September 2026.** Status: proposed. No production value has been published under this document; Wave-1 sources are not yet cleared for production collection, so every value computed under it today is a labelled research preview.
+**Version 1.2, 14 September 2026.** Status: in production.
+
+Urdais publishes Token Price for Anthropic, OpenAI and xAI, computed under version 1.1 and live since 14 September 2026. Google and Alibaba Cloud are verified and enter under this version. DeepSeek is collected but withheld, for the reason recorded below.
+
+Every published value rests on a manually verified reading of the provider's own published pricing page, retained with its hash and the verifier's statement. That is a basis for publishing a fact, not a licence to collect: no token-pricing source is cleared for automated production retrieval, and every one of them remains under terms review. A value's own methodology version is the one in force on its calculation date, so values published under 1.1 stay 1.1.
 
 ## Why this exists
 
@@ -114,7 +118,11 @@ Because a constituent change breaks the comparability of a percentage change acr
 
 ## Publication
 
-Publication requires an approved version of this methodology and source rights permitting production collection and index use for the provider. Wave-1 providers are not cleared, so the benchmark is visible only in the development research preview, labelled as such. Production remains fail-closed: where the requirements are not met, no value is published and no substitute is shown.
+Publication requires an approved version of this methodology and a recorded lawful basis for the value itself.
+
+Those are two different questions and Urdais keeps them apart. Whether a price may be published is answered by how the price was obtained: a person reading the provider's own published page, retaining the artifact and recording what they checked, is a sufficient basis, and every published Token Price today rests on one. Whether Urdais may retrieve that page automatically, on a schedule, is a separate question answered by the source's collection rights, and for every token-pricing source that question is still open. Publishing a verified fact grants no collection right, and no amount of publication moves a source towards automated retrieval.
+
+Production remains fail-closed. A value is served only from a frozen calculation whose two leg observations are themselves production-publicable; research observations are never promoted, and where the requirements are not met no value is published and no substitute is shown.
 
 ## Version history
 

@@ -12,11 +12,15 @@ import {
   methodologyInForce,
   tokenBenchmarkPrice,
   TOKEN_BENCHMARK_WITHHELD,
+  TOKEN_PRICE_DEFAULT_PROVIDER,
   withholdingFor,
   type TokenBenchmarkConstituent,
 } from "@/lib/tokens/read/benchmark";
 import type { PublicTokenSeries } from "@/lib/tokens/read/api-contract";
 import { persistProviderBenchmarks } from "@/lib/tokens/read/benchmark-store";
+import { publishableBenchmarks } from "@/lib/tokens/read/benchmark-series";
+import { benchmarkInstrumentsFromSeries, pickDefaultTokenInstrument } from "@/lib/tokens/read/instruments";
+import { listVisibleTokenSeries } from "@/lib/tokens/read/series";
 import { tokenReadCatalogFromStore } from "@/lib/tokens/read/load";
 import { InMemoryTokenPricingStore } from "@/lib/tokens/store";
 import { WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
@@ -223,5 +227,33 @@ describe("a rulebook edit must not add a point to a published series", () => {
     const second = await persistProviderBenchmarks(sql, catalog, "production", TODAY);
     expect(second.inserted).toBe(0);
     expect(rows).toHaveLength(5);
+  });
+});
+
+describe("the surfaces open on a designated provider, not on an ordering accident", () => {
+  it("names Anthropic as the default rather than deriving it from slug order", () => {
+    expect(TOKEN_PRICE_DEFAULT_PROVIDER).toBe("anthropic");
+    // Alibaba sorts first alphabetically; the default must not follow that.
+    expect([...benchmarkProviders()].sort()[0]).toBe("alibaba");
+  });
+
+  it("opens on the designated provider even though another sorts earlier", () => {
+    const { store } = verifyAllProviders();
+    const instruments = benchmarkInstrumentsFromSeries(
+      publishableBenchmarks(listVisibleTokenSeries(tokenReadCatalogFromStore(store), "production"), TODAY),
+    );
+    // The selector itself stays deterministic and alphabetical.
+    expect(instruments.map((row) => row.shortLabel)).toEqual(["Alibaba Cloud", "Anthropic", "Google", "OpenAI", "xAI"]);
+    expect(pickDefaultTokenInstrument(instruments)!.benchmarkIdentity!.providerSlug).toBe("anthropic");
+  });
+
+  it("falls back to the ordering rule when the designated provider is absent", () => {
+    const { store } = verifyAllProviders();
+    const all = benchmarkInstrumentsFromSeries(
+      publishableBenchmarks(listVisibleTokenSeries(tokenReadCatalogFromStore(store), "production"), TODAY),
+    );
+    const withoutAnthropic = all.filter((row) => row.benchmarkIdentity?.providerSlug !== "anthropic");
+    expect(pickDefaultTokenInstrument(withoutAnthropic)).toBeDefined();
+    expect(pickDefaultTokenInstrument(withoutAnthropic)!.benchmarkIdentity!.providerSlug).not.toBe("anthropic");
   });
 });

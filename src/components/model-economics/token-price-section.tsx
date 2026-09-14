@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { pickDefaultTokenInstrument } from "@/lib/tokens/read/instruments";
+
 import { DetailedMarketChart } from "@/components/charts/detailed-market-chart";
 import { movementClass } from "@/components/market/movement";
 import { PeriodPerformance } from "@/components/market-detail/period-performance";
@@ -49,7 +51,8 @@ function TokenPriceChart({
   instruments: readonly MarketInstrumentDetail[];
   researchPreview: boolean;
 }) {
-  const fallback = instruments[0]!;
+  // The designated default, not whichever instrument happens to be first.
+  const fallback = pickDefaultTokenInstrument(instruments) ?? instruments[0]!;
   const [instrumentId, setInstrumentId] = useState(fallback.id);
   const instrument = instruments.find((row) => row.id === instrumentId) ?? fallback;
   const chart = useInstrumentChart(instrument, (id) => instruments.find((row) => row.id === id));
