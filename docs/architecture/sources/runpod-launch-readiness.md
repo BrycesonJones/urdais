@@ -1,6 +1,6 @@
 # Runpod Launch-Readiness Evidence
 
-**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Prepared 13 September 2026 from Runpod's public documentation, public API references and public price surface, read on that date. No authenticated request was made, no account was created, and nothing here changes Runpod's permission classification, which remains `not_permitted` on both axes and `production_blocked` with a clarification request pending.
+**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Prepared 13 September 2026 from Runpod's public documentation, public API references and public price surface, read on that date. No authenticated request was made, no account was created, and nothing here changes Runpod's permission classification, which remains `not_permitted` on both axes and `production_blocked`. **Superseded as a launch path on 14 September 2026: Runpod refused both permissions, so none of the evidence below can be acted on.** It is retained as provenance for how the source was assessed, not as a route to production. See `runpod-permission-denied.md`.
 
 This document answers, for Runpod, the launch-readiness questions the child methodology leaves to source evidence: product match, geography, tenancy, availability, price components, and what only an authenticated call can settle.
 

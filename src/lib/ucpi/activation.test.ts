@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ACTIVATION_WORKFLOW, evaluateActivation, LAMBDA_ACTIVATION_2026_09_13, RUNPOD_ACTIVATION_2026_09_13, type ActivationInputs } from "@/lib/ucpi/activation";
+import { ACTIVATION_WORKFLOW, evaluateActivation, LAMBDA_ACTIVATION_2026_09_13, RUNPOD_ACTIVATION_2026_09_13, RUNPOD_ACTIVATION_2026_09_14, type ActivationInputs } from "@/lib/ucpi/activation";
 import { SqlPersistence } from "@/lib/ucpi/runtime/persistence";
 
 describe("activation workflow", () => {
@@ -73,5 +73,35 @@ describe("SQL persistence statements", () => {
     const s = sql.supersessionStatement("a", "b", "input correction", "2026-09-14T06:00:00Z");
     expect(s.text).toMatch(/^update pipeline\.regional_observations set superseded_by_id/);
     expect(s.text).toContain("superseded_by_id is null");
+  });
+});
+
+describe("Runpod was refused, and the record says so", () => {
+  it("is not ready for validation or production, and cannot become so", () => {
+    const checklist = evaluateActivation(RUNPOD_ACTIVATION_2026_09_14);
+    expect(checklist.readyForValidation).toBe(false);
+    expect(checklist.readyForProduction).toBe(false);
+  });
+
+  it("records the answer as a refusal rather than an outstanding request", () => {
+    // The failure this guards against is a record that still reads "pending"
+    // after the provider has said no, which invites exactly the wrong next move.
+    const checklist = evaluateActivation(RUNPOD_ACTIVATION_2026_09_14);
+    const written = checklist.items.find((row) => row.key === "writtenPermissionOrAgreement")!;
+    expect(written.status).toBe("fail");
+    expect(written.detail).toContain("refused");
+    expect(checklist.items.some((row) => row.status === "pending")).toBe(false);
+  });
+
+  it("keeps the 13 September record, where the request was still open", () => {
+    const before = evaluateActivation(RUNPOD_ACTIVATION_2026_09_13);
+    expect(before.items.find((row) => row.key === "writtenPermissionOrAgreement")!.status).toBe("pending");
+  });
+
+  it("keeps the product findings that were true when gathered", () => {
+    const checklist = evaluateActivation(RUNPOD_ACTIVATION_2026_09_14);
+    for (const key of ["productId", "tenancy", "availabilityGrade3", "countryMapping", "legalEntitySeeded"]) {
+      expect(checklist.items.find((row) => row.key === key)!.status).toBe("pass");
+    }
   });
 });
