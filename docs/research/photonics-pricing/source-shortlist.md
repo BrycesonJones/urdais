@@ -38,7 +38,7 @@ Everything else — LightCounting, Omdia, Cignal AI, Yole, TechInsights, Dell'Or
 | Cadence | Quarterly. |
 | Coverage | Global optical components. |
 | Route | Licensing conversation only. |
-| Contact | `citations@omdia.com` for research and data-citation requests, `press@omdia.com` for press, per https://omdia.tech.informa.com/contact-us; product-intelligence enquiry form at https://pages.omdia.informa.com/Product-Intelligence-Services_Contact-Us. **SEMI-VERIFIED** — attributed to Omdia's own contact page but the page returned 403 to every re-verification attempt on 2026-09-14. Load it in a browser before sending. |
+| Contact | `citations@omdia.com` for research and data-citation requests, `press@omdia.com` for press, per https://omdia.tech.informa.com/contact-us; product-intelligence enquiry form at https://pages.omdia.informa.com/Product-Intelligence-Services_Contact-Us. **VERIFIED manually before outreach was sent** — exact verification date not recorded; the page returned 403 to direct retrieval attempts on 2026-09-14. |
 | Registry values if seeded | provider_kind `other`; source_class `price_surface`; access_class `sales_only`; terms_review_state `not_permitted` (robots); data_use_terms_state `under_review`; production_access_state `production_blocked`. |
 
 **Why this ranks first in photonics.** It is the only paid product that advertises *pricing* at optical-component granularity, and it is the only research firm in this vertical that publishes a citations address — meaning it has already thought about third-party reuse and built a door for it. Best-formed ask in the vertical.

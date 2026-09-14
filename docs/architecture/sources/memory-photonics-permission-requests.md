@@ -1,10 +1,10 @@
-# Memory and Photonics Permission Requests — Drafts
+# Memory and Photonics Outreach — Sent Requests and Remaining Drafts
 
 **Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Prepared 14 September 2026.
 
-**None of these has been sent.** They are drafts for human review and approval. No email was sent and no draft was created in any mail client while preparing them. The outreach record for each lives in `memory-photonics-outreach-tracker.md`, where every row is `not yet contacted` with an empty date.
+**Requests 1–5 have been sent:** WSTS, TrendForce / DRAMeXchange, Silicon Data, Omdia and LightCounting. Their exact send dates and times are not present in the repository and are not inferred here. No response is recorded. Requests 6–9 remain drafts and must not be sent without separate human approval. The operational record for each lives in `memory-photonics-outreach-tracker.md`.
 
-## Before sending any of these
+## Before sending any remaining draft
 
 Carried over from the compute outreach in this directory, where each of these went wrong at least once.
 
@@ -20,12 +20,12 @@ Every draft opens with the same one-line description of the company, by design:
 
 ---
 
-# Memory
+## Memory
 
-## 1. WSTS — distribution licence for Memory ASP
+### 1. WSTS — distribution licence for Memory ASP
 
 **To:** `tp@wsts.org` (Tobias Proettel, Administrator) · **cc:** `sh@wsts.org` · **VERIFIED**
-**Why this recipient:** the WSTS contact page lists distribution licenses within his remit. Recipient status: **ready to send.**
+**Why this recipient:** the WSTS contact page lists distribution licenses within his remit. Outreach status: **sent; awaiting response. Exact send date and time not recorded in the repository.**
 
 **Subject:** Distribution licence enquiry — WSTS memory ASP series in a published price index
 
@@ -58,10 +58,10 @@ Urdais · https://urdais.com
 
 ---
 
-## 2. TrendForce / DRAMeXchange — spot and contract memory prices
+### 2. TrendForce / DRAMeXchange — spot and contract memory prices
 
 **To:** `SR_MI@trendforce.com` (Semiconductor Research) · **cc:** `mi@dramexchange.com` · **VERIFIED**
-**Why this recipient:** the Semiconductor Research desk is the department that owns memory, per TrendForce's own contact page. Recipient status: **ready to send.**
+**Why this recipient:** the Semiconductor Research desk is the department that owns memory, per TrendForce's own contact page. Outreach status: **sent; awaiting response. Exact send date and time not recorded in the repository.**
 
 **Subject:** Licensing enquiry — DRAMeXchange spot and contract prices in a published memory index
 
@@ -95,10 +95,10 @@ Urdais · https://urdais.com
 
 ---
 
-## 3. Silicon Data — partnership on non-GDDR6 memory
+### 3. Silicon Data — partnership on non-GDDR6 memory
 
 **To:** `support@silicondata.com`, asking to be routed to data partnerships · **VERIFIED**
-**Note:** the Data Partnerships page and the "Book a call" scheduler are the published partnership routes; no BD address is published. Recipient status: **ready to send.**
+**Note:** the Data Partnerships page and the "Book a call" scheduler are the published partnership routes; no BD address is published. Outreach status: **sent; awaiting response. Exact send date and time not recorded in the repository.**
 
 **Subject:** Memory index partnership — beyond GDDR6
 
@@ -130,12 +130,12 @@ Urdais · https://urdais.com
 
 ---
 
-# Photonics
+## Photonics
 
-## 4. Omdia — Optical Components Intelligence Service
+### 4. Omdia — Optical Components Intelligence Service
 
-**To:** `citations@omdia.com` · **SEMI-VERIFIED — load https://omdia.tech.informa.com/contact-us in a browser and confirm before sending.**
-**Note:** the product-intelligence enquiry form is the fallback route.
+**To:** `citations@omdia.com` · **VERIFIED manually before sending; exact verification date not recorded in the repository.**
+**Note:** the product-intelligence enquiry form is the fallback route. Outreach status: **sent; awaiting response. Exact send date and time not recorded in the repository.**
 
 **Subject:** Licensing enquiry — optical component pricing data in a published index
 
@@ -170,10 +170,10 @@ Urdais · https://urdais.com
 
 ---
 
-## 5. LightCounting — transceiver price and shipment database
+### 5. LightCounting — transceiver price and shipment database
 
 **To:** `info@lightcounting.com` · **VERIFIED** (published in plain text on lightcounting.com). `sales@lightcounting.com` is semi-verified; prefer `info@`.
-Recipient status: **ready to send.**
+Outreach status: **sent; awaiting response. Exact send date and time not recorded in the repository.**
 
 **Subject:** Licensing enquiry — transceiver pricing database for a published photonics index
 
@@ -208,7 +208,7 @@ Urdais · https://urdais.com
 
 ---
 
-## 6. Cignal AI — Optical Components report and the Citation Policy
+### 6. Cignal AI — Optical Components report and the Citation Policy
 
 **To:** form at https://cignal.ai/contact/ · **UNVERIFIED — no published email address.**
 **Channel decision needed before sending.** The alternate is LinkedIn to Andrew Schmitt. Do not guess an address.
@@ -245,7 +245,7 @@ Urdais · https://urdais.com
 
 ---
 
-## 7. FS.com — written consent for price collection, or a feed
+### 7. FS.com — written consent for price collection, or a feed
 
 **To:** form at https://www.fs.com/service.html, asking to be routed to business development or data licensing · **UNVERIFIED — no published BD or data address; the site refuses unauthenticated retrieval.**
 **Channel decision needed before sending.** LinkedIn BD to FS (Fiberstore) partnerships is the alternate.
@@ -282,7 +282,7 @@ Urdais · https://urdais.com
 
 ---
 
-## 8. US Census Bureau — practical questions only, no permission needed
+### 8. US Census Bureau — practical questions only, no permission needed
 
 **To:** `eid.international.trade.data@census.gov` · **VERIFIED**
 **Note:** the Census API terms already permit both retrieval and derived commercial use, so this is not a permission request. It is a short courtesy note with practical questions, and it is optional. Recipient status: **ready to send.**
@@ -309,7 +309,7 @@ Urdais · https://urdais.com
 
 ---
 
-## 9. ICCSZ (讯石光通讯网) — automated retrieval of the news index, for discovery only
+### 9. ICCSZ (讯石光通讯网) — automated retrieval of the news index, for discovery only
 
 **To:** none published · **UNVERIFIED.** Only `0755-82960080` was located, and it is the 企联荟 membership line. Recipient status: **not ready to send — no address, and one prerequisite outstanding.**
 
@@ -355,15 +355,15 @@ Urdais · https://urdais.com
 
 ---
 
-## Sending checklist
+## Outreach checklist
 
-| # | Provider | Recipient | Ready to send? |
+| # | Provider | Recipient | Current status |
 |---|---|---|---|
-| 1 | WSTS | `tp@wsts.org` | **Yes** — verified |
-| 2 | TrendForce / DRAMeXchange | `SR_MI@trendforce.com` | **Yes** — verified |
-| 3 | Silicon Data | `support@silicondata.com` | **Yes** — verified |
-| 4 | Omdia | `citations@omdia.com` | **Confirm in a browser first** — semi-verified |
-| 5 | LightCounting | `info@lightcounting.com` | **Yes** — verified |
+| 1 | WSTS | `tp@wsts.org` | **Sent; awaiting response** — exact send date/time not recorded |
+| 2 | TrendForce / DRAMeXchange | `SR_MI@trendforce.com` | **Sent; awaiting response** — exact send date/time not recorded |
+| 3 | Silicon Data | `support@silicondata.com` | **Sent; awaiting response** — exact send date/time not recorded |
+| 4 | Omdia | `citations@omdia.com` | **Sent; awaiting response** — recipient manually verified first; exact send date/time not recorded |
+| 5 | LightCounting | `info@lightcounting.com` | **Sent; awaiting response** — exact send date/time not recorded |
 | 6 | Cignal AI | none published | **No** — channel decision needed (web form or LinkedIn) |
 | 7 | FS.com | none published | **No** — channel decision needed (web form or LinkedIn) |
 | 8 | US Census | `eid.international.trade.data@census.gov` | **Yes** — verified, and optional |
