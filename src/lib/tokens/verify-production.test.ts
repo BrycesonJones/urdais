@@ -95,6 +95,59 @@ describe("manual verification publishes a verified fact", () => {
     }
   });
 
+  it("is idempotent across time: re-verifying the same artifact later writes no retrieval either", () => {
+    // The failure this covers reached a real production database. The retrieval's
+    // idempotency key carried the moment the operator ran the command, so a second
+    // verification of a byte-identical page looked like a new retrieval, wrote an
+    // empty row into an append-only table, and still reported "nothing inserted".
+    const store = new InMemoryTokenPricingStore();
+    const verifyAt = (verifiedAt: string) =>
+      WAVE1_PROVIDERS.map((provider) =>
+        verifyProviderProduction({
+          provider,
+          verification: { ...VERIFICATION, verifiedAt, sourceUrl: WAVE1_SOURCE_INTERFACES[provider].canonicalUrl },
+          store,
+        }).report,
+      );
+
+    const first = verifyAt("2026-09-14T06:00:00Z");
+    expect(store.retrievals).toHaveLength(WAVE1_PROVIDERS.length);
+    expect(first.reduce((total, row) => total + row.observationsInserted, 0)).toBeGreaterThan(0);
+
+    const later = verifyAt("2026-09-15T09:30:00Z");
+    expect(later.reduce((total, row) => total + row.observationsInserted, 0)).toBe(0);
+    expect(later.every((row) => row.alreadyPresentForRetrieval)).toBe(true);
+    // The point of the test: no second retrieval, a day later, for the same artifact.
+    expect(store.retrievals).toHaveLength(WAVE1_PROVIDERS.length);
+  });
+
+  it("still records a separate retrieval when the artifact itself changed", () => {
+    const store = new InMemoryTokenPricingStore();
+    const provider: Wave1Provider = "anthropic";
+    const fixture = loadPricingFixture(provider);
+    const base = {
+      provider,
+      verification: { ...VERIFICATION, sourceUrl: fixture.sourceUrl },
+      store,
+    };
+    verifyProviderProduction(base);
+    expect(store.retrievals).toHaveLength(1);
+
+    // A changed page is a different artifact and must be its own retrieval, even
+    // though the content addressing above makes an unchanged one a no-op.
+    verifyProviderProduction({
+      ...base,
+      verification: { ...VERIFICATION, verifiedAt: "2026-09-20T06:00:00Z", sourceUrl: fixture.sourceUrl },
+      artifact: {
+        body: fixture.body.replace("<td>$10 / MTok</td>", "<td>$11 / MTok</td>"),
+        contentType: fixture.contentType,
+        url: fixture.sourceUrl,
+        retrievedAt: "2026-09-20T06:00:00Z",
+      },
+    });
+    expect(store.retrievals).toHaveLength(2);
+  });
+
   it("is idempotent: verifying the same artifact again adds no observation", () => {
     const store = new InMemoryTokenPricingStore();
     const run = () =>

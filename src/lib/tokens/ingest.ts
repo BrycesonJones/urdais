@@ -117,7 +117,17 @@ export function ingestTokenPricing(input: IngestInput): TokenIngestReport {
     id: retrievalId,
     sourceInterfaceId: source.id,
     sourceInterfaceSlug: source.slug,
-    idempotencyKey: `token-pricing:${source.slug}:${source.parserId}:${responseHash}:${requestedAt}`,
+    // A manual verification identifies the artifact a person read, not the moment
+    // they ran the command. Keying it by requestedAt records a fresh retrieval on
+    // every re-verification of a byte-identical page, which defeats the
+    // already-present guard below: that guard expects insertRetrieval to hand back
+    // the existing row, and it cannot when the key moves with the clock. An
+    // automated retrieval keeps its timestamp, because two scheduled fetches of an
+    // unchanged page are two real events; a person re-reading the same page is not.
+    idempotencyKey:
+      acquisition === "manual_verified"
+        ? `token-pricing:${source.slug}:${source.parserId}:${responseHash}:manual_verified`
+        : `token-pricing:${source.slug}:${source.parserId}:${responseHash}:${requestedAt}`,
     requestedAt,
     completedAt,
     requestMethod: method,

@@ -77,11 +77,15 @@ async function main(): Promise<void> {
     );
   }
   const inserted = run.written.observationsInserted;
+  const retrievals = run.written.retrievalsInserted;
   const frozen = run.benchmarks.inserted;
+  // Retrievals count. Reporting "nothing inserted" while writing a retrieval row
+  // into an append-only table is how a verification that is not idempotent looks
+  // exactly like one that is.
   console.log(
-    inserted === 0 && frozen === 0
+    inserted === 0 && retrievals === 0 && frozen === 0
       ? "nothing inserted: this verification was already recorded, and the frozen benchmarks already exist."
-      : `inserted ${inserted} observation(s) and ${run.written.retrievalsInserted} retrieval(s); froze ${frozen} benchmark(s).`,
+      : `inserted ${inserted} observation(s) and ${retrievals} retrieval(s); froze ${frozen} benchmark(s).`,
   );
   console.log("no source-rights column was written; automated production collection remains gated as before.");
 }

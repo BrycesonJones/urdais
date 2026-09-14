@@ -1,12 +1,12 @@
 # Runpod Permission Request — Sent 13 September 2026
 
-**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Prepared 13 September 2026. **Sent 13 September 2026; awaiting a response.** It supports the classification recorded in the H100 Source Terms Review, where Runpod is `not_permitted` on both permission axes pending written permission.
+**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Prepared 13 September 2026. **Sent 13 September 2026. Answered 14 September 2026: both permissions were refused.** The refusal is preserved verbatim in `runpod-permission-denied.md`, which is the operative record; this document is retained as the record of what was asked and why. It supports the classification recorded in the H100 Source Terms Review, where Runpod is `not_permitted` on both permission axes.
 
 ## Outreach record
 
 | Field | Value |
 |---|---|
-| Status | **Sent, awaiting response** |
+| Status | **Answered 14 September 2026 — both permissions refused** |
 | Date sent | 13 September 2026, 15:05 UTC |
 | Channel | Email |
 | To | `help@runpod.io` |
@@ -18,7 +18,7 @@
 | Signature address | `brycesonshui@gmail.com` — **does not match the sending account; see the correction note below** |
 | Provider reference ID | None issued. No ticket or case number was returned at submission. |
 | Message identifier | Gmail message and thread `1a09b4ce294d8be3` |
-| Response as at this writing | None received |
+| Response as at this writing | Acknowledged 14 September 2026 11:26 UTC; refused 14 September 2026 13:27 UTC (message `1a0a01a2456e600d`, provider reference `MM1GD7-PVV4K`). See `runpod-permission-denied.md`. |
 
 **Why this route rather than the phone line or support portal.** Runpod's contact page offers a sales telephone number and a support portal at `contact.runpod.io`, which returned HTTP 403 to an unauthenticated request. Neither produces the written record this request needs. The Terms of Service themselves designate an email address for questions about use of the Service, and that address is a first-party published route, so it was used in preference to a phone call that would leave no auditable trace.
 
