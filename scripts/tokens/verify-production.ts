@@ -40,11 +40,27 @@ async function main(): Promise<void> {
     process.exit(2);
   }
 
-  const url = resolveTokenDatabaseUrl(process.env, { allowLocalDefault: true });
-  if (!url) {
-    console.error("no database url; set the token database environment or run against the local stack");
+  // The database must be named deliberately. A verification that lands in the
+  // wrong place is worse than one that does not run, so there is no silent
+  // local fallback: --local is an explicit statement that this is development.
+  const local = process.argv.includes("--local");
+  const explicit = (process.env.DATABASE_URL ?? process.env.URDAIS_DATABASE_URL ?? "").trim();
+  if (local && explicit) {
+    console.error("refusing to run: --local was passed but a database url is configured; drop one of them so the target is unambiguous");
     process.exit(2);
   }
+  if (!local && !explicit) {
+    console.error("refusing to run: no database url is configured.");
+    console.error("  set DATABASE_URL (or URDAIS_DATABASE_URL) to the database this verification belongs in,");
+    console.error("  or pass --local to write to the local development database.");
+    process.exit(2);
+  }
+  const url = resolveTokenDatabaseUrl(process.env, { allowLocalDefault: local });
+  if (!url) {
+    console.error("refusing to run: the database url could not be resolved for this environment");
+    process.exit(2);
+  }
+  console.log(`target: ${url.replace(/:\/\/([^:@/]+)(:[^@]*)?@/, "://$1:***@")}${local ? " (local development)" : ""}`);
 
   const sql = await tokenSqlExecutor(url);
   const verifiedAt = arg("verified-at") ?? new Date().toISOString();
@@ -60,7 +76,13 @@ async function main(): Promise<void> {
       `  ${row.provider.padEnd(10)} ${row.legs.providerModelId.padEnd(18)} input $${row.legs.input.toFixed(2)}  output $${row.legs.output.toFixed(2)}  Token Price $${row.legs.benchmark.toFixed(2)} per 1M tokens`,
     );
   }
-  console.log(`observations inserted: ${run.written.observationsInserted}; retrievals inserted: ${run.written.retrievalsInserted}; benchmarks frozen: ${run.benchmarks.inserted}`);
+  const inserted = run.written.observationsInserted;
+  const frozen = run.benchmarks.inserted;
+  console.log(
+    inserted === 0 && frozen === 0
+      ? "nothing inserted: this verification was already recorded, and the frozen benchmarks already exist."
+      : `inserted ${inserted} observation(s) and ${run.written.retrievalsInserted} retrieval(s); froze ${frozen} benchmark(s).`,
+  );
   console.log("no source-rights column was written; automated production collection remains gated as before.");
 }
 

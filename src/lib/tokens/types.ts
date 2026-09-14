@@ -121,6 +121,13 @@ export type ProviderParseResult = {
 
 export type ObservationChangeKind =
   | "unchanged"
+  /**
+   * The same numeric price, first recorded under research provenance and now
+   * manually verified for production. A new append-only observation, because
+   * publication state is part of what an observation records; the research row
+   * is never rewritten.
+   */
+  | "provenance_promoted"
   | "price_changed"
   | "model_added"
   | "facet_added"
