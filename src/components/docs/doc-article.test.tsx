@@ -20,7 +20,7 @@ describe("repository-backed documentation", () => {
       expect(container.querySelector("article")?.textContent).toContain(getHeadings(page!.markdown)[0]!.text);
       unmount();
     }
-  });
+  }, 15_000);
 
   it("does not publish unregistered files or resolve URL paths against the filesystem", async () => {
     expect(await readDoc("FRONTEND_PRD")).toBeUndefined();

@@ -1,0 +1,25 @@
+{
+  "url": "https://www.priceofcompute.com/gpus/b200",
+  "status": 200,
+  "retrievedAt": "2026-09-14T01:45:55.948Z",
+  "headers": {
+    "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+    "connection": "keep-alive",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+    "content-type": "text/html; charset=utf-8",
+    "date": "Mon, 14 Sep 2026 01:45:55 GMT",
+    "link": "</api/badge/index.svg>; rel=preload; as=\"image\", </_next/static/css/81859f1fbe0a90d4.css>; rel=preload; as=\"style\"",
+    "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "server": "railway-hikari",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
+    "transfer-encoding": "chunked",
+    "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+    "x-hikari-trace": "atl1.mwdw",
+    "x-railway-edge": "atl1",
+    "x-railway-request-id": "0StHi1UvRTKQUb7eGbGh5g"
+  }
+}

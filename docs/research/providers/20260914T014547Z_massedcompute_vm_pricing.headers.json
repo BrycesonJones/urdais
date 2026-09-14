@@ -1,0 +1,27 @@
+{
+  "url": "https://vm.massedcompute.com/pricing",
+  "status": 200,
+  "retrievedAt": "2026-09-14T01:49:49.233Z",
+  "headers": {
+    "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate",
+    "cf-cache-status": "DYNAMIC",
+    "cf-ray": "a3abbcbe0893dd20-ATL",
+    "connection": "keep-alive",
+    "content-encoding": "br",
+    "content-security-policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.wp.com https://s0.wp.com https://stats.wp.com https://*.zohopublic.com https://*.zohocdn.com https://*.termly.io https://*.google.com https://*.gstatic.com https://*.clarity.ms https://scripts.clarity.ms https://*.google-analytics.com https://*.googletagmanager.com https://*.cookieyes.com https://cdn-cookieyes.com https://*.wistia.com https://*.sentry-cdn.com https://*.helpscout.net https://*.crisp.chat https://*.logr-ingest.com https://*.logrocket.com https://*.metricool.com https://cdn.brevo.com https://cdn.by.wonderpush.com https://sibautomation.com https://*.sibautomation.com https://*.ashbyhq.com; connect-src 'self' https://api.stripe.com https://*.wp.com https://pixel.wp.com https://*.amplitude.com https://*.wistia.com https://*.sentry-cdn.com https://*.clarity.ms https://y.clarity.ms https://*.google.com https://*.google-analytics.com https://*.analytics.google.com https://*.g.doubleclick.net https://*.cookieyes.com https://log.cookieyes.com https://cdn-cookieyes.com https://*.termly.io https://*.consent.api.termly.io https://*.crisp.chat wss://*.crisp.chat https://*.logr-ingest.com https://*.logrocket.com https://*.zohopublic.com wss://*.zohopublic.com https://*.metricool.com https://*.brevo.com https://*.wonderpush.com https://sibautomation.com https://*.sibautomation.com https://*.ashbyhq.com; frame-src 'self' blob: https://js.stripe.com https://hooks.stripe.com https://*.youtube.com https://*.termly.io https://*.google.com https://*.clarity.ms https://clarity.microsoft.com https://*.doubleclick.net https://*.crisp.chat https://*.wp.com https://*.wordpress.com https://wordpress.com https://*.ashbyhq.com; font-src 'self' data: https://fonts.wp.com https://*.gstatic.com https://*.wistia.com https://*.crisp.chat https://*.wp.com https://*.zohocdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts-api.wp.com https://*.gstatic.com https://*.crisp.chat https://*.wp.com https://*.zohocdn.com; img-src 'self' data: https://*.stripe.com https://vm-marketplace.s3.amazonaws.com https://vm-marketplace.s3.us-east-1.amazonaws.com https://*.wp.com https://*.wordpress.com https://*.gravatar.com https://pixel.wp.com https://*.googleusercontent.com https://*.google.com https://*.gstatic.com https://*.googletagmanager.com https://*.doubleclick.net https://*.google-analytics.com https://cdn-cookieyes.com https://*.clarity.ms https://c.bing.com https://claritystatic.blob.core.windows.net https://*.wistia.com https://*.w.org https://*.crisp.chat https://*.zohocdn.com https://*.metricool.com; worker-src 'self' blob:; upgrade-insecure-requests; frame-ancestors 'self'; form-action 'self';",
+    "content-type": "text/html; charset=utf-8",
+    "date": "Mon, 14 Sep 2026 01:49:49 GMT",
+    "link": "</_next/static/media/345b029bff63acdd-s.p.3w2qxf8a26hc2.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\", </_next/static/media/GeistMono_Variable.p.3ms9vq719j3f8.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\", </_next/static/media/Geist_Variable-s.p.0mrjj4bg00-he.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\", </_next/static/media/ce62453a442c7f35-s.p.0a0h245ktd4x0.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\", </_next/static/media/ef1484efef1c9752-s.p.0vtrapzs99yg4.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\"",
+    "permissions-policy": "accelerometer=(), autoplay=*, camera=(), display-capture=(self), encrypted-media=*, fullscreen=*, geolocation=(self), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(self), picture-in-picture=*, usb=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "server": "cloudflare",
+    "set-cookie": "AWSALBCORS=7YTrsagE86F20WVeicPk1tg44FvA0ng1do29wOgzviDsDYFk9dxzfkWQQB4I9QGR7fQl0U72sY2+pFeYsiyxuix6s2dciLLkBVEx18jyzLwifTipTMH7GS0wcERf; Expires=Mon, 21 Sep 2026 01:49:49 GMT; Path=/; SameSite=None; Secure",
+    "strict-transport-security": "max-age=63072000; includeSubDomains",
+    "transfer-encoding": "chunked",
+    "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "SAMEORIGIN",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "1; mode=block"
+  }
+}

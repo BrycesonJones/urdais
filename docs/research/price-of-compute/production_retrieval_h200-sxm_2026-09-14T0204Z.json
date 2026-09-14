@@ -1,0 +1,105 @@
+{
+  "retrieval": {
+    "id": "8796459e-13f6-4a14-9a43-8dda07297b97",
+    "requestedAt": "2026-09-14T02:04:28.589Z",
+    "completedAt": "2026-09-14T02:04:28.854Z",
+    "responseStatus": 200,
+    "request": {
+      "method": "GET",
+      "url": "https://priceofcompute.com/api/v1/prices/h200-sxm",
+      "parameters": {},
+      "requiredHeaders": []
+    },
+    "responseHash": "abdc4079ed41f208e4d182d8ce5549a68262351ecb279296460d10390f0f287b",
+    "responseByteLength": 1452,
+    "recordCount": 9,
+    "retrievalPurpose": "production",
+    "permissionGrantId": "77777777-0000-4000-8000-000000000101",
+    "collectorIdentity": "ucpi-listed-print/collect/UCPI-H200-SXM-LISTED"
+  },
+  "response": {
+    "sku": "H200-SXM",
+    "day": "2026-09-14",
+    "prices": {
+      "spot": {
+        "usd_per_gpu_hr": 2.358125,
+        "providers": 2
+      },
+      "community": {
+        "usd_per_gpu_hr": 3.59,
+        "providers": 1
+      },
+      "on_demand": {
+        "usd_per_gpu_hr": 5.4475,
+        "providers": 4
+      }
+    },
+    "providers": [
+      {
+        "provider": "datacrunch",
+        "pricing_type": "spot",
+        "usd_per_gpu_hr": 2.1,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:35.461Z"
+      },
+      {
+        "provider": "coreweave",
+        "pricing_type": "spot",
+        "usd_per_gpu_hr": 2.61625,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:44.422Z"
+      },
+      {
+        "provider": "runpod",
+        "pricing_type": "community",
+        "usd_per_gpu_hr": 3.59,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:34.070Z"
+      },
+      {
+        "provider": "vast",
+        "pricing_type": "spot",
+        "usd_per_gpu_hr": 3.947368,
+        "region": "SA",
+        "observed_at": "2026-09-13T18:11:21.869Z"
+      },
+      {
+        "provider": "datacrunch",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 4.2,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:35.461Z"
+      },
+      {
+        "provider": "runpod",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 4.59,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:34.070Z"
+      },
+      {
+        "provider": "vast",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 4.605263,
+        "region": "US",
+        "observed_at": "2026-09-13T18:11:21.869Z"
+      },
+      {
+        "provider": "coreweave",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 6.305,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:44.422Z"
+      },
+      {
+        "provider": "nebius",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 7.15,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:36.538Z"
+      }
+    ],
+    "updated_at": "2026-09-14T01:02:44.422Z",
+    "attribution": "Data: Price of Compute \u2014 priceofcompute.com"
+  }
+}

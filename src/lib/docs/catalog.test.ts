@@ -136,12 +136,45 @@ describe("compute price sibling specifications", () => {
     expect(doc).toContain(`](${docHref(ucpi!.slug)})`);
     expect(doc).toContain(`](${docHref(child!.slug)})`);
     expect(doc.match(/^# /gm)).toHaveLength(1);
-    expect(doc).toContain("version 0.1.1-draft");
+    expect(doc).toContain("version 0.1.2-draft");
     expect(doc).toContain("SELLER_LEGAL_IDENTITY_UNRESOLVED");
     expect(doc).toContain("different economic object");
     expect(doc).toContain("listed prices, not guaranteed availability");
     expect(doc).toContain("never a participant");
     expect(doc).toContain("listed, provider-wide");
+  });
+});
+
+describe("listed GPU family specifications", () => {
+  const family = findDoc("methodology/ucpi-listed-gpu");
+  const h100Listed = findDoc("methodology/ucpi-h100-sxm-listed");
+  const children = [
+    "methodology/ucpi-h200-sxm-listed",
+    "methodology/ucpi-b200-listed",
+    "methodology/ucpi-a100-sxm4-80gb-listed",
+    "methodology/ucpi-rtx-5090-listed",
+  ] as const;
+
+  it("registers the reusable listed-GPU specification after the H100 listed sibling, then the four new children", () => {
+    expect(family).toMatchObject({ section: "Methodology", file: "methodology/ucpi-listed-gpu.md" });
+    expect(docPages[docPages.indexOf(h100Listed!) + 1]).toBe(family);
+    for (const [i, slug] of children.entries()) {
+      expect(findDoc(slug)).toMatchObject({ section: "Methodology", file: `${slug}.md` });
+      expect(docPages[docPages.indexOf(family!) + 1 + i]?.slug).toBe(slug);
+    }
+  });
+
+  it("each listed GPU child cites the family specification and remains a draft", () => {
+    const familyDoc = readFileSync(path.join(process.cwd(), "docs", family!.file), "utf8");
+    expect(familyDoc).toContain("version 0.1.0-draft");
+    expect(familyDoc).toContain("listed on-demand");
+    expect(familyDoc).toContain("never a participant");
+    for (const slug of children) {
+      const doc = readFileSync(path.join(process.cwd(), "docs", findDoc(slug)!.file), "utf8");
+      expect(doc).toContain(`](${docHref(family!.slug)})`);
+      expect(doc).toContain("version 0.1.0-draft");
+      expect(doc.match(/^# /gm)).toHaveLength(1);
+    }
   });
 });
 

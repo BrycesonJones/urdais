@@ -152,6 +152,8 @@ export type NormalizedObservation = {
   enumerationAssessment: Retrieval["enumerationAssessment"];
   /** Attribution the upstream source requires wherever its data is used; null for first-party sources. */
   sourceAttribution?: string | null;
+  /** True when the seller prices by instance quantity and the source supplies one provider-level figure; diagnostic only. */
+  sellerPricesByQuantityTier?: boolean | null;
 };
 
 /** The child's exclusion vocabulary. Mirrors reference.exclusion_reasons. */
@@ -192,7 +194,8 @@ export type DiagnosticCode =
   | "MARKETPLACE_SELLER_ID_STABILITY_UNRESOLVED"
   | "AVAILABILITY_GRADE_3"
   | "SOURCE_EFFECTIVE_TIME_ABSENT"
-  | "PRICE_CARRIED";
+  | "PRICE_CARRIED"
+  | "SELLER_PRICE_TIERED_BY_QUANTITY";
 
 export type InputStatus = "valid" | "stale" | "ineligible" | "unavailable" | "conflicted";
 

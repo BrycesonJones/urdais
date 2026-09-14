@@ -1,0 +1,31 @@
+{
+  "url": "https://www.denvrdata.com/terms-of-service",
+  "status": 200,
+  "retrievedAt": "2026-09-14T01:47:25.399Z",
+  "headers": {
+    "accept-ranges": "bytes",
+    "age": "0",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "cache-control": "private,max-age=0,must-revalidate",
+    "content-encoding": "br",
+    "content-language": "en",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Mon, 14 Sep 2026 01:47:25 GMT",
+    "etag": "W/\"4bf9f0bc29385f4b0eb8b6ffcfda0361\"",
+    "glb-x-seen-by": "bS8wRlGzu0Hc+WrYuHB8QIg44yfcdCMJRkBoQ1h6Vjc=",
+    "link": "<https://static.parastorage.com/>; rel=preconnect; crossorigin, <https://static.parastorage.com/>; rel=preconnect, <https://static.wixstatic.com/>; rel=preconnect; crossorigin, <https://static.wixstatic.com/>; rel=preconnect, <https://siteassets.parastorage.com>; rel=preconnect; crossorigin",
+    "server": "Pepyaka",
+    "server-timing": "cache;desc=miss, varnish;desc=miss_miss, dc;desc=fastly_virginia-phy_g",
+    "set-cookie": "ssr-caching=cache#desc=miss#varnish=miss_miss#dc#desc=fastly_virginia-phy_g; max-age=20",
+    "strict-transport-security": "max-age=31556952",
+    "transfer-encoding": "chunked",
+    "vary": "Accept-Encoding",
+    "via": "1.1 google",
+    "x-cache": "MISS",
+    "x-cache-status": "MISS",
+    "x-content-type-options": "nosniff",
+    "x-seen-by": "yvSunuo/8ld62ehjr5B7kA==,AHc3TXLcXOul+t9LIbGg9ciHE4dbw+wewoJ5nvKoyjE=,AHc3TXLcXOul+t9LIbGg9ciHE4dbw+wewoJ5nvKoyjE=,Ua1iSBCTq7qSXjmRCGE1Nxr9QbZKc6QUNm2eig4bEIIWFM2+QQFePU3wAxjZHyTpEpzrUii78VdYxnNKzUeyUYhIydfYCelFDfkrvUteY3iirfv3BFEVzZW910rMKeNv,2d58ifebGbosy5xc+FRalk3sJ7Bo0IolVvYnzj3/h2LEw18lq2f3EIdTp3++3jSmm32TqV+ZdKD2/X6bKCmgxkxaRz7Hx0caFQgtbdYKMbg=,2UNV7KOq4oGjA5+PKsX47Efm2FDoAuZ3d2dZFPgraZgFVd1lR1L8/yRoc88kq/ej,/B3VgDtICCNDWQOEWfZmMhNVLyZkd3cPO6FYFxDjcEg=,EJEd9b7dmFptmyI1HOovvzKss9alOiYgfY0aj4hBKkoj6r0AZAMucqm4C7kwBEyadVjcLXLcLP4jKKlzytijcQ==,/B3VgDtICCNDWQOEWfZmMgFB9H9lrZ2ld65Zt+jARiE=,LoUK8/saGAmOxZWtpubo2vtPtO1J472WJ6B8pPqIjcnevrUAflqWwHPK9qd+p6JjGL9+wL2KGZmsMsDOTAcv+vfauD2Ci6kg/4RMNL8MCwA=,/B3VgDtICCNDWQOEWfZmMoV4KxGelyb+VzdAbVtSHQ0=,RyPGOLsHDe7v/GTf4wBGuqxc6kWJSmkQRKI6p0IHx2aNc6SmBNQqm8DDnECb4YG2e+1OxWdxXEQGctPKxYLu7aOoh78qyhTZ0fkERsXOTkQ=",
+    "x-served-by": "cache-pdk-kpdk2140093-PDK",
+    "x-wix-request-id": "1789350443.6472614384111417"
+  }
+}

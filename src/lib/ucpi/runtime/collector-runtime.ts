@@ -16,6 +16,7 @@
 import type { NormalizationContext, ProviderAdapter } from "@/lib/ucpi/collector";
 import { calculationWindow } from "@/lib/ucpi/calculation-window";
 import type { EligibilityAssessment, NormalizedObservation, RawOffer, Retrieval } from "@/lib/ucpi/domain";
+import type { GpuIdentityRequirement } from "@/lib/ucpi/listed/instruments";
 import { assessEligibility, type InstrumentSpec } from "@/lib/ucpi/eligibility";
 import { productionCollectionPermitted, type SourceRegistryState } from "@/lib/ucpi/permission-gate";
 import { CREDENTIAL_VARIABLES, credentialRequired, hasCredential, readCredential, type EnvRecord, type ProviderSlug, type RunMode } from "@/lib/ucpi/runtime/config";
@@ -70,6 +71,8 @@ export type SourceRuntimeInput<TParams, TResponse, TCompanion> = {
   idFactory: () => string;
   /** Which instrument specification assesses the observations at collection time; accessible by default. */
   spec?: InstrumentSpec;
+  /** The hardware the instrument measures; the founding H100 SXM child by default. */
+  identity?: GpuIdentityRequirement;
 };
 
 export type SourceCollectionResult = {
@@ -196,7 +199,7 @@ export async function collectSource<TParams, TResponse, TCompanion>(input: Sourc
   retrieval.recordCount = rawOffers.length;
   const observations = rawOffers.map((raw) => input.adapter.normalize(raw, retrieval as Retrieval, input.context));
   const registry = new Map([[source, input.registry]]);
-  const assessments = observations.map((o) => assessEligibility(o, { calculationDate: input.calculationDate, registry, entities: input.context.entities, spec: input.spec }));
+  const assessments = observations.map((o) => assessEligibility(o, { calculationDate: input.calculationDate, registry, entities: input.context.entities, spec: input.spec, identity: input.identity }));
 
   await input.persistence.transaction(async () => {
     await input.persistence.insertRetrieval(retrieval);

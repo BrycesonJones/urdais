@@ -1,6 +1,6 @@
 # UCPI-H100-SXM-LISTED Sibling Specification
 
-**Status: proposed sibling specification, version 0.1.1-draft. Not launched.** Prepared 14 September 2026; amended the same day. No production value has been published under this document, and none may be until the family methodology and this specification carry approved versions. A candidate value computed as a labelled simulation is not a publication.
+**Status: proposed sibling specification, version 0.1.2-draft. Not launched.** Prepared 14 September 2026; amended twice the same day. From 0.1.2-draft this is a child of the reusable [UCPI-LISTED-GPU family specification](/docs/methodology/ucpi-listed-gpu), which now holds the rules this document previously stated for itself; the rules did not change. No production value has been published under this document, and none may be until the family methodology and this specification carry approved versions. A candidate value computed as a labelled simulation is not a publication.
 
 This is a sibling of [UCPI-H100-SXM](/docs/methodology/ucpi-h100-sxm) under the [Urdais Compute Price Index family](/docs/methodology/ucpi). It measures a **different economic object** from that child and must never be presented as the same series, as a substitute for it, or as "the H100 price". The distinction is the reason this document exists.
 
@@ -63,6 +63,8 @@ UCPI-H100-SXM-LISTED, listed provider-wide: price in United States dollars per H
 Before a first publication: an approved family methodology version; an approved version of this specification; at least one permitted licensed source with its methodology assessed and recorded; per-seller topology evidence recorded for every admitted participant; and the first production calculation completed after its cutoff with every gate passed.
 
 ## Version History
+
+**0.1.2-draft, 14 September 2026**: placed under the UCPI-LISTED-GPU family specification 0.1.0-draft. No rule changed; the candidate of 14 September 2026 (3.74, four participants) is unaffected and remains reproducible from its preserved retrieval and evidence snapshot.
 
 **0.1.1-draft, 14 September 2026**: seller legal identity made a participation requirement rather than a disclosure. A seller without an evidenced single contracting legal entity is excluded with `SELLER_LEGAL_IDENTITY_UNRESOLVED`. Prompted by review of the first candidate: Nebius's listed price could not be tied to one contracting entity. Its Services Agreement (effective 26 June 2026) assigns the contracting entity by customer jurisdiction: Nebius Inc. for United States customers registered after 13 November 2025, Nebius Israel Ltd for Israel customers registered on or after 11 March 2026, and Nebius B.V. otherwise. No production effective date.
 

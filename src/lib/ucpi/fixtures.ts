@@ -214,6 +214,7 @@ export function eligibleObservation(overrides: Partial<NormalizedObservation> = 
     sourceQualityGrade: 2,
     enumerationAssessment: "complete",
     sourceAttribution: null,
+    sellerPricesByQuantityTier: null,
     ...overrides,
   };
 }

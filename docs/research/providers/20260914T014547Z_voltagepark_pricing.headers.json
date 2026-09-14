@@ -1,0 +1,26 @@
+{
+  "url": "https://www.voltagepark.com/pricing",
+  "status": 200,
+  "retrievedAt": "2026-09-14T01:47:26.084Z",
+  "headers": {
+    "age": "2362759",
+    "alt-svc": "h3=\":443\"; ma=86400",
+    "cf-cache-status": "HIT",
+    "cf-ray": "a3abb93fc8f0cf6c-ATL",
+    "connection": "keep-alive",
+    "content-encoding": "gzip",
+    "content-type": "text/html; charset=utf-8",
+    "date": "Mon, 14 Sep 2026 01:47:26 GMT",
+    "last-modified": "Mon, 17 Aug 2026 19:10:27 GMT",
+    "link": "<https://cdn.prod.website-files.com>; rel=preconnect; crossorigin, <https://cdn.prod.website-files.com/66bf3d007a95625ff7d81868/css/voltage-park.webflow.shared.8d522507f.css>; rel=preload; as=style; crossorigin; integrity=\"sha384-jVIlB/T4I0Ysjgzr/hZ6zef52+kOs6lpWzVsuwTEn0s4t2oSzdwZ3+Ptnfb6QrxU\", <https://cdn.prod.website-files.com/66bf3d007a95625ff7d81868/css/voltage-park.webflow.680ec1a7b4c3114f43f58f69.d3b25e7f9.opt.css>; rel=preload; as=style; crossorigin; integrity=\"sha384-07Jef5HtUGTeF6Qh/8L8rpvV1qoswq0BWNe8Jd2tf6PRsC3th+RzvNhUWaAnFlsw\", <https://fonts.googleapis.com>; rel=preconnect, <https://fonts.gstatic.com>; rel=preconnect; crossorigin, <https://cdn.intellimize.co>; rel=preconnect, <https://api.intellimize.co>; rel=preconnect; crossorigin, <https://log.intellimize.co>; rel=preconnect; crossorigin, <https://117450729.intellimizeio.com>; rel=preconnect",
+    "server": "cloudflare",
+    "set-cookie": "_cfuvid=B6Vo7nPXCDEDT9607JspBrUXY8.Z7T7Z2NSewzIcrCk-1789350446.0416605-1.0.1.1-XiO2r1SSf48bYEaRIihWgXyQMVe3dRDGFy9hZYpHi_g; HttpOnly; SameSite=None; Secure; Path=/; Domain=voltagepark.com",
+    "strict-transport-security": "max-age=31536000",
+    "surrogate-control": "max-age=2147483647",
+    "surrogate-key": "voltagepark.com 66bf3d007a95625ff7d81868 pageId:680ec1a7b4c3114f43f58f69",
+    "transfer-encoding": "chunked",
+    "vary": "accept-encoding",
+    "x-lambda-id": "b7290e7a-09a7-41ea-9307-2dc4498b66b2",
+    "x-wf-region": "us-east-1"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "url": "https://datacrunch.io/pricing",
+  "status": 200,
+  "retrievedAt": "2026-09-14T01:47:18.056Z",
+  "headers": {
+    "age": "117",
+    "cache-control": "public, max-age=300",
+    "cf-cache-status": "HIT",
+    "cf-ray": "a3abb90de8991881-ATL",
+    "connection": "keep-alive",
+    "content-encoding": "gzip",
+    "content-security-policy": "frame-ancestors none",
+    "content-type": "text/html",
+    "cross-origin-opener-policy": "same-origin",
+    "cross-origin-resource-policy": "same-origin",
+    "date": "Mon, 14 Sep 2026 01:47:18 GMT",
+    "last-modified": "Mon, 14 Sep 2026 01:45:21 GMT",
+    "origin-agent-cluster": "?1",
+    "referrer-policy": "no-referrer",
+    "server": "cloudflare",
+    "strict-transport-security": "max-age=15552000, max-age=63072000",
+    "transfer-encoding": "chunked",
+    "vary": "accept-encoding",
+    "x-content-type-options": "nosniff",
+    "x-download-options": "noopen",
+    "x-frame-options": "SAMEORIGIN",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+  }
+}

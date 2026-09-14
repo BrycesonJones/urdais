@@ -8,6 +8,7 @@
 import { calculationDateOf } from "@/lib/ucpi/calculation-window";
 import type { DiagnosticCode, EligibilityAssessment, ExclusionReason, InputStatus, NormalizedObservation, MarketEntity } from "@/lib/ucpi/domain";
 import { HOST_MEMORY_FLOOR_GB_PER_ACCELERATOR, bundleEnvelope, freshnessOnCalculationDate } from "@/lib/ucpi/launch-parameters";
+import type { GpuIdentityRequirement } from "@/lib/ucpi/listed/instruments";
 import { productionCollectionPermitted, type SourceRegistryState } from "@/lib/ucpi/permission-gate";
 
 /**
@@ -32,7 +33,11 @@ export type EligibilityContext = {
   entities: ReadonlyMap<string, MarketEntity>;
   /** The index currency. Anything else needs a conversion the child has not yet approved. */
   indexCurrency?: string;
+  /** The hardware the instrument measures. Defaults to the H100 SXM 80 GB device of the founding child. */
+  identity?: GpuIdentityRequirement;
 };
+
+export const H100_SXM_IDENTITY: GpuIdentityRequirement = { vendor: "NVIDIA", model: "H100", formFactor: "SXM", memoryGb: 80 };
 
 const MINIMUM_AVAILABILITY_GRADE = 3;
 
@@ -44,12 +49,13 @@ export function assessEligibility(obs: NormalizedObservation, ctx: EligibilityCo
 
   // P0: identity qualification -------------------------------------------------
   if (obs.fullDevice === false || obs.tenancyGrade === "shared_or_fractional") exclusions.add("FRACTIONAL_OR_SHARED_DEVICE");
-  if (obs.gpuVendor !== "NVIDIA" || obs.gpuModel !== "H100") {
+  const identity = ctx.identity ?? H100_SXM_IDENTITY;
+  if (obs.gpuVendor !== identity.vendor || obs.gpuModel !== identity.model) {
     exclusions.add("WRONG_HARDWARE");
   } else if (obs.formFactor === null || obs.hardwareIdentityGrade === "insufficient") {
     exclusions.add("HARDWARE_VARIANT_UNRESOLVED");
-  } else if (obs.formFactor !== "SXM" || obs.gpuMemoryGb !== 80) {
-    // NVL and PCIe are different instruments, as is any non-80 GB device.
+  } else if (obs.formFactor !== identity.formFactor || (identity.memoryGb !== null && obs.gpuMemoryGb !== identity.memoryGb)) {
+    // Another form factor or memory class of the same model is a different instrument, never collapsed into this one.
     exclusions.add("WRONG_HARDWARE");
   }
   const p0 = exclusions.size === 0;
@@ -144,6 +150,7 @@ export function assessEligibility(obs: NormalizedObservation, ctx: EligibilityCo
   if (obs.sourceEffectiveAt === null) diagnostics.add("SOURCE_EFFECTIVE_TIME_ABSENT");
   if (obs.enumerationAssessment !== "complete") diagnostics.add("ENUMERATION_INCOMPLETE");
   if (obs.marketplaceEntityId !== null) diagnostics.add("MARKETPLACE_SELLER_ID_STABILITY_UNRESOLVED");
+  if (obs.sellerPricesByQuantityTier === true) diagnostics.add("SELLER_PRICE_TIERED_BY_QUANTITY");
 
   const p2 = p1 && exclusions.size === 0;
 

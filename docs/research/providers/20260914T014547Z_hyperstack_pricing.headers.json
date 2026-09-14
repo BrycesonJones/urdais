@@ -1,0 +1,32 @@
+{
+  "url": "https://www.hyperstack.cloud/gpu-pricing",
+  "status": 200,
+  "retrievedAt": "2026-09-14T01:47:18.753Z",
+  "headers": {
+    "alt-svc": "h3=\":443\"; ma=86400",
+    "cache-control": "s-maxage=36000, max-age=5",
+    "cf-ray": "a3abb911aaee22ab-CDG",
+    "connection": "keep-alive",
+    "content-encoding": "br",
+    "content-security-policy": "upgrade-insecure-requests",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Mon, 14 Sep 2026 01:47:18 GMT",
+    "edge-cache-tag": "CT-75646711267,P-26282475,W-361238168800,W-87624560363,W-90262270163,W-90262927588,W-90262927817,W-90512245193,CW-100688567243,CW-104893055945,CW-104893489098,CW-245785375987,CW-249876208834,CW-249960380621,CW-85440297161,CW-87628279010,CW-90265175231,CW-90872030913,E-75120486879,E-75120657095,E-75120657099,E-75120657122,E-75120657136,E-78254280911,E-79521999588,E-79522001115,E-87628279021,MENU-361238168800,MENU-87624560363,MENU-90262270163,MENU-90262927588,MENU-90262927817,MENU-90512245193,PGS-ALL,SW-0,GC-75338507477,GC-90287510507,TS-75120486869",
+    "last-modified": "Tue, 25 Aug 2026 12:28:09 GMT",
+    "link": "<https://fonts.googleapis.com>; rel=preconnect,<https://fonts.gstatic.com>; rel=preconnect,<https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap>; rel=preload; as=style,<https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap>; rel=preload; as=style,</hs/hsstatic/jquery-libs/static-1.4/jquery/jquery-1.11.2.js>; rel=preload; as=script,<https://www.hyperstack.cloud/hubfs/hub_generated/template_assets/1/75120657095/1787660849017/template_main.min.css>; rel=preload; as=style,<https://www.hyperstack.cloud/hubfs/hub_generated/template_assets/1/75120657099/1787660840028/template_theme-overrides.min.css>; rel=preload; as=style,<https://www.hyperstack.cloud/hubfs/hub_generated/template_assets/1/78254280911/1787660846592/template_style.min.css>; rel=preload; as=style,<https://www.hyperstack.cloud/hubfs/hub_generated/module_assets/1/104893055945/1779288678742/module_Header_-_Top_Notification.min.css>; rel=preload; as=style",
+    "referrer-policy": "no-referrer-when-downgrade",
+    "server": "cloudflare",
+    "set-cookie": "_cfuvid=M_bZN38wL2dyiFrSSpbYrRv6mxEtt_BtJz6Ii2qWhrg-1789350438.6666367-1.0.1.1-lPQo1ff2nC96UMGoE9B.uTMkAowWdKCQ4v0S4RPEfzI; HttpOnly; SameSite=None; Secure; Path=/; Domain=www.hyperstack.cloud",
+    "strict-transport-security": "max-age=31536000",
+    "transfer-encoding": "chunked",
+    "vary": "accept-encoding",
+    "x-hs-cache-config": "BrowserCache-5s-EdgeCache-180s",
+    "x-hs-cache-control": "s-maxage=36000, max-age=0",
+    "x-hs-cf-cache-status": "HIT",
+    "x-hs-cfworker-meta": "{\"contentType\":\"SITE_PAGE\",\"resolver\":\"PreRenderedContentResolver\"}",
+    "x-hs-content-id": "75646711267",
+    "x-hs-hub-id": "26282475",
+    "x-hs-portal-id": "26282475",
+    "x-hs-prerendered": "Tue, 25 Aug 2026 12:28:09 GMT"
+  }
+}

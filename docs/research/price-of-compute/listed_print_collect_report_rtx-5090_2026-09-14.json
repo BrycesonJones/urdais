@@ -1,0 +1,213 @@
+{
+  "instrument": "UCPI-RTX-5090-LISTED",
+  "specVersion": "0.1.0-draft",
+  "sku": "RTX-5090",
+  "calculationDate": "2026-09-14",
+  "vendorHeadline": {
+    "community": {
+      "usd_per_gpu_hr": 0.69,
+      "providers": 1
+    },
+    "on_demand": {
+      "usd_per_gpu_hr": 0.99,
+      "providers": 1
+    }
+  },
+  "providerRows": 4,
+  "onDemandRows": 2,
+  "rows": [
+    {
+      "seller": "vast",
+      "pricingType": "spot",
+      "price": 0.666667,
+      "eligible": false,
+      "exclusions": [
+        "WRONG_SERVICE_PRODUCT",
+        "WRONG_PROCUREMENT_MODE",
+        "PREEMPTIBLE",
+        "MINIMUM_TOPOLOGY_UNKNOWN",
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED",
+        "MARKETPLACE_SELLER_ID_STABILITY_UNRESOLVED"
+      ]
+    },
+    {
+      "seller": "runpod",
+      "pricingType": "community",
+      "price": 0.69,
+      "eligible": false,
+      "exclusions": [
+        "WRONG_PROCUREMENT_MODE"
+      ],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    },
+    {
+      "seller": "vast",
+      "pricingType": "on_demand",
+      "price": 0.969333,
+      "eligible": false,
+      "exclusions": [
+        "WRONG_SERVICE_PRODUCT",
+        "MINIMUM_TOPOLOGY_UNKNOWN",
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED",
+        "MARKETPLACE_SELLER_ID_STABILITY_UNRESOLVED"
+      ]
+    },
+    {
+      "seller": "runpod",
+      "pricingType": "on_demand",
+      "price": 0.99,
+      "eligible": true,
+      "exclusions": [],
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    }
+  ],
+  "candidate": {
+    "outcome": "unavailable",
+    "structuralCondition": "SINGLE_PARTICIPANT",
+    "priceLevel": null,
+    "participantCount": 1,
+    "participants": [
+      {
+        "seller": "runpod",
+        "price": 0.99
+      }
+    ],
+    "marketBreadth": null,
+    "contributingSourceCount": 1,
+    "largestSourceParticipantShare": null,
+    "dispersion": null,
+    "attributions": [
+      "Data: Price of Compute \u2014 priceofcompute.com"
+    ],
+    "publicSeriesPoint": {
+      "instrument": "UCPI-RTX-5090-LISTED",
+      "displayName": "UCPI RTX 5090 Listed",
+      "gpu": {
+        "vendor": "NVIDIA",
+        "model": "RTX 5090",
+        "formFactor": "PCIe",
+        "memoryGb": 32,
+        "label": "RTX 5090"
+      },
+      "observationType": "listed",
+      "procurementMode": "on_demand",
+      "regionScope": "listed_provider_wide",
+      "country": null,
+      "attributions": [
+        "Data: Price of Compute \u2014 priceofcompute.com"
+      ],
+      "calculationDate": "2026-09-14",
+      "status": "unavailable",
+      "priceLevel": null,
+      "currency": "USD",
+      "unit": "accelerator_hour",
+      "percentageChange1d": null,
+      "changeDisposition": null,
+      "marketBreadth": null,
+      "structuralCondition": "SINGLE_PARTICIPANT",
+      "participantCount": 1,
+      "contributingSourceCount": 1,
+      "largestSourceParticipantShare": null,
+      "dispersion": null,
+      "reasonCodes": [
+        "SINGLE_PARTICIPANT"
+      ],
+      "freshness": {
+        "windowStart": "2026-09-14T00:00:00.000Z",
+        "cutoff": "2026-09-15T00:00:00.000Z",
+        "allInputsWithinWindow": true
+      },
+      "methodologyVersion": "0.1.2-draft",
+      "instrumentSpecVersion": "0.1.0-draft",
+      "calculatedAt": "2026-09-14T02:04:37.940Z",
+      "publishedAt": null
+    }
+  },
+  "retrieval": {
+    "id": "c0d85099-0e6e-4256-8c66-16b7bafcbfd6",
+    "requestedAt": "2026-09-14T02:04:37.681Z",
+    "completedAt": "2026-09-14T02:04:37.935Z",
+    "status": 200,
+    "responseHash": "560d00bbc79f7737719a59391107ee67f2ac2b5f0c9b8b634dd003b948e234f1",
+    "bytes": 765,
+    "records": 4,
+    "purpose": "production"
+  },
+  "events": [
+    {
+      "type": "provider_request_started",
+      "source": "price-of-compute-prices",
+      "attempt": 1,
+      "url": "https://priceofcompute.com/api/v1/prices/rtx-5090"
+    },
+    {
+      "type": "provider_request_succeeded",
+      "source": "price-of-compute-prices",
+      "attempt": 1,
+      "status": 200,
+      "bytes": 765,
+      "durationMs": 254
+    },
+    {
+      "type": "retrieval_persisted",
+      "source": "price-of-compute-prices",
+      "retrievalId": "c0d85099-0e6e-4256-8c66-16b7bafcbfd6",
+      "purpose": "production",
+      "recordCount": 4,
+      "duplicateOfRetrievalId": null
+    },
+    {
+      "type": "source_excluded",
+      "source": "price-of-compute-prices",
+      "observationId": "n:c0d85099-0e6e-4256-8c66-16b7bafcbfd6:0",
+      "exclusions": [
+        "WRONG_SERVICE_PRODUCT",
+        "WRONG_PROCUREMENT_MODE",
+        "PREEMPTIBLE",
+        "MINIMUM_TOPOLOGY_UNKNOWN",
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ]
+    },
+    {
+      "type": "source_excluded",
+      "source": "price-of-compute-prices",
+      "observationId": "n:c0d85099-0e6e-4256-8c66-16b7bafcbfd6:1",
+      "exclusions": [
+        "WRONG_PROCUREMENT_MODE"
+      ]
+    },
+    {
+      "type": "source_excluded",
+      "source": "price-of-compute-prices",
+      "observationId": "n:c0d85099-0e6e-4256-8c66-16b7bafcbfd6:2",
+      "exclusions": [
+        "WRONG_SERVICE_PRODUCT",
+        "MINIMUM_TOPOLOGY_UNKNOWN",
+        "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+      ]
+    },
+    {
+      "type": "observation_eligible",
+      "source": "price-of-compute-prices",
+      "observationId": "n:c0d85099-0e6e-4256-8c66-16b7bafcbfd6:3",
+      "diagnostics": [
+        "TAX_BASIS_UNRESOLVED",
+        "OPERATOR_UNDETERMINED"
+      ]
+    }
+  ]
+}

@@ -22,7 +22,8 @@ import { validatePocPrices } from "@/lib/ucpi/runtime/schema-validation";
 const PAYLOAD = validatePocPrices(JSON.parse(readFileSync(path.join(process.cwd(), "docs/research/price-of-compute/api_v1_prices_h100-sxm.json"), "utf8")));
 
 const ENTITY_IDS = new Map(POC_SELLER_EVIDENCE_2026_09_14.map((e) => [e.slug, `ent-${e.slug}`]));
-const PROFILES = pocSellerProfiles(ENTITY_IDS);
+// The frozen snapshot of the first candidate: H100 SXM topology only, Verda unevidenced.
+const PROFILES = pocSellerProfiles(ENTITY_IDS, POC_SELLER_EVIDENCE_2026_09_14);
 const ENTITIES: MarketEntity[] = [...ENTITY_IDS].map(([slug, id]) => ({ id, slug, name: slug, legalName: PROFILES.get(slug)?.legalNameEvidenced ? `${slug} legal` : null, legalIdentifier: null, controllingEntityId: null }));
 const ENTITY_MAP: ReadonlyMap<string, MarketEntity> = new Map(ENTITIES.map((e) => [e.id, e]));
 const LISTED_VERSIONS = { methodologyVersion: "0.1.2-draft", instrumentSpecVersion: "0.1.1-draft", instrument: "UCPI-H100-SXM-LISTED" };
@@ -97,7 +98,7 @@ describe("normalization: nothing invented", () => {
     expect(by("voltagepark")).toMatchObject({ topologyClass: "per_accelerator_allocation", minimumGpuCount: 1, wholeNodeRequired: false });
     expect(by("coreweave")).toMatchObject({ topologyClass: "whole_node", minimumGpuCount: 8, wholeNodeRequired: true });
     expect(by("azure")).toMatchObject({ topologyClass: "whole_node", wholeNodeRequired: true });
-    expect(by("denvr")).toMatchObject({ topologyClass: "unknown", minimumGpuCount: null, wholeNodeRequired: null });
+    expect(by("massedcompute")).toMatchObject({ topologyClass: "unknown", minimumGpuCount: null, wholeNodeRequired: null });
   });
 
   it("the marketplace row is an aggregate, not a seller: service product other with the marketplace entity set", () => {
@@ -143,8 +144,10 @@ describe("UCPI-H100-SXM-LISTED eligibility, row by row", () => {
     expect(assess(slug, "on_demand").exclusions).toContain("WHOLE_NODE_REQUIRED");
   });
 
-  it.each(["massedcompute", "datacrunch", "denvr"])("%s on-demand is excluded as MINIMUM_TOPOLOGY_UNKNOWN until Urdais evidences its class", (slug) => {
-    expect(assess(slug, "on_demand").exclusions).toContain("MINIMUM_TOPOLOGY_UNKNOWN");
+  it.each(["massedcompute", "datacrunch", "denvr"])("%s on-demand is excluded under the frozen snapshot: no per-instrument topology and no evidenced contracting entity", (slug) => {
+    const a = assess(slug, "on_demand");
+    expect(a.p2).toBe(false);
+    expect(a.exclusions).toEqual(expect.arrayContaining(["MINIMUM_TOPOLOGY_UNKNOWN", "SELLER_LEGAL_IDENTITY_UNRESOLVED"]));
   });
 
   it("Nebius is excluded as SELLER_LEGAL_IDENTITY_UNRESOLVED: no single contracting entity stands behind the listed price", () => {

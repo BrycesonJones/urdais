@@ -1,0 +1,112 @@
+{
+  "retrieval": {
+    "id": "c70d2192-ad79-4521-ab49-6cfe5c9d9f33",
+    "requestedAt": "2026-09-14T02:04:31.622Z",
+    "completedAt": "2026-09-14T02:04:31.820Z",
+    "responseStatus": 200,
+    "request": {
+      "method": "GET",
+      "url": "https://priceofcompute.com/api/v1/prices/b200",
+      "parameters": {},
+      "requiredHeaders": []
+    },
+    "responseHash": "945fced73258e1fef130986964f33d0fb4a05cff93ed51ab851131f6f07cf147",
+    "responseByteLength": 1577,
+    "recordCount": 10,
+    "retrievalPurpose": "production",
+    "permissionGrantId": "77777777-0000-4000-8000-000000000101",
+    "collectorIdentity": "ucpi-listed-print/collect/UCPI-B200-LISTED"
+  },
+  "response": {
+    "sku": "B200",
+    "day": "2026-09-14",
+    "prices": {
+      "community": {
+        "usd_per_gpu_hr": 5.98,
+        "providers": 1
+      },
+      "on_demand": {
+        "usd_per_gpu_hr": 6.79,
+        "providers": 5
+      },
+      "spot": {
+        "usd_per_gpu_hr": 3.689875,
+        "providers": 2
+      }
+    },
+    "providers": [
+      {
+        "provider": "datacrunch",
+        "pricing_type": "spot",
+        "usd_per_gpu_hr": 3.115,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:35.461Z"
+      },
+      {
+        "provider": "coreweave",
+        "pricing_type": "spot",
+        "usd_per_gpu_hr": 4.26375,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:44.422Z"
+      },
+      {
+        "provider": "massedcompute",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 5.4325,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:47.310Z"
+      },
+      {
+        "provider": "vast",
+        "pricing_type": "spot",
+        "usd_per_gpu_hr": 5.875,
+        "region": "US",
+        "observed_at": "2026-09-13T18:11:21.869Z"
+      },
+      {
+        "provider": "runpod",
+        "pricing_type": "community",
+        "usd_per_gpu_hr": 5.98,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:34.070Z"
+      },
+      {
+        "provider": "datacrunch",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 6.2325,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:35.461Z"
+      },
+      {
+        "provider": "runpod",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 6.79,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:34.070Z"
+      },
+      {
+        "provider": "lambda",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 6.89,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:49.240Z"
+      },
+      {
+        "provider": "vast",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 7.75,
+        "region": "US",
+        "observed_at": "2026-09-13T18:11:21.869Z"
+      },
+      {
+        "provider": "coreweave",
+        "pricing_type": "on_demand",
+        "usd_per_gpu_hr": 8.6,
+        "region": null,
+        "observed_at": "2026-09-14T01:02:44.422Z"
+      }
+    ],
+    "updated_at": "2026-09-14T01:02:49.240Z",
+    "attribution": "Data: Price of Compute \u2014 priceofcompute.com"
+  }
+}

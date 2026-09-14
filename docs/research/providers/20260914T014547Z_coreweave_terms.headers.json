@@ -1,0 +1,23 @@
+{
+  "url": "https://www.coreweave.com/terms-of-service",
+  "status": 404,
+  "retrievedAt": "2026-09-14T01:47:22.515Z",
+  "headers": {
+    "cache-control": "max-age=43200",
+    "cf-cache-status": "DYNAMIC",
+    "cf-ray": "a3abb927ef274f55-ATL",
+    "connection": "keep-alive",
+    "content-encoding": "gzip",
+    "content-security-policy": "frame-ancestors 'self'",
+    "content-type": "text/html; charset=utf-8",
+    "date": "Mon, 14 Sep 2026 01:47:22 GMT",
+    "last-modified": "Sat, 12 Sep 2026 19:46:00 GMT",
+    "server": "cloudflare",
+    "set-cookie": "__cf_bm=FZGB1kRe1_6cs8Ul9jQM.bB7hxqhq3K4mZ7lHWNItk4-1789350442.2274504-1.0.1.1-KB18QJ8DLQEPzed9LIZhOerd50JQQC0uCaBVAvI31Yxgfb8GEmIoZV96b58Sf9CzQQhq8cN_dG6LRowYd6jaQZVHv_W9Z4vDRICB278TfcuT0t4I9_aunH7VHN9MvC8S; HttpOnly; SameSite=None; Secure; Path=/; Domain=coreweave.com; Expires=Mon, 14 Sep 2026 02:17:22 GMT",
+    "surrogate-key": "wf.coreweave.com 62ba1fb86485b6d5029975c4 pageId:62ccaa9b8cf05d3d2ed37e31 404req",
+    "transfer-encoding": "chunked",
+    "vary": "accept-encoding",
+    "x-frame-options": "SAMEORIGIN",
+    "x-wf-region": "us-east-1"
+  }
+}
