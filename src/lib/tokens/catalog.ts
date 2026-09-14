@@ -10,12 +10,6 @@ import type { SourceRegistryState } from "@/lib/ucpi/permission-gate";
 import type { ModelIdentity } from "@/lib/tokens/identity";
 import type { TokenSourceInterface, Wave1Provider } from "@/lib/tokens/types";
 
-export const MODEL_API_PROVIDER_IDS = {
-  openai: "77777777-0000-4000-8000-000000000001",
-  anthropic: "77777777-0000-4000-8000-000000000002",
-  xai: "77777777-0000-4000-8000-000000000004",
-} as const;
-
 export type Wave1ModelSeed = ModelIdentity & { id: string };
 
 export const WAVE1_MODELS: readonly Wave1ModelSeed[] = [

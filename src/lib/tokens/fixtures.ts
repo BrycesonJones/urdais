@@ -1,6 +1,7 @@
 /**
- * Load a reviewed first-party pricing fixture. The HTML is the retrieval
- * artifact; JSON sidecar records URL, retrieval time, hash, and provenance.
+ * Load a reviewed first-party pricing fixture. The HTML file is the retained
+ * retrieval artifact; the META table below records its URL, retrieval time,
+ * hash and provenance, and loading re-hashes the file and refuses a mismatch.
  */
 
 import { readFileSync } from "node:fs";

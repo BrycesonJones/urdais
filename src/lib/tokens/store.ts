@@ -5,6 +5,7 @@
  */
 
 import { aliasesFor, modelsFor, WAVE1_SOURCE_INTERFACES, type Wave1ModelSeed } from "@/lib/tokens/catalog";
+import { WAVE1_PROVIDERS } from "@/lib/tokens/types";
 import type { Wave1Provider } from "@/lib/tokens/types";
 import type { TokenPriceObservationRow, TokenSourceInterface, TokenSourceRetrieval } from "@/lib/tokens/types";
 
@@ -52,7 +53,7 @@ export class InMemoryTokenPricingStore implements TokenPricingStore {
   private readonly interfaces: Record<Wave1Provider, TokenSourceInterface>;
 
   constructor(
-    private readonly providers: readonly Wave1Provider[] = ["anthropic", "xai", "openai"],
+    private readonly providers: readonly Wave1Provider[] = WAVE1_PROVIDERS,
     interfaceOverrides: Partial<Record<Wave1Provider, TokenSourceInterface>> = {},
     initial: { retrievals?: readonly TokenSourceRetrieval[]; observations?: readonly TokenPriceObservationRow[] } = {},
   ) {

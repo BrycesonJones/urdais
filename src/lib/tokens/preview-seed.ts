@@ -42,7 +42,7 @@ export async function seedWave1ResearchPreviewDatabase(sql: TokenSqlExecutor): P
   benchmarks: { inserted: number; points: unknown[] };
 }> {
   const existing = await loadTokenReadCatalogFromSql(sql);
-  const store = new InMemoryTokenPricingStore(["anthropic", "xai", "openai"], {}, {
+  const store = new InMemoryTokenPricingStore([...WAVE1_PROVIDERS], {}, {
     retrievals: existing.retrievals,
     observations: existing.observations,
   });
