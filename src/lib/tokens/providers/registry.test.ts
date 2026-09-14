@@ -32,12 +32,12 @@ describe("an unregistered provider is refused, not guessed at", () => {
     // The defect this replaces: the dispatch chain tested two providers and
     // returned the OpenAI parser for everything else, so an unregistered
     // provider's page was parsed as though it were OpenAI's.
-    expect(() => providerParser("google")).toThrow(UnknownProviderParserError);
-    expect(() => providerParser("google")).toThrow(/no pricing parser is registered for provider "google"/);
+    expect(() => providerParser("mistral")).toThrow(UnknownProviderParserError);
+    expect(() => providerParser("mistral")).toThrow(/no pricing parser is registered for provider "mistral"/);
   });
 
-  it("refuses every Wave-2 provider slug until its parser exists", () => {
-    for (const provider of ["google", "deepseek", "alibaba"]) {
+  it("refuses any slug that is not on the roster", () => {
+    for (const provider of ["mistral", "cohere", "meta", ""]) {
       expect(() => providerParser(provider)).toThrow(UnknownProviderParserError);
     }
   });

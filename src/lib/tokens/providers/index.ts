@@ -14,7 +14,10 @@
  * throws by name rather than guessing.
  */
 
+import { parseAlibabaPricing } from "@/lib/tokens/providers/alibaba";
 import { parseAnthropicPricing } from "@/lib/tokens/providers/anthropic";
+import { parseDeepSeekPricing } from "@/lib/tokens/providers/deepseek";
+import { parseGooglePricing } from "@/lib/tokens/providers/google";
 import { parseOpenAiPricing } from "@/lib/tokens/providers/openai";
 import { parseXaiPricing } from "@/lib/tokens/providers/xai";
 import type { ProviderParseResult, Wave1Provider } from "@/lib/tokens/types";
@@ -30,6 +33,9 @@ export const PROVIDER_PARSERS: Record<Wave1Provider, ProviderParser> = {
   anthropic: parseAnthropicPricing,
   openai: parseOpenAiPricing,
   xai: parseXaiPricing,
+  google: parseGooglePricing,
+  deepseek: parseDeepSeekPricing,
+  alibaba: parseAlibabaPricing,
 };
 
 export class UnknownProviderParserError extends Error {

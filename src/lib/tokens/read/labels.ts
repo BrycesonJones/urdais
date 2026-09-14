@@ -13,6 +13,9 @@ export const WAVE1_PROVIDER_NAMES: Record<Wave1Provider, string> = {
   anthropic: "Anthropic",
   openai: "OpenAI",
   xai: "xAI",
+  google: "Google",
+  deepseek: "DeepSeek",
+  alibaba: "Alibaba Cloud",
 };
 
 const DIMENSION_LABELS: Record<SourcePricingDimension, string> = {

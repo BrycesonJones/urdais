@@ -24,7 +24,7 @@ begin
       and si.data_use_terms_state = 'under_review';
   if n <> 6 then raise exception 'expected 6 research-usable token pricing interfaces, found %', n; end if;
   select count(*) into n from reference.models;
-  if n <> 18 then raise exception 'expected 18 wave-1 models, found %', n; end if;
+  if n <> 34 then raise exception 'expected 34 models across both waves, found %', n; end if;
   select count(*) into n from pipeline.token_price_observations;
   if n <> 0 then raise exception 'token prices were seeded'; end if;
 

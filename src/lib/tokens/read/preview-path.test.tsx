@@ -9,6 +9,7 @@ import { findMarket } from "@/data/mock/market-detail";
 import { seedWave1ResearchPreview, seedWave1ResearchPreviewDatabase } from "@/lib/tokens/preview-seed";
 import { validatePublicTokenPricesResponse } from "@/lib/tokens/read/api-contract";
 import { WAVE1_MODELS, WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
+import { WAVE1_PROVIDERS } from "@/lib/tokens/types";
 import { TOKEN_BENCHMARK_PENDING_NOTE } from "@/lib/tokens/read/benchmark";
 import { benchmarkInstrumentsFromSeries, tokenInstrumentsFromSeries, withTokenInstruments } from "@/lib/tokens/read/instruments";
 import { publishableBenchmarks } from "@/lib/tokens/read/benchmark-series";
@@ -45,7 +46,7 @@ function modelRows() {
 }
 
 function interfaceRows() {
-  return (["anthropic", "xai", "openai"] as const).map((provider) => {
+  return WAVE1_PROVIDERS.map((provider) => {
     const source = WAVE1_SOURCE_INTERFACES[provider];
     return {
       id: source.id,
@@ -228,7 +229,7 @@ describe("database loader and visibility", () => {
     const production = listPublicTokenSeries(loaded);
     expect(preview.length).toBeGreaterThan(0);
     expect(production).toEqual([]);
-    expect(new Set(preview.map((row) => row.providerSlug))).toEqual(new Set(["anthropic", "openai", "xai"]));
+    expect(new Set(preview.map((row) => row.providerSlug))).toEqual(new Set(WAVE1_PROVIDERS));
     expect(preview.every((row) => row.history.length === 1)).toBe(true);
     expect(preview.every((row) => row.percentageChange === null)).toBe(true);
     expect(preview.some((row) => row.seriesId.startsWith("tokens-anthropic") || row.displayName === "Anthropic")).toBe(false);
@@ -281,7 +282,7 @@ describe("Tokens and Model Economics preview UI", () => {
     const series = listVisibleTokenSeries(previewCatalog(), "research_preview");
     expect(series.length).toBeGreaterThan(0);
     const reports = tokenVerificationReports(series);
-    expect(reports.map((row) => row.providerSlug).sort()).toEqual(["anthropic", "openai", "xai"]);
+    expect(reports.map((row) => row.providerSlug).sort()).toEqual([...WAVE1_PROVIDERS].sort());
     expect(reports.every((row) => row.models > 0 && row.observations > 0)).toBe(true);
     // Recorded observations only: one point per series, no synthetic intraday.
     const instruments = tokenInstrumentsFromSeries(series);
@@ -341,10 +342,13 @@ describe("Token Price benchmark on the product surfaces", () => {
     const market = withTokenInstruments(findMarket("ucpi")!, benchmarkInstruments());
     render(<MarketDetailPage market={market} researchPreview={true} />);
     fireEvent.click(screen.getByRole("button", { name: "Tokens" }));
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Anthropic");
-    expect(screen.getByText("$30.00")).toBeInTheDocument();
+    // The default is the first provider by identity, never a quality ranking:
+    // pickDefaultTokenSeries tie-breaks on provider slug, so the roster's
+    // alphabetical head is what opens. Adding a provider can move it.
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Alibaba Cloud");
+    expect(screen.getByText("$4.00")).toBeInTheDocument();
     expect(screen.getByText("per 1M tokens")).toBeInTheDocument();
-    expect(screen.getByText(/Urdais Token Price · Claude Fable 5.1/)).toBeInTheDocument();
+    expect(screen.getByText(/Urdais Token Price · Qwen3.8-Max/)).toBeInTheDocument();
     expect(screen.getByText("Research preview")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Model/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /Pricing dimension/ })).toBeNull();
@@ -356,7 +360,7 @@ describe("Token Price benchmark on the product surfaces", () => {
 
   it("compares provider benchmark against provider benchmark, capped at four series", () => {
     const instruments = benchmarkInstruments();
-    expect(instruments).toHaveLength(3);
+    expect(instruments).toHaveLength(5);  // six providers ingested, DeepSeek withheld
     expect(MAX_COMPARISONS).toBe(3);
     for (const instrument of instruments) {
       expect(instrument.comparisons.map((row) => row.label).sort()).toEqual(
@@ -368,8 +372,8 @@ describe("Token Price benchmark on the product surfaces", () => {
   it("gives Model Economics the same provider benchmark values, with only a lab selector", () => {
     render(<TokenPriceSection instruments={benchmarkInstruments()} researchPreview={true} />);
     expect(screen.getByRole("heading", { name: "Token Price" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Provider/ })).toHaveTextContent("Anthropic");
-    expect(screen.getByText("$30.00")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Provider/ })).toHaveTextContent("Alibaba Cloud");
+    expect(screen.getByText("$4.00")).toBeInTheDocument();
     expect(screen.getByText("per 1M tokens")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Model/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /Pricing dimension/ })).toBeNull();
@@ -377,7 +381,7 @@ describe("Token Price benchmark on the product surfaces", () => {
 
   it("publishes no benchmark in production even with research observations present", () => {
     expect(visibleTokenBenchmarks(previewCatalog(), { NODE_ENV: "production" })).toEqual([]);
-    expect(visibleTokenBenchmarks(previewCatalog(), { NODE_ENV: "development" })).toHaveLength(3);
+    expect(visibleTokenBenchmarks(previewCatalog(), { NODE_ENV: "development" })).toHaveLength(5);
   });
 });
 

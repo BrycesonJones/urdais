@@ -17,7 +17,7 @@
  * caller exits nonzero. Nothing is written, ever.
  */
 
-import { benchmarkProviders, constituentInForce } from "@/lib/tokens/read/benchmark";
+import { benchmarkProviders, constituentInForce, TOKEN_BENCHMARK_WITHHELD, withholdingFor } from "@/lib/tokens/read/benchmark";
 import { loadPersistedBenchmarks, persistedBenchmarks, type BenchmarkSqlExecutor } from "@/lib/tokens/read/benchmark-store";
 import { tokenReadCatalogFromStore } from "@/lib/tokens/read/load";
 import { productionFrozenRows, researchDerivedFrozenRows } from "@/lib/tokens/read/lineage";
@@ -224,6 +224,14 @@ export async function checkTokenProductionReadiness(input: ReadinessInput): Prom
       detail: "the read path loaded no Token Price benchmark at all",
       remedy: "run the operator verification against this database before deploying",
     });
+  }
+
+  // A provider Urdais collects but deliberately does not publish is neither a
+  // failure nor an absence. Readiness names it, so that "five providers" is
+  // read as a decision about the sixth rather than an oversight.
+  for (const row of TOKEN_BENCHMARK_WITHHELD) {
+    if (!withholdingFor(row.providerSlug, onDate)) continue;
+    notes.push(`${row.providerSlug} is collected but deliberately not published (${row.reason}); it is not expected to have a frozen benchmark and its absence is not a failure`);
   }
 
   return { ready: findings.length === 0, appliedMigrations: applied, pendingMigrations: pending, findings, notes, providers };
