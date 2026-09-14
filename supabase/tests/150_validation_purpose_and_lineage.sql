@@ -30,8 +30,12 @@ begin
   if not ok then raise exception 'validation retrieval without a grant was accepted'; end if;
 
   insert into reference.permission_grants (id, source_interface_id, grant_kind, reference, covers_collection, covers_index_use, effective_from, evidence)
-  values (grant_id, iface, 'written_permission', 'test-thread', true, true, now() - interval '1 day', 'test'),
-         (narrow_grant, iface, 'written_permission', 'test-thread-2', true, false, now() - interval '1 day', 'collection only');
+  -- A fixed date, not now() - 1 day: the retrievals below are stamped with fixed
+  -- times, so a relative effective_from silently stops covering them once the
+  -- wall clock moves past them, and the test fails on the calendar rather than
+  -- on the behaviour it asserts.
+  values (grant_id, iface, 'written_permission', 'test-thread', true, true, '2026-09-01T00:00:00Z', 'test'),
+         (narrow_grant, iface, 'written_permission', 'test-thread-2', true, false, '2026-09-01T00:00:00Z', 'collection only');
 
   -- A validation retrieval on a non-approved interface is rejected by the trigger.
   ok := false;
