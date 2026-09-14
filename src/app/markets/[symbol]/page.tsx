@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MarketDetailPage } from "@/components/market-detail/market-detail-page";
 import { findMarket } from "@/data/mock/market-detail";
-import { hydrateMarketWithTokenPrices } from "@/lib/tokens/read/load";
+import { hydrateMarketWithTokenPrices, tokenResearchPreviewActive } from "@/lib/tokens/read/load";
 
 type PageProps = { params: Promise<{ symbol: string }> };
 
@@ -18,12 +18,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function MarketIndexPage({ params }: PageProps) {
   const found = findMarket((await params).symbol);
   if (!found) notFound();
-  const market = hydrateMarketWithTokenPrices(found);
+  const market = await hydrateMarketWithTokenPrices(found);
+  const researchPreview =
+    tokenResearchPreviewActive() &&
+    (market.families.find((family) => family.id === "tokens")?.instruments.length ?? 0) > 0;
 
   return (
     <>
       <SiteHeader />
-      <MarketDetailPage key={market.symbol} market={market} />
+      <MarketDetailPage key={market.symbol} market={market} researchPreview={researchPreview} />
       <SiteFooter />
     </>
   );

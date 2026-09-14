@@ -6,7 +6,7 @@ export {
   type PublicTokenSeries,
   type PublicTokenPricesResponse,
 } from "@/lib/tokens/read/api-contract";
-export { listPublicTokenSeries, tokenSeriesId, type TokenReadCatalog } from "@/lib/tokens/read/series";
+export { listPublicTokenSeries, listVisibleTokenSeries, tokenSeriesId, type TokenReadCatalog } from "@/lib/tokens/read/series";
 export { pickDefaultTokenSeries } from "@/lib/tokens/read/default-selection";
 export {
   tokenInstrumentsFromSeries,
@@ -17,10 +17,19 @@ export {
 } from "@/lib/tokens/read/instruments";
 export {
   loadTokenReadCatalog,
-  loadPublicTokenInstruments,
+  loadVisibleTokenInstruments,
   hydrateMarketWithTokenPrices,
   tokenReadCatalogFromStore,
   emptyTokenReadCatalog,
+  visibleTokenPricesResponse,
+  tokenResearchPreviewActive,
 } from "@/lib/tokens/read/load";
-export { observationIsPublicable } from "@/lib/tokens/read/publication";
+export {
+  observationIsPublicable,
+  observationIsResearchPreviewable,
+  observationIsVisible,
+  tokenVisibilityMode,
+  isProductionRuntime,
+  type TokenVisibilityMode,
+} from "@/lib/tokens/read/publication";
 export { TOKEN_CHART_UNIT, tokenUnitCaption, tokenFacetLabel, tokenSeriesLabel } from "@/lib/tokens/read/labels";

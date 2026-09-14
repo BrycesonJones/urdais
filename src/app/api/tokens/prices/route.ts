@@ -1,13 +1,13 @@
-import { listPublicTokenSeries } from "@/lib/tokens/read/series";
-import { loadTokenReadCatalog } from "@/lib/tokens/read/load";
-import { publicTokenPricesResponse, validatePublicTokenPricesResponse } from "@/lib/tokens/read/api-contract";
+import { loadTokenReadCatalog, visibleTokenPricesResponse } from "@/lib/tokens/read/load";
+import { validatePublicTokenPricesResponse } from "@/lib/tokens/read/api-contract";
 
 /**
- * Public token-price catalog. Allowlisted series only; empty while
- * production-publicable observations do not exist.
+ * Token-price catalog. Production remains `{ series: [] }` until observations
+ * satisfy public publication policy. Development may return Wave-1 research
+ * preview series from the local database.
  */
 export async function GET(): Promise<Response> {
-  const body = publicTokenPricesResponse(listPublicTokenSeries(loadTokenReadCatalog()));
+  const body = visibleTokenPricesResponse(await loadTokenReadCatalog());
   const reasons = validatePublicTokenPricesResponse(JSON.parse(JSON.stringify(body)) as unknown);
   if (reasons.length > 0) return new Response(null, { status: 500 });
   return Response.json(body);

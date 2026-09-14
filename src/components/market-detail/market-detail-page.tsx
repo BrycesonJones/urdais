@@ -29,7 +29,13 @@ function instrumentInFamily(family: MarketFamily, instrumentId: string): MarketI
  * shared chart hook. Mount with a key of the market symbol so navigating
  * between markets resets the selection.
  */
-export function MarketDetailPage({ market }: { market: MarketDetail }) {
+export function MarketDetailPage({
+  market,
+  researchPreview = false,
+}: {
+  market: MarketDetail;
+  researchPreview?: boolean;
+}) {
   const initialFamily =
     familyOf(market, market.defaultInstrumentId) ??
     market.families.find((family) => family.instruments.some((instrument) => instrument.id === market.defaultInstrumentId)) ??
@@ -54,7 +60,7 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
       <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-6 text-neutral-50 sm:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-screen-2xl">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-            <MarketHeader market={market} instrument={null} emptyFamilyLabel={family.label} />
+            <MarketHeader market={market} instrument={null} emptyFamilyLabel={family.label} researchPreview={false} />
             <MarketSelectors
               market={market}
               family={family}
@@ -78,6 +84,7 @@ export function MarketDetailPage({ market }: { market: MarketDetail }) {
       market={market}
       family={family}
       instrument={instrument}
+      researchPreview={researchPreview}
       onFamilyChange={handleFamilyChange}
       onInstrumentChange={handleInstrumentChange}
     />
@@ -88,12 +95,14 @@ function LoadedMarketDetail({
   market,
   family,
   instrument,
+  researchPreview,
   onFamilyChange,
   onInstrumentChange,
 }: {
   market: MarketDetail;
   family: MarketFamily;
   instrument: MarketInstrumentDetail;
+  researchPreview: boolean;
   onFamilyChange: (familyId: string) => void;
   onInstrumentChange: (instrumentId: string) => void;
 }) {
@@ -116,7 +125,11 @@ function LoadedMarketDetail({
     <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-6 text-neutral-50 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-screen-2xl">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <MarketHeader market={market} instrument={instrument} />
+          <MarketHeader
+            market={market}
+            instrument={instrument}
+            researchPreview={researchPreview && Boolean(instrument.tokenIdentity)}
+          />
           <MarketSelectors
             market={market}
             family={family}

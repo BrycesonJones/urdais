@@ -1,4 +1,5 @@
 import { movementClass } from "@/components/market/movement";
+import { ResearchPreviewBadge } from "@/components/market-detail/research-preview-badge";
 import { formatNumber, formatPercent, formatUpdatedAt } from "@/lib/format";
 import { instrumentDisplaySymbol, isHeadlineInstrument } from "@/lib/market-display";
 import type { MarketDetail, MarketInstrumentDetail } from "@/types/market";
@@ -8,6 +9,8 @@ type MarketHeaderProps = {
   instrument: MarketInstrumentDetail | null;
   /** Family label used when the selected family has no instruments yet. */
   emptyFamilyLabel?: string;
+  /** Server-computed Wave-1 research-preview flag. Never true in production. */
+  researchPreview?: boolean;
 };
 
 /**
@@ -21,7 +24,7 @@ type MarketHeaderProps = {
  * returns live under the chart. Percentage change is withheld when the
  * series has no prior comparable observation.
  */
-export function MarketHeader({ market, instrument, emptyFamilyLabel }: MarketHeaderProps) {
+export function MarketHeader({ market, instrument, emptyFamilyLabel, researchPreview = false }: MarketHeaderProps) {
   if (!instrument) {
     return (
       <div className="min-w-0">
@@ -49,6 +52,7 @@ export function MarketHeader({ market, instrument, emptyFamilyLabel }: MarketHea
             Demo data
           </span>
         )}
+        {token && researchPreview && <ResearchPreviewBadge />}
       </div>
       <p className="mt-1 text-sm text-neutral-400 md:text-base">
         {instrument.name}

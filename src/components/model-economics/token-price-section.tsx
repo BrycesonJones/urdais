@@ -9,6 +9,7 @@ import { MultiSelectMenu } from "@/components/market-detail/select-menu";
 import { TokenSeriesSelectors } from "@/components/market-detail/token-series-selectors";
 import { MAX_COMPARISONS, useInstrumentChart } from "@/components/market-detail/use-instrument-chart";
 import { SectionHeading } from "@/components/analytics/section-heading";
+import { ResearchPreviewBadge } from "@/components/market-detail/research-preview-badge";
 import { pickDefaultTokenInstrument } from "@/lib/tokens/read/instruments";
 import { formatNumber, formatPercent } from "@/lib/format";
 import type { MarketInstrumentDetail } from "@/types/market";
@@ -19,7 +20,13 @@ import type { MarketInstrumentDetail } from "@/types/market";
  * reuse the market SelectMenu. Comparisons stay absolute because every
  * series shares USD / 1M tokens, and labels identify the economic object.
  */
-export function TokenPriceSection({ instruments }: { instruments: readonly MarketInstrumentDetail[] }) {
+export function TokenPriceSection({
+  instruments,
+  researchPreview = false,
+}: {
+  instruments: readonly MarketInstrumentDetail[];
+  researchPreview?: boolean;
+}) {
   if (instruments.length === 0) {
     return (
       <section id="price" aria-labelledby="price-heading" className="scroll-mt-24">
@@ -27,10 +34,16 @@ export function TokenPriceSection({ instruments }: { instruments: readonly Marke
       </section>
     );
   }
-  return <TokenPriceChart instruments={instruments} />;
+  return <TokenPriceChart instruments={instruments} researchPreview={researchPreview} />;
 }
 
-function TokenPriceChart({ instruments }: { instruments: readonly MarketInstrumentDetail[] }) {
+function TokenPriceChart({
+  instruments,
+  researchPreview,
+}: {
+  instruments: readonly MarketInstrumentDetail[];
+  researchPreview: boolean;
+}) {
   const fallback = pickDefaultTokenInstrument(instruments) ?? instruments[0]!;
   const [instrumentId, setInstrumentId] = useState(fallback.id);
   const instrument = instruments.find((row) => row.id === instrumentId) ?? fallback;
@@ -52,6 +65,7 @@ function TokenPriceChart({ instruments }: { instruments: readonly MarketInstrume
         id="price-heading"
         title="Token Price"
         subtitle="Current model-level token pricing"
+        badge={researchPreview ? <ResearchPreviewBadge /> : undefined}
         aside={
           <div className="flex w-full flex-col gap-2 sm:w-auto">
             <TokenSeriesSelectors instruments={instruments} instrument={instrument} onInstrumentChange={handleInstrumentChange} />

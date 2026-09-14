@@ -1,14 +1,15 @@
 /**
- * Canonical token-pricing read model: group production-publicable
- * observations into model/facet series without collapsing economically
- * distinct quotes or inventing history.
+ * Canonical token-pricing read model: group visible observations into
+ * model/facet series without collapsing economically distinct quotes or
+ * inventing history. Visibility is applied by the caller; this module does
+ * not decide whether a row is production-publicable.
  */
 
 import { CANONICAL_UNIT } from "@/lib/tokens/dimensions";
 import type { CacheTtl, ServiceTier, SourcePricingDimension } from "@/lib/tokens/dimensions";
 import type { Wave1ModelSeed } from "@/lib/tokens/catalog";
 import { modelIdentityKey } from "@/lib/tokens/identity";
-import { observationIsPublicable } from "@/lib/tokens/read/publication";
+import { observationIsVisible, type TokenVisibilityMode } from "@/lib/tokens/read/publication";
 import { providerDisplayName } from "@/lib/tokens/read/labels";
 import type { PublicTokenSeries } from "@/lib/tokens/read/api-contract";
 import type { TokenPriceObservationRow, TokenSourceInterface, TokenSourceRetrieval } from "@/lib/tokens/types";
@@ -64,7 +65,7 @@ function compareSeriesIdentity(a: PublicTokenSeries, b: PublicTokenSeries): numb
   );
 }
 
-export function listPublicTokenSeries(catalog: TokenReadCatalog): PublicTokenSeries[] {
+export function listVisibleTokenSeries(catalog: TokenReadCatalog, mode: TokenVisibilityMode): PublicTokenSeries[] {
   const retrievals = new Map(catalog.retrievals.map((row) => [row.id, row]));
   const sources = new Map(catalog.sourceInterfaces.map((row) => [row.id, row]));
   const models = new Map(catalog.models.map((row) => [modelKey(row.providerSlug, row.providerModelId), row]));
@@ -73,7 +74,7 @@ export function listPublicTokenSeries(catalog: TokenReadCatalog): PublicTokenSer
   for (const observation of catalog.observations) {
     const retrieval = retrievals.get(observation.retrievalId);
     const source = sources.get(observation.sourceInterfaceId);
-    if (!observationIsPublicable(observation, retrieval, source)) continue;
+    if (!observationIsVisible(observation, retrieval, source, mode)) continue;
     const model = models.get(modelKey(observation.providerSlug, observation.providerModelId));
     if (!model) continue;
     const rows = grouped.get(observation.observationKey) ?? [];
@@ -115,4 +116,9 @@ export function listPublicTokenSeries(catalog: TokenReadCatalog): PublicTokenSer
   }
 
   return series.sort(compareSeriesIdentity);
+}
+
+/** Production publication filter. Research observations are excluded. */
+export function listPublicTokenSeries(catalog: TokenReadCatalog): PublicTokenSeries[] {
+  return listVisibleTokenSeries(catalog, "production");
 }

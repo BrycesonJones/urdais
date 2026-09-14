@@ -20,7 +20,13 @@ const SECTIONS = [
  * introduction. The quick model-level token-price view remains inside
  * UCPI; this page is its deeper destination.
  */
-export function ModelEconomicsPage({ tokenInstruments = [] }: { tokenInstruments?: readonly MarketInstrumentDetail[] }) {
+export function ModelEconomicsPage({
+  tokenInstruments = [],
+  researchPreview = false,
+}: {
+  tokenInstruments?: readonly MarketInstrumentDetail[];
+  researchPreview?: boolean;
+}) {
   return (
     <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-6 text-neutral-50 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-screen-2xl">
@@ -53,7 +59,7 @@ export function ModelEconomicsPage({ tokenInstruments = [] }: { tokenInstruments
         </nav>
 
         <div className="mt-10 flex flex-col gap-14">
-          <TokenPriceSection instruments={tokenInstruments} />
+          <TokenPriceSection instruments={tokenInstruments} researchPreview={researchPreview} />
           <UtviSection />
           <MarketShareChart />
           <ModelFrontierChart />

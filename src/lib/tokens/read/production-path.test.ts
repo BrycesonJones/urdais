@@ -29,6 +29,12 @@ const PRODUCTION_TOKEN_PATHS = [
   "src/lib/tokens/read/load.ts",
   "src/lib/tokens/read/instruments.ts",
   "src/lib/tokens/read/series.ts",
+  "src/lib/tokens/read/publication.ts",
+  "src/lib/tokens/read/sql.ts",
+  "src/lib/tokens/read/database.ts",
+  "src/lib/tokens/preview-seed.ts",
+  "src/components/market-detail/research-preview-badge.tsx",
+  "src/components/model-economics/model-economics-page.tsx",
 ];
 
 describe("production Tokens path", () => {

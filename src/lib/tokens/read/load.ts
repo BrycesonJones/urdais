@@ -1,15 +1,16 @@
 /**
- * Production token-price catalog loader.
+ * Token-price catalog loader.
  *
- * The Next app has no database client in this phase. The public read path
- * therefore fails closed: wave-1 models and source interfaces are known, and
- * observations are empty until production-publicable rows can be read from
- * pipeline.token_price_observations under permitted rights.
+ * Reads canonical rows from the database when a server-side connection is
+ * available. Visibility (production vs research preview) is applied after
+ * load and never by inventing a second data model.
  */
 
 import { WAVE1_MODELS, WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
 import { tokenInstrumentsFromSeries, withTokenInstruments } from "@/lib/tokens/read/instruments";
-import { listPublicTokenSeries, type TokenReadCatalog } from "@/lib/tokens/read/series";
+import { publicTokenPricesResponse, type PublicTokenPricesResponse } from "@/lib/tokens/read/api-contract";
+import { tokenVisibilityMode, type ProcessEnvLike } from "@/lib/tokens/read/publication";
+import { listVisibleTokenSeries, type TokenReadCatalog } from "@/lib/tokens/read/series";
 import { InMemoryTokenPricingStore } from "@/lib/tokens/store";
 import type { MarketDetail, MarketInstrumentDetail } from "@/types/market";
 
@@ -31,16 +32,37 @@ export function tokenReadCatalogFromStore(store: InMemoryTokenPricingStore): Tok
   };
 }
 
-/** Live catalog for the product surface and public API. Empty until production-publicable observations exist. */
-export function loadTokenReadCatalog(): TokenReadCatalog {
-  return emptyTokenReadCatalog();
+/** Live catalog of canonical rows. Empty when no database is reachable. */
+export async function loadTokenReadCatalog(env: ProcessEnvLike = process.env): Promise<TokenReadCatalog> {
+  const { loadTokenReadCatalogFromDatabase } = await import("@/lib/tokens/read/database");
+  try {
+    const catalog = await loadTokenReadCatalogFromDatabase(env);
+    return catalog ?? emptyTokenReadCatalog();
+  } catch {
+    return emptyTokenReadCatalog();
+  }
 }
 
-export function loadPublicTokenInstruments(): MarketInstrumentDetail[] {
-  return tokenInstrumentsFromSeries(listPublicTokenSeries(loadTokenReadCatalog()));
+export function visibleTokenPricesResponse(
+  catalog: TokenReadCatalog,
+  env: ProcessEnvLike = process.env,
+): PublicTokenPricesResponse {
+  return publicTokenPricesResponse(listVisibleTokenSeries(catalog, tokenVisibilityMode(env)));
 }
 
-export function hydrateMarketWithTokenPrices(market: MarketDetail): MarketDetail {
+export async function loadVisibleTokenInstruments(env: ProcessEnvLike = process.env): Promise<MarketInstrumentDetail[]> {
+  const catalog = await loadTokenReadCatalog(env);
+  return tokenInstrumentsFromSeries(listVisibleTokenSeries(catalog, tokenVisibilityMode(env)));
+}
+
+export async function hydrateMarketWithTokenPrices(
+  market: MarketDetail,
+  env: ProcessEnvLike = process.env,
+): Promise<MarketDetail> {
   if (!market.families.some((family) => family.id === "tokens")) return market;
-  return withTokenInstruments(market, loadPublicTokenInstruments());
+  return withTokenInstruments(market, await loadVisibleTokenInstruments(env));
+}
+
+export function tokenResearchPreviewActive(env: ProcessEnvLike = process.env): boolean {
+  return tokenVisibilityMode(env) === "research_preview";
 }

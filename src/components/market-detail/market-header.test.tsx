@@ -43,6 +43,19 @@ describe("MarketHeader", () => {
     expect(screen.queryByText("+0.00%")).toBeNull();
     expect(screen.queryByText("today")).toBeNull();
     expect(screen.queryByText("2.00 $/1M")).toBeNull();
+    expect(screen.queryByText("Research preview")).toBeNull();
+  });
+
+  it("shows the research-preview indicator only when asked", () => {
+    const [instrument] = tokenInstrumentsFromSeries(
+      listPublicTokenSeries(
+        seedTokenReadCatalog([
+          { provider: "anthropic", providerModelId: "claude-sonnet-5", dimension: "input", price: 2, retrievedAt: "2026-09-14T03:10:00Z" },
+        ]),
+      ),
+    );
+    render(<MarketHeader market={findMarket("ucpi")!} instrument={instrument!} researchPreview />);
+    expect(screen.getByText("Research preview")).toBeInTheDocument();
   });
 
   it("shows percentage change only when the same token series has history", () => {
