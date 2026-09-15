@@ -18,13 +18,16 @@ import type {
   TokenIngestMode,
   Wave1Provider,
 } from "@/lib/tokens/types";
+import { WAVE1_PROVIDERS } from "@/lib/tokens/types";
 import type { ProductionAccessState, SourceRegistryState, TermsState } from "@/lib/ucpi/permission-gate";
 
 export type TokenSqlExecutor = {
   query(text: string, params: readonly unknown[]): Promise<{ rows: Record<string, unknown>[] }>;
 };
 
-const WAVE1_SLUGS = ["anthropic", "xai", "openai"] as const;
+// The provider roster, not a second copy of it. A literal here silently drops
+// any provider added to WAVE1_PROVIDERS from every database load.
+const WAVE1_SLUGS = WAVE1_PROVIDERS;
 const TERMS: readonly TermsState[] = ["not_reviewed", "under_review", "permitted", "not_permitted"];
 const ACCESS: readonly ProductionAccessState[] = [
   "research_usable",

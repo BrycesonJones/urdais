@@ -25,7 +25,10 @@ begin
   end if;
   select id into grant_id from reference.permission_grants where source_interface_id = iface and grant_kind = 'provider_terms' and covers_collection and covers_index_use;
   if grant_id is null then raise exception 'no provider_terms grant covering both axes'; end if;
-  select count(*) into n from reference.permission_grants; if n <> 1 then raise exception 'expected one grant, found %', n; end if;
+  select count(*) into n from reference.permission_grants g
+    join reference.source_interfaces si on si.id = g.source_interface_id
+   where si.source_class <> 'news_feed';
+  if n <> 1 then raise exception 'expected one compute-market grant, found %', n; end if;
 
   -- The attribution string is recorded verbatim in the evidence.
   if position('Data: Price of Compute' in (select terms_evidence::text from reference.source_interfaces where id = iface)) = 0 then

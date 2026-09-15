@@ -18,6 +18,23 @@ export const TOKEN_PRICE_UNIT = "USD / 1M tokens" as const;
 /** What the product prints beside the value. Never "per 1M input tokens". */
 export const TOKEN_PRICE_UNIT_CAPTION = "per 1M tokens" as const;
 export const TOKEN_PRICE_BENCHMARK_NAME = "Urdais Token Price" as const;
+
+/**
+ * The provider a Token Price surface opens on.
+ *
+ * An explicit product choice, not an ordering accident. Selection among series
+ * is deliberately identity-ordered and refuses to rank providers by quality,
+ * which is right for choosing between rows but leaves the opening view to
+ * whichever slug sorts first. That made adding Alibaba Cloud silently change
+ * what every reader saw first, for no reason a reader could infer.
+ *
+ * Anthropic is the anchor because it was the surface's default through Wave 1
+ * and a stable opening view is worth more than an alphabetical one. Changing it
+ * should be a decision someone makes, which is what naming it here requires.
+ *
+ * Ordering of the selector itself is untouched and stays alphabetical.
+ */
+export const TOKEN_PRICE_DEFAULT_PROVIDER = "anthropic" as const;
 export const TOKEN_PRICE_METHODOLOGY_DOC = "docs/methodology/token-price.md" as const;
 
 /**
@@ -37,10 +54,15 @@ export const TOKEN_PRICE_METHODOLOGY_VERSIONS: readonly TokenPriceMethodologyVer
   { version: "1.0", effectiveFrom: "2026-09-14", inputTokens: 500_000, outputTokens: 500_000, inputWeight: 0.5, outputWeight: 0.5 },
   // 1.1 corrects constituent selection and calculation-event semantics; the workload and weights are unchanged.
   { version: "1.1", effectiveFrom: "2026-09-14", inputTokens: 500_000, outputTokens: 500_000, inputWeight: 0.5, outputWeight: 0.5 },
+  // 1.2 lets a designation name the regional scope its price is quoted under.
+  // The workload and the weights are unchanged, and for any designation with no
+  // base region the eligible legs are exactly those 1.1 selected, so no value
+  // computed under 1.1 changes under 1.2.
+  { version: "1.2", effectiveFrom: "2026-09-14", inputTokens: 500_000, outputTokens: 500_000, inputWeight: 0.5, outputWeight: 0.5 },
 ];
 
 /** The current version, for labelling a new calculation and for reports. */
-export const TOKEN_PRICE_METHODOLOGY_VERSION = "1.1" as const;
+export const TOKEN_PRICE_METHODOLOGY_VERSION = "1.2" as const;
 
 /** The version in force on a date, or undefined before the first one. */
 export function methodologyInForce(onDate: string): TokenPriceMethodologyVersion | undefined {
@@ -68,6 +90,17 @@ export type TokenBenchmarkConstituent = {
   providerModelId: string;
   /** The provider's base, non-surcharge context tier, named rather than inferred. Null where the provider has none. */
   baseContextTier: string | null;
+  /**
+   * The regional scope the designated price is quoted under, for a provider
+   * that publishes no unscoped list. Null where the provider quotes one price
+   * for everyone, which is every Wave-1 provider.
+   *
+   * Introduced by methodology 1.2. A catalog where every row states a scope and
+   * the scopes differ in price has no region-neutral number to select, and
+   * treating one scope as if it were neutral would publish a regional price as
+   * a global one. Naming the scope keeps the choice visible and reviewable.
+   */
+  baseRegion: string | null;
   effectiveFrom: string;
   /** The methodology version that introduced this designation. */
   methodologyVersion: string;
@@ -79,6 +112,7 @@ export const TOKEN_BENCHMARK_CONSTITUENTS: readonly TokenBenchmarkConstituent[] 
     providerSlug: "anthropic",
     providerModelId: "claude-fable-5-1",
     baseContextTier: null,
+    baseRegion: null,
     effectiveFrom: "2026-09-14",
     methodologyVersion: "1.1",
     rationale:
@@ -88,6 +122,7 @@ export const TOKEN_BENCHMARK_CONSTITUENTS: readonly TokenBenchmarkConstituent[] 
     providerSlug: "openai",
     providerModelId: "gpt-6-astra",
     baseContextTier: "short_context",
+    baseRegion: null,
     effectiveFrom: "2026-09-14",
     methodologyVersion: "1.1",
     rationale:
@@ -97,12 +132,118 @@ export const TOKEN_BENCHMARK_CONSTITUENTS: readonly TokenBenchmarkConstituent[] 
     providerSlug: "xai",
     providerModelId: "grok-4.6",
     baseContextTier: "prompt_lt_200k",
+    baseRegion: null,
     effectiveFrom: "2026-09-14",
     methodologyVersion: "1.1",
     rationale:
       "Highest current general-purpose Grok in the qualified roster. Grok Build 0.1 is coding-specific, the 4.20 multi-agent build is agent-specific, and the 4.20 reasoning and non-reasoning entries are mode variants of an earlier version.",
   },
+  {
+    providerSlug: "google",
+    providerModelId: "gemini-3.1-pro-preview",
+    baseContextTier: "prompt_lte_200k",
+    baseRegion: null,
+    effectiveFrom: "2026-09-14",
+    methodologyVersion: "1.2",
+    rationale:
+      "Google's current Pro-class model, described on the pricing page retrieved 2026-09-14 as \"Our 3rd generation Pro model\". Google publishes no generally available 3.x Pro: the 3.x rows that are generally available are Flash class, and the newest of those carries a promotional rate with a scheduled increase on 1 January 2027, which would put a step change into the benchmark for reasons unrelated to the market. Gemini 2.5 Pro is generally available but two generations behind. The preview label is a caveat on stability, not on availability: any paid-tier developer can call it, unlike a model restricted to vetted organisations. Revisit when a generally available 3.x Pro ships. The designation takes the standard paid rate at prompts of 200k tokens or fewer; the long-context rate above that threshold is a surcharge tier and is excluded.",
+  },
+  {
+    providerSlug: "alibaba",
+    providerModelId: "qwen3.8-max",
+    baseContextTier: null,
+    baseRegion: "international",
+    effectiveFrom: "2026-09-14",
+    methodologyVersion: "1.2",
+    rationale:
+      "Alibaba's current flagship commercial Qwen, quoted under the International deployment scope. Every row in the Model Studio catalog states a scope and the scopes differ in price: the same model is $1.65 and $4.951 under China (Beijing) against $2 and $6 under International. International is designated because it is the scope the English catalog quotes in USD and the one the international endpoint serves; it is named on the designation rather than silently treated as the global rate. The published band 0<Token≤1M covers the model's whole window, so there is no context surcharge to exclude. Batch at 50%, context-cache discounts and the Singapore free quota are all excluded.",
+  },
+  {
+    providerSlug: "moonshot",
+    providerModelId: "kimi-k3",
+    baseContextTier: null,
+    baseRegion: "international",
+    effectiveFrom: "2026-09-14",
+    methodologyVersion: "1.2",
+    rationale:
+      "Moonshot's current general-purpose Kimi. The platform banner announces K3 as launched and the pricing table carries it with a 1,048,576-token window, the largest in the family. The two K2.7 entries are coding builds by name and one is a speed variant of the other, so neither represents the general-purpose frontier; K2.6 is the previous general-purpose generation. The input leg is the published cache-miss rate, which is what a request pays when nothing is reused; the cache-hit rate is a cache dimension and is excluded. The base region is International because Moonshot publishes two first-party lists at different numbers, this one in USD and a China list in CNY, and neither is a global rate. One rate covers the whole window, so there is no context surcharge to exclude.",
+  },
 ];
+
+/**
+ * Why a provider Urdais has studied is not publishing a value.
+ *
+ * These are not the same condition and must never be reported as one:
+ *
+ *   collected_not_publishable      The prices are in hand and the methodology
+ *                                  cannot express them. There is no designation
+ *                                  to make, and making one would require a
+ *                                  methodology change.
+ *
+ *   designated_publication_blocked The model is chosen and its price is
+ *                                  methodology-compatible. Something outside
+ *                                  the methodology stops publication, and the
+ *                                  value is known and stated here.
+ *
+ * Collapsing them would turn "we cannot measure this" and "we can measure this
+ * and are waiting on one fact" into the same sentence, and they call for
+ * completely different next steps.
+ */
+export type TokenBenchmarkExclusionState = "collected_not_publishable" | "designated_publication_blocked";
+
+/**
+ * A provider that is absent from the benchmark by decision rather than by
+ * oversight, with the reason on the record. A missing series should never leave
+ * a reader guessing whether anyone looked.
+ */
+export type TokenBenchmarkWithholding = {
+  providerSlug: string;
+  providerName: string;
+  state: TokenBenchmarkExclusionState;
+  since: string;
+  reason: string;
+  detail: string;
+  /**
+   * For a blocked designation: the model chosen, by display name. There is no
+   * provider-native id here on purpose. The absence of a stable one is the
+   * blocker itself, and writing a plausible id would manufacture the very fact
+   * that is missing.
+   */
+  designatedModel?: string;
+  /** The mutable pointer the source publishes, recorded so it is never mistaken for an identity. */
+  mutableAliasObserved?: string;
+  /** What the benchmark would be, once the blocker clears. Not published anywhere. */
+  expectedPriceUsdPer1m?: number;
+};
+
+export const TOKEN_BENCHMARK_WITHHELD: readonly TokenBenchmarkWithholding[] = [
+  {
+    providerSlug: "deepseek",
+    providerName: "DeepSeek",
+    state: "collected_not_publishable",
+    since: "2026-09-14",
+    reason: "NO_STANDARD_SERVICE_TIER",
+    detail:
+      "DeepSeek publishes no standard rate. Every price is a peak or an off-peak rate, and peak covers 35 of the 168 hours in a week, so off-peak is the majority condition rather than a discount window. Selecting either would publish a number that is wrong most of the time or wrong during business hours, and averaging them needs a time-weighting rule the methodology does not contain. Both tiers are collected as canonical observations; the headline value is withheld until the methodology has a principled treatment for providers with no standard tier.",
+  },
+  {
+    providerSlug: "mistral",
+    providerName: "Mistral AI",
+    state: "designated_publication_blocked",
+    since: "2026-09-14",
+    reason: "NO_IMMUTABLE_MODEL_IDENTITY",
+    designatedModel: "Mistral Large 3",
+    mutableAliasObserved: "mistral-large-latest",
+    expectedPriceUsdPer1m: 1,
+    detail:
+      "Mistral Large 3 is designated: Mistral's own pages call it a general-purpose flagship, which is the criterion, while Mistral Medium 3.5 describes itself as optimized for agentic and coding use cases, a specialization the methodology excludes. Its published rates of $0.50 input and $1.50 output are fully methodology-compatible and would give $1.00. Publication is blocked on identity, not on price: the pricing surface publishes only the mutable pointer mistral-large-latest, and a benchmark frozen against a moving alias would claim a lineage it does not have. The dated identity must be read from the designated model's own first-party page; it is not inferred from a naming pattern. Nothing is collected, seeded or published until then.",
+  },
+];
+
+/** Is this provider deliberately withheld rather than simply undesignated? */
+export function withholdingFor(providerSlug: string, onDate: string): TokenBenchmarkWithholding | undefined {
+  return TOKEN_BENCHMARK_WITHHELD.filter((row) => row.providerSlug === providerSlug && row.since <= onDate)[0];
+}
 
 /** The designation in force for a provider on a date, or undefined when none is. */
 export function constituentInForce(
@@ -149,7 +290,9 @@ export function isEligibleLeg(series: PublicTokenSeries, constituent: TokenBench
   if (series.providerModelId !== constituent.providerModelId) return false;
   if (series.pricingDimension !== "input" && series.pricingDimension !== "output") return false;
   if (series.serviceTier !== "standard") return false;
-  if (series.region !== null) return false;
+  // Methodology 1.2: the declared base region, which is null for a provider
+  // that publishes one price for everyone. Identical to 1.1 in that case.
+  if ((series.region ?? null) !== constituent.baseRegion) return false;
   if (series.cacheTtl !== null) return false;
   if ((series.contextTier ?? null) !== constituent.baseContextTier) return false;
   return true;

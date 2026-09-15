@@ -37,7 +37,9 @@ begin
   -- Still nothing live, published or newly permitted.
   select count(*) into n from reference.instruments where lifecycle_status = 'live'; if n <> 0 then raise exception 'an instrument is live'; end if;
   select count(*) into n from pipeline.regional_publications; if n <> 0 then raise exception 'a publication exists'; end if;
-  select count(*) into n from reference.source_interfaces where production_access_state = 'production_approved'; if n <> 1 then raise exception 'approved sources: %', n; end if;
+  select count(*) into n from reference.source_interfaces
+   where production_access_state = 'production_approved' and source_class <> 'news_feed';
+  if n <> 1 then raise exception 'approved compute sources: %', n; end if;
 
   raise notice 'listed gpu family: ok';
 end $$;

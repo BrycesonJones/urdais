@@ -15,9 +15,7 @@ import { WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
 import { sha256Hex } from "@/lib/tokens/hash";
 import { assertTokenIngestPermitted } from "@/lib/tokens/permission";
 import { observationIsPublicable } from "@/lib/tokens/read/publication";
-import { parseAnthropicPricing } from "@/lib/tokens/providers/anthropic";
-import { parseOpenAiPricing } from "@/lib/tokens/providers/openai";
-import { parseXaiPricing } from "@/lib/tokens/providers/xai";
+import { providerParser } from "@/lib/tokens/providers";
 import type { TokenPricingStore } from "@/lib/tokens/store";
 import type { TokenPriceQuote } from "@/lib/tokens/observation";
 import type {
@@ -56,9 +54,10 @@ export type IngestInput = {
 };
 
 function parseProvider(provider: Wave1Provider, body: string, retrievedAt: string): ProviderParseResult {
-  if (provider === "anthropic") return parseAnthropicPricing(body, retrievedAt);
-  if (provider === "xai") return parseXaiPricing(body, retrievedAt);
-  return parseOpenAiPricing(body, retrievedAt);
+  // Registry lookup, not a chain with a default arm. The previous form returned
+  // the OpenAI parser for any provider it did not name, which is a wrong answer
+  // wearing the shape of a right one.
+  return providerParser(provider)(body, retrievedAt);
 }
 
 function observationRow(
@@ -248,4 +247,4 @@ export async function retrieveLivePricing(url: string, now: Date): Promise<Retri
   };
 }
 
-export { parseAnthropicPricing, parseOpenAiPricing, parseXaiPricing };
+export { PROVIDER_PARSERS, providerParser, UnknownProviderParserError } from "@/lib/tokens/providers";

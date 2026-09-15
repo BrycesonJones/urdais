@@ -14,6 +14,10 @@ import { legObservationIndex, listVisibleTokenSeries } from "@/lib/tokens/read/s
 import { InMemoryTokenPricingStore } from "@/lib/tokens/store";
 import { WAVE1_PROVIDERS, type ManualVerification, type Wave1Provider } from "@/lib/tokens/types";
 import { verifyProviderProduction } from "@/lib/tokens/verify-production";
+import { benchmarkProviders } from "@/lib/tokens/read/benchmark";
+
+/** Only designated providers have legs to verify; a withheld one has none by design. */
+const DESIGNATED = benchmarkProviders() as Wave1Provider[];
 
 const MIGRATIONS = ["20260914030000_token_price_benchmarks.sql", "20260914040000_manual_verified_acquisition.sql"];
 const VERIFICATION: Omit<ManualVerification, "sourceUrl"> = {
@@ -22,7 +26,7 @@ const VERIFICATION: Omit<ManualVerification, "sourceUrl"> = {
   evidence: "Read the provider's published API pricing page and confirmed the standard input and output rates.",
 };
 
-function verifiedStore(providers: readonly Wave1Provider[] = WAVE1_PROVIDERS): InMemoryTokenPricingStore {
+function verifiedStore(providers: readonly Wave1Provider[] = DESIGNATED): InMemoryTokenPricingStore {
   const store = new InMemoryTokenPricingStore();
   for (const provider of providers) {
     verifyProviderProduction({
@@ -60,7 +64,7 @@ function readOnlySql(options: { tables?: string[]; columns?: string[]; ledger?: 
  * is what the readiness check now resolves. `benchmarkPoints` is the same
  * function the freeze uses, so the lineage here is the lineage in the table.
  */
-function frozenRowsFrom(store: InMemoryTokenPricingStore, mode: "production" | "research_preview", providers: readonly Wave1Provider[] = WAVE1_PROVIDERS) {
+function frozenRowsFrom(store: InMemoryTokenPricingStore, mode: "production" | "research_preview", providers: readonly Wave1Provider[] = DESIGNATED) {
   const catalog = tokenReadCatalogFromStore(store);
   const points = benchmarkPoints(listVisibleTokenSeries(catalog, mode), "2026-09-14", legObservationIndex(catalog, mode));
   return points
@@ -84,7 +88,7 @@ function frozenRowsFrom(store: InMemoryTokenPricingStore, mode: "production" | "
     }));
 }
 
-function frozenRowsFor(store: InMemoryTokenPricingStore, providers: readonly Wave1Provider[] = WAVE1_PROVIDERS) {
+function frozenRowsFor(store: InMemoryTokenPricingStore, providers: readonly Wave1Provider[] = DESIGNATED) {
   return frozenRowsFrom(store, "production", providers);
 }
 
@@ -100,16 +104,20 @@ describe("production readiness", () => {
     expect(report.ready).toBe(true);
     expect(report.findings).toEqual([]);
     expect(report.providers.map((row) => [row.providerSlug, row.productionVisible, row.priceUsdPer1m])).toEqual([
+      ["alibaba", true, 4],
       ["anthropic", true, 30],
+      ["google", true, 7],
+      ["moonshot", true, 9],
       ["openai", true, 30],
       ["xai", true, 4],
     ]);
   });
 
   it("fails when one provider is missing, and says what to run", async () => {
-    const store = verifiedStore(["anthropic", "openai"]);
+    const present = DESIGNATED.filter((provider) => provider !== "xai");
+    const store = verifiedStore(present);
     const report = await checkTokenProductionReadiness({
-      sql: readOnlySql({ frozen: frozenRowsFor(store, ["anthropic", "openai"]) }),
+      sql: readOnlySql({ frozen: frozenRowsFor(store, present) }),
       migrationFiles: MIGRATIONS,
       loadCatalog: async () => tokenReadCatalogFromStore(store),
       onDate: "2026-09-14",
@@ -344,7 +352,7 @@ describe("schema checks run before the schema-dependent catalog load", () => {
     expect(missing.map((row) => row.detail).join(" ")).toContain("verification_evidence");
     for (const finding of missing) expect(finding.remedy).toContain("apply the outstanding migrations");
     // The report still names every designated provider, with nothing claimed about them.
-    expect(report.providers.map((row) => row.providerSlug)).toEqual(["anthropic", "openai", "xai"]);
+    expect(report.providers.map((row) => row.providerSlug)).toEqual(["alibaba", "anthropic", "google", "moonshot", "openai", "xai"]);
     expect(report.providers.every((row) => !row.frozen && !row.productionVisible)).toBe(true);
   });
 

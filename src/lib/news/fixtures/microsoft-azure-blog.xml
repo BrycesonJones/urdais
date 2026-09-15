@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	>
+
+<channel>
+	<title>Microsoft Azure Blog</title>
+	<atom:link href="https://azure.microsoft.com/en-us/blog/feed/" rel="self" type="application/rss+xml" />
+	<link>https://azure.microsoft.com/en-us/blog/</link>
+	<description>Get the latest Azure news, updates, and announcements from the Azure blog. From product updates to hot topics, hear from the Azure experts.</description>
+	<lastBuildDate>Fri, 11 Sep 2026 18:13:23 +0000</lastBuildDate>
+	<language>en-US</language>
+	<sy:updatePeriod>
+	hourly	</sy:updatePeriod>
+	<sy:updateFrequency>
+	1	</sy:updateFrequency>
+	<generator>https://wordpress.org/?v=6.9.5</generator>
+
+<image>
+	<url>https://azure.microsoft.com/en-us/blog/wp-content/uploads/2024/06/microsoft_logo-150x150.webp</url>
+	<title>Microsoft Azure Blog</title>
+	<link>https://azure.microsoft.com/en-us/blog/</link>
+	<width>32</width>
+	<height>32</height>
+</image> 
+	<item>
+		<title>Microsoft named a Leader in the 2026 Gartner® Magic Quadrant™ for Container Management</title>
+		<link>https://azure.microsoft.com/en-us/blog/microsoft-named-a-leader-in-the-2026-gartner-magic-quadrant-for-container-management/</link>
+					<comments>https://azure.microsoft.com/en-us/blog/microsoft-named-a-leader-in-the-2026-gartner-magic-quadrant-for-container-management/#respond</comments>
+		
+		<dc:creator><![CDATA[Brendan Burns]]></dc:creator>
+		<pubDate>Thu, 10 Sep 2026 21:00:00 +0000</pubDate>
+				<category><![CDATA[Compute]]></category>
+		<category><![CDATA[Containers]]></category>
+		<category><![CDATA[Hybrid + multicloud]]></category>
+		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Gartner® Magic Quadrant™]]></category>
+		<guid isPermaLink="false">https://azure.microsoft.com/en-us/blog/?p=53828</guid>
+
+					<description><![CDATA[<p>Microsoft was named a Leader in the 2026 Gartner® Magic Quadrant™ for Container Management. Discover how AKS, Azure Arc, and Azure Container Apps help organizations run AI and hybrid workloads at scale.</p>
+<p>The post <a href="https://azure.microsoft.com/en-us/blog/microsoft-named-a-leader-in-the-2026-gartner-magic-quadrant-for-container-management/">Microsoft named a Leader in the 2026 Gartner® Magic Quadrant™ for Container Management</a> appeared first on <a href="https://azure.microsoft.com/en-us/blog">Microsoft Azure Blog</a>.</p>
+]]></description>
+										
+					
+					<wfw:commentRss>https://azure.microsoft.com/en-us/blog/microsoft-named-a-leader-in-the-2026-gartner-magic-quadrant-for-container-management/feed/</wfw:commentRss>
+			<slash:comments>0</slash:comments>
+		
+		
+			</item><item>
+		<title>The Economics of Agent Optimization: How AI agent governance controls cost and proves ROI</title>
+		<link>https://azure.microsoft.com/en-us/blog/the-economics-of-agent-optimization-how-ai-agent-governance-controls-cost-and-proves-roi/</link>
+					<comments>https://azure.microsoft.com/en-us/blog/the-economics-of-agent-optimization-how-ai-agent-governance-controls-cost-and-proves-roi/#respond</comments>
+		
+		<dc:creator><![CDATA[Steve Sweetman]]></dc:creator>
+		<pubDate>Thu, 10 Sep 2026 17:00:00 +0000</pubDate>
+				<category><![CDATA[AI + machine learning]]></category>
+		<category><![CDATA[Analytics]]></category>
+		<category><![CDATA[DevOps]]></category>
+		<category><![CDATA[Hybrid + multicloud]]></category>
+		<category><![CDATA[Management and governance]]></category>
+		<category><![CDATA[Migration]]></category>
+		<category><![CDATA[Security]]></category>
+		<category><![CDATA[The Economics of Agent Optimization]]></category>
+		<guid isPermaLink="false">https://azure.microsoft.com/en-us/blog/?p=53839</guid>
+
+					<description><![CDATA[<p>This blog post is the fourth and final installment of The Economics of Agent Optimization, which shares the strategies, capabilities, and proof points that can help you optimize agent costs and run AI as a managed investment system on Microsoft Foundry.</p>
+<p>The post <a href="https://azure.microsoft.com/en-us/blog/the-economics-of-agent-optimization-how-ai-agent-governance-controls-cost-and-proves-roi/">The Economics of Agent Optimization: How AI agent governance controls cost and proves ROI</a> appeared first on <a href="https://azure.microsoft.com/en-us/blog">Microsoft Azure Blog</a>.</p>
+]]></description>
+										
+					
+					<wfw:commentRss>https://azure.microsoft.com/en-us/blog/the-economics-of-agent-optimization-how-ai-agent-governance-controls-cost-and-proves-roi/feed/</wfw:commentRss>
+			<slash:comments>0</slash:comments>
+		
+		
+			</item><item>
+		<title>The future of infrastructure resiliency starts with modernization</title>
+		<link>https://azure.microsoft.com/en-us/blog/the-future-of-infrastructure-resiliency-starts-with-modernization/</link>
+					<comments>https://azure.microsoft.com/en-us/blog/the-future-of-infrastructure-resiliency-starts-with-modernization/#respond</comments>
+		
+		<dc:creator><![CDATA[Maria Bledsoe]]></dc:creator>
+		<pubDate>Thu, 10 Sep 2026 16:00:00 +0000</pubDate>
+				<category><![CDATA[Analytics]]></category>
+		<category><![CDATA[Management and governance]]></category>
+		<category><![CDATA[Azure IaaS]]></category>
+		<guid isPermaLink="false">https://azure.microsoft.com/en-us/blog/?p=53814</guid>
+
+					<description><![CDATA[<p>Modernization only succeeds when organizations have confidence that their infrastructure can withstand disruption and continue supporting critical operations.</p>
+<p>The post <a href="https://azure.microsoft.com/en-us/blog/the-future-of-infrastructure-resiliency-starts-with-modernization/">The future of infrastructure resiliency starts with modernization</a> appeared first on <a href="https://azure.microsoft.com/en-us/blog">Microsoft Azure Blog</a>.</p>
+]]></description>
+										
+					
+					<wfw:commentRss>https://azure.microsoft.com/en-us/blog/the-future-of-infrastructure-resiliency-starts-with-modernization/feed/</wfw:commentRss>
+			<slash:comments>0</slash:comments>
+		
+		
+			</item><item>
+		<title>Two zones or three? A design framework for zone-resilient Azure workloads</title>
+		<link>https://azure.microsoft.com/en-us/blog/two-zones-or-three-a-design-framework-for-zone-resilient-azure-workloads/</link>
+					<comments>https://azure.microsoft.com/en-us/blog/two-zones-or-three-a-design-framework-for-zone-resilient-azure-workloads/#respond</comments>
+		
+		<dc:creator><![CDATA[Mark Russinovich, Eric Henry and Sai Vaidhyanathan]]></dc:creator>
+		<pubDate>Wed, 09 Sep 2026 18:00:00 +0000</pubDate>
+				<category><![CDATA[Compute]]></category>
+		<category><![CDATA[Management and governance]]></category>
+		<category><![CDATA[Migration]]></category>
+		<category><![CDATA[Networking]]></category>
+		<category><![CDATA[Storage]]></category>
+		<category><![CDATA[Advancing reliability]]></category>
+		<category><![CDATA[Azure Essentials]]></category>
+		<guid isPermaLink="false">https://azure.microsoft.com/en-us/blog/?p=53717</guid>
+
+					<description><![CDATA[<p>Zone resiliency isn't a single number you apply to a whole workload. The useful question isn't “how many zones?” but “how many zones does each component need to survive the loss of one?” Decide zone patterns component by component, use service-managed zone redundancy wherever it fits, and reserve three-zone designs for the components that genuinely require a third failure domain.</p>
+<p>The post <a href="https://azure.microsoft.com/en-us/blog/two-zones-or-three-a-design-framework-for-zone-resilient-azure-workloads/">Two zones or three? A design framework for zone-resilient Azure workloads</a> appeared first on <a href="https://azure.microsoft.com/en-us/blog">Microsoft Azure Blog</a>.</p>
+]]></description>
+										
+					
+					<wfw:commentRss>https://azure.microsoft.com/en-us/blog/two-zones-or-three-a-design-framework-for-zone-resilient-azure-workloads/feed/</wfw:commentRss>
+			<slash:comments>0</slash:comments>
+		
+		
+			</item></channel></rss>

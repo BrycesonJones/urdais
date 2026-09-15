@@ -61,9 +61,9 @@ begin
   if not exists (select 1 from reference.source_interfaces where id = iface and production_access_state = 'research_usable' and terms_review_state = 'under_review' and data_use_terms_state = 'under_review') then
     raise exception 'recording a manual verification changed the source registry';
   end if;
-  select count(*) into ok from reference.source_interfaces where production_access_state = 'production_approved';
-  if (select count(*) from reference.source_interfaces where production_access_state = 'production_approved') <> 1 then
-    raise exception 'the set of production-approved interfaces changed';
+  if (select count(*) from reference.source_interfaces
+       where production_access_state = 'production_approved' and source_class <> 'news_feed') <> 1 then
+    raise exception 'the set of production-approved compute interfaces changed';
   end if;
 
   -- And an automated production retrieval from the very same interface is still refused.

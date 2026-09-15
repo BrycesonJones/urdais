@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Alibaba Cloud Model Studio pricing fixture</title></head>
+<body>
+<h1>Model Studio model pricing</h1>
+<p>Prices are per 1 million tokens in USD. Every row carries a deployment scope: the same model is priced differently by region, and the scopes are not interchangeable. This excerpt reproduces the International scope only; the China (Beijing), Hong Kong, US and Japan lists are separate and are not collapsed into it.</p>
+<h2>Text generation, commercial Qwen models</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Model ID</th>
+      <th>Deployment scope</th>
+      <th>Mode</th>
+      <th>Input tokens per request</th>
+      <th>Input price</th>
+      <th>Output price</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>qwen3.8-max</td>
+      <td>International</td>
+      <td>Non-Thinking and Thinking modes</td>
+      <td>0&lt;Token≤1M</td>
+      <td>$2</td>
+      <td>$6</td>
+    </tr>
+    <tr>
+      <td>qwen3.8-max-0902</td>
+      <td>International</td>
+      <td>Non-Thinking and Thinking modes</td>
+      <td>0&lt;Token≤1M</td>
+      <td>$2</td>
+      <td>$6</td>
+    </tr>
+    <tr>
+      <td>qwen3.8-27b</td>
+      <td>International</td>
+      <td>Non-Thinking and Thinking modes</td>
+      <td>0&lt;Token≤1M</td>
+      <td>$0.5</td>
+      <td>$3</td>
+    </tr>
+    <tr>
+      <td>qwen3.7-max-2026-06-08</td>
+      <td>International</td>
+      <td>Non-Thinking and Thinking modes</td>
+      <td>0&lt;Token≤1M</td>
+      <td>$2.5</td>
+      <td>$7.5</td>
+    </tr>
+    <tr>
+      <td>qwen3.7-max-2026-05-20</td>
+      <td>International</td>
+      <td>Non-Thinking and Thinking modes</td>
+      <td>0&lt;Token≤1M</td>
+      <td>$2.5</td>
+      <td>$7.5</td>
+    </tr>
+    <tr>
+      <td>qwen3.6-max-preview</td>
+      <td>International</td>
+      <td>Non-Thinking and Thinking modes</td>
+      <td>0&lt;Token≤128K</td>
+      <td>$1.3</td>
+      <td>$7.8</td>
+    </tr>
+    <tr>
+      <td>qwen3-max</td>
+      <td>International</td>
+      <td>Non-Thinking and Thinking modes</td>
+      <td>0&lt;Token≤32K</td>
+      <td>$1.2</td>
+      <td>$6</td>
+    </tr>
+  </tbody>
+</table>
+<p>qwen3.7-max is currently equivalent to qwen3.7-max-2026-05-20. It is a pointer to a dated snapshot, not a separate product identity, and is recorded as an alias.</p>
+<p>Comparison, not ingested here: the China (Beijing) scope lists qwen3.8-max at $1.65 input and $4.951 output for the same model. Recording the International figure without its scope would collapse that difference.</p>
+<h2>Discounts and separate dimensions</h2>
+<p>Models that support batch calls are billed at 50% of the real-time inference price for both input and output tokens. Context caching discounts apply to input tokens only. These two discounts cannot apply simultaneously. Batch is a separate service tier and context caching is a separate pricing dimension; neither is part of the standardized workload.</p>
+<p>A free quota is offered only in Singapore, valid for 90 days from activation, model release, or application approval. A free quota is not a list price and is not ingested.</p>
+<p>Omitted from this excerpt: the qwen-plus, qwen-omni, qwen-vl and realtime families, whose rows carry additional published columns that this excerpt does not reproduce.</p>
+</body>
+</html>

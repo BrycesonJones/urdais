@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Kimi API Platform model pricing fixture</title></head>
+<body>
+<h1>Model Inference Pricing Explanation</h1>
+<p>Here, 1M = 1,000,000. The prices in the table represent the cost per 1M tokens consumed. Model inference APIs bill both Input and Output based on usage.</p>
+<p>This is the international Kimi API Platform list, quoted in USD. Moonshot publishes a separate China list on its own platform in CNY, at different numbers for the same models; the two are not interchangeable and are never mixed. Prices exclude applicable taxes.</p>
+<h2>Model Pricing</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Deployment scope</th>
+      <th>Unit</th>
+      <th>Input Price (Cache Hit)</th>
+      <th>Input Price (Cache Miss)</th>
+      <th>Output Price</th>
+      <th>Context Window</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>kimi-k3</td>
+      <td>International</td>
+      <td>1M tokens</td>
+      <td>$0.30</td>
+      <td>$3.00</td>
+      <td>$15.00</td>
+      <td>1,048,576 tokens</td>
+    </tr>
+    <tr>
+      <td>kimi-k2.7-code</td>
+      <td>International</td>
+      <td>1M tokens</td>
+      <td>$0.19</td>
+      <td>$0.95</td>
+      <td>$4.00</td>
+      <td>262,144 tokens</td>
+    </tr>
+    <tr>
+      <td>kimi-k2.7-code-highspeed</td>
+      <td>International</td>
+      <td>1M tokens</td>
+      <td>$0.38</td>
+      <td>$1.90</td>
+      <td>$8.00</td>
+      <td>262,144 tokens</td>
+    </tr>
+    <tr>
+      <td>kimi-k2.6</td>
+      <td>International</td>
+      <td>1M tokens</td>
+      <td>$0.16</td>
+      <td>$0.95</td>
+      <td>$4.00</td>
+      <td>262,144 tokens</td>
+    </tr>
+  </tbody>
+</table>
+<h2>Model notes</h2>
+<p>Kimi K3 has launched. Each model publishes one rate for its whole context window; there is no long-context surcharge band on this table.</p>
+<p>Comparison, not ingested here: the China platform lists kimi-k3 at &#165;20.00 input on a cache miss and &#165;100.00 output per 1M tokens, with cache hit at &#165;2.00. Recording the USD figure without its scope would collapse that difference.</p>
+<h2>Other pricing</h2>
+<p>BatchJob pricing and WebSearch pricing are published on separate pages. Batch is a separate service tier and is not part of the standardized workload. File content extraction and file storage APIs are temporarily free and are not token prices.</p>
+</body>
+</html>
