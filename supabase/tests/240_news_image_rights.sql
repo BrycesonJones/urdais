@@ -15,22 +15,27 @@ begin
   -- Eight enabled Compute sources across seven publishers. Two Google Cloud
   -- feeds share a provider; every other source is a distinct company, which is
   -- the concentration this phase was meant to fix.
-  select count(*) into n from reference.news_sources where is_enabled;
-  if n <> 8 then raise exception 'expected 8 enabled news sources, found %', n; end if;
+  select count(*) into n from reference.news_sources where is_enabled and category = 'compute';
+  if n <> 8 then raise exception 'expected 8 enabled Compute sources, found %', n; end if;
   select count(distinct si.provider_id) into n
     from reference.news_sources ns
     join reference.source_interfaces si on si.id = ns.source_interface_id
-   where ns.is_enabled;
-  if n <> 7 then raise exception 'expected 7 distinct publishers, found %', n; end if;
+   where ns.is_enabled and ns.category = 'compute';
+  if n <> 7 then raise exception 'expected 7 distinct Compute publishers, found %', n; end if;
 
   -- The roster reads both feed formats.
   select count(*) into n from reference.news_sources where is_enabled and feed_mechanism = 'atom';
   if n < 1 then raise exception 'no Atom source is enabled, so that parser is untested in production'; end if;
 
   -- Image policy is recorded per source, and defaults to none.
-  select count(*) into n from reference.news_sources where is_enabled and image_policy = 'feed_media';
-  -- Both Google Cloud feeds, CoreWeave, Together AI and Cloudflare.
-  if n <> 5 then raise exception 'expected 5 sources referencing feed images, found %', n; end if;
+  -- Both Google Cloud feeds, CoreWeave, Together AI and Cloudflare. No
+  -- Energy / Power source references an image: none of those feeds attaches one.
+  select count(*) into n from reference.news_sources
+   where is_enabled and category = 'compute' and image_policy = 'feed_media';
+  if n <> 5 then raise exception 'expected 5 Compute sources referencing feed images, found %', n; end if;
+  select count(*) into n from reference.news_sources
+   where is_enabled and category = 'energy-power' and image_policy <> 'none';
+  if n <> 0 then raise exception 'an Energy / Power source references images; none of those feeds supplies any'; end if;
   select count(*) into n from reference.news_sources where is_enabled and image_evidence is null;
   if n <> 0 then raise exception '% source(s) recorded no image finding at all', n; end if;
 

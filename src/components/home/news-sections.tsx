@@ -1,5 +1,6 @@
 import { NewsRail } from "@/components/news/news-rail";
-import { loadComputeNews } from "@/lib/news/read/load";
+import { loadNewsRail, type NewsRailData } from "@/lib/news/read/load";
+import { productionNewsCategories } from "@/lib/news/sources";
 import { getMockNewsByCategory } from "@/data/mock/news";
 import { HOMEPAGE_NEWS_CATEGORIES } from "@/types/news";
 
@@ -8,44 +9,55 @@ import { HOMEPAGE_NEWS_CATEGORIES } from "@/types/news";
  *
  * Which categories appear is `HOMEPAGE_NEWS_CATEGORIES`, a presentation
  * decision held in one place rather than as conditions scattered here. The
- * taxonomy behind it is unchanged: Memory, Photonics and AI Chips are hidden
- * from this surface, not removed from Urdais.
+ * taxonomy behind it is unchanged: the categories missing from this surface are
+ * hidden from it, not removed from Urdais.
  *
- * Compute is production-backed: its stories come from the approved feeds in
+ * Which of those are production-backed is asked of the source registry rather
+ * than named here, so migrating a category is adding its source definitions
+ * and nothing else. A production rail's stories come from the approved feeds in
  * reference.news_sources by way of pipeline.news_articles, and if that store
- * cannot be read the rail says so rather than quietly showing invented
- * content. The rest still render mock data and are labelled as such. The
- * boundary between the two is the accessor each rail is given, so migrating
- * one changes this file and nothing else.
+ * cannot be read the rail says so rather than quietly showing invented content.
+ * The rest render mock data and are labelled as such.
  */
 export async function NewsSections() {
-  const compute = await loadComputeNews();
+  const production = new Set<string>(productionNewsCategories());
+  const live = new Map<string, NewsRailData>(
+    await Promise.all(
+      HOMEPAGE_NEWS_CATEGORIES.filter((category) => production.has(category.id)).map(
+        async (category) => [category.id, await loadNewsRail(category.id)] as const,
+      ),
+    ),
+  );
 
   return (
     <div className="bg-[#0a0a0a] px-4 pb-20 text-neutral-50 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-screen-2xl flex-col gap-12">
-        {HOMEPAGE_NEWS_CATEGORIES.map((category) =>
-          category.id === "compute" ? (
+        {HOMEPAGE_NEWS_CATEGORIES.map((category) => {
+          const data = live.get(category.id);
+          if (!data) {
+            return (
+              <NewsRail
+                key={category.id}
+                title={category.label}
+                articles={getMockNewsByCategory(category.id)}
+                provenance="demo"
+              />
+            );
+          }
+          return (
             <NewsRail
               key={category.id}
               title={category.label}
-              articles={compute.articles}
+              articles={data.articles}
               provenance="production"
               emptyMessage={
-                compute.available
-                  ? "No Compute stories have been ingested yet."
-                  : "Compute news is unavailable right now."
+                data.available
+                  ? `No ${category.label} stories have been ingested yet.`
+                  : `${category.label} news is unavailable right now.`
               }
             />
-          ) : (
-            <NewsRail
-              key={category.id}
-              title={category.label}
-              articles={getMockNewsByCategory(category.id)}
-              provenance="demo"
-            />
-          ),
-        )}
+          );
+        })}
       </div>
     </div>
   );

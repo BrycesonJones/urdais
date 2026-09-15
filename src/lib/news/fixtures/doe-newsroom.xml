@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:og="http://ogp.me/ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:schema="http://schema.org/" xmlns:sioc="http://rdfs.org/sioc/ns#" xmlns:sioct="http://rdfs.org/sioc/types#" xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#" version="2.0" xml:base="https://www.energy.gov/listings/energy-news">
+  <channel>
+    <title>Energy News</title>
+    <link>https://www.energy.gov/listings/energy-news</link>
+    <description>Energy News</description>
+    <language>en</language>
+    
+    <item>
+  <title>U.S. Secretary of Energy Chris Wright Delivers U.S. National Statement at the General Conference of the International Atomic Energy Agency in Vienna, Austria</title>
+  <link>https://www.energy.gov/articles/us-secretary-energy-chris-wright-delivers-us-national-statement-general-conference-0</link>
+  <description>U.S. Secretary of Energy Chris Wright today delivered the U.S. National Statement at the General Conference of the International Atomic Energy Agency (IAEA) in Vienna, Austria.</description>
+  <pubDate>Mon, 14 Sep 2026 13:15:00 -0400</pubDate>
+    <dc:creator>Energy.gov</dc:creator>
+    <guid isPermaLink="true">https://www.energy.gov/articles/us-secretary-energy-chris-wright-delivers-us-national-statement-general-conference-0</guid>
+    </item><item>
+  <title>Energy Secretary Keeps Northwest Coal Generating Plant Online</title>
+  <link>https://www.energy.gov/articles/energy-secretary-keeps-northwest-coal-generating-plant-online</link>
+  <description>Emergency order addresses critical grid reliability issues in the Northwestern U.S. by keeping coal plant online</description>
+  <pubDate>Fri, 11 Sep 2026 20:01:00 -0400</pubDate>
+    <dc:creator>Energy.gov</dc:creator>
+    <guid isPermaLink="true">https://www.energy.gov/articles/energy-secretary-keeps-northwest-coal-generating-plant-online</guid>
+    </item><item>
+  <title>DOE’s Office of Critical Minerals and Energy Innovation Announces $73 Million to Advance Domestic Mining Technology</title>
+  <link>https://www.energy.gov/articles/does-office-critical-minerals-and-energy-innovation-announces-73-million-advance-domestic</link>
+  <description>Funded projects will establish real-world testing grounds for innovative mining technologies to continue securing America's critical materials supply chains</description>
+  <pubDate>Wed, 09 Sep 2026 10:10:00 -0400</pubDate>
+    <dc:creator>Energy.gov</dc:creator>
+    <guid isPermaLink="true">https://www.energy.gov/articles/does-office-critical-minerals-and-energy-innovation-announces-73-million-advance-domestic</guid>
+    </item><item>
+  <title>Energy Department Closes $1.9 Billion Loan to Restart Duane Arnold Nuclear Plant</title>
+  <link>https://www.energy.gov/articles/energy-department-closes-19-billion-loan-restart-duane-arnold-nuclear-plant</link>
+  <description>The U.S. Department of Energy’s Office of Energy Dominance Financing today announced the financial close of a loan of up to $1.9 billion to NextEra Energy to help finance the restart of the Duane Arnold Energy Center in Linn County, Iowa.</description>
+  <pubDate>Tue, 08 Sep 2026 07:30:00 -0400</pubDate>
+    <dc:creator>Energy.gov</dc:creator>
+    <guid isPermaLink="true">https://www.energy.gov/articles/energy-department-closes-19-billion-loan-restart-duane-arnold-nuclear-plant</guid>
+    </item></channel></rss>

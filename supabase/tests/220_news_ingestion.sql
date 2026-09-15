@@ -28,10 +28,21 @@ begin
   -- Four in Phase 1A, eight once Phase 1B finished the category.
   if n <> 8 then raise exception 'expected 8 enabled Compute news sources, found %', n; end if;
 
-  -- Phase 1A ingests Compute only. The other five rails stay on mock data and
-  -- have no source rows at all, which is what makes that visible here.
-  select count(*) into n from reference.news_sources where category <> 'compute';
-  if n <> 0 then raise exception 'a non-Compute news source exists in Phase 1A'; end if;
+  -- Every source this file is about is a Compute source. Other categories
+  -- migrate on their own and are asserted in their own files; what matters here
+  -- is that none of them is mixed into the Compute roster.
+  select count(*) into n from reference.news_sources ns
+    join reference.source_interfaces si on si.id = ns.source_interface_id
+   where ns.category = 'compute' and si.id not in (
+     '6f6f6f6f-0000-4000-8000-000000000001', '6f6f6f6f-0000-4000-8000-000000000002',
+     '6f6f6f6f-0000-4000-8000-000000000003', '6f6f6f6f-0000-4000-8000-000000000004',
+     '6f6f6f6f-0000-4000-8000-000000000007', '6f6f6f6f-0000-4000-8000-000000000008',
+     '6f6f6f6f-0000-4000-8000-000000000009', '6f6f6f6f-0000-4000-8000-00000000000a');
+  if n <> 0 then raise exception '% unexpected source(s) registered under Compute', n; end if;
+  -- Still no source for the categories that have not migrated.
+  select count(*) into n from reference.news_sources
+   where category in ('memory', 'photonics', 'ai-chips', 'crypto');
+  if n <> 0 then raise exception 'a deferred category gained a news source'; end if;
 
   -- The two reviewed-and-refused feeds are recorded, unapproved, and not enabled.
   if (select production_access_state from reference.source_interfaces where id = nvidia) <> 'production_review_pending'

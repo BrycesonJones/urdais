@@ -78,12 +78,13 @@ begin
   -- Compute is untouched: eight sources, seven publishers, five with images.
   select count(*) into n from reference.news_sources where is_enabled and category = 'compute';
   if n <> 8 then raise exception 'expected 8 enabled Compute sources, found %', n; end if;
-  select count(*) into n from reference.news_sources where is_enabled;
-  if n <> 8 then raise exception 'something outside Compute is enabled; % enabled in total', n; end if;
+  -- Memory gained nothing, and the Compute roster is untouched by later phases.
   select count(distinct si.provider_id) into n from reference.news_sources ns
-    join reference.source_interfaces si on si.id = ns.source_interface_id where ns.is_enabled;
+    join reference.source_interfaces si on si.id = ns.source_interface_id
+   where ns.is_enabled and ns.category = 'compute';
   if n <> 7 then raise exception 'expected 7 enabled Compute publishers, found %', n; end if;
-  select count(*) into n from reference.news_sources where is_enabled and image_policy = 'feed_media';
+  select count(*) into n from reference.news_sources
+   where is_enabled and category = 'compute' and image_policy = 'feed_media';
   if n <> 5 then raise exception 'expected 5 Compute sources referencing feed images, found %', n; end if;
 
   -- And a research migration writes no articles.

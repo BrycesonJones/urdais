@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	>
+
+<channel>
+	<title>PJM Inside Lines</title>
+	<atom:link href="https://insidelines.pjm.com/feed/" rel="self" type="application/rss+xml" />
+	<link>https://insidelines.pjm.com</link>
+	<description>Inside Lines informs PJM&#039;s stakeholders of various committee actions, upcoming training and other activities.</description>
+	<lastBuildDate>Thu, 10 Sep 2026 14:44:02 +0000</lastBuildDate>
+	<language>en-US</language>
+	<sy:updatePeriod>
+	hourly	</sy:updatePeriod>
+	<sy:updateFrequency>
+	1	</sy:updateFrequency>
+	
+	<item>
+		<title>PJM Proposes Reliability Standards to Manage Large Load Disconnection Events</title>
+		<link>https://insidelines.pjm.com/reliability-standards-to-manage-large-load-disconnection-events-proposed-by-pjm/</link>
+		
+		<dc:creator><![CDATA[Jason McGovern]]></dc:creator>
+		<pubDate>Thu, 10 Sep 2026 14:37:59 +0000</pubDate>
+				<category><![CDATA[Operations]]></category>
+		<category><![CDATA[Planning]]></category>
+		<guid isPermaLink="false">https://insidelines.pjm.com/?p=210224</guid>
+
+					<description><![CDATA[<img width="139" height="81" src="https://insidelines.pjm.com/wp-content/uploads/2019/07/controlroom5_1024x1024-139x81.jpg" class="webfeedsFeaturedVisual wp-post-image" alt="" style="float: left; margin-right: 5px;" link_thumbnail="" decoding="async" />PJM has proposed changes to interconnection reliability requirements for Large Loads, specifically, computational loads that include data centers and crypto-mining facilities. The PJM action announced Sept. 8 followed a July 22 event during which nearly 4,000 MW of data center load unexpectedly disconnected from the grid in northern Virginia. As data centers disconnected from the [&#8230;]]]></description>
+										
+					
+		
+		
+			</item><item>
+		<title>PJM Hot Weather Operations Update – Sept. 3, 2026</title>
+		<link>https://insidelines.pjm.com/pjm-hot-weather-operations-update-sept-3-2026/</link>
+		
+		<dc:creator><![CDATA[Jason McGovern]]></dc:creator>
+		<pubDate>Thu, 03 Sep 2026 20:55:50 +0000</pubDate>
+				<category><![CDATA[Operations]]></category>
+		<category><![CDATA[hot weather]]></category>
+		<category><![CDATA[hot weather alert]]></category>
+		<category><![CDATA[hot weather operations]]></category>
+		<guid isPermaLink="false">https://insidelines.pjm.com/?p=210221</guid>
+
+					<description><![CDATA[<img width="139" height="81" src="https://insidelines.pjm.com/wp-content/uploads/2019/09/PJM-Inside-Lines_Hot-Weather_NOAA_1024x1024-139x81.jpg" class="webfeedsFeaturedVisual wp-post-image" alt="" style="float: left; margin-right: 5px;" link_thumbnail="" decoding="async" />PJM has extended a Hot Weather Alert for the entire region PJM serves through Sept. 4 as unusually hot and humid weather continues. A Hot Weather Alert is a routine procedure PJM issues ahead of forecasted hot weather and/or high humidity to prepare transmission and generation staff and facilities for expected increases in electricity demand, [&#8230;]]]></description>
+										
+					
+		
+		
+			</item><item>
+		<title>PJM Hot Weather Operations Update – Sept. 2, 2026</title>
+		<link>https://insidelines.pjm.com/pjm-hot-weather-operations-update-sept-2-2026/</link>
+		
+		<dc:creator><![CDATA[Jason McGovern]]></dc:creator>
+		<pubDate>Wed, 02 Sep 2026 20:23:08 +0000</pubDate>
+				<category><![CDATA[Operations]]></category>
+		<category><![CDATA[hot weather operations]]></category>
+		<guid isPermaLink="false">https://insidelines.pjm.com/?p=210215</guid>
+
+					<description><![CDATA[<img width="139" height="81" src="https://insidelines.pjm.com/wp-content/uploads/2021/07/Hot-Weather-and-Power-Grid-Illustration_Inside-Lines-139x81.jpg" class="webfeedsFeaturedVisual wp-post-image" alt="" style="float: left; margin-right: 5px;" link_thumbnail="" decoding="async" loading="lazy" />PJM continues to implement proactive procedures to maintain reliable grid operations through humid and hot weather. PJM has issued a&#160;Maximum Generation Alert&#160;and&#160;Load Management Alert&#160;for Sept. 3 for the region PJM serves. This alert does not require any action from customers. A Maximum Generation Alert is targeted at transmission/generation owners, who then determine if any maintenance [&#8230;]]]></description>
+										
+					
+		
+		
+			</item><item>
+		<title>PJM Hot Weather Operations Update – Sept. 1, 2026</title>
+		<link>https://insidelines.pjm.com/pjm-hot-weather-operations-update-sept-1-2026/</link>
+		
+		<dc:creator><![CDATA[Jeffrey Shields]]></dc:creator>
+		<pubDate>Tue, 01 Sep 2026 22:28:05 +0000</pubDate>
+				<category><![CDATA[Operations]]></category>
+		<category><![CDATA[hot weather]]></category>
+		<category><![CDATA[hot weather alert]]></category>
+		<category><![CDATA[maximum generation alert]]></category>
+		<category><![CDATA[Reliability]]></category>
+		<guid isPermaLink="false">https://insidelines.pjm.com/?p=210209</guid>
+
+					<description><![CDATA[<img width="139" height="81" src="https://insidelines.pjm.com/wp-content/uploads/2020/05/Inside-Lines_Summer-Preparedness_Banner_opt2v2-139x81.jpg" class="webfeedsFeaturedVisual wp-post-image" alt="" style="float: left; margin-right: 5px;" link_thumbnail="" decoding="async" loading="lazy" />PJM continues to take proactive procedures to maintain reliable grid operations through unusually hot and humid weather. PJM has issued a&#160;Maximum Generation Alert&#160;and&#160;Load Management Alert&#160;for Sept. 2 for the region PJM serves. This alert does not require any action from customers. A Maximum Generation Alert is targeted at transmission/generation owners, who then determine if any [&#8230;]]]></description>
+										
+					
+		
+		
+			</item></channel></rss>

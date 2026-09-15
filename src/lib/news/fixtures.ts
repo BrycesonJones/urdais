@@ -112,6 +112,46 @@ const META: Record<NewsSourceSlug, Omit<FeedFixture, "body">> = {
     provenance:
       "First three entries of the live response retrieved 2026-09-14 (HTTP 200, application/atom+xml, 1442396 bytes, Atom 1.0, 100 entries). Feed header verbatim. The content elements are kept as published because they are the element this parser reads and the evidence that the feed offers an article body rather than a summary, which is why the source stores no description.",
   },
+  "doe-newsroom": {
+    source: "doe-newsroom",
+    sourceUrl: "https://www.energy.gov/newsroom/rss.xml",
+    retrievedAt: "2026-09-15T14:20:00Z",
+    contentType: "application/rss+xml; charset=utf-8",
+    bodyFile: "doe-newsroom.xml",
+    sha256: "7fcc0780a920adc10853faa930ff4558fcc3b0931a9bd0889d8996d808971e92",
+    provenance:
+      "First four items of the live response retrieved 2026-09-15 (HTTP 200, application/rss+xml; charset=utf-8, 7274 bytes, RSS 2.0, 10 items). Channel header verbatim. Plain-text descriptions of around 180 characters, which is why this source stores them; no media element.",
+  },
+  "pjm-inside-lines": {
+    source: "pjm-inside-lines",
+    sourceUrl: "https://insidelines.pjm.com/feed/",
+    retrievedAt: "2026-09-15T14:20:00Z",
+    contentType: "application/rss+xml; charset=UTF-8",
+    bodyFile: "pjm-inside-lines.xml",
+    sha256: "755445e3126b811a7920434528ed245e6cfac9b282e5ef048c84a012246e61e8",
+    provenance:
+      "First four items of the live response retrieved 2026-09-15 (HTTP 200, application/rss+xml; charset=UTF-8, 49930 bytes, RSS 2.0, 10 items), with content:encoded removed from each. Channel header verbatim. The description elements are kept as published because they are the evidence that this feed carries the post body with an inline image, which is why the source stores neither a description nor an image.",
+  },
+  "power-magazine": {
+    source: "power-magazine",
+    sourceUrl: "https://www.powermag.com/feed/",
+    retrievedAt: "2026-09-15T14:20:00Z",
+    contentType: "application/rss+xml; charset=UTF-8",
+    bodyFile: "power-magazine.xml",
+    sha256: "397605b723749088e3d7040c36e9640bc73507676d6633e2c23affad8f5bfa44",
+    provenance:
+      "First three items of the live response retrieved 2026-09-15 (HTTP 200, application/rss+xml; charset=UTF-8, 31082 bytes, RSS 2.0, 10 items), with content:encoded removed from each. Channel header verbatim.",
+  },
+  "power-magazine-data-centers": {
+    source: "power-magazine-data-centers",
+    sourceUrl: "https://www.powermag.com/category/data-centers/feed/",
+    retrievedAt: "2026-09-15T14:20:00Z",
+    contentType: "application/rss+xml; charset=UTF-8",
+    bodyFile: "power-magazine-data-centers.xml",
+    sha256: "05744f3eaf180e6767b7094ac246af9bd502325239f9e85fc7a0c1492d2e8403",
+    provenance:
+      "First three items of the live response retrieved 2026-09-15 (HTTP 200, application/rss+xml; charset=UTF-8, 30561 bytes, RSS 2.0, 10 items), with content:encoded removed from each. Channel header verbatim. Items carry the publisher's own category terms, Data Centers among them, which is how this endpoint is scoped.",
+  },
 };
 
 export function loadFeedFixture(source: NewsSourceSlug): FeedFixture {

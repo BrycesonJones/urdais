@@ -21,6 +21,10 @@ export const NEWS_SOURCE_SLUGS = [
   "together-ai-blog",
   "cloudflare-workers-blog",
   "digitalocean-blog",
+  "doe-newsroom",
+  "pjm-inside-lines",
+  "power-magazine",
+  "power-magazine-data-centers",
 ] as const;
 
 export type NewsSourceSlug = (typeof NEWS_SOURCE_SLUGS)[number];
