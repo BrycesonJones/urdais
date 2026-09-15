@@ -28,6 +28,13 @@ A deployed Urdais instance needs two secrets:
   public one. Set it in the Vercel project's environment variables; it belongs in
   no file in this repository.
 
+One optional variable, and deliberately only one:
+
+- `UBWI_ETH_RPC_URLS` — a comma-separated list of Ethereum JSON-RPC endpoints for
+  the UBWI numerator. Unset, the documented public keyless defaults apply, so
+  **UBWI publication requires no third secret**. See “The numerator is retrieved
+  live” below.
+
 Two facts about that string matter in practice:
 
 - **Use the pooler, not the direct host.** `db.<ref>.supabase.co` resolves to IPv6 only, and most build and hosting environments are IPv4. The session pooler at `aws-0-us-east-1.pooler.supabase.com:5432` with user `postgres.<ref>` is reachable over IPv4.
@@ -121,21 +128,69 @@ To publish by hand:
 
 ```bash
 DATABASE_URL=<UrdaisProd> npm run ubwi:load
-DATABASE_URL=<UrdaisProd> npm run ubwi:load -- --dry-run   # calculate and print, write nothing
+DATABASE_URL=<UrdaisProd> npm run ubwi:load -- --dry-run   # retrieve and print, write nothing
 ```
 
-> **The numerator is not yet retrieved live.** `PRODUCTION_BTC_OBSERVATION` in
-> `src/lib/ubwi/numerator.ts` is a compile-time constant: the block height, the
-> Chainlink round and the price were captured by hand on 15 September 2026 and
-> committed. Nothing in the pipeline fetches a new one. So the scheduled job, as
-> shipped, will run every day at 06:00 UTC and correctly refuse with
-> `observation_stale` from 16 September onward, because that round is past its
-> heartbeat — publishing **no** point rather than a duplicate of the first one.
-> That is the honest behaviour and it is the behaviour the tests pin, but it
-> means **the chart will not begin to grow until a live numerator retrieval
-> exists**: a Chainlink `latestRoundData` read plus the two-endpoint chain-tip
-> cross-check, wired into `calculateUbwi`'s injectable `numerator`. That is a
-> separate slice and this phase does not attempt it.
+`--dry-run` performs the full live retrieval and prints the round, its age, the
+chain tip and the derived supply without writing anything. It is the safe way to
+see the current numerator without touching the published series.
+
+### The numerator is retrieved live
+
+Each run obtains a fresh BTC/USD observation at execution time. Nothing
+scheduled reads a committed constant.
+
+- **Price.** `latestRoundData()` on the Chainlink BTC/USD proxy
+  `0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c` on Ethereum mainnet, plus
+  `description()`, `decimals()`, `version()`, `phaseId()` and `aggregator()` for
+  identity and lineage. Every `eth_call` is pinned to one explicit block, so the
+  observation is re-runnable and cannot straddle a round boundary. Every function
+  selector is derived from Keccak-256 at build time and pinned to published
+  known answers in `src/lib/ubwi/retrieve/keccak.test.ts`; none is written by hand.
+- **Cross-check.** A second, independent RPC endpoint is asked about the **same
+  block** and must return the same round. Where it cannot serve that block — a
+  lagging or pruning node — the check falls back once to that endpoint's own head
+  and still requires the identical round, and the weaker mode is reported rather
+  than silently chosen. A disagreement publishes nothing.
+- **Height.** `mempool.space/api/blocks/tip/height` and
+  `blockchain.info/q/getblockcount`, read live, must agree **exactly**. No
+  averaging and no tolerance. The supply is then derived from that height by the
+  protocol subsidy schedule; no supply figure is taken from any provider.
+- **Freshness.** The documented 3,600-second heartbeat is enforced, unchanged, by
+  the same validator the gate uses. There is no grace period.
+
+`REFERENCE_BTC_OBSERVATION` in `src/lib/ubwi/numerator.ts` is what the old
+`PRODUCTION_BTC_OBSERVATION` became: a frozen fixture and the deterministic input
+behind the read surface's disclosure block. It is not a production source, the
+scheduled job has no path to it, and its round is long past its heartbeat, so a
+run that somehow reached it would refuse as stale rather than republish the first
+point.
+
+A run now ends in one of five states, distinguishable from the cron response
+without reading a log: `published`; `already_published` (the day already has its
+point); `observation_stale` or `retrieval_failed` (fail-closed, nothing written,
+`retrievalProblem` naming which of unreachable endpoint, malformed response,
+cross-check disagreement, height disagreement, bad round, non-positive price,
+failed derivation or an observation that failed its own checks); or HTTP 500 with
+`reason: "run_failed"`, which is the only one that is an outage.
+
+#### `UBWI_ETH_RPC_URLS` — optional
+
+A comma-separated list of Ethereum JSON-RPC endpoints. The first is the primary
+read and the second the independent cross-check; fewer than two is refused,
+because the observation shape promises a cross-check and one endpoint cannot
+provide it.
+
+**It is optional and there is no secret.** Unset, the job uses
+`https://ethereum-rpc.publicnode.com` and `https://eth.drpc.org`, both public and
+keyless, so a deployment needs no new credential to publish UBWI. The endpoint
+URL is frozen onto every published observation as provenance, which is only
+honest while no endpoint carries a key — so if this variable is ever set, set it
+to keyless endpoints.
+
+Endpoints tried and rejected, recorded so they are not rediscovered:
+`cloudflare-eth.com` answers an internal error, `rpc.ankr.com/eth` now requires an
+API key, and `eth.llamarpc.com` returns intermittent 525s.
 
 ### Activating the schedule
 
@@ -198,6 +253,33 @@ compared against `select string_agg(version, ',' order by version) from supabase
 > The ledger's `statements` column holds the SQL that actually ran and `created_by`
 > holds who ran it. Rekeying a row preserves both, which is why it is a safe
 > repair and why deleting a ledger row is not.
+
+> **Two migration files may not share a version prefix.** `supabase db push`
+> keys on the version, so where two filenames carry the same one, only one of
+> them can ever be recorded and the other silently never runs.
+>
+> That happened on 15 September 2026: `#75` and `#76` merged in that order and
+> both named their migration `20260915030000`, producing
+> `20260915030000_news_energy_power_sources.sql` and
+> `20260915030000_ubwi_daily_publication_cadence.sql`. The repository's own
+> uniqueness guard in `src/lib/migrations.test.ts` went red on `main` at the
+> moment the second merged. The UBWI file was renamed to `20260915150000`, which
+> was safe because neither database had applied it — UrdaisProd's ledger held no
+> `20260915020000` or `20260915030000` at all, and UrdaisDev's held nothing at or
+> after `20260915010000`.
+>
+> Two consequences worth knowing before the next `db push`. UrdaisProd carries
+> the two news migrations under wall-clock versions `20260915143157` and
+> `20260915143307` (the `apply_migration` path above), so the repository's
+> `20260915020000` and `20260915030000` still read as pending against it and must
+> not be replayed — they need the same rekeying repair. And
+> `pipeline.ubwi_publications_daily_idx` **does not exist in UrdaisProd**: the
+> UBWI daily cadence migration has never been applied there, so until it is, the
+> daily one-point-per-UTC-day rule rests on the application check alone and not
+> on the database. Two runs that overlap in time would not be caught.
+>
+> Run the version comparison above after any merge that adds a migration, not
+> only after a deploy.
 
 ### 2. Verify Wave-1 token prices into production
 
