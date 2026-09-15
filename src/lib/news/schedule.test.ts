@@ -17,10 +17,19 @@ const vercelConfig = JSON.parse(readFileSync(path.join(process.cwd(), "vercel.js
 };
 
 describe("the news refresh policy", () => {
-  it("is every four hours, on the hour, in UTC", () => {
-    expect(NEWS_REFRESH_INTERVAL_HOURS).toBe(4);
-    expect(NEWS_REFRESH_CRON).toBe("0 */4 * * *");
-    expect(newsRefreshHoursUtc()).toEqual([0, 4, 8, 12, 16, 20]);
+  it("is once a day, on the hour, in UTC", () => {
+    expect(NEWS_REFRESH_INTERVAL_HOURS).toBe(24);
+    expect(NEWS_REFRESH_CRON).toBe("0 0 * * *");
+    expect(newsRefreshHoursUtc()).toEqual([0]);
+  });
+
+  it("stays within what the deployment platform will accept", () => {
+    // Vercel's Hobby plan refuses any expression that runs more than once a
+    // day, at deploy time rather than at run time. Raising the cadence means
+    // upgrading the plan first; this guard is what turns that into a failing
+    // test instead of a failed deployment.
+    expect(NEWS_REFRESH_INTERVAL_HOURS).toBeGreaterThanOrEqual(24);
+    expect(NEWS_REFRESH_CRON).not.toMatch(/\*\//);
   });
 
   it("is declared once, and the deployed schedule is the one the code states", () => {

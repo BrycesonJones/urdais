@@ -36,7 +36,7 @@ Two facts about that string matter in practice:
 
 ## Scheduled news ingestion
 
-`vercel.json` declares one cron job: `GET /api/cron/news` on `0 */4 * * *`, the
+`vercel.json` declares one cron job: `GET /api/cron/news` on `0 0 * * *`, the
 shared Urdais news cadence (`src/lib/news/schedule.ts`). It ingests every
 enabled, production-approved news source — Compute today, every category that
 is migrated later — and is safe to run repeatedly, so a duplicate or retried
@@ -51,11 +51,16 @@ are quiet rather than loud:
 - **Without `CRON_SECRET`** the route answers 401 to everything, including
   Vercel. The cron job runs, gets refused, and nothing is ingested.
 
-> **The four-hour cadence needs a Pro team.** Vercel's Hobby plan runs cron jobs
-> once per day and rejects more frequent expressions at deploy time. If the
-> project is on Hobby, `vercel.json` will fail to deploy until the plan is
-> upgraded or the schedule is changed — in `vercel.json` and
-> `NEWS_REFRESH_CRON` together, since a test asserts they agree.
+> **The cadence is capped by the plan, not chosen freely.** Vercel's Hobby plan
+> runs cron jobs once per day and rejects a faster expression at deploy time —
+> `0 */4 * * *` was tried on 15 September 2026 and failed the deployment. Once
+> the project is on a Pro team the cadence can be raised in `vercel.json`,
+> `NEWS_REFRESH_CRON` and `NEWS_REFRESH_INTERVAL_HOURS` together; a test
+> requires the three to agree and a second test asserts the current value is one
+> the plan accepts.
+>
+> On Hobby the job also fires at some point within the named hour rather than on
+> the minute, which the pipeline does not care about.
 
 To ingest by hand, or to backfill after a scheduling gap:
 

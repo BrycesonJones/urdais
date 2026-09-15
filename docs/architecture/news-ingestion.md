@@ -3,7 +3,7 @@
 **Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 14 September 2026 when the homepage Compute rail stopped reading mock data (Phase 1A); rewritten 15 September 2026 when Compute was finished (Phase 1B).
 
 The homepage Compute rail reads production data from eight approved publisher
-feeds, refreshed every four hours. This document records how, from which
+feeds, refreshed once a day. This document records how, from which
 sources, under what reading of their terms, and what is deliberately not built.
 
 Phase 1B completes Compute for V1. There is no `/news` page, no news navigation
@@ -34,8 +34,8 @@ the homepage read path, and fail-closed behaviour.
 
 **Phase 1B** finished the category: four more publishers, feed-supplied
 thumbnails under their own rights decision, a presentation rule so no publisher
-owns the rail, and scheduled ingestion every four hours under a policy the
-remaining five categories will inherit.
+owns the rail, and scheduled ingestion under one refresh policy the remaining
+five categories will inherit.
 
 ---
 
@@ -189,8 +189,8 @@ customer under the Cloud Terms of Service, whose clause (iv) bars monitoring
 "the Services" for benchmarking. The blog is a public page under the Website
 Terms of Use, which define the "Sites" separately and contain no
 automated-access clause. The Acceptable Use Policy prohibits only "web crawling
-which is not restricted to a rate"; one request every four hours is
-rate-restricted by construction. Robots disallows only HubSpot preview paths.
+which is not restricted to a rate"; one request a day is rate-restricted by
+construction. Robots disallows only HubSpot preview paths.
 
 **Together AI.** The Terms of Service are a customer agreement for the inference
 and GPU Services and do not address the public website at all; read in full,
@@ -217,9 +217,9 @@ AUP clause the Phase 4A review could not settle — "Monitoring or crawling of a
 System that impairs or disrupts the System being monitored or crawled, or other
 harvesting or scraping of any content of the Services" — sits under a **Network
 Abuse** heading whose lead sentence is about connecting without permission, and
-is qualified by impairment or disruption. Six requests a day to an endpoint the
-blog advertises by `link rel="alternate"`, on a site whose robots allows every
-agent everything but four authentication paths, is neither.
+is qualified by impairment or disruption. One request a day to an endpoint the blog
+advertises by `link rel="alternate"`, on a site whose robots allows every agent
+everything but four authentication paths, is neither.
 
 ### Reviewed and refused
 
@@ -417,8 +417,8 @@ There is no API route for reading news, and no `/news` page.
 `src/lib/news/schedule.ts` holds one constant for all of Urdais news:
 
 ```ts
-NEWS_REFRESH_INTERVAL_HOURS = 4
-NEWS_REFRESH_CRON = "0 */4 * * *"   // 00, 04, 08, 12, 16, 20 UTC
+NEWS_REFRESH_INTERVAL_HOURS = 24
+NEWS_REFRESH_CRON = "0 0 * * *"    // 00:00 UTC
 NEWS_REFRESH_PATH = "/api/cron/news"
 ```
 
@@ -429,15 +429,29 @@ later phase approves a Memory feed, that feed joins this run by existing.
 A test asserts there is exactly one cron entry and that the schedule module
 names no category.
 
-Four hours suits what these sources are: a publisher newsroom produces a handful
-of items a day, so polling more often costs the publisher requests and gains
-Urdais nothing, while polling less often leaves a rail stale for most of a day.
+### Why daily, and not more often
 
-> **Deployment constraint.** Vercel's Hobby plan runs cron jobs **once per day**
-> and *"expressions that run more frequently will fail deployment"*. `0 */4 * * *`
-> therefore requires a Pro team. If the Urdais Vercel project is on Hobby, the
-> deploy will reject `vercel.json` until the plan is upgraded or
-> `NEWS_REFRESH_CRON` and the `vercel.json` entry are changed together.
+Daily is what the platform runs. Vercel's Hobby plan invokes a cron job once per
+day and *"expressions that run more frequently will fail deployment"* — this was
+not a theoretical limit: `0 */4 * * *` was written first and Vercel failed the
+deployment for it on 15 September 2026.
+
+Four-hourly is what these sources would otherwise warrant. A publisher newsroom
+produces a handful of items a day, so polling more often costs the publisher
+requests and gains Urdais nothing, while daily leaves a story published just
+after a run up to a day off the rail. Nothing is lost by the delay: each run
+reads the feed's current window rather than a delta, so the next run still finds
+it, and the feeds hold between 10 and 100 items.
+
+Raising the cadence once the project is on a Pro team is
+`NEWS_REFRESH_INTERVAL_HOURS`, `NEWS_REFRESH_CRON` and the `vercel.json` entry,
+which a test requires to agree. A second test asserts the cadence stays within
+what the plan accepts, so an attempt to raise it fails in CI rather than at
+deploy time.
+
+On Hobby, Vercel also invokes the job at any point inside the named hour rather
+than on the minute. The pipeline does not care: it is idempotent and reads a
+window, not a delta.
 
 ### The route
 
@@ -471,7 +485,7 @@ The secret is never logged, never echoed in a response body, and is not in git.
 ### Concurrency
 
 A full eight-source run takes about 5 seconds against a live network; the
-interval is four hours; `maxDuration` is 60 seconds. Overlap is not credible, so
+interval is a day; `maxDuration` is 60 seconds. Overlap is not credible, so
 there is no lock, and no Redis or other infrastructure service was introduced
 for one. The real protection is that the run is idempotent: Vercel's own
 documentation says cron delivery "can also occasionally invoke the same

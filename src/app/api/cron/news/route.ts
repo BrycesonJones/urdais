@@ -19,8 +19,8 @@ import { productionRunSummary, runProductionNewsIngestion } from "@/lib/news/run
 
 // Reads and writes the production store on every invocation.
 export const dynamic = "force-dynamic";
-// Eight feeds, a few hundred kilobytes each. Bounded well under the four-hour
-// interval, so a run cannot still be going when the next one is due.
+// Eight feeds, a few hundred kilobytes each. A full run takes seconds against
+// a live network, so it cannot still be going when the next one is due.
 export const maxDuration = 60;
 
 /**
