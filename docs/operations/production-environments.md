@@ -40,11 +40,82 @@ Two facts about that string matter in practice:
 - **Use the pooler, not the direct host.** `db.<ref>.supabase.co` resolves to IPv6 only, and most build and hosting environments are IPv4. The session pooler at `aws-0-us-east-1.pooler.supabase.com:5432` with user `postgres.<ref>` is reachable over IPv4.
 - **Supabase presents a private certificate authority.** Its chain is issued by `Supabase Root 2021 CA`, which is not in the public trust store, so a default `sslmode=verify-full` fails with `self-signed certificate in certificate chain`. Download the project's CA from the Supabase dashboard under Settings → Database, give the runtime the file, and append `sslmode=verify-full&sslrootcert=<path>`. The current operator connection pins the root whose SHA-256 fingerprint is `80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA`.
 
+## Connection classes
+
+One connection string is configured, but three different kinds of work connect
+with it, and they have different lifetimes. Treating them as one is what caused
+the capacity outage on 15 September 2026.
+
+| Class | Who | Connects with | Shape |
+|---|---|---|---|
+| **A. Serverless request/read** | every public page and API read | the transaction pooler, port `6543`, derived from `DATABASE_URL` | one process-wide `pg.Pool`, `max: 1`, no `end()` |
+| **B. Cron / private job** | `/api/cron/{news,ubwi,ucpi}` and the `scripts/` commands | `DATABASE_URL` verbatim | one owned `pg.Client`, closed by its caller |
+| **C. Migration / admin** | `supabase db push`, `migrations:check --production`, the `production migration ledger` CI job | `DATABASE_URL` / `URDAIS_PRODUCTION_DATABASE_URL` verbatim | session connection, as the tooling expects |
+
+**Why class A is rewritten in code.** The session pooler at
+`…pooler.supabase.com:5432` allots roughly fifteen clients to a role/database
+pair. Class A used to take that path with `pg.Pool({ max: 4 })` *per Vercel
+instance*, so four concurrent warm instances could hold the entire budget.
+Past that Supavisor answers
+
+```
+(EMAXCONNSESSION) max clients reached in session mode - max clients are limited to pool_size: 15
+```
+
+and every production-backed read fails at once, over a database that is
+perfectly healthy: the UBWI row gone from the Urdais Indices panel, all three
+News rails "unavailable right now", `/markets/ubwi` showing its
+not-yet-published note, `/api/tokens/prices` answering `{"benchmarks":[]}`. It
+heals two or three minutes after the load stops, so it leaves nothing behind to
+find. **Do not reproduce this against production** — a ~50-request smoke test is
+what took the site down for three minutes. The regression tests in
+`src/lib/tokens/read/serverless-pool.test.ts` reproduce it locally against a
+fake pooler instead.
+
+The same host serves the *transaction* pooler on port `6543`, whose budget is
+far larger and whose unit of assignment is a statement rather than a session, so
+`src/lib/db/connection.ts` changes the port and nothing else — TLS parameters
+included. It is done in code rather than by asking an operator to edit the
+Vercel variable because the safe value is derivable, and a deployment one manual
+env edit away from the old failure is not fixed. `URDAIS_DATABASE_RUNTIME_URL`
+overrides the derivation for an operator who wants to name class A explicitly.
+
+**The connection budget.** Before: 4 per warm instance against 15, so 4
+concurrent instances exhausted it. After: 1 per warm instance, and off the
+session pool entirely — the fifteen session slots now serve only the daily cron
+(1 client, briefly) and operator/CI admin work.
+
+**Nothing relies on session affinity.** Every `begin`/`commit` in the codebase —
+`src/lib/news/sql.ts`, `src/lib/ubwi/run.ts`, `src/lib/ucpi/runtime/*`,
+`src/lib/tokens/read/sql.ts`, `src/lib/tokens/read/benchmark-store.ts` — is in a
+*persist* path reached only through a class-B owned client. There is no
+`LISTEN`/`NOTIFY`, no `pg_advisory_*`, no temporary table, no `SET`/`RESET`, no
+declared cursor and no named prepared statement anywhere in `src/` or
+`scripts/`; `pg` sends parameterised queries unnamed, which transaction pooling
+supports.
+
+### Reading a failed read
+
+A read that cannot reach the database degrades to the same empty surface as a
+table with no rows, so the reason has to reach the log. Every read path now logs
+a stable code from `databaseErrorCode`:
+
+| Code | Means | Remedy |
+|---|---|---|
+| `DB_POOL_EXHAUSTED` | the pooler refused another client | capacity: check class A's `max` and the pooler mode |
+| `DB_POOL_CLOSED` | a borrower called `end()` on the shared pool | a code defect; see PR #82 |
+| `DB_CONNECT_FAILED` | unreachable host, refused connection, connect timeout | network, host, or a paused project |
+| `DB_AUTH_FAILED` | wrong role or password | the pooler wants `postgres.<project-ref>`, not bare `postgres` |
+| `DB_TLS_FAILED` | the CA is not trusted | pin the Supabase Root 2021 CA; never disable verification |
+| `DB_QUERY_FAILED` | the statement itself failed | a missing migration, usually |
+
+Credentials are stripped from every one of these lines, role included.
+
 `NODE_ENV=production` (or `VERCEL_ENV=production`) is what puts the read path into production mode. In that mode the research-preview filter is unavailable and the read path serves only frozen benchmarks whose two leg observations are both production. There is no flag that relaxes this.
 
 ## Scheduled news ingestion
 
-`vercel.json` declares one cron job: `GET /api/cron/news` on `0 0 * * *`, the
+`vercel.json` declares three cron jobs; this is the first: `GET /api/cron/news` on `0 0 * * *`, the
 shared Urdais news cadence (`src/lib/news/schedule.ts`). It ingests every
 enabled, production-approved news source — Compute today, every category that
 is migrated later — and is safe to run repeatedly, so a duplicate or retried
@@ -199,9 +270,12 @@ API key, and `eth.llamarpc.com` returns intermittent 525s.
 2. Set `CRON_SECRET` and `DATABASE_URL` in the Vercel project. Without
    `CRON_SECRET` the route answers 401 to everything including Vercel; without
    `DATABASE_URL` it answers 503 and publishes nothing.
-3. Confirm the plan accepts two daily crons. Hobby caps both the cadence and the
-   *number* of cron jobs; if the deployment is rejected, the fix is the plan, not
-   the schedule.
+3. Confirm the plan accepts the cadence. Hobby caps the **cadence** — once per
+   day, and a faster expression fails at deploy time — and fires within the
+   named hour rather than on the minute. It does **not** cap the count in any
+   way that matters here: every plan allows 100 cron jobs per project, so the
+   three Urdais declares are well inside it. A cron that never fires is
+   therefore not explained by the number of them.
 4. Verify with an authenticated call against the deployment:
    `curl -H "Authorization: Bearer $CRON_SECRET" https://<origin>/api/cron/ubwi`.
    An unauthenticated call must answer `401`.

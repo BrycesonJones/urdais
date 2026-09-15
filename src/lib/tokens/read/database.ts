@@ -8,6 +8,12 @@
 
 import pg from "pg";
 
+import {
+  SERVERLESS_POOL_OPTIONS,
+  describeDatabaseError,
+  redactConnectionString,
+  serverlessRuntimeUrl,
+} from "@/lib/db/connection";
 import { isProductionRuntime, type ProcessEnvLike } from "@/lib/tokens/read/publication";
 import { loadPersistedBenchmarks, type PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
 import { loadTokenReadCatalogFromSql, type TokenSqlExecutor } from "@/lib/tokens/read/sql";
@@ -80,12 +86,36 @@ type GlobalTokenPool = {
  * Work that really does own its connection -- the cron routes, which run once
  * and exit -- uses `createTokenSqlExecutor` below and closes that, which is
  * private to the caller and safe to end.
+ *
+ * This is connection class A. The URL it is handed is the *configured* one; the
+ * one it connects with is `serverlessRuntimeUrl`'s, which on Supabase moves
+ * this path off the session pooler's fifteen-client budget and onto the
+ * transaction pooler. The pool is `max: 1`, not the `max: 4` it was: four
+ * concurrent warm Vercel instances used to be able to claim the whole session
+ * budget between them, and every production read then failed at once over a
+ * healthy database. See @/lib/db/connection for the full account.
  */
 export async function tokenSqlExecutor(url: string): Promise<TokenSqlExecutor> {
   const globalForPool = globalThis as typeof globalThis & GlobalTokenPool;
+  // Keyed on the configured URL, so a caller need not know about the rewrite to
+  // get the process's one pool back.
   if (globalForPool.__urdaisTokenPool?.url === url) return globalForPool.__urdaisTokenPool;
 
-  const pool = new pg.Pool({ connectionString: url, max: 4 });
+  const runtime = serverlessRuntimeUrl(url);
+  // Once per cold start, not per request: which of the three cases produced the
+  // runtime URL is the first thing to check when capacity is in question.
+  console.info(
+    `db: serverless read pool (max ${SERVERLESS_POOL_OPTIONS.max}, ${runtime.source}) -> ${redactConnectionString(runtime.url)}`,
+  );
+
+  const pool = new pg.Pool({ connectionString: runtime.url, ...SERVERLESS_POOL_OPTIONS });
+  // A pool-level error -- a backend closing an idle connection, the pooler
+  // dropping one -- is emitted on the pool, not on any query. `pg` treats an
+  // unhandled one as an uncaught exception, which on a serverless instance ends
+  // the whole process rather than one request.
+  pool.on("error", (error) => {
+    console.error(`db: serverless read pool error (${describeDatabaseError(error)})`);
+  });
   const executor: SharedTokenExecutor = {
     url,
     async query(text: string, params: readonly unknown[]) {
@@ -97,6 +127,19 @@ export async function tokenSqlExecutor(url: string): Promise<TokenSqlExecutor> {
   return executor;
 }
 
+/**
+ * A private, caller-owned connection: connection classes B and C.
+ *
+ * The cron routes and the `scripts/` commands each run one multi-statement
+ * transaction and exit, and they close what they opened -- so unlike the shared
+ * pool above, this executor does expose `end`, and its callers must call it.
+ *
+ * It connects with the configured URL **verbatim**, with no rewrite to the
+ * transaction pooler. That is deliberate on both counts: one client once a day
+ * is not what exhausts a session pooler, and the migration/admin tooling in
+ * class C reads server bookkeeping that wants a session connection. A caller
+ * that wants the other topology can point `DATABASE_URL` at it.
+ */
 export async function createTokenSqlExecutor(url: string): Promise<TokenSqlExecutor & { end: () => Promise<void> }> {
   const client = new pg.Client({ connectionString: url });
   await client.connect();
@@ -122,8 +165,7 @@ export async function loadFrozenBenchmarksFromDatabase(
     const sql = await tokenSqlExecutor(url);
     return await loadPersistedBenchmarks(sql);
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    console.warn(`token benchmarks: database unavailable (${detail}); falling back to calculation`);
+    console.warn(`token benchmarks: database unavailable (${describeDatabaseError(error)}); falling back to calculation`);
     return null;
   }
 }
@@ -138,8 +180,7 @@ export async function loadTokenReadCatalogFromDatabase(
     const sql = await tokenSqlExecutor(url);
     return await loadTokenReadCatalogFromSql(sql);
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    console.warn(`token catalog: database unavailable (${detail}); returning empty catalog`);
+    console.warn(`token catalog: database unavailable (${describeDatabaseError(error)}); returning empty catalog`);
     return null;
   }
 }

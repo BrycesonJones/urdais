@@ -54,8 +54,8 @@ export async function loadNewsRail(
     );
     return { articles: diversifyBySource(candidates, { limit }), available: true };
   } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    console.warn(`news: production store unavailable (${detail}); the ${category} rail will render empty`);
+    const { describeDatabaseError } = await import("@/lib/db/connection");
+    console.warn(`news: production store unavailable (${describeDatabaseError(error)}); the ${category} rail will render empty`);
     return { articles: [], available: false };
   }
 }
