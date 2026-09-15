@@ -30,7 +30,7 @@ declare
     'pipeline.wealth_vintages', 'pipeline.wealth_vintage_components',
     'pipeline.wealth_vintage_unobserved_economies',
     'pipeline.btc_market_observations', 'pipeline.btc_venue_quotes',
-    'pipeline.btc_chainlink_observations',
+    'pipeline.btc_chainlink_observations', 'pipeline.btc_height_observations',
     'pipeline.ubwi_calculations', 'pipeline.ubwi_sensitivity_scenarios',
     'pipeline.ubwi_publications'
   ];

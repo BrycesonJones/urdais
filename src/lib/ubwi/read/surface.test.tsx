@@ -13,14 +13,35 @@ const NOW = "2026-09-15T03:10:39Z";
 const surface = ubwiSurface({ now: NOW });
 
 describe("the UBWI public surface", () => {
-  it("withholds the value while the publication gate refuses", () => {
+  it("shows no value before a point is frozen, and does not claim the gate refused", () => {
+    // Phase 2E's surface withheld on one gate finding. Methodology 1.2.0 removes it, so
+    // with no publication passed the surface is silent for a different reason: the history
+    // has not started. Saying "the gate refuses" here would be a fabricated explanation,
+    // which is the specific failure this test exists to catch.
     expect(surface.status).toBe("withheld");
     if (surface.status !== "withheld") throw new Error("unreachable");
-    // Phase 2E cleared the imputed-share ceiling with Taiwan. The remaining refusal is
-    // the BTC supply source's own terms, and the surface quotes the gate's code rather
-    // than inventing its own explanation for why there is no number.
-    expect(surface.gateFailures).toEqual(["NUMERATOR_SOURCE_NOT_RIGHTS_CLEARED"]);
-    expect(surface.reason).toContain("withholds the value rather than relaxing the gate");
+    expect(surface.gateFailures).toEqual([]);
+    expect(surface.reason).toContain("history begins at the first frozen production point");
+    expect(surface.reason).not.toContain("gate refuses");
+  });
+
+  it("names the protocol derivation as the supply basis, and never a supply vendor", () => {
+    expect(surface.supplyProvenance).not.toBeNull();
+    expect(surface.supplyProvenance!.basis).toBe("Protocol-derived scheduled issuance");
+    expect(surface.supplyProvenance!.referenceBlockHeight).toBe(surface.blockHeight);
+    expect(surface.supplyProvenance!.halvingEra).toBe(4);
+    expect(surface.supplyProvenance!.blockSubsidyBtc).toBe(3.125);
+    expect(surface.supplyProvenance!.caveat).toContain("Transaction fees are excluded");
+    expect(surface.supplyProvenance!.caveat).toContain("no lost-coin");
+  });
+
+  it("names no retired supply vendor anywhere on the rendered surface", () => {
+    const { container } = render(<UbwiSection surface={surface} />);
+    const text = container.textContent ?? "";
+    for (const forbidden of ["blockchain.info", "Blockchain.com", "Coinbase", "Kraken", "Bitstamp"]) {
+      expect(text, `${forbidden} must not appear on the public surface`).not.toContain(forbidden);
+    }
+    expect(text).toContain("Protocol-derived scheduled issuance");
   });
 
   it("shows observed and modelled shares, and never calls modelled wealth observed", () => {
@@ -74,6 +95,49 @@ describe("the UBWI public surface", () => {
     expect(surface.modeledSharePercent).toBeGreaterThan(35);
   });
 
+  it("serves the frozen value, with no change and no history, once a point is published", () => {
+    // The state the first production print puts the surface into. Everything asserted here
+    // is what a reader actually sees on /markets/ubwi with a frozen point behind it.
+    const published = ubwiSurface({
+      now: NOW,
+      publication: {
+        publishedAt: "2026-09-15T04:33:47.738Z",
+        valuePercent: 0.26716309468662236,
+        changePercent: null,
+      },
+    });
+    expect(published.status).toBe("published");
+    if (published.status !== "published") throw new Error("unreachable");
+    expect(published.valuePercent).toBe(0.26716309468662236);
+    expect(published.methodologyVersion).toBe("1.2.0");
+    // The first point has no predecessor. Null, never zero: zero would assert that the
+    // value did not move, which is a different claim and a false one.
+    expect(published.changePercent).toBeNull();
+    expect(published.changeWithheldReason).toContain("until a second production observation");
+    expect(published.supplyProvenance!.basis).toBe("Protocol-derived scheduled issuance");
+  });
+
+  it("renders the published value without inventing a change or a series", () => {
+    const published = ubwiSurface({
+      now: NOW,
+      publication: {
+        publishedAt: "2026-09-15T04:33:47.738Z",
+        valuePercent: 0.26716309468662236,
+        changePercent: null,
+      },
+    });
+    const { container } = render(<UbwiSection surface={published} />);
+    const text = container.textContent ?? "";
+    expect(text).toContain("0.2672");
+    // No fabricated movement, no points series, no back history.
+    expect(text).not.toMatch(/[+\-]\d+\.\d+\s*%\s*(today|change)/i);
+    expect(text).not.toContain("pts");
+    expect(text).not.toContain("Demo");
+    for (const forbidden of ["blockchain.info", "Blockchain.com", "Coinbase", "Kraken", "Bitstamp"]) {
+      expect(text, `${forbidden} must not appear`).not.toContain(forbidden);
+    }
+  });
+
   it("keeps UBWI off the watchlist and out of the demo dataset", () => {
     expect(INDEX_SNAPSHOTS.find((row) => row.symbol === "UBWI")).toBeUndefined();
     const ubwi = findMarket("ubwi")!;
@@ -88,18 +152,31 @@ describe("the seeded methodology hash matches the document", () => {
     readFileSync(path.join(process.cwd(), "supabase", "migrations", file), "utf8");
 
   it("pins the current version to the current document", () => {
-    const amendment = read("20260915000400_ubwi_chainlink_and_taiwan.sql");
+    const amendment = read("20260915000500_ubwi_protocol_scheduled_supply.sql");
     expect(amendment).toContain(docHash);
-    const specHash = createHash("sha256").update(`UBWI-1.1.0:${docHash}`).digest("hex");
+    const specHash = createHash("sha256").update(`UBWI-1.2.0:${docHash}`).digest("hex");
     expect(amendment).toContain(specHash);
   });
 
-  it("leaves the superseded version pinned to the document it was recorded from", () => {
-    // 1.0.0's hash is deliberately no longer the file's. A methodology version pins the
-    // document at the commit it was recorded from, and rewriting it to match a later
-    // edit would destroy exactly the history the version exists to keep.
+  it("leaves every superseded version pinned to the document it was recorded from", () => {
+    // 1.0.0's and 1.1.0's hashes are deliberately no longer the file's. A methodology
+    // version pins the document at the commit it was recorded from, and rewriting them to
+    // match a later edit would destroy exactly the history the versions exist to keep.
     const seed = read("20260915000200_ubwi_production_v1_seed.sql");
     expect(seed).toContain("612613bc0e93bdbde4b897d52db354b9696b0aaf193a585d673e6e696532dda8");
     expect(seed).not.toContain(docHash);
+
+    const chainlink = read("20260915000400_ubwi_chainlink_and_taiwan.sql");
+    expect(chainlink).toContain("adceaefd0de3ec17239f7fd8a55c64c5106d081fc2aaf2fa9da7dc0f7e1b78e6");
+    expect(chainlink).not.toContain(docHash);
+  });
+
+  it("keeps the superseded hashes asserted in the migration that supersedes them", () => {
+    // The 1.2.0 migration re-asserts 1.0.0's and 1.1.0's hashes as invariants, so a later
+    // edit that quietly rewrote a superseded row would fail the migration rather than pass
+    // silently.
+    const amendment = read("20260915000500_ubwi_protocol_scheduled_supply.sql");
+    expect(amendment).toContain("612613bc0e93bdbde4b897d52db354b9696b0aaf193a585d673e6e696532dda8");
+    expect(amendment).toContain("adceaefd0de3ec17239f7fd8a55c64c5106d081fc2aaf2fa9da7dc0f7e1b78e6");
   });
 });

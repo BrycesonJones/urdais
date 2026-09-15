@@ -1,0 +1,99 @@
+/**
+ * The frozen UBWI publication, read from the database for the public surface.
+ *
+ * Until Phase 2F there was nothing to read: the gate refused every calculation, so the
+ * surface rendered its withheld state unconditionally and the read path did not exist.
+ * Methodology 1.2.0 removed the last numerator rights dependency, the gate passed, and a
+ * point is frozen -- so the surface has to serve the real value rather than a placeholder.
+ *
+ * Three rules this module exists to keep:
+ *
+ *   1. Only a FROZEN publication is served. A row without `frozen_at` is a row the
+ *      publication process did not finish, and serving it would publish something Urdais
+ *      never committed to.
+ *   2. The percentage change is computed only against a real predecessor under the same
+ *      methodology and residual-model versions. With one point there is no predecessor and
+ *      the change is null. It is never zero, and never back-filled.
+ *   3. No database, or any error reaching one, yields null rather than a fabricated point.
+ *      A surface that cannot read its own publication must say it has no value, not invent
+ *      one.
+ */
+
+export type FrozenUbwiPublication = {
+  publishedAt: string;
+  valuePercent: number;
+  /** Null until a second frozen point exists under the same versions. Never zero. */
+  changePercent: number | null;
+  methodologyVersion: string;
+  residualModelVersion: string;
+};
+
+type Row = Record<string, unknown>;
+
+/**
+ * Load the latest frozen publication, and its immediate predecessor if one exists.
+ *
+ * Ordered by `published_at` and tie-broken by `frozen_at`, so two points published in the
+ * same second still have a defined order rather than an arbitrary one.
+ */
+export async function loadFrozenUbwiPublication(
+  env: NodeJS.ProcessEnv = process.env,
+): Promise<FrozenUbwiPublication | null> {
+  try {
+    const { resolveTokenDatabaseUrl, tokenSqlExecutor } = await import(
+      "@/lib/tokens/read/database"
+    );
+    const url = resolveTokenDatabaseUrl(env, { allowLocalDefault: false });
+    if (!url) return null;
+
+    const sql = await tokenSqlExecutor(url);
+    try {
+      const { rows } = await sql.query(
+        `select published_at, frozen_at, published_value_percent,
+                methodology_version, residual_model_version
+           from pipeline.ubwi_publications
+          where frozen_at is not null
+          order by published_at desc, frozen_at desc
+          limit 2`,
+        [],
+      );
+      if (rows.length === 0) return null;
+
+      const latest = rows[0] as Row;
+      const previous = rows[1] as Row | undefined;
+
+      const valuePercent = Number(latest.published_value_percent);
+      if (!Number.isFinite(valuePercent)) return null;
+
+      const methodologyVersion = String(latest.methodology_version);
+      const residualModelVersion = String(latest.residual_model_version);
+
+      // A change across a methodology or model boundary would compare two different
+      // definitions and call the difference a movement in the world. It is withheld
+      // instead, which is the same rule the calculation layer applies to vintages.
+      let changePercent: number | null = null;
+      if (
+        previous !== undefined &&
+        String(previous.methodology_version) === methodologyVersion &&
+        String(previous.residual_model_version) === residualModelVersion
+      ) {
+        const priorValue = Number(previous.published_value_percent);
+        if (Number.isFinite(priorValue)) changePercent = valuePercent - priorValue;
+      }
+
+      return {
+        publishedAt: new Date(String(latest.published_at)).toISOString(),
+        valuePercent,
+        changePercent,
+        methodologyVersion,
+        residualModelVersion,
+      };
+    } finally {
+      await sql.end?.();
+    }
+  } catch {
+    // No database, an unreachable one, or a schema without the table. The surface shows
+    // its no-value state; it never invents a point to fill the gap.
+    return null;
+  }
+}

@@ -153,6 +153,69 @@ export type VenueQuote = {
 export type BtcPriceRule = "median_of_venues" | "chainlink_reference_feed";
 
 /**
+ * How the supply quantity was arrived at.
+ *
+ * `claimed_issuance` is the retired 1.0.0/1.1.0 leg: a figure read from an external supply
+ * dataset. `protocol_scheduled` is the 1.2.0 leg: cumulative block subsidy derived from the
+ * reference height by arithmetic, depending on no third-party dataset at all.
+ */
+export type BtcSupplyConstruction = "claimed_issuance" | "protocol_scheduled";
+
+/**
+ * One independent observation of the chain tip, frozen whole.
+ *
+ * Block height is a network fact, not a proprietary dataset: it is the same integer for
+ * every honest observer, and any two sources either agree on it or one of them is wrong.
+ * That is why it is cross-verified, and why disagreement fails closed rather than being
+ * averaged or silently resolved toward the higher reading.
+ *
+ * These sources establish the integer height and nothing else. They are emphatically not
+ * the source of the supply value: under methodology 1.2.0 the supply is computed from the
+ * height, so a height source's rights posture bears on the height and never on the
+ * quantity derived from it.
+ */
+export type BlockHeightObservation = {
+  /** The endpoint the height was read from. */
+  source: string;
+  /** Exactly what the endpoint returned, before parsing. */
+  rawValue: string;
+  /** The parsed integer. */
+  blockHeight: number;
+  retrievedAt: string;
+  /** Why Urdais may read this endpoint for an integer. Provenance, not a data licence. */
+  provenance: string;
+};
+
+/**
+ * The supply derivation, frozen onto the observation.
+ *
+ * There is no source interface here and no terms artifact, because nobody supplies the
+ * quantity. Its rights basis is that it is arithmetic. See src/lib/ubwi/supply.ts.
+ */
+export type ScheduledSupplyLineage = {
+  /** The derivation's identity. */
+  derivation: string;
+  /** The version of the arithmetic that produced the quantity. */
+  derivationVersion: string;
+  /**
+   * Deliberately its own state, and deliberately not `cleared`, `inferred_permitted` or
+   * any other state that would assert something about a third party's permission: no
+   * third-party licence is relied upon for this quantity.
+   */
+  rightsBasis: "derived_from_protocol";
+  /** The halving era the reference height falls in. */
+  halvingEra: number;
+  /** The scheduled subsidy of the block at the reference height, in satoshis. */
+  blockSubsidySats: string;
+  /** Cumulative scheduled issuance through the reference height, in satoshis. */
+  scheduledSupplySats: string;
+  /** The derivation excludes transaction fees. Recorded on the point, never assumed. */
+  excludesTransactionFees: true;
+  /** No lost-coin, spendability or recoverability adjustment is applied. */
+  excludesLostCoinAdjustment: true;
+};
+
+/**
  * One instantaneous Bitcoin market capitalization observation.
  *
  *   Bitcoin Market Capitalization = Issued BTC Supply x BTC/USD reference price
@@ -164,9 +227,21 @@ export type BtcMarketObservation = {
   /** Chain height, confirmed independently. A supply without its height is not reproducible. */
   blockHeight: number;
   heightSources: readonly string[];
+  /**
+   * Per-source height evidence. Present from methodology 1.2.0, where the height is the
+   * sole input to the supply quantity and therefore has to be auditable on its own.
+   */
+  heightObservations?: readonly BlockHeightObservation[];
   supplyBtc: number;
-  supplySourceInterface: string;
-  supplyConstruction: "claimed_issuance";
+  /**
+   * The interface the supply figure was *retrieved* through. Absent under
+   * `protocol_scheduled`, where the quantity is derived rather than retrieved and naming
+   * an interface would invent a dependency that does not exist.
+   */
+  supplySourceInterface?: string;
+  supplyConstruction: BtcSupplyConstruction;
+  /** The derivation behind a `protocol_scheduled` supply. Never both this and an interface. */
+  supplyDerivation?: ScheduledSupplyLineage;
   priceRule: BtcPriceRule;
   /** The price the market cap was computed at, whatever rule produced it. */
   priceUsd: number;

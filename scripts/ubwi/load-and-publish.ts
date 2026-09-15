@@ -184,19 +184,27 @@ async function loadNumerator(sql: Sql, c: UbwiCalculation): Promise<string> {
   );
   if (existing && typeof existing.id === "string") return existing.id;
 
-  const supplyIfaceId = await requireId(
-    sql,
-    "select id from reference.source_interfaces where slug = $1",
-    [n.supplySourceInterface],
-    `supply interface ${n.supplySourceInterface}`,
-  );
+  // Null under `protocol_scheduled`: no third party supplies the quantity, so there is no
+  // interface to resolve. Looking one up would invent the dependency 1.2.0 removed.
+  const supplyIfaceId =
+    n.supplySourceInterface === undefined
+      ? null
+      : await requireId(
+          sql,
+          "select id from reference.source_interfaces where slug = $1",
+          [n.supplySourceInterface],
+          `supply interface ${n.supplySourceInterface}`,
+        );
+  const derivation = n.supplyDerivation;
   const inserted = await one(
     sql,
     `insert into pipeline.btc_market_observations (
        observed_at, block_height, height_confirmed_by, supply_btc, supply_construction,
        supply_source_interface_id, price_rule, price_source_interface_id, venue_count,
-       price_usd, market_cap_usd, retrieved_at
-     ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) returning id`,
+       price_usd, market_cap_usd, retrieved_at,
+       supply_derivation, supply_derivation_version, supply_rights_basis,
+       halving_era, block_subsidy_sats, scheduled_supply_sats
+     ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) returning id`,
     [
       n.observedAt,
       n.blockHeight,
@@ -215,9 +223,36 @@ async function loadNumerator(sql: Sql, c: UbwiCalculation): Promise<string> {
       n.priceUsd,
       n.marketCapUsd,
       n.observedAt,
+      derivation?.derivation ?? null,
+      derivation?.derivationVersion ?? null,
+      derivation?.rightsBasis ?? null,
+      derivation?.halvingEra ?? null,
+      derivation?.blockSubsidySats ?? null,
+      derivation?.scheduledSupplySats ?? null,
     ],
   );
   const observationId = inserted!.id as string;
+
+  // The per-source height evidence. Under methodology 1.2.0 the height is the sole input to
+  // the supply, so each independent reading is frozen: endpoint, raw bytes, parsed integer,
+  // retrieval time and provenance. The database's deferred trigger enforces that at least
+  // two readings exist, that they agree exactly, and that they agree with the height the
+  // supply was derived from.
+  for (const reading of n.heightObservations ?? []) {
+    await sql.query(
+      `insert into pipeline.btc_height_observations
+         (observation_id, source, raw_value, block_height, retrieved_at, provenance)
+       values ($1,$2,$3,$4,$5,$6) on conflict do nothing`,
+      [
+        observationId,
+        reading.source,
+        reading.rawValue,
+        reading.blockHeight,
+        reading.retrievedAt,
+        reading.provenance,
+      ],
+    );
+  }
 
   // The Chainlink round, frozen whole. A published point that cannot be re-read from the
   // chain later is not reproducible, and a round id alone stops identifying a round once
@@ -280,6 +315,19 @@ async function loadNumerator(sql: Sql, c: UbwiCalculation): Promise<string> {
   return observationId;
 }
 
+/**
+ * The open client, so the entrypoint can close it however `main` finishes. A script that
+ * completes its work and then hangs looks exactly like a script that is still working,
+ * which is the worst way for a publication run to end.
+ */
+let openSql: { end: () => Promise<void> } | null = null;
+
+async function closeSql(): Promise<void> {
+  const sql = openSql;
+  openSql = null;
+  if (sql) await sql.end();
+}
+
 async function main(): Promise<void> {
   const dryRun = process.argv.includes("--dry-run");
   const allowLocalDefault = process.argv.includes("--local");
@@ -309,6 +357,7 @@ async function main(): Promise<void> {
   // a deferred constraint trigger, so the components must land together or the first one
   // inserted would be compared against the finished subtotal.
   const sql = await createTokenSqlExecutor(url);
+  openSql = sql;
 
   let vintageId: string;
   let btcId: string;
@@ -442,8 +491,16 @@ async function main(): Promise<void> {
   console.log(`published and frozen: ${pub!.id}`);
 }
 
-main().catch((error: unknown) => {
-  const e = error as Error;
-  console.error(`${e.name}: ${e.message}`);
-  process.exit(1);
-});
+main()
+  .then(async () => {
+    // The pg client holds the event loop open. Until Phase 2F the script never reached
+    // here -- the gate refused and it exited non-zero -- so a successful publication was
+    // the first run that could hang on an unclosed connection, and did.
+    await closeSql();
+  })
+  .catch(async (error: unknown) => {
+    const e = error as Error;
+    console.error(`${e.name}: ${e.message}`);
+    await closeSql();
+    process.exit(1);
+  });

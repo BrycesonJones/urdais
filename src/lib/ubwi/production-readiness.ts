@@ -199,8 +199,8 @@ export async function checkUbwiProductionReadiness(
         kind: "RIGHTS_BLOCKED",
         code: "RETIRED_NUMERATOR_SOURCE_NOT_CLEARED",
         detail:
-          `${iface.slug} is ${status} for the use a published numerator makes, and is not read by ` +
-          `methodology ${calculation.methodologyVersion}` +
+          `${iface.slug} is ${status} for the use a published numerator makes, and supplies no ` +
+          `published quantity under methodology ${calculation.methodologyVersion}` +
           (reviewed
             ? `, against ${iface.termsArtifact!.url} retained ${iface.termsArtifact!.retrievedAt}`
             : " (no retained terms artifact)"),

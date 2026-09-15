@@ -76,10 +76,14 @@ describe("the frozen production round", () => {
     expect(validation.valid).toBe(true);
   });
 
-  it("was 352 seconds old at retrieval, well inside the heartbeat", () => {
+  it("was inside the documented heartbeat at retrieval", () => {
+    // Asserted as the property that decides validity rather than as the exact age, which
+    // is a circumstance of one retrieval and changes whenever the round is re-observed.
+    // The bound itself is pinned; a grace period added here would be an invented tolerance.
     const validation = validateChainlinkObservation(LIVE_ROUND);
-    expect(validation.ageSeconds).toBe(352);
-    expect(validation.ageSeconds).toBeLessThanOrEqual(3600);
+    expect(validation.ageSeconds).toBeGreaterThan(0);
+    expect(validation.ageSeconds).toBeLessThanOrEqual(CHAINLINK_BTC_USD_FEED.heartbeatSeconds);
+    expect(CHAINLINK_BTC_USD_FEED.heartbeatSeconds).toBe(3600);
     expect(validation.stale).toBe(false);
   });
 
@@ -89,16 +93,26 @@ describe("the frozen production round", () => {
     expect(LIVE_ROUND.proxyAddress).toBe(CHAINLINK_BTC_USD_FEED.proxyAddress);
     expect(LIVE_ROUND.aggregatorAddress).toBe("0x4a3411ac2948b33c69666b35cc6d055b27ea84f1");
     expect(LIVE_ROUND.aggregatorTypeAndVersion).toBe("AccessControlledOCR2Aggregator 1.0.0");
-    expect(LIVE_ROUND.roundId).toBe("129127208515966885593");
+    expect(LIVE_ROUND.roundId).toBe("129127208515966885594");
     expect(LIVE_ROUND.phaseId).toBe(7);
-    expect(LIVE_ROUND.aggregatorRoundId).toBe("24281");
-    expect(LIVE_ROUND.answer).toBe("7777948460264");
+    expect(LIVE_ROUND.aggregatorRoundId).toBe("24282");
+    expect(LIVE_ROUND.answer).toBe("7772301327859");
     expect(LIVE_ROUND.decimals).toBe(8);
-    expect(LIVE_ROUND.normalizedUsd).toBe(77_779.484_602_64);
+    expect(LIVE_ROUND.normalizedUsd).toBe(77_723.013_278_59);
+    // The proxy round id is the phase in the high 64 bits and the aggregator round in the
+    // low 64. Recomposed here rather than restated, so the three fields cannot drift apart.
+    expect(
+      (BigInt(LIVE_ROUND.phaseId) << 64n) | BigInt(LIVE_ROUND.aggregatorRoundId),
+    ).toBe(BigInt(LIVE_ROUND.roundId));
+    // The normalized price is the integer answer scaled by the contract's own decimals.
+    expect(Number(LIVE_ROUND.answer) / 10 ** LIVE_ROUND.decimals).toBe(LIVE_ROUND.normalizedUsd);
     expect(LIVE_ROUND.startedAt).toBeGreaterThan(0);
     expect(LIVE_ROUND.updatedAt).toBeGreaterThan(0);
     expect(LIVE_ROUND.retrievalTimestamp).toBeGreaterThan(LIVE_ROUND.updatedAt);
-    expect(LIVE_ROUND.blockNumber).toBe(25_980_084);
+    // The block the read was pinned to. A circumstance of the retrieval, so its shape is
+    // asserted rather than its exact value: it must be a real, post-merge mainnet height.
+    expect(Number.isInteger(LIVE_ROUND.blockNumber)).toBe(true);
+    expect(LIVE_ROUND.blockNumber).toBeGreaterThan(15_537_394);
     expect(LIVE_ROUND.blockHash).toMatch(/^0x[0-9a-f]{64}$/);
     expect(LIVE_ROUND.rpcSource).toBe("https://ethereum-rpc.publicnode.com");
     expect(LIVE_ROUND.rpcCrossCheckSource).toBe("https://eth.drpc.org");
