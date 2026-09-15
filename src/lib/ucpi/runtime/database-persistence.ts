@@ -376,7 +376,9 @@ export class DatabasePersistence implements Persistence {
         instrumentSpecVersion: this.lineageVersions().instrumentSpecVersion,
         participants: [],
         diagnostics: [],
-        sourceAttributions: [],
+        // The source's attribution travels with the value. The methodology requires it on
+        // every public representation, and the surface has no other place to get it from.
+        sourceAttributions: ((row.source_attributions ?? []) as unknown[]).map(str),
         publication:
           publishedAt === null
             ? null
