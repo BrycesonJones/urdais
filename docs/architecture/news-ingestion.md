@@ -13,18 +13,31 @@ item, no article page, and no public news API; the only reader is the homepage.
 
 ## 1. Scope
 
-| Rail | State |
-| --- | --- |
-| Compute | **production** — eight approved feeds, seven publishers, thumbnails where permitted |
-| Memory | mock — qualified in Phase 2A, no source passed; see §12 |
-| Photonics | mock |
-| Energy / Power | mock |
-| AI Chips | mock |
-| Crypto | mock |
+| Rail | Homepage | State |
+| --- | --- | --- |
+| Compute | shown | **production** — eight approved feeds, seven publishers, thumbnails where permitted |
+| Energy / Power | shown | mock, pending its own migration |
+| Crypto | shown | mock, pending its own migration |
+| Memory | hidden | mock — qualified in Phase 2A, no source passed; see §12 |
+| Photonics | hidden | mock |
+| AI Chips | hidden | mock |
 
-The six categories, their order, and the rail and card components are unchanged
-from the original landing page. Mock rails carry a `Demo content` badge; the
-Compute rail carries `Live`.
+The homepage shows three of the six. Mock rails carry a `Demo content` badge;
+the Compute rail carries `Live`. The rail and card components are unchanged from
+the original landing page.
+
+**Hidden is not deleted.** `HOMEPAGE_NEWS_CATEGORY_IDS` in `src/types/news.ts`
+is the visible set and is the only thing that decides what renders;
+`NEWS_CATEGORIES` beside it remains the product taxonomy, and the database
+category constraint, the source registry, the ingestion runner and the read path
+all still know about all six. Restoring a category is adding its id back.
+
+Three are shown because three is what Urdais can stand behind. Memory is
+deferred because its qualification pass approved no source at all; Photonics and
+AI Chips are deferred because a rail of invented stories is a worse thing to
+ship than no rail. Energy / Power and Crypto stay visible and labelled demo
+because each is next to migrate on its own. A deferred category returns when
+production-grade sourcing exists for it.
 
 ### What each phase did
 
