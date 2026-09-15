@@ -3,6 +3,14 @@
  * shape independently; this gate adds what only the application knows, such as
  * the expected versions, the permission lineage of the inputs, and that no
  * participant price is about to leave the system. Every failure is named.
+ *
+ * Approval is a gate, not a label. Both UCPI 0.1.2-draft and the LISTED-GPU
+ * specification require approved versions of the family methodology and of the
+ * child before a first publication, and say that a value computed before then
+ * is a labelled candidate. The calculation still runs and the regional
+ * observation is still recorded; only the publication is refused. Because the
+ * status is a required input, a caller cannot publish without stating where
+ * each version stands, and an omission is a type error rather than a release.
  */
 
 import type { RegionalObservation } from "@/lib/ucpi/aggregation";
@@ -11,10 +19,24 @@ import { calculationWindow } from "@/lib/ucpi/calculation-window";
 import type { Retrieval } from "@/lib/ucpi/domain";
 import type { CalculationRunRow } from "@/lib/ucpi/runtime/persistence";
 
+/** The lifecycle of a registry version, mirroring reference.*_versions.status. */
+export type VersionApprovalState = "draft" | "approved" | "superseded" | "retired";
+
+/**
+ * The versions a run is expected to carry, each with where it stands in the
+ * registry. Only "approved" may publish.
+ */
+export type ExpectedVersions = {
+  methodologyVersion: string;
+  instrumentSpecVersion: string;
+  methodologyVersionStatus: VersionApprovalState;
+  instrumentSpecVersionStatus: VersionApprovalState;
+};
+
 export type PublicationGateInput = {
   regional: RegionalObservation;
   run: CalculationRunRow;
-  expected: { methodologyVersion: string; instrumentSpecVersion: string };
+  expected: ExpectedVersions;
   /** Retrievals behind the participants, for permission lineage. */
   inputRetrievals: readonly Retrieval[];
   /** The intended publication instant. */
@@ -32,6 +54,8 @@ export function validateForPublication(input: PublicationGateInput): Publication
   if (run.runKind === "simulation") reasons.push("RUN_IS_SIMULATION");
   if (run.methodologyVersion !== input.expected.methodologyVersion) reasons.push("METHODOLOGY_VERSION_MISMATCH");
   if (run.instrumentSpecVersion !== input.expected.instrumentSpecVersion) reasons.push("SPEC_VERSION_MISMATCH");
+  if (input.expected.methodologyVersionStatus !== "approved") reasons.push(`METHODOLOGY_VERSION_NOT_APPROVED:${input.expected.methodologyVersionStatus}`);
+  if (input.expected.instrumentSpecVersionStatus !== "approved") reasons.push(`SPEC_VERSION_NOT_APPROVED:${input.expected.instrumentSpecVersionStatus}`);
   if (regional.methodologyVersion !== run.methodologyVersion || regional.instrumentSpecVersion !== run.instrumentSpecVersion) reasons.push("OBSERVATION_VERSION_MISMATCH");
 
   const window = calculationWindow(run.calculationDate);

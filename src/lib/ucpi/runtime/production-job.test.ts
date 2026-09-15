@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ENTITIES, LAMBDA_TENANCY_DOCUMENTED_SYNTHETIC, normalizationContext, permitted, REGISTRY_TODAY, VERSIONS } from "@/lib/ucpi/fixtures";
+import { DRAFT_VERSIONS, ENTITIES, LAMBDA_TENANCY_DOCUMENTED_SYNTHETIC, normalizationContext, permitted, REGISTRY_TODAY, VERSIONS } from "@/lib/ucpi/fixtures";
 import { getLatestPoint, getSeries, assertSafeToExpose } from "@/lib/ucpi/read/series";
 import { CollectingSink } from "@/lib/ucpi/runtime/events";
 import { InMemoryPersistence } from "@/lib/ucpi/runtime/persistence";
@@ -27,7 +27,7 @@ function jobs(clock: TestClock, over: { runpod?: Partial<SourceJob>; lambda?: Pa
   ];
 }
 
-async function collectAndCalculate(opts: { clock?: TestClock; sources?: SourceJob[]; registry?: typeof BOTH_PERMITTED; calculateAt?: string; runKind?: "production" | "simulation" | "correction"; persistence?: InMemoryPersistence; supersedes?: Map<string, string> } = {}) {
+async function collectAndCalculate(opts: { clock?: TestClock; sources?: SourceJob[]; registry?: typeof BOTH_PERMITTED; calculateAt?: string; runKind?: "production" | "simulation" | "correction"; persistence?: InMemoryPersistence; supersedes?: Map<string, string>; versions?: typeof VERSIONS | typeof DRAFT_VERSIONS } = {}) {
   const clock = opts.clock ?? new TestClock("2026-09-13T10:00:00Z");
   const persistence = opts.persistence ?? new InMemoryPersistence();
   const events = new CollectingSink();
@@ -36,8 +36,8 @@ async function collectAndCalculate(opts: { clock?: TestClock; sources?: SourceJo
   clock.set(opts.calculateAt ?? "2026-09-14T00:02:00Z");
   const calculation = await runCalculationPhase({
     calculationDate: "2026-09-13",
-    instrument: VERSIONS.instrument,
-    versions: VERSIONS,
+    instrument: (opts.versions ?? VERSIONS).instrument,
+    versions: opts.versions ?? VERSIONS,
     entities: ENTITIES,
     registry: opts.registry ?? BOTH_PERMITTED,
     persistence,
@@ -169,6 +169,69 @@ describe("publication gate", () => {
     expect(late).toEqual({ ok: true, status: "delayed" });
     const sim = validateForPublication({ regional: obs, run: { ...calculation.run, runKind: "simulation" }, expected: VERSIONS, inputRetrievals: retrievals, publishAt: new Date("2026-09-14T00:05:00Z"), exposedJson: point("2026-09-14T00:05:00Z") });
     expect(sim.ok).toBe(false);
+  });
+
+  it("refuses to publish a value whose methodology or specification version is still a draft", async () => {
+    const { calculation, persistence } = await collectAndCalculate();
+    const obs = calculation.regional[0]!.observation;
+    const base = {
+      regional: obs,
+      run: calculation.run,
+      inputRetrievals: persistence.retrievals,
+      publishAt: new Date("2026-09-14T00:05:00Z"),
+      exposedJson: JSON.stringify(toSeriesPoint(obs, { calculatedAt: calculation.run.calculatedAt, publishedAt: "2026-09-14T00:05:00Z" })),
+    };
+
+    // The registry as it actually stands. Both UCPI and the LISTED specification
+    // require approved versions before a first publication.
+    const drafts = validateForPublication({ ...base, expected: DRAFT_VERSIONS });
+    expect(drafts.ok).toBe(false);
+    if (!drafts.ok) {
+      expect(drafts.reasons).toContain("METHODOLOGY_VERSION_NOT_APPROVED:draft");
+      expect(drafts.reasons).toContain("SPEC_VERSION_NOT_APPROVED:draft");
+    }
+
+    // Either half alone is enough to refuse: an approved child under a draft family does not publish.
+    const familyDraft = validateForPublication({ ...base, expected: { ...VERSIONS, methodologyVersionStatus: "draft" } });
+    expect(familyDraft.ok).toBe(false);
+    if (!familyDraft.ok) {
+      expect(familyDraft.reasons).toContain("METHODOLOGY_VERSION_NOT_APPROVED:draft");
+      expect(familyDraft.reasons).not.toContain("SPEC_VERSION_NOT_APPROVED:approved");
+    }
+
+    const childDraft = validateForPublication({ ...base, expected: { ...VERSIONS, instrumentSpecVersionStatus: "draft" } });
+    expect(childDraft.ok).toBe(false);
+    if (!childDraft.ok) expect(childDraft.reasons).toContain("SPEC_VERSION_NOT_APPROVED:draft");
+
+    // Superseded and retired are not approved either, and the reason names which state it was.
+    const superseded = validateForPublication({ ...base, expected: { ...VERSIONS, instrumentSpecVersionStatus: "superseded" } });
+    expect(superseded.ok).toBe(false);
+    if (!superseded.ok) expect(superseded.reasons).toContain("SPEC_VERSION_NOT_APPROVED:superseded");
+
+    // Only approved publishes, and the approved fixture still does, so the refusal is
+    // the approval state and nothing else about this run.
+    expect(validateForPublication({ ...base, expected: VERSIONS })).toEqual({ ok: true, status: "published" });
+  });
+
+  it("records the calculation but publishes nothing when the versions are drafts: a candidate is not a publication", async () => {
+    const persistence = new InMemoryPersistence();
+    const { calculation } = await collectAndCalculate({ persistence, versions: DRAFT_VERSIONS });
+
+    // The run and its regional observation are recorded. That is what a labelled candidate is.
+    expect(persistence.runs).toHaveLength(1);
+    expect(calculation.regional).not.toHaveLength(0);
+    const value = calculation.regional.find((r) => r.observation.outcome === "value");
+    expect(value, "the fixture should produce a value, so that the block is about approval").toBeDefined();
+
+    // Nothing was released, and the reason is named.
+    expect(value!.status).toBe("blocked");
+    expect(value!.publishedAt).toBeNull();
+    expect(value!.gate.ok).toBe(false);
+    if (!value!.gate.ok) expect(value!.gate.reasons).toContain("SPEC_VERSION_NOT_APPROVED:draft");
+    expect(persistence.publications).toHaveLength(0);
+
+    // And nothing reaches the public series.
+    expect(await getSeries(persistence, { instrument: DRAFT_VERSIONS.instrument, country: "US" })).toEqual([]);
   });
 
   it("regression: an explicit participant or member price field in the public response blocks publication, whatever its value", async () => {

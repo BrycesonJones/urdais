@@ -189,15 +189,35 @@ describe("RTX 5090", () => {
 describe("family read model", () => {
   it("lists every listed instrument, with a public point where a calculation exists and an explicit no-calculation state otherwise, never a placeholder price", async () => {
     const persistence = new InMemoryPersistence();
+
+    // B200: a production run that was actually released. This is the only shape that
+    // produces a public point.
     const b200 = candidate("UCPI-B200-LISTED", PAYLOADS["UCPI-B200-LISTED"], POC_SELLER_EVIDENCE_2026_09_14_GPU_FAMILY).regional[0]!;
-    await persistence.insertRegionalObservation({ ...b200, id: "ro-b200", runId: "run-1", runKind: "simulation", calculatedAt: "2026-09-15T00:01:00Z", supersededById: null });
+    await persistence.insertRegionalObservation({ ...b200, id: "ro-b200", runId: "run-1", runKind: "production", calculatedAt: "2026-09-15T00:01:00Z", supersededById: null });
+    await persistence.insertPublication({ id: "pub-b200", regionalObservationId: "ro-b200", publishedAt: "2026-09-15T00:02:00Z", publicationStatus: "published", publisherIdentity: "test" });
+
+    // H200: calculated, never published. A simulation is the clearest case, and the
+    // persistence layer refuses to publish one at all -- so if the read model showed it,
+    // it would be showing a price that by construction can never be released.
+    const h200 = candidate("UCPI-H200-SXM-LISTED", PAYLOADS["UCPI-H200-SXM-LISTED"], POC_SELLER_EVIDENCE_2026_09_14_GPU_FAMILY).regional[0]!;
+    await persistence.insertRegionalObservation({ ...h200, id: "ro-h200", runId: "run-2", runKind: "simulation", calculatedAt: "2026-09-15T00:01:00Z", supersededById: null });
+    expect(h200.outcome, "the H200 fixture must carry a price, or this proves nothing").toBe("value");
+    await expect(persistence.insertPublication({ id: "pub-h200", regionalObservationId: "ro-h200", publishedAt: "2026-09-15T00:02:00Z", publicationStatus: "published", publisherIdentity: "test" })).rejects.toThrow(/simulation/);
+
     const rows = await listListedMarkets(persistence);
     expect(rows.map((r) => r.symbol)).toEqual(LISTED_GPU_INSTRUMENTS.map((i) => i.symbol));
+
     const listed = rows.find((r) => r.symbol === "UCPI-B200-LISTED")!;
-    expect(listed.status).toBe("delayed");
+    expect(listed.status).toBe("published");
     expect(listed.latest).toMatchObject({ priceLevel: 6.79, observationType: "listed", procurementMode: "on_demand", gpu: { label: "B200" }, displayName: "UCPI B200 Listed" });
     expect(Object.keys(listed.latest!).sort()).toEqual([...PUBLIC_SERIES_POINT_KEYS].sort());
     expect(validatePublicResponseShape(JSON.parse(JSON.stringify(listed.latest)))).toEqual([]);
+
+    // The unpublished calculation is not a point, and carries no price onto the surface.
+    const unpublished = rows.find((r) => r.symbol === "UCPI-H200-SXM-LISTED")!;
+    expect(unpublished.status).toBe("no_calculation");
+    expect(unpublished.latest).toBeNull();
+
     for (const r of rows.filter((x) => x.symbol !== "UCPI-B200-LISTED")) {
       expect(r.status).toBe("no_calculation");
       expect(r.latest).toBeNull();
