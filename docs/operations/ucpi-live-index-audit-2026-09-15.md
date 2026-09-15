@@ -2,7 +2,9 @@
 
 **Status: internal operations document. Not a methodology page, not routed publicly, not registered in the docs catalog.** It establishes no methodology, publishes no value, and grants no source right. It records what the production compute dataset contained on 15 September 2026, measured against the methodology as written, and the decision that followed.
 
-**Decision: NO-GO.** Neither `UCPI-H100-SXM` nor `UCPI-H100-SXM-LISTED` may publish a production value. The blocker is not a close call on one threshold; it is four independent blockers, any one of which is sufficient on its own.
+**Decision at the time of the audit: NO-GO.** Neither `UCPI-H100-SXM` nor `UCPI-H100-SXM-LISTED` could publish a production value, for four independent blockers.
+
+**Superseded in part, the same day.** The methodology blocker was the binding one and it was a decision, not a data problem: UCPI-LISTED-GPU and its five children were approved at 1.0.0 with effect from 15 September 2026, and the seller-refusal question below was resolved. The listed track is now live-capable and its remaining requirement is production ingestion. `UCPI-H100-SXM`, the accessible-offer child, remains launch-blocked exactly as recorded here.
 
 ## What was measured
 
@@ -74,11 +76,13 @@ Four eligible sellers, one technical source, one calculation date. The median of
 
 Breadth is the one requirement the dataset satisfies. It is also the only one anybody was ever in doubt about, which is worth saying plainly: the sample was never the binding constraint.
 
-### The Runpod question is open
+### The Runpod question, resolved
 
-Runpod refused both permission axes in writing on 14 September 2026, and is closed as a *direct* source. Its listed price nonetheless reaches Urdais through the Price of Compute licensed feed, where it is one of the four P2 constituents and is **pivotal to the median**: without it the four-seller median moves from 3.74 to 3.99.
+Runpod refused both permission axes in writing on 14 September 2026, and is closed as a *direct* source. Its listed price nonetheless reaches Urdais through the Price of Compute licensed feed, where it was one of the eligible constituents and pivotal to the median.
 
-The methodology does not settle this. The family says a licensed dataset is a technical source and the underlying seller is the participant, which points toward admissibility; it does not address a participant that has separately refused to have its data used in a commercial market-data product. This is recorded as a **methodology ambiguity**, not resolved here, and it is a decision about rights rather than about statistics. It needs an answer before this sibling publishes, because the answer moves the first printed value.
+**The repository already answered this, and the answer is exclusion.** The denial migration records the refusal as a decision about the intended use rather than the retrieval mechanism, in terms that name the route: *"no alternative endpoint, method, cache or intermediary cures it."* Price of Compute's terms govern Urdais's use of the Price of Compute dataset; they cannot grant what Runpod withheld about Runpod's own price. Admitting the row because it arrived by a different road would make the aggregator a way around an answer Urdais asked for and received.
+
+The rule is now written into UCPI-LISTED-GPU 1.0.0 as the seller-refusal rule, with the exclusion reason `SELLER_USE_REFUSED`, and it applies by every route. The cost is recorded rather than absorbed: under the snapshot the first candidate used, excluding Runpod moves the four-seller median of 3.74 to a three-seller 3.99; under the broader production snapshot it moves a five-seller 3.49 to a four-seller 3.62. The child still publishes either way, because breadth survives the exclusion.
 
 ## Blocker classification
 

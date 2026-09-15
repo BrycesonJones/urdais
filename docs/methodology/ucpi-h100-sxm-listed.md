@@ -1,6 +1,8 @@
 # UCPI-H100-SXM-LISTED Sibling Specification
 
-**Status: proposed sibling specification, version 0.1.2-draft. Not launched.** Prepared 14 September 2026; amended twice the same day. From 0.1.2-draft this is a child of the reusable [UCPI-LISTED-GPU family specification](/docs/methodology/ucpi-listed-gpu), which now holds the rules this document previously stated for itself; the rules did not change. No production value has been published under this document, and none may be until the family methodology and this specification carry approved versions. A candidate value computed as a labelled simulation is not a publication.
+**Status: approved sibling specification, version 1.0.0, effective 15 September 2026.** Prepared 14 September 2026, amended twice that day, approved 15 September 2026. This is a child of the reusable [UCPI-LISTED-GPU family specification](/docs/methodology/ucpi-listed-gpu), which holds the rules this document previously stated for itself; the rules did not change. From 1.0.0 this child declares UCPI-LISTED-GPU as its methodology and binds this version to UCPI-LISTED-GPU 1.0.0.
+
+The candidate of 14 September 2026 was never a publication and does not become one retrospectively. A production series begins at the first calculation made under this approved version, from observations retrieved into the production environment.
 
 This is a sibling of [UCPI-H100-SXM](/docs/methodology/ucpi-h100-sxm) under the [Urdais Compute Price Index family](/docs/methodology/ucpi). It measures a **different economic object** from that child and must never be presented as the same series, as a substitute for it, or as "the H100 price". The distinction is the reason this document exists.
 
@@ -62,7 +64,11 @@ UCPI-H100-SXM-LISTED, listed provider-wide: price in United States dollars per H
 
 Before a first publication: an approved family methodology version; an approved version of this specification; at least one permitted licensed source with its methodology assessed and recorded; per-seller topology evidence recorded for every admitted participant; and the first production calculation completed after its cutoff with every gate passed.
 
+**As at 15 September 2026 the first four are met**: UCPI-LISTED-GPU 1.0.0 and this specification 1.0.0 are approved; Price of Compute is a production-approved source with its methodology assessed; and topology evidence is recorded for the admitted sellers. The last is met on the first production calculation, and whether that calculation produces a value is decided by the structural participant rule on the day, not by this paragraph.
+
 ## Version History
+
+**1.0.0, 15 September 2026, effective 15 September 2026**: approved, bound to UCPI-LISTED-GPU 1.0.0. No rule of this sibling changed. Runpod is excluded from every route under the family specification's seller-refusal rule, having refused Urdais the intended use in writing on 14 September 2026; the 14 September candidate of 3.74 included Runpod and is superseded as a candidate, not as a published value, because no value was published.
 
 **0.1.2-draft, 14 September 2026**: placed under the UCPI-LISTED-GPU family specification 0.1.0-draft. No rule changed; the candidate of 14 September 2026 (3.74, four participants) is unaffected and remains reproducible from its preserved retrieval and evidence snapshot.
 

@@ -50,14 +50,33 @@ begin
   -- promise this file keeps is that a *bootstrapped* database holds no observed or
   -- published data: migrations seed none, and the assertions below check that directly
   -- rather than inferring it from a version status or a lifecycle flag.
+  -- UCPI-LISTED-GPU 1.0.0 is approved for the same reason: the listed-price
+  -- specification is finished and carries an effective date. It admits no
+  -- observation and publishes no value on its own; the pipeline assertions below
+  -- are what establish that a bootstrapped database holds neither.
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id
-   where mv.status <> 'draft' and m.slug <> 'ubwi';
-  if n <> 0 then raise exception 'a non-draft methodology version exists outside UBWI'; end if;
+   where mv.status <> 'draft' and m.slug not in ('ubwi', 'ucpi-listed-gpu');
+  if n <> 0 then raise exception 'a non-draft methodology version exists outside UBWI and UCPI-LISTED-GPU'; end if;
+  -- The accessible-price UCPI family is not approved by anything.
+  select count(*) into n from reference.methodology_versions mv
+    join reference.methodologies m on m.id = mv.methodology_id
+   where mv.status <> 'draft' and m.slug = 'ucpi';
+  if n <> 0 then raise exception 'the accessible-price UCPI family has a non-draft version'; end if;
   select count(*) into n from reference.instrument_spec_versions sv
     join reference.instruments i on i.id = sv.instrument_id
-   where sv.status <> 'draft' and i.symbol <> 'UBWI';
-  if n <> 0 then raise exception 'a non-draft spec version exists outside UBWI'; end if;
+   where sv.status <> 'draft' and i.symbol <> 'UBWI' and i.symbol not like 'UCPI-%-LISTED';
+  if n <> 0 then raise exception 'a non-draft spec version exists outside UBWI and the listed children'; end if;
+  -- Exactly the five listed children are approved, and each at 1.0.0.
+  select count(*) into n from reference.instrument_spec_versions sv
+    join reference.instruments i on i.id = sv.instrument_id
+   where sv.status = 'approved' and i.symbol like 'UCPI-%-LISTED' and sv.version = '1.0.0';
+  if n <> 5 then raise exception 'expected five approved listed children at 1.0.0, found %', n; end if;
+  -- The accessible-price child has no approved specification version.
+  select count(*) into n from reference.instrument_spec_versions sv
+    join reference.instruments i on i.id = sv.instrument_id
+   where sv.status <> 'draft' and i.symbol = 'UCPI-H100-SXM';
+  if n <> 0 then raise exception 'the accessible-price child has a non-draft spec version'; end if;
 
   -- UBWI specifically: live from methodology 1.2.0, and still nothing published. Those are
   -- two different facts and the second is the one this file is about. `live` says the
