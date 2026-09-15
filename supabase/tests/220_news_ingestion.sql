@@ -41,7 +41,7 @@ begin
   if n <> 0 then raise exception '% unexpected source(s) registered under Compute', n; end if;
   -- Still no source for the categories that have not migrated.
   select count(*) into n from reference.news_sources
-   where category in ('memory', 'photonics', 'ai-chips', 'crypto');
+   where category in ('memory', 'photonics', 'ai-chips');
   if n <> 0 then raise exception 'a deferred category gained a news source'; end if;
 
   -- The two reviewed-and-refused feeds are recorded, unapproved, and not enabled.

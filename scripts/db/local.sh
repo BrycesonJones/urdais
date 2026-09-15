@@ -115,6 +115,26 @@ cmd_migrate() {
   local files=("$MIGRATIONS_DIR"/*.sql)
   shopt -u nullglob
   [[ ${#files[@]} -gt 0 ]] || die "no migrations found in $MIGRATIONS_DIR"
+
+  # The ledger is keyed by version alone, so two files sharing one version means
+  # the second is recorded as already applied and silently never runs. That has
+  # happened: two branches picked the same timestamp, and the migration that lost
+  # the race went missing from every database built from zero while CI stayed
+  # green until a test happened to assert one of its objects. Fail loudly here
+  # instead, because the alternative is a schema that differs from the repository
+  # and nothing saying so.
+  local dupes
+  dupes="$(for f in "${files[@]}"; do basename "$f" | cut -d_ -f1; done | sort | uniq -d)"
+  if [[ -n "$dupes" ]]; then
+    printf '\033[1;31m[db] duplicate migration version(s):\033[0m\n' >&2
+    while read -r v; do
+      [[ -z "$v" ]] && continue
+      printf '        %s\n' "$v" >&2
+      for f in "$MIGRATIONS_DIR/${v}_"*.sql; do printf '          %s\n' "$(basename "$f")" >&2; done
+    done <<< "$dupes"
+    die "each migration needs its own version; rename one and keep its contents re-runnable"
+  fi
+
   for f in "${files[@]}"; do
     version="$(basename "$f" | cut -d_ -f1)"
     name="$(basename "$f" .sql | cut -d_ -f2-)"

@@ -257,6 +257,60 @@ export const NEWS_SOURCES: Record<NewsSourceSlug, NewsSourceDefinition> = {
     registry: registry("power-magazine-data-centers-feed"),
     notes: "Overlaps the main POWER feed; a story in both is stored once under its canonical URL.",
   },
+  "bitcoin-optech": {
+    slug: "bitcoin-optech",
+    sourceInterfaceId: "6f6f6f6f-0000-4000-8000-00000000001d",
+    sourceInterfaceSlug: "bitcoin-optech-feed",
+    permissionGrantId: "6e6e6e6e-0000-4000-8000-00000000000f",
+    publisherName: "Bitcoin Optech",
+    publisherHomepage: "https://bitcoinops.org",
+    category: "crypto",
+    feedUrl: "https://bitcoinops.org/feed.xml",
+    mechanism: "atom",
+    // The summary element is a genuine abstract; the content element is the
+    // whole newsletter and is not read.
+    descriptionPolicy: "source_description",
+    // The one media element is the Optech logo, identical on every entry. A
+    // logo repeated down the rail is not article artwork.
+    imagePolicy: "none",
+    imageHosts: [],
+    registry: registry("bitcoin-optech-feed"),
+    notes: "Everything Optech produces is released under the MIT licence, which is the clearest grant in the category.",
+  },
+  "the-block": {
+    slug: "the-block",
+    sourceInterfaceId: "6f6f6f6f-0000-4000-8000-00000000001e",
+    sourceInterfaceSlug: "the-block-feed",
+    permissionGrantId: "6e6e6e6e-0000-4000-8000-000000000010",
+    publisherName: "The Block",
+    publisherHomepage: "https://www.theblock.co",
+    category: "crypto",
+    feedUrl: "https://www.theblock.co/rss.xml",
+    mechanism: "rss",
+    descriptionPolicy: "source_description",
+    imagePolicy: "feed_media",
+    imageHosts: [{ host: "www.tbstat.com", pathPrefix: "/wp/uploads/" }],
+    registry: registry("the-block-feed"),
+    notes:
+      "The only crypto news publisher in the field that published a machine-readable grant rather than a prohibition. Its terms pages return 403 and the review rests on that signal, which the registry evidence records.",
+  },
+  "chainalysis-blog": {
+    slug: "chainalysis-blog",
+    sourceInterfaceId: "6f6f6f6f-0000-4000-8000-00000000001f",
+    sourceInterfaceSlug: "chainalysis-blog-feed",
+    permissionGrantId: "6e6e6e6e-0000-4000-8000-000000000011",
+    publisherName: "Chainalysis",
+    publisherHomepage: "https://www.chainalysis.com",
+    category: "crypto",
+    feedUrl: "https://www.chainalysis.com/feed/",
+    mechanism: "rss",
+    descriptionPolicy: "source_description",
+    imagePolicy: "none",
+    imageHosts: [],
+    registry: registry("chainalysis-blog-feed"),
+    notes:
+      "Approved on the blog while the company's Acceptable Use Policy prohibits robots against its licensed compliance products; that policy is addressed to licensees and does not govern this feed.",
+  },
 };
 
 /**

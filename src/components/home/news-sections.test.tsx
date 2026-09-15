@@ -12,14 +12,36 @@ import { HOMEPAGE_NEWS_CATEGORIES, NEWS_CATEGORIES, type NewsArticle } from "@/t
 
 const newsRail = vi.mocked(loadNewsRail);
 
-/** Answers each production rail with its own articles, and fails loudly otherwise. */
-function railData(byCategory: Record<string, { articles: NewsArticle[]; available: boolean }>) {
+/**
+ * Answers every production rail. Defaults keep each test to the rail it is
+ * about; an unexpected category still fails loudly, so a fourth one going
+ * production without a test noticing is not possible.
+ */
+function railData(overrides: Record<string, { articles: NewsArticle[]; available: boolean }> = {}) {
+  const base: Record<string, { articles: NewsArticle[]; available: boolean }> = {
+    compute: { articles: PRODUCTION, available: true },
+    "energy-power": { articles: ENERGY, available: true },
+    crypto: { articles: CRYPTO, available: true },
+  };
   newsRail.mockImplementation(async (category: string) => {
-    const data = byCategory[category];
+    const data = { ...base, ...overrides }[category];
     if (!data) throw new Error(`unexpected production read for ${category}`);
     return data;
   });
 }
+
+const CRYPTO: NewsArticle[] = [
+  {
+    id: "c1",
+    category: "crypto",
+    title: "House committee releases sweeping crypto tax bill",
+    summary: "Hours ahead of an initial vote on the Clarity Act.",
+    source: "The Block",
+    publishedAt: "2026-09-15T11:52:00.000Z",
+    url: "https://www.theblock.co/news/regulation/2026-09-15-crypto-tax-bill",
+    imageUrl: "https://www.tbstat.com/wp/uploads/2026/09/bill.png",
+  },
+];
 
 const ENERGY: NewsArticle[] = [
   {
@@ -71,7 +93,7 @@ beforeEach(() => {
 
 describe("the homepage news rails", () => {
   it("shows exactly the V1 categories, in taxonomy order", async () => {
-    railData({ compute: { articles: PRODUCTION, available: true }, "energy-power": { articles: ENERGY, available: true } });
+    railData();
     await renderSections();
     const headings = screen.getAllByRole("heading", { level: 2 }).map((node) => node.textContent);
     expect(headings).toEqual(["Compute", "Energy / Power", "Crypto"]);
@@ -79,7 +101,7 @@ describe("the homepage news rails", () => {
   });
 
   it("hides the deferred categories completely, heading and stories alike", async () => {
-    railData({ compute: { articles: PRODUCTION, available: true }, "energy-power": { articles: ENERGY, available: true } });
+    railData();
     await renderSections();
 
     // The hidden set is the complement of the visible one, so this test cannot
@@ -113,7 +135,7 @@ describe("the homepage news rails", () => {
   });
 
   it("renders Compute from production data, attributed and linked to the publisher", async () => {
-    railData({ compute: { articles: PRODUCTION, available: true }, "energy-power": { articles: ENERGY, available: true } });
+    railData();
     await renderSections();
 
     const compute = rail("Compute");
@@ -127,7 +149,7 @@ describe("the homepage news rails", () => {
   });
 
   it("renders no dek where the publisher supplied none", async () => {
-    railData({ compute: { articles: PRODUCTION, available: true }, "energy-power": { articles: ENERGY, available: true } });
+    railData();
     await renderSections();
     const compute = rail("Compute");
     expect(within(compute).getByText("The publisher's own dek.")).toBeInTheDocument();
@@ -136,7 +158,7 @@ describe("the homepage news rails", () => {
   });
 
   it("never shows a mock Compute story once the rail is production-backed", async () => {
-    railData({ compute: { articles: PRODUCTION, available: true }, "energy-power": { articles: ENERGY, available: true } });
+    railData();
     await renderSections();
     for (const mock of MOCK_NEWS.compute) {
       expect(screen.queryByText(mock.title)).not.toBeInTheDocument();
@@ -144,7 +166,7 @@ describe("the homepage news rails", () => {
   });
 
   it("says so plainly when the production store cannot be read, and invents nothing", async () => {
-    railData({ compute: { articles: [], available: false }, "energy-power": { articles: ENERGY, available: true } });
+    railData({ compute: { articles: [], available: false } });
     await renderSections();
 
     const compute = rail("Compute");
@@ -156,7 +178,7 @@ describe("the homepage news rails", () => {
   });
 
   it("distinguishes a store with nothing in it from a store it could not read", async () => {
-    railData({ compute: { articles: [], available: true }, "energy-power": { articles: ENERGY, available: true } });
+    railData({ compute: { articles: [], available: true } });
     await renderSections();
     expect(within(rail("Compute")).getByText("No Compute stories have been ingested yet.")).toBeInTheDocument();
   });
@@ -197,7 +219,7 @@ describe("the homepage news rails", () => {
   });
 
   it("renders Energy / Power from production, no longer as demo", async () => {
-    railData({ compute: { articles: PRODUCTION, available: true }, "energy-power": { articles: ENERGY, available: true } });
+    railData();
     await renderSections();
 
     const energy = rail("Energy / Power");
@@ -212,21 +234,32 @@ describe("the homepage news rails", () => {
     }
   });
 
-  it("leaves Crypto, the one remaining mock rail, working and labelled as demo", async () => {
-    railData({ compute: { articles: PRODUCTION, available: true }, "energy-power": { articles: ENERGY, available: true } });
+  it("renders Crypto from production, completing News V1", async () => {
+    railData();
     await renderSections();
 
+    const crypto = rail("Crypto");
+    expect(within(crypto).getByText("Live")).toBeInTheDocument();
+    expect(within(crypto).queryByText("Demo content")).not.toBeInTheDocument();
+    const link = within(crypto).getByRole("link", { name: CRYPTO[0]!.title });
+    expect(link).toHaveAttribute("href", CRYPTO[0]!.url!);
+    expect(within(crypto).getByText(/The Block/)).toBeInTheDocument();
+    for (const mock of MOCK_NEWS.crypto) {
+      expect(screen.queryByText(mock.title)).not.toBeInTheDocument();
+    }
+  });
+
+  it("shows no Demo content badge anywhere, because every visible rail is live", async () => {
+    railData();
+    await renderSections();
+
+    expect(screen.queryByText("Demo content")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Live")).toHaveLength(HOMEPAGE_NEWS_CATEGORIES.length);
+    // And no mock story from any visible category survives.
     for (const category of HOMEPAGE_NEWS_CATEGORIES) {
-      if (category.id === "compute" || category.id === "energy-power") continue;
-      const section = rail(category.label);
-      expect(within(section).getByText("Demo content")).toBeInTheDocument();
-      // And never mistaken for production: a demo rail carries no Live badge.
-      expect(within(section).queryByText("Live")).not.toBeInTheDocument();
-      const mocks = MOCK_NEWS[category.id];
-      expect(within(section).getAllByRole("heading", { level: 3 })).toHaveLength(mocks.length);
-      expect(within(section).getByText(mocks[0]!.title)).toBeInTheDocument();
-      // Mock stories still link nowhere.
-      expect(within(section).queryAllByRole("link")).toHaveLength(0);
+      for (const mock of MOCK_NEWS[category.id]) {
+        expect(screen.queryByText(mock.title)).not.toBeInTheDocument();
+      }
     }
   });
 });

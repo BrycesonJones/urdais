@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	>
+
+<channel>
+	<title>Chainalysis</title>
+	<atom:link href="https://www.chainalysis.com/feed/" rel="self" type="application/rss+xml" />
+	<link>https://www.chainalysis.com/</link>
+	<description>The Blockchain Data Platform</description>
+	<lastBuildDate>Wed, 09 Sep 2026 20:40:14 +0000</lastBuildDate>
+	<language>en-US</language>
+	<sy:updatePeriod>
+	hourly	</sy:updatePeriod>
+	<sy:updateFrequency>
+	1	</sy:updateFrequency>
+	<generator>https://wordpress.org/?v=7.1</generator>
+	<item>
+		<title>OFAC and DOJ Strike Xinbi, a Multibillion-Dollar Marketplace for Cybercriminals</title>
+		<link>https://www.chainalysis.com/blog/ofac-sanctions-xinbi-cybercriminal-crypto-marketplace/</link>
+		
+		<dc:creator><![CDATA[Chainalysis Team]]></dc:creator>
+		<pubDate>Wed, 09 Sep 2026 20:40:14 +0000</pubDate>
+				<category><![CDATA[Crime]]></category>
+		<category><![CDATA[OFAC]]></category>
+		<category><![CDATA[Sanctions]]></category>
+		<category><![CDATA[Xinbi]]></category>
+		<guid isPermaLink="false">https://www.chainalysis.com/?p=30198</guid>
+
+					<description><![CDATA[<p>Summary U.S. authorities have sanctioned Xinbi Guarantee, a major Chinese-language illicit marketplace that connects criminal networks with money laundering, scam&#8230;</p>
+<p>The post <a href="https://www.chainalysis.com/blog/ofac-sanctions-xinbi-cybercriminal-crypto-marketplace/">OFAC and DOJ Strike Xinbi, a Multibillion-Dollar Marketplace for Cybercriminals</a> appeared first on <a href="https://www.chainalysis.com">Chainalysis</a>.</p>
+]]></description>
+		
+		
+		
+			</item><item>
+		<title>How The $320M Exploit of Liquid Network Went Down</title>
+		<link>https://www.chainalysis.com/blog/320m-exploit-liquid-network/</link>
+		
+		<dc:creator><![CDATA[Chainalysis Team]]></dc:creator>
+		<pubDate>Wed, 09 Sep 2026 20:22:00 +0000</pubDate>
+				<category><![CDATA[Crime]]></category>
+		<category><![CDATA[Bitcoin]]></category>
+		<category><![CDATA[Hacking]]></category>
+		<guid isPermaLink="false">https://www.chainalysis.com/?p=30194</guid>
+
+					<description><![CDATA[<p>Summary Purported white-hat hackers exploited the Liquid Network to withdraw $320 million in BTC from the network’s reserve. A vulnerability&#8230;</p>
+<p>The post <a href="https://www.chainalysis.com/blog/320m-exploit-liquid-network/">How The $320M Exploit of Liquid Network Went Down</a> appeared first on <a href="https://www.chainalysis.com">Chainalysis</a>.</p>
+]]></description>
+		
+		
+		
+			</item><item>
+		<title>Tracing Crypto in a Narcotics Investigation: FBI Charges Alleged Opioid Distributors</title>
+		<link>https://www.chainalysis.com/blog/fbi-traces-crypto-opioids-distributors/</link>
+		
+		<dc:creator><![CDATA[Chainalysis Team]]></dc:creator>
+		<pubDate>Tue, 08 Sep 2026 17:23:45 +0000</pubDate>
+				<category><![CDATA[Crime]]></category>
+		<category><![CDATA[Darknet Markets]]></category>
+		<category><![CDATA[Drugs]]></category>
+		<category><![CDATA[FBI]]></category>
+		<category><![CDATA[Opioid Crisis]]></category>
+		<guid isPermaLink="false">https://www.chainalysis.com/?p=30183</guid>
+
+					<description><![CDATA[<p>Summary U.S. authorities charged two Jacksonville brothers with operating “BarbaraWhite,” a prolific darknet vendor account accused of distributing counterfeit pills&#8230;</p>
+<p>The post <a href="https://www.chainalysis.com/blog/fbi-traces-crypto-opioids-distributors/">Tracing Crypto in a Narcotics Investigation: FBI Charges Alleged Opioid Distributors</a> appeared first on <a href="https://www.chainalysis.com">Chainalysis</a>.</p>
+]]></description>
+		
+		
+		
+			</item></channel></rss>

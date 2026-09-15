@@ -210,7 +210,7 @@ begin
   end;
   if not ok then raise exception 'invented data-use state was accepted'; end if;
 
-  -- Seven settled prohibitions are blocked: the marketplace and Runpod on both axes,
+  -- Fifteen settled prohibitions are blocked: the marketplace and Runpod on both axes,
   -- Lambda on data use, Coinbase on both axes and Kraken on data use since UBWI
   -- Phase 2D retrieved the numerator venues' own terms, and -- since the Memory news
   -- qualification pass read them -- the SK hynix Newsroom on both axes. An unresolved
@@ -218,9 +218,13 @@ begin
   -- are not here, and neither are the Memory candidates refused on staleness,
   -- unusable feeds or relevance rather than on terms. Utility Dive joined the
   -- blocked set with the Energy / Power pass: the Informa TechTarget terms that
-  -- govern it prohibit data mining and robots outright.
+  -- govern it prohibit data mining and robots outright. The Crypto pass added
+  -- eight more, which is the highest proportion of any category Urdais has
+  -- qualified: CoinDesk, Decrypt, Blockworks, Cointelegraph, CryptoSlate,
+  -- Bitcoin Magazine, Solana and the Ethereum Foundation, the last of these
+  -- licensing its content openly while prohibiting the retrieval of it.
   select count(*) into n from reference.source_interfaces where production_access_state = 'production_blocked';
-  if n <> 7 then raise exception 'expected 7 blocked interfaces (settled prohibitions only), found %', n; end if;
+  if n <> 15 then raise exception 'expected 15 blocked interfaces (settled prohibitions only), found %', n; end if;
   select count(*) into n from reference.source_interfaces
    where terms_review_state = 'under_review' or data_use_terms_state = 'under_review';
   if n < 3 then raise exception 'expected at least 3 interfaces with an unresolved axis, found %', n; end if;

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+    xmlns:content="http://purl.org/rss/1.0/modules/content/"
+    xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:atom="http://www.w3.org/2005/Atom"
+    xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+    xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+    xmlns:media="http://search.yahoo.com/mrss/"
+    >
+
+<channel>
+    <title>The Block</title>
+    <link>https://www.theblock.co</link>
+    <atom:link href="https://www.theblock.co/rss.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://www.theblock.co/rss.xml?paged=2" rel="next" type="application/rss+xml" />
+    <atom:link href="https://pubsubhubbub.appspot.com/" rel="hub"/>
+    <description>The Block features breaking Crypto news about Bitcoin, Blockchain, Web3, and DeFi from the web&#039;s most reliable source.</description>
+    <lastBuildDate>Tue, 15 Sep 2026 14:38:13 +0000</lastBuildDate>
+    <language>en-US</language>
+    <copyright>© 2026 THE BLOCK</copyright>
+    <generator>TheBlock</generator>
+    <ttl>5</ttl>
+    <sy:updatePeriod>hourly</sy:updatePeriod>
+    <sy:updateFrequency>1</sy:updateFrequency>
+    <image>
+        <url>https://www.tbstat.com/wp/uploads/2024/03/the-block-logo-wordmark-black.png</url>
+        <title>The Block</title>
+        <link>https://www.theblock.co</link>
+    </image>
+        <item>
+        <title><![CDATA[Lead Senate Republican Lummis rejects Democratic counteroffer as Clarity Act vote nears]]></title>
+        <link>https://www.theblock.co/news/regulation/2026-09-15-senate-republican-lummis-rejects-democratic-counteroffer-clarity-act-vote-414850</link>
+        <media:content url="https://www.tbstat.com/wp/uploads/2021/06/20210630_Senator_Cynthia_Lummis-1200x675.png" type="image/*" medium="image"/>        <guid isPermaLink="false">b29a74e8-1f86-59c8-9e07-805f1d33110a</guid>
+        <pubDate>Tue, 15 Sep 2026 14:38:13 +0000</pubDate>
+            <description><![CDATA[Hours ahead of an initial vote on the Clarity Act, Senate Republicans are pushing back against a counterproposal from fellow Democrats.]]></description>            <dc:creator><![CDATA[Sarah Wynn]]></dc:creator>
+        <content:encoded/>
+        		<category domain="https://www.theblock.co/category/policy-people"><![CDATA[People]]></category>
+		<category domain="https://www.theblock.co/category/policy"><![CDATA[Policy]]></category>
+		<category domain="https://www.theblock.co/category/regulation"><![CDATA[Regulation]]></category>
+		<category domain="tag"><![CDATA[Cynthia Lummis]]></category>
+		<category domain="https://www.theblock.co/">News</category>
+                </item><item>
+        <title><![CDATA[House committee releases sweeping crypto tax bill ahead of Wednesday markup]]></title>
+        <link>https://www.theblock.co/news/regulation/2026-09-15-house-committee-crypto-tax-bill-414824</link>
+        <media:content url="https://www.tbstat.com/wp/uploads/2023/08/20230712_USA_CryptoTax_News-1200x675.jpg" type="image/*" medium="image"/>        <guid isPermaLink="false">3007abaa-2b19-5c5c-aecf-18bfa54e4128</guid>
+        <pubDate>Tue, 15 Sep 2026 11:52:36 +0000</pubDate>
+            <description><![CDATA[Among its provisions is a $10 exception for certain fees paid in crypto, along with provisions covering stablecoins, mining, and staking.]]></description>            <dc:creator><![CDATA[James Hunt]]></dc:creator>
+        <content:encoded/>
+        		<category domain="https://www.theblock.co/category/crypto-ecosystems"><![CDATA[Crypto Ecosystems]]></category>
+		<category domain="https://www.theblock.co/category/policy"><![CDATA[Policy]]></category>
+		<category domain="https://www.theblock.co/category/regulation"><![CDATA[Regulation]]></category>
+		<category domain="https://www.theblock.co/category/web3"><![CDATA[Web3]]></category>
+		<category domain="tag"><![CDATA[Crypto]]></category>
+		<category domain="https://www.theblock.co/">News</category>
+                </item><item>
+        <title><![CDATA[Standard Chartered sees Arbitrum at $10 by end-2030, up 70-fold]]></title>
+        <link>https://www.theblock.co/news/markets/2026-09-15-standard-chartered-sees-arbitrum-at-10-by-end-2030-up-70-fold-414821</link>
+        <media:content url="https://www.tbstat.com/wp/uploads/2023/03/20230315_Arbitrum_airdrop-1200x675.jpg" type="image/*" medium="image"/>        <guid isPermaLink="false">d3071efd-6078-59c2-aa66-68d7f4de5602</guid>
+        <pubDate>Tue, 15 Sep 2026 11:50:30 +0000</pubDate>
+            <description><![CDATA[Standard Chartered sees Arbitrum at $10 by 2030, projecting a roughly 70-fold increase as tokenization grows and TradFi firms move onchain.]]></description>            <dc:creator><![CDATA[Brian Danga]]></dc:creator>
+        <content:encoded/>
+        		<category domain="https://www.theblock.co/category/equities"><![CDATA[Equities]]></category>
+		<category domain="https://www.theblock.co/category/markets"><![CDATA[Markets]]></category>
+		<category domain="tag"><![CDATA[Analyst Reports]]></category>
+		<category domain="https://www.theblock.co/">News</category>
+                </item><item>
+        <title><![CDATA[Tonkeeper rebrands as Keeper with support for 7 networks, including Bitcoin and Ethereum]]></title>
+        <link>https://www.theblock.co/news/business/2026-09-15-tonkeeper-rebrands-as-keeper-with-support-for-7-networks-including-bitcoin-and-ethereum-414807</link>
+        <media:content url="https://www.tbstat.com/wp/uploads/2023/09/20230811_WalletsCryptoPayments_News2-1200x675.jpg" type="image/*" medium="image"/>        <guid isPermaLink="false">2cb2487c-b723-5ee4-93b6-6190e9dc45de</guid>
+        <pubDate>Tue, 15 Sep 2026 09:35:02 +0000</pubDate>
+            <description><![CDATA[Tonkeeper has rebranded as Keeper, with the wallet now supporting seven blockchain networks, including Bitcoin and Ethereum.]]></description>            <dc:creator><![CDATA[Brian Danga]]></dc:creator>
+        <content:encoded/>
+        		<category domain="https://www.theblock.co/category/companies"><![CDATA[Companies]]></category>
+		<category domain="https://www.theblock.co/category/crypto-ecosystems"><![CDATA[Crypto Ecosystems]]></category>
+		<category domain="https://www.theblock.co/category/infrastructure"><![CDATA[Infrastructure]]></category>
+		<category domain="tag"><![CDATA[exclusive]]></category>
+		<category domain="tag"><![CDATA[Wallets]]></category>
+		<category domain="https://www.theblock.co/">News</category>
+                </item></channel></rss>

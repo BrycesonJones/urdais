@@ -18,15 +18,31 @@ describe("the approved source registry", () => {
   });
 
   it("holds the categories that have migrated, and nothing else", () => {
+    // News V1: three production categories, and three deferred rails with no
+    // sources at all.
     expect(newsSourcesForCategory("compute").length).toBe(8);
     expect(newsSourcesForCategory("energy-power").length).toBe(4);
-    expect(newsSourcesForCategory("compute").length + newsSourcesForCategory("energy-power").length).toBe(
-      NEWS_SOURCE_SLUGS.length,
-    );
+    expect(newsSourcesForCategory("crypto").length).toBe(3);
+    expect(
+      newsSourcesForCategory("compute").length +
+        newsSourcesForCategory("energy-power").length +
+        newsSourcesForCategory("crypto").length,
+    ).toBe(NEWS_SOURCE_SLUGS.length);
     for (const category of NEWS_CATEGORIES) {
-      if (category.id === "compute" || category.id === "energy-power") continue;
+      if (["compute", "energy-power", "crypto"].includes(category.id)) continue;
       expect(newsSourcesForCategory(category.id)).toEqual([]);
     }
+  });
+
+  it("gives Crypto three publishers, each on a different kind of basis", () => {
+    const crypto = newsSourcesForCategory("crypto");
+    expect(new Set(crypto.map((source) => source.publisherName)).size).toBe(3);
+    // One source references images, on its publisher's own host under one path.
+    const withImages = crypto.filter((source) => source.imagePolicy === "feed_media");
+    expect(withImages).toHaveLength(1);
+    expect(withImages[0]!.imageHosts[0]!.pathPrefix.startsWith("/")).toBe(true);
+    // The Atom parser is exercised in production by Crypto as well as Compute.
+    expect(crypto.some((source) => source.mechanism === "atom")).toBe(true);
   });
 
   it("gives Energy / Power three publishers across four feeds", () => {
@@ -115,7 +131,9 @@ describe("the approved source registry", () => {
     expect(memory.length).toBeGreaterThanOrEqual(8);
     expect(newsSourcesForCategory("memory")).toEqual([]);
     expect(
-      enabledNewsSources().every((source) => source.category === "compute" || source.category === "energy-power"),
+      enabledNewsSources().every((source) =>
+        ["compute", "energy-power", "crypto"].includes(source.category),
+      ),
     ).toBe(true);
 
     // The one refused on rights rather than on quality or relevance.

@@ -58,6 +58,8 @@ describe("the news refresh policy", () => {
     // which is the property this file exists to protect.
     const enabled = enabledNewsSources();
     expect(enabled.length).toBeGreaterThan(0);
-    expect(new Set(enabled.map((source) => source.category))).toEqual(new Set(["compute", "energy-power"]));
+    expect(new Set(enabled.map((source) => source.category))).toEqual(
+      new Set(["compute", "energy-power", "crypto"]),
+    );
   });
 });
