@@ -92,3 +92,72 @@ Urdais — https://urdais.com
 Sending a request is not permission, and this request has not been sent. The OECD SDMX interface remains `not_reviewed` on both axes, `production_review_pending`, with `written_agreement_required` undetermined. The registry is deliberately not modified by this draft.
 
 Be alert to two ways a reply could be misread. A reply confirming that the API is public and free to use answers the retrieval question and **not** the index-construction question, and the two have diverged for every commercial source Urdais has reviewed. And a pointer to a licence page is only an answer if Urdais can actually load it.
+
+---
+
+## CLOSED — resolved without outreach, 14 September 2026
+
+**Status: superseded. Do not send this request. Nothing was ever sent.**
+
+Added during [UBWI Phase 2B](../../research/ubwi-phase2b-coverage-expansion.md), which resolved the question this draft exists to ask.
+
+## What happened
+
+The draft above rests on one premise: that `https://www.oecd.org/en/about/terms-conditions.html` cannot be loaded from this environment, and that the terms are therefore unreadable. **The premise was wrong, and it was wrong in the way the draft itself predicted.**
+
+On 14 September 2026 the canonical URL returned **HTTP 200, 1,482,983 bytes**, title *Terms & Conditions | OECD*, to a plain `urllib.request` call carrying exactly three headers:
+
+```
+User-Agent:      Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+                 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36
+Accept:          text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.9
+```
+
+The gate is real but path-specific: `oecd.org/termsandconditions/`, `oecd.org/en/about/terms-and-conditions.html` and `oecd-ilibrary.org/oecd/terms` still return HTTP 403 with Cloudflare interstitials. A Wayback snapshot of the canonical URL returns the same text, corroborating it independently.
+
+The draft said: *"Recommended before sending: confirm the current terms page from an environment that is not Cloudflare-gated. If the licence turns out to be an open grant that already covers this use, the request is unnecessary and should not be sent at all. That is the likeliest outcome and it is the reason this draft exists rather than a sent message."* **That is what happened.**
+
+## The answers to the three questions the draft asks
+
+**1. What terms govern data retrieved through the public SDMX REST service?** Section 3, *Data*, of the OECD Terms & Conditions.
+
+**2. May Urdais retrieve this data automatically on a schedule?** **Yes.**
+
+> "You may use one or more OECD-developed application programming interfaces ("APIs") to facilitate access to the Data."
+
+**3. May Urdais use the data as an input to derived aggregate indices published as a commercial product?** **Yes.**
+
+> "Except where additional restrictions apply as stated above, you can extract from, download, copy, adapt, print, distribute, share and embed Data for any purpose, even for commercial use."
+
+The two axes Urdais deliberately keeps separate are both answered, separately, in the publisher's own words.
+
+## The practical questions, also answered
+
+| Draft question | Published answer |
+|---|---|
+| Attribution form and placement | `OECD (year), (dataset name), (data source) DOI or URL (accessed on (date))` — *"if no specific citation is available"*, otherwise the citation associated with the dataset. Sub-licence pass-through required: *"you agree to include the same acknowledgment requirement in any sub-licenses that you grant, along with the requirement that any further sub-licensees do the same."* |
+| Country values or aggregates only | No distinction is drawn. Both are permitted. |
+| Caching / retention of API responses | Covered by *"extract from, download, copy"*. No retention limit is stated. |
+| Rate or scheduling convention | None published, but the OECD *"may monitor your use of the Data and reserves the right … to modify the amount of Data you may request in a single query, to modify the number of queries you may make over a specified time"*, and may *"limit or suspend any user's IP address access … if you are placing too great a strain on the infrastructure necessary for making the Data available to a reasonable number of people."* Voluntary registration is *"encouraged, but not required"*. |
+| Better contact | Not applicable — no message is being sent. |
+
+## Registry state
+
+| | Before | After |
+|---|---|---|
+| Retrieval | `not_reviewed` | **`permitted`** |
+| Data use | `not_reviewed` | **`permitted`** |
+| Written agreement required | undetermined | **no** |
+| Production state | `production_review_pending` | **eligible for `production_approved`**, subject to the two conditions below |
+
+**Two conditions travel with the grant and belong in the interface record, not in prose.**
+
+1. **API version currency is a term, not a suggestion:** *"you therefore agree, for each API, to use the most up-to-date version available."* A pinned SDMX version that the OECD later supersedes puts Urdais outside the licence, not merely out of date.
+2. **Third-party ownership must be verified per dataset:** *"Data may be subject to restrictions beyond the scope of these Terms and Conditions … It is the user's responsibility to verify … whether the Data is fully or partially owned by third parties."* The SDMX dataflow metadata for `OECD.SDD.NAD,DSD_NASEC10@DF_TABLE9B,1.0` was retrieved (HTTP 200) and **declares no third-party restriction**. It does carry the registry annotation `NonProductionDataflow = true`, which is recorded as an operational fact about the dataflow's status and a reason to confirm the designation before depending on that flow in production.
+
+## What this does not change
+
+**The OECD was never the coverage problem, and the draft said so.** It is the harmonised route to seven economies in the Phase 2B observed set, and those economies are about 19 % of world GDP. Phase 2B's finding is that directly observed coverage cannot exceed **62.93 %** of world GDP without China, against a proposed gate of 70 % rights-cleared. **A cleared OECD licence removes a blocker that was not the binding one.**
+
+**No outreach is drafted or recommended for any UBWI source.** Every remaining rights gap — Destatis on adaptation, Italy's joint Istat/Banca d'Italia authorship, the ECB's reference-rate terms — is a retrieval. This phase resolved two long-standing "unreadable terms" findings by retrieval alone, which is the second time Urdais's own rule has paid: *a retrieval failure is a fact about the retrieval, not a fact about the source.*
