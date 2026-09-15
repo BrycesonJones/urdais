@@ -217,6 +217,31 @@ export class DatabasePersistence implements Persistence {
     return { observations, retrievals: [...retrievals.values()] };
   }
 
+  /**
+   * Whether Urdais collected anything for this instrument on this date.
+   *
+   * The distinction this answers is not a nicety. `decideBreadth(0)` yields
+   * NO_ELIGIBLE_PARTICIPANT, which is the methodology's structural rule and means "the market
+   * was observed and produced no eligible participant". A date before production collection
+   * began produces the same zero for an entirely different reason -- nobody looked -- and
+   * publishing that as an Unavailable point would state something about the market that
+   * Urdais never observed. So the question is asked of the retrievals, not the observations:
+   * a retrieval that returned nothing is still coverage, and Unavailable is then true.
+   */
+  async hasProductionCoverage(calculationDate: string): Promise<boolean> {
+    const w = utcWindow(calculationDate);
+    const { rows } = await this.sql.query(
+      "select 1 from pipeline.source_retrievals r " +
+        "join reference.source_interfaces si on si.id = r.source_interface_id " +
+        "where r.retrieval_purpose = 'production' and r.requested_at >= $1::timestamptz and r.requested_at < $2::timestamptz " +
+        "and exists (select 1 from pipeline.raw_offers ro join pipeline.normalized_observations o on o.raw_offer_id = ro.id " +
+        "            where ro.retrieval_id = r.id and o.instrument_id = $3) " +
+        "limit 1",
+      [w.start, w.end, this.lineage.instrumentId],
+    );
+    return rows.length > 0;
+  }
+
   async insertCalculationRun(run: CalculationRunRow): Promise<void> {
     const s = this.statements.runStatement(run);
     await this.sql.query(s.text, s.params);
