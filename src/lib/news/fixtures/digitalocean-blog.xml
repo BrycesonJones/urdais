@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>tag:www.digitalocean.com,2005:/rss/blog.atom</id>
+    <title>DigitalOcean Blog</title>
+    <updated>2026-09-14T21:10:53.774Z</updated>
+    <generator>DigitalOcean</generator>
+    <link rel="alternate" href="https://www.digitalocean.com/blog"/>
+    <link rel="self" href="https://www.digitalocean.com/rss/blog.atom"/>
+    <subtitle>The latest from DigitalOcean, the developer cloud for modern apps.</subtitle>
+    <entry>
+        <title type="html"><![CDATA[Built for agents: Omarchy's pipeline moves to DigitalOcean]]></title>
+        <id>tag:www.digitalocean.com,2005:/blog/digitalocean-joins-omacom-foundation</id>
+        <link href="https://www.digitalocean.com/blog/digitalocean-joins-omacom-foundation"/>
+        <updated>2026-09-09T15:30:15.727Z</updated>
+        <content type="html"><![CDATA[<p><a href="https://omarchy.org/" rel="ugc nofollow noopener" target="_blank">Omarchy</a> is a keyboard-first Linux desktop built on Arch and Hyprland by David Heinemeier Hansson (DHH), and its production pipeline, packaging builds, PR review agents, and QA testing, now run on DigitalOcean.</p>
+<p>Agent workloads don’t behave like a typical web server. They’re bursty and parallel: an agent spins up, does one job, and shuts down. Omarchy’s pipeline is a real example of that pattern, and DigitalOcean infrastructure complements its needs. A single doctl command can provision a Droplet, run the job, call separately configured inference services, and destroy the Droplet when the work is done.</p>
+<p>Alongside the infrastructure move, DigitalOcean is joining the <a href="https://omarchy.org/foundation/" rel="ugc nofollow noopener" target="_blank">Omacom Foundation</a>, the nonprofit that funds Omarchy’s infrastructure and the open source projects it depends on, as a Founding Corporate Patron, and will serve as Omarchy’s agentic compute provider.</p>
+<blockquote>
+<p><em>“I’m thrilled to have DigitalOcean become a Founding Corporate Patron of the Omacom Foundation, and our new agentic compute provider as well. We have such grand ambitions for Omarchy, and it’s time we upgrade our technical infrastructure to match. Whether it’s build servers for packaging, agent runners for PR reviews, or Droplets for QA testing, DigitalOcean simply has everything we need. They also have the right mindset for the future and our new age of agents. Couldn’t imagine a better fit!”</em> — David Heinemeier Hansson, creator of Omarchy</p>
+</blockquote>
+<details class="collapsible" open="">
+<summary>
+<h2 id="what-s-next"><a href="#what-s-next" onclick="navigator.clipboard.writeText(this.href);">What’s Next</a><a class="hash-anchor" href="#what-s-next" aria-hidden="true" onclick="navigator.clipboard.writeText(this.href);"></a></h2>
+</summary>
+<p>Coming soon, DigitalOcean and Omarchy plan to release a 1-click Omarchy Droplet available through the DigitalOcean Marketplace, enabling developers to quickly deploy the same environment used by the maintainers.</p>
+</details>
+]]></content>
+        <category label="news" term="news"/>
+        <published>2026-09-09T15:30:15.727Z</published>
+    </entry><entry>
+        <title type="html"><![CDATA[Introducing v5 Droplets: next-generation performance, sized to your workload]]></title>
+        <id>tag:www.digitalocean.com,2005:/blog/introducing-v5-droplets</id>
+        <link href="https://www.digitalocean.com/blog/introducing-v5-droplets"/>
+        <updated>2026-08-26T02:19:47.496Z</updated>
+        <content type="html"><![CDATA[<p>We’re excited to introduce v5 Droplets, a new generation of compute built on 5th Gen AMD EPYC™ processors. v5 Droplets are purpose built to deliver higher performance for demanding workloads such as compute-intensive agentic AI platforms, AI/ML tools, high throughput audio/video transcoding, and high-traffic distributed web applications and APIs. v5 Droplets deliver up to 30% higher performance per core than our previous-generation Droplets. For the first time, you can select vCPU, memory, and storage independently and pay for only the resources you choose. Your Droplet fits your application, and your bill reflects exactly what you used, nothing more. You can continue creating bundled Droplets the way you’re used to, or choose v5 Droplets for next-generation workload-optimized performance.</p>
+<details class="collapsible" open="">
+<summary>
+<h2 id="designed-for-workloads-that-need-more"><a href="#designed-for-workloads-that-need-more" onclick="navigator.clipboard.writeText(this.href);">Designed for workloads that need more</a><a class="hash-anchor" href="#designed-for-workloads-that-need-more" aria-hidden="true" onclick="navigator.clipboard.writeText(this.href);"></a></h2>
+</summary>
+<p>More teams are building AI applications, agent platforms, bursty data pipelines, and hosting high-traffic web applications on DigitalOcean than ever before, and those workloads demand higher performance. They need the faster cores, flexible memory ratios, and compute configurations that v5 Droplets provide. Starting with v5, every Droplet is tied to a hardware generation, so you get the same silicon and the same performance every time. You can choose <strong>Shared Droplets</strong> (s5) for bursty, variable work that doesn’t need a full dedicated core, or <strong>General purpose Droplets</strong> (g5) for guaranteed, dedicated CPU, with memory ratios from 2x to 8x per vCPU. Pricing is simple and based on an hourly rate. You see each resource’s price as you configure, a running total as you go, and one line per Droplet on your bill. Early customers running game servers and high throughput e-commerce applications saw 2x performance compared to their existing Droplets.</p>
+</details>
+<details class="collapsible" open="">
+<summary>
+<h2 id="no-changes-to-existing-droplets-pricing-or-experience"><a href="#no-changes-to-existing-droplets-pricing-or-experience" onclick="navigator.clipboard.writeText(this.href);">No changes to existing Droplets pricing or experience</a><a class="hash-anchor" href="#no-changes-to-existing-droplets-pricing-or-experience" aria-hidden="true" onclick="navigator.clipboard.writeText(this.href);"></a></h2>
+</summary>
+<p>Every existing Droplet plan stays exactly as it is and maintains the same prices, same bundles, same monthly caps, no migrations, and nothing new on your invoice. Your current Droplet plan isn’t going anywhere. You can continue using the existing SKUs if they are a good fit for your workloads on price, simplicity or familiarity. And when you want higher per-core performance for your workload, you have the flexibility to choose the new v5 Droplet.</p>
+</details>
+<details class="collapsible" open="">
+<summary>
+<h2 id="available-now"><a href="#available-now" onclick="navigator.clipboard.writeText(this.href);">Available now</a><a class="hash-anchor" href="#available-now" aria-hidden="true" onclick="navigator.clipboard.writeText(this.href);"></a></h2>
+</summary>
+<p>v5 Droplets are available today in our Memphis, Kansas City, Richmond, and Atlanta regions, with more regions to follow the rest of the year. You can launch v5 as standalone Droplets or use them as part of DigitalOcean Kubernetes node pools. To get started, create a v5 Droplet using the <a href="https://cloud.digitalocean.com/droplets/new?region=mem1&amp;size=s5-2vcpu-4gb-30gb" rel="ugc nofollow noopener" target="_blank">console</a>, or the <a href="https://docs.digitalocean.com/products/droplets/how-to/create/#create-a-droplet-using-automation" rel="ugc nofollow noopener" target="_blank">API</a>. These new Droplets are the next step in DigitalOcean’s compute evolution, where ambitious teams build and scale AI-era applications. And, we’re just getting started.</p>
+</details>
+]]></content>
+        <author>
+            <name>Krishna Nallamothu</name>
+        </author>
+        <category label="product-updates" term="product-updates"/>
+        <published>2026-08-26T02:19:47.496Z</published>
+    </entry><entry>
+        <title type="html"><![CDATA[Private Preview: DigitalOcean Managed Agents Runtime Services]]></title>
+        <id>tag:www.digitalocean.com,2005:/blog/managed-agents-runtime-services-private-preview</id>
+        <link href="https://www.digitalocean.com/blog/managed-agents-runtime-services-private-preview"/>
+        <updated>2026-08-25T19:01:05.321Z</updated>
+        <content type="html"><![CDATA[<p>AI agents are helping developers, teams, and businesses do more: writing and executing code, conducting research, and running dynamic workflows across systems. But that ability is often bounded by where they run. Close the laptop, and the work stops there. You can’t pick it up on another device, hand off to a teammate, or scale it across users. Moving agents to cloud VMs solves part of this problem; developers and companies building agent harness frameworks still have to build a high-fidelity experience that can match a local session, including agent friendly execution environments, session persistence, secure tool access, human-in-the-loop approvals, and observability.</p>
+<p>Now available in <a href="https://try.digitalocean.com/managed-agents-private-preview/" rel="ugc nofollow noopener" target="_blank">Private Preview</a>, DigitalOcean Managed Agents Runtime Services (M.A.R.S.) provides that infrastructure as a fully managed service. It gives developers, teams, and ISVs a powerful yet lightweight environment for operating coding agents and long-running, multi-tool agentic workflows without building and managing the underlying infrastructure themselves.</p>
+<p>M.A.R.S. brings together two products: <strong>Harness Runtime</strong> provides the managed execution environment in which agents run, persist, and scale. <strong>Action Gateway</strong> gives those same agents governed access to the tools, APIs, and SaaS systems they need to complete real-world work.</p>
+<p>Rather than requiring you to rebuild your agent around a proprietary framework, M.A.R.S. lets you define an environment template that packages your preferred harness, dependencies, tools, and configuration. Designed to work with Claude Code, Codex CLI, and OpenCode, as well as agents built with LangGraph or CrewAI, giving teams the freedom to choose the agent experience that best fits their needs without being locked into a single harness or framework.</p>
+<details class="collapsible" open="">
+<summary>
+<h2 id="agent-sessions-that-outlive-your-laptop"><a href="#agent-sessions-that-outlive-your-laptop" onclick="navigator.clipboard.writeText(this.href);">Agent sessions that outlive your laptop</a><a class="hash-anchor" href="#agent-sessions-that-outlive-your-laptop" aria-hidden="true" onclick="navigator.clipboard.writeText(this.href);"></a></h2>
+</summary>
+<p><strong>Harness Runtime</strong> helps agent sessions run independently of any local machine. They can start in under a second and resume from a pause in as little as 200 milliseconds while preserving their files, processes, and working state.</p>
+<p>Developers can continue a session from another device, hand work to a teammate mid-task, or run multiple agents in parallel without multiplying the infrastructure setup. Each session runs inside an isolated Firecracker microVM, designed to separate agent-generated code from local machines and shared infrastructure.</p>
+</details>
+<details class="collapsible" open="">
+<summary>
+<h2 id="govern-how-agents-interact-with-the-outside-world"><a href="#govern-how-agents-interact-with-the-outside-world" onclick="navigator.clipboard.writeText(this.href);"><strong>Govern how agents interact with the outside world</strong></a><a class="hash-anchor" href="#govern-how-agents-interact-with-the-outside-world" aria-hidden="true" onclick="navigator.clipboard.writeText(this.href);"></a></h2>
+</summary>
+<p><strong>Action Gateway</strong> gives agents governed access to services such as GitHub, Jira, Notion, Linear, and Postgres. Authentication, permissions, approvals, and audit controls are managed centrally. OAuth credentials are brokered through Secrets Manager and are exposed to neither the model nor the execution environment in which the agent runs.</p>
+</details>
+<details class="collapsible" open="">
+<summary>
+<h2 id="m-a-r-s-capabilities-at-a-glance"><a href="#m-a-r-s-capabilities-at-a-glance" onclick="navigator.clipboard.writeText(this.href);">M.A.R.S. capabilities at a glance:</a><a class="hash-anchor" href="#m-a-r-s-capabilities-at-a-glance" aria-hidden="true" onclick="navigator.clipboard.writeText(this.href);"></a></h2>
+</summary>
+<ul>
+<li>
+<p><strong>Durable sessions:</strong> Pause and resume work without losing the session’s environment or state.</p>
+</li>
+<li>
+<p><strong>Isolated execution:</strong> Run agent-generated code inside dedicated Firecracker microVMs.</p>
+</li>
+<li>
+<p><strong>Human approvals:</strong> Define which actions agents can take autonomously and which require sign-off.</p>
+</li>
+<li>
+<p><strong>Native GitHub support:</strong> Allow agents to clone repositories, create branches, commit changes, and open pull requests.</p>
+</li>
+<li>
+<p><strong>Managed tool access:</strong> Connect agents to external systems through centrally governed authentication and policy controls.</p>
+</li>
+<li>
+<p><strong>Harness flexibility:</strong> Run supported coding agents, LangGraph workloads, or your own custom agent environment.</p>
+</li>
+</ul>
+<p>With M.A.R.S., developers retain control over the agents they build and the experiences they deliver. DigitalOcean manages the execution, persistence, isolation, scaling, and governed external access underneath them.</p>
+<div class="callout info">
+<p><strong>DigitalOcean M.A.R.S. is currently available through an invite-only Private Preview,</strong> <a href="https://try.digitalocean.com/managed-agents-private-preview/" rel="ugc nofollow noopener" target="_blank"><strong>request access here</strong></a><strong>.</strong></p>
+</div>
+</details>
+]]></content>
+        <author>
+            <name>Salman Paracha</name>
+        </author>
+        <category label="product-updates" term="product-updates"/>
+        <published>2026-08-25T19:01:05.321Z</published>
+    </entry></feed>

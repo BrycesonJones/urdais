@@ -72,6 +72,46 @@ const META: Record<NewsSourceSlug, Omit<FeedFixture, "body">> = {
     provenance:
       "First four items of the live response retrieved 2026-09-14 (HTTP 200, application/rss+xml; charset=utf-8, 89532 bytes, sha256 d92f061d93a2d6c1bb9388984b4040c1a08bcafba1da7a51146548a1bc64502f). Channel header verbatim. Item links use the wf.coreweave.com publishing host, which is the evidence for the recorded canonical-host rewrite.",
   },
+  "lambda-blog": {
+    source: "lambda-blog",
+    sourceUrl: "https://lambda.ai/blog/rss.xml",
+    retrievedAt: "2026-09-14T22:40:00Z",
+    contentType: "text/xml; charset=UTF-8",
+    bodyFile: "lambda-blog.xml",
+    sha256: "8bb451d5727c3fb10533ae509dd9cd184b3ffb0e01181bc0e0d76e9ba08aea6f",
+    provenance:
+      "First three items of the live response retrieved 2026-09-14 (HTTP 200, text/xml; charset=UTF-8, 34299 bytes, RSS 2.0, 10 items). Channel header verbatim. The description elements are kept as published because they are the evidence that this feed carries the whole HubSpot post, including its inline featured image, which is why the source stores neither a description nor an image.",
+  },
+  "together-ai-blog": {
+    source: "together-ai-blog",
+    sourceUrl: "https://www.together.ai/blog/rss.xml",
+    retrievedAt: "2026-09-14T22:40:00Z",
+    contentType: "application/rss+xml; charset=utf-8",
+    bodyFile: "together-ai-blog.xml",
+    sha256: "a879b46888fc527422d01d411269703df471ab5c5c5ad8676a1ddc859182e3eb",
+    provenance:
+      "First four items of the live response retrieved 2026-09-14 (HTTP 200, application/rss+xml; charset=utf-8, 59196 bytes, RSS 2.0, 100 items). Channel header verbatim. Short publisher descriptions, and media:content on the items that carry artwork.",
+  },
+  "cloudflare-workers-blog": {
+    source: "cloudflare-workers-blog",
+    sourceUrl: "https://blog.cloudflare.com/tag/workers/rss/",
+    retrievedAt: "2026-09-14T22:40:00Z",
+    contentType: "application/rss+xml; charset=utf-8",
+    bodyFile: "cloudflare-workers-blog.xml",
+    sha256: "3aafce8104b4c26a6360d2978ab158b7190f6189884674d631d40302a48a68b9",
+    provenance:
+      "First four items of the live response retrieved 2026-09-14 (HTTP 200, application/rss+xml; charset=utf-8, 304887 bytes, RSS 2.0, 20 items), with content:encoded removed from each item. Channel header verbatim. The description elements and the image enclosures are the ones the parser reads and are kept as published.",
+  },
+  "digitalocean-blog": {
+    source: "digitalocean-blog",
+    sourceUrl: "https://www.digitalocean.com/rss/blog.atom",
+    retrievedAt: "2026-09-14T22:40:00Z",
+    contentType: "application/atom+xml",
+    bodyFile: "digitalocean-blog.xml",
+    sha256: "4c1d321b656f60300d76f14be7a50f9766746914fb144724468bd847c26257c4",
+    provenance:
+      "First three entries of the live response retrieved 2026-09-14 (HTTP 200, application/atom+xml, 1442396 bytes, Atom 1.0, 100 entries). Feed header verbatim. The content elements are kept as published because they are the element this parser reads and the evidence that the feed offers an article body rather than a summary, which is why the source stores no description.",
+  },
 };
 
 export function loadFeedFixture(source: NewsSourceSlug): FeedFixture {

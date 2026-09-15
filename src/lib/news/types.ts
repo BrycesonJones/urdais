@@ -17,6 +17,10 @@ export const NEWS_SOURCE_SLUGS = [
   "google-cloud-compute",
   "microsoft-azure-blog",
   "coreweave-blog",
+  "lambda-blog",
+  "together-ai-blog",
+  "cloudflare-workers-blog",
+  "digitalocean-blog",
 ] as const;
 
 export type NewsSourceSlug = (typeof NEWS_SOURCE_SLUGS)[number];
@@ -42,6 +46,16 @@ export type DescriptionPolicy = "source_description" | "omit_feed_carries_body";
 export type ImagePolicy = "feed_media" | "none";
 
 /**
+ * One permitted origin for a source's images, as host plus a path prefix.
+ *
+ * The path matters as much as the host. Two of the approved publishers serve
+ * their assets from one shared CDN, so a host-only rule would let either
+ * publisher's artwork in under the other's decision, and would let in every
+ * other site on that CDN besides.
+ */
+export type ImageHost = { host: string; pathPrefix: string };
+
+/**
  * One approved source. Every source-specific fact lives here — endpoint,
  * mechanism, category, rights state, normalization policy — so that adding a
  * source is adding a definition, never editing the pipeline.
@@ -61,6 +75,12 @@ export type NewsSourceDefinition = {
   mechanism: FeedMechanism;
   descriptionPolicy: DescriptionPolicy;
   imagePolicy: ImagePolicy;
+  /**
+   * Where this source's images may come from. Enforced during ingestion, so a
+   * URL outside it is never stored; next.config.ts mirrors the same list for
+   * the renderer. Empty whenever imagePolicy is "none".
+   */
+  imageHosts: readonly ImageHost[];
   /**
    * Some publishers emit links on a publishing host that their own article
    * pages declare non-canonical. Where that has been verified, the rewrite is
@@ -136,6 +156,7 @@ export type NewsDiagnosticCode =
   | "ENTRY_PUBLISHED_AT_UNPARSEABLE"
   | "ENTRY_PUBLISHED_AT_IMPLAUSIBLE"
   | "ENTRY_DUPLICATE_IN_FEED"
+  | "ENTRY_IMAGE_HOST_NOT_PERMITTED"
   | "FEED_EMPTY"
   | "HTTP_ERROR"
   | "RETRIEVAL_IDEMPOTENT";

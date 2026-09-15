@@ -15,6 +15,14 @@ type NewsThumbnailProps = {
  * is no URL or the image fails to load, shows a quiet Urdais fallback: a
  * navy surface with a faint cobalt square matrix. Purely illustrative, so
  * it is hidden from assistive technology; the headline carries the meaning.
+ *
+ * The image is `unoptimized` on purpose. Urdais is a discovery layer: it
+ * references a publisher's own URL and stores nothing, and routing these
+ * through the Next image optimizer would mean fetching and caching publisher
+ * artwork on Urdais's side. Rendering it directly leaves the bytes where the
+ * publisher put them, along with their logs, their cache headers, and their
+ * ability to stop serving it. Which URLs may be referenced at all is settled
+ * long before here, by the per-source allowlist enforced during ingestion.
  */
 export function NewsThumbnail({ imageUrl, sizes }: NewsThumbnailProps) {
   const [failed, setFailed] = useState(false);
@@ -33,6 +41,7 @@ export function NewsThumbnail({ imageUrl, sizes }: NewsThumbnailProps) {
           fill
           sizes={sizes}
           className="object-cover"
+          unoptimized
           onError={() => setFailed(true)}
         />
       ) : (

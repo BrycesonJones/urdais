@@ -61,19 +61,40 @@ ON CONFLICT DO NOTHING
 RETURNING id
 `;
 
+/**
+ * The newest publishable stories in one category, ranked per source before they
+ * are ranked against each other.
+ *
+ * A flat newest-first window cannot support any presentation rule, because one
+ * approved feed stamps a hundred items with a single publication minute and
+ * would fill any window on its own. Taking each source's newest few first means
+ * the candidate set always contains something from every publisher that has
+ * anything, which is what lets the rail be assembled. It is still one bounded
+ * query, and it still orders by publication time: the ranking selects
+ * candidates, it does not reorder them.
+ */
 const PUBLISHED_SQL = `
-SELECT a.id, a.category, a.title, a.summary, a.canonical_url, a.image_url, a.published_at,
-       p.name AS publisher_name
-  FROM pipeline.news_articles a
-  JOIN reference.source_interfaces si ON si.id = a.source_interface_id
-  JOIN reference.providers p ON p.id = si.provider_id
-  JOIN reference.news_sources ns ON ns.source_interface_id = si.id
- WHERE a.category = $1
-   AND a.withdrawn_at IS NULL
-   AND ns.is_enabled
-   AND si.production_access_state = 'production_approved'
- ORDER BY a.published_at DESC, a.id
- LIMIT $2
+WITH ranked AS (
+  SELECT a.id, a.category, a.title, a.summary, a.canonical_url, a.image_url, a.published_at,
+         p.name AS publisher_name,
+         ROW_NUMBER() OVER (
+           PARTITION BY a.source_interface_id
+           ORDER BY a.published_at DESC, a.id
+         ) AS source_rank
+    FROM pipeline.news_articles a
+    JOIN reference.source_interfaces si ON si.id = a.source_interface_id
+    JOIN reference.providers p ON p.id = si.provider_id
+    JOIN reference.news_sources ns ON ns.source_interface_id = si.id
+   WHERE a.category = $1
+     AND a.withdrawn_at IS NULL
+     AND ns.is_enabled
+     AND si.production_access_state = 'production_approved'
+)
+SELECT id, category, title, summary, canonical_url, image_url, published_at, publisher_name
+  FROM ranked
+ WHERE source_rank <= $2
+ ORDER BY published_at DESC, id
+ LIMIT $3
 `;
 
 export async function loadStoredNewsIdentity(
@@ -185,12 +206,19 @@ function asNullText(value: unknown): string | null {
   return text === "" ? null : text;
 }
 
+export type PublishedNewsQuery = {
+  /** Most rows to return in total. */
+  limit: number;
+  /** Most rows any one source may contribute to that total. */
+  perSource: number;
+};
+
 export async function loadPublishedNews(
   sql: NewsSqlExecutor,
   category: NewsCategory,
-  limit: number,
+  { limit, perSource }: PublishedNewsQuery,
 ): Promise<PublishedNewsRow[]> {
-  const result = await sql.query(PUBLISHED_SQL, [category, limit]);
+  const result = await sql.query(PUBLISHED_SQL, [category, perSource, limit]);
   return result.rows.flatMap((row) => {
     try {
       return [

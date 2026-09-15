@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts tagged &quot;Cloudflare Workers&quot;</title>
+    <description>All posts tagged with Cloudflare Workers</description>
+    <link>https://blog.cloudflare.com/tag/workers/</link>
+    <language>en-us</language>
+    <atom:link href="https://blog.cloudflare.com/tag/workers/rss" rel="self" type="application/rss+xml"/>
+    <image>
+      <url>https://blog.cloudflare.com/favicon.ico</url>
+      <title>Cloudflare Blog</title>
+      <link>https://blog.cloudflare.com</link>
+    </image>
+    <lastBuildDate>Tue, 15 Sep 2026 03:43:20 GMT</lastBuildDate>
+    <item>
+      <title>How we rebuilt Cloudflare Workers’ module registry for Node.js compatibility</title>
+      <link>https://blog.cloudflare.com/workers-module-registry-nodejs/</link>
+      <pubDate>Wed, 09 Sep 2026 13:00:00 GMT</pubDate>
+      <description>Workers now enables Node.js compatibility by default, supports applications up to 64 mebibytes, and adds a URL-based module registry with import.meta, lazy compilation, shared code caches, and clearer errors.</description>
+      <dc:creator>Logan Gatlin</dc:creator>
+      <dc:creator>James Snell</dc:creator>
+      <category>Cloudflare Workers</category>
+      <category>Developer Platform</category>
+      <category>Developers</category>
+      <category>JavaScript</category>
+      <category>Node.js</category>
+      <category>Open Source</category>
+      
+      <enclosure url="https://blog.cloudflare.com/_emdash/api/media/file/01M1WCDP58M0ZWWK4EQ5Z60396.01M1WCDPYM384QTHNEZA0WQ8W8.png" type="image/png" length="0"/>
+      <guid isPermaLink="false">01M1WCCYXD65TK4WBQW6QVC79V</guid>
+    </item><item>
+      <title>The Cloudflare Blog — brought to you by EmDash</title>
+      <link>https://blog.cloudflare.com/cloudflare-blog-uses-emdash/</link>
+      <pubDate>Mon, 24 Aug 2026 19:00:00 GMT</pubDate>
+      <description>We migrated the Cloudflare Blog to EmDash to prove our stack at massive scale. Here is how we stress-tested performance, safely routed production traffic, and redesigned the frontend experience.</description>
+      <dc:creator>Kody Jackson</dc:creator>
+      <dc:creator>Diogo Carneiro</dc:creator>
+      <dc:creator>Amy Dutton</dc:creator>
+      <category>Cloudflare Workers</category>
+      <category>Developer Platform</category>
+      <category>Developers</category>
+      <category>EmDash</category>
+      <category>Performance</category>
+      
+      <enclosure url="https://blog.cloudflare.com/_emdash/api/media/file/01M0TDC1Q5KWFS3GWEG7SHYMEP.png" type="image/png" length="0"/>
+      <guid isPermaLink="false">01M0TDEVJZ66N7RGSKFA27M2WZ</guid>
+    </item><item>
+      <title>Secure all your internal vibe-coded applications — in one click</title>
+      <link>https://blog.cloudflare.com/workers-protected-by-access/</link>
+      <pubDate>Fri, 14 Aug 2026 13:00:00 GMT</pubDate>
+      <description>Introducing Cloudflare Access for Workers. Attach an Access policy directly to a Worker and it applies everywhere that Worker runs — routes, custom domains, workers.dev, and previews — automatically.</description>
+      <dc:creator>Chythra Malapati</dc:creator>
+      <dc:creator>Matt Rothenberg</dc:creator>
+      <dc:creator>Matt Provost</dc:creator>
+      <category>AI</category>
+      <category>Cloudflare Access</category>
+      <category>Cloudflare Workers</category>
+      <category>Developer Platform</category>
+      <category>Developers</category>
+      <category>Product News</category>
+      <category>SASE</category>
+      <category>Zero Trust</category>
+      
+      <enclosure url="https://blog.cloudflare.com/_emdash/api/media/file/01KZW0HXCQS1KX2QJ1MD5YT1JP.png" type="image/png" length="0"/>
+      <guid isPermaLink="false">01KZW0MF4VJTZW3F7601QANQ7Z</guid>
+    </item><item>
+      <title>Everything we launched during Agents Week</title>
+      <link>https://blog.cloudflare.com/agents-week-review-august-2026/</link>
+      <pubDate>Mon, 10 Aug 2026 18:34:10 GMT</pubDate>
+      <description>Our latest Agents Week has come to a close. Here’s a recap of all the announcements we made from Wallets to Radar.</description>
+      <dc:creator>Shelley Jones</dc:creator>
+      <dc:creator>Ann Ming Samborski</dc:creator>
+      <dc:creator>Kathy Liao</dc:creator>
+      <category>Agents</category>
+      <category>Agents Week</category>
+      <category>AI</category>
+      <category>Cloudflare One</category>
+      <category>Cloudflare Workers</category>
+      <category>Developer Platform</category>
+      <category>Developers</category>
+      <category>SASE</category>
+      <category>Zero Trust</category>
+      
+      <enclosure url="https://blog.cloudflare.com/_emdash/api/media/file/01KZEF2H4G3BD74C5TP4BWMS76.png" type="image/png" length="0"/>
+      <guid isPermaLink="false">01KZEF237MMZ9CHJ8RTKBA8G7A</guid>
+    </item></channel></rss>
