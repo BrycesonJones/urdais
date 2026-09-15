@@ -1,5 +1,5 @@
 /**
- * Migration filenames, checked as a set.
+ * The repository's own migration files, checked as a set.
  *
  * Supabase identifies a migration by the numeric prefix of its filename, not by
  * the filename. Two files sharing a prefix are one version to the ledger: the
@@ -12,6 +12,11 @@
  * added a migration on the same day and both reached for the same timestamp,
  * and it cost a debugging cycle to notice the migration had never run. The set
  * of prefixes is cheap to check and the failure is expensive to find.
+ *
+ * The rule itself lives in `@/lib/migrations/integrity`, which `npm run
+ * migrations:check` and the production readiness path also call. This file is
+ * the rule applied to the real `supabase/migrations` directory, so the suite
+ * reddens on `main` the moment two migrations converge on one version.
  */
 
 import { readdirSync } from "node:fs";
@@ -19,10 +24,10 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { checkRepositoryMigrations } from "@/lib/migrations/integrity";
 import { expectedMigrationVersions } from "@/lib/tokens/production-readiness";
 
 const MIGRATIONS_DIR = path.join(process.cwd(), "supabase", "migrations");
-const FILENAME = /^(\d{14})_[a-z0-9_]+\.sql$/;
 
 function migrationFiles(): string[] {
   return readdirSync(MIGRATIONS_DIR)
@@ -35,17 +40,15 @@ describe("migration filenames", () => {
     expect(migrationFiles().length).toBeGreaterThan(0);
   });
 
-  it("gives every migration a unique version prefix", () => {
-    const byVersion = new Map<string, string[]>();
-    for (const name of migrationFiles()) {
-      const version = name.slice(0, 14);
-      byVersion.set(version, [...(byVersion.get(version) ?? []), name]);
-    }
-    const collisions = [...byVersion.entries()]
-      .filter(([, names]) => names.length > 1)
-      .map(([version, names]) => `${version}: ${names.join(", ")}`);
+  it("passes the repository integrity check with no structural finding", () => {
+    const result = checkRepositoryMigrations(migrationFiles());
     // A collision means one of these files will never run, and nothing says so.
-    expect(collisions, "two migrations share a version prefix; the ledger records one and silently skips the other").toEqual([]);
+    // A malformed name means the ledger cannot read a version out of it at all.
+    expect(
+      result.findings.filter((f) => f.severity === "structural").map((f) => `${f.code}: ${f.detail}`),
+      "run `npm run migrations:check` for the full diagnosis",
+    ).toEqual([]);
+    expect(result.valid).toBe(true);
   });
 
   it("produces one expected version per migration file", () => {
@@ -55,8 +58,9 @@ describe("migration filenames", () => {
     expect(new Set(expectedMigrationVersions(files)).size).toBe(files.length);
   });
 
-  it("names every migration so the ledger can read its version", () => {
-    const malformed = migrationFiles().filter((name) => !FILENAME.test(name));
-    expect(malformed, "migration filenames must be <14-digit timestamp>_<lower_snake_case>.sql").toEqual([]);
+  it("parses every migration into the version the ledger will record", () => {
+    const result = checkRepositoryMigrations(migrationFiles());
+    expect(result.malformed, "migration filenames must be <14-digit timestamp>_<lower_snake_case>.sql").toEqual([]);
+    expect(result.migrations.map((m) => m.version)).toEqual(expectedMigrationVersions(migrationFiles()));
   });
 });

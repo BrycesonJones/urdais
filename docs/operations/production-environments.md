@@ -268,18 +268,68 @@ compared against `select string_agg(version, ',' order by version) from supabase
 > `20260915020000` or `20260915030000` at all, and UrdaisDev's held nothing at or
 > after `20260915010000`.
 >
-> Two consequences worth knowing before the next `db push`. UrdaisProd carries
-> the two news migrations under wall-clock versions `20260915143157` and
-> `20260915143307` (the `apply_migration` path above), so the repository's
-> `20260915020000` and `20260915030000` still read as pending against it and must
-> not be replayed — they need the same rekeying repair. And
-> `pipeline.ubwi_publications_daily_idx` **does not exist in UrdaisProd**: the
-> UBWI daily cadence migration has never been applied there, so until it is, the
-> daily one-point-per-UTC-day rule rests on the application check alone and not
-> on the database. Two runs that overlap in time would not be caught.
->
-> Run the version comparison above after any merge that adds a migration, not
-> only after a deploy.
+> Both consequences were resolved on 15 September 2026 and are recorded here
+> because the *shape* recurs, not because either is outstanding. UrdaisProd had
+> carried the two news migrations under wall-clock versions `20260915143157` and
+> `20260915143307` and under `_prod` names, so the repository's `20260915020000`
+> and `20260915030000` read as pending against a database that had already run
+> them. The applied bodies in `statements` were pulled back and proved to be the
+> repository files exactly, apart from SQL comments, which the management API
+> strips, and apart from each file's trailing `do $$ … $$;` assertion block,
+> which the API had not recorded and which performs no DDL and no DML — the
+> production schema was separately checked against every invariant those blocks
+> assert. Both rows were then rekeyed in one guarded transaction. **Unlike the
+> `20260915042926` repair above, both the version *and* the name had drifted, so
+> both columns were set**; preserving the name there was a fact about that case,
+> not a rule. `statements` and `created_by` were untouched, no SQL was re-run and
+> no schema object changed. `20260915150000_ubwi_daily_publication_cadence` was
+> then the only pending migration and was applied with `supabase db push`;
+> `pipeline.ubwi_publications_daily_idx` now exists in UrdaisProd.
+
+### Checking migration integrity
+
+Run the version comparison after any merge that adds a migration, not only after
+a deploy — and do not run it by hand, because the comparison is what kept being
+skipped:
+
+```bash
+npm run migrations:check                              # static; no credentials
+npm run migrations:check -- --base-ref origin/main    # also against the merge target
+DATABASE_URL=<UrdaisProd> npm run migrations:check -- --production
+```
+
+The rule lives in `src/lib/migrations/integrity.ts` and nothing else implements
+it. The check **detects drift and repairs nothing**: whether two bodies of SQL
+are the same thing is a judgement about `statements`, and that judgement is not
+safe to automate.
+
+Three separate claims, which is the distinction that makes the guard usable:
+
+- **Repository structural validity.** No two migration files share a version
+  prefix, every filename is one the ledger can read a version out of, and no two
+  share a logical name. Always an error, needs no credentials, and runs on every
+  pull request and every push in the `validate` job. On a pull request CI also
+  checks the union of the branch's migrations and the merge target's, which
+  catches the case a branch cannot see on its own: two open pull requests each
+  adding a migration, each green, and the second to merge landing a duplicate.
+- **Pending.** A repository migration production has not applied. This is the
+  ordinary state of a pull request that adds a migration and it **passes**. A
+  guard that reddened here would be switched off, and the real drift would go
+  unnoticed again.
+- **Drift.** Production carrying a repository migration under a different
+  version, under an ad hoc `_prod` name, or a ledger row no repository migration
+  accounts for. This fails the `production migration ledger` job, which runs on
+  pushes to `main` where `URDAIS_PRODUCTION_DATABASE_URL` is configured and skips
+  where it is not. Its remedy is always the same: prove equivalence from
+  `statements`, then rekey in one transaction. **Rekey; never delete.**
+
+Ad hoc `_prod` migration versions are prohibited for the reason the name makes
+visible — the repository migration files are the source of truth, and a ledger
+row that does not carry a repository file's version and name is a row nothing in
+the repository can reason about. The approved deployment path is `supabase db
+push`, which reads the version from the filename. Where the management API is
+the only way in, the version it stamps must be corrected afterwards, in the same
+session, not discovered weeks later by a deploy offering to replay it.
 
 ### 2. Verify Wave-1 token prices into production
 
@@ -309,7 +359,7 @@ The second form additionally reads what the running site serves: the benchmarks 
 
 ### 4. Custom domain
 
-`urdais.com` is registered at Porkbun and its DNS is served by Porkbun's nameservers. It currently resolves to Porkbun's parking addresses and redirects to a link-shortener landing page, which is why the public domain serves no Urdais application.
+`urdais.com` is registered at Porkbun and its DNS is served by Porkbun's nameservers. **The domain now resolves to the Vercel deployment**: on 15 September 2026 `https://urdais.com/` and `https://urdais.com/api/tokens/prices` both answered `200` from the application, served by Vercel, and `/api/cron/news` and `/api/cron/ubwi` both answered `401` unauthenticated, which is the fail-closed behaviour the routes are supposed to have. The records below are what had to be replaced to get there.
 
 Pointing it at a deployment means replacing, in the Porkbun DNS panel:
 
