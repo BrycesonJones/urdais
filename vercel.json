@@ -8,6 +8,10 @@
     {
       "path": "/api/cron/ubwi",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/ucpi",
+      "schedule": "0 1 * * *"
     }
   ]
 }

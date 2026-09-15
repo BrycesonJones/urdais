@@ -86,7 +86,7 @@ export class PersistenceGateError extends Error {
   }
 }
 
-function previousDate(calculationDate: string): string {
+export function previousDate(calculationDate: string): string {
   return new Date(Date.parse(`${calculationDate}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
 }
 
@@ -339,8 +339,8 @@ export class SqlPersistence {
   normalizedObservationStatement(o: NormalizedObservation, ids: { entityIdFor: (domainId: string) => string | null }): SqlStatement {
     return {
       text:
-        "insert into pipeline.normalized_observations (id, raw_offer_id, instrument_id, instrument_spec_version_id, methodology_version_id, seller_entity_id, operator_entity_id, operator_attribution_basis, marketplace_entity_id, canonical_region_code, observed_at, source_effective_at, availability_observed_at, normalized_price, normalized_currency, normalized_unit, price_conversion, tax_basis, mandatory_fee_interpretation, promotional_indicators, hardware_identity_grade, full_device, gpu_count, minimum_gpu_count, minimum_topology_source_field, whole_node_required, topology_class, procurement_mode, preemptible, service_product, tenancy_grade, availability_state, availability_evidence_grade, availability_quantity, vcpu_per_accelerator, host_memory_gb_per_accelerator, storage_gb_per_accelerator, service_tier, observation_type, source_quality_grade) " +
-        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17::jsonb, $18, $19::jsonb, $20::jsonb, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38::jsonb, $39, $40)",
+        "insert into pipeline.normalized_observations (id, raw_offer_id, instrument_id, instrument_spec_version_id, methodology_version_id, seller_entity_id, operator_entity_id, operator_attribution_basis, marketplace_entity_id, canonical_region_code, observed_at, source_effective_at, availability_observed_at, normalized_price, normalized_currency, normalized_unit, price_conversion, tax_basis, mandatory_fee_interpretation, promotional_indicators, hardware_identity_grade, full_device, gpu_count, minimum_gpu_count, minimum_topology_source_field, whole_node_required, topology_class, procurement_mode, preemptible, service_product, tenancy_grade, availability_state, availability_evidence_grade, availability_quantity, vcpu_per_accelerator, host_memory_gb_per_accelerator, storage_gb_per_accelerator, service_tier, observation_type, source_quality_grade, gpu_vendor, gpu_model, form_factor, gpu_memory_gb, tenancy_evidence, region_mapping_evidence, source_attribution, seller_prices_by_quantity_tier) " +
+        "values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17::jsonb, $18, $19::jsonb, $20::jsonb, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38::jsonb, $39, $40, $41, $42, $43, $44, $45, $46, $47, $48)",
       params: [
         o.id, o.rawOfferId, this.lineage.instrumentId, this.lineage.instrumentSpecVersionId, this.lineage.methodologyVersionId,
         ids.entityIdFor(o.sellerEntityId), o.operatorEntityId === null ? null : ids.entityIdFor(o.operatorEntityId), o.operatorAttributionBasis, o.marketplaceEntityId === null ? null : ids.entityIdFor(o.marketplaceEntityId),
@@ -349,6 +349,7 @@ export class SqlPersistence {
         o.hardwareIdentityGrade, o.fullDevice, o.gpuCount, o.minimumGpuCount, o.minimumTopologySourceField, o.wholeNodeRequired, o.topologyClass,
         o.procurementMode, o.preemptible, o.serviceProduct, o.tenancyGrade, o.availabilityState, o.availabilityEvidenceGrade, o.availabilityQuantity,
         o.vcpuPerAccelerator, o.hostMemoryGbPerAccelerator, o.storageGbPerAccelerator, JSON.stringify(o.serviceTier), o.observationType, o.sourceQualityGrade,
+        o.gpuVendor, o.gpuModel, o.formFactor, o.gpuMemoryGb, o.tenancyEvidence, o.regionMappingEvidence, o.sourceAttribution ?? null, o.sellerPricesByQuantityTier ?? null,
       ],
     };
   }
