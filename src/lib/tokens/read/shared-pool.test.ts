@@ -62,6 +62,15 @@ class FakePool {
     return { rows: [] };
   }
 
+  /**
+   * `pg.Pool` is an EventEmitter and the read path subscribes to its `error`
+   * event -- an unhandled one there is an uncaught exception, which on a
+   * serverless instance ends the process rather than the request.
+   */
+  on() {
+    return this;
+  }
+
   async end() {
     this.ending = true;
   }

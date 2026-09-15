@@ -137,8 +137,8 @@ export async function loadFrozenUbwiPublication(
     // It says so in the log on the way, because "no UBWI row" and "could not reach the
     // database" render identically on the page and must not be indistinguishable to an
     // operator. A transient fault that leaves no trace cannot be diagnosed once it heals.
-    const detail = error instanceof Error ? error.message : String(error);
-    console.warn(`ubwi: publication unavailable (${detail}); the index row will not render`);
+    const { describeDatabaseError } = await import("@/lib/db/connection");
+    console.warn(`ubwi: publication unavailable (${describeDatabaseError(error)}); the index row will not render`);
     return null;
   }
 }

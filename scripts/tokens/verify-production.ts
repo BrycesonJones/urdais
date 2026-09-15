@@ -16,7 +16,7 @@
  * refuses to run, because an unattributed verification is not one.
  */
 
-import { tokenSqlExecutor, resolveTokenDatabaseUrl } from "@/lib/tokens/read/database";
+import { createTokenSqlExecutor, resolveTokenDatabaseUrl } from "@/lib/tokens/read/database";
 import { runProductionVerification } from "@/lib/tokens/verify-production";
 import type { Wave1Provider } from "@/lib/tokens/types";
 
@@ -66,13 +66,18 @@ async function main(): Promise<void> {
   }
   console.log(`target: ${url.replace(/:\/\/([^:@/]+)(:[^@]*)?@/, "://$1:***@")}${local ? " (local development)" : ""}`);
 
-  const sql = await tokenSqlExecutor(url);
+  // A private, owned client rather than the shared read pool. This command
+  // writes inside a `begin`/`commit`, and a transaction is a property of one
+  // backend: split across a pool's connections, its statements are not in the
+  // transaction the rollback would undo. The shared pool is `max: 1` today, so
+  // this worked -- by arithmetic, not by construction.
+  const sql = await createTokenSqlExecutor(url);
   const verifiedAt = arg("verified-at") ?? new Date().toISOString();
   const run = await runProductionVerification(
     sql,
     { verifiedBy, evidence, verifiedAt },
     process.argv.includes("--expect") ? EXPECTED : {},
-  );
+  ).finally(() => sql.end());
 
   console.log(`verified at ${verifiedAt} by ${verifiedBy}`);
   for (const row of run.verifications) {

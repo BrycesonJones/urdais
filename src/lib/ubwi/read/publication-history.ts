@@ -95,8 +95,8 @@ export async function loadFrozenUbwiHistory(
   } catch (error) {
     // An empty history and an unreachable database both draw no chart, so the reason
     // has to reach the log or it is lost entirely.
-    const detail = error instanceof Error ? error.message : String(error);
-    console.warn(`ubwi: history unavailable (${detail}); the chart will not render`);
+    const { describeDatabaseError } = await import("@/lib/db/connection");
+    console.warn(`ubwi: history unavailable (${describeDatabaseError(error)}); the chart will not render`);
     return [];
   }
 }
