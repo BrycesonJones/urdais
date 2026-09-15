@@ -131,12 +131,14 @@ describe("compute price sibling specifications", () => {
     expect(docPages[docPages.indexOf(child!) + 1]).toBe(listed);
   });
 
-  it("links to the parent and the child, states it is a different economic object, and is not launched", () => {
+  it("links to the parent and the child, states it is a different economic object, and is approved at 1.0.0", () => {
     const doc = readFileSync(path.join(process.cwd(), "docs", listed!.file), "utf8");
     expect(doc).toContain(`](${docHref(ucpi!.slug)})`);
     expect(doc).toContain(`](${docHref(child!.slug)})`);
     expect(doc.match(/^# /gm)).toHaveLength(1);
-    expect(doc).toContain("version 0.1.2-draft");
+    expect(doc).toContain("version 1.0.0, effective 15 September 2026");
+    // The drafts stay in the version history as lineage.
+    expect(doc).toContain("0.1.2-draft, 14 September 2026");
     expect(doc).toContain("SELLER_LEGAL_IDENTITY_UNRESOLVED");
     expect(doc).toContain("different economic object");
     expect(doc).toContain("listed prices, not guaranteed availability");
@@ -164,17 +166,30 @@ describe("listed GPU family specifications", () => {
     }
   });
 
-  it("each listed GPU child cites the family specification and remains a draft", () => {
+  it("each listed GPU child cites the family specification and is approved at 1.0.0, with its draft lineage retained", () => {
     const familyDoc = readFileSync(path.join(process.cwd(), "docs", family!.file), "utf8");
-    expect(familyDoc).toContain("version 0.1.0-draft");
+    expect(familyDoc).toContain("version 1.0.0, effective 15 September 2026");
+    expect(familyDoc).toContain("0.1.0-draft, 14 September 2026");
     expect(familyDoc).toContain("listed on-demand");
     expect(familyDoc).toContain("never a participant");
     for (const slug of children) {
       const doc = readFileSync(path.join(process.cwd(), "docs", findDoc(slug)!.file), "utf8");
       expect(doc).toContain(`](${docHref(family!.slug)})`);
-      expect(doc).toContain("version 0.1.0-draft");
+      expect(doc).toContain("version 1.0.0, effective 15 September 2026");
+      expect(doc).toContain("0.1.0-draft, 14 September 2026");
       expect(doc.match(/^# /gm)).toHaveLength(1);
     }
+  });
+
+  it("the family specification carries the seller-refusal rule, and the accessible child is untouched by it", () => {
+    const familyDoc = readFileSync(path.join(process.cwd(), "docs", family!.file), "utf8");
+    expect(familyDoc).toContain("SELLER_USE_REFUSED");
+    // The point of the rule: an intermediary does not launder a refusal of the use.
+    expect(familyDoc).toContain("does not cure such a refusal");
+    // The accessible-price child is a different track and stays blocked.
+    const accessible = readFileSync(path.join(process.cwd(), "docs", findDoc("methodology/ucpi-h100-sxm")!.file), "utf8");
+    expect(accessible).toContain("Launch blocked");
+    expect(accessible).not.toContain("version 1.0.0");
   });
 });
 

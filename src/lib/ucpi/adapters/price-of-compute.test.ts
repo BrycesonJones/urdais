@@ -24,7 +24,7 @@ const PAYLOAD = validatePocPrices(JSON.parse(readFileSync(path.join(process.cwd(
 const ENTITY_IDS = new Map(POC_SELLER_EVIDENCE_2026_09_14.map((e) => [e.slug, `ent-${e.slug}`]));
 // The frozen snapshot of the first candidate: H100 SXM topology only, Verda unevidenced.
 const PROFILES = pocSellerProfiles(ENTITY_IDS, POC_SELLER_EVIDENCE_2026_09_14);
-const ENTITIES: MarketEntity[] = [...ENTITY_IDS].map(([slug, id]) => ({ id, slug, name: slug, legalName: PROFILES.get(slug)?.legalNameEvidenced ? `${slug} legal` : null, legalIdentifier: null, controllingEntityId: null }));
+const ENTITIES: MarketEntity[] = [...ENTITY_IDS].map(([slug, id]) => ({ id, slug, name: slug, legalName: PROFILES.get(slug)?.legalNameEvidenced ? `${slug} legal` : null, legalIdentifier: null, controllingEntityId: null, useRefusedEvidence: PROFILES.get(slug)?.useRefused ?? null }));
 const ENTITY_MAP: ReadonlyMap<string, MarketEntity> = new Map(ENTITIES.map((e) => [e.id, e]));
 const LISTED_VERSIONS = { methodologyVersion: "0.1.2-draft", instrumentSpecVersion: "0.1.1-draft", instrument: "UCPI-H100-SXM-LISTED" };
 const REGISTRY = [...REGISTRY_TODAY, permitted(PRICE_OF_COMPUTE_SLUG)];

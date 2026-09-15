@@ -17,11 +17,19 @@
 
 import type { PocSellerProfile, PocSellerProfiles, PocSellerTopology } from "@/lib/ucpi/adapters/price-of-compute";
 
-export type PocSellerEvidence = Omit<PocSellerProfile, "entityId" | "topology"> & { slug: string; topology: Readonly<Record<string, PocSellerTopology>> };
+// `useRefused` is optional here and required on the profile: a snapshot recorded before any
+// refusal existed stays valid and unedited, and binding fills the absence with null.
+export type PocSellerEvidence = Omit<PocSellerProfile, "entityId" | "topology" | "useRefused"> & {
+  slug: string;
+  topology: Readonly<Record<string, PocSellerTopology>>;
+  useRefused?: string | null;
+};
 
 const RUNPOD_H100 = "Runpod GPU catalog: single-GPU H100 SXM pods; minPodGpuCount field (Phase 1/2 research, 12 September 2026)";
 const RUNPOD_TENANCY = "Runpod documentation: Secure Cloud pods run on dedicated hardware in vetted data centres (Phase 2 research); the dataset's on_demand row is Secure Cloud, community priced separately";
 const LAMBDA_TENANCY = "Lambda documentation does not state whether a 1x instance shares its host; question sent in-thread, unanswered";
+const RUNPOD_USE_REFUSED =
+  "Runpod Support, 2026-09-14: refused approval of systematic retrieval of catalog, pricing and availability data for the purpose of building a compilation, and of use of that data as an input to a commercial market-data product. A decision about the intended use, not the retrieval mechanism. Preserved in docs/architecture/sources/runpod-permission-denied.md.";
 
 /**
  * The snapshot the first H100 candidate was interpreted under (UCPI-H100-SXM-LISTED
@@ -126,13 +134,28 @@ export const POC_SELLER_EVIDENCE_2026_09_14_GPU_FAMILY: readonly PocSellerEviden
   { slug: "vast", kind: "marketplace_aggregate", tenancyGrade: "unknown", tenancyEvidence: null, legalNameEvidenced: false, topology: {} },
 ];
 
+/**
+ * The production snapshot from 15 September 2026, the day UCPI-LISTED-GPU 1.0.0 was approved.
+ *
+ * It differs from the 14 September snapshot in exactly one fact, and that fact is not about
+ * hardware: Runpod refused Urdais the intended use in writing on 14 September 2026, and a
+ * refusal of the use is not cured by receiving the same listed price through Price of Compute.
+ * Runpod is therefore excluded from every listed series under the family's seller-refusal rule.
+ *
+ * The 14 September snapshot is left exactly as it was. The candidate of that date was
+ * interpreted under it and stays reproducible from it; this is a new snapshot, not an edit.
+ */
+export const POC_SELLER_EVIDENCE_2026_09_15: readonly PocSellerEvidence[] = POC_SELLER_EVIDENCE_2026_09_14_GPU_FAMILY.map((e) =>
+  e.slug === "runpod" ? { ...e, useRefused: RUNPOD_USE_REFUSED } : e,
+);
+
 /** Binds a snapshot to market entity ids; a slug absent from `entityIdBySlug` is left unmapped and cannot participate. */
-export function pocSellerProfiles(entityIdBySlug: ReadonlyMap<string, string>, evidence: readonly PocSellerEvidence[] = POC_SELLER_EVIDENCE_2026_09_14_GPU_FAMILY): PocSellerProfiles {
+export function pocSellerProfiles(entityIdBySlug: ReadonlyMap<string, string>, evidence: readonly PocSellerEvidence[] = POC_SELLER_EVIDENCE_2026_09_15): PocSellerProfiles {
   const out = new Map<string, PocSellerProfile>();
   for (const e of evidence) {
     const entityId = entityIdBySlug.get(e.slug);
     if (entityId === undefined) continue;
-    out.set(e.slug, { entityId, kind: e.kind, topology: new Map(Object.entries(e.topology)), tenancyGrade: e.tenancyGrade, tenancyEvidence: e.tenancyEvidence, legalNameEvidenced: e.legalNameEvidenced });
+    out.set(e.slug, { entityId, kind: e.kind, topology: new Map(Object.entries(e.topology)), tenancyGrade: e.tenancyGrade, tenancyEvidence: e.tenancyEvidence, legalNameEvidenced: e.legalNameEvidenced, useRefused: e.useRefused ?? null });
   }
   return out;
 }

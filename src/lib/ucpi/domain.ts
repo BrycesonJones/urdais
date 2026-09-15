@@ -98,6 +98,13 @@ export type MarketEntity = {
   legalIdentifier: string | null;
   /** Evidenced common control; drives collapse. Never inferred from prices. */
   controllingEntityId: string | null;
+  /**
+   * Where the seller has refused Urdais the intended use in writing, the reference to that
+   * refusal; null otherwise. Set, it excludes the seller by every route under the listed
+   * family's seller-refusal rule, an intermediary included, because what was refused was the
+   * use and not the road. Mirrors reference.market_entities.use_refused_evidence.
+   */
+  useRefusedEvidence: string | null;
 };
 
 /** Urdais's interpretation of one raw offer under one child version. Mirrors pipeline.normalized_observations. */
@@ -167,6 +174,7 @@ export type ExclusionReason =
   | "PROMOTIONAL_PRICE"
   | "MINIMUM_TOPOLOGY_UNKNOWN"
   | "SELLER_LEGAL_IDENTITY_UNRESOLVED"
+  | "SELLER_USE_REFUSED"
   | "WHOLE_NODE_REQUIRED"
   | "TENANCY_UNRESOLVED"
   | "REGION_UNRESOLVED"

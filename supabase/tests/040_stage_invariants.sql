@@ -149,11 +149,13 @@ begin
   begin delete from pipeline.eligibility_diagnostics where assessment_id = a_new; exception when restrict_violation then ok := true; end;
   if not ok then raise exception 'diagnostic was deletable'; end if;
 
-  -- Vocabulary counts match the methodology.
-  select count(*) into n from reference.exclusion_reasons; if n <> 27 then raise exception 'expected 27 exclusion reasons, found %', n; end if;
+  -- Vocabulary counts match the methodology. 27 from UCPI-H100-SXM, plus
+  -- SELLER_USE_REFUSED added at UCPI-LISTED-GPU 1.0.0 for a seller that refused
+  -- Urdais the intended use.
+  select count(*) into n from reference.exclusion_reasons; if n <> 28 then raise exception 'expected 28 exclusion reasons, found %', n; end if;
   select count(*) into n from reference.diagnostic_codes; if n <> 8 then raise exception 'expected 8 diagnostic codes, found %', n; end if;
   select count(*) into n from reference.exclusion_reasons where stage = 'P0'; if n <> 3 then raise exception 'expected 3 P0 reasons, found %', n; end if;
-  select count(*) into n from reference.exclusion_reasons where stage = 'P1'; if n <> 8 then raise exception 'expected 8 P1 reasons, found %', n; end if;
+  select count(*) into n from reference.exclusion_reasons where stage = 'P1'; if n <> 9 then raise exception 'expected 9 P1 reasons, found %', n; end if;
   select count(*) into n from reference.exclusion_reasons where stage = 'P2'; if n <> 16 then raise exception 'expected 16 P2 reasons, found %', n; end if;
 
   raise notice 'stage invariants: ok';
