@@ -89,52 +89,56 @@ export async function loadFrozenUbwiPublication(
     const url = resolveTokenDatabaseUrl(env, { allowLocalDefault: false });
     if (!url) return null;
 
+    // The executor is process-wide and shared with the news and token reads; it is
+    // borrowed here, never closed. See @/lib/tokens/read/database.
     const sql = await tokenSqlExecutor(url);
-    try {
-      const { rows } = await sql.query(
-        `select published_at, frozen_at, published_value_percent,
-                methodology_version, residual_model_version
-           from pipeline.ubwi_publications
-          where frozen_at is not null and superseded_by_id is null
-          order by published_at desc, frozen_at desc
-          limit 2`,
-        [],
-      );
-      if (rows.length === 0) return null;
+    const { rows } = await sql.query(
+      `select published_at, frozen_at, published_value_percent,
+              methodology_version, residual_model_version
+         from pipeline.ubwi_publications
+        where frozen_at is not null and superseded_by_id is null
+        order by published_at desc, frozen_at desc
+        limit 2`,
+      [],
+    );
+    if (rows.length === 0) return null;
 
-      const latest = rows[0] as Row;
-      const previous = rows[1] as Row | undefined;
+    const latest = rows[0] as Row;
+    const previous = rows[1] as Row | undefined;
 
-      const valuePercent = Number(latest.published_value_percent);
-      if (!Number.isFinite(valuePercent)) return null;
+    const valuePercent = Number(latest.published_value_percent);
+    if (!Number.isFinite(valuePercent)) return null;
 
-      const methodologyVersion = String(latest.methodology_version);
-      const residualModelVersion = String(latest.residual_model_version);
+    const methodologyVersion = String(latest.methodology_version);
+    const residualModelVersion = String(latest.residual_model_version);
 
-      const changePercent = ubwiChangePercent(
-        { valuePercent, methodologyVersion, residualModelVersion },
-        previous === undefined
-          ? undefined
-          : {
-              valuePercent: Number(previous.published_value_percent),
-              methodologyVersion: String(previous.methodology_version),
-              residualModelVersion: String(previous.residual_model_version),
-            },
-      );
+    const changePercent = ubwiChangePercent(
+      { valuePercent, methodologyVersion, residualModelVersion },
+      previous === undefined
+        ? undefined
+        : {
+            valuePercent: Number(previous.published_value_percent),
+            methodologyVersion: String(previous.methodology_version),
+            residualModelVersion: String(previous.residual_model_version),
+          },
+    );
 
-      return {
-        publishedAt: new Date(String(latest.published_at)).toISOString(),
-        valuePercent,
-        changePercent,
-        methodologyVersion,
-        residualModelVersion,
-      };
-    } finally {
-      await sql.end?.();
-    }
-  } catch {
+    return {
+      publishedAt: new Date(String(latest.published_at)).toISOString(),
+      valuePercent,
+      changePercent,
+      methodologyVersion,
+      residualModelVersion,
+    };
+  } catch (error) {
     // No database, an unreachable one, or a schema without the table. The surface shows
     // its no-value state; it never invents a point to fill the gap.
+    //
+    // It says so in the log on the way, because "no UBWI row" and "could not reach the
+    // database" render identically on the page and must not be indistinguishable to an
+    // operator. A transient fault that leaves no trace cannot be diagnosed once it heals.
+    const detail = error instanceof Error ? error.message : String(error);
+    console.warn(`ubwi: publication unavailable (${detail}); the index row will not render`);
     return null;
   }
 }
