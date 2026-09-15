@@ -6,6 +6,7 @@ import {
   UBWI_EXPLANATION,
   UBWI_GATE_SUMMARY,
   UBWI_METHODOLOGY_HREF,
+  UBWI_VALUE_FRACTION_DIGITS,
   type UbwiSurface,
 } from "@/lib/ubwi/read/surface";
 
@@ -38,7 +39,7 @@ export function UbwiSection({ surface }: { surface: UbwiSurface }) {
           <div>
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-medium tabular-nums text-neutral-100">
-                {formatNumber(surface.valuePercent, 4)}
+                {formatNumber(surface.valuePercent, UBWI_VALUE_FRACTION_DIGITS)}
               </span>
               <span className="text-lg text-neutral-400">{surface.unit}</span>
             </div>

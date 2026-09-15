@@ -9,6 +9,9 @@
  * the first verified production observation, and percentage change is unavailable until a
  * second one exists: there is no such thing as a change from nothing.
  */
+import { MARKET_CATALOG } from "@/data/market-catalog";
+import type { IndexSnapshot } from "@/types/market";
+
 import { calculateUbwi, METHODOLOGY_VERSION, RESIDUAL_MODEL_VERSION, UBWI_UNIT } from "../calculate";
 import { CHAINLINK_BTC_USD_FEED } from "../chainlink";
 import { evaluateGate, PRODUCTION_V1_THRESHOLDS } from "../gate";
@@ -116,6 +119,41 @@ export const UBWI_EXPLANATION =
   "UBWI estimates Bitcoin's share of total global wealth using directly observed national balance sheets where available and a versioned residual model for economies without comparable published balance sheets.";
 
 export const UBWI_METHODOLOGY_HREF = "/docs/methodology/ubwi";
+
+/**
+ * Decimal places for a published UBWI value, wherever it is shown.
+ *
+ * UBWI's whole defensible range is about 0.22 % to 0.30 %. Two decimals would render
+ * most of that band as the same number, so every surface that shows the value shares
+ * this constant rather than choosing its own precision.
+ */
+export const UBWI_VALUE_FRACTION_DIGITS = 4;
+
+/**
+ * The homepage watchlist row for UBWI, or null when nothing is published.
+ *
+ * A row exists only for a frozen production point. There is deliberately no withheld
+ * row and no placeholder level: a watchlist row is a number, and UBWI has a number only
+ * once the gate has passed and a point is frozen. Until then the homepage shows no UBWI
+ * row at all and the detail page carries the withheld state with its full disclosure.
+ *
+ * Change stays null until a second observation exists; IndexRow omits the movement line
+ * for a null change rather than printing a fabricated 0 %.
+ */
+export function ubwiIndexSnapshot(
+  publication: { publishedAt: string; valuePercent: number; changePercent: number | null } | null,
+): IndexSnapshot | null {
+  if (publication === null) return null;
+  return {
+    symbol: "UBWI",
+    name: MARKET_CATALOG.find((market) => market.symbol === "UBWI")?.name ?? "Urdais Bitcoin Wealth Index",
+    unit: UBWI_UNIT,
+    value: publication.valuePercent,
+    valueFractionDigits: UBWI_VALUE_FRACTION_DIGITS,
+    changePercent: publication.changePercent,
+    asOf: Math.floor(new Date(publication.publishedAt).getTime() / 1000),
+  };
+}
 
 /**
  * Build the surface state. `publication` is the frozen published point where one exists;
