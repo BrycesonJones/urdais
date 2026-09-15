@@ -8,7 +8,7 @@ vi.mock("@/lib/news/read/load", () => ({ loadComputeNews: vi.fn() }));
 import { NewsSections } from "@/components/home/news-sections";
 import { loadComputeNews } from "@/lib/news/read/load";
 import { MOCK_NEWS } from "@/data/mock/news";
-import { NEWS_CATEGORIES, type NewsArticle } from "@/types/news";
+import { HOMEPAGE_NEWS_CATEGORIES, NEWS_CATEGORIES, type NewsArticle } from "@/types/news";
 
 const computeNews = vi.mocked(loadComputeNews);
 
@@ -48,11 +48,46 @@ beforeEach(() => {
 });
 
 describe("the homepage news rails", () => {
-  it("keeps all six rails in their established order", async () => {
+  it("shows exactly the V1 categories, in taxonomy order", async () => {
     computeNews.mockResolvedValue({ articles: PRODUCTION, available: true });
     await renderSections();
     const headings = screen.getAllByRole("heading", { level: 2 }).map((node) => node.textContent);
-    expect(headings).toEqual(NEWS_CATEGORIES.map((category) => category.label));
+    expect(headings).toEqual(["Compute", "Energy / Power", "Crypto"]);
+    expect(headings).toEqual(HOMEPAGE_NEWS_CATEGORIES.map((category) => category.label));
+  });
+
+  it("hides the deferred categories completely, heading and stories alike", async () => {
+    computeNews.mockResolvedValue({ articles: PRODUCTION, available: true });
+    await renderSections();
+
+    // The hidden set is the complement of the visible one, so this test cannot
+    // drift out of step with the config it is checking.
+    const hidden = NEWS_CATEGORIES.filter(
+      (category) => !HOMEPAGE_NEWS_CATEGORIES.some((visible) => visible.id === category.id),
+    );
+    expect(hidden.map((category) => category.id)).toEqual(["memory", "photonics", "ai-chips"]);
+
+    for (const category of hidden) {
+      expect(screen.queryByRole("region", { name: category.label })).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading", { level: 2, name: category.label })).not.toBeInTheDocument();
+      // Not merely visually hidden: none of their mock stories is rendered at all.
+      for (const mock of MOCK_NEWS[category.id]) {
+        expect(screen.queryByText(mock.title)).not.toBeInTheDocument();
+      }
+    }
+  });
+
+  it("leaves the taxonomy alone: hidden is not deleted", async () => {
+    // The backend still knows about all six. Ingestion, the schedule and the
+    // database category constraint are unchanged by a presentation decision.
+    expect(NEWS_CATEGORIES.map((category) => category.id)).toEqual([
+      "compute",
+      "memory",
+      "photonics",
+      "energy-power",
+      "ai-chips",
+      "crypto",
+    ]);
   });
 
   it("renders Compute from production data, attributed and linked to the publisher", async () => {
@@ -139,14 +174,16 @@ describe("the homepage news rails", () => {
     expect(img.getAttribute("src")).not.toContain("/_next/image");
   });
 
-  it("leaves the five categories that are still mocked working and labelled as demo", async () => {
+  it("leaves the visible categories that are still mocked working and labelled as demo", async () => {
     computeNews.mockResolvedValue({ articles: PRODUCTION, available: true });
     await renderSections();
 
-    for (const category of NEWS_CATEGORIES) {
+    for (const category of HOMEPAGE_NEWS_CATEGORIES) {
       if (category.id === "compute") continue;
       const section = rail(category.label);
       expect(within(section).getByText("Demo content")).toBeInTheDocument();
+      // And never mistaken for production: a demo rail carries no Live badge.
+      expect(within(section).queryByText("Live")).not.toBeInTheDocument();
       const mocks = MOCK_NEWS[category.id];
       expect(within(section).getAllByRole("heading", { level: 3 })).toHaveLength(mocks.length);
       expect(within(section).getByText(mocks[0]!.title)).toBeInTheDocument();
