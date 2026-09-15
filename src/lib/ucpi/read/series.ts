@@ -2,6 +2,15 @@
  * The read path from the publication layer to the UcpiSeriesPoint contract.
  * Internal for now; not routed. It reads only what the contract exposes: no
  * participant prices, no raw payloads, no permission documents, no secrets.
+ *
+ * It also reads only what was actually released. `loadRegionalSeries` left-joins
+ * the publication, so a calculated observation the publication gate refused --
+ * a draft methodology version, a permission-lineage failure, a simulation --
+ * comes back with no publication row, and rendering it would put the price the
+ * gate had just withheld onto the public series with the status "delayed", as
+ * though release were merely late. A value is a series point only once it has
+ * been published. An Unavailable observation is kept: it is a published state
+ * under the family's structural rule and it carries no price.
  */
 
 import { CONSTITUENT_FIELDS, toSeriesPoint, validatePublicResponseShape, type UcpiSeriesPoint } from "@/lib/ucpi/api-contract";
@@ -11,13 +20,15 @@ export type SeriesFilter = { instrument: string; country?: string; from?: string
 
 export async function getSeries(persistence: Pick<Persistence, "loadRegionalSeries">, filter: SeriesFilter): Promise<UcpiSeriesPoint[]> {
   const rows = await persistence.loadRegionalSeries(filter);
-  return rows.map((row) =>
-    toSeriesPoint(
-      // Participants never leave the read path.
-      { ...row, participants: [] },
-      { calculatedAt: row.calculatedAt, publishedAt: row.publication?.publishedAt ?? null },
-    ),
-  );
+  return rows
+    .filter((row) => row.publication !== null || row.outcome === "unavailable")
+    .map((row) =>
+      toSeriesPoint(
+        // Participants never leave the read path.
+        { ...row, participants: [] },
+        { calculatedAt: row.calculatedAt, publishedAt: row.publication?.publishedAt ?? null },
+      ),
+    );
 }
 
 export async function getLatestPoint(persistence: Pick<Persistence, "loadRegionalSeries">, instrument: string, country: string): Promise<UcpiSeriesPoint | null> {

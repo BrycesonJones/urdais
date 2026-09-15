@@ -12,7 +12,23 @@ import { regionMappingKey } from "@/lib/ucpi/collector";
 import type { MarketEntity, NormalizedObservation, RequestSpec, Retrieval } from "@/lib/ucpi/domain";
 import { REGISTRY_SNAPSHOT_2026_09_13, type SourceRegistryState } from "@/lib/ucpi/permission-gate";
 
-export const VERSIONS = { methodologyVersion: "0.1.2-draft", instrumentSpecVersion: "0.1.4-draft", instrument: "UCPI-H100-SXM" } as const;
+/**
+ * The test lineage. The approval states are the fixture's own hypothesis, not a
+ * claim about the registry: every real UCPI methodology and specification version
+ * is still `draft`, and the publication gate refuses a draft. Tests that exercise
+ * the other gates need a run that would otherwise publish, so the fixture states
+ * approved and the draft refusal is tested against its own fixture below.
+ */
+export const VERSIONS = {
+  methodologyVersion: "0.1.2-draft",
+  instrumentSpecVersion: "0.1.4-draft",
+  methodologyVersionStatus: "approved",
+  instrumentSpecVersionStatus: "approved",
+  instrument: "UCPI-H100-SXM",
+} as const;
+
+/** The registry as it actually stands: nothing approved, so nothing may publish. */
+export const DRAFT_VERSIONS = { ...VERSIONS, methodologyVersionStatus: "draft", instrumentSpecVersionStatus: "draft" } as const;
 
 export const ENTITIES: readonly MarketEntity[] = [
   { id: "ent-runpod", slug: "runpod", name: "Runpod", legalName: "Runpod, Inc.", legalIdentifier: null, controllingEntityId: null },
