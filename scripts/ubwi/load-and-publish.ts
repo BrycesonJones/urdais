@@ -194,8 +194,9 @@ async function loadNumerator(sql: Sql, c: UbwiCalculation): Promise<string> {
     sql,
     `insert into pipeline.btc_market_observations (
        observed_at, block_height, height_confirmed_by, supply_btc, supply_construction,
-       supply_source_interface_id, price_rule, venue_count, median_price_usd, market_cap_usd, retrieved_at
-     ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) returning id`,
+       supply_source_interface_id, price_rule, price_source_interface_id, venue_count,
+       price_usd, market_cap_usd, retrieved_at
+     ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) returning id`,
     [
       n.observedAt,
       n.blockHeight,
@@ -204,20 +205,66 @@ async function loadNumerator(sql: Sql, c: UbwiCalculation): Promise<string> {
       n.supplyConstruction,
       supplyIfaceId,
       n.priceRule,
-      n.venues.length,
-      n.medianPriceUsd,
+      await requireId(
+        sql,
+        "select id from reference.source_interfaces where slug = $1",
+        [n.priceSourceInterface],
+        `price interface ${n.priceSourceInterface}`,
+      ),
+      n.venues?.length ?? null,
+      n.priceUsd,
       n.marketCapUsd,
       n.observedAt,
     ],
   );
   const observationId = inserted!.id as string;
 
+  // The Chainlink round, frozen whole. A published point that cannot be re-read from the
+  // chain later is not reproducible, and a round id alone stops identifying a round once
+  // the aggregator behind the proxy has been replaced.
+  const feed = n.chainlink;
+  if (feed !== undefined) {
+    await sql.query(
+      `insert into pipeline.btc_chainlink_observations (
+         observation_id, chain_id, proxy_address, aggregator_address, aggregator_type_and_version,
+         feed_description, decimals, proxy_version, round_id, phase_id, aggregator_round_id,
+         answer, normalized_usd, started_at, updated_at, answered_in_round, retrieval_timestamp,
+         block_number, block_hash, rpc_source, rpc_cross_check_source
+       ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
+                 to_timestamp($14), to_timestamp($15), $16, to_timestamp($17), $18,$19,$20,$21)
+       on conflict do nothing`,
+      [
+        observationId,
+        feed.chainId,
+        feed.proxyAddress,
+        feed.aggregatorAddress,
+        feed.aggregatorTypeAndVersion,
+        feed.description,
+        feed.decimals,
+        feed.proxyVersion,
+        feed.roundId,
+        feed.phaseId,
+        feed.aggregatorRoundId,
+        feed.answer,
+        feed.normalizedUsd,
+        feed.startedAt,
+        feed.updatedAt,
+        feed.answeredInRound,
+        feed.retrievalTimestamp,
+        feed.blockNumber,
+        feed.blockHash,
+        feed.rpcSource,
+        feed.rpcCrossCheckSource,
+      ],
+    );
+  }
+
   const venueSlug: Record<string, string> = {
     coinbase: "coinbase-spot",
     bitstamp: "bitstamp-ticker",
     kraken: "kraken-ticker",
   };
-  for (const v of n.venues) {
+  for (const v of n.venues ?? []) {
     const venueId = await requireId(
       sql,
       "select id from reference.source_interfaces where slug = $1",

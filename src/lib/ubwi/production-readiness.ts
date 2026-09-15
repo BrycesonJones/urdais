@@ -8,8 +8,14 @@
  */
 import { calculateUbwi } from "./calculate";
 import { evaluateGate, PRODUCTION_V1_THRESHOLDS, type GateThresholds } from "./gate";
+import { PRODUCTION_BTC_OBSERVATION, numeratorSourceInterfaces } from "./numerator";
 import { OBSERVED_ECONOMIES } from "./observations";
-import { SOURCE_INTERFACES, effectiveRightsStatus, termsArtifactIsStale } from "./rights";
+import {
+  SOURCE_INTERFACES,
+  effectiveRightsStatus,
+  mayPublishNumeratorFrom,
+  termsArtifactIsStale,
+} from "./rights";
 import type { UbwiCalculation } from "./types";
 
 export type ReadinessFailureKind =
@@ -91,6 +97,8 @@ export async function checkUbwiProductionReadiness(
   const notes: string[] = [];
   const thresholds = input.thresholds ?? PRODUCTION_V1_THRESHOLDS;
 
+  const calculation = calculateUbwi({ calculatedAt: input.calculatedAt });
+
   // ---------------------------------------------------------------- research + rights
   if (OBSERVED_ECONOMIES.length === 0) {
     findings.push({
@@ -102,12 +110,23 @@ export async function checkUbwiProductionReadiness(
     });
   }
 
+  // What the *current* methodology actually reads. A registered interface that supplies
+  // nothing is a different fact from one that supplies a published value and may not, and
+  // conflating them was accurate only while the venue median was the price rule. Under
+  // methodology 1.1.0 the three exchange venues supply nothing: they are retired, their
+  // retained terms artifacts are kept as the evidence for that retirement, and reporting
+  // them as blockers would send an operator to solve a problem that no longer exists.
+  const liveNumeratorSlugs = new Set(numeratorSourceInterfaces(PRODUCTION_BTC_OBSERVATION));
+
   for (const iface of SOURCE_INTERFACES) {
     const status = effectiveRightsStatus(iface);
-    const used = OBSERVED_ECONOMIES.some(
+    const suppliesDenominator = OBSERVED_ECONOMIES.some(
       (e) => e.sourceInterface === iface.slug || e.fx.sourceInterface === iface.slug,
     );
-    if (used && status !== "cleared") {
+    const suppliesNumerator = liveNumeratorSlugs.has(iface.slug);
+    const used = suppliesDenominator || suppliesNumerator;
+
+    if (suppliesDenominator && status !== "cleared") {
       findings.push({
         kind: "RIGHTS_BLOCKED",
         code: "DENOMINATOR_SOURCE_NOT_CLEARED",
@@ -116,6 +135,40 @@ export async function checkUbwiProductionReadiness(
         blocking: true,
       });
     }
+    // A live numerator source. `cleared` and `inferred_permitted` both satisfy the gate
+    // here; anything else stops a deployment, and this is the finding that currently does.
+    if (suppliesNumerator && !mayPublishNumeratorFrom(status)) {
+      findings.push({
+        kind: "RIGHTS_BLOCKED",
+        code: "NUMERATOR_SOURCE_NOT_CLEARED",
+        detail:
+          `${iface.slug} is ${status} for the use a published numerator makes` +
+          (iface.termsArtifact === null
+            ? " (no retained terms artifact)"
+            : `, against ${iface.termsArtifact.url} retained ${iface.termsArtifact.retrievedAt}`),
+        remedy:
+          iface.note ??
+          "obtain the permission the retained terms require, or do not publish from this interface",
+        blocking: true,
+      });
+    }
+    if (suppliesNumerator && status === "inferred_permitted") {
+      // Not an outstanding action -- an explicit product decision closed it -- but never
+      // silent either. Reported every run with what the decision does not cover, because
+      // an inference that stops being visible is how it quietly becomes treated as a grant.
+      const decision = iface.inferredPermission!;
+      findings.push({
+        kind: "RIGHTS_BLOCKED",
+        code: "NUMERATOR_SOURCE_INFERRED_PERMITTED",
+        detail:
+          `${iface.slug} publishes under inferred permission (${decision.decisionId}, decided ` +
+          `${decision.decidedOn}), not an express grant. Not covered: ${decision.limits.join(" ")}`,
+        remedy:
+          "this is a recorded product decision, not an outstanding action; retrieving the provider's terms text supersedes it either way",
+        blocking: false,
+      });
+    }
+
     if (!used && status !== "cleared") {
       // The numerator venues sit here. Reported separately from a denominator rights
       // failure because the operator response differs, and reported with the reason the
@@ -139,17 +192,22 @@ export async function checkUbwiProductionReadiness(
         });
         continue;
       }
+      // A numerator interface the current price rule does not read. Its rights state is
+      // retained because it is the evidence for why the rule changed, and it is reported so
+      // the finding stays visible -- but it blocks nothing, because it supplies nothing.
       findings.push({
         kind: "RIGHTS_BLOCKED",
-        code: reviewed ? "NUMERATOR_SOURCE_NOT_CLEARED" : "NUMERATOR_SOURCE_TERMS_NOT_REVIEWED",
-        detail: reviewed
-          ? `${iface.slug} is ${status} for the use a published numerator makes, against ` +
-            `${iface.termsArtifact!.url} retained ${iface.termsArtifact!.retrievedAt}`
-          : `${iface.slug} has no reviewed, retained terms artifact (${status})`,
-        remedy: reviewed
-          ? iface.note ?? "obtain the permission the retained terms require, or do not publish from this interface"
-          : "retrieve, review and retain the interface's terms before production publication",
-        blocking: true,
+        code: "RETIRED_NUMERATOR_SOURCE_NOT_CLEARED",
+        detail:
+          `${iface.slug} is ${status} for the use a published numerator makes, and is not read by ` +
+          `methodology ${calculation.methodologyVersion}` +
+          (reviewed
+            ? `, against ${iface.termsArtifact!.url} retained ${iface.termsArtifact!.retrievedAt}`
+            : " (no retained terms artifact)"),
+        remedy:
+          "retired under an approved methodology amendment; the evidence is retained rather than " +
+          "deleted, and reinstating this interface would require clearing its terms first",
+        blocking: false,
       });
     }
     if (status === "cleared" && termsArtifactIsStale(iface, new Date(input.calculatedAt))) {
@@ -170,7 +228,6 @@ export async function checkUbwiProductionReadiness(
   }
 
   // ---------------------------------------------------------------- the calculation
-  const calculation = calculateUbwi({ calculatedAt: input.calculatedAt });
   const gate = evaluateGate(calculation, thresholds);
 
   for (const finding of gate.findings) {

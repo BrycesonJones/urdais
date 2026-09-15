@@ -9,14 +9,17 @@ import { INDEX_SNAPSHOTS } from "@/data/mock/indices";
 import { findMarket } from "@/data/mock/market-detail";
 import { UBWI_EXPLANATION, ubwiSurface } from "./surface";
 
-const NOW = "2026-09-15T00:48:04Z";
+const NOW = "2026-09-15T03:10:39Z";
 const surface = ubwiSurface({ now: NOW });
 
 describe("the UBWI public surface", () => {
   it("withholds the value while the publication gate refuses", () => {
     expect(surface.status).toBe("withheld");
     if (surface.status !== "withheld") throw new Error("unreachable");
-    expect(surface.gateFailures).toContain("IMPUTED_SHARE_ABOVE_CEILING");
+    // Phase 2E cleared the imputed-share ceiling with Taiwan. The remaining refusal is
+    // the BTC supply source's own terms, and the surface quotes the gate's code rather
+    // than inventing its own explanation for why there is no number.
+    expect(surface.gateFailures).toEqual(["NUMERATOR_SOURCE_NOT_RIGHTS_CLEARED"]);
     expect(surface.reason).toContain("withholds the value rather than relaxing the gate");
   });
 
@@ -79,15 +82,24 @@ describe("the UBWI public surface", () => {
 });
 
 describe("the seeded methodology hash matches the document", () => {
-  it("does not drift from docs/methodology/ubwi.md", () => {
-    const doc = readFileSync(path.join(process.cwd(), "docs", "methodology", "ubwi.md"));
-    const docHash = createHash("sha256").update(doc).digest("hex");
-    const seed = readFileSync(
-      path.join(process.cwd(), "supabase", "migrations", "20260915000200_ubwi_production_v1_seed.sql"),
-      "utf8",
-    );
-    expect(seed).toContain(docHash);
-    const specHash = createHash("sha256").update(`UBWI-1.0.0:${docHash}`).digest("hex");
-    expect(seed).toContain(specHash);
+  const doc = readFileSync(path.join(process.cwd(), "docs", "methodology", "ubwi.md"));
+  const docHash = createHash("sha256").update(doc).digest("hex");
+  const read = (file: string) =>
+    readFileSync(path.join(process.cwd(), "supabase", "migrations", file), "utf8");
+
+  it("pins the current version to the current document", () => {
+    const amendment = read("20260915000400_ubwi_chainlink_and_taiwan.sql");
+    expect(amendment).toContain(docHash);
+    const specHash = createHash("sha256").update(`UBWI-1.1.0:${docHash}`).digest("hex");
+    expect(amendment).toContain(specHash);
+  });
+
+  it("leaves the superseded version pinned to the document it was recorded from", () => {
+    // 1.0.0's hash is deliberately no longer the file's. A methodology version pins the
+    // document at the commit it was recorded from, and rewriting it to match a later
+    // edit would destroy exactly the history the version exists to keep.
+    const seed = read("20260915000200_ubwi_production_v1_seed.sql");
+    expect(seed).toContain("612613bc0e93bdbde4b897d52db354b9696b0aaf193a585d673e6e696532dda8");
+    expect(seed).not.toContain(docHash);
   });
 });

@@ -1,6 +1,6 @@
 # Urdais Bitcoin Wealth Index (UBWI)
 
-**Version 1.0.0, 15 September 2026.** Status: approved for production. Prepared under the [Urdais methodology framework](/docs/methodology). UBWI is an **estimate calibrated to observed economies, not a census of world wealth**: roughly two fifths of its denominator is a disclosed, versioned model, and every surface carrying the value says so. This version defines the production construction and the publication gate. **No UBWI value is published as of this version's effective date**, because the gate refuses the current denominator on its imputed-share ceiling; the gate is not relaxed to produce a number.
+**Version 1.1.0, 15 September 2026.** Status: approved for production. Prepared under the [Urdais methodology framework](/docs/methodology). UBWI is an **estimate calibrated to observed economies, not a census of world wealth**: roughly two fifths of its denominator is a disclosed, versioned model, and every surface carrying the value says so. This version amends the numerator's price rule and admits Taiwan to the observed set. **No UBWI value is published as of this version's effective date.** The denominator now satisfies every gate it previously failed; publication is refused on one remaining condition, the rights state of the Bitcoin supply source, and the gate is not relaxed to produce a number.
 
 ## Purpose and Scope
 
@@ -46,13 +46,57 @@ A free-float or lost-coin-adjusted numerator would therefore embed an unfalsifia
 
 ### Price
 
-$P_t$ is **the median of the last-traded United States dollar price for bitcoin across at least three independent spot venues, retrieved within a sixty-second window**. The venue set is named in the specification, each venue's price and retrieval timestamp are retained, and the median is taken across venues, not across time.
+$P_t$ is **the latest valid Chainlink BTC/USD Data Feed reference price on Ethereum mainnet available at the UBWI calculation timestamp.**
 
-Three properties matter. The median is robust to a single venue printing a stale or erroneous quote. An odd venue count avoids an interpolation convention. And the whole construction is Urdais's own: it depends on no vendor's undisclosed weighting and on no vendor's redistribution permission.
+This replaces the three-venue exchange median that version 1.0.0 specified. The change is an amendment to the price rule, not a substitution of one venue for another inside an unchanged rule, and it is versioned as such.
 
-A **directly published market-capitalization series is not used.** The surveyed vendors either do not disclose how their price is formed, or forbid the use Urdais would make of it, or both; one publishes a reproducible construction under a non-commercial licence. Where a vendor series is retained, it is retained as a comparison diagnostic and never as the numerator.
+#### Why the three-venue median was retired
 
-If fewer than three venues return a price within the window, the numerator is **withheld** and no UBWI value is computed for that instant. Urdais does not fall back to two venues, to a single venue, or to a vendor aggregate.
+Version 1.0.0 reasoned that reading public venue tickers directly removes the licensing dependency a vendor aggregate would carry. That reasoning was correct about *vendors* and was never a statement about the *venues*. When the venues' own terms were retrieved and read, three of the four numerator interfaces did not permit the use Urdais actually makes of them — retain the reading, compute a commercial index from it, and display both — and the fourth granted exactly that use only under a signed agreement Urdais does not hold:
+
+- **Coinbase** prohibits collecting, caching, aggregating and storing the data, prohibits sharing it with third parties without prior written authorization, and prohibits recording it by automated program at all.
+- **Kraken** grants use of its content "only for your own benefit" and lists commercial exploitation and making it available to a third party among the prohibited acts.
+- **Bitstamp** permits incorporation, redistribution and derived calculations commercially — to a company that has signed its Data License Agreement. Urdais has not signed one and did not seek one.
+
+**Reproducing a construction yourself does not reproduce the permission to publish it.** Those findings, and the retained terms artifacts behind them, are preserved in the source-rights record; retiring the rule does not retract them, and the retired observation itself is preserved in the codebase rather than deleted.
+
+#### The feed
+
+- **Network**: Ethereum mainnet, chain ID `1`.
+- **Proxy**: `0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c`.
+- **Pair**, from `description()` on the proxy: `BTC / USD`.
+- **`decimals()`**: `8`.
+- **Heartbeat**: 3600 seconds.
+- **Deviation threshold**: 0.5 %.
+- **Product**: a standard push-based Data Feed reference price, `BTC/USD-RefPrice-DF-Ethereum-001`.
+
+Every value above was read from the live contract through two independent public RPC endpoints, which returned byte-identical rounds, and the heartbeat and deviation threshold were read from Chainlink's own feed metadata document — the file `docs.chain.link` itself renders.
+
+The feed is **not Data Streams and not Smart Value Recapture**, which are different Chainlink products with different delivery channels and different terms.
+
+**The proxy is the methodology pin.** Reads go through `latestRoundData()` on the proxy and never through a transient aggregator implementation. Chainlink upgrades the aggregator behind a stable proxy by design, and an ordinary aggregator upgrade behind the approved proxy **is not a methodology change**: the aggregator address, its `typeAndVersion` and the round's phase are frozen as observation lineage on every published point, so any round stays auditable after an upgrade. A change to the **proxy, the pair, the network, the product type or the source class** fails closed pending methodology review.
+
+#### Validity
+
+A price observation is valid only if every applicable check passes. There is no partial acceptance and no fallback.
+
+- **Network.** Chain ID must be `1`.
+- **Feed identity.** The proxy must match the approved address, `description()` must equal `BTC / USD`, and `decimals()` must equal `8`.
+- **Round.** `latestRoundData()` must succeed with `answer > 0` and `updatedAt > 0`. The round id's decomposition must agree with the frozen phase and aggregator round. `answeredInRound` is frozen but never read as a validity condition: Chainlink's own API reference marks it deprecated, and the old `answeredInRound >= roundId` idiom is a test on a field that no longer carries that meaning.
+- **Staleness.** `retrieval_timestamp - updatedAt <= 3600 seconds`, the documented heartbeat. **No grace period is added.** Chainlink's own documentation directs consumers to "use the `updatedAt` value from the `latestRoundData()` function to make sure that the latest answer is recent enough". Beyond 3600 seconds the numerator is classified stale and UBWI is withheld.
+- **RPC.** If the endpoint is unavailable, times out, returns the wrong chain id, disagrees with a second endpoint, or the block cannot be re-fetched, the observation fails closed and nothing is published.
+- **Deprecation.** If the proxy reverts, returns zero, or the feed identity no longer matches, the observation fails closed. Urdais does not silently switch networks or feeds.
+
+#### Lineage frozen on every published point
+
+Chain id; proxy address; aggregator address and its type and version where determinable; proxy round id; phase id; aggregator round id; the raw `answer`; `decimals`; the normalized USD value; `startedAt`; `updatedAt`; the retrieval timestamp; the block number and block hash the read was pinned to; the RPC endpoint's identity (never a secret, and no endpoint Urdais uses carries one); the Chainlink rights state; and the methodology version.
+
+#### What a Chainlink reference price is, and is not
+
+- It is **not a spot exchange price.** Chainlink's own documentation says Data Feeds "aggregate many data sources and publish them onchain". **Urdais cannot independently reconstruct the underlying source basket**, and the feed does not disclose it. This is a real and stated limitation of the numerator.
+- It is **not streaming.** The feed updates when the price deviates past the 0.5 % threshold or when the heartbeat elapses, so an observation may sit up to 0.5 % away from the wider market between updates, and up to an hour old. That is the numerator's price uncertainty, and it remains roughly two orders of magnitude smaller than the denominator's sensitivity range.
+
+A **directly published market-capitalization series is still not used.** The surveyed vendors either do not disclose how their price is formed, or forbid the use Urdais would make of it, or both. Where a vendor series is retained, it is retained as a comparison diagnostic and never as the numerator.
 
 ### Update frequency
 
@@ -151,6 +195,65 @@ disagree materially — France's net foreign position differs by EUR 379 bn betw
 Eurostat — so a component records the interface it actually came from, and a disagreeing route is
 retained as superseded rather than silently discarded.
 
+#### Taiwan, admitted in version 1.1.0
+
+Taiwan is the eighteenth observed constituent and the only one added since version 1.0.0. It is what
+brings the modelled share of the denominator under the 40 % ceiling, and it clears that ceiling by
+**0.24 percentage points** — narrowly enough that a single revision could un-clear it, which is worth
+stating rather than presenting the bound as comfortably met.
+
+**The concept.** The Directorate-General of Budget, Accounting and Statistics compiles *National
+Wealth Statistics* on a 2008 SNA basis, publishing a year-end total-economy net worth. For 2024,
+released 29 April 2026: **NT$2,589,685 × 10⁸**, which is net non-financial assets NT$2,080,329 × 10⁸
+plus net financial assets NT$509,356 × 10⁸. The accounting identity reproduces exactly, and DGBAS's
+own Table 1 note 1 states that net financial assets equal **net foreign** financial assets, because
+domestic claims and obligations offset within the national economy — the same construction as the
+Eurostat components.
+
+**Consumer durables are stripped**, as for every other component that includes them. DGBAS reports
+household durable and semi-durable properties (NT$27,885 × 10⁸) and household cars and motorcycles
+(NT$31,921 × 10⁸) separately, together NT$59,806 × 10⁸. The accepted figure is therefore
+**NT$2,529,879 × 10⁸**, converted at the Central Bank of the Republic of China's interbank spot market
+closing rate for 31 December 2024 of **NT$32.781 per US dollar** — matched to the component's own
+reference date, as the FX policy requires. DGBAS's national-accounts workbook publishes a 32.11 rate
+for 2024 but labels it "Average of daily figures", which is a period average and the wrong basis for a
+year-end stock. The accepted contribution is **US$7.7175 trillion**.
+
+The figures are taken from DGBAS Table 4, which publishes in units of 100 million NT$, rather than
+from Table 1, which publishes the same totals rounded to two decimal places of NT$ trillions.
+
+**Three caveats travel with Taiwan and none is hidden.**
+
+1. **Land is valued at 公告現值, the announced current land value** — an administrative assessment, not
+   a market price. DGBAS states this in Table 1 note 3. Land is included in full (NT$134.12 trillion,
+   52 % of net worth), but on an administrative basis that almost certainly understates it: DGBAS's own
+   alternative series, re-valuing residential, industrial and commercial land at market price, raises
+   net worth by NT$10,119 × 10⁸, or 0.39 %. Urdais takes the announced-value headline, so Taiwan's
+   contribution is if anything conservative.
+2. **Taiwan is absent from the World Bank's Changing Wealth of Nations cross section.** It contributes
+   wealth to the denominator while contributing nothing to the residual model's calibration weights, so
+   the reported observed share of CWON wealth understates the observed set from this version onward.
+   The calibration factor itself is unaffected: Taiwan is in neither side of the ratio.
+3. **Taiwan is not a World Development Indicators country**, so its GDP weight comes from DGBAS's own
+   nominal GDP in US dollars (US$801.529 bn for 2024) rather than from the same source as every other
+   component's. This is stated because it is a basis inconsistency, small and unavoidable.
+
+**Double counting is avoided, and the reason is a retrieved World Bank statement rather than an
+assumption.** The World Bank states that "Taiwan, China is not listed as a separate country for World
+Development Indicators. For most indicators, Taiwan, China is not included in the estimate for China,
+but is added to the world aggregate and the aggregate for high-income countries." The world GDP
+denominator therefore already includes Taiwan, and Taiwan does not sit inside China's figure. Adding
+Taiwan to the observed set correctly removes its GDP from the unobserved remainder the residual model
+values, and cannot double count it against China, which remains disclosed as unobserved.
+
+**Rights.** DGBAS releases everything its sites publish under the **Open Government Data License,
+Taiwan 1.0** — free of charge, non-exclusive, sublicensable, unlimited in time and territory, covering
+reproduction, adaptation, editing, public transmission and the development of derivative products, and
+stated in terms to be not afterwards withdrawn and to need no separate written permission. Attribution
+is the one condition and it is a real one: the licence text provides that a user who fails to attribute
+is treated as never having been granted the rights. The Central Bank of the Republic of China declares
+the same licence for its exchange-rate data. Both declarations are retained and hashed.
+
 ### Modeled residual wealth, and why modelling is structurally necessary
 
 The economies Urdais does not observe are not a research backlog. **They are economies that do not
@@ -222,11 +325,17 @@ larger than several economies' entire contribution to the denominator.
 30 June; every other economy in the observed set is a calendar year-end. A single harmonised fixing
 date would either treat a 30 June stock as a 31 December stock or select the wrong fixing for it.
 
-**One FX source, rights-cleared, recorded per component.** Production V1 converts every
-non-USD component at the European Central Bank's euro foreign exchange reference rates, whose terms
-permit free use with accurate reproduction and citation of the ECB, and which require that any
-modification be stated explicitly. Converting a stock to USD is such a modification and is disclosed
-on every component's FX lineage. A source is never switched without recording the change.
+**One FX source per component, rights-cleared, recorded.** Every non-USD component except Taiwan is
+converted at the European Central Bank's euro foreign exchange reference rates, whose terms permit free
+use with accurate reproduction and citation of the ECB, and which require that any modification be
+stated explicitly. Converting a stock to USD is such a modification and is disclosed on every
+component's FX lineage.
+
+Taiwan is the one exception and it is named rather than absorbed: **the ECB publishes no New Taiwan
+dollar reference rate**, so Taiwan's stock is converted at the Central Bank of the Republic of China's
+own interbank spot market closing rate for the component's reference date, under the same OGDL-Taiwan
+1.0 licence as the stock itself. A second FX source is a thing to notice; it is recorded on the
+component, and a source is never switched without recording the change.
 
 ## Denominator Vintage Policy
 
@@ -272,16 +381,17 @@ scenario is the published value; the others are diagnostics and **an alternative
 becomes a second UBWI**.
 
 The range is published **with** the value, never in an appendix. Numerator uncertainty is not in it,
-because it does not belong there: venue dispersion at the observation instant is of the order of one
-basis point, three orders of magnitude smaller than the denominator's.
+because it does not belong there: the reference feed's 0.5 % deviation threshold bounds the price leg's
+departure from the wider market at 50 basis points, against a denominator sensitivity range spanning
+roughly a quarter of the published value.
 
 ## Historical Reconstruction
 
 **UBWI may be reconstructed annually, at year-end, from 31 December 2013.**
 
-The binding constraint is the numerator, not the denominator. Bitcoin supply is reconstructible from the chain to the genesis block, and world-wealth vintages exist annually from the mid-1990s. But before 2013, Bitcoin price discovery was concentrated on a single venue that later failed, and a three-venue median cannot be formed from independently retrievable surviving sources. A price that cannot be formed under the methodology's own rule is not a price the methodology may use.
+The binding constraint is the numerator, not the denominator. Bitcoin supply is reconstructible from the chain to the genesis block, and world-wealth vintages exist annually from the mid-1990s. But **the Chainlink BTC/USD feed on Ethereum mainnet does not extend backwards indefinitely**, and before it existed no price can be formed under this version's rule at all. A price that cannot be formed under the methodology's own rule is not a price the methodology may use.
 
-Points for 2010 to 2012 are computable from a single-venue price and are **not published**, because doing so would present a different construction under the same name. If a documented, retrievable multi-venue reconstruction of that era is established, admitting it is a versioned change.
+This is a real narrowing relative to version 1.0.0, which could in principle have reconstructed a venue median back to 2013, and it is stated rather than glossed: the price amendment bought a publishable rights posture at the cost of reconstructible history. Reconstruction before the feed's first round would require a separate, versioned historical price rule, which does not exist. Points computable from a single-venue price are **not published**, because doing so would present a different construction under the same name.
 
 **Nothing is backfilled.** No point exists for a year in which either the numerator rule or a denominator vintage cannot be satisfied. A gap is shown as a gap.
 
@@ -299,7 +409,19 @@ In descending order of preference for the denominator:
 
 A source enters the denominator only with a permitted and reproducible collection path and permitted data use, recorded as a permission basis, exactly as for every other Urdais output. Where a source requires attribution, the attribution is carried on every published surface.
 
-For the numerator the hierarchy is shorter: **public spot venue tickers read directly by Urdais** are preferred to any vendor aggregate, because the construction is then Urdais's own and carries no redistribution dependency.
+For the numerator the hierarchy is shorter: **a public onchain reference feed read directly by Urdais through its documented interface** is preferred to any vendor aggregate, and both are preferred to a source whose terms forbid the use.
+
+### Chainlink rights posture: inferred permission, not a grant
+
+Urdais's right to use the Chainlink BTC/USD Data Feed as a UBWI input is recorded as **`inferred_permitted`**. It is **not** `expressly_granted`, not `licensed`, and not `confirmed_by_chainlink`. The distinction is carried in the rights model itself, not only in prose: an inferred permission may support a numerator and may never supply a denominator constituent, and it can never be promoted to `cleared` by any code path.
+
+**What the inference rests on.** The feed is exposed through Chainlink's documented public interface; the data is published onchain by the oracle network and readable by any Ethereum node, and Urdais reads it through public RPC endpoints requiring no key, no account and no click-through agreement; Urdais is not reselling or redistributing the raw feed; and Urdais uses one observed reference price as an input to its own derived wealth index.
+
+**What was not found, in both directions.** No explicit prohibition of the Coinbase or Kraken kind — on caching, on automated recording, or on creating an external financial index from the data — was found in any Chainlink document Urdais retrieved. **No explicit affirmative derived-index grant was found either.** And Chainlink's terms could not be read at all: `https://chain.link/terms`, the document Chainlink's own documentation footer names as governing, returns HTTP 200 with a client-rendered shell carrying 3,441 characters of navigation text and no terms prose. Nothing in this methodology is quoted from a document Urdais has not read.
+
+**What the inference does not cover.** It is not a licence; Chainlink has granted Urdais nothing, has not been contacted, and no outreach was sent. It extends to reading one reference price as an index input, and not to redistributing or mirroring the feed, nor to presenting Urdais's output as a Chainlink product. **The terms of the upstream data providers whose data the oracle network aggregates are undisclosed to Urdais and are not covered.** One successful retrieval of Chainlink's terms text settles the question either way and supersedes the inference.
+
+The published surface carries this qualification with the price provenance rather than implying a licence.
 
 ## Published Surface
 
@@ -334,6 +456,14 @@ checked against the measured feasible frontier, not literals chosen for how they
 - **Source lineage complete**, per component. Required.
 - **FX lineage complete and end-period**, per component. Required.
 - **Every unobserved economy above 3 % of world GDP disclosed.** Required.
+- **Every numerator source rights-cleared or explicitly inferred-permitted**, for the use actually
+  performed — retaining the reading, deriving a commercial index from it, and displaying it. Required,
+  and it covers the **supply** leg as well as the price leg. `under_review` and `blocked` both refuse.
+- **Numerator observation valid**, including the price feed's network, identity, round and staleness
+  checks. Required.
+- **Terms-artifact integrity.** Every rights state must cite a retained document whose hash and byte
+  length match the actual bytes and every word of whose quoted clause occurs, in order, in the
+  document. An inferred permission must additionally state its basis and its limits. Required.
 
 **Why 40 % and 52 %, and why they are the same bound.** A gate must be set against the feasible
 frontier. A threshold above it is not a high standard; it is a permanent refusal disguised as one.
@@ -344,8 +474,18 @@ while appearing to encode a quality rule. **≤ 40 % is the tightest satisfiable
 coverage floor is the same constraint stated in the other unit and moves with it; it is derived, not
 chosen. A configured floor above the stored frontier is itself refused as a configuration error.
 
+**An inferred permission satisfies the numerator rights condition and nothing else.** It may never
+supply a denominator constituent, and it can never be promoted to `cleared`. This is the only widening
+of any gate condition in version 1.1.0, it is scoped to one explicitly decided source, and no threshold
+was changed.
+
 **The gate is never relaxed to make a calculation pass.** Where any gate fails, no value is published
 and no substitute is shown. The failure is reported with the measured figure against the threshold.
+
+**As at version 1.1.0's effective date** the gate measures a modelled share of **39.76 %** against the
+40 % ceiling and rights-cleared observed GDP coverage of **52.95 %** against the 52 % floor — both
+satisfied for the first time — and refuses on exactly one condition: the Bitcoin supply source is not
+cleared for the use a published numerator makes. No value is published.
 
 ## Update Cadence
 
@@ -380,7 +520,7 @@ Stated with every published value.
 
 **The exchange-rate conversion has a known direction of error.** Where a purchasing-power-denominated wealth aggregate is converted to market exchange rates using an economy-weighted factor, the conversion over-deflates, because wealth is more concentrated in high-income economies than income is. The resulting denominator is a lower bound and the resulting UBWI an upper bound.
 
-**Uncertainty in the denominator is larger than any plausible uncertainty in the numerator.** The numerator's venue dispersion is of the order of a basis point. Reasonable denominator choices move UBWI by a factor approaching two. Any presentation that implies four-decimal precision in the underlying quantity, rather than in the arithmetic, is misleading, and the published sensitivity range exists to prevent that reading. The honest form of the answer is a range, not a point.
+**Uncertainty in the denominator is larger than any plausible uncertainty in the numerator.** The numerator's price leg is bounded by the feed's 0.5 % deviation threshold and its 3600-second heartbeat. Reasonable denominator choices move UBWI by a factor approaching two. Any presentation that implies four-decimal precision in the underlying quantity, rather than in the arithmetic, is misleading, and the published sensitivity range exists to prevent that reading. The honest form of the answer is a range, not a point.
 
 ## Open Questions
 
@@ -391,10 +531,27 @@ the purchasing-power conversion and its known bias).
 
 Open, and each is recorded rather than worked around.
 
-1. **The imputed-share ceiling is not met.** At the Production V1 observed set the modelled share is
-   above 40 %, and the gate refuses publication. Closing it needs roughly one further percentage point
-   of rights-cleared observed GDP coverage from balance sheets that include land. This is a coverage
-   problem, not a rights problem.
+1. **The Bitcoin supply source is not cleared for the use UBWI makes of it.** This is the one gate
+   condition version 1.1.0 does not satisfy, and it is the reason no value is published. Issued supply
+   is read from Blockchain.com's Explorer API, whose Terms of Service grant "a revocable, limited,
+   non-exclusive, non-transferable licence to access and use the Explorer API" and state that the
+   service is "provided solely for informational purposes". The grant covers retrieval. It does not
+   address redistribution or retention and does not grant the commercial derived-index publication
+   Urdais performs, so the data-use axis is recorded as open rather than read as permission by silence.
+   A separate "API Terms of Service" is named in the site's own translation bundle but is served from
+   no reachable path, so nothing is assumed from it.
+
+   The supply leg is a numerator source and is held to the same standard as the price leg, which is why
+   the price amendment did not resolve it. It is noted, without being relied on, that issued supply is a
+   deterministic property of the chain: it is reproducible from the issuance schedule at a stated
+   height, and this interface is a retrieval path for it rather than the authority for it. Resolving
+   this is a source decision — a retrieval path whose terms permit the use — and deliberately not
+   something version 1.1.0 solved by changing architecture.
+
+2. **The imputed-share ceiling is met, but narrowly.** Taiwan's admission brings the modelled share to
+   39.76 % against the 40 % ceiling, a margin of 0.24 percentage points. A revision to any large
+   component, or a world-GDP restatement, could move it back above. Further rights-cleared coverage is
+   still the durable answer.
 2. **Six near-frontier economies** — Norway, Finland, Hungary, Israel, Latvia, Portugal — are worth
    1.73 pp of coverage between the achieved figure and the 55.72 % frontier. Finland entered this
    version; the others are each blocked on a matched net-foreign-position year or, for Norway, on a
@@ -402,17 +559,18 @@ Open, and each is recorded rather than worked around.
    treating fixed capital stock as national net wealth, which this methodology prohibits.
 3. **The composition-sensitivity band** is approximately 16 pp against a proposed ≤ 15 pp target,
    reachable at roughly 58–60 % coverage.
-4. **Numerator source terms have not been reviewed.** The venue tickers and the chain-supply endpoint
-   are read directly, which removes the licensing dependency a vendor aggregate would carry, but no
-   terms artifact has been retrieved and reviewed for any of them. They are recorded as `not_reviewed`
-   rather than assumed permissive.
+4. **Chainlink's own terms could not be read.** The rights state for the price leg is an inference
+   from a documented public interface and from the absence of a retrieved prohibition, not a grant. One
+   successful retrieval of the terms text settles it either way. Upstream data-provider terms remain
+   undisclosed and are outside the inference.
 5. **An operational Bank of Korea ECOS API key** for production retrieval volumes. Korea's publication
    rights are cleared and its value is manually verified against the first-party table; only the
    automated collection path is pending. These are separate questions and only the second is open.
 6. **Non-Bitcoin crypto assets in the denominator**, required by the asset boundary and still
    unmeasured under a redistributable licence.
-7. **The venue set for the numerator median**, and the rule for adding or removing a venue without
-   moving the series.
+7. **A second independent price reference.** Version 1.1.0 depends on one feed. A documented
+   eligibility rule for a second onchain reference, and a rule for reconciling the two without moving
+   the series, is not yet written; adding one is a versioned change.
 
 ## Relationship to the Urdais Product Surface
 
@@ -420,11 +578,31 @@ UBWI appears in the Urdais market catalog as an index symbol. Its unit is a perc
 
 ## Methodology Version
 
-**1.0.0, 15 September 2026.** Status: approved for production, effective 15 September 2026. The
-residual denominator model carries its own version, **1.0.0**, and a published value is immutable
-under both: a correction is a new, superseding publication, never an edit.
+**1.1.0, 15 September 2026.** Status: approved for production, effective 15 September 2026. The
+residual denominator model carries its own version, **1.0.0**, unchanged by this amendment, and a
+published value is immutable under both: a correction is a new, superseding publication, never an edit.
 
 ## Version History
+
+**1.1.0, 15 September 2026**: numerator price amendment and one denominator admission. Replaces the
+three-venue Coinbase/Bitstamp/Kraken spot median with the Ethereum mainnet Chainlink BTC/USD Data Feed
+reference price, pinned to proxy `0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c`, with a fail-closed
+validator over network, feed identity, round and a 3600-second heartbeat staleness bound, and with full
+proxy, phase, aggregator, round and block lineage frozen on every published point. Distinguishes the
+proxy as the methodology pin from the aggregator as observation lineage, so an ordinary aggregator
+upgrade is not a methodology break while a change of proxy, pair, network or product type fails closed.
+Records the Chainlink rights state as **inferred permission, not an express grant**, with its basis,
+what was searched for and not found in both directions, and what the inference does not cover;
+introduces `inferred_permitted` as a source-rights state that may support a numerator and may never
+supply a denominator constituent. Admits **Taiwan** to the observed set on DGBAS *National Wealth
+Statistics* for 2024 under the Open Government Data License, Taiwan 1.0, with consumer durables
+stripped, land included at announced current land value, and the World Bank's own statement on Taiwan's
+treatment in WDI aggregates as the basis for the residual handling. The denominator now satisfies the
+40 % modelled-share ceiling (39.76 %) and the 52 % coverage floor (52.95 %); **no threshold was
+changed**. The retired venue observation, and every retained venue terms artifact behind its
+retirement, are preserved rather than deleted. **No value is published under this version at its
+effective date**: the Bitcoin supply source's terms do not grant the derived-index publication Urdais
+performs, that source is a numerator source, and the gate refuses.
 
 **1.0.0, 15 September 2026**: first production methodology. Defines Total Global Wealth as a
 constructed hybrid of directly observed, rights-cleared national balance sheets and a versioned

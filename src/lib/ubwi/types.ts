@@ -14,6 +14,8 @@
  * worth for the economies Urdais observes, plus a disclosed model for the rest.
  */
 
+import type { ChainlinkPriceObservation } from "./chainlink";
+
 /** How a component's currency was converted to USD. */
 export type FxBasis = "end_period" | "period_average";
 
@@ -49,6 +51,24 @@ export type ObservationStatus = "observed" | "imputed";
  * from whether the terms URL happens to answer on a given run.
  */
 export type RightsStatus = "cleared" | "under_review" | "blocked";
+
+/**
+ * A *source interface's* rights state, which has one state a denominator constituent may
+ * never have.
+ *
+ * `inferred_permitted` is the state Phase 2E needed and the three-valued model could not
+ * express without lying in one direction or the other. Chainlink's BTC/USD Data Feed is
+ * exposed through a documented public interface and Urdais found no prohibition on using
+ * an observed reference price as an input to its own derived index -- but Chainlink has
+ * granted nothing in writing, its terms page could not be read at all, and the upstream
+ * data providers' terms are undisclosed. Calling that `cleared` would assert a permission
+ * nobody gave; calling it `under_review` would assert an open review that is in fact
+ * closed by an explicit product decision to proceed on the inference.
+ *
+ * It is deliberately not available to the denominator: `ObservedEconomy.rightsStatus`
+ * stays three-valued, and the gate requires observed constituents to be `cleared`.
+ */
+export type SourceRightsStatus = RightsStatus | "inferred_permitted";
 
 /** Whether the compiler is the national authority or a harmonisation layer over it. */
 export type SourceType = "primary" | "harmonized";
@@ -103,7 +123,13 @@ export type ExcludedEconomy = {
   rule: string;
 };
 
-/** One spot venue reading behind the numerator median. */
+/**
+ * One spot venue reading behind the retired three-venue median.
+ *
+ * Methodology 1.0.0 built the price leg this way. Methodology 1.1.0 does not, and the
+ * type is kept rather than deleted because the retired observation is preserved in
+ * ./numerator.ts and a methodology history that cannot be typed is not a history.
+ */
 export type VenueQuote = {
   venue: string;
   endpoint: string;
@@ -119,7 +145,20 @@ export type VenueQuote = {
   selected: boolean;
 };
 
-/** One instantaneous Bitcoin market capitalization observation. */
+/**
+ * The retired price rule and the approved one. Both are named so that a stored
+ * observation says which methodology produced it rather than leaving it to be inferred
+ * from which fields happen to be populated.
+ */
+export type BtcPriceRule = "median_of_venues" | "chainlink_reference_feed";
+
+/**
+ * One instantaneous Bitcoin market capitalization observation.
+ *
+ *   Bitcoin Market Capitalization = Issued BTC Supply x BTC/USD reference price
+ *
+ * The supply leg is unchanged by the 1.1.0 amendment. The price leg is the amendment.
+ */
 export type BtcMarketObservation = {
   observedAt: string;
   /** Chain height, confirmed independently. A supply without its height is not reproducible. */
@@ -128,9 +167,15 @@ export type BtcMarketObservation = {
   supplyBtc: number;
   supplySourceInterface: string;
   supplyConstruction: "claimed_issuance";
-  venues: readonly VenueQuote[];
-  priceRule: "median_of_venues";
-  medianPriceUsd: number;
+  priceRule: BtcPriceRule;
+  /** The price the market cap was computed at, whatever rule produced it. */
+  priceUsd: number;
+  /** The Chainlink round, frozen whole. Present under `chainlink_reference_feed`. */
+  chainlink?: ChainlinkPriceObservation;
+  /** The venue rows behind a `median_of_venues` observation. Retired; never both. */
+  venues?: readonly VenueQuote[];
+  /** The source interface slug the price came through, held to the numerator rights gate. */
+  priceSourceInterface: string;
   marketCapUsd: number;
 };
 

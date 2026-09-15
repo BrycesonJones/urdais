@@ -38,7 +38,15 @@ import type {
   UbwiCalculation,
 } from "./types";
 
-export const METHODOLOGY_VERSION = "1.0.0";
+/**
+ * Methodology 1.1.0 amends exactly one thing: the BTC price leg moves from the three-venue
+ * exchange median to the Chainlink BTC/USD Data Feed on Ethereum mainnet. The denominator,
+ * the residual model, the identity and every gate threshold are unchanged, which is why the
+ * residual-model version does not move with it. See docs/methodology/ubwi.md.
+ */
+export const METHODOLOGY_VERSION = "1.1.0";
+/** The superseded version, kept so a stored point can be read against what produced it. */
+export const PRIOR_METHODOLOGY_VERSION = "1.0.0";
 export const RESIDUAL_MODEL_VERSION = "1.0.0";
 export const UBWI_METHODOLOGY_DOC = "docs/methodology/ubwi.md" as const;
 export const UBWI_SYMBOL = "UBWI" as const;
