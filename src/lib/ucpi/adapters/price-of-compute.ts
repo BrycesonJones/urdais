@@ -71,6 +71,8 @@ export type PocSellerProfile = {
   tenancyGrade: NormalizedObservation["tenancyGrade"];
   tenancyEvidence: string | null;
   legalNameEvidenced: boolean;
+  /** The seller's written refusal of the intended use, where one exists; excluded by every route. */
+  useRefused: string | null;
 };
 
 export type PocSellerProfiles = ReadonlyMap<string, PocSellerProfile>;

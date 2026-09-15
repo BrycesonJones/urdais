@@ -29,7 +29,7 @@ import path from "node:path";
 
 import { LISTED_SCOPE_KEY } from "@/lib/ucpi/aggregation";
 import { PRICE_OF_COMPUTE_SLUG, priceOfComputeAdapter, type PocPricesResponse } from "@/lib/ucpi/adapters/price-of-compute";
-import { POC_SELLER_EVIDENCE_2026_09_14_GPU_FAMILY, pocSellerProfiles } from "@/lib/ucpi/adapters/price-of-compute-profiles";
+import { POC_SELLER_EVIDENCE_2026_09_15, pocSellerProfiles } from "@/lib/ucpi/adapters/price-of-compute-profiles";
 import { toSeriesPoint } from "@/lib/ucpi/api-contract";
 import { calculationWindow } from "@/lib/ucpi/calculation-window";
 import { runPipeline } from "@/lib/ucpi/collector";
@@ -82,9 +82,11 @@ const LEGAL_NAMES = new Map<string, string>([
 const REGISTRY: SourceRegistryState = { slug: PRICE_OF_COMPUTE_SLUG, termsReviewState: "permitted", dataUseTermsState: "permitted", productionAccessState: "production_approved", writtenAgreementRequired: false };
 const GRANT: PermissionGrant = { id: SOURCE.grant, sourceInterfaceSlug: PRICE_OF_COMPUTE_SLUG, grantKind: "provider_terms", reference: "https://www.priceofcompute.com/api", coversCollection: true, coversIndexUse: true, effectiveFrom: "2026-09-14T00:00:00Z", effectiveTo: null };
 
-const entities: MarketEntity[] = [...ENTITY_ID_BY_SLUG].map(([slug, id]) => ({ id, slug, name: slug, legalName: LEGAL_NAMES.get(slug) ?? null, legalIdentifier: null, controllingEntityId: null }));
+const profileEvidence = POC_SELLER_EVIDENCE_2026_09_15;
+const profileUseRefused = (slug: string): string | null => profileEvidence.find((e) => e.slug === slug)?.useRefused ?? null;
+const entities: MarketEntity[] = [...ENTITY_ID_BY_SLUG].map(([slug, id]) => ({ id, slug, name: slug, legalName: LEGAL_NAMES.get(slug) ?? null, legalIdentifier: null, controllingEntityId: null, useRefusedEvidence: profileUseRefused(slug) }));
 const entityMap: ReadonlyMap<string, MarketEntity> = new Map(entities.map((e) => [e.id, e]));
-const profiles = pocSellerProfiles(ENTITY_ID_BY_SLUG, POC_SELLER_EVIDENCE_2026_09_14_GPU_FAMILY);
+const profiles = pocSellerProfiles(ENTITY_ID_BY_SLUG, POC_SELLER_EVIDENCE_2026_09_15);
 const entityIdFor = (domainId: string): string | null => ([...ENTITY_ID_BY_SLUG.values()].includes(domainId) ? domainId : null);
 
 function arg(name: string, fallback?: string): string {

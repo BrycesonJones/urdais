@@ -31,12 +31,12 @@ export const VERSIONS = {
 export const DRAFT_VERSIONS = { ...VERSIONS, methodologyVersionStatus: "draft", instrumentSpecVersionStatus: "draft" } as const;
 
 export const ENTITIES: readonly MarketEntity[] = [
-  { id: "ent-runpod", slug: "runpod", name: "Runpod", legalName: "Runpod, Inc.", legalIdentifier: null, controllingEntityId: null },
-  { id: "ent-lambda", slug: "lambda", name: "Lambda", legalName: "Lambda, Inc.", legalIdentifier: null, controllingEntityId: null },
-  { id: "ent-c", slug: "cloud-c", name: "Cloud C", legalName: "Cloud C GmbH", legalIdentifier: null, controllingEntityId: null },
-  { id: "ent-d", slug: "cloud-d", name: "Cloud D", legalName: "Cloud D Ltd", legalIdentifier: null, controllingEntityId: null },
+  { id: "ent-runpod", slug: "runpod", name: "Runpod", legalName: "Runpod, Inc.", legalIdentifier: null, controllingEntityId: null, useRefusedEvidence: null },
+  { id: "ent-lambda", slug: "lambda", name: "Lambda", legalName: "Lambda, Inc.", legalIdentifier: null, controllingEntityId: null, useRefusedEvidence: null },
+  { id: "ent-c", slug: "cloud-c", name: "Cloud C", legalName: "Cloud C GmbH", legalIdentifier: null, controllingEntityId: null, useRefusedEvidence: null },
+  { id: "ent-d", slug: "cloud-d", name: "Cloud D", legalName: "Cloud D Ltd", legalIdentifier: null, controllingEntityId: null, useRefusedEvidence: null },
   // A brand that is a distinct legal entity under Cloud C's control, on evidence.
-  { id: "ent-c-brand", slug: "cloud-c-brand", name: "C Brand", legalName: "C Brand LLC", legalIdentifier: null, controllingEntityId: "ent-c" },
+  { id: "ent-c-brand", slug: "cloud-c-brand", name: "C Brand", legalName: "C Brand LLC", legalIdentifier: null, controllingEntityId: "ent-c", useRefusedEvidence: null },
 ];
 
 export const ENTITY_MAP: ReadonlyMap<string, MarketEntity> = new Map(ENTITIES.map((e) => [e.id, e]));

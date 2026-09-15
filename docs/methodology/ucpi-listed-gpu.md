@@ -1,6 +1,8 @@
 # UCPI-LISTED-GPU Family Specification
 
-**Status: proposed reusable specification, version 0.1.0-draft. Not launched.** Prepared 14 September 2026. This document defines the behaviour shared by every *listed on-demand GPU price* sibling under the [Urdais Compute Price Index family](/docs/methodology/ucpi). A GPU child under this specification fixes only its hardware identity, its admitted upstream SKUs and its model-specific evidence; everything else it inherits from here and from the family. No production value may be published under this document or any child until the family methodology, this specification and the child carry approved versions.
+**Status: approved, version 1.0.0, effective 15 September 2026.** Prepared 14 September 2026, approved 15 September 2026. This document defines the behaviour shared by every *listed on-demand GPU price* sibling under the [Urdais Compute Price Index family](/docs/methodology/ucpi). A GPU child under this specification fixes only its hardware identity, its admitted upstream SKUs and its model-specific evidence; everything else it inherits from here and from the family.
+
+From 1.0.0 this specification is the **methodology of record for its children**. Each listed child declares this specification as its methodology and binds its specification versions to a version of this document. It no longer routes its versioning through the UCPI family document; the family remains the source of the shared primitives named below, and nothing about those primitives changes.
 
 ## Why a reusable specification
 
@@ -54,14 +56,31 @@ The compute-instrument identity framework; the seller, operator and marketplace 
 
 Vendor, model, form factor and memory where it distinguishes products; the upstream SKUs, per technical source, that denote exactly that instrument; the per-seller topology evidence for that instrument; and any model-specific exclusion. A child may not relax anything above.
 
+## Seller refusal of the intended use
+
+A listed price reaches Urdais through a technical source, and the source's terms govern Urdais's use of the source's dataset. That is the ordinary case and it is why a seller's own interface being closed does not by itself remove the seller from a listed series.
+
+It is not the whole rule. Where **the seller has refused Urdais, in writing, permission to use that seller's price data for the intended use**, and the refusal is expressed as a decision about the intended use rather than about a retrieval mechanism, the seller is excluded with `SELLER_USE_REFUSED` and is disclosed as an excluded candidate. Receiving the same price through an intermediary does not cure such a refusal, because the thing refused was the use and not the route.
+
+Two situations are kept apart deliberately:
+
+- A seller whose own interface Urdais may not collect from, with nothing said about the data itself, **remains eligible** through a permitted source. Its exclusion, if any, is for an ordinary reason.
+- A seller that has refused the use is **excluded from every route**, and the refusal is recorded on the seller's market entity with its correspondence reference.
+
+This rule exists because the alternative is to treat a licensed aggregator as a way around an answer Urdais asked for and received. Urdais asked; the answer was no; the answer is respected wherever the data arrives from. A seller excluded under this rule never counts toward breadth, and the count of such sellers is published with every value so that a user can see the measure is narrower than the market.
+
+Reopening requires a materially different intended use and a fresh written approval from the seller.
+
 ## Vocabulary
 
-Exclusion reasons and diagnostics are the family's and the H100 child's, with two listed-family additions: `SELLER_LEGAL_IDENTITY_UNRESOLVED` (P1 exclusion) and `SELLER_PRICE_TIERED_BY_QUANTITY` (diagnostic).
+Exclusion reasons and diagnostics are the family's and the H100 child's, with three listed-family additions: `SELLER_LEGAL_IDENTITY_UNRESOLVED` (P1 exclusion), `SELLER_USE_REFUSED` (P1 exclusion) and `SELLER_PRICE_TIERED_BY_QUANTITY` (diagnostic).
 
 ## Published Surface
 
 For each child: symbol and display name; the GPU identity; price in United States dollars per accelerator-hour; the one-day percentage change under the family rule, never a currency difference; procurement mode on-demand; observation type listed; the participant count; the market-breadth qualifier; the contributing technical-source count and the largest-source participant share; the price distribution, withheld at Minimum breadth; the as-of date; the status; the required attributions; and the family, specification and child versions. Constituent sellers and their prices are never exposed.
 
 ## Version History
+
+**1.0.0, 15 September 2026, effective 15 September 2026**: approved. This specification becomes the methodology of record for its children, which bind their specification versions to it directly rather than to the UCPI family document; no shared primitive changed. Adds the seller-refusal rule and `SELLER_USE_REFUSED`, which excludes a seller that has refused Urdais the intended use, by every route including an intermediary. No value had been published under any earlier version, so nothing is superseded in the sense of a restatement: the drafts are retained as lineage.
 
 **0.1.0-draft, 14 September 2026**: initial reusable specification, extracted from UCPI-H100-SXM-LISTED 0.1.1-draft without change of semantics, adding per-instrument topology evidence, the quantity-tier diagnostic and the no-placeholder rule for children without a calculation. No production effective date.
