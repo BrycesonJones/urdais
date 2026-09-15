@@ -1,6 +1,6 @@
 # News ingestion
 
-**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 14 September 2026 when the homepage Compute rail stopped reading mock data (Phase 1A); rewritten 15 September 2026 when Compute was finished (Phase 1B); §12 added the same day when the Memory qualification pass found nothing it could ingest (Phase 2A).
+**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 14 September 2026 when the homepage Compute rail stopped reading mock data (Phase 1A); rewritten 15 September 2026 when Compute was finished (Phase 1B); §12 added the same day when the Memory qualification pass found nothing it could ingest (Phase 2A); §13 when Energy / Power became the second production category (Phase 2B).
 
 The homepage Compute rail reads production data from eight approved publisher
 feeds, refreshed once a day. This document records how, from which
@@ -16,7 +16,7 @@ item, no article page, and no public news API; the only reader is the homepage.
 | Rail | Homepage | State |
 | --- | --- | --- |
 | Compute | shown | **production** — eight approved feeds, seven publishers, thumbnails where permitted |
-| Energy / Power | shown | mock, pending its own migration |
+| Energy / Power | shown | **production** — four approved feeds, three publishers, no images; see §13 |
 | Crypto | shown | mock, pending its own migration |
 | Memory | hidden | mock — qualified in Phase 2A, no source passed; see §12 |
 | Photonics | hidden | mock |
@@ -35,8 +35,8 @@ all still know about all six. Restoring a category is adding its id back.
 Three are shown because three is what Urdais can stand behind. Memory is
 deferred because its qualification pass approved no source at all; Photonics and
 AI Chips are deferred because a rail of invented stories is a worse thing to
-ship than no rail. Energy / Power and Crypto stay visible and labelled demo
-because each is next to migrate on its own. A deferred category returns when
+ship than no rail. Crypto stays visible and labelled demo because it is next to
+migrate on its own. A deferred category returns when
 production-grade sourcing exists for it.
 
 ### What each phase did
@@ -625,6 +625,78 @@ The two routes forward are a written permission request to SK hynix, which the
 `docs/architecture/sources/` outreach records are the pattern for, and
 re-testing the `relevance` and `abandoned` candidates when a publisher changes
 what it emits. Neither is scheduled.
+
+---
+
+## 13. Energy / Power
+
+The second production category. Four approved feeds across three publishers, no
+images, and one open question recorded rather than resolved.
+
+The scope is power markets and electricity infrastructure as they bear on
+compute: electricity prices and wholesale markets, grid capacity, transmission
+and interconnection, data-centre power demand, generation tied to that demand,
+and the reliability and investment behind it. Deliberately not general climate
+coverage, oil and transport fuels, consumer solar or energy politics.
+
+### Approved
+
+| Publisher | Endpoint | Basis | Description | Image |
+| --- | --- | --- | --- | --- |
+| U.S. Department of Energy | `energy.gov/newsroom/rss.xml` | **public domain** | publisher dek | none offered |
+| PJM Interconnection | `insidelines.pjm.com/feed/` | feed syndication | none (body) | none offered |
+| POWER Magazine | `powermag.com/feed/` | feed syndication | none (body) | none offered |
+| POWER Magazine — Data Centers | `powermag.com/category/data-centers/feed/` | feed syndication | none (body) | none offered |
+
+**DOE** is the first source in the registry on a `public_domain` basis, which is
+a new `syndication_basis` value rather than a stretched reading of the existing
+one. Its Web Policies state that "Government information at DOE websites is in
+the public domain" and "may be freely distributed and copied", asking only for
+acknowledgement — which attributing every card to its publisher already gives.
+The same notice warns that some images on DOE sites are licensed from third
+parties, which is one of two reasons this source references none.
+
+**PJM** operates the largest wholesale electricity market in North America and
+is the source closest to Urdais's subject: its recent window includes proposed
+reliability standards for large load disconnection, which is data-centre
+interconnection. Its Legal & Privacy page was read in full and carries no
+automated-access or content-reuse clause; robots disallows only `/wp-admin/`;
+and PJM lists RSS feeds as a published feature of its own site. The trademark
+restriction it does carry concerns marks and logos, which Urdais does not
+reproduce — the card names the publisher, which is nominative use.
+
+**POWER Magazine** contributes two endpoints: the main feed and the publisher's
+own **Data Centers** category, which is the most precisely scoped feed in the
+roster. Selecting a publisher-scoped endpoint is how Urdais narrows a source;
+it does not classify stories itself. Its robots file restricts AI training
+crawlers by name and permits everything else — the Together AI shape already
+accepted for Compute — and no content terms-of-use exists on the site, only a
+subscriber privacy policy.
+
+No approved source attaches a media element, so none references an image, every
+card renders the Urdais fallback, and `next.config.ts` is untouched.
+
+### Refused
+
+| Source | Kind | Why |
+| --- | --- | --- |
+| Utility Dive | `terms` | The Informa TechTarget terms that govern it prohibit "any data mining, robots or similar data gathering or extraction methods" — the AWS Site Terms clause shape this registry already refuses. Its robots file permits the feed; the terms govern. The best-scoped commercial candidate, and blocked. |
+| EIA Today in Energy | `relevance` | **Rights are the strongest available and settled**: EIA material is public domain and robots permits the feed. Refused on editorial scope only — roughly 6 of 16 items in the window were electricity or grid, the rest crude oil, LNG, refining and pipelines. The feed carries no `<category>` element and no EIA electricity-scoped feed exists, so narrowing it would mean Urdais classifying stories itself. Recorded `permitted` on both axes so the open question reads as editorial, not legal. |
+| Canary Media | `relevance` | Live and well produced, but its beat is climate policy, heat pumps and residential solar — the content this scope names as out. |
+| ISO New England | `relevance` | A grid operator, but its newswire is stakeholder administration: settlement forums, satisfaction surveys, webinar notices. PJM covers the same role with operational reporting. |
+| Data Center Dynamics | `relevance` | Carries an express `Content-Signal: search=yes, use=reference` grant, and is a data-centre publication of which power is one strand; its power-scoped channel feeds all return 403 and its terms page is behind a Cloudflare challenge. A Compute-rail question, not this one. |
+
+No feed at any probed path: ERCOT, CAISO, NYISO, SPP, NERC, NREL. HTTP 403 to a
+non-browser agent and not retried: FERC, MISO, LBNL Electricity Markets & Policy.
+
+### The EIA question
+
+This is the one case §16 of the brief anticipated: a rights-clean, high-quality
+source that would improve the rail only with classification. It is recorded and
+not resolved. Adopting it would require either deterministic topic selection on
+publisher-supplied metadata — which EIA does not supply — or a semantic
+classifier, which the pipeline deliberately does not have and which was not
+added here. If Urdais ever adopts one, EIA is the first source to revisit.
 
 ---
 

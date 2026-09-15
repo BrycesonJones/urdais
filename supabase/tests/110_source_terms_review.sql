@@ -210,15 +210,17 @@ begin
   end;
   if not ok then raise exception 'invented data-use state was accepted'; end if;
 
-  -- Six settled prohibitions are blocked: the marketplace and Runpod on both axes,
+  -- Seven settled prohibitions are blocked: the marketplace and Runpod on both axes,
   -- Lambda on data use, Coinbase on both axes and Kraken on data use since UBWI
   -- Phase 2D retrieved the numerator venues' own terms, and -- since the Memory news
   -- qualification pass read them -- the SK hynix Newsroom on both axes. An unresolved
   -- source is review-pending, never blocked, which is why Bitstamp and Blockchain.com
   -- are not here, and neither are the Memory candidates refused on staleness,
-  -- unusable feeds or relevance rather than on terms.
+  -- unusable feeds or relevance rather than on terms. Utility Dive joined the
+  -- blocked set with the Energy / Power pass: the Informa TechTarget terms that
+  -- govern it prohibit data mining and robots outright.
   select count(*) into n from reference.source_interfaces where production_access_state = 'production_blocked';
-  if n <> 6 then raise exception 'expected 6 blocked interfaces (settled prohibitions only), found %', n; end if;
+  if n <> 7 then raise exception 'expected 7 blocked interfaces (settled prohibitions only), found %', n; end if;
   select count(*) into n from reference.source_interfaces
    where terms_review_state = 'under_review' or data_use_terms_state = 'under_review';
   if n < 3 then raise exception 'expected at least 3 interfaces with an unresolved axis, found %', n; end if;

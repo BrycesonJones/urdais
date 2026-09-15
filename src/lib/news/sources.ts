@@ -185,6 +185,78 @@ export const NEWS_SOURCES: Record<NewsSourceSlug, NewsSourceDefinition> = {
     notes:
       "The roster's one Atom feed. Approved separately from digitalocean-sizes, which remains under review: that is an authenticated API, this is a feed the blog advertises by link rel=alternate.",
   },
+  "doe-newsroom": {
+    slug: "doe-newsroom",
+    sourceInterfaceId: "6f6f6f6f-0000-4000-8000-000000000014",
+    sourceInterfaceSlug: "doe-newsroom-feed",
+    permissionGrantId: "6e6e6e6e-0000-4000-8000-00000000000b",
+    publisherName: "U.S. Department of Energy",
+    publisherHomepage: "https://www.energy.gov",
+    category: "energy-power",
+    feedUrl: "https://www.energy.gov/newsroom/rss.xml",
+    mechanism: "rss",
+    // Short plain-text summaries, not bodies.
+    descriptionPolicy: "source_description",
+    // No media element, and DOE's own reuse notice warns that some images on
+    // its sites are licensed from third parties rather than public domain.
+    imagePolicy: "none",
+    imageHosts: [],
+    registry: registry("doe-newsroom-feed"),
+    notes:
+      "A federal agency publication in the public domain. The site-wide energy.gov/rss.xml is a different, abandoned feed; this newsroom one is live.",
+  },
+  "pjm-inside-lines": {
+    slug: "pjm-inside-lines",
+    sourceInterfaceId: "6f6f6f6f-0000-4000-8000-000000000015",
+    sourceInterfaceSlug: "pjm-inside-lines-feed",
+    permissionGrantId: "6e6e6e6e-0000-4000-8000-00000000000c",
+    publisherName: "PJM Interconnection",
+    publisherHomepage: "https://www.pjm.com",
+    category: "energy-power",
+    feedUrl: "https://insidelines.pjm.com/feed/",
+    mechanism: "rss",
+    // The description carries the post body with an inline image.
+    descriptionPolicy: "omit_feed_carries_body",
+    imagePolicy: "none",
+    imageHosts: [],
+    registry: registry("pjm-inside-lines-feed"),
+    notes:
+      "The grid operator for the largest wholesale electricity market in North America, and the source closest to compute: large-load interconnection is data-center interconnection.",
+  },
+  "power-magazine": {
+    slug: "power-magazine",
+    sourceInterfaceId: "6f6f6f6f-0000-4000-8000-000000000016",
+    sourceInterfaceSlug: "power-magazine-feed",
+    permissionGrantId: "6e6e6e6e-0000-4000-8000-00000000000d",
+    publisherName: "POWER Magazine",
+    publisherHomepage: "https://www.powermag.com",
+    category: "energy-power",
+    feedUrl: "https://www.powermag.com/feed/",
+    mechanism: "rss",
+    descriptionPolicy: "omit_feed_carries_body",
+    imagePolicy: "none",
+    imageHosts: [],
+    registry: registry("power-magazine-feed"),
+    notes: "Power generation, transmission and grid trade reporting.",
+  },
+  "power-magazine-data-centers": {
+    slug: "power-magazine-data-centers",
+    sourceInterfaceId: "6f6f6f6f-0000-4000-8000-000000000017",
+    sourceInterfaceSlug: "power-magazine-data-centers-feed",
+    permissionGrantId: "6e6e6e6e-0000-4000-8000-00000000000e",
+    publisherName: "POWER Magazine",
+    publisherHomepage: "https://www.powermag.com",
+    category: "energy-power",
+    // The publisher's own category endpoint. Urdais selects a publisher-scoped
+    // feed rather than classifying stories itself.
+    feedUrl: "https://www.powermag.com/category/data-centers/feed/",
+    mechanism: "rss",
+    descriptionPolicy: "omit_feed_carries_body",
+    imagePolicy: "none",
+    imageHosts: [],
+    registry: registry("power-magazine-data-centers-feed"),
+    notes: "Overlaps the main POWER feed; a story in both is stored once under its canonical URL.",
+  },
 };
 
 /**
@@ -329,12 +401,20 @@ export function newsSourcesForCategory(category: NewsSourceDefinition["category"
 }
 
 /**
- * Every source the scheduled run ingests, across every category. Compute is
- * the whole list today; a later phase adds a category by adding definitions,
- * not by adding a schedule.
+ * Every source the scheduled run ingests, across every category. A later phase
+ * adds a category by adding definitions, not by adding a schedule.
  */
 export function enabledNewsSources(): NewsSourceDefinition[] {
   return NEWS_SOURCE_SLUGS.map((slug) => NEWS_SOURCES[slug]);
+}
+
+/**
+ * The categories that have production sources, derived from the registry
+ * rather than listed. The homepage asks this rather than naming categories, so
+ * migrating one is adding its definitions and nothing else.
+ */
+export function productionNewsCategories(): NewsCategory[] {
+  return [...new Set(enabledNewsSources().map((source) => source.category))];
 }
 
 /**

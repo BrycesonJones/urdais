@@ -17,12 +17,23 @@ describe("the approved source registry", () => {
     for (const slug of NEWS_SOURCE_SLUGS) expect(NEWS_SOURCES[slug].slug).toBe(slug);
   });
 
-  it("holds Compute only, because Phase 1A migrates one rail", () => {
-    expect(newsSourcesForCategory("compute").length).toBe(NEWS_SOURCE_SLUGS.length);
+  it("holds the categories that have migrated, and nothing else", () => {
+    expect(newsSourcesForCategory("compute").length).toBe(8);
+    expect(newsSourcesForCategory("energy-power").length).toBe(4);
+    expect(newsSourcesForCategory("compute").length + newsSourcesForCategory("energy-power").length).toBe(
+      NEWS_SOURCE_SLUGS.length,
+    );
     for (const category of NEWS_CATEGORIES) {
-      if (category.id === "compute") continue;
+      if (category.id === "compute" || category.id === "energy-power") continue;
       expect(newsSourcesForCategory(category.id)).toEqual([]);
     }
+  });
+
+  it("gives Energy / Power three publishers across four feeds", () => {
+    const energy = newsSourcesForCategory("energy-power");
+    expect(new Set(energy.map((source) => source.publisherName)).size).toBe(3);
+    // None of these feeds attaches media, so none references an image.
+    expect(energy.every((source) => source.imagePolicy === "none" && source.imageHosts.length === 0)).toBe(true);
   });
 
   it("carries a working endpoint, a publisher and a rights state for every source", () => {
@@ -103,7 +114,9 @@ describe("the approved source registry", () => {
     const memory = NEWS_SOURCES_REVIEWED_NOT_APPROVED.filter((row) => row.category === "memory");
     expect(memory.length).toBeGreaterThanOrEqual(8);
     expect(newsSourcesForCategory("memory")).toEqual([]);
-    expect(enabledNewsSources().every((source) => source.category === "compute")).toBe(true);
+    expect(
+      enabledNewsSources().every((source) => source.category === "compute" || source.category === "energy-power"),
+    ).toBe(true);
 
     // The one refused on rights rather than on quality or relevance.
     const skhynix = memory.find((row) => row.sourceInterfaceSlug === "skhynix-newsroom-feed");

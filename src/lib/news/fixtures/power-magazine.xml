@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	>
+
+<channel>
+	<title>POWER Magazine</title>
+	<atom:link href="https://www.powermag.com/feed/" rel="self" type="application/rss+xml" />
+	<link>https://www.powermag.com/</link>
+	<description>The power industry&#039;s trusted source for generation technology, O&#38;M, and legal &#38; regulatory news for coal, gas, nuclear, hydro, wind &#38; solar power plants; power jobs</description>
+	<lastBuildDate>Sat, 12 Sep 2026 14:46:50 +0000</lastBuildDate>
+	<language>en-US</language>
+	<sy:updatePeriod>
+	hourly	</sy:updatePeriod>
+	<sy:updateFrequency>
+	1	</sy:updateFrequency>
+	<generator>https://wordpress.org/?v=7.0.4</generator>
+
+<image>
+	<url>https://www.powermag.com/wp-content/uploads/2020/11/cropped-p-power-32x32.jpg</url>
+	<title>POWER Magazine</title>
+	<link>https://www.powermag.com/</link>
+	<width>32</width>
+	<height>32</height>
+</image> 
+	<item>
+		<title>Court Rules Against Trump Order to Keep Michigan Coal-Fired Plant Operating</title>
+		<link>https://www.powermag.com/court-rules-against-trump-order-to-keep-michigan-coal-fired-plant-operating/</link>
+					<comments>https://www.powermag.com/court-rules-against-trump-order-to-keep-michigan-coal-fired-plant-operating/#respond</comments>
+		
+		<dc:creator><![CDATA[Darrell Proctor]]></dc:creator>
+		<pubDate>Fri, 11 Sep 2026 16:53:49 +0000</pubDate>
+				<category><![CDATA[Legal & Regulatory]]></category>
+		<category><![CDATA[Coal]]></category>
+		<category><![CDATA[News]]></category>
+		<category><![CDATA[Power]]></category>
+		<category><![CDATA[CATF]]></category>
+		<category><![CDATA[Chris Wright]]></category>
+		<category><![CDATA[coal]]></category>
+		<category><![CDATA[consumers energy]]></category>
+		<category><![CDATA[Dept. of Energy]]></category>
+		<category><![CDATA[DOE]]></category>
+		<category><![CDATA[emergency order]]></category>
+		<category><![CDATA[Federal Power Act]]></category>
+		<category><![CDATA[J.H. Campbell]]></category>
+		<category><![CDATA[Michigan]]></category>
+		<category><![CDATA[NRDC]]></category>
+		<category><![CDATA[Section 202(c)]]></category>
+		<category><![CDATA[trump]]></category>
+		<guid isPermaLink="false">https://www.powermag.com/?p=272223</guid>
+
+					<description><![CDATA[<p>The D.C. Circuit Court of Appeals has ruled against the Trump administration's order to keep the J.H. Campbell coal-fired power plant in Michigan operating. The decision that could impact other orders that have been issued to keep U.S. coal-fired power plants operating past their scheduled retirement dates.</p>
+<p>The post <a href="https://www.powermag.com/court-rules-against-trump-order-to-keep-michigan-coal-fired-plant-operating/">Court Rules Against Trump Order to Keep Michigan Coal-Fired Plant Operating</a> appeared first on <a href="https://www.powermag.com">POWER Magazine</a>.</p>
+<p><img width="350" height="267" src="https://www.powermag.com/wp-content/uploads/2025/05/jh-campbell-complex-waterway-descriptor3.png" class="attachment-post-thumbnail size-post-thumbnail wp-post-image" alt="jh-campbell-complex-waterway-descriptor3" decoding="async" fetchpriority="high" srcset="https://www.powermag.com/wp-content/uploads/2025/05/jh-campbell-complex-waterway-descriptor3.png 350w, https://www.powermag.com/wp-content/uploads/2025/05/jh-campbell-complex-waterway-descriptor3-300x229.png 300w" sizes="(max-width: 350px) 100vw, 350px" /></p>]]></description>
+		
+					<wfw:commentRss>https://www.powermag.com/court-rules-against-trump-order-to-keep-michigan-coal-fired-plant-operating/feed/</wfw:commentRss>
+			<slash:comments>0</slash:comments>
+		
+		
+			</item><item>
+		<title>A Phased Framework for Adaptive Protection Migration in DER-Heavy Transmission Substations</title>
+		<link>https://www.powermag.com/a-phased-framework-for-adaptive-protection-migration-in-der-heavy-transmission-substations/</link>
+					<comments>https://www.powermag.com/a-phased-framework-for-adaptive-protection-migration-in-der-heavy-transmission-substations/#respond</comments>
+		
+		<dc:creator><![CDATA[POWER]]></dc:creator>
+		<pubDate>Thu, 10 Sep 2026 21:23:07 +0000</pubDate>
+				<category><![CDATA[Distributed Energy]]></category>
+		<category><![CDATA[T&D]]></category>
+		<category><![CDATA[Technology]]></category>
+		<category><![CDATA[Cybersecurity]]></category>
+		<category><![CDATA[Smart Grid]]></category>
+		<category><![CDATA[Full Coverage]]></category>
+		<category><![CDATA[Power]]></category>
+		<category><![CDATA[Adaptive Protection]]></category>
+		<category><![CDATA[der]]></category>
+		<category><![CDATA[distributed energy resources]]></category>
+		<category><![CDATA[grid modernization]]></category>
+		<category><![CDATA[Substation Automation]]></category>
+		<category><![CDATA[Transmission Substations]]></category>
+		<guid isPermaLink="false">https://www.powermag.com/?p=272096</guid>
+
+					<description><![CDATA[<p>This article presents a practical four-phase engineering methodology for migrating legacy transmission substations toward adaptive protection architectures in power systems with high distributed energy resource (DER) penetration. Increasing DER integration introduces significant challenges to conventional protection schemes, including bidirectional power flow, dynamic fault current behavior, relay coordination complexity, and reduced protection reliability in aging substations. [&#8230;]</p>
+<p>The post <a href="https://www.powermag.com/a-phased-framework-for-adaptive-protection-migration-in-der-heavy-transmission-substations/">A Phased Framework for Adaptive Protection Migration in DER-Heavy Transmission Substations</a> appeared first on <a href="https://www.powermag.com">POWER Magazine</a>.</p>
+<p><img width="1280" height="853" src="https://www.powermag.com/wp-content/uploads/2026/09/power-grid-infrastructure-in-the-daytime-sky-2026-03-24-09-50-13-utc.jpg" class="attachment-post-thumbnail size-post-thumbnail wp-post-image" alt="transmission-substation" decoding="async" srcset="https://www.powermag.com/wp-content/uploads/2026/09/power-grid-infrastructure-in-the-daytime-sky-2026-03-24-09-50-13-utc.jpg 1280w, https://www.powermag.com/wp-content/uploads/2026/09/power-grid-infrastructure-in-the-daytime-sky-2026-03-24-09-50-13-utc-300x200.jpg 300w, https://www.powermag.com/wp-content/uploads/2026/09/power-grid-infrastructure-in-the-daytime-sky-2026-03-24-09-50-13-utc-1024x682.jpg 1024w, https://www.powermag.com/wp-content/uploads/2026/09/power-grid-infrastructure-in-the-daytime-sky-2026-03-24-09-50-13-utc-768x512.jpg 768w" sizes="(max-width: 1280px) 100vw, 1280px" /></p>]]></description>
+		
+					<wfw:commentRss>https://www.powermag.com/a-phased-framework-for-adaptive-protection-migration-in-der-heavy-transmission-substations/feed/</wfw:commentRss>
+			<slash:comments>0</slash:comments>
+		
+		
+			</item><item>
+		<title>Battery Energy Storage Group Receives Millions in Funding</title>
+		<link>https://www.powermag.com/battery-energy-storage-group-receives-millions-in-funding/</link>
+					<comments>https://www.powermag.com/battery-energy-storage-group-receives-millions-in-funding/#respond</comments>
+		
+		<dc:creator><![CDATA[Press Release]]></dc:creator>
+		<pubDate>Thu, 10 Sep 2026 18:55:25 +0000</pubDate>
+				<category><![CDATA[Press Releases]]></category>
+		<category><![CDATA[Energy Storage]]></category>
+		<category><![CDATA[Business]]></category>
+		<category><![CDATA[News]]></category>
+		<category><![CDATA[Power]]></category>
+		<category><![CDATA[battery energy storage]]></category>
+		<category><![CDATA[BESS]]></category>
+		<category><![CDATA[CR Financial Holdings]]></category>
+		<category><![CDATA[Horizon Technology Finance]]></category>
+		<category><![CDATA[NeoVolta]]></category>
+		<category><![CDATA[RoHo Capital Opportunity Fund]]></category>
+		<category><![CDATA[Roth Capital]]></category>
+		<guid isPermaLink="false">https://www.powermag.com/?p=271992</guid>
+
+					<description><![CDATA[<p>Horizon Technology Finance Corp., an affiliate of Monroe Capital, on September 10 said that the RoHo Capital Opportunity Fund LLC, a joint venture formed by Horizon and CR Financial Holdings, Inc., the holding company for Roth Capital Partners, LLC, has provided a $20-million senior credit facility to NeoVolta, Inc., with the ability to increase the facility to $30 million upon mutual agreement. An initial $20 million was funded at closing to support NeoVolta’s continued growth.</p>
+<p>The post <a href="https://www.powermag.com/battery-energy-storage-group-receives-millions-in-funding/">Battery Energy Storage Group Receives Millions in Funding</a> appeared first on <a href="https://www.powermag.com">POWER Magazine</a>.</p>
+<p><img width="500" height="400" src="https://www.powermag.com/wp-content/uploads/2026/09/neovolta.png" class="attachment-post-thumbnail size-post-thumbnail wp-post-image" alt="NeoVolta" decoding="async" srcset="https://www.powermag.com/wp-content/uploads/2026/09/neovolta.png 500w, https://www.powermag.com/wp-content/uploads/2026/09/neovolta-300x240.png 300w" sizes="(max-width: 500px) 100vw, 500px" /></p>]]></description>
+		
+					<wfw:commentRss>https://www.powermag.com/battery-energy-storage-group-receives-millions-in-funding/feed/</wfw:commentRss>
+			<slash:comments>0</slash:comments>
+		
+		
+			</item></channel></rss>

@@ -51,10 +51,10 @@ describe("the news refresh policy", () => {
   });
 
   it("points at a route that ingests every enabled source, whatever its category", () => {
-    // Today that is Compute only, which is a fact about the registry rather
-    // than about the schedule.
+    // The set grows as categories migrate and the schedule does not change,
+    // which is the property this file exists to protect.
     const enabled = enabledNewsSources();
     expect(enabled.length).toBeGreaterThan(0);
-    expect(new Set(enabled.map((source) => source.category))).toEqual(new Set(["compute"]));
+    expect(new Set(enabled.map((source) => source.category))).toEqual(new Set(["compute", "energy-power"]));
   });
 });
