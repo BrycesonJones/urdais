@@ -96,6 +96,37 @@ describe("the approved source registry", () => {
     }
   });
 
+  it("records the Memory qualification pass, and enables nothing from it", () => {
+    // Phase 2A researched Memory and found no source it could ingest. The
+    // record of that is the deliverable; the absence of Memory sources is the
+    // result, and both are asserted so neither is quietly undone.
+    const memory = NEWS_SOURCES_REVIEWED_NOT_APPROVED.filter((row) => row.category === "memory");
+    expect(memory.length).toBeGreaterThanOrEqual(8);
+    expect(newsSourcesForCategory("memory")).toEqual([]);
+    expect(enabledNewsSources().every((source) => source.category === "compute")).toBe(true);
+
+    // The one refused on rights rather than on quality or relevance.
+    const skhynix = memory.find((row) => row.sourceInterfaceSlug === "skhynix-newsroom-feed");
+    expect(skhynix?.refusalKind).toBe("terms");
+    expect(skhynix?.reason).toContain("non-commercial use only");
+
+    // Every kind of refusal the pass produced is represented, because they age
+    // differently and a later reader needs to know which are worth re-testing.
+    expect(new Set(memory.map((row) => row.refusalKind))).toEqual(
+      new Set(["terms", "abandoned", "unusable", "relevance"]),
+    );
+  });
+
+  it("never lists a refused feed as an approved one", () => {
+    const approved = new Set(NEWS_SOURCE_SLUGS.map((slug) => NEWS_SOURCES[slug].feedUrl));
+    const approvedInterfaces = new Set(NEWS_SOURCE_SLUGS.map((slug) => NEWS_SOURCES[slug].sourceInterfaceSlug));
+    for (const row of NEWS_SOURCES_REVIEWED_NOT_APPROVED) {
+      expect(approved.has(row.feedUrl)).toBe(false);
+      expect(approvedInterfaces.has(row.sourceInterfaceSlug)).toBe(false);
+      expect(row.reason.length).toBeGreaterThan(80);
+    }
+  });
+
   it("keeps the refused feeds and the reason they were refused", () => {
     const slugs = NEWS_SOURCES_REVIEWED_NOT_APPROVED.map((row) => row.sourceInterfaceSlug);
     expect(slugs).toContain("nvidia-newsroom-feed");
