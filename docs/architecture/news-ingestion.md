@@ -1,6 +1,6 @@
 # News ingestion
 
-**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 14 September 2026 when the homepage Compute rail stopped reading mock data (Phase 1A); rewritten 15 September 2026 when Compute was finished (Phase 1B).
+**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 14 September 2026 when the homepage Compute rail stopped reading mock data (Phase 1A); rewritten 15 September 2026 when Compute was finished (Phase 1B); §12 added the same day when the Memory qualification pass found nothing it could ingest (Phase 2A).
 
 The homepage Compute rail reads production data from eight approved publisher
 feeds, refreshed once a day. This document records how, from which
@@ -16,7 +16,7 @@ item, no article page, and no public news API; the only reader is the homepage.
 | Rail | State |
 | --- | --- |
 | Compute | **production** — eight approved feeds, seven publishers, thumbnails where permitted |
-| Memory | mock |
+| Memory | mock — qualified in Phase 2A, no source passed; see §12 |
 | Photonics | mock |
 | Energy / Power | mock |
 | AI Chips | mock |
@@ -536,7 +536,86 @@ operator command exits non-zero in the same case.
 
 ---
 
-## 11. Migrating the remaining five categories
+## 12. Memory: the qualification pass that approved nothing
+
+Phase 2A ran the §4 qualification over Memory and approved no source. The rail
+stays on mock. This section is the result, kept so the search is not repeated.
+
+The scope was DRAM, HBM, NAND, DDR and LPDDR, the manufacturing, pricing,
+capacity and supply behind them, and memory demand from AI infrastructure —
+deliberately not general semiconductors, storage systems or consumer parts.
+
+### What was refused, and what would change it
+
+Four kinds of refusal came up. They age differently, which is why they are kept
+apart in `terms_evidence.refusal_kind` rather than collapsed into "rejected".
+
+| Kind | Reversed by | Sources |
+| --- | --- | --- |
+| `terms` | the terms changing, or written permission | SK hynix |
+| `abandoned` | the publisher posting to the feed again | Samsung memory tag, JEDEC |
+| `unusable` | the publisher emitting a field it omits | DRAMeXchange |
+| `relevance` | a memory-scoped feed from the same publisher | Blocks & Files, TrendForce, Rambus, SNIA, CXL Consortium |
+
+**SK hynix** was the only candidate that was live, squarely on topic and
+technically sound, and the only one refused on rights. Its Newsroom Terms of Use
+(last modified 7 March 2025) prohibit "any robot, spider, or other automatic
+device, process, or means to access the Website for any purpose, including
+monitoring or copying any of the material", permit the site "for non-commercial
+use only", and forbid storing or publicly displaying its material "without the
+prior written consent of the Company". The only carve-outs are RAM caching,
+browser cache and one printed copy for personal non-commercial use; the document
+was searched in full and contains no press, media, editorial, fair-use or
+attribution exception. That is a stronger prohibition than NVIDIA's, which this
+registry already refuses on the collection axis alone. Its `/tag/hbm/`,
+`/tag/dram/` and `/tag/nand/` feeds — 20 distinct current articles between them —
+are the same site under the same terms and are refused with it.
+
+**DRAMeXchange** was the most on-topic feed found anywhere: DRAM and NAND
+contract and spot pricing is the closest thing in this field to what UCPI
+measures for compute. No item carries a publication time of any kind, and the
+channel time elements are empty. A rail ordered by publication date cannot be
+built from that without inventing dates, so it is not built. Item links are also
+site-relative, which would have been a generic fix; the missing timestamps are
+not.
+
+**Blocks & Files** was the closest near miss and is the one worth re-testing. It
+has a real NAND, DRAM and HBM beat, but 12 of the 69 items in the retrieved
+window were memory stories and the rest were storage arrays, disk and
+filesystems. Unfiltered it makes the Memory rail a storage rail; filtered it
+needs story classification the pipeline deliberately does not have.
+
+### Candidates with no interface to record
+
+These have no working feed, so there is no source interface to point at and no
+registry row. They are listed only here.
+
+| Publisher | Finding (2026-09-15) |
+| --- | --- |
+| Micron | No feed on the main site; `investors.micron.com` RSS returns 403 to a non-browser agent. `micron.com/robots.txt` is permissive, but there is nothing to read. |
+| Kioxia | Newsroom pages return HTML; no feed and no autodiscovery link on either the global or Americas site. |
+| SanDisk | `/company/newsroom/rss` returns 403; no autodiscovery link. |
+| Semiconductor Engineering | Cloudflare managed challenge on every path including `/robots.txt`. Its `/category/memory/feed/` would have been ideal. |
+| The Memory Guy | 403 to a non-browser agent. |
+| Solidigm, Winbond, Macronix, Counterpoint, Yole, StorageNewsletter | No feed endpoint or autodiscovery link found. |
+
+Every 403 above was treated as an answer. None was retried with a spoofed agent.
+
+### What this leaves
+
+Memory is the first category where the rights model produced no rail rather than
+a smaller one, and that is the model working rather than failing: the alternative
+was a rail labelled Memory carrying storage-array coverage, or one built on a
+publisher that says non-commercial only.
+
+The two routes forward are a written permission request to SK hynix, which the
+`docs/architecture/sources/` outreach records are the pattern for, and
+re-testing the `relevance` and `abandoned` candidates when a publisher changes
+what it emits. Neither is scheduled.
+
+---
+
+## 11. Migrating a category
 
 Nothing structural is missing, and the scheduler does not change.
 
