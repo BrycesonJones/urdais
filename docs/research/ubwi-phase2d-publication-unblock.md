@@ -214,7 +214,7 @@ Had its rights been established, the existing reference-year convention — the 
 
 | | Modelled share | Gate |
 |---|---:|---|
-| Production V1 | 40.43918 % | refused |
+| Production V1 | 40.43922 % | refused |
 | + New Zealand, paired with 2024 GDP | **39.99989 %** | **passes by 0.00011 pp** |
 | + New Zealand, paired with 2023 GDP | 40.00194 % | refused |
 
