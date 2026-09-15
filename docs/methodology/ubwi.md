@@ -1,6 +1,6 @@
 # Urdais Bitcoin Wealth Index (UBWI)
 
-**Status: proposed methodology, version 0.1.0-draft. Not launched.** Prepared 14 September 2026 under the [Urdais methodology framework](/docs/methodology). No production value has been published under this document, and none may be: the denominator has no source that is simultaneously global, current, market-valued and cleared for redistribution. A value computed under this document today is a **labelled candidate**, never a publication.
+**Version 1.0.0, 15 September 2026.** Status: approved for production. Prepared under the [Urdais methodology framework](/docs/methodology). UBWI is an **estimate calibrated to observed economies, not a census of world wealth**: roughly two fifths of its denominator is a disclosed, versioned model, and every surface carrying the value says so. This version defines the production construction and the publication gate. **No UBWI value is published as of this version's effective date**, because the gate refuses the current denominator on its imputed-share ceiling; the gate is not relaxed to produce a number.
 
 ## Purpose and Scope
 
@@ -130,6 +130,63 @@ Adding Bitcoin lowers UBWI by about a quarter of one percent of its own value at
 
 **Crypto assets other than Bitcoin are not added to the denominator.** They belong there under the same paragraph, they are not measured here, and their omission biases UBWI upward. This is a named limitation, quantified with every published value once a redistributable measure of non-Bitcoin crypto capitalization exists.
 
+## Production Denominator Construction
+
+**Total Global Wealth is constructed, not read.** No compiler publishes a world national-wealth
+total at market value and market exchange rates under terms that permit redistribution, and the
+research that established this is recorded in the Phase 1 to Phase 2C source studies. UBWI therefore
+builds its denominator as
+
+$$\text{Total Global Wealth} = \text{Observed Rights-Cleared Wealth} + \text{Modeled Residual Wealth} + \text{Bitcoin Market Capitalization}$$
+
+### Observed wealth
+
+The observed leg is the sum of national balance sheets for the economies Urdais can both observe and
+publish. Each component carries its compiler's own series identifier, its own reference date, its own
+currency and FX conversion, its land and consumer-durables treatment, and its rights state. Components
+are summed, never averaged, and no component is bridged, interpolated or rolled forward.
+
+**Observed does not mean harmonised.** Two harmonisation layers over the same national compiler can
+disagree materially — France's net foreign position differs by EUR 379 bn between the OECD and
+Eurostat — so a component records the interface it actually came from, and a disagreeing route is
+retained as superseded rather than silently discarded.
+
+### Modeled residual wealth, and why modelling is structurally necessary
+
+The economies Urdais does not observe are not a research backlog. **They are economies that do not
+compile the thing being measured.** China does not publish a national balance sheet with a
+market-valued net-worth total; neither does India. No permission, retrieval or budget creates a
+statistic a national statistical office does not produce. Phase 2C measured the feasible frontier —
+the rights-cleared coverage reachable from balance sheets that exist today — at **55.72 % of world
+GDP**, and a counterfactual ceiling of 62.93 % that would require nineteen further statistical
+offices to begin valuing land.
+
+A denominator that included only observed economies would not be world wealth; it would be the wealth
+of the rich world, presented as the world's. Modelling the remainder is therefore the honest option,
+provided the model is versioned, disclosed, and never called an observation.
+
+**The rule.** Unobserved world GDP at market exchange rates is valued at the observed set's own
+wealth-to-GDP ratio, scaled by a calibration factor measuring how much poorer per unit of output the
+unobserved world is in the one cross section where both are measured comparably — the World Bank's
+Changing Wealth of Nations, 2020:
+
+$$\text{Modeled Residual Wealth} = k \cdot R \cdot \text{Unobserved World GDP}$$
+
+where $R$ is the observed-set wealth-to-GDP ratio computed from the components themselves and $k$ is
+the CWON tail calibration. The rule is deliberately simple. Phase 2A backtested regional and
+income-group refinements and found they do not reliably beat a single world ratio — regional grouping
+is worse at six of eleven cut-points — so the model does not invite elaborations that add opacity
+without accuracy.
+
+**The imputation rule is versioned reference data, not application code**, so a value computed under
+one rule stays explicable after the rule changes. History is never restated.
+
+### The modelled share is disclosed, always
+
+The observed and modelled shares of Total Global Wealth are published beside the value, in those
+words. **Modelled wealth is never described as observed**, and the headline is never shown without
+its modelled share and its sensitivity range.
+
 ## Accounting Framework
 
 Four candidate frameworks were compared. The comparison is recorded in the Phase 1 source study; the conclusion is stated here because it determines everything above.
@@ -154,6 +211,23 @@ Four sources of uncertainty survive the framework choice and cannot be assumed a
 
 **Purchasing-power and market exchange rates give materially different totals.** The conversion applied to reach a market-exchange-rate denominator is itself a source of error, and its direction is known: see the vintage section.
 
+## Foreign Exchange Policy
+
+**End-period FX for end-period stocks.** A national balance sheet is a stock at an instant, and it is
+converted at the last quoted reference-rate fixing at or before that component's own reference date.
+Phase 2B measured the error from the wrong basis at up to **6.6 % for a single country**, which is
+larger than several economies' entire contribution to the denominator.
+
+**The fixing date is per component, not per vintage.** Australia's national balance sheet is as at
+30 June; every other economy in the observed set is a calendar year-end. A single harmonised fixing
+date would either treat a 30 June stock as a 31 December stock or select the wrong fixing for it.
+
+**One FX source, rights-cleared, recorded per component.** Production V1 converts every
+non-USD component at the European Central Bank's euro foreign exchange reference rates, whose terms
+permit free use with accurate reproduction and citation of the ECB, and which require that any
+modification be stated explicitly. Converting a stock to USD is such a modification and is disclosed
+on every component's FX lineage. A source is never switched without recording the change.
+
 ## Denominator Vintage Policy
 
 Comprehensive world-wealth estimates are annual, refer to a year-end, and are published six to eighteen months after the period they describe. Bitcoin is continuous. UBWI must therefore hold three timestamps apart and publish all three:
@@ -167,6 +241,39 @@ Comprehensive world-wealth estimates are annual, refer to a year-end, and are pu
 **A new vintage takes effect from its own publication date forward.** Values already published are not restated when a vintage is superseded, because they were correct statements of the best measurement available when they were made. Errors are corrected under the revision policy; superseded vintages are not errors.
 
 **Percentage change is withheld across a vintage boundary.** A vintage change moves the denominator by several percent in one step, and a change computed across that step would describe the arrival of a statistical publication rather than any movement in Bitcoin or in wealth. Change is therefore computed only between values sharing the same denominator vintage and the same methodology version, and is withheld across either boundary rather than shown as a jump or as zero.
+
+## Major-Economy Treatment
+
+**The requirement is disclosure, not observation.** An earlier proposal required every economy above
+3 % of world GDP to be observed or the index would not publish. That is a permanent block on China,
+which does not compile the statistic, and a rule that can never be satisfied is a decision never to
+publish taken silently rather than a standard.
+
+Instead: **every economy above the disclosure threshold that UBWI does not observe is named on the
+published surface, with its GDP weight and the reason it is unobserved**, and the published
+sensitivity range spans a plausible range of its wealth-to-GDP ratio. Phase 2C measured the China
+band at 0.2440 %–0.2927 % — roughly 17 % of the value from one economy's assumed ratio — which is a
+far more informative disclosure than any coverage percentage.
+
+## Sensitivity Methodology
+
+**The published range is not a confidence interval.** No distribution over world wealth is available
+and none is assumed. The range is the span of four named, reproducible assumptions about the single
+parameter that dominates the uncertainty — the wealth-to-GDP ratio of the world UBWI cannot observe:
+
+- **Unobserved world as wealthy per unit GDP as the observed set**: tail ratio $R$.
+- **Central, CWON-2020 calibrated tail**: tail ratio $k \cdot R$. This is the published value.
+- **Low**: tail ratio $0.60 \cdot R$.
+- **High**: tail ratio $1.15 \cdot R$.
+
+Each scenario is stored with its ratio, its imputed subtotal, its Total Global Wealth and its
+resulting UBWI, so the range is reproducible from the versioned assumptions alone. The central
+scenario is the published value; the others are diagnostics and **an alternative denominator never
+becomes a second UBWI**.
+
+The range is published **with** the value, never in an appendix. Numerator uncertainty is not in it,
+because it does not belong there: venue dispersion at the observation instant is of the order of one
+basis point, three orders of magnitude smaller than the denominator's.
 
 ## Historical Reconstruction
 
@@ -211,15 +318,47 @@ UBWI is displayed as a percentage with four decimal places. It is never displaye
 
 ## Publication Gates
 
-No UBWI value is published unless all of the following hold:
+No UBWI value is published unless **all** of the following hold. The thresholds are configuration
+checked against the measured feasible frontier, not literals chosen for how they sound.
 
-- an approved version of this methodology, with an effective date;
-- a denominator vintage from a source whose terms permit production use and redistribution of the derived value;
-- a numerator formed from at least three independent venues within the retrieval window;
-- the denominator vintage's own reference date, publication date and coverage recorded;
-- the additive component panel reconciling to the denominator total within a stated tolerance, with any residual shown.
+- **Every directly observed constituent is rights-cleared.** Required, no exceptions.
+- **Modelled share of the wealth denominator**: at most **40 %**.
+- **Rights-cleared observed GDP coverage**: at least **52 %**.
+- **No silently interpolated national wealth stock.** Required.
+- **Vintage age at the calculation date**: at most **4 years**.
+- **Vintage dispersion, oldest to newest**: at most **4 years**.
+- **Consumer durables included but not stripped**: prohibited.
+- **Sensitivity output available.** Required.
+- **Methodology version explicit.** Required.
+- **Denominator model version explicit.** Required.
+- **Source lineage complete**, per component. Required.
+- **FX lineage complete and end-period**, per component. Required.
+- **Every unobserved economy above 3 % of world GDP disclosed.** Required.
 
-Where any gate fails, **no value is published and no substitute is shown**. A previously valid value continues to be displayed with its own original timestamp under the last-known-good rule, and the failure is reported separately.
+**Why 40 % and 52 %, and why they are the same bound.** A gate must be set against the feasible
+frontier. A threshold above it is not a high standard; it is a permanent refusal disguised as one.
+Phases 2A and 2B both proposed a 25 % imputed-share ceiling, which requires **68.44 %** observed
+coverage; a 35 % ceiling requires **57.31 %**. Both exceed the measured 55.72 % frontier, so either
+would have made the index refuse every denominator the global statistical system can produce, forever,
+while appearing to encode a quality rule. **≤ 40 % is the tightest satisfiable bound.** The 52 %
+coverage floor is the same constraint stated in the other unit and moves with it; it is derived, not
+chosen. A configured floor above the stored frontier is itself refused as a configuration error.
+
+**The gate is never relaxed to make a calculation pass.** Where any gate fails, no value is published
+and no substitute is shown. The failure is reported with the measured figure against the threshold.
+
+## Update Cadence
+
+**The numerator is re-observed on each production calculation**; it is instantaneous and its timestamp
+is load-bearing. **The denominator is re-constructed when a constituent compiler publishes a new
+balance sheet**, which is annual for every economy in the observed set except Canada, which publishes
+quarterly and is selected by a stored rule: the latest published observation at or before 31 December
+of the latest complete calendar year.
+
+Between denominator vintages the denominator is held fixed and UBWI moves only with Bitcoin. Urdais
+does not nowcast, interpolate or roll forward a denominator. **Percentage change is withheld across a
+vintage or methodology boundary**, and is unavailable entirely until a second real observation exists:
+there is no such thing as a change from nothing, and no historical UBWI is fabricated to create one.
 
 ## Revisions and Corrections
 
@@ -245,14 +384,35 @@ Stated with every published value.
 
 ## Open Questions
 
-These are unresolved and block launch.
+Resolved since 0.1.0-draft: the denominator source-rights blocker (every constituent is now cleared
+against a retained, hashed terms artifact); which world aggregate to use (none exists, so UBWI
+constructs one); and the exchange-rate conversion (end-period reference rates per component, replacing
+the purchasing-power conversion and its known bias).
 
-1. **Source rights for the denominator.** Both candidate sources are blocked. The open multi-economy database that implements the identity publishes no licence: its terms-of-use page does not resolve and its repository carries no licence file. The proprietary research report that measures the concept best states that any use of its material without specific permission is strictly prohibited. Until one of the two is cleared in writing, no production value may be published.
-2. **Which world aggregate to use, and whether to construct one.** No compiler publishes a world market-value national-wealth total at market exchange rates. Whether Urdais should construct one from country-level balance sheets, and under what coverage rule, is a methodology decision this version does not make.
-3. **The purchasing-power to market-exchange-rate conversion.** The V1 conversion is an economy-weighted GDP factor with a known bias. Whether a wealth-weighted conversion is constructible from open data is unresolved.
-4. **Whether a second, comprehensive-wealth-based denominator should be published as a declared floor.** The temptation is real and the prohibition on multiple headline variants is also real; if it is published at all it is a diagnostic, not a second UBWI.
-5. **Non-Bitcoin crypto assets in the denominator.** Required by the asset boundary, currently unmeasured under a redistributable licence.
-6. **The venue set for the numerator median**, and the rule for adding or removing a venue without moving the series.
+Open, and each is recorded rather than worked around.
+
+1. **The imputed-share ceiling is not met.** At the Production V1 observed set the modelled share is
+   above 40 %, and the gate refuses publication. Closing it needs roughly one further percentage point
+   of rights-cleared observed GDP coverage from balance sheets that include land. This is a coverage
+   problem, not a rights problem.
+2. **Six near-frontier economies** — Norway, Finland, Hungary, Israel, Latvia, Portugal — are worth
+   1.73 pp of coverage between the achieved figure and the 55.72 % frontier. Finland entered this
+   version; the others are each blocked on a matched net-foreign-position year or, for Norway, on a
+   non-produced asset series that stops in 2014. Admitting one without its land valuation would mean
+   treating fixed capital stock as national net wealth, which this methodology prohibits.
+3. **The composition-sensitivity band** is approximately 16 pp against a proposed ≤ 15 pp target,
+   reachable at roughly 58–60 % coverage.
+4. **Numerator source terms have not been reviewed.** The venue tickers and the chain-supply endpoint
+   are read directly, which removes the licensing dependency a vendor aggregate would carry, but no
+   terms artifact has been retrieved and reviewed for any of them. They are recorded as `not_reviewed`
+   rather than assumed permissive.
+5. **An operational Bank of Korea ECOS API key** for production retrieval volumes. Korea's publication
+   rights are cleared and its value is manually verified against the first-party table; only the
+   automated collection path is pending. These are separate questions and only the second is open.
+6. **Non-Bitcoin crypto assets in the denominator**, required by the asset boundary and still
+   unmeasured under a redistributable licence.
+7. **The venue set for the numerator median**, and the rule for adding or removing a venue without
+   moving the series.
 
 ## Relationship to the Urdais Product Surface
 
@@ -260,8 +420,33 @@ UBWI appears in the Urdais market catalog as an index symbol. Its unit is a perc
 
 ## Methodology Version
 
-**0.1.0-draft, 14 September 2026.** Status: draft. No production effective date. A draft carries no effective date, and publishing under a draft is prohibited.
+**1.0.0, 15 September 2026.** Status: approved for production, effective 15 September 2026. The
+residual denominator model carries its own version, **1.0.0**, and a published value is immutable
+under both: a correction is a new, superseding publication, never an edit.
 
 ## Version History
 
-**0.1.0-draft, 14 September 2026**: initial methodology. Fixes the primary question and the percentage unit; defines the numerator as claimed issued supply times a three-venue median spot price with no lost-coin adjustment; defines Total Global Wealth as consolidated world net worth on the SNA national-wealth identity, excluding human capital and consumer durables, including government assets and liabilities, natural capital, valuables and monetary gold, and including crypto assets without a corresponding liability; states the anti-double-counting rule and its four prohibitions; selects national balance sheets over household net worth, comprehensive wealth and asset-class aggregation, with reasons; places Bitcoin inside its own denominator; fixes the vintage policy, the three timestamps and the withholding of change across a vintage boundary; sets the historical reconstruction start at 31 December 2013 on a numerator constraint; defines the published surface with separate additive and non-additive component panels; and records the source-rights blocker that prevents publication. No production effective date.
+**1.0.0, 15 September 2026**: first production methodology. Defines Total Global Wealth as a
+constructed hybrid of directly observed, rights-cleared national balance sheets and a versioned
+modelled residual for economies that do not compile a comparable balance sheet, and states why that
+modelling is structurally necessary rather than provisional. Adds the production denominator
+construction, the residual model and its CWON-2020 calibration, the four-scenario sensitivity
+methodology, the end-period per-component FX policy replacing the purchasing-power conversion, the
+major-economy disclosure rule replacing the unsatisfiable major-economy observation rule, the concrete
+publication gate with thresholds checked against a measured feasible frontier, the vintage age and
+dispersion bounds, and the update cadence. Records that the Bank of Korea component is manually
+verified and its automated retrieval pending, and that numerator source terms are unreviewed. Applies
+the vintage rule, which removes New Zealand (2017) and Russia (2019) from the observed set rather than
+bridging them. **No value is published under this version at its effective date**: the modelled share
+is above the 40 % ceiling and the gate refuses.
+
+**0.1.0-draft, 14 September 2026**: initial methodology. Fixed the primary question and the percentage
+unit; defined the numerator as claimed issued supply times a three-venue median spot price with no
+lost-coin adjustment; defined Total Global Wealth as consolidated world net worth on the SNA
+national-wealth identity, excluding human capital and consumer durables, including government assets
+and liabilities, natural capital, valuables and monetary gold, and including crypto assets without a
+corresponding liability; stated the anti-double-counting rule and its four prohibitions; selected
+national balance sheets over household net worth, comprehensive wealth and asset-class aggregation;
+placed Bitcoin inside its own denominator; fixed the vintage policy, the three timestamps and the
+withholding of change across a vintage boundary; set historical reconstruction at 31 December 2013 on
+a numerator constraint; and recorded the source-rights blocker that then prevented publication.

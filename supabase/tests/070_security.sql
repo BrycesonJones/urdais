@@ -23,7 +23,15 @@ declare
     'pipeline.regional_observations', 'pipeline.regional_observation_participants',
     'pipeline.regional_publications', 'pipeline.token_price_observations',
     'pipeline.token_price_benchmarks',
-    'reference.news_sources', 'pipeline.news_articles'
+    'reference.news_sources', 'pipeline.news_articles',
+    -- UBWI Production V1.
+    'reference.wealth_estimation_rules', 'reference.wealth_feasible_frontiers',
+    'reference.ubwi_publication_gates',
+    'pipeline.wealth_vintages', 'pipeline.wealth_vintage_components',
+    'pipeline.wealth_vintage_unobserved_economies',
+    'pipeline.btc_market_observations', 'pipeline.btc_venue_quotes',
+    'pipeline.ubwi_calculations', 'pipeline.ubwi_sensitivity_scenarios',
+    'pipeline.ubwi_publications'
   ];
   n integer;
 begin

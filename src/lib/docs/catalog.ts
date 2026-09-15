@@ -113,7 +113,7 @@ export const docPages: readonly DocPage[] = [
   {
     slug: "methodology/ubwi",
     title: "UBWI",
-    description: "Proposed methodology for the Urdais Bitcoin Wealth Index: Bitcoin market capitalization as a percentage of Total Global Wealth, defined on the national-accounts net-worth identity and excluding human capital.",
+    description: "Production methodology for the Urdais Bitcoin Wealth Index: Bitcoin market capitalization as a percentage of Total Global Wealth, built from rights-cleared national balance sheets where observable and a versioned residual model for the rest of the world.",
     section: "Methodology",
     file: "methodology/ubwi.md",
   },

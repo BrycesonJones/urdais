@@ -30,7 +30,10 @@
     "db:ci": "scripts/db/local.sh ci",
     "tokens:verify": "tsx scripts/tokens/verify.ts",
     "tokens:verify-production": "tsx scripts/tokens/verify-production.ts",
-    "tokens:production:check": "tsx scripts/tokens/production-check.ts"
+    "tokens:production:check": "tsx scripts/tokens/production-check.ts",
+    "ubwi:calculate": "tsx scripts/ubwi/calculate.ts",
+    "ubwi:load": "tsx scripts/ubwi/load-and-publish.ts",
+    "ubwi:production:check": "tsx scripts/ubwi/production-check.ts"
   },
   "dependencies": {
     "github-slugger": "^2.0.0",

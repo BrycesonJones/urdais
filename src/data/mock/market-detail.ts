@@ -463,8 +463,16 @@ function headlineInstrumentId(symbol: string): string {
  * Their units and scales differ, so the comparison is relative: both series
  * are rebased to percentage change over the selected range.
  */
+/**
+ * Markets that publish no series, and so cannot be charted against another one. Offering
+ * a comparison that resolves to no instrument would put a dead option in the menu.
+ */
+const MARKETS_WITHOUT_SERIES = new Set(["UBWI"]);
+
 function indexComparisons(symbol: string): ComparisonOption[] {
-  return MARKET_CATALOG.filter((market) => market.symbol !== symbol).map((market) => ({
+  return MARKET_CATALOG.filter(
+    (market) => market.symbol !== symbol && !MARKETS_WITHOUT_SERIES.has(market.symbol),
+  ).map((market) => ({
     instrumentId: headlineInstrumentId(market.symbol),
     label: market.symbol,
     basis: "relative" as const,
@@ -545,29 +553,30 @@ const UACI_MARKET = buildIndexMarket(
 );
 
 /**
- * UBWI is a **percentage of Total Global Wealth**, not an index level. Per
- * /docs/methodology/ubwi it carries no base date and no base value, it is
- * bounded in [0, 100] by construction because Bitcoin sits inside its own
- * denominator, and "any presentation of UBWI as a points series is wrong".
- * This market previously carried a `pts` unit and a level near 1342.57, which
- * was a category error rather than a stale number, so the unit is corrected
- * here.
+ * UBWI carries **no demo series and no demo level**.
  *
- * The level below remains a **demo walk, not a UBWI value**. The methodology is
- * a draft with no effective date, its denominator has no source cleared for
- * production use, and publishing under a draft is prohibited — so no computed
- * candidate may be seeded here. The anchor is deliberately not any figure
- * produced by the UBWI research phases. A daily series is the right shape even
- * so: UBWI's numerator moves continuously while its denominator is held fixed
- * at the latest annual vintage, so between vintages the series moves with
- * Bitcoin alone.
+ * It is a percentage of Total Global Wealth, not an index level: per
+ * /docs/methodology/ubwi it has no base date, no base value, and is bounded in
+ * [0, 100] because Bitcoin sits inside its own denominator. It previously
+ * carried a synthetic daily walk anchored at 0.85 %, which was honest about
+ * being a demo in a comment and dishonest about it on the page.
+ *
+ * Nothing replaces it, because there is nothing real to put there yet: the
+ * production methodology is approved, the calculation runs, and the publication
+ * gate refuses the current denominator on its modelled-share ceiling. UBWI
+ * history begins at the first verified production observation, so the market
+ * carries an empty family and the page renders the withheld state with its
+ * disclosure instead of a number. See src/lib/ubwi/read/surface.ts.
  */
-const UBWI_MARKET = buildIndexMarket(
-  "UBWI",
-  "%",
-  { seed: 20130101, latestValue: 0.85, latestDailyReturn: 0.0042, points: LONG_HISTORY_DAYS, volatility: 0.028, drift: 0.0011 },
-  { seed: 6_600_000, days: 7, volatility: 0.012 },
-);
+const UBWI_MARKET: MarketDetail = {
+  symbol: "UBWI",
+  name: catalogEntry("UBWI").name,
+  unit: "%",
+  description: catalogEntry("UBWI").description,
+  question: catalogEntry("UBWI").question,
+  defaultInstrumentId: "ubwi",
+  families: [{ id: "index", label: "Index", instruments: [], defaultInstrumentId: "ubwi" }],
+};
 
 /* ---------- Lookup ---------- */
 
