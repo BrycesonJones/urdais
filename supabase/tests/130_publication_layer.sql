@@ -1,7 +1,8 @@
 -- The publication layer encodes the family's structural rules as constraints:
 -- the UTC window, one participant has no value, two publish at Minimum with
 -- dispersion withheld, three or more at Normal, publication status follows
--- the deadline, simulations are never published, rows are append-only.
+-- the deadline, simulations are never published, a run under a draft
+-- methodology or specification is never published, rows are append-only.
 begin;
 
 insert into reference.canonical_regions (code, name) values ('US', 'United States') on conflict (code) do nothing;
@@ -25,6 +26,14 @@ values ('eeeeeeee-0000-4000-8000-000000000001', 'dddddddd-0000-4000-8000-0000000
 insert into reference.market_entities (id, slug, name, legal_name)
 values ('99999999-0000-4000-8000-000000000001', 'seller-a', 'Seller A', 'Seller A, Inc.'),
        ('99999999-0000-4000-8000-000000000002', 'seller-b', 'Seller B', 'Seller B, Ltd.');
+-- The versions this run carries are approved, for the same reason the interface above is:
+-- these cases are about the structural rules, and an unapproved version would refuse every
+-- one of them before they were reached. The refusal itself is tested at the end.
+-- Inside the transaction, and rolled back with it: no UCPI version is approved in the schema.
+update reference.methodology_versions set status = 'approved', effective_from = '2026-09-01'
+ where id = '11111111-0000-4000-8000-000000000112';
+update reference.instrument_spec_versions set status = 'approved', effective_from = '2026-09-01'
+ where id = '22222222-0000-4000-8000-000000000114';
 
 do $$
 declare
@@ -233,6 +242,39 @@ begin
   values ('aaaaaaaa-4444-4000-8000-000000000005', 'aaaaaaaa-1111-4000-8000-000000000004', inst, '2026-09-13', 'US', 'value', 'minimum', 3.50, 2, 2, 0.5, false, 'withheld');
   select count(*) into n from pipeline.regional_observations where canonical_region_code = 'US' and calculation_date = '2026-09-13' and superseded_by_id is null;
   if n <> 1 then raise exception 'expected one current US observation after supersession, found %', n; end if;
+
+  -- A draft version never publishes. UCPI 0.1.2-draft and the LISTED-GPU specification
+  -- both require approved versions before a first publication and call anything computed
+  -- before then a candidate. The application gate says so too; this is the independent
+  -- half, so that a caller that forgets cannot release a value on its own say-so.
+  update reference.instrument_spec_versions set status = 'draft', effective_from = null
+   where id = '22222222-0000-4000-8000-000000000114';
+  begin
+    insert into pipeline.regional_publications (regional_observation_id, published_at, publication_status)
+    values ('aaaaaaaa-4444-4000-8000-000000000005', '2026-09-14T00:05:00Z', 'published');
+    raise exception 'a draft instrument specification published';
+  exception when check_violation then null;
+  end;
+  update reference.instrument_spec_versions set status = 'approved', effective_from = '2026-09-01'
+   where id = '22222222-0000-4000-8000-000000000114';
+
+  update reference.methodology_versions set status = 'draft', effective_from = null
+   where id = '11111111-0000-4000-8000-000000000112';
+  begin
+    insert into pipeline.regional_publications (regional_observation_id, published_at, publication_status)
+    values ('aaaaaaaa-4444-4000-8000-000000000005', '2026-09-14T00:05:00Z', 'published');
+    raise exception 'a draft methodology version published';
+  exception when check_violation then null;
+  end;
+  update reference.methodology_versions set status = 'approved', effective_from = '2026-09-01'
+   where id = '11111111-0000-4000-8000-000000000112';
+
+  -- With both approved again the same insert succeeds, so the refusal above was the
+  -- approval state and nothing else about this row.
+  insert into pipeline.regional_publications (regional_observation_id, published_at, publication_status)
+  values ('aaaaaaaa-4444-4000-8000-000000000005', '2026-09-14T00:05:00Z', 'published');
+  select count(*) into n from pipeline.regional_publications where regional_observation_id = 'aaaaaaaa-4444-4000-8000-000000000005';
+  if n <> 1 then raise exception 'expected the approved publication to be recorded, found %', n; end if;
 
   raise notice 'publication layer: ok';
 end $$;

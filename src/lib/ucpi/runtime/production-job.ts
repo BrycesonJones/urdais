@@ -26,7 +26,7 @@ import { collectSource, type SourceCollectionResult, type SourceRuntimeInput } f
 import type { EventSink } from "@/lib/ucpi/runtime/events";
 import type { Clock } from "@/lib/ucpi/runtime/http";
 import type { CalculationRunRow, Persistence, StoredRegionalObservation } from "@/lib/ucpi/runtime/persistence";
-import { validateForPublication } from "@/lib/ucpi/runtime/publication-gate";
+import { validateForPublication, type ExpectedVersions } from "@/lib/ucpi/runtime/publication-gate";
 
 export type SourceJob = Omit<SourceRuntimeInput<unknown, unknown, unknown>, "mode" | "calculationDate" | "persistence" | "events" | "clock" | "sleep" | "idFactory">;
 
@@ -68,7 +68,8 @@ export type CalculationPhaseResult = {
 export async function runCalculationPhase(input: {
   calculationDate: string;
   instrument: string;
-  versions: { methodologyVersion: string; instrumentSpecVersion: string };
+  /** The run's versions and where each stands in the registry. Only approved versions publish. */
+  versions: ExpectedVersions;
   entities: readonly MarketEntity[];
   registry: readonly SourceRegistryState[];
   persistence: Persistence;
