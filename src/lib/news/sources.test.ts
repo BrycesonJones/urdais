@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   assertNewsIngestPermitted,
+  enabledNewsSources,
   NEWS_SOURCES,
   NEWS_SOURCES_REVIEWED_NOT_APPROVED,
   newsSource,
@@ -47,6 +48,52 @@ describe("the approved source registry", () => {
 
   it("names a source it does not know rather than guessing one", () => {
     expect(() => newsSource("techcrunch")).toThrow(UnknownNewsSourceError);
+  });
+
+  it("is deep enough that no one publisher can own the rail", () => {
+    // The Phase 1A roster was four feeds from three publishers, and one of
+    // them stamps its whole feed with a single minute. Concentration is a
+    // source-roster problem first and a presentation problem second.
+    const enabled = enabledNewsSources();
+    expect(enabled.length).toBeGreaterThanOrEqual(8);
+    expect(new Set(enabled.map((source) => source.publisherName)).size).toBeGreaterThanOrEqual(7);
+  });
+
+  it("reads both feed formats, so the Atom path is exercised in production", () => {
+    const mechanisms = new Set(enabledNewsSources().map((source) => source.mechanism));
+    expect(mechanisms).toContain("rss");
+    expect(mechanisms).toContain("atom");
+  });
+
+  it("records an image decision for every source, and an allowlist wherever images are on", () => {
+    for (const slug of NEWS_SOURCE_SLUGS) {
+      const source = NEWS_SOURCES[slug];
+      if (source.imagePolicy === "none") {
+        expect(source.imageHosts).toEqual([]);
+        continue;
+      }
+      expect(source.imageHosts.length).toBeGreaterThan(0);
+      for (const entry of source.imageHosts) {
+        // A host on its own is never enough: two publishers share a CDN.
+        expect(entry.pathPrefix.startsWith("/")).toBe(true);
+        expect(entry.pathPrefix.length).toBeGreaterThan(1);
+        expect(entry.host).not.toContain("*");
+      }
+    }
+  });
+
+  it("never lets one publisher's allowlist admit another's assets on a shared CDN", () => {
+    // Two feeds from one publisher may share an allowlist — Google Cloud has
+    // two. Two different publishers on one host may not.
+    const entries = NEWS_SOURCE_SLUGS.flatMap((slug) =>
+      NEWS_SOURCES[slug].imageHosts.map((entry) => ({ publisher: NEWS_SOURCES[slug].publisherName, ...entry })),
+    );
+    for (const a of entries) {
+      for (const b of entries) {
+        if (a.publisher === b.publisher || a.host !== b.host) continue;
+        expect(a.pathPrefix.startsWith(b.pathPrefix)).toBe(false);
+      }
+    }
   });
 
   it("keeps the refused feeds and the reason they were refused", () => {

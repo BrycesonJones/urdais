@@ -25,7 +25,8 @@ begin
    where ns.is_enabled and ns.category = 'compute' and si.source_class = 'news_feed'
      and si.production_access_state = 'production_approved'
      and si.terms_review_state = 'permitted' and si.data_use_terms_state = 'permitted';
-  if n <> 4 then raise exception 'expected 4 enabled Compute news sources, found %', n; end if;
+  -- Four in Phase 1A, eight once Phase 1B finished the category.
+  if n <> 8 then raise exception 'expected 8 enabled Compute news sources, found %', n; end if;
 
   -- Phase 1A ingests Compute only. The other five rails stay on mock data and
   -- have no source rows at all, which is what makes that visible here.

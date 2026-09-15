@@ -74,11 +74,15 @@ describe("one source, one retained feed", () => {
     expect(store.all.every((row) => row.summary === null)).toBe(true);
   });
 
-  it("stores no image where the source does not opt in", () => {
-    const store = new InMemoryNewsStore();
-    // The CoreWeave feed does supply media:content; Phase 1A references none.
-    ingest("coreweave-blog", store);
-    expect(store.all.every((row) => row.imageUrl === null)).toBe(true);
+  it("stores an image only where the source's own rights finding allows one", () => {
+    const withImages = new InMemoryNewsStore();
+    ingest("coreweave-blog", withImages);
+    expect(withImages.all.every((row) => row.imageUrl !== null)).toBe(true);
+
+    // Same pipeline, a source whose feed attaches nothing to attach.
+    const without = new InMemoryNewsStore();
+    ingest("microsoft-azure-blog", without);
+    expect(without.all.every((row) => row.imageUrl === null)).toBe(true);
   });
 
   it("retains the feed body and its hash as the evidence behind the articles", () => {
@@ -245,7 +249,7 @@ describe("entries Urdais will not store", () => {
 });
 
 describe("a run over every Compute source", () => {
-  it("ingests all four approved feeds into one Compute set", async () => {
+  it("ingests every approved feed into one Compute set", async () => {
     const store = new InMemoryNewsStore();
     const run = await ingestNewsSources({
       sources: newsSourcesForCategory("compute"),
@@ -256,11 +260,12 @@ describe("a run over every Compute source", () => {
       now: () => new Date("2026-09-14T17:45:00Z"),
     });
 
-    expect(run.sourcesSucceeded).toBe(4);
+    const compute = newsSourcesForCategory("compute");
+    expect(run.sourcesSucceeded).toBe(compute.length);
     expect(run.sourcesFailed).toBe(0);
     expect(run.articlesInserted).toBe(store.all.length);
     expect(store.all.every((row) => row.category === "compute")).toBe(true);
-    expect(new Set(store.all.map((row) => row.sourceInterfaceId)).size).toBe(4);
+    expect(new Set(store.all.map((row) => row.sourceInterfaceId)).size).toBe(compute.length);
   });
 
   it("keeps ingesting when one source fails", async () => {
@@ -277,7 +282,7 @@ describe("a run over every Compute source", () => {
     });
 
     expect(run.sourcesFailed).toBe(1);
-    expect(run.sourcesSucceeded).toBe(3);
+    expect(run.sourcesSucceeded).toBe(newsSourcesForCategory("compute").length - 1);
     const failed = run.outcomes.find((outcome) => !outcome.ok);
     expect(failed && !failed.ok && failed.error.message).toContain("ETIMEDOUT");
     expect(store.all.length).toBeGreaterThan(0);
@@ -299,7 +304,7 @@ describe("a run over every Compute source", () => {
       idFactory: nextId,
     });
 
-    expect(run.sourcesSucceeded).toBe(3);
+    expect(run.sourcesSucceeded).toBe(newsSourcesForCategory("compute").length - 1);
     const failed = run.outcomes.find((outcome) => !outcome.ok);
     expect(failed && !failed.ok && failed.error.name).toBe(new MalformedFeedError("x").name);
   });
