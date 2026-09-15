@@ -13,14 +13,21 @@
  * calculation and no duplicate publication, and a second run on the same UTC observation
  * date converges on the point that already exists rather than adding another.
  *
+ * The numerator is retrieved live, here as in the scheduled job. `--dry-run` retrieves and
+ * prints the observation without writing anything, which is the safe way to see the current
+ * BTC/USD round, its age and the chain tip without touching the published series.
+ *
  * Usage:
  *   npm run ubwi:load                        load and record; publish only if the gate passes
  *   npm run ubwi:load -- --local             allow the local development database
- *   npm run ubwi:load -- --dry-run           print what would be written, write nothing
+ *   npm run ubwi:load -- --dry-run           retrieve and print, write nothing
  */
 import { calculateUbwi } from "@/lib/ubwi/calculate";
 import { CHAINLINK_BTC_USD_FEED } from "@/lib/ubwi/chainlink";
 import { evaluateGate } from "@/lib/ubwi/gate";
+import { liveNumeratorProvider } from "@/lib/ubwi/retrieve/numerator-provider";
+import { isNumeratorRetrievalError } from "@/lib/ubwi/retrieve/problems";
+import { resolveUbwiRpcEndpoints } from "@/lib/ubwi/retrieve/rpc";
 import {
   priceRoundAgeSeconds,
   runDailyUbwiPublication,
@@ -47,7 +54,36 @@ async function main(): Promise<void> {
 
   const now = new Date().toISOString();
   const observationDate = ubwiObservationDate(now);
-  const calculation = calculateUbwi({ calculatedAt: now });
+
+  // Retrieved once, here, and then handed to the pipeline. Retrieving again inside the run
+  // would print one observation and publish a different one.
+  console.log(`reading the numerator through ${resolveUbwiRpcEndpoints().join(", ")}`);
+  const retrieval = await liveNumeratorProvider()().catch((error: unknown) => {
+    if (isNumeratorRetrievalError(error)) {
+      console.error(`\nno numerator could be retrieved: ${error.message}`);
+      console.error("nothing was written.");
+      process.exit(1);
+    }
+    throw error;
+  });
+
+  const feed = retrieval.observation.chainlink!;
+  console.log(
+    `BTC/USD ${retrieval.observation.priceUsd} at round ${feed.roundId} ` +
+      `(phase ${feed.phaseId}, aggregator round ${feed.aggregatorRoundId}), ` +
+      `updated ${new Date(feed.updatedAt * 1000).toISOString()}, ${retrieval.chainlink.ageSeconds} s old`,
+  );
+  console.log(
+    `chain tip ${retrieval.observation.blockHeight} from ` +
+      `${retrieval.height.heightSources.join(" and ")}; ` +
+      `scheduled supply ${retrieval.observation.supplyBtc} BTC`,
+  );
+  console.log(
+    `cross-check ${feed.rpcCrossCheckSource ?? "none"} (${retrieval.chainlink.crossCheckMode}), ` +
+      `legs read ${retrieval.observationWindowSeconds} s apart`,
+  );
+
+  const calculation = calculateUbwi({ calculatedAt: now, numerator: retrieval.observation });
   const gate = evaluateGate(calculation);
   const priceAge = priceRoundAgeSeconds(calculation, now);
 
@@ -85,7 +121,13 @@ async function main(): Promise<void> {
 
   // A refusal is not a crash, but it is not a success either: an operator and a cron log
   // both need to see that today produced no point.
-  if (result.outcome === "gate_refused" || result.outcome === "observation_stale") process.exit(1);
+  if (
+    result.outcome === "gate_refused" ||
+    result.outcome === "observation_stale" ||
+    result.outcome === "retrieval_failed"
+  ) {
+    process.exit(1);
+  }
 }
 
 main()

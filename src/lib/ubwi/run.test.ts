@@ -15,7 +15,10 @@ import { calculateUbwi } from "@/lib/ubwi/calculate";
 import { CHAINLINK_BTC_USD_FEED } from "@/lib/ubwi/chainlink";
 import { evaluateGate } from "@/lib/ubwi/gate";
 import { OBSERVED_ECONOMIES } from "@/lib/ubwi/observations";
-import { PRODUCTION_BTC_OBSERVATION } from "@/lib/ubwi/numerator";
+import { REFERENCE_BTC_OBSERVATION } from "@/lib/ubwi/numerator";
+import type { NumeratorRetrieval } from "@/lib/ubwi/retrieve/numerator-provider";
+import type { RetrievalProblem } from "@/lib/ubwi/retrieve/problems";
+import { NumeratorRetrievalError } from "@/lib/ubwi/retrieve/problems";
 import type { BtcMarketObservation, UbwiCalculation } from "@/lib/ubwi/types";
 import {
   UBWI_DAILY_CRON_PATH,
@@ -34,7 +37,7 @@ import {
  * current, rather than one invented to pass.
  */
 const FROZEN_AT = "2026-09-15T04:33:47.738Z";
-const FRESH_NOW = new Date((PRODUCTION_BTC_OBSERVATION.chainlink!.updatedAt + 600) * 1000).toISOString();
+const FRESH_NOW = new Date((REFERENCE_BTC_OBSERVATION.chainlink!.updatedAt + 600) * 1000).toISOString();
 
 type PublicationRow = {
   id: string;
@@ -213,12 +216,12 @@ class FakeUbwiDatabase {
  */
 function freshNumeratorAt(nowIso: string): BtcMarketObservation {
   const nowUnix = Math.floor(Date.parse(nowIso) / 1000);
-  const feed = PRODUCTION_BTC_OBSERVATION.chainlink!;
+  const feed = REFERENCE_BTC_OBSERVATION.chainlink!;
   const observedAt = new Date((nowUnix - 60) * 1000).toISOString().replace(".000Z", "Z");
   return {
-    ...PRODUCTION_BTC_OBSERVATION,
+    ...REFERENCE_BTC_OBSERVATION,
     observedAt,
-    heightObservations: PRODUCTION_BTC_OBSERVATION.heightObservations?.map((reading) => ({
+    heightObservations: REFERENCE_BTC_OBSERVATION.heightObservations?.map((reading) => ({
       ...reading,
       retrievedAt: observedAt,
     })),
@@ -496,5 +499,185 @@ describe("the run summary", () => {
   it("describes the frozen production point that already exists", () => {
     // The real 2026-09-15 point: value and freeze time as production holds them.
     expect(ubwiObservationDate(FROZEN_AT)).toBe("2026-09-15");
+  });
+});
+
+/**
+ * The seam that ended the compile-time numerator.
+ *
+ * Until this slice the scheduled run recalculated one committed observation every day and
+ * correctly refused to publish it, so the series could never grow past its first point. The
+ * tests below are about where a numerator comes from, not about what is done with it: that
+ * the production path asks a provider, that a provider's refusal writes nothing, and that
+ * two successful retrievals on one UTC day still leave one point.
+ */
+describe("the live numerator seam", () => {
+  /** A provider over a fixture observation, counting how often the pipeline asks. */
+  function providerFor(observation: BtcMarketObservation) {
+    let calls = 0;
+    const provide = async (): Promise<NumeratorRetrieval> => {
+      calls += 1;
+      return {
+        observation,
+        chainlink: {
+          observation: observation.chainlink!,
+          crossCheckMode: "same_block",
+          ageSeconds:
+            observation.chainlink!.retrievalTimestamp - observation.chainlink!.updatedAt,
+        },
+        height: {
+          blockHeight: observation.blockHeight,
+          observations: [...(observation.heightObservations ?? [])],
+          heightSources: [...observation.heightSources],
+        },
+        observationWindowSeconds: 1,
+      };
+    };
+    return { provide, calls: () => calls };
+  }
+
+  function refusing(problem: RetrievalProblem) {
+    return async (): Promise<NumeratorRetrieval> => {
+      throw new NumeratorRetrievalError(problem, "fixture refusal");
+    };
+  }
+
+  it("asks the provider when no calculation is supplied, and publishes what it returns", async () => {
+    const db = new FakeUbwiDatabase();
+    const provider = providerFor(freshNumeratorAt(FRESH_NOW));
+
+    const result = await runDailyUbwiPublication(db.sql, {
+      now: FRESH_NOW,
+      retrieveNumerator: provider.provide,
+    });
+
+    expect(provider.calls(), "the production path must retrieve, not recalculate a constant").toBe(1);
+    expect(result.outcome).toBe("published");
+    expect(db.publications).toHaveLength(1);
+    // And the published value is the one the retrieved observation produces, not the one
+    // the reference fixture would have produced.
+    expect(result.valuePercent).toBe(
+      calculateUbwi({ calculatedAt: FRESH_NOW, numerator: freshNumeratorAt(FRESH_NOW) }).ubwiPercent,
+    );
+  });
+
+  it("does not reach the reference fixture: its round is long past the heartbeat", async () => {
+    // The structural guarantee behind the rename. Even if some future caller reached the
+    // constant, a run dated after 15 September 2026 refuses it as stale rather than
+    // publishing a duplicate of the first point.
+    const aWeekLater = "2026-09-22T06:00:00.000Z";
+    const db = new FakeUbwiDatabase();
+    const result = await runDailyUbwiPublication(db.sql, {
+      now: aWeekLater,
+      calculation: calculateUbwi({ calculatedAt: aWeekLater, numerator: REFERENCE_BTC_OBSERVATION }),
+    });
+    expect(result.outcome).toBe("observation_stale");
+    expect(db.statements).toEqual([]);
+  });
+
+  it("writes nothing at all when retrieval refuses", async () => {
+    for (const problem of [
+      "RPC_UNAVAILABLE",
+      "RPC_MALFORMED_RESPONSE",
+      "FEED_CROSS_CHECK_DISAGREES",
+      "HEIGHT_SOURCES_DISAGREE",
+      "NUMERATOR_INVALID",
+      "RPC_ENDPOINTS_INSUFFICIENT",
+    ] as const) {
+      const db = new FakeUbwiDatabase();
+      const result = await runDailyUbwiPublication(db.sql, {
+        now: FRESH_NOW,
+        retrieveNumerator: refusing(problem),
+      });
+
+      expect(result.outcome, problem).toBe("retrieval_failed");
+      expect(result.retrievalProblem, problem).toBe(problem);
+      expect(result.publicationId).toBeNull();
+      expect(result.calculationId).toBeNull();
+      expect(result.valuePercent, "no value may be invented for a day nothing was observed").toBeNull();
+      expect(db.publications).toHaveLength(0);
+      expect(db.calculations).toHaveLength(0);
+      expect(db.statements, "not one statement may run").toEqual([]);
+    }
+  });
+
+  it("reports a stale feed as stale rather than as a generic retrieval failure", async () => {
+    const db = new FakeUbwiDatabase();
+    const result = await runDailyUbwiPublication(db.sql, {
+      now: FRESH_NOW,
+      retrieveNumerator: refusing("FEED_OBSERVATION_STALE"),
+    });
+    expect(result.outcome).toBe("observation_stale");
+    expect(result.retrievalProblem).toBe("FEED_OBSERVATION_STALE");
+    expect(db.statements).toEqual([]);
+  });
+
+  it("summarises a refused run without inventing a value", async () => {
+    const db = new FakeUbwiDatabase();
+    const summary = ubwiRunSummary(
+      await runDailyUbwiPublication(db.sql, {
+        now: FRESH_NOW,
+        retrieveNumerator: refusing("RPC_UNAVAILABLE"),
+      }),
+    );
+    expect(summary.valuePercent).toBeNull();
+    expect(summary.retrievalProblem).toBe("RPC_UNAVAILABLE");
+    expect(JSON.stringify(summary)).not.toContain("0.0000");
+  });
+
+  it("leaves one point when two successful retrievals land on the same UTC date", async () => {
+    const db = new FakeUbwiDatabase();
+    const morning = "2026-09-16T06:00:00.000Z";
+    const evening = "2026-09-16T18:00:00.000Z";
+
+    const first = await runDailyUbwiPublication(db.sql, {
+      now: morning,
+      retrieveNumerator: providerFor(freshNumeratorAt(morning)).provide,
+    });
+    // A genuinely different observation -- later instant, a newer round -- which every
+    // content-keyed identity in the pipeline would happily admit as a second point.
+    const second = await runDailyUbwiPublication(db.sql, {
+      now: evening,
+      retrieveNumerator: providerFor(freshNumeratorAt(evening)).provide,
+    });
+
+    expect(first.outcome).toBe("published");
+    expect(second.outcome).toBe("already_published");
+    expect(second.publicationId).toBe(first.publicationId);
+    expect(db.publications).toHaveLength(1);
+  });
+
+  it("converges on one point when two retrieving runs overlap in time", async () => {
+    const db = new FakeUbwiDatabase();
+    const now = "2026-09-17T06:00:00.000Z";
+    const winner = await runDailyUbwiPublication(db.sql, {
+      now,
+      retrieveNumerator: providerFor(freshNumeratorAt(now)).provide,
+    });
+
+    // Both runs read an empty day before either inserted: the state the application check
+    // cannot see and the daily unique index exists for.
+    db.hideFromDailyCheck = true;
+    const loser = await runDailyUbwiPublication(db.sql, {
+      now: "2026-09-17T06:00:05.000Z",
+      retrieveNumerator: providerFor(freshNumeratorAt("2026-09-17T06:00:05.000Z")).provide,
+    });
+
+    expect(winner.outcome).toBe("published");
+    expect(loser.outcome).toBe("already_published");
+    expect(db.publications).toHaveLength(1);
+  });
+
+  it("lets an unexpected error surface rather than reporting a clean fail-closed skip", async () => {
+    const db = new FakeUbwiDatabase();
+    await expect(
+      runDailyUbwiPublication(db.sql, {
+        now: FRESH_NOW,
+        retrieveNumerator: async () => {
+          throw new TypeError("a bug, not a source failure");
+        },
+      }),
+    ).rejects.toThrow(TypeError);
+    expect(db.publications).toHaveLength(0);
   });
 });

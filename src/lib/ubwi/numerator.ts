@@ -129,9 +129,27 @@ export const RETIRED_RETRIEVED_SUPPLY_OBSERVATION: BtcMarketObservation = {
 };
 
 /**
- * The Phase 2F production numerator observation, under methodology 1.2.0.
+ * The reference numerator observation, under methodology 1.2.0.
  *
- * The supply leg is no longer retrieved from anybody. The chain tip was read from two
+ * **This is not the production source and nothing scheduled reads it.** It is a frozen,
+ * deterministic test vector: the observation the first published UBWI point was frozen
+ * against, captured by hand on 15 September 2026 and kept so that point stays reproducible
+ * and so the methodology has one worked example in the code rather than only in prose.
+ *
+ * It was called `PRODUCTION_BTC_OBSERVATION` until the numerator became a live retrieval,
+ * and the old name was accurate then and dangerous afterwards: a constant named "production"
+ * is a constant somebody will eventually publish. The daily job now obtains its numerator
+ * from ./retrieve/numerator-provider.ts at execution time, and this value's only remaining
+ * roles are as a fixture, as the structural example the rights readiness check reads its
+ * interface slugs from, and as the deterministic input the read surface's disclosure block
+ * is computed from.
+ *
+ * Two structural facts keep the two apart. `runDailyUbwiPublication` never calls
+ * `calculateUbwi` without a retrieved numerator, and this round is long past its
+ * 3,600-second heartbeat, so even a path that reached it would be refused as stale rather
+ * than publishing a duplicate of the first point.
+ *
+ * The supply leg is not retrieved from anybody. The chain tip was read from two
  * independent endpoints, which agreed exactly on the integer 967,075, and the supply is the
  * cumulative scheduled block subsidy through that height computed by ./supply.ts:
  * 2,008,461,250,000,000 satoshis. Height 967,075 is in halving era 4, where the scheduled
@@ -150,7 +168,7 @@ export const RETIRED_RETRIEVED_SUPPLY_OBSERVATION: BtcMarketObservation = {
  *
  * This is the observation the first published UBWI point is frozen against.
  */
-export const PRODUCTION_BTC_OBSERVATION: BtcMarketObservation = {
+export const REFERENCE_BTC_OBSERVATION: BtcMarketObservation = {
   observedAt: "2026-09-15T04:13:40Z",
   blockHeight: 967_075,
   heightSources: ["mempool.space/api/blocks/tip/height", "blockchain.info/q/getblockcount"],

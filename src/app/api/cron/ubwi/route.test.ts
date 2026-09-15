@@ -190,3 +190,89 @@ describe("the scheduled publication route", () => {
     vi.doUnmock("@/lib/ubwi/run");
   });
 });
+
+/**
+ * The route is the production publication path, so what it *cannot* do matters as much as
+ * what it does. It cannot supply an observation, which is what makes every scheduled run a
+ * live retrieval rather than a recalculation of a committed constant.
+ */
+describe("the scheduled route retrieves its numerator", () => {
+  it("passes no calculation and no numerator, leaving the run to retrieve one", async () => {
+    vi.resetModules();
+    vi.stubEnv("CRON_SECRET", SECRET);
+    vi.stubEnv("DATABASE_URL", "postgresql://user:pw@example.invalid/db");
+    const run = vi.fn(async () => ({
+      outcome: "published",
+      observationDate: "2026-09-16",
+      valuePercent: 0.2671,
+      publicationId: "pub-1",
+      detail: "published",
+    }));
+    vi.doMock("@/lib/ubwi/run", () => ({
+      runDailyUbwiPublication: run,
+      ubwiRunSummary: (r: { outcome: string }) => ({ outcome: r.outcome }),
+    }));
+    vi.doMock("@/lib/tokens/read/database", () => ({
+      createTokenSqlExecutor: async () => ({ query: async () => ({ rows: [] }), end: async () => {} }),
+    }));
+
+    const { GET } = await import("@/app/api/cron/ubwi/route");
+    const response = await GET(
+      new Request("https://urdais.com/api/cron/ubwi", {
+        headers: { authorization: `Bearer ${SECRET}` },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(run).toHaveBeenCalledTimes(1);
+    const [, options] = run.mock.calls[0] as unknown as [unknown, Record<string, unknown>];
+    // No `calculation` and no `retrieveNumerator` override: the run falls through to the
+    // live provider. A route that supplied either could publish something it was handed.
+    expect(options.calculation).toBeUndefined();
+    expect(options.retrieveNumerator).toBeUndefined();
+    expect(Object.keys(options)).toEqual(["now"]);
+
+    vi.unstubAllEnvs();
+    vi.doUnmock("@/lib/ubwi/run");
+    vi.doUnmock("@/lib/tokens/read/database");
+  });
+
+  it("answers 200 for a fail-closed retrieval skip, not 500", async () => {
+    vi.resetModules();
+    vi.stubEnv("CRON_SECRET", SECRET);
+    vi.stubEnv("DATABASE_URL", "postgresql://user:pw@example.invalid/db");
+    vi.doMock("@/lib/ubwi/run", () => ({
+      runDailyUbwiPublication: async () => ({
+        outcome: "retrieval_failed",
+        retrievalProblem: "RPC_UNAVAILABLE",
+        valuePercent: null,
+        detail: "nothing was written",
+      }),
+      ubwiRunSummary: (r: { outcome: string; retrievalProblem: string }) => ({
+        outcome: r.outcome,
+        retrievalProblem: r.retrievalProblem,
+      }),
+    }));
+    vi.doMock("@/lib/tokens/read/database", () => ({
+      createTokenSqlExecutor: async () => ({ query: async () => ({ rows: [] }), end: async () => {} }),
+    }));
+
+    const { GET } = await import("@/app/api/cron/ubwi/route");
+    const response = await GET(
+      new Request("https://urdais.com/api/cron/ubwi", {
+        headers: { authorization: `Bearer ${SECRET}` },
+      }),
+    );
+
+    // A source that could not be read is the pipeline working, not an outage. A 500 here
+    // would tell a scheduler to retry something that must not be retried into a duplicate.
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as { ok: boolean; outcome: string };
+    expect(body.ok).toBe(true);
+    expect(body.outcome).toBe("retrieval_failed");
+
+    vi.unstubAllEnvs();
+    vi.doUnmock("@/lib/ubwi/run");
+    vi.doUnmock("@/lib/tokens/read/database");
+  });
+});

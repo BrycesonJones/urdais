@@ -54,6 +54,10 @@
 import { calculateUbwi, METHODOLOGY_VERSION, RESIDUAL_MODEL_VERSION } from "@/lib/ubwi/calculate";
 import { CHAINLINK_BTC_USD_FEED } from "@/lib/ubwi/chainlink";
 import { evaluateGate } from "@/lib/ubwi/gate";
+import type { NumeratorProvider } from "@/lib/ubwi/retrieve/numerator-provider";
+import { liveNumeratorProvider } from "@/lib/ubwi/retrieve/numerator-provider";
+import type { RetrievalProblem } from "@/lib/ubwi/retrieve/problems";
+import { isNumeratorRetrievalError } from "@/lib/ubwi/retrieve/problems";
 import { sourceInterface } from "@/lib/ubwi/rights";
 import type { UbwiCalculation } from "@/lib/ubwi/types";
 
@@ -97,7 +101,17 @@ export type UbwiRunOutcome =
   /** The publication gate refused. The calculation is recorded; no point exists. */
   | "gate_refused"
   /** The price round is older than the feed's heartbeat at the observation instant. */
-  | "observation_stale";
+  | "observation_stale"
+  /**
+   * No numerator could be retrieved at all: an endpoint was unreachable, the two RPC
+   * endpoints disagreed about the round, the two chain-tip sources disagreed about the
+   * height, a response did not decode, or the assembled observation failed its own checks.
+   *
+   * Kept separate from `observation_stale` because they are different facts about the
+   * world. Stale means the sources answered and the answer is too old to use; this means
+   * the sources did not give a usable answer. Both write nothing.
+   */
+  | "retrieval_failed";
 
 export type UbwiRunResult = {
   outcome: UbwiRunOutcome;
@@ -105,7 +119,8 @@ export type UbwiRunResult = {
   observationDate: string;
   /** When the arithmetic ran. */
   calculatedAt: string;
-  valuePercent: number;
+  /** Null where the run failed before a calculation existed, which only retrieval can do. */
+  valuePercent: number | null;
   methodologyVersion: string;
   residualModelVersion: string;
   publicationId: string | null;
@@ -113,6 +128,8 @@ export type UbwiRunResult = {
   gateFailures: string[];
   /** Age of the price round at the observation instant, in seconds. */
   priceAgeSeconds: number | null;
+  /** Which fail-closed retrieval problem ended the run, where one did. */
+  retrievalProblem: RetrievalProblem | null;
   /** One line an operator or a cron log can read without further lookup. */
   detail: string;
 };
@@ -439,9 +456,17 @@ export function priceRoundAgeSeconds(calculation: UbwiCalculation, now: string):
 /**
  * Run the daily production publication for one intended observation instant.
  *
- * Every fail-closed rule that guarded the manual path still guards this one, and one more
- * is added for the cadence:
+ * The numerator is retrieved at execution time unless the caller supplies a calculation.
+ * That is the whole of what the live-retrieval slice changed here: everything below this
+ * line already existed and is reused rather than reimplemented.
  *
+ * Every fail-closed rule that guarded the manual path still guards this one, and two more
+ * are added for the cadence:
+ *
+ *   - a numerator that could not be retrieved -- an unreachable endpoint, two RPC endpoints
+ *     that disagree about the round, two chain-tip sources that disagree about the height,
+ *     a response that does not decode, an observation that fails its own checks -- ends the
+ *     run before a connection is used for anything
  *   - a price round older than the feed's heartbeat at the observation instant is refused
  *     before anything is written
  *   - a stale, wrong-feed or wrong-network Chainlink round, a block-height disagreement, a
@@ -457,15 +482,60 @@ export async function runDailyUbwiPublication(
   options: {
     /** The intended observation instant, ISO 8601. Injected, never read from the clock here. */
     now: string;
-    /** Injectable for tests; production always calculates from the methodology. */
+    /**
+     * A ready-made calculation, for the callers that already have one: the operator command
+     * prints a calculation before deciding to write it, and the tests need determinism.
+     * Supplying one skips retrieval; supplying none retrieves.
+     */
     calculation?: UbwiCalculation;
+    /**
+     * Where a numerator comes from when none is supplied. Defaults to the live retrieval
+     * against the Chainlink proxy and the two chain-tip sources.
+     *
+     * This is the seam that ended the compile-time numerator. Before it, a scheduled run
+     * recalculated the one committed observation every day and correctly refused to publish
+     * it, so the series could never grow. There is no path from here to that constant.
+     */
+    retrieveNumerator?: NumeratorProvider;
     publisherIdentity?: string;
   },
 ): Promise<UbwiRunResult> {
   const now = options.now;
   const observationDate = ubwiObservationDate(now);
   const publisherIdentity = options.publisherIdentity ?? "urdais-ubwi/load-and-publish";
-  const calculation = options.calculation ?? calculateUbwi({ calculatedAt: now });
+
+  let calculation: UbwiCalculation;
+  if (options.calculation !== undefined) {
+    calculation = options.calculation;
+  } else {
+    const retrieve = options.retrieveNumerator ?? liveNumeratorProvider();
+    try {
+      const retrieval = await retrieve();
+      calculation = calculateUbwi({ calculatedAt: now, numerator: retrieval.observation });
+    } catch (error) {
+      // Fail closed, before a single row is written and before a connection is used for
+      // anything. A run that could not observe the world publishes nothing and says why.
+      if (!isNumeratorRetrievalError(error)) throw error;
+      const stale = error.problem === "FEED_OBSERVATION_STALE";
+      return {
+        observationDate,
+        calculatedAt: now,
+        valuePercent: null,
+        methodologyVersion: METHODOLOGY_VERSION,
+        residualModelVersion: RESIDUAL_MODEL_VERSION,
+        gateFailures: [],
+        priceAgeSeconds: null,
+        retrievalProblem: error.problem,
+        outcome: stale ? "observation_stale" : "retrieval_failed",
+        publicationId: null,
+        calculationId: null,
+        detail:
+          `no numerator could be retrieved for ${observationDate}: ${error.message}. ` +
+          "nothing was written",
+      };
+    }
+  }
+
   const gate = evaluateGate(calculation);
   const priceAgeSeconds = priceRoundAgeSeconds(calculation, now);
 
@@ -477,6 +547,7 @@ export async function runDailyUbwiPublication(
     residualModelVersion: RESIDUAL_MODEL_VERSION,
     gateFailures: gate.findings.map((f) => f.code),
     priceAgeSeconds,
+    retrievalProblem: null,
   };
 
   // Freshness first, before a single row is written. A numerator whose price round has
@@ -735,11 +806,15 @@ export function ubwiRunSummary(result: UbwiRunResult): Record<string, unknown> {
   return {
     outcome: result.outcome,
     observationDate: result.observationDate,
-    valuePercent: Number(result.valuePercent.toFixed(4)),
+    // Null where retrieval failed before there was anything to calculate. Reported as null
+    // rather than as a zero, because a cron log that says "0.0000 %" on a day nothing was
+    // observed is a log that has invented a number.
+    valuePercent: result.valuePercent === null ? null : Number(result.valuePercent.toFixed(4)),
     methodologyVersion: result.methodologyVersion,
     residualModelVersion: result.residualModelVersion,
     publicationId: result.publicationId,
     priceAgeSeconds: result.priceAgeSeconds,
+    retrievalProblem: result.retrievalProblem,
     gateFailures: result.gateFailures,
     detail: result.detail,
   };
