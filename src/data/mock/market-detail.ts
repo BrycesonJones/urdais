@@ -544,11 +544,28 @@ const UACI_MARKET = buildIndexMarket(
   { seed: 7_400_000, days: 7, volatility: 0.011 },
 );
 
-// Strong long-run growth with crypto-scale daily moves.
+/**
+ * UBWI is a **percentage of Total Global Wealth**, not an index level. Per
+ * /docs/methodology/ubwi it carries no base date and no base value, it is
+ * bounded in [0, 100] by construction because Bitcoin sits inside its own
+ * denominator, and "any presentation of UBWI as a points series is wrong".
+ * This market previously carried a `pts` unit and a level near 1342.57, which
+ * was a category error rather than a stale number, so the unit is corrected
+ * here.
+ *
+ * The level below remains a **demo walk, not a UBWI value**. The methodology is
+ * a draft with no effective date, its denominator has no source cleared for
+ * production use, and publishing under a draft is prohibited — so no computed
+ * candidate may be seeded here. The anchor is deliberately not any figure
+ * produced by the UBWI research phases. A daily series is the right shape even
+ * so: UBWI's numerator moves continuously while its denominator is held fixed
+ * at the latest annual vintage, so between vintages the series moves with
+ * Bitcoin alone.
+ */
 const UBWI_MARKET = buildIndexMarket(
   "UBWI",
-  "pts",
-  { seed: 20130101, latestValue: 1342.57, latestDailyReturn: 0.0042, points: LONG_HISTORY_DAYS, volatility: 0.028, drift: 0.0011 },
+  "%",
+  { seed: 20130101, latestValue: 0.85, latestDailyReturn: 0.0042, points: LONG_HISTORY_DAYS, volatility: 0.028, drift: 0.0011 },
   { seed: 6_600_000, days: 7, volatility: 0.012 },
 );
 
