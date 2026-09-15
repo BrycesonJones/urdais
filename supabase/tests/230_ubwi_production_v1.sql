@@ -45,11 +45,31 @@ begin
           or terms_artifact_hash is null or terms_artifact_status <> 200);
   if n <> 0 then raise exception '% denominator/FX source(s) permitted without a retained artifact', n; end if;
 
-  -- The numerator venues are recorded as unreviewed rather than assumed permissive.
+  -- Phase 2D retrieved the numerator venues' terms. Every one now rests on a retained,
+  -- hashed, successfully retrieved artifact -- and not one of them is permitted on both
+  -- axes, because none grants the use a published numerator makes.
   select count(*) into n from reference.source_interfaces
    where source_class in ('chain_data_interface', 'spot_price_interface')
-     and (terms_review_state <> 'not_reviewed' or data_use_terms_state <> 'not_reviewed');
-  if n <> 0 then raise exception 'a numerator source claims a reviewed terms state'; end if;
+     and (terms_artifact_hash is null or terms_artifact_status <> 200 or terms_retrieved_at is null);
+  if n <> 0 then raise exception '% numerator source(s) carry no retained terms artifact', n; end if;
+
+  select count(*) into n from reference.source_interfaces
+   where source_class in ('chain_data_interface', 'spot_price_interface')
+     and terms_review_state = 'permitted' and data_use_terms_state = 'permitted';
+  if n <> 0 then raise exception '% numerator source(s) read cleared on both axes, which no artifact supports', n; end if;
+
+  -- Four sources, four distinct documents. One hash cited twice would mean one of them
+  -- was never retrieved.
+  select count(distinct terms_artifact_hash) into n from reference.source_interfaces
+   where source_class in ('chain_data_interface', 'spot_price_interface');
+  if n <> 4 then raise exception 'expected 4 distinct numerator terms artifacts, found %', n; end if;
+
+  -- Coinbase is the one interface whose terms forbid the retrieval itself, so it is the
+  -- one whose retrieval axis is blocked rather than merely unresolved.
+  select count(*) into n from reference.source_interfaces
+   where slug = 'coinbase-spot' and terms_review_state = 'not_permitted'
+     and production_access_state = 'production_blocked' and written_agreement_required is true;
+  if n <> 1 then raise exception 'Coinbase must be blocked on retrieval with written permission as its remedy'; end if;
 
   -- The Bank of Korea is cleared to publish and not automated. Two different questions.
   if not exists (select 1 from reference.source_interfaces

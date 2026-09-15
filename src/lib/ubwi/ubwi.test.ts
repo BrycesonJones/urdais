@@ -39,9 +39,19 @@ import {
   recheckTerms,
   sourceInterface,
 } from "./rights";
+import {
+  checkTermsArtifactShape,
+  clauseWords,
+  extractDocumentText,
+  isWordSubsequence,
+  verifyAgainstRetainedBytes,
+} from "./terms-integrity";
 import type { ObservedEconomy } from "./types";
 
 const CALCULATED_AT = "2026-09-15T00:48:04Z";
+// After every terms retrieval in the record, so the structural checks are deterministic
+// rather than reading the wall clock.
+const RIGHTS_CHECKED_AT = new Date("2026-09-15T12:00:00Z");
 const calculation = calculateUbwi({ calculatedAt: CALCULATED_AT });
 
 function codes(findings: readonly { code: GateFailureCode }[]): GateFailureCode[] {
@@ -565,5 +575,217 @@ describe("no fabricated history", () => {
     for (const economy of OBSERVED_ECONOMIES) {
       expect(economy.referenceDate <= CALCULATED_AT.slice(0, 10)).toBe(true);
     }
+  });
+});
+
+describe("numerator rights: the venues' own terms", () => {
+  // Phase 1 concluded that reading venue tickers directly removes the licensing
+  // dependency of a vendor aggregate. Phase 2D retrieved the venues' own terms and found
+  // the conclusion was about vendors: reproducing the construction does not reproduce the
+  // permission. These tests fix that finding so it cannot be quietly undone.
+  const numeratorSlugs = [
+    PRODUCTION_BTC_OBSERVATION.supplySourceInterface,
+    ...PRODUCTION_BTC_OBSERVATION.venues.map((v) => v.sourceInterface),
+  ];
+
+  it("names a registered source interface for every venue and for the supply", () => {
+    expect(numeratorSlugs).toHaveLength(4);
+    for (const slug of numeratorSlugs) {
+      expect(sourceInterface(slug), `${slug} is not registered`).toBeDefined();
+    }
+  });
+
+  it("rests every numerator rights state on a retained, hashed artifact", () => {
+    for (const slug of numeratorSlugs) {
+      const artifact = sourceInterface(slug)!.termsArtifact;
+      expect(artifact, `${slug} has no retained terms artifact`).not.toBeNull();
+      expect(artifact!.contentHash).toMatch(/^[0-9a-f]{64}$/);
+      expect(artifact!.httpStatus).toBe(200);
+      expect(artifact!.byteLength).toBeGreaterThan(0);
+    }
+  });
+
+  it("clears none of the four for the use a published numerator makes", () => {
+    for (const slug of numeratorSlugs) {
+      expect(effectiveRightsStatus(sourceInterface(slug)!), slug).not.toBe("cleared");
+    }
+  });
+
+  it("records Coinbase as blocked on both axes, retrieval included", () => {
+    const coinbase = sourceInterface("coinbase-spot")!;
+    expect(coinbase.termsReviewState).toBe("not_permitted");
+    expect(coinbase.dataUseTermsState).toBe("not_permitted");
+    expect(effectiveRightsStatus(coinbase)).toBe("blocked");
+    expect(coinbase.usageTerms!.cachingAndRetention).toBe("not_permitted");
+    expect(coinbase.termsArtifact!.decisiveClause).toContain("Collect, cache, aggregate, or store data");
+  });
+
+  it("records Kraken as permitted to read and not permitted to publish from", () => {
+    const kraken = sourceInterface("kraken-ticker")!;
+    expect(kraken.termsReviewState).toBe("permitted");
+    expect(kraken.dataUseTermsState).toBe("not_permitted");
+    expect(effectiveRightsStatus(kraken)).toBe("blocked");
+    expect(kraken.usageTerms!.automatedRetrieval).toBe("permitted");
+    expect(kraken.usageTerms!.commercialDerivedIndex).toBe("not_permitted");
+    expect(kraken.termsArtifact!.decisiveClause).toContain("only for your own benefit");
+  });
+
+  it("records Bitstamp's grant as conditional on an agreement Urdais does not hold", () => {
+    // The distinction the two-valued model could not carry: Bitstamp permits exactly the
+    // use Urdais makes, to a signatory. An unsigned conditional grant is not a grant.
+    const bitstamp = sourceInterface("bitstamp-ticker")!;
+    expect(bitstamp.usageTerms!.commercialDerivedIndex).toBe("conditional");
+    expect(bitstamp.usageTerms!.automatedRetrieval).toBe("permitted");
+    expect(bitstamp.usageTerms!.rateLimit).toContain("400 requests per second");
+    expect(bitstamp.dataUseTermsState).toBe("under_review");
+    expect(effectiveRightsStatus(bitstamp)).toBe("under_review");
+    expect(bitstamp.termsArtifact!.decisiveClause).toContain("Data License Agreement");
+  });
+
+  it("does not read Blockchain.com's silence on redistribution as permission", () => {
+    const chain = sourceInterface("blockchain-info-supply")!;
+    expect(chain.termsReviewState).toBe("permitted");
+    expect(chain.dataUseTermsState).toBe("under_review");
+    expect(chain.usageTerms!.commercialDerivedIndex).toBe("not_reviewed");
+    expect(chain.termsArtifact!.decisiveClause).toContain("solely for informational purposes");
+  });
+
+  it("refuses publication on the numerator's rights, naming every uncleared interface", () => {
+    const gate = evaluateGate(calculation);
+    const finding = gate.findings.find((f) => f.code === "NUMERATOR_SOURCE_NOT_RIGHTS_CLEARED");
+    expect(finding, "the gate must refuse a numerator it may not publish").toBeDefined();
+    for (const slug of numeratorSlugs) {
+      expect(finding!.detail).toContain(slug);
+    }
+    expect(gate.passed).toBe(false);
+  });
+
+  it("does not swap a venue to make the rights easier", () => {
+    // The methodology names the venue set and carries no eligibility rule for changing
+    // it. Replacing a venue for rights reasons is a methodology decision, not a fix, and
+    // the production observation must still carry the three venues that were read.
+    expect(PRODUCTION_BTC_OBSERVATION.venues.map((v) => v.venue)).toEqual([
+      "coinbase",
+      "bitstamp",
+      "kraken",
+    ]);
+    expect(PRODUCTION_BTC_OBSERVATION.priceRule).toBe("median_of_venues");
+  });
+});
+
+describe("terms-artifact integrity", () => {
+  const withArtifact = (patch: Record<string, unknown>) => {
+    const iface = sourceInterface("federal-reserve-z1")!;
+    return { ...iface, termsArtifact: { ...iface.termsArtifact!, ...patch } };
+  };
+  const problems = (iface: (typeof SOURCE_INTERFACES)[number]) =>
+    checkTermsArtifactShape([iface], RIGHTS_CHECKED_AT).map((f) => f.problem);
+
+  it("passes the structural checks on the whole rights record", () => {
+    expect(checkTermsArtifactShape(SOURCE_INTERFACES, RIGHTS_CHECKED_AT)).toEqual([]);
+  });
+
+  it("refuses a hash that is not a hash", () => {
+    expect(problems(withArtifact({ contentHash: "not-a-hash" }))).toContain("HASH_MALFORMED");
+    expect(problems(withArtifact({ contentHash: "0".repeat(63) }))).toContain("HASH_MALFORMED");
+  });
+
+  it("refuses a 404 body cited as terms", () => {
+    expect(problems(withArtifact({ httpStatus: 404 }))).toContain("HTTP_STATUS_NOT_OK");
+  });
+
+  it("refuses a retrieval timestamped after the check", () => {
+    expect(problems(withArtifact({ retrievedAt: "2099-01-01T00:00:00Z" }))).toContain(
+      "RETRIEVED_AT_IN_FUTURE",
+    );
+  });
+
+  it("refuses a byte length of zero and a clause too short to identify a licence", () => {
+    expect(problems(withArtifact({ byteLength: 0 }))).toContain("BYTE_LENGTH_NOT_POSITIVE");
+    expect(problems(withArtifact({ decisiveClause: "public domain" }))).toContain(
+      "DECISIVE_CLAUSE_TOO_SHORT",
+    );
+  });
+
+  it("refuses one hash cited for two different documents", () => {
+    const fed = sourceInterface("federal-reserve-z1")!;
+    const abs = sourceInterface("abs-asna-5204")!;
+    const collided = {
+      ...abs,
+      termsArtifact: { ...abs.termsArtifact!, contentHash: fed.termsArtifact!.contentHash },
+    };
+    const found = checkTermsArtifactShape([fed, collided], RIGHTS_CHECKED_AT);
+    expect(found.map((f) => f.problem)).toContain("HASH_REUSED_FOR_A_DIFFERENT_DOCUMENT");
+  });
+
+  it("refuses a permitted state with no artifact behind it", () => {
+    const bare = { ...sourceInterface("federal-reserve-z1")!, termsArtifact: null };
+    expect(problems(bare)).toContain("CLEARED_WITHOUT_ARTIFACT");
+  });
+
+  it("catches a clause remembered rather than read", () => {
+    // The Production V1 failure mode, reproduced: the hash and the length are right and
+    // the quote is a paraphrase. Byte checks alone pass it; the clause check does not.
+    const iface = sourceInterface("federal-reserve-z1")!;
+    const remembered = {
+      ...iface,
+      termsArtifact: {
+        ...iface.termsArtifact!,
+        decisiveClause: "All Federal Reserve data may be freely redistributed for any purpose whatsoever.",
+      },
+    };
+    const result = verifyAgainstRetainedBytes(remembered, {
+      contentHash: iface.termsArtifact!.contentHash,
+      byteLength: iface.termsArtifact!.byteLength,
+      text: "Information on the Board's website is in the public domain.",
+    });
+    expect(result.hashMatches).toBe(true);
+    expect(result.byteLengthMatches).toBe(true);
+    expect(result.clauseIsPresent).toBe(false);
+    expect(result.verified).toBe(false);
+  });
+
+  it("verifies a clause that is genuinely in the document, through list markup", () => {
+    // The OGL v3.0 presents its grant as a bulleted list, so the committed quote joins
+    // items with punctuation the source does not contain. Word order survives that;
+    // substring containment would not, which is why the check is a subsequence.
+    const iface = sourceInterface("ons-national-balance-sheet")!;
+    const html =
+      "<h2>You are free to:</h2><ul><li>copy, publish, distribute and transmit the Information</li>" +
+      "<li>adapt the Information</li><li>exploit the Information commercially and non-commercially " +
+      "for example, by combining it with other Information, or by including it in your own product " +
+      "or application</li></ul>";
+    const result = verifyAgainstRetainedBytes(iface, {
+      contentHash: iface.termsArtifact!.contentHash,
+      byteLength: iface.termsArtifact!.byteLength,
+      text: extractDocumentText(html),
+    });
+    expect(result.clauseIsPresent).toBe(true);
+    expect(result.verified).toBe(true);
+  });
+
+  it("reports a hash mismatch as a mismatch rather than as a missing clause", () => {
+    const iface = sourceInterface("federal-reserve-z1")!;
+    const result = verifyAgainstRetainedBytes(iface, {
+      contentHash: "f".repeat(64),
+      byteLength: iface.termsArtifact!.byteLength,
+      text: iface.termsArtifact!.decisiveClause,
+    });
+    expect(result.hashMatches).toBe(false);
+    expect(result.clauseIsPresent).toBe(true);
+    expect(result.detail).toContain("hash mismatch");
+  });
+
+  it("strips script bodies out of an artifact rather than quoting from them", () => {
+    expect(extractDocumentText("<p>granted</p><script>var x = 'granted twice';</script>")).toBe(
+      "granted",
+    );
+  });
+
+  it("compares non-ASCII licence text character by character", () => {
+    // Japan's and Korea's decisive clauses are not word-delimited. The tokenizer makes
+    // every non-ASCII character its own token so they compare at all.
+    expect(isWordSubsequence(clauseWords("内閣府"), clauseWords("著作権は内閣府に帰属し"))).toBe(true);
+    expect(isWordSubsequence(clauseWords("内閣府"), clauseWords("著作権は財務省に帰属し"))).toBe(false);
   });
 });

@@ -17,7 +17,8 @@
  */
 import { LATEST_COMPLETE_YEAR } from "./observations";
 import { checkNumerator } from "./numerator";
-import { effectiveRightsStatus, sourceInterface } from "./rights";
+import { SOURCE_INTERFACES, effectiveRightsStatus, sourceInterface } from "./rights";
+import { checkTermsArtifactShape } from "./terms-integrity";
 import { satisfiesVintageRule } from "./calculate";
 import type { UbwiCalculation } from "./types";
 
@@ -86,6 +87,8 @@ export type GateFailureCode =
   | "FX_LINEAGE_INCOMPLETE"
   | "MAJOR_ECONOMY_NOT_DISCLOSED"
   | "NUMERATOR_INVALID"
+  | "NUMERATOR_SOURCE_NOT_RIGHTS_CLEARED"
+  | "TERMS_ARTIFACT_INTEGRITY_FAILED"
   | "THRESHOLD_ABOVE_FEASIBLE_FRONTIER";
 
 export type GateFinding = {
@@ -308,13 +311,65 @@ export function evaluateGate(
     });
   }
 
-  // Numerator.
+  // Numerator arithmetic.
   const numeratorProblems = checkNumerator(calculation.numerator);
   if (numeratorProblems.length > 0) {
     findings.push({
       code: "NUMERATOR_INVALID",
       detail: `the Bitcoin market capitalization observation fails its own checks: ${numeratorProblems.join(", ")}`,
       remedy: "re-take the observation; supply, height, venue rows and the median must agree",
+    });
+  }
+
+  // Numerator rights. Until Phase 2D this was checked only by the readiness report, which
+  // meant the gate could pass a calculation whose price Urdais was not permitted to
+  // publish. The numerator's sources are held to the same standard as the denominator's:
+  // cleared against a retained terms artifact, for the use actually performed.
+  const numeratorSlugs = [
+    calculation.numerator.supplySourceInterface,
+    ...calculation.numerator.venues.map((v) => v.sourceInterface),
+  ];
+  const numeratorProblemsBySlug = new Map<string, string>();
+  for (const slug of numeratorSlugs) {
+    const iface = sourceInterface(slug);
+    if (iface === undefined) {
+      numeratorProblemsBySlug.set(slug, "not registered");
+      continue;
+    }
+    const status = effectiveRightsStatus(iface);
+    if (status !== "cleared") numeratorProblemsBySlug.set(slug, status);
+  }
+  if (numeratorProblemsBySlug.size > 0) {
+    findings.push({
+      code: "NUMERATOR_SOURCE_NOT_RIGHTS_CLEARED",
+      detail:
+        `numerator source(s) not cleared for the use actually performed -- retaining the reading, ` +
+        `deriving a commercial index from it and displaying it: ` +
+        [...numeratorProblemsBySlug].map(([slug, state]) => `${slug} (${state})`).join(", "),
+      remedy:
+        "clear the interface's terms for that use and retain the artifact, or replace the venue under " +
+        "a defined eligibility rule; a venue may not be swapped silently, because the venue set is part " +
+        "of the methodology",
+    });
+  }
+
+  // The evidence behind every rights state must be structurally sound. This cannot prove
+  // a hash is right -- only `npm run ubwi:verify-terms` against the retained bytes can do
+  // that -- but it refuses a hash that is not a hash, a 404 body cited as terms, a
+  // retrieval timestamped in the future, and one hash cited for two different documents.
+  // Checked against the wall clock, not the calculation instant: evidence retrieved
+  // after a calculation is still evidence, and the thing being caught here is a
+  // timestamp that could not have happened at all.
+  const shapeFindings = checkTermsArtifactShape(SOURCE_INTERFACES);
+  if (shapeFindings.length > 0) {
+    findings.push({
+      code: "TERMS_ARTIFACT_INTEGRITY_FAILED",
+      detail: `${shapeFindings.length} terms-artifact record(s) fail their structural checks: ${shapeFindings
+        .map((f) => `${f.slug} (${f.problem})`)
+        .join(", ")}`,
+      remedy:
+        "re-retrieve the document, hash the actual bytes, and quote a clause that occurs in it; " +
+        "no hash may be typed by hand",
     });
   }
 

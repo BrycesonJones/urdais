@@ -107,6 +107,13 @@ export type ExcludedEconomy = {
 export type VenueQuote = {
   venue: string;
   endpoint: string;
+  /**
+   * The registered source interface the reading came through. Named so the gate can check
+   * the venue's rights the same way it checks a denominator constituent's: a numerator
+   * source that is not cleared for the use actually performed must refuse publication,
+   * and it cannot do that if the observation only records a venue's informal name.
+   */
+  sourceInterface: string;
   priceUsd: number;
   /** True for the reading the median selected. */
   selected: boolean;

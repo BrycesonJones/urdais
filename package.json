@@ -33,7 +33,8 @@
     "tokens:production:check": "tsx scripts/tokens/production-check.ts",
     "ubwi:calculate": "tsx scripts/ubwi/calculate.ts",
     "ubwi:load": "tsx scripts/ubwi/load-and-publish.ts",
-    "ubwi:production:check": "tsx scripts/ubwi/production-check.ts"
+    "ubwi:production:check": "tsx scripts/ubwi/production-check.ts",
+    "ubwi:verify-terms": "tsx scripts/ubwi/verify-terms.ts"
   },
   "dependencies": {
     "github-slugger": "^2.0.0",

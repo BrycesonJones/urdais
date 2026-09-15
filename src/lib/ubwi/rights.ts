@@ -43,6 +43,34 @@ export type TermsArtifact = {
   attributionRequired: string;
 };
 
+/**
+ * One axis of a permission. `conditional` is the state the two-valued model could not
+ * express and that Phase 2D found twice: the terms grant the use, but only to a party
+ * that has executed something Urdais does not hold. A conditional grant is not a grant.
+ */
+export type UsagePermission = "permitted" | "conditional" | "not_permitted" | "not_reviewed";
+
+/**
+ * What a source's own terms say about the six things a published index actually does.
+ * Recorded per axis because they diverge: Bitstamp permits automated retrieval outright
+ * and permits the derived-index use only under a signed agreement, and collapsing those
+ * into one flag loses precisely the fact that decides publication.
+ */
+export type UsageTerms = {
+  /** May Urdais read this endpoint on a schedule, by machine? */
+  automatedRetrieval: UsagePermission;
+  /** May Urdais compute and publish a commercial index derived from the reading? */
+  commercialDerivedIndex: UsagePermission;
+  /** May Urdais display the reading itself to third parties? */
+  redistribution: UsagePermission;
+  /** Attribution the terms require, verbatim in substance. Null where none is stated. */
+  attribution: string | null;
+  /** May Urdais retain the reading in its own store? */
+  cachingAndRetention: UsagePermission;
+  /** The rate limit the provider publishes, quoted. Null where the terms state none. */
+  rateLimit: string | null;
+};
+
 export type UbwiSourceInterface = {
   slug: string;
   providerName: string;
@@ -52,6 +80,12 @@ export type UbwiSourceInterface = {
   termsReviewState: TermsReviewState;
   /** Question 2: may Urdais use it to construct and publish an index? */
   dataUseTermsState: TermsReviewState;
+  /**
+   * The per-axis reading behind the two states above. Required on every numerator
+   * interface, where the axes diverge and the divergence is the finding; optional on the
+   * statistical compilers, whose licences answer all six axes with one sentence.
+   */
+  usageTerms?: UsageTerms;
   termsArtifact: TermsArtifact | null;
   /**
    * Whether an automated production collector exists and is usable today. False does
@@ -311,56 +345,141 @@ export const SOURCE_INTERFACES: readonly UbwiSourceInterface[] = [
   },
 
   // ---------------------------------------------------------------- numerator sources
+  //
   // Phase 1 concluded that building the numerator from public venue tickers read
-  // directly removes the licensing dependency that a vendor aggregate would carry.
-  // That is a research conclusion, not a recorded grant: no terms artifact has been
-  // retrieved for any of these endpoints. They are therefore `not_reviewed`, which the
-  // readiness check reports as its own distinct finding rather than folding into the
-  // denominator's rights state.
+  // directly removes the licensing dependency that a vendor aggregate would carry. That
+  // conclusion was about *vendor* licensing and it was correct as far as it went. It was
+  // never a statement about the venues' own terms, and Phase 2D retrieved those terms.
+  //
+  // The reading is that reproducing the construction yourself does not reproduce the
+  // permission. Three of the four interfaces do not permit the use Urdais actually makes
+  // -- retain the reading, compute a commercial index from it, and display both -- and
+  // the fourth grants it only under a signed agreement Urdais does not hold. Every state
+  // below is anchored to a document retrieved on 15 September 2026 and retained with its
+  // hash, and every `decisiveClause` is a verbatim slice of that document.
   {
     slug: "blockchain-info-supply",
     providerName: "Blockchain.com",
     providerKind: "chain_data",
     canonicalUrl: "https://blockchain.info/q/totalbc",
-    termsReviewState: "not_reviewed",
-    dataUseTermsState: "not_reviewed",
-    termsArtifact: null,
+    // Retrieval is granted outright. The derived-index use is not addressed by any grant
+    // and the service is scoped "solely for informational purposes", so the second axis
+    // stays open rather than being read as permission by silence.
+    termsReviewState: "permitted",
+    dataUseTermsState: "under_review",
+    usageTerms: {
+      automatedRetrieval: "permitted",
+      commercialDerivedIndex: "not_reviewed",
+      redistribution: "not_reviewed",
+      attribution: null,
+      cachingAndRetention: "not_reviewed",
+      rateLimit: null,
+    },
+    termsArtifact: {
+      url: "https://www.blockchain.com/legal/terms",
+      contentHash: "0e2b690483d494a013ade657ac1e9a84278bc60d0d6fe9c479d13e884de791ef",
+      byteLength: 1_476_048,
+      httpStatus: 200,
+      retrievedAt: "2026-09-15T01:52:11Z",
+      decisiveClause:
+        "Subject to these Terms, we grant you a revocable, limited, non-exclusive, non-transferable licence to access and use the Explorer API. [...] The Explorer and the Explorer API are provided solely for informational purposes and do not constitute investment advice, legal advice, tax advice, financial advice or any recommendation to engage in any transaction involving crypto-assets or any other assets.",
+      attributionRequired: "",
+    },
     automatedRetrievalAvailable: true,
     note:
-      "Issued supply is a deterministic property of the chain, cross-checked against the nominal issuance schedule at the same height and against an independent tip height from mempool.space. No terms artifact has been retrieved and reviewed.",
+      "Section 20 (Explorer) of the Blockchain.com Terms of Service governs the Explorer API and grants access and use. It states no redistribution, retention or attribution terms, and scopes the service to informational purposes; it therefore does not grant the commercial derived-index publication Urdais performs. A separate 'API Terms of Service' is referenced in the site's own translation bundle but is served from no reachable path on www.blockchain.com (/legal/api returns HTTP 404), so it could not be retrieved and nothing is assumed from it. Issued supply remains a deterministic property of the chain: it is reproducible from the issuance schedule at a stated height and does not depend on this interface for its truth, only for its retrieval.",
   },
   {
     slug: "coinbase-spot",
     providerName: "Coinbase",
     providerKind: "spot_venue",
     canonicalUrl: "https://api.coinbase.com/v2/prices/BTC-USD/spot",
-    termsReviewState: "not_reviewed",
-    dataUseTermsState: "not_reviewed",
-    termsArtifact: null,
+    // The only interface in the whole record whose terms prohibit the retrieval itself.
+    termsReviewState: "not_permitted",
+    dataUseTermsState: "not_permitted",
+    usageTerms: {
+      automatedRetrieval: "not_permitted",
+      commercialDerivedIndex: "not_permitted",
+      redistribution: "not_permitted",
+      attribution: null,
+      cachingAndRetention: "not_permitted",
+      rateLimit: null,
+    },
+    termsArtifact: {
+      url: "https://www.coinbase.com/legal/developer-platform/terms-of-service",
+      contentHash: "1fe28153ef70be9ecebdc14a5603c572f269c4851b0f231f1837eca370484feb",
+      byteLength: 610_772,
+      httpStatus: 200,
+      retrievedAt: "2026-09-15T01:47:52Z",
+      decisiveClause:
+        "Collect, cache, aggregate, or store data or content accessed via the CDP Tools other than for purposes allowed under these terms. You may not share such data or content with third parties in any manner without Coinbase’s prior written authorization. Further, you are strictly prohibited from recording data or content accessed via the CDP Tools through the use of any automated programs, software, or any other method of screen scraping.",
+      attributionRequired: "",
+    },
     automatedRetrievalAvailable: true,
-    note: "No terms artifact has been retrieved and reviewed.",
+    note:
+      "The clause above is item 9 (Use Restrictions) of the Coinbase Developer Platform Terms. Urdais's numerator does all four prohibited things: it records the quote by automated program, caches it, aggregates it into a median, and shares it on a public surface. None is permitted without prior written authorization, which Urdais does not have. The licence grant in the same document is narrower still -- it covers 'the CDP Tools and underlying content available at https://cdp.coinbase.com', and the production endpoint is api.coinbase.com -- so even a permissive reading of the restrictions would leave the grant unestablished for this interface.",
   },
   {
     slug: "bitstamp-ticker",
     providerName: "Bitstamp",
     providerKind: "spot_venue",
     canonicalUrl: "https://www.bitstamp.net/api/v2/ticker/btcusd/",
-    termsReviewState: "not_reviewed",
-    dataUseTermsState: "not_reviewed",
-    termsArtifact: null,
+    // Retrieval is granted outright and generously. The derived-index use is granted too
+    // -- to a party that has signed for it. Urdais has not, and an unsigned conditional
+    // grant is not a grant.
+    termsReviewState: "permitted",
+    dataUseTermsState: "under_review",
+    usageTerms: {
+      automatedRetrieval: "permitted",
+      commercialDerivedIndex: "conditional",
+      redistribution: "conditional",
+      attribution: null,
+      cachingAndRetention: "conditional",
+      rateLimit:
+        "As standard, all clients can make 400 requests per second. There is a default limit threshold of 10,000 requests per 10 minutes in place.",
+    },
+    termsArtifact: {
+      url: "https://www.bitstamp.net/api/",
+      contentHash: "d11bf1c0dec89cf397eef81766fa59fa75d90cd09bbe9d301b1e57d007abef76",
+      byteLength: 2_007_325,
+      httpStatus: 200,
+      retrievedAt: "2026-09-15T01:47:44Z",
+      decisiveClause:
+        "Companies seeking to utilize Bitstamp's exchange data for their own commercial purposes are directed to contact partners@bitstamp.net to receive and sign a commercial use Data License Agreement. Bitstamp allows the incorporation and redistribution of our exchange data for commercial purposes. This includes the right to create ratios, calculations, new original works, statistics, and similar, based on the exchange data.",
+      attributionRequired: "",
+    },
     automatedRetrievalAvailable: true,
-    note: "No terms artifact has been retrieved and reviewed.",
+    note:
+      "This is the closest any numerator venue comes to a grant, and it is the clearest 'not yet'. Bitstamp's own API documentation says in terms that it allows incorporation and redistribution of its exchange data for commercial purposes, including the right to create calculations from it -- which is exactly UBWI -- and directs companies wanting that to sign a Data License Agreement. Urdais holds no such agreement, so the permission is conditional and unmet. Executing one is an outreach decision that requires explicit approval and was not taken in this phase. The bitstamp.net terms-of-use page itself sits behind an Imperva challenge that returns a 212-byte stub to every request; that is a fact about the retrieval, and the rights state above rests on the API documentation, which is first-party and was retrieved cleanly.",
   },
   {
     slug: "kraken-ticker",
     providerName: "Kraken",
     providerKind: "spot_venue",
     canonicalUrl: "https://api.kraken.com/0/public/Ticker?pair=XBTUSD",
-    termsReviewState: "not_reviewed",
-    dataUseTermsState: "not_reviewed",
-    termsArtifact: null,
+    termsReviewState: "permitted",
+    dataUseTermsState: "not_permitted",
+    usageTerms: {
+      automatedRetrieval: "permitted",
+      commercialDerivedIndex: "not_permitted",
+      redistribution: "not_permitted",
+      attribution: null,
+      cachingAndRetention: "not_reviewed",
+      rateLimit: null,
+    },
+    termsArtifact: {
+      url: "https://www.kraken.com/legal/global-terms",
+      contentHash: "6e61bf4ebe741d246e33849f95d10015d8a14d52b6f87501e0f15bacb4d7bea0",
+      byteLength: 3_633_626,
+      httpStatus: 200,
+      retrievedAt: "2026-09-15T01:47:36Z",
+      decisiveClause:
+        "So long as you comply with these Terms, you are permitted to use our services, and Our Content made available to you as part of our services, but only for your own benefit. We can take away this permission at any time for any reason. You do not have or acquire any rights to Our Content beyond the limited, revocable permission in the previous sentence. [...] use (except as expressly permitted in these Terms), license, sublicense, sell, resell, transfer, assign, distribute or otherwise commercially exploit or make available to any third party Our Content in any way,",
+      attributionRequired: "",
+    },
     automatedRetrievalAvailable: true,
-    note: "No terms artifact has been retrieved and reviewed.",
+    note:
+      "Kraken's Global Terms of Service define 'Our Content' as the services and platforms and all content and materials found on them, which reaches a published ticker price. The permission granted is to use it 'only for your own benefit'; commercially exploiting it or making it available to a third party is listed among the prohibited acts, and the document directs anyone wanting another purpose to seek prior permission first. Publishing an index derived from the price, and displaying the venue row that produced it, is the other purpose. The Global Terms are the applicable ones: Kraken serves separate Canadian, EEA and Brazil terms and the Global terms apply everywhere else.",
   },
 ];
 
