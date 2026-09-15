@@ -30,6 +30,14 @@ type DetailedMarketChartProps = {
   intraday: boolean;
   /** Format values as K / M / B / T counts, for volume-like units such as tokens per day. */
   compact?: boolean;
+  /**
+   * Display precision for axis ticks and the readout. Two decimals suit an instrument
+   * quoted in dollars or points; an index whose entire meaningful range sits below one
+   * unit needs more, or every tick and every reading collapses to the same number while
+   * the line visibly moves. Raise it to whatever the surface owning the value uses, so
+   * the chart and the headline cannot disagree about what was published.
+   */
+  fractionDigits?: number;
   /** Accessible name of the chart, e.g. "H100 SXM chart for the Urdais Compute Price Index, 1 month range". */
   label: string;
   className?: string;
@@ -104,6 +112,7 @@ export function DetailedMarketChart({
   basis = "absolute",
   intraday,
   compact = false,
+  fractionDigits = 2,
   label,
   className,
 }: DetailedMarketChartProps) {
@@ -177,7 +186,12 @@ export function DetailedMarketChart({
     // below zero; rebased percentages can.
     const pad = (vMax - vMin || Math.abs(vMax) || 1) * 0.06;
     const yTickCount = Math.max(3, Math.min(8, Math.floor(plotHeight / Y_LABEL_SPACING) + 1));
-    const yAxis = niceTicks(relative ? vMin - pad : Math.max(0, vMin - pad), vMax + pad, yTickCount);
+    const yAxis = niceTicks(
+      relative ? vMin - pad : Math.max(0, vMin - pad),
+      vMax + pad,
+      yTickCount,
+      fractionDigits,
+    );
     const yMin = yAxis.ticks[0]!;
     const yMax = yAxis.ticks[yAxis.ticks.length - 1]!;
 
@@ -219,7 +233,7 @@ export function DetailedMarketChart({
       vMin,
       vMax,
     };
-  }, [primaryPlot, comparisonPlots, fieldedComparison, relative, size]);
+  }, [primaryPlot, comparisonPlots, fieldedComparison, relative, size, fractionDigits]);
 
   function handlePointerMove(event: PointerEvent<SVGSVGElement>) {
     if (!geometry) return;
@@ -242,10 +256,10 @@ export function DetailedMarketChart({
     return candidate && Math.abs(candidate.time - hoveredPrimary.time) <= tolerance ? candidate : null;
   });
 
-  const formatPlotted = (value: number, decimals = 2) =>
+  const formatPlotted = (value: number, decimals = fractionDigits) =>
     relative ? formatPercent(value, decimals) : compact ? formatCompact(value) : formatAxisValue(value, decimals, axisUnit);
   const formatReading = (value: number, unit: string) =>
-    compact ? `${formatCompact(value)} ${unit}` : formatValueWithUnit(value, unit);
+    compact ? `${formatCompact(value)} ${unit}` : formatValueWithUnit(value, unit, fractionDigits);
 
   const description =
     geometry && describeChart(primary, visibleComparisons, relative, intraday, geometry.vMin, geometry.vMax, formatPlotted, formatReading);
@@ -713,26 +727,32 @@ function nearestIndex(points: TimeSeriesPoint[], time: number): number {
   return low;
 }
 
-/** Values are displayed to two decimals, so axis ticks never need more. */
-const MAX_TICK_DECIMALS = 2;
-const MIN_TICK_STEP = 10 ** -MAX_TICK_DECIMALS;
+/** Default display precision: values are shown to two decimals, so ticks need no more. */
+const DEFAULT_TICK_DECIMALS = 2;
 
 /**
  * Human-readable y ticks: the step is 1, 2, 2.5, or 5 times a power of ten,
  * never finer than the display precision, and the ticks extend to cover
- * [min, max] on both sides.
+ * [min, max] on both sides. `maxDecimals` is the chart's display precision,
+ * so a low-level index resolves ticks its own values can distinguish.
  */
-function niceTicks(min: number, max: number, count: number): { ticks: number[]; decimals: number } {
+function niceTicks(
+  min: number,
+  max: number,
+  count: number,
+  maxDecimals = DEFAULT_TICK_DECIMALS,
+): { ticks: number[]; decimals: number } {
+  const minStep = 10 ** -maxDecimals;
   const span = max - min || Math.abs(max) || 1;
-  const rough = Math.max(span / Math.max(count - 1, 1), MIN_TICK_STEP);
+  const rough = Math.max(span / Math.max(count - 1, 1), minStep);
   const magnitude = 10 ** Math.floor(Math.log10(rough));
   const fraction = rough / magnitude;
   let nice = fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 2.5 ? 2.5 : fraction <= 5 ? 5 : 10;
   // A 2.5 step needs one more decimal than its magnitude; when that would
   // exceed the display precision, fall to whichever neighbour is closer.
-  if (nice === 2.5 && magnitude < 10 ** -(MAX_TICK_DECIMALS - 1)) nice = fraction < Math.sqrt(10) ? 2 : 5;
+  if (nice === 2.5 && magnitude < 10 ** -(maxDecimals - 1)) nice = fraction < Math.sqrt(10) ? 2 : 5;
   const step = nice * magnitude;
-  const decimals = Math.min(MAX_TICK_DECIMALS, Math.max(0, -Math.floor(Math.log10(step))) + (nice === 2.5 ? 1 : 0));
+  const decimals = Math.min(maxDecimals, Math.max(0, -Math.floor(Math.log10(step))) + (nice === 2.5 ? 1 : 0));
   const start = Math.floor(min / step) * step;
   const end = Math.ceil(max / step) * step;
   const ticks: number[] = [];

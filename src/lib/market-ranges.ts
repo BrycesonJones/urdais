@@ -129,3 +129,89 @@ export function periodReturn(series: DetailedSeries, range: DetailRange, asOf: n
 export function periodPerformance(series: DetailedSeries, asOf: number): PeriodPerformance[] {
   return DETAIL_RANGES.map((range) => ({ range, returnPercent: periodReturn(series, range, asOf) }));
 }
+
+/* ------------------------------------------------------------------ low-frequency series
+ *
+ * The functions above assume a continuously quoted instrument: a daily close series with
+ * a fine intraday tail, where `1D` and `1W` are windows on the intraday points. A
+ * low-frequency index -- one published once per day, or less often -- has no intraday
+ * series at all, and the generic rule would therefore disable `1D` and `1W` forever.
+ *
+ * The wrong fix is to copy daily points into the intraday array. That would invent
+ * observations, and for an index like UBWI, whose whole claim is that it publishes only
+ * what it actually measured, inventing observations to unlock a button is the failure
+ * mode, not the workaround.
+ *
+ * The right fix is small: read every range off the published points themselves, and keep
+ * the existing availability rule otherwise -- a range is supported when the history
+ * reaches back to the window's base and the window holds at least two real points. Ranges
+ * then become available organically as history accumulates: two consecutive daily points
+ * support `1D`, a week of them supports `1W`, and so on, with no range ever implying data
+ * that does not exist.
+ */
+
+/**
+ * Points inside the window for a low-frequency series, starting at the base observation.
+ *
+ * The whole history is returned when it begins after the window opens, matching
+ * `windowPoints`, so a caller drawing a longer window over a short history still gets
+ * every real point rather than none.
+ */
+export function lowFrequencyWindowPoints(
+  points: readonly TimeSeriesPoint[],
+  range: DetailRange,
+  asOf: number,
+): TimeSeriesPoint[] {
+  const base = baseIndex(points as TimeSeriesPoint[], rangeStart(range, asOf));
+  return base < 0 ? [...points] : points.slice(base);
+}
+
+/**
+ * A range is supported when the history reaches back to the window's base and the window
+ * contains at least two real observations. Two points are the minimum that can be drawn
+ * as a line or measured as a return; one is a dot and no movement.
+ */
+export function isLowFrequencyRangeAvailable(
+  points: readonly TimeSeriesPoint[],
+  range: DetailRange,
+  asOf: number,
+): boolean {
+  if (points.length < 2) return false;
+  if (baseIndex(points as TimeSeriesPoint[], rangeStart(range, asOf)) < 0) return false;
+  return lowFrequencyWindowPoints(points, range, asOf).length >= 2;
+}
+
+export function lowFrequencyAvailableRanges(
+  points: readonly TimeSeriesPoint[],
+  asOf: number,
+): DetailRange[] {
+  return DETAIL_RANGES.filter((range) => isLowFrequencyRangeAvailable(points, range, asOf));
+}
+
+/**
+ * Relative percentage return over the window, on the same convention as `periodReturn`:
+ * `(last - first) / first * 100`. Null where the range is unavailable or the base is zero,
+ * never a fabricated 0 %.
+ */
+export function lowFrequencyPeriodReturn(
+  points: readonly TimeSeriesPoint[],
+  range: DetailRange,
+  asOf: number,
+): number | null {
+  if (!isLowFrequencyRangeAvailable(points, range, asOf)) return null;
+  const window = lowFrequencyWindowPoints(points, range, asOf);
+  const first = window[0];
+  const last = window[window.length - 1];
+  if (!first || !last || first.value === 0) return null;
+  return ((last.value - first.value) / first.value) * 100;
+}
+
+export function lowFrequencyPeriodPerformance(
+  points: readonly TimeSeriesPoint[],
+  asOf: number,
+): PeriodPerformance[] {
+  return DETAIL_RANGES.map((range) => ({
+    range,
+    returnPercent: lowFrequencyPeriodReturn(points, range, asOf),
+  }));
+}

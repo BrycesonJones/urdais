@@ -28,13 +28,56 @@ export type FrozenUbwiPublication = {
   residualModelVersion: string;
 };
 
+/** The version pair a change may be computed within, and never across. */
+export type UbwiRegime = {
+  methodologyVersion: string;
+  residualModelVersion: string;
+};
+
+/**
+ * The relative percentage return from one published UBWI level to the next.
+ *
+ * UBWI is itself quoted in percent, which is exactly why this has to be stated rather
+ * than assumed. Until this phase the read path returned `latest - previous`, a difference
+ * in percentage *points* carried under the name `changePercent`. At UBWI's scale that is
+ * not a cosmetic disagreement: a move from 0.2672 % to 0.2700 % is a real +1.05 % change
+ * in Bitcoin's share of global wealth, and the percentage-point difference of 0.0028
+ * renders as "+0.00%" at the two decimals every movement surface uses. A genuine
+ * one-percent day would have displayed as no movement at all, on the market page and on
+ * the homepage row alike.
+ *
+ * The convention here is the one the rest of Urdais already keeps -- `periodReturn` in
+ * @/lib/market-ranges computes `(last - first) / first * 100` -- so UBWI's movement is
+ * comparable with every other instrument's.
+ *
+ * Null, never zero, whenever the comparison would be meaningless: no predecessor, a
+ * predecessor published under a different methodology or residual-model version, or a
+ * base of zero.
+ */
+export function ubwiChangePercent(
+  latest: { valuePercent: number } & UbwiRegime,
+  previous: ({ valuePercent: number } & UbwiRegime) | undefined,
+): number | null {
+  if (previous === undefined) return null;
+  // A change across a methodology or model boundary would compare two different
+  // definitions and call the difference a movement in the world. It is withheld
+  // instead, which is the same rule the calculation layer applies to vintages.
+  if (previous.methodologyVersion !== latest.methodologyVersion) return null;
+  if (previous.residualModelVersion !== latest.residualModelVersion) return null;
+  if (!Number.isFinite(previous.valuePercent) || previous.valuePercent === 0) return null;
+  if (!Number.isFinite(latest.valuePercent)) return null;
+  return ((latest.valuePercent - previous.valuePercent) / previous.valuePercent) * 100;
+}
+
 type Row = Record<string, unknown>;
 
 /**
  * Load the latest frozen publication, and its immediate predecessor if one exists.
  *
  * Ordered by `published_at` and tie-broken by `frozen_at`, so two points published in the
- * same second still have a defined order rather than an arbitrary one.
+ * same second still have a defined order rather than an arbitrary one. Superseded points
+ * are excluded, which is the same public-history rule ./publication-history.ts applies:
+ * a correction is a supersession, and the corrected point is not what Urdais publishes.
  */
 export async function loadFrozenUbwiPublication(
   env: NodeJS.ProcessEnv = process.env,
@@ -52,7 +95,7 @@ export async function loadFrozenUbwiPublication(
         `select published_at, frozen_at, published_value_percent,
                 methodology_version, residual_model_version
            from pipeline.ubwi_publications
-          where frozen_at is not null
+          where frozen_at is not null and superseded_by_id is null
           order by published_at desc, frozen_at desc
           limit 2`,
         [],
@@ -68,18 +111,16 @@ export async function loadFrozenUbwiPublication(
       const methodologyVersion = String(latest.methodology_version);
       const residualModelVersion = String(latest.residual_model_version);
 
-      // A change across a methodology or model boundary would compare two different
-      // definitions and call the difference a movement in the world. It is withheld
-      // instead, which is the same rule the calculation layer applies to vintages.
-      let changePercent: number | null = null;
-      if (
-        previous !== undefined &&
-        String(previous.methodology_version) === methodologyVersion &&
-        String(previous.residual_model_version) === residualModelVersion
-      ) {
-        const priorValue = Number(previous.published_value_percent);
-        if (Number.isFinite(priorValue)) changePercent = valuePercent - priorValue;
-      }
+      const changePercent = ubwiChangePercent(
+        { valuePercent, methodologyVersion, residualModelVersion },
+        previous === undefined
+          ? undefined
+          : {
+              valuePercent: Number(previous.published_value_percent),
+              methodologyVersion: String(previous.methodology_version),
+              residualModelVersion: String(previous.residual_model_version),
+            },
+      );
 
       return {
         publishedAt: new Date(String(latest.published_at)).toISOString(),

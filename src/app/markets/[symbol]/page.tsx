@@ -9,6 +9,11 @@ import { hydrateMarketWithTokenPrices, tokenResearchPreviewActive } from "@/lib/
 import { UbwiSection } from "@/components/ubwi/ubwi-section";
 import { ubwiSurface } from "@/lib/ubwi/read/surface";
 import { loadFrozenUbwiPublication } from "@/lib/ubwi/read/publication-store";
+import {
+  loadFrozenUbwiHistory,
+  ubwiCurrentRegimePoints,
+  ubwiSeriesPoints,
+} from "@/lib/ubwi/read/publication-history";
 
 type PageProps = { params: Promise<{ symbol: string }> };
 
@@ -34,20 +39,33 @@ export default async function MarketIndexPage({ params }: PageProps) {
     (await tokenResearchPreviewActive()) &&
     (market.families.find((family) => family.id === "tokens")?.instruments.length ?? 0) > 0;
 
-  // UBWI publishes no series, so the chart page would render a stretched blank above a
-  // surface that already carries everything real. It gets its own surface instead: the
-  // value where one is published, and the reason plus the full observed/modelled
-  // disclosure where none is.
+  // UBWI does not use the generic market chart page: that page is built around a
+  // continuously quoted instrument with an intraday tail, and UBWI publishes once per UTC
+  // day. It gets its own surface instead -- the value where one is published, the reason
+  // plus the full observed/modelled disclosure where none is, and its own chart drawn
+  // only from frozen production publications.
   if (market.symbol === "UBWI") {
     // The frozen point where one exists; null where none does, or where no database is
     // reachable. The surface decides what to render from that -- it never invents a value.
+    // Sequential, deliberately. Both loaders take the process-wide pooled executor for
+    // this url and close it when they finish, so running them concurrently lets whichever
+    // returns first tear the pool out from under the other -- which renders as a healthy
+    // database behind a surface that says nothing is published.
     const publication = await loadFrozenUbwiPublication();
+    const history = await loadFrozenUbwiHistory();
+    // The current methodology/residual regime only. The chart never joins two definitions
+    // into one line, for the same reason the headline change refuses to measure across
+    // them. With one regime published this is the whole history.
+    const points = ubwiSeriesPoints(ubwiCurrentRegimePoints(history));
     return (
       <>
         <SiteHeader />
         <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-10 text-neutral-50 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-screen-2xl">
-            <UbwiSection surface={ubwiSurface({ publication: publication ?? undefined })} />
+            <UbwiSection
+              surface={ubwiSurface({ publication: publication ?? undefined })}
+              history={points}
+            />
           </div>
         </main>
         <SiteFooter />
