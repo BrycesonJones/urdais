@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SectionHeading } from "@/components/analytics/section-heading";
+import { UbwiChart } from "@/components/ubwi/ubwi-chart";
 import { formatCompact, formatNumber, formatUpdatedAt } from "@/lib/format";
 import {
   UBWI_EXPLANATION,
@@ -9,6 +10,7 @@ import {
   UBWI_VALUE_FRACTION_DIGITS,
   type UbwiSurface,
 } from "@/lib/ubwi/read/surface";
+import type { TimeSeriesPoint } from "@/types/market";
 
 /**
  * The public UBWI surface.
@@ -22,8 +24,18 @@ import {
  *
  * There is no demo level and no back series: history begins at the first verified
  * production observation.
+ *
+ * `history` is the frozen production history behind the chart, and it is the only thing
+ * the chart is ever drawn from. It is optional and defaults to empty, so a caller with no
+ * database reachable renders exactly the surface that existed before the chart did.
  */
-export function UbwiSection({ surface }: { surface: UbwiSurface }) {
+export function UbwiSection({
+  surface,
+  history = [],
+}: {
+  surface: UbwiSurface;
+  history?: TimeSeriesPoint[];
+}) {
   const usd = (value: number) => `$${formatCompact(value)}`;
 
   return (
@@ -49,6 +61,8 @@ export function UbwiSection({ surface }: { surface: UbwiSurface }) {
             {surface.changeWithheldReason ? (
               <p className="mt-1 text-xs text-neutral-500">{surface.changeWithheldReason}</p>
             ) : null}
+            {/* Renders nothing until a second frozen production point exists. */}
+            <UbwiChart points={history} className="mt-6" />
           </div>
         ) : (
           <div>

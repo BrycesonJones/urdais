@@ -21,11 +21,12 @@ A deployed Urdais instance needs two secrets:
 
 - `DATABASE_URL` — the UrdaisProd Postgres connection string.
 - `CRON_SECRET` — a random string of at least 16 characters. Vercel sends it to
-  the scheduled news ingestion route as `Authorization: Bearer <secret>`, and
-  `/api/cron/news` refuses every request that does not match it. When the
-  variable is unset the route refuses **all** requests, so a deployment without
-  it has no ingestion trigger rather than a public one. Set it in the Vercel
-  project's environment variables; it belongs in no file in this repository.
+  every scheduled route as `Authorization: Bearer <secret>`, and both
+  `/api/cron/news` and `/api/cron/ubwi` refuse every request that does not match
+  it. When the variable is unset the routes refuse **all** requests, so a
+  deployment without it has no ingestion or publication trigger rather than a
+  public one. Set it in the Vercel project's environment variables; it belongs in
+  no file in this repository.
 
 Two facts about that string matter in practice:
 
@@ -70,6 +71,85 @@ DATABASE_URL=<UrdaisProd> npm run news:ingest -- --mode production --live --writ
 
 That command calls the same function the route does. Add `--source <slug>` to
 run one feed while diagnosing it.
+
+## Scheduled UBWI publication
+
+`vercel.json` declares a second cron job: `GET /api/cron/ubwi` on `0 6 * * *`.
+UBWI publishes **at most one point per UTC day**, and the daily identity is the
+UTC calendar date of `published_at`.
+
+**Why 06:00 UTC.** The news job holds `0 0 * * *`, and midnight is the one hour
+where jitter decides which UTC date a run belongs to — which matters here,
+because the date *is* the uniqueness key. That risk is not theoretical on this
+plan: Hobby fires a job at some point within the named hour rather than on the
+minute, so a midnight job can land on either side of the boundary. 06:00 UTC is
+six hours clear of both boundaries, is a fixed UTC hour unaffected by any
+daylight-saving transition anywhere, and sits close to the 04:33 UTC hour at
+which the first production point was frozen, which keeps the accumulating series
+roughly evenly spaced. The value is stated once, in
+`UBWI_DAILY_CRON_SCHEDULE` (`src/lib/ubwi/run.ts`), and a test requires
+`vercel.json` to agree with it.
+
+The route calls `runDailyUbwiPublication`, the same function
+`npm run ubwi:load` calls. There is no second implementation of the calculation
+or of the publication rules, and the route accepts no input: not a date, not a
+value, not a force flag.
+
+Every existing fail-closed rule still holds, and one is added for the cadence:
+
+- a **stale price round, wrong feed or wrong network**, a **block-height
+  disagreement**, a **denominator gate failure** and a **rights or provenance
+  failure** all end the same way — the calculation is recorded so the refusal is
+  auditable, and no publication row is created.
+- **a price round older than the feed's 3,600-second heartbeat at the
+  observation instant** is refused before anything is written at all. This is a
+  different measurement from the one frozen on the observation (`retrieval −
+  updatedAt`, which stays true forever) and it is what stops a daily job from
+  republishing yesterday's price under today's date.
+- a failed day produces **no point**. Nothing is interpolated into the gap and
+  nothing is back-filled into it later. If 18 September fails and 19 September
+  passes, the chart simply has no 18 September observation.
+
+Idempotency is enforced twice. The run checks the observation date before it
+writes, which covers a scheduler retry, a redeployment and an operator running
+the command by hand. The partial unique index
+`ubwi_publications_daily_idx` covers the case the check cannot see — two runs
+that overlap, both reading an empty day before either inserts — by refusing the
+loser, which then reports the winner's point instead of publishing a second.
+
+To publish by hand:
+
+```bash
+DATABASE_URL=<UrdaisProd> npm run ubwi:load
+DATABASE_URL=<UrdaisProd> npm run ubwi:load -- --dry-run   # calculate and print, write nothing
+```
+
+> **The numerator is not yet retrieved live.** `PRODUCTION_BTC_OBSERVATION` in
+> `src/lib/ubwi/numerator.ts` is a compile-time constant: the block height, the
+> Chainlink round and the price were captured by hand on 15 September 2026 and
+> committed. Nothing in the pipeline fetches a new one. So the scheduled job, as
+> shipped, will run every day at 06:00 UTC and correctly refuse with
+> `observation_stale` from 16 September onward, because that round is past its
+> heartbeat — publishing **no** point rather than a duplicate of the first one.
+> That is the honest behaviour and it is the behaviour the tests pin, but it
+> means **the chart will not begin to grow until a live numerator retrieval
+> exists**: a Chainlink `latestRoundData` read plus the two-endpoint chain-tip
+> cross-check, wired into `calculateUbwi`'s injectable `numerator`. That is a
+> separate slice and this phase does not attempt it.
+
+### Activating the schedule
+
+1. Deploy a build containing this `vercel.json`. Vercel registers crons at
+   deploy time, so the job does not exist until a deployment carries it.
+2. Set `CRON_SECRET` and `DATABASE_URL` in the Vercel project. Without
+   `CRON_SECRET` the route answers 401 to everything including Vercel; without
+   `DATABASE_URL` it answers 503 and publishes nothing.
+3. Confirm the plan accepts two daily crons. Hobby caps both the cadence and the
+   *number* of cron jobs; if the deployment is rejected, the fix is the plan, not
+   the schedule.
+4. Verify with an authenticated call against the deployment:
+   `curl -H "Authorization: Bearer $CRON_SECRET" https://<origin>/api/cron/ubwi`.
+   An unauthenticated call must answer `401`.
 
 ## Pages that read the database must not be prerendered
 

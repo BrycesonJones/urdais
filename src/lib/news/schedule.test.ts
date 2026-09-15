@@ -33,9 +33,12 @@ describe("the news refresh policy", () => {
   });
 
   it("is declared once, and the deployed schedule is the one the code states", () => {
-    const crons = vercelConfig.crons ?? [];
-    expect(crons).toHaveLength(1);
-    expect(crons[0]).toEqual({ path: NEWS_REFRESH_PATH, schedule: NEWS_REFRESH_CRON });
+    // Other Urdais jobs may hold their own slots -- UBWI publishes daily on its own
+    // schedule -- so what this guards is that the *news* job is declared exactly once and
+    // at the cadence the schedule module states, not that it is the only cron in the file.
+    const news = (vercelConfig.crons ?? []).filter((cron) => cron.path === NEWS_REFRESH_PATH);
+    expect(news).toHaveLength(1);
+    expect(news[0]).toEqual({ path: NEWS_REFRESH_PATH, schedule: NEWS_REFRESH_CRON });
   });
 
   it("is a news policy, not a Compute one: one schedule for all six categories", () => {
