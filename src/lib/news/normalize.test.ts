@@ -133,11 +133,18 @@ describe("timestamps", () => {
 });
 
 describe("images and identity", () => {
-  it("references a feed thumbnail only where the source opts in", () => {
-    expect(normalizeImageUrl("https://cdn.example.com/a.jpg", "none")).toBeNull();
-    expect(normalizeImageUrl("https://cdn.example.com/a.jpg", "feed_media")).toBe("https://cdn.example.com/a.jpg");
-    expect(normalizeImageUrl("http://cdn.example.com/a.jpg", "feed_media")).toBeNull();
-    expect(normalizeImageUrl("not a url", "feed_media")).toBeNull();
+  it("references a feed thumbnail only where the source opts in and names the host", () => {
+    const hosts = [{ host: "cdn.example.com", pathPrefix: "/media/" }];
+    expect(normalizeImageUrl("https://cdn.example.com/media/a.jpg", "none", hosts)).toEqual({ ok: true, value: null });
+    expect(normalizeImageUrl("https://cdn.example.com/media/a.jpg", "feed_media", hosts)).toEqual({
+      ok: true,
+      value: "https://cdn.example.com/media/a.jpg",
+    });
+    // Opting in is not enough on its own: an undeclared host is refused.
+    expect(normalizeImageUrl("https://cdn.example.com/other/a.jpg", "feed_media", hosts).ok).toBe(false);
+    expect(normalizeImageUrl("https://cdn.other.com/media/a.jpg", "feed_media", hosts).ok).toBe(false);
+    expect(normalizeImageUrl("http://cdn.example.com/media/a.jpg", "feed_media", hosts)).toEqual({ ok: true, value: null });
+    expect(normalizeImageUrl("not a url", "feed_media", hosts)).toEqual({ ok: true, value: null });
   });
 
   it("prefers the publisher's stable id and falls back to the URL key", () => {

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
+  <channel>
+    <title>The Lambda deep learning blog</title>
+    <link>https://lambda.ai/blog</link>
+    <description>The Lambda deep learning blog</description>
+    <language>en</language>
+    <pubDate>Mon, 14 Sep 2026 20:03:57 GMT</pubDate>
+    <dc:date>2026-09-14T20:03:57Z</dc:date>
+    <dc:language>en</dc:language>
+    <item>
+      <title>Lambda signs the White House Ratepayer Protection Pledge, reinforcing commitment to community benefits and grid reliability</title>
+      <link>https://lambda.ai/blog/lambda-signs-the-white-house-ratepayer-protection-pledge</link>
+      <description>&lt;div class="hs-featured-image-wrapper"&gt; 
+ &lt;a href="https://lambda.ai/blog/lambda-signs-the-white-house-ratepayer-protection-pledge" title="" class="hs-featured-image-link"&gt; &lt;img src="https://lambda.ai/hubfs/lambda_blog_whitehouse_1600x860.png" alt="Lambda signs the White House Ratepayer Protection Pledge" class="hs-featured-image" style="width:auto !important; max-width:50%; float:left; margin:0 15px 15px 0;"&gt; &lt;/a&gt; 
+&lt;/div&gt; 
+&lt;p style="line-height: 1.2;"&gt;&lt;strong&gt;&lt;span&gt;SAN FRANCISCO, CA, September 14&lt;/span&gt;&lt;/strong&gt;&lt;strong&gt;&lt;span&gt;, 2026 &lt;span style="color: #0b0b0b; background-color: #e7e6d9;"&gt;—&lt;/span&gt;&amp;nbsp;&lt;/span&gt;&lt;/strong&gt;&lt;span&gt;Lambda, Inc. (“Lambda”), the Superintelligence Cloud, today announced it has signed the &lt;/span&gt;&lt;a href="https://www.whitehouse.gov/ratepayer-protection-pledge/"&gt;&lt;u&gt;&lt;span&gt;White House Ratepayer Protection Pledge&lt;/span&gt;&lt;/u&gt;&lt;/a&gt;&lt;span&gt;, affirming its commitment to ensuring that the infrastructure supporting America's artificial intelligence (AI) future delivers meaningful benefits for local communities, while protecting consumers and ratepayers.&lt;/span&gt;&lt;/p&gt;</description>
+      
+      <category>announcements</category>
+      <category>company</category>
+      <category>about</category>
+      <category>data center</category>
+      <category>AI infrastructure</category>
+      <category>data centers</category>
+      <pubDate>Mon, 14 Sep 2026 20:03:57 GMT</pubDate>
+      <guid>https://lambda.ai/blog/lambda-signs-the-white-house-ratepayer-protection-pledge</guid>
+      <dc:date>2026-09-14T20:03:57Z</dc:date>
+      <dc:creator>Lambda</dc:creator>
+    </item><item>
+      <title>OpenResearcher: a reproducible and scalable pipeline for training deep research agents</title>
+      <link>https://lambda.ai/blog/openresearcher-training-research-agents-at-scale</link>
+      <description>&lt;div class="hs-featured-image-wrapper"&gt; 
+ &lt;a href="https://lambda.ai/blog/openresearcher-training-research-agents-at-scale" title="" class="hs-featured-image-link"&gt; &lt;img src="https://lambda.ai/hubfs/lambda-blog_openresearcher-training-research-agents.png" alt="Lambda blog header for &amp;quot;OpenResearcher: training research agents at scale,&amp;quot; featuring a stylized sun with orbital rings and RGB-glitch accents on a black background." class="hs-featured-image" style="width:auto !important; max-width:50%; float:left; margin:0 15px 15px 0;"&gt; &lt;/a&gt; 
+&lt;/div&gt; 
+&lt;p&gt;A deep research agent has to do more than answer a question. It plans, searches, opens documents, gathers evidence, reasons across sources, and keeps going across dozens or hundreds of tool calls before it lands on an answer. Training one means teaching all of that. That's where most teams hit a wall.&lt;/p&gt;</description>
+      
+      <category>agentic AI</category>
+      <category>synthetic data</category>
+      <category>deep research agents</category>
+      <category>long-horizon reasoning</category>
+      <category>LLM post-training</category>
+      <pubDate>Thu, 10 Sep 2026 14:38:02 GMT</pubDate>
+      <guid>https://lambda.ai/blog/openresearcher-training-research-agents-at-scale</guid>
+      <dc:date>2026-09-10T14:38:02Z</dc:date>
+      <dc:creator>Jianwen Xie</dc:creator>
+    </item><item>
+      <title>Giving robots 3D vision without depth sensors</title>
+      <link>https://lambda.ai/blog/giving-robots-3d-vision-without-depth-sensors</link>
+      <description>&lt;div class="hs-featured-image-wrapper"&gt; 
+ &lt;a href="https://lambda.ai/blog/giving-robots-3d-vision-without-depth-sensors" title="" class="hs-featured-image-link"&gt; &lt;img src="https://lambda.ai/hubfs/lambda_blog_robots-3D-vision_1600x860.png" alt="Giving robots 3D vision without depth sensors" class="hs-featured-image" style="width:auto !important; max-width:50%; float:left; margin:0 15px 15px 0;"&gt; &lt;/a&gt; 
+&lt;/div&gt; 
+&lt;h2&gt;&lt;strong&gt;Giving robots better 3D perception&lt;/strong&gt;&lt;/h2&gt; 
+&lt;p&gt;Robots are becoming increasingly capable of learning manipulation skills directly from images. Most robot policies still rely on monocular cameras, though, which struggle to estimate depth accurately. That makes precise tasks such as grasping objects in cluttered environments, inserting parts, or manipulating complex geometry hard to pull off.&lt;/p&gt;</description>
+      
+      <pubDate>Wed, 09 Sep 2026 18:34:13 GMT</pubDate>
+      <guid>https://lambda.ai/blog/giving-robots-3d-vision-without-depth-sensors</guid>
+      <dc:date>2026-09-09T18:34:13Z</dc:date>
+      <dc:creator>Jianwen Xie</dc:creator>
+    </item></channel></rss>

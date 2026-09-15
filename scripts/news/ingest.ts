@@ -1,5 +1,5 @@
 /**
- * The news ingestion entry point.
+ * The news ingestion entry point for an operator.
  *
  *   npm run news:ingest -- --mode research                      (fixtures, no network)
  *   npm run news:ingest -- --mode research --live               (live GET, nothing published)
@@ -19,9 +19,9 @@
 
 import { loadFeedFixture } from "@/lib/news/fixtures";
 import { ingestNewsSources, retrieveFeed, type RetrievedFeed } from "@/lib/news/ingest";
-import { newsSourcesForCategory, NEWS_SOURCES, newsSource } from "@/lib/news/sources";
+import { enabledNewsSources, NEWS_SOURCES, newsSource } from "@/lib/news/sources";
+import { productionRunSummary, runProductionNewsIngestion } from "@/lib/news/run";
 import { InMemoryNewsStore } from "@/lib/news/store";
-import { loadStoredNewsIdentity, persistNewsRun } from "@/lib/news/sql";
 import type { NewsIngestMode, NewsSourceDefinition } from "@/lib/news/types";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
 
@@ -58,7 +58,7 @@ async function main(): Promise<void> {
   const write = flag("write");
 
   const only = process.argv.includes("--source") ? option("source") : null;
-  const sources = only ? [newsSource(only)] : newsSourcesForCategory("compute");
+  const sources = only ? [newsSource(only)] : enabledNewsSources();
   if (sources.length === 0) throw new Error("no approved sources are enabled");
   if (mode === "production" && !live) {
     throw new Error("production ingestion reads the live feed; pass --live (fixtures are research evidence)");
@@ -67,63 +67,56 @@ async function main(): Promise<void> {
   const databaseUrl = write ? (process.env.DATABASE_URL ?? process.env.URDAIS_DATABASE_URL ?? "").trim() : "";
   if (write && databaseUrl === "") throw new Error("--write needs DATABASE_URL");
 
-  const sql = write ? await createTokenSqlExecutor(databaseUrl) : null;
-  try {
-    // Seed the run with what is already stored so the counts it reports are
-    // what it wrote, not what it offered. The unique indexes are still the
-    // authority; this only keeps the report honest.
-    const identity = sql
-      ? await loadStoredNewsIdentity(sql, sources.map((source) => source.sourceInterfaceId))
-      : [];
-    const store = new InMemoryNewsStore({ identity });
+  const retrieve = (source: NewsSourceDefinition) =>
+    live ? retrieveFeed(source, new Date()) : Promise.resolve(fixtureArtifact(source));
 
-    const run = await ingestNewsSources({
-      sources,
-      mode,
-      store,
-      retrieve: (source) => (live ? retrieveFeed(source, new Date()) : Promise.resolve(fixtureArtifact(source))),
-    });
-
-    const written = sql
-      ? await persistNewsRun(sql, { retrievals: store.retrievals, articles: store.all })
-      : null;
-
-    console.log(
-      JSON.stringify(
-        {
-          mode,
-          acquisition: live ? "live" : "fixture",
-          persisted: written !== null,
-          startedAt: run.startedAt,
-          sourcesSucceeded: run.sourcesSucceeded,
-          sourcesFailed: run.sourcesFailed,
-          articlesInserted: written ? written.articlesInserted : run.articlesInserted,
-          retrievalsInserted: written?.retrievalsInserted ?? null,
-          sources: run.outcomes.map((outcome) =>
-            outcome.ok
-              ? {
-                  source: outcome.source,
-                  feed: NEWS_SOURCES[outcome.source].feedUrl,
-                  entriesParsed: outcome.report.entriesParsed,
-                  articlesInserted: outcome.report.articlesInserted,
-                  articlesAlreadyStored: outcome.report.articlesAlreadyStored,
-                  entriesRejected: outcome.report.entriesRejected,
-                  diagnostics: outcome.report.diagnostics,
-                }
-              : { source: outcome.source, failed: outcome.error },
-          ),
-        },
-        null,
-        2,
-      ),
-    );
-
-    // A run in which every source failed is a failed run, and the exit code
-    // says so, because a scheduler reads exit codes and not prose.
-    if (run.sourcesSucceeded === 0) process.exitCode = 1;
-  } finally {
-    await sql?.end();
+  // A persisted production run is the scheduled run, invoked by hand. It goes
+  // through the same function the cron route calls rather than a second copy
+  // of the pipeline that could drift from it.
+  if (mode === "production" && write) {
+    const sql = await createTokenSqlExecutor(databaseUrl);
+    try {
+      const result = await runProductionNewsIngestion(sql, { sources, retrieve });
+      console.log(JSON.stringify({ mode, acquisition: "live", persisted: true, ...productionRunSummary(result) }, null, 2));
+      if (result.sourcesSucceeded === 0) process.exitCode = 1;
+    } finally {
+      await sql.end();
+    }
+    return;
   }
+
+  // Everything else is a dry run: research mode, or production without --write.
+  const store = new InMemoryNewsStore();
+  const run = await ingestNewsSources({ sources, mode, store, retrieve });
+  console.log(
+    JSON.stringify(
+      {
+        mode,
+        acquisition: live ? "live" : "fixture",
+        persisted: false,
+        startedAt: run.startedAt,
+        sourcesSucceeded: run.sourcesSucceeded,
+        sourcesFailed: run.sourcesFailed,
+        articlesInserted: run.articlesInserted,
+        sources: run.outcomes.map((outcome) =>
+          outcome.ok
+            ? {
+                source: outcome.source,
+                feed: NEWS_SOURCES[outcome.source].feedUrl,
+                entriesParsed: outcome.report.entriesParsed,
+                articlesInserted: outcome.report.articlesInserted,
+                articlesAlreadyStored: outcome.report.articlesAlreadyStored,
+                entriesRejected: outcome.report.entriesRejected,
+                diagnostics: outcome.report.diagnostics,
+              }
+            : { source: outcome.source, failed: outcome.error },
+        ),
+      },
+      null,
+      2,
+    ),
+  );
+  if (run.sourcesSucceeded === 0) process.exitCode = 1;
 }
 
 main().catch((error: unknown) => {
