@@ -7,7 +7,9 @@ import { describe, expect, it } from "vitest";
 import { UbwiSection } from "@/components/ubwi/ubwi-section";
 import { INDEX_SNAPSHOTS } from "@/data/mock/indices";
 import { findMarket } from "@/data/mock/market-detail";
-import { UBWI_EXPLANATION, ubwiSurface } from "./surface";
+import { UrdaisIndices } from "@/components/market/urdais-indices";
+import { MARKET_CATALOG } from "@/data/market-catalog";
+import { UBWI_EXPLANATION, UBWI_VALUE_FRACTION_DIGITS, ubwiIndexSnapshot, ubwiSurface } from "./surface";
 
 const NOW = "2026-09-15T03:10:39Z";
 const surface = ubwiSurface({ now: NOW });
@@ -138,7 +140,9 @@ describe("the UBWI public surface", () => {
     }
   });
 
-  it("keeps UBWI off the watchlist and out of the demo dataset", () => {
+  it("keeps UBWI out of the demo dataset even though it now has a watchlist row", () => {
+    // The row exists, but it is built from the frozen production publication. UBWI must
+    // never acquire a mock value: that is the whole reason it was pulled from this file.
     expect(INDEX_SNAPSHOTS.find((row) => row.symbol === "UBWI")).toBeUndefined();
     const ubwi = findMarket("ubwi")!;
     expect(ubwi.families.flatMap((family) => family.instruments)).toHaveLength(0);
@@ -180,3 +184,73 @@ describe("the seeded methodology hash matches the document", () => {
     expect(amendment).toContain("adceaefd0de3ec17239f7fd8a55c64c5106d081fc2aaf2fa9da7dc0f7e1b78e6");
   });
 });
+
+const PUBLICATION = {
+  publishedAt: "2026-09-15T04:33:47.738Z",
+  valuePercent: 0.26716309468662236,
+  changePercent: null,
+};
+
+/** The homepage joins the mock rows to the production UBWI row, exactly as the page does. */
+function homepageRows() {
+  const row = ubwiIndexSnapshot(PUBLICATION);
+  return row === null ? INDEX_SNAPSHOTS : [...INDEX_SNAPSHOTS, row];
+}
+
+describe("the UBWI homepage watchlist row", () => {
+  it("is built from the frozen production publication, not from the demo dataset", () => {
+    const row = ubwiIndexSnapshot(PUBLICATION)!;
+    expect(row.symbol).toBe("UBWI");
+    expect(row.name).toBe("Urdais Bitcoin Wealth Index");
+    expect(row.unit).toBe("%");
+    expect(row.value).toBe(PUBLICATION.valuePercent);
+    // The old demo series was a points level. Nothing resembling it may come back.
+    expect(row.unit).not.toBe("pts");
+    expect(row.value).not.toBe(1342.57);
+    expect(row.asOf).toBe(Math.floor(Date.parse(PUBLICATION.publishedAt) / 1000));
+  });
+
+  it("withholds change until a second production observation exists", () => {
+    expect(ubwiIndexSnapshot(PUBLICATION)!.changePercent).toBeNull();
+  });
+
+  it("carries enough precision to distinguish values inside UBWI's range", () => {
+    // Two decimals would render 0.2672 and 0.2918 both as 0.27 and 0.29 respectively,
+    // collapsing most of the defensible band. Four keeps the published value legible.
+    expect(ubwiIndexSnapshot(PUBLICATION)!.valueFractionDigits).toBe(UBWI_VALUE_FRACTION_DIGITS);
+    expect(UBWI_VALUE_FRACTION_DIGITS).toBeGreaterThanOrEqual(4);
+  });
+
+  it("produces no row at all when nothing is published, rather than a placeholder", () => {
+    // A failed read and an unpublished index are both null here, and both must yield
+    // silence: no fabricated 0.2672, no fallback to the deleted demo series.
+    expect(ubwiIndexSnapshot(null)).toBeNull();
+    expect(homepageRowsWithout().find((row) => row.symbol === "UBWI")).toBeUndefined();
+  });
+
+  it("renders the real value, links to the detail page, and shows no movement line", () => {
+    render(<UrdaisIndices indices={homepageRows()} />);
+    const link = screen.getByRole("link", { name: /UBWI/ });
+    expect(link).toHaveAttribute("href", "/markets/ubwi");
+    // Scoped to the UBWI row: the mock indices legitimately use "pts" and carry movement,
+    // and this test is about UBWI's row alone.
+    const row = link.textContent ?? "";
+    expect(row).toContain("0.2672");
+    expect(row).toContain("%");
+    expect(row).not.toContain("Demo");
+    expect(row).not.toContain("pts");
+    expect(row).not.toMatch(/[+\u2212-]\d+\.\d+\s*%/);
+  });
+
+  it("appears in market-catalog order, after the other indices, and changes none of them", () => {
+    const expected = MARKET_CATALOG.map((market) => market.symbol).filter((symbol) => symbol !== "UCPI");
+    expect(homepageRows().map((row) => row.symbol)).toEqual(expected);
+    // The other six keep their existing rows untouched by this wiring.
+    expect(INDEX_SNAPSHOTS.map((row) => row.symbol)).toEqual(["UGAI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI"]);
+  });
+});
+
+function homepageRowsWithout() {
+  const row = ubwiIndexSnapshot(null);
+  return row === null ? INDEX_SNAPSHOTS : [...INDEX_SNAPSHOTS, row];
+}

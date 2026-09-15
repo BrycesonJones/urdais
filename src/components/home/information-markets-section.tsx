@@ -4,6 +4,7 @@ import { UcpiSummary } from "@/components/market/ucpi-summary";
 import { UrdaisIndices } from "@/components/market/urdais-indices";
 import { ChromeRevealText } from "@/components/ui/chrome-reveal-text";
 import { INDEX_SNAPSHOTS } from "@/data/mock/indices";
+import type { IndexSnapshot } from "@/types/market";
 import { UCPI_INDEX, UCPI_SERIES, UCPI_SNAPSHOT } from "@/data/mock/ucpi";
 import { MARKETS_HREF } from "@/lib/routes";
 
@@ -19,7 +20,16 @@ import { MARKETS_HREF } from "@/lib/routes";
  * continuation of the hero rather than a new block.
  * The surface is explicitly dark regardless of colour scheme.
  */
-export function InformationMarketsSection() {
+export function InformationMarketsSection({
+  indices = INDEX_SNAPSHOTS,
+}: {
+  /**
+   * The watchlist rows. Defaults to the mock snapshots alone, so a render with no
+   * props never implies a published production value; the page passes the real UBWI
+   * row in when one is frozen.
+   */
+  indices?: IndexSnapshot[];
+} = {}) {
   return (
     <section
       aria-labelledby="information-markets-heading"
@@ -46,7 +56,7 @@ export function InformationMarketsSection() {
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,3fr)]">
           <UcpiSummary index={UCPI_INDEX} snapshot={UCPI_SNAPSHOT} series={UCPI_SERIES} />
-          <UrdaisIndices indices={INDEX_SNAPSHOTS} />
+          <UrdaisIndices indices={indices} />
         </div>
       </div>
     </section>

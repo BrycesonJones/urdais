@@ -85,7 +85,15 @@ export type TokenInstrumentIdentity = {
   unitCaption: string;
 };
 
-export type IndexSnapshot = MarketIndex & MarketSnapshot;
+/**
+ * A watchlist row.
+ *
+ * `valueFractionDigits` overrides the row's display precision for an index whose
+ * meaningful range sits far below one unit. UBWI moves between roughly 0.22 % and
+ * 0.29 %, so the default two decimals would collapse every plausible value to the
+ * same 0.27 % and the row would look static while the index moved.
+ */
+export type IndexSnapshot = MarketIndex & MarketSnapshot & { valueFractionDigits?: number };
 
 /*
  * Market detail page.

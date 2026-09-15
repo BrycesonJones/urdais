@@ -6,12 +6,11 @@
  * primary Information Markets panel. Replace with API data when the backend
  * publishes index values.
  *
- * A market with no instruments produces no row. UBWI is the first such market:
- * its production methodology is approved and its publication gate refuses the
- * current denominator, so there is no published value and no series. A watchlist
- * row needs a number, and inventing one for a market that publishes nothing is
- * exactly the demo-data problem this file still has for the others. Its detail
- * page renders the withheld state with its full disclosure instead.
+ * A market with no instruments produces no row, and UBWI is deliberately not here at
+ * all. It is the one index with a real published value, so its row is built from the
+ * frozen production publication in `@/lib/ubwi/read/surface` and joined to this list by
+ * the homepage. Adding UBWI here would mean giving a production index a mock value,
+ * which is precisely the demo-data problem this file still has for the others.
  */
 
 import { MARKETS } from "@/data/mock/market-detail";
