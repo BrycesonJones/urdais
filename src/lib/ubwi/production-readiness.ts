@@ -123,6 +123,22 @@ export async function checkUbwiProductionReadiness(
       // retrieved all four, and "we never looked" and "we looked and it says no" are
       // different facts that would take different actions to resolve.
       const reviewed = iface.termsArtifact !== null;
+      // Categorised by what the interface is, not by whether the observed set happens to
+      // reference it. A statistical compiler Urdais cannot yet publish from is a
+      // denominator-coverage finding even while it supplies nothing -- which is exactly
+      // Stats NZ's position.
+      if (iface.providerKind === "statistical_compiler") {
+        findings.push({
+          kind: "RIGHTS_BLOCKED",
+          code: "DENOMINATOR_CANDIDATE_NOT_CLEARED",
+          detail: `${iface.slug} is ${status} and therefore supplies no denominator component`,
+          remedy: iface.note ?? "retrieve, review and retain the interface's terms",
+          // It costs coverage rather than corrupting a published value, and the gate
+          // already refuses on the coverage it costs.
+          blocking: false,
+        });
+        continue;
+      }
       findings.push({
         kind: "RIGHTS_BLOCKED",
         code: reviewed ? "NUMERATOR_SOURCE_NOT_CLEARED" : "NUMERATOR_SOURCE_TERMS_NOT_REVIEWED",

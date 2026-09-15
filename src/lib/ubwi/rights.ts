@@ -344,6 +344,24 @@ export const SOURCE_INTERFACES: readonly UbwiSourceInterface[] = [
       "The euro foreign exchange reference rates convert national-currency stocks to USD. That conversion is a modification under the ECB's terms and is stated explicitly on every component's FX lineage.",
   },
 
+  {
+    slug: "statsnz-annual-balance-sheets",
+    providerName: "Stats NZ",
+    providerKind: "statistical_compiler",
+    canonicalUrl: "https://www.stats.govt.nz/information-releases/annual-balance-sheets-2024-provisional/",
+    // Registered although it supplies nothing, because the reason it supplies nothing is
+    // a rights fact and a rights fact belongs in the rights record. New Zealand's data is
+    // current, land-inclusive and exactly the denominator's concept; only the licence is
+    // unestablished, and recording that as `not_reviewed` keeps the gap visible instead of
+    // leaving it as a sentence in an exclusion note.
+    termsReviewState: "not_reviewed",
+    dataUseTermsState: "not_reviewed",
+    termsArtifact: null,
+    automatedRetrievalAvailable: true,
+    note:
+      "Stats NZ publishes Annual balance sheets: 2024 (provisional), released 27 November 2025: total-economy net worth at market value, NZD 2,973,715 mn at 31 March 2024, of which NZD 1,634,567 mn non-produced non-financial assets, series SG07NLE00000AN20000S800C0. Worth 0.23 pp of world GDP and enough on its own to bring the modelled share under the 40 % ceiling. No terms artifact could be retrieved: stats.govt.nz/about-us/copyright/ returns HTTP 200 with a client-rendered shell carrying 22 characters of body text, the CSV and workbook state no licence, and browser automation is unavailable on the machine this was attempted from. That is a retrieval fact; it is not a refusal, and it is not permission either. One successful retrieval of the licence text would settle it.",
+  },
+
   // ---------------------------------------------------------------- numerator sources
   //
   // Phase 1 concluded that building the numerator from public venue tickers read

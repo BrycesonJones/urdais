@@ -38,12 +38,29 @@ begin
   -- ------------------------------------------------------------------ reference data
   if fed is null or ecb is null or bok is null then raise exception 'UBWI source interfaces missing'; end if;
 
-  -- Every denominator and FX source is permitted on both axes and shows its artifact.
+  -- Every denominator and FX source is in exactly one of two honest states: permitted on
+  -- both axes with a successfully retrieved artifact behind it, or unreviewed with no
+  -- artifact and no claim. Anything between the two -- a permitted axis with nothing to
+  -- rest on, or a retained artifact that never produced a state -- is the failure this
+  -- rejects. Stats NZ sits in the second state: a registered candidate whose licence
+  -- could not be read, recorded rather than assumed either way.
   select count(*) into n from reference.source_interfaces
    where source_class in ('statistical_dataset', 'exchange_rate_series')
-     and (terms_review_state <> 'permitted' or data_use_terms_state <> 'permitted'
-          or terms_artifact_hash is null or terms_artifact_status <> 200);
-  if n <> 0 then raise exception '% denominator/FX source(s) permitted without a retained artifact', n; end if;
+     and not (
+       (terms_review_state = 'permitted' and data_use_terms_state = 'permitted'
+        and terms_artifact_hash is not null and terms_artifact_status = 200)
+       or
+       (terms_review_state = 'not_reviewed' and data_use_terms_state = 'not_reviewed'
+        and terms_artifact_hash is null)
+     );
+  if n <> 0 then raise exception '% denominator/FX source(s) are in neither an evidenced nor an honestly-unreviewed state', n; end if;
+
+  -- The unreviewed ones supply nothing, so the count of evidenced compilers is what the
+  -- observed set actually rests on.
+  select count(*) into n from reference.source_interfaces
+   where source_class in ('statistical_dataset', 'exchange_rate_series')
+     and terms_review_state = 'permitted' and data_use_terms_state = 'permitted';
+  if n <> 11 then raise exception 'expected 11 evidenced denominator/FX sources, found %', n; end if;
 
   -- Phase 2D retrieved the numerator venues' terms. Every one now rests on a retained,
   -- hashed, successfully retrieved artifact -- and not one of them is permitted on both

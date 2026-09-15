@@ -136,6 +136,36 @@ update reference.source_interfaces set
           'interface is a retrieval path for it, not the authority for it.'
 where slug = 'blockchain-info-supply';
 
+-- ------------------------------------------------- a denominator candidate, unreviewed
+--
+-- Stats NZ is registered although it supplies nothing, because the reason it supplies
+-- nothing is a rights fact and rights facts belong in the rights record rather than in a
+-- comment. New Zealand's balance sheet is current, land-inclusive, market-valued and
+-- exactly the denominator's concept -- Production V1 excluded it on the OECD's 2017
+-- mirror, which is no longer the true reason. The true reason is that its licence could
+-- not be read: the Stats NZ copyright page renders client-side and returns 22 characters
+-- of body text to an HTTP client. No artifact, no rights state, no inclusion.
+
+insert into reference.providers (id, slug, name, provider_kind, website) values
+  ('b1b1b1b1-0000-4000-8000-000000000016', 'stats-nz', 'Stats NZ', 'statistical_compiler', 'https://www.stats.govt.nz');
+
+insert into reference.source_interfaces (
+  id, provider_id, slug, name, source_class, canonical_url, is_machine_readable, access_class,
+  terms_review_state, data_use_terms_state, automated_retrieval_available, notes
+) values (
+  'b2b2b2b2-0000-4000-8000-000000000016', 'b1b1b1b1-0000-4000-8000-000000000016',
+  'statsnz-annual-balance-sheets', 'Stats NZ annual balance sheets', 'statistical_dataset',
+  'https://www.stats.govt.nz/information-releases/annual-balance-sheets-2024-provisional/',
+  true, 'public_unauthenticated',
+  'not_reviewed', 'not_reviewed', true,
+  'Annual balance sheets: 2024 (provisional), released 27 November 2025. Total-economy net worth at market ' ||
+  'value, NZD 2,973,715 mn at 31 March 2024, of which NZD 1,634,567 mn non-produced non-financial assets; ' ||
+  'series SG07NLE00000AN20000S800C0. Worth 0.23 pp of world GDP. No terms artifact could be retrieved: ' ||
+  'stats.govt.nz/about-us/copyright/ returns HTTP 200 with a client-rendered shell carrying 22 characters of ' ||
+  'body text, the published CSV and workbook state no licence, and browser automation was unavailable. That ' ||
+  'is a retrieval fact: it is not a refusal and it is not permission. One successful retrieval settles it.'
+);
+
 -- ---------------------------------------------------------------- invariants
 --
 -- The migration must have moved exactly what it says it moved, and must not have moved

@@ -146,9 +146,22 @@ describe("the vintage rule and the New Zealand / Russia exclusion", () => {
     const excluded = EXCLUDED_ECONOMIES.map((e) => e.economy).sort();
     expect(excluded).toEqual(["NZL", "RUS"]);
     for (const dropped of EXCLUDED_ECONOMIES) {
-      expect(dropped.rule).toBe("vintage_max_age_years");
       expect(OBSERVED_ECONOMIES.some((e) => e.economy === dropped.economy)).toBe(false);
+      expect(dropped.reason.trim().length).toBeGreaterThan(40);
     }
+  });
+
+  it("excludes New Zealand on rights, not on vintage, since Phase 2D read Stats NZ", () => {
+    // Production V1 dropped New Zealand on the OECD's 2017 mirror. Stats NZ publishes a
+    // current land-inclusive balance sheet, so the vintage reason is no longer true --
+    // and the exclusion stands on a reason that is.
+    const nz = EXCLUDED_ECONOMIES.find((e) => e.economy === "NZL")!;
+    expect(nz.rule).toBe("source_rights_not_established");
+    expect(nz.referenceDate).toBe("2024-03-31");
+    expect(LATEST_COMPLETE_YEAR - Number(nz.referenceDate.slice(0, 4))).toBeLessThanOrEqual(
+      VINTAGE_MAX_AGE_YEARS,
+    );
+    expect(nz.reason).toContain("Rights not established");
   });
 
   it("keeps every retained component inside the vintage bound", () => {
@@ -160,11 +173,13 @@ describe("the vintage rule and the New Zealand / Russia exclusion", () => {
     }
   });
 
-  it("would fail the vintage rule for both dropped economies", () => {
+  it("would fail the vintage rule for every economy dropped by it", () => {
     for (const dropped of EXCLUDED_ECONOMIES) {
+      if (dropped.rule !== "vintage_max_age_years") continue;
       const year = Number(dropped.referenceDate.slice(0, 4));
       expect(LATEST_COMPLETE_YEAR - year).toBeGreaterThan(VINTAGE_MAX_AGE_YEARS);
     }
+    expect(EXCLUDED_ECONOMIES.filter((e) => e.rule === "vintage_max_age_years")).toHaveLength(1);
   });
 
   it("does not assume the Phase 2C candidate survived the cleanup", () => {

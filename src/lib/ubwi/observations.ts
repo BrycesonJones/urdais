@@ -467,19 +467,37 @@ export const OBSERVED_ECONOMIES: readonly ObservedEconomy[] = [
 ];
 
 /**
- * Dropped by the vintage rule. Both were rights-cleared and both were in the Phase 2C
- * candidate; neither is bridged, interpolated or carried forward. Their combined GDP
- * weight is 2.19 pp of world GDP, and losing it raises the imputed share -- the cost is
- * stated rather than hidden.
+ * Dropped from the observed set, with the rule that dropped each. Neither is bridged,
+ * interpolated or carried forward. Their combined GDP weight is 2.19 pp of world GDP, and
+ * losing it raises the imputed share -- the cost is stated rather than hidden.
+ *
+ * New Zealand's reason changed in Phase 2D and the change matters. Production V1 dropped
+ * it on vintage, reading the OECD's mirror, which stops at 2017. Stats NZ itself publishes
+ * *Annual balance sheets: 2024 (provisional)*, released 27 November 2025: total-economy
+ * net worth at market value, NZD 2,973,715 million at 31 March 2024, of which NZD
+ * 1,634,567 million is non-produced non-financial assets. That is current, land-inclusive
+ * and exactly the denominator's concept -- the same lesson Phase 2C learned four times
+ * over, that a national compiler is often years fresher than the harmonised mirror.
+ *
+ * It is still excluded, for a different and honest reason: **its rights could not be
+ * established from a retained artifact.** Stats NZ's copyright page renders entirely
+ * client-side and returns 22 characters of body text to a plain HTTP client; the data
+ * files carry no licence statement; and browser automation is broken on the machine this
+ * ran on. A rights state derives from a retained, hashed terms document, never from an
+ * assumption about what a government statistics office probably permits. So the state is
+ * "not established", not "permitted" and not "refused".
  */
 export const EXCLUDED_ECONOMIES: readonly ExcludedEconomy[] = [
   {
     economy: "NZL",
-    referenceDate: "2017-12-31",
+    referenceDate: "2024-03-31",
     gdpUsd2024: 261_497_198_363.906,
     reason:
-      "Latest OECD-published national balance sheet is 2017, eight years before the latest complete calendar year.",
-    rule: "vintage_max_age_years",
+      "Stats NZ publishes a current, land-inclusive, market-valued total-economy net worth " +
+      "(NZD 2,973,715 mn at 31 March 2024), which satisfies the vintage rule. No terms artifact " +
+      "could be retrieved: the Stats NZ copyright page is client-rendered and returns no licence " +
+      "text to a plain HTTP client, and the data files state none. Rights not established.",
+    rule: "source_rights_not_established",
   },
   {
     economy: "RUS",

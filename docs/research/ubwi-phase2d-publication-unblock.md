@@ -36,6 +36,8 @@ That is UBWI, described almost exactly. It is conditional on an agreement Urdais
 
 **Eight. The artifact-integrity invariant exists, and it verifies the whole existing record.** All eleven Production V1 terms artifacts were re-found in the research store by content hash and every one reproduces byte-for-byte, and every one of the eleven committed decisive clauses occurs, word for word and in order, in the document it cites. The record is sound. The invariant is now enforced in code so that the next one has to be too.
 
+**Nine. The denominator's best remaining candidate is one retrieval away, and it is a licence, not a balance sheet.** Nine national compilers were checked. Eight publish produced assets, household wealth or financial accounts and no land. **Stats NZ publishes exactly the right thing** — total-economy net worth at market value, land-inclusive, at 31 March 2024 — and Production V1 excluded it on the OECD's 2017 mirror. Its terms could not be retrieved, because its copyright page renders client-side and returns 22 characters of body text. **No terms artifact, no rights state, no inclusion.** The exclusion record now says that rather than repeating a vintage reason that is no longer true.
+
 **Decision: UBWI stays unpublished. The binding blocker is the numerator, not the denominator.**
 
 ---
@@ -162,6 +164,62 @@ Admitting any of them would mean treating produced capital stock as national net
 
 No threshold is changed here. The frontier constant stays at the measured 55.72 % and remains above every configured bound, so no gate becomes unsatisfiable. But the near-term frontier should be re-measured on a land-inclusive basis before it is leaned on again, and that is recorded as an open question rather than acted on tonight.
 
+### 2.4 The national compilers, nine of them
+
+Both harmonised compilers being exhausted, the remaining route is national statistical offices one at a time. Nine were checked, chosen by GDP weight, each against its own first-party publication or API. **Every artifact was re-hashed and every quoted string re-grepped locally before it entered this document.**
+
+| Economy | GDP 2024 | Verdict | What is published instead |
+|---|---:|---|---|
+| **New Zealand** | $261 bn | **LAND-INCLUSIVE BALANCE SHEET FOUND** | *Annual balance sheets: 2024 (provisional)* |
+| Spain | $1,726 bn | not found | GDP, national income, GFCF by asset type. No asset balance sheet. BdE publishes financial accounts and experimental *household* distributional wealth accounts. |
+| Switzerland | $970 bn | not found | Net non-financial capital stock: "buildings, works of civil engineering, machinery and equipments, cultivated assets, research and development as well as software" — produced assets only. |
+| Poland | $918 bn | not found | Fixed assets (*środki trwałe*). Six national-accounts sub-topics, none a balance sheet. |
+| Belgium | $671 bn | **not found — near miss** | See below. |
+| Israel | $542 bn | not found | A subject literally named *מאזן לאומי* (national balance sheet) whose 266 series are entirely financial: AF.1–AF.8, LF.1–LF.8, net financial worth. No AN codes. |
+| Norway | $501 bn | not found | Fixed capital (09181, 11189), *household* wealth accounts (10315), financial accounts. Table 11123 is a flow. |
+| Denmark | $425 bn | not found | NAHK/NABK/NASK are AN.11 fixed assets; "other structures and land improvements" is a produced asset, not land. |
+| Croatia | $93 bn | not found | DZS publishes gross fixed capital *formation* (a flow) and non-financial sector accounts. **The OECD's `N211N` row for Croatia corresponds to nothing DZS publishes nationally.** |
+
+**Belgium is the one that would have closed the gap alone**, and it fails for an unusually precise reason. The NBB's `DF_CAPSTOCK2010_DISS` cube does publish land with the full AN.21 breakdown — but only for households and NPISH. Verified by direct grep of the retained CSV:
+
+```
+…,SLS,TOT,AN21000,V,S14_15,2023,1137164.2,P,F,6,1
+…,SLS,TOT,AN21000,V,S1,   2023,NaN,      M,F,6,1
+```
+
+The total-economy cell **exists in the published cube and is empty**, flagged `M` for missing, as are S.11, S.12 and S.13. This is "not compiled or not released", not a conceptual absence — a materially different finding from the other seven negatives, and the only one where a question to the compiler could plausibly change the answer.
+
+### 2.5 New Zealand: the data is there, the licence is not
+
+Stats NZ publishes *Annual balance sheets: 2024 (provisional)*, released 27 November 2025, covering years ended March 2007–2024 at current price (market value) for the total domestic economy. Independently re-hashed (`sha256 3b2a8baf…0f2438`, 1,016,246 bytes, HTTP 200) and re-grepped:
+
+| Line | Code | NZD million, 31 March 2024 |
+|---|---|---:|
+| Total non-financial assets | `AN00000` | 3,171,132 |
+| — produced | `AN10000` | 1,536,566 |
+| — **non-produced (land)** | `AN20000` | **1,634,567** |
+| Total financial assets | `AFA0000` | 4,334,450 |
+| Total financial liabilities | `AFL0000` | 4,531,868 |
+| **Closing balance net worth** | `B900000` | **2,973,715** |
+
+Series `SG07NLE00000AN20000S800C0`, sector 800 "Total economy (excl rest of the world)". The identity checks: 3,171,132 + 4,334,450 = 7,505,582 against a published total of 7,505,583, and 7,505,583 − 4,531,868 = 2,973,715 exactly. **This is national net worth on the same construction as the ABS's and Statistics Canada's — land-inclusive, market-valued, net of the foreign position — and it is better than the Eurostat assembly, not worse.** The ECB's last NZD fixing at or before 31 March 2024 (Easter Sunday) is 28 March 2024 at 1.8092 NZD/EUR against 1.0811 USD/EUR, giving 1.673481 NZD per USD and **USD 1.7770 tn**.
+
+Production V1 excluded New Zealand on vintage, reading the OECD's mirror, which stops at 2017. That reason is no longer true, and leaving it in place would have been the same mistake Phase 2C corrected four times over.
+
+**It is still excluded, and the reason is rights.** Stats NZ's copyright page returns HTTP 200 with a client-rendered shell carrying 22 characters of body text; the CSV and the workbook state no licence; and browser automation is unavailable on this machine. **No terms artifact could be retrieved, so no rights state can be established** — not "permitted", and not "refused" either. `EXCLUDED_ECONOMIES` now records `source_rights_not_established` rather than `vintage_max_age_years`, and `statsnz-annual-balance-sheets` is registered in the rights record as `not_reviewed` with no artifact, so the gap is visible in code rather than only in prose.
+
+### 2.6 What New Zealand would have done to the gate, and why that is uncomfortable
+
+Had its rights been established, the existing reference-year convention — the one Australia's 30 June component already follows — would pair a 31 March 2024 balance sheet with New Zealand's 2024 GDP, and the gate would read:
+
+| | Modelled share | Gate |
+|---|---:|---|
+| Production V1 | 40.43918 % | refused |
+| + New Zealand, paired with 2024 GDP | **39.99989 %** | **passes by 0.00011 pp** |
+| + New Zealand, paired with 2023 GDP | 40.00194 % | refused |
+
+**The gate outcome turns on which calendar year's GDP is paired with a fiscal-year balance sheet.** The 2024 pairing is the rule-following one and is not chosen to produce a pass — but a threshold decided at the fifth decimal place by an alignment convention is not a measurement, and this is recorded so that whoever clears New Zealand's licence knows the denominator does not really clear with it. **It reaches the line; it does not clear it.** One more economy of any size would.
+
 ---
 
 ## Part 3 — The artifact-integrity invariant
@@ -237,7 +295,12 @@ Publication count: **zero**. Instrument lifecycle: **`launch_blocked`**. No poin
 
 > **Blocked on both, and the numerator is the harder one.**
 
-The denominator blocker is 0.46 pp of world GDP away and needs one mid-sized economy with a land-inclusive national balance sheet. Both harmonised compilers are exhausted; the remaining route is national compilers one at a time.
+The denominator blocker is 0.46 pp of world GDP away. Both harmonised compilers and nine national compilers are now exhausted, and the search produced one real candidate and one precise near miss:
+
+- **New Zealand** publishes the right thing and its licence could not be read. One successful retrieval settles it — and even then it reaches the 40 % ceiling at the fifth decimal place rather than clearing it.
+- **Belgium** compiles land for households and leaves the total-economy cells empty in its own published cube. Worth 0.60 pp, and a question for the NBB rather than a search.
+
+Neither is a research problem any more.
 
 The numerator blocker is not a research gap. **Three venues' terms say no to the thing UBWI does, in writing, and the fourth says yes to a signatory.** No amount of further retrieval changes that. The resolutions available are all decisions rather than findings:
 
@@ -259,6 +322,13 @@ The numerator blocker is not a research gap. **Three venues' terms say no to the
 | `blockchain.com/legal/api`, `/legal/terms-of-service` | HTTP 404. An "API Terms of Service" exists in the site's translation bundle and is served from no reachable path. Nothing assumed from it. |
 | `mempool.space/terms-of-service`, `/about` | HTTP 200, 3,017-byte Angular shell at both. Not registered as a source; cited only for block-height confirmation. |
 | Eurostat for Norway, Hungary, Latvia, Portugal | `N1N` only. **No land.** Produced assets are not national net wealth. |
+| INE / Banco de España for Spain | No balance sheet of non-financial assets in INE's complete list of national-accounts operations. BdE has financial accounts and experimental household distributional wealth accounts. |
+| FSO Switzerland | Net non-financial capital stock only, produced assets by its own definition. |
+| GUS Poland, Danmarks Statistik, SSB Norway | Fixed assets or household wealth. No land, no non-produced total. |
+| CBS Israel subject 46, *מאזן לאומי* | Named "national balance sheet" and entirely financial: AF/LF codes and net financial worth across all 266 series. |
+| DZS Croatia | Gross fixed capital *formation* (a flow) and non-financial sector accounts. The OECD's `N211N` row for Croatia corresponds to nothing DZS publishes. |
+| Stats NZ copyright page | HTTP 200, client-rendered, 22 characters of body text. Browser automation broken on this machine. The balance sheet is usable; the licence could not be read. |
+| `stat.nbb.be` direct, `statbel.fgov.be` | Connection reset (curl 56) on every attempt, and a CAPTCHA interstitial respectively. Belgium's finding rests on the NBB SDMX cube, which returned cleanly. |
 | Eurostat for Spain, Poland, Belgium, Denmark, Ireland, Greece and the rest | `N11N` only. Unchanged across four phases. |
 | OECD terms page, live re-fetch | **Not attempted, by standing instruction.** The grant is anchored to the cached artifact, whose hash was re-verified from the retained bytes this phase. |
 | Headless Chrome | Not attempted. Known broken on this machine (`CVDisplayLinkCreateWithCGDisplay failed`: produces output, never exits). Plain `urllib` retrieved every artifact in this phase. |
@@ -269,10 +339,12 @@ The numerator blocker is not a research gap. **Three venues' terms say no to the
 
 1. **The numerator venue set.** Three venues do not permit publication and the methodology has no rule for changing the set. This is now the single blocking item for UBWI, and it is a decision, not research.
 2. **Bitstamp's Data License Agreement.** The permission Urdais needs, named by the counterparty, unsigned. Requires approval to pursue.
-3. **One more land-inclusive economy, worth ≥ 0.47 pp of world GDP.** Both harmonised compilers are exhausted. The route is national compilers.
-4. **Re-measure the near-term feasible frontier on a land-inclusive basis.** Part 2.3 shows four of the six economies behind the 55.72 % figure publish no land. The constant is not changed here and no threshold depends on it being exact, but it should not be leaned on again as measured.
-5. **Whether the artifact store belongs in the repository.** Fifteen documents, roughly 11 MB, several third-party. Today the store lives outside version control and `npm run ubwi:verify-terms` is run against it deliberately; the structural half of the invariant runs on every commit.
-6. Carried unchanged from Phase 2C: Korea's ECOS operational API key; Spain's non-financial asset stock; whether Mexico can be re-sourced from INEGI; how the US public-land omission is disclosed; non-Bitcoin crypto in the denominator.
+3. **Stats NZ's licence.** One successful retrieval of a client-rendered page is the entire distance between New Zealand's balance sheet and the observed set. It is the cheapest open item in the phase.
+4. **Whether the NBB compiles total-economy land.** Belgium's S.1 land cells exist in the published cube and are empty while households' are populated. It is worth 0.60 pp of world GDP and it is a question for the compiler, not a search.
+5. **One more land-inclusive economy beyond New Zealand.** New Zealand alone reaches the ceiling at the fifth decimal place, which is not a margin. Both harmonised compilers and nine national compilers are now exhausted.
+6. **Re-measure the near-term feasible frontier on a land-inclusive basis.** Part 2.3 shows four of the six economies behind the 55.72 % figure publish no land. The constant is not changed here and no threshold depends on it being exact, but it should not be leaned on again as measured.
+7. **Whether the artifact store belongs in the repository.** Fifteen documents, roughly 11 MB, several third-party. Today the store lives outside version control and `npm run ubwi:verify-terms` is run against it deliberately; the structural half of the invariant runs on every commit.
+8. Carried unchanged from Phase 2C: Korea's ECOS operational API key; Spain's non-financial asset stock; whether Mexico can be re-sourced from INEGI; how the US public-land omission is disclosed; non-Bitcoin crypto in the denominator.
 
 **Not carried forward: China.** Not reopened by this phase and no first-party lead was found that would alter [the study's conclusion](./ubwi-china-source-study.md).
 
@@ -293,6 +365,9 @@ All retrieved 15 September 2026 by direct `urllib` call, saved, and hashed over 
 | 7 | Eurostat `nama_10_nfa_bs`, `N211N`, all geographies | `ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/` | 200 | — | dataset updated 2026-09-08 |
 | 8 | Eurostat `nama_10_nfa_bs`, `N2N` / `N21N` / `N1N` / `N11N` | same | 200 | — | same |
 | 9 | OECD `DSD_NASEC10@DF_TABLE9B`, `N211N` / `NN` / `N2N` / `N1N` / `N11N` | `sdmx.oecd.org/public/rest/data/` | 200 | — | re-measured this phase, not read from the Phase 2C matrix |
+| 10 | Stats NZ, Annual balance sheets 2007–2024 (provisional) | `stats.govt.nz/assets/Uploads/Annual-balance-sheets/…/annual-balance-sheets-2007-2024-provisional.csv` | 200 | 1,016,246 | `3b2a8bafba97e4f6` |
+| 11 | NBB `DF_CAPSTOCK2010_DISS`, stocks of land by sector | `nbb.stat.bnb.be` SDMX | 200 | 127,380 | `b1d9ae8a18ee55a0` |
+| 12 | ECB `D.NZD.EUR.SP00.A` and `D.USD.EUR.SP00.A`, March 2024 | `data-api.ecb.europa.eu/service/data/EXR/` | 200 | — | 20 daily fixings each; last common 2024-03-28 |
 
 Full hashes are recorded in `src/lib/ubwi/rights.ts` and in migration `20260915000300_ubwi_numerator_terms_evidence.sql`, and are re-derivable from the retained bytes with `npm run ubwi:verify-terms`.
 
@@ -307,4 +382,4 @@ Full hashes are recorded in `src/lib/ubwi/rights.ts` and in migration `202609150
 | Phase 2B | How far does coverage reach? | 53.99 % observed, 47.66 % rights-cleared; ceiling 62.93 % without China. |
 | Phase 2C | Can the rights gap close, and what gate is feasible? | Gap closed to zero; the proposed ≤ 25 % gate is arithmetically unsatisfiable; frontier 55.72 %. |
 | Production V1 | Build it and let the gate decide. | Gate refused on the modelled share. Correct behaviour. |
-| **Phase 2D** | **Can the last two blockers clear?** | **No. The numerator's own venues do not permit the use, and the denominator is 0.46 pp short with both harmonised compilers exhausted.** |
+| **Phase 2D** | **Can the last two blockers clear?** | **No. The numerator's own venues do not permit the use. The denominator is 0.46 pp short; New Zealand would reach the line but its licence could not be read.** |
