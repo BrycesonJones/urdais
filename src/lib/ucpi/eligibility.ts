@@ -76,6 +76,10 @@ export function assessEligibility(obs: NormalizedObservation, ctx: EligibilityCo
   // independent of any other participant and is not counted. Never inferred from a brand name.
   const seller = ctx.entities.get(obs.sellerEntityId);
   if (seller === undefined || seller.legalName === null) exclusions.add("SELLER_LEGAL_IDENTITY_UNRESOLVED");
+  // A seller that refused Urdais the intended use is excluded by every route. The source's terms
+  // govern Urdais's use of the source's dataset; they cannot grant what the seller itself withheld
+  // about its own price, so receiving the row through a permitted aggregator does not cure it.
+  if (seller !== undefined && seller.useRefusedEvidence !== null) exclusions.add("SELLER_USE_REFUSED");
   const p1 = p0 && exclusions.size === 0;
 
   // P2: headline eligibility ----------------------------------------------------

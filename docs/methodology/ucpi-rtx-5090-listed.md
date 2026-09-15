@@ -1,6 +1,6 @@
 # UCPI-RTX-5090-LISTED Child Specification
 
-**Status: proposed child specification, version 0.1.0-draft. Not launched.** Prepared 14 September 2026. A child of the [UCPI-LISTED-GPU family specification](/docs/methodology/ucpi-listed-gpu) under the [Urdais Compute Price Index family](/docs/methodology/ucpi); everything not stated here is inherited from those documents unchanged. A different economic object from any accessible-offer child.
+**Status: approved child specification, version 1.0.0, effective 15 September 2026.** Prepared 14 September 2026, approved 15 September 2026. This child declares [UCPI-LISTED-GPU](/docs/methodology/ucpi-listed-gpu) as its methodology and binds this version to UCPI-LISTED-GPU 1.0.0. A child of the [UCPI-LISTED-GPU family specification](/docs/methodology/ucpi-listed-gpu) under the [Urdais Compute Price Index family](/docs/methodology/ucpi); everything not stated here is inherited from those documents unchanged. A different economic object from any accessible-offer child.
 
 ## Instrument
 
@@ -19,5 +19,7 @@ Runpod: RTX 5090 32 GB listed per GPU with per-GPU host resources (Secure Cloud)
 One eligible seller. Under the family's structural rule the instrument is **Unavailable** (`SINGLE_PARTICIPANT`) and no candidate value exists. This is a valid result; the instrument stays defined so that a second independent legal seller makes it calculable without new methodology.
 
 ## Version History
+
+**1.0.0, 15 September 2026, effective 15 September 2026**: approved, bound to UCPI-LISTED-GPU 1.0.0. No rule of this child changed; the specification it inherits was approved and this child was approved with it. Whether this child publishes on any date is decided by the family's structural participant rule against that date's eligible sellers, never by this approval.
 
 **0.1.0-draft, 14 September 2026**: initial child. No production effective date.

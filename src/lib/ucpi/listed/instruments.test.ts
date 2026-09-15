@@ -13,7 +13,7 @@ import { describe, expect, it } from "vitest";
 
 import { LISTED_SCOPE_KEY } from "@/lib/ucpi/aggregation";
 import { identifyPocSku, POC_SKU_IDENTITY, PRICE_OF_COMPUTE_ATTRIBUTION, PRICE_OF_COMPUTE_SLUG, priceOfComputeAdapter, type PocPricesResponse } from "@/lib/ucpi/adapters/price-of-compute";
-import { POC_SELLER_EVIDENCE_2026_09_14, POC_SELLER_EVIDENCE_2026_09_14_GPU_FAMILY, pocSellerProfiles, type PocSellerEvidence } from "@/lib/ucpi/adapters/price-of-compute-profiles";
+import { POC_SELLER_EVIDENCE_2026_09_14, POC_SELLER_EVIDENCE_2026_09_14_GPU_FAMILY, POC_SELLER_EVIDENCE_2026_09_15, pocSellerProfiles, type PocSellerEvidence } from "@/lib/ucpi/adapters/price-of-compute-profiles";
 import { PUBLIC_SERIES_POINT_KEYS, toSeriesPoint, validatePublicResponseShape } from "@/lib/ucpi/api-contract";
 import { runPipeline, type PipelineResult } from "@/lib/ucpi/collector";
 import type { MarketEntity, Retrieval } from "@/lib/ucpi/domain";
@@ -41,7 +41,7 @@ const A100_40 = payload(`${TS}_api_v1_prices_a100-sxm-40gb.json`);
 const SLUGS = [...new Set([...POC_SELLER_EVIDENCE_2026_09_14, ...POC_SELLER_EVIDENCE_2026_09_14_GPU_FAMILY].map((e) => e.slug))];
 const ENTITY_IDS = new Map(SLUGS.map((slug) => [slug, `ent-${slug}`]));
 function entitiesFor(evidence: readonly PocSellerEvidence[]): { list: MarketEntity[]; map: ReadonlyMap<string, MarketEntity> } {
-  const list = SLUGS.map((slug) => ({ id: `ent-${slug}`, slug, name: slug, legalName: evidence.find((e) => e.slug === slug)?.legalNameEvidenced ? `${slug} legal` : null, legalIdentifier: null, controllingEntityId: null }));
+  const list = SLUGS.map((slug) => ({ id: `ent-${slug}`, slug, name: slug, legalName: evidence.find((e) => e.slug === slug)?.legalNameEvidenced ? `${slug} legal` : null, legalIdentifier: null, controllingEntityId: null, useRefusedEvidence: evidence.find((e) => e.slug === slug)?.useRefused ?? null }));
   return { list, map: new Map(list.map((e) => [e.id, e])) };
 }
 const REGISTRY = [...REGISTRY_TODAY, permitted(PRICE_OF_COMPUTE_SLUG)];
@@ -183,6 +183,55 @@ describe("RTX 5090", () => {
     expect(sellers(r)).toEqual(["runpod"]);
     expect(r.regional[0]).toMatchObject({ outcome: "unavailable", structuralCondition: "SINGLE_PARTICIPANT", priceLevel: null, participantCount: 1 });
     expect(exclusionsBySeller(r, "vast")).toContain("WRONG_SERVICE_PRODUCT");
+  });
+});
+
+describe("the seller-refusal rule", () => {
+  // Runpod refused Urdais the intended use in writing on 14 September 2026. Its listed price
+  // still arrives through Price of Compute, whose own terms permit collection and data use.
+  // The rule is that the aggregator's grant cannot supply what the seller withheld about its
+  // own price, so the seller is excluded by every route.
+  const before = candidate("UCPI-H100-SXM-LISTED", PAYLOADS["UCPI-H100-SXM-LISTED"], POC_SELLER_EVIDENCE_2026_09_14_GPU_FAMILY);
+  const after = candidate("UCPI-H100-SXM-LISTED", PAYLOADS["UCPI-H100-SXM-LISTED"], POC_SELLER_EVIDENCE_2026_09_15);
+
+  it("admitted Runpod under the 14 September snapshot, and excludes it under the 15 September one", () => {
+    expect(sellers(before)).toContain("runpod");
+    expect(sellers(after)).not.toContain("runpod");
+    expect(exclusionsBySeller(after, "runpod")).toContain("SELLER_USE_REFUSED");
+    // Nothing else moved: the refusal is the only difference between the snapshots.
+    expect(sellers(after)).toEqual(sellers(before).filter((x) => x !== "runpod"));
+  });
+
+  it("reproduces the first candidate under the snapshot it was interpreted under, and moves the value under the production one", () => {
+    // The 14 September candidate was computed under the H100-only snapshot, before DataCrunch's
+    // legal identity and topology were evidenced: four sellers, median 3.74, Runpod pivotal.
+    const h100Only = candidate("UCPI-H100-SXM-LISTED", PAYLOADS["UCPI-H100-SXM-LISTED"], POC_SELLER_EVIDENCE_2026_09_14);
+    expect(sellers(h100Only)).toEqual(["hyperstack", "lambda", "runpod", "voltagepark"]);
+    expect(h100Only.regional[0]).toMatchObject({ outcome: "value", participantCount: 4 });
+    expect(h100Only.regional[0]!.priceLevel).toBeCloseTo(3.74, 6);
+
+    // The production snapshot evidences DataCrunch too, so the like-for-like comparison of the
+    // refusal is against five sellers, not four.
+    expect(before.regional[0]).toMatchObject({ outcome: "value", participantCount: 5 });
+    expect(before.regional[0]!.priceLevel).toBeCloseTo(3.49, 6);
+
+    // Excluding Runpod costs one participant and moves the value. Four sellers still constitute
+    // a market under the structural rule, so the child continues to publish at Normal breadth.
+    expect(after.regional[0]).toMatchObject({ outcome: "value", participantCount: 4, marketBreadth: "normal" });
+    expect(after.regional[0]!.priceLevel).toBeCloseTo(3.62, 2);
+    expect(after.regional[0]!.priceLevel).not.toBeCloseTo(before.regional[0]!.priceLevel!, 6);
+  });
+
+  it("the frozen 14 September snapshot is not edited by the rule, so the first candidate stays reproducible", () => {
+    expect(POC_SELLER_EVIDENCE_2026_09_14_GPU_FAMILY.find((e) => e.slug === "runpod")?.useRefused ?? null).toBeNull();
+    expect(POC_SELLER_EVIDENCE_2026_09_15.find((e) => e.slug === "runpod")?.useRefused).toContain("2026-09-14");
+  });
+
+  it("a refused seller is excluded even where every other requirement is satisfied", () => {
+    // Runpod's on-demand H100 row satisfies identity, topology, tenancy and legal identity;
+    // it fails only the refusal, which is the whole point of a separate reason code.
+    const ex = exclusionsBySeller(after, "runpod");
+    expect(ex).toEqual(["SELLER_USE_REFUSED"]);
   });
 });
 

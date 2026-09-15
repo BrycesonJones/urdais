@@ -22,7 +22,7 @@ begin
                   where i.symbol = 'UCPI-H100-SXM-LISTED' and sv.version = '0.1.2-draft' and sv.status = 'draft' and sv.methodology_version_id = family) then
     raise exception 'H100 listed 0.1.2-draft missing'; end if;
   select count(*) into n from reference.instrument_spec_versions sv join reference.instruments i on i.id = sv.instrument_id where i.symbol = 'UCPI-H100-SXM-LISTED';
-  if n <> 3 then raise exception 'expected three H100 listed versions (0.1.0, 0.1.1, 0.1.2), found %', n; end if;
+  if n <> 4 then raise exception 'expected four H100 listed versions (0.1.0, 0.1.1, 0.1.2 drafts and 1.0.0 approved), found %', n; end if;
 
   if not exists (select 1 from reference.methodology_versions mv join reference.methodologies m on m.id = mv.methodology_id
                   where m.slug = 'ucpi-listed-gpu' and mv.version = '0.1.0-draft' and mv.status = 'draft' and mv.content_hash ~ '^[0-9a-f]{64}$') then

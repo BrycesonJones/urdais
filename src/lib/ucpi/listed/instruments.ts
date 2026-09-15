@@ -31,7 +31,7 @@ export type ListedGpuInstrument = {
   identity: GpuIdentityRequirement;
   /** Upstream SKUs per technical source slug that denote exactly this instrument. */
   upstreamSkus: Readonly<Record<string, readonly string[]>>;
-  /** Routed specification document (docs catalog slug) and its current draft version. */
+  /** Routed specification document (docs catalog slug) and its current version. */
   docSlug: string;
   specVersion: string;
   /** Model-specific notes that the child specification also states. */
@@ -41,6 +41,8 @@ export type ListedGpuInstrument = {
 /** Behaviour shared by every listed GPU instrument; the family specification, not the child, owns these. */
 export const LISTED_FAMILY = {
   methodology: "UCPI-LISTED-GPU",
+  /** The approved specification version every listed child binds to. */
+  methodologyVersion: "1.0.0",
   observationType: "indicative_or_list_price",
   procurementModes: ["on_demand"],
   regionScope: "listed_provider_wide",
@@ -57,7 +59,7 @@ export const LISTED_GPU_INSTRUMENTS: readonly ListedGpuInstrument[] = [
     identity: { vendor: "NVIDIA", model: "H100", formFactor: "SXM", memoryGb: 80 },
     upstreamSkus: { [PRICE_OF_COMPUTE_SLUG]: ["H100-SXM"] },
     docSlug: "methodology/ucpi-h100-sxm-listed",
-    specVersion: "0.1.2-draft",
+    specVersion: "1.0.0",
     notes: ["H100 PCIe and H100 NVL are different instruments."],
   },
   {
@@ -67,7 +69,7 @@ export const LISTED_GPU_INSTRUMENTS: readonly ListedGpuInstrument[] = [
     identity: { vendor: "NVIDIA", model: "H200", formFactor: "SXM", memoryGb: 141 },
     upstreamSkus: { [PRICE_OF_COMPUTE_SLUG]: ["H200-SXM"] },
     docSlug: "methodology/ucpi-h200-sxm-listed",
-    specVersion: "0.1.0-draft",
+    specVersion: "1.0.0",
     notes: ["H200 NVL is a different physical product and is not this instrument."],
   },
   {
@@ -77,7 +79,7 @@ export const LISTED_GPU_INSTRUMENTS: readonly ListedGpuInstrument[] = [
     identity: { vendor: "NVIDIA", model: "B200", formFactor: "SXM", memoryGb: null },
     upstreamSkus: { [PRICE_OF_COMPUTE_SLUG]: ["B200"] },
     docSlug: "methodology/ucpi-b200-listed",
-    specVersion: "0.1.0-draft",
+    specVersion: "1.0.0",
     notes: [
       "The B200 accelerator as sold in HGX B200 systems (SXM6 module). Sellers label device memory 180 GB or 192 GB for the same part, so memory does not gate identity.",
       "GB200 and GB300 NVL platforms are different products and are never admitted as B200 observations.",
@@ -90,7 +92,7 @@ export const LISTED_GPU_INSTRUMENTS: readonly ListedGpuInstrument[] = [
     identity: { vendor: "NVIDIA", model: "A100", formFactor: "SXM", memoryGb: 80 },
     upstreamSkus: { [PRICE_OF_COMPUTE_SLUG]: ["A100-SXM-80GB"] },
     docSlug: "methodology/ucpi-a100-sxm4-80gb-listed",
-    specVersion: "0.1.0-draft",
+    specVersion: "1.0.0",
     notes: ["A100 SXM4 40 GB, A100 PCIe 80 GB and A100 PCIe 40 GB are different instruments."],
   },
   {
@@ -100,7 +102,7 @@ export const LISTED_GPU_INSTRUMENTS: readonly ListedGpuInstrument[] = [
     identity: { vendor: "NVIDIA", model: "RTX 5090", formFactor: "PCIe", memoryGb: 32 },
     upstreamSkus: { [PRICE_OF_COMPUTE_SLUG]: ["RTX-5090"] },
     docSlug: "methodology/ucpi-rtx-5090-listed",
-    specVersion: "0.1.0-draft",
+    specVersion: "1.0.0",
     notes: ["A consumer card rented as a whole device. Virtualized slices, shared hosts and serverless products are excluded by the family's full-device and service-product rules."],
   },
 ];
