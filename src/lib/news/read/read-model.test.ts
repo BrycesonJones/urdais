@@ -60,16 +60,20 @@ describe("backend record to homepage article", () => {
 });
 
 describe("the published-news query", () => {
-  it("asks for one category, newest first, bounded, and only publishable rows", async () => {
+  it("asks for one category, newest first, bounded per source and overall, and only publishable rows", async () => {
     const sql = executor([]);
-    await loadPublishedNews(sql, "compute", 12);
+    await loadPublishedNews(sql, "compute", { limit: 96, perSource: 12 });
     const statement = sql.statements[0]!;
-    expect(sql.params[0]).toEqual(["compute", 12]);
-    expect(statement).toMatch(/ORDER BY a\.published_at DESC/);
-    expect(statement).toMatch(/LIMIT \$2/);
+    expect(sql.params[0]).toEqual(["compute", 12, 96]);
+    expect(statement).toMatch(/ORDER BY a\.published_at DESC, a\.id/);
+    expect(statement).toMatch(/ORDER BY published_at DESC, id/);
+    expect(statement).toMatch(/LIMIT \$3/);
     expect(statement).toMatch(/a\.withdrawn_at IS NULL/);
     expect(statement).toMatch(/ns\.is_enabled/);
     expect(statement).toMatch(/si\.production_access_state = 'production_approved'/);
+    // Ranked per source, so one deep feed cannot fill the candidate set alone.
+    expect(statement).toMatch(/PARTITION BY a\.source_interface_id/);
+    expect(statement).toMatch(/source_rank <= \$2/);
   });
 
   it("reads rows in the order the database returned them", async () => {
@@ -77,7 +81,7 @@ describe("the published-news query", () => {
       { id: "a", category: "compute", title: "Newer", summary: null, canonical_url: "https://x/a", image_url: null, published_at: "2026-09-13T00:00:00Z", publisher_name: "Google Cloud" },
       { id: "b", category: "compute", title: "Older", summary: "dek", canonical_url: "https://x/b", image_url: null, published_at: "2026-09-12T00:00:00Z", publisher_name: "CoreWeave" },
     ]);
-    const rows = await loadPublishedNews(sql, "compute", 12);
+    const rows = await loadPublishedNews(sql, "compute", { limit: 96, perSource: 12 });
     expect(rows.map((row) => row.title)).toEqual(["Newer", "Older"]);
     expect(rows[0]!.publishedAt).toBe("2026-09-13T00:00:00.000Z");
   });
@@ -87,6 +91,6 @@ describe("the published-news query", () => {
       { id: "a", category: "compute", title: "Fine", summary: null, canonical_url: "https://x/a", image_url: null, published_at: "2026-09-13T00:00:00Z", publisher_name: "Google Cloud" },
       { id: "b", category: "compute", title: "Broken", summary: null, canonical_url: "https://x/b", image_url: null, published_at: "not a date", publisher_name: "CoreWeave" },
     ]);
-    expect((await loadPublishedNews(sql, "compute", 12)).map((row) => row.title)).toEqual(["Fine"]);
+    expect((await loadPublishedNews(sql, "compute", { limit: 96, perSource: 12 })).map((row) => row.title)).toEqual(["Fine"]);
   });
 });

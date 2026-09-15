@@ -12,11 +12,24 @@
  */
 
 import { loadPublishedNews, type NewsSqlExecutor } from "@/lib/news/sql";
+import { diversifyBySource } from "@/lib/news/read/diversity";
 import { newsArticlesFromRows } from "@/lib/news/read/read-model";
 import type { NewsArticle, NewsCategory } from "@/types/news";
 
 /** Enough to fill the rail and scroll a little; not a feed. */
 export const NEWS_RAIL_LIMIT = 12;
+
+/**
+ * How deep the read goes before the rail is assembled.
+ *
+ * The diversity rule can only defer a story to a publisher that has one
+ * waiting, so the candidate set has to contain something from every publisher
+ * that has anything. The per-source cap is what guarantees that: without it a
+ * feed that stamps a hundred items with one publication minute fills any flat
+ * window by itself, and there is nothing left to alternate with.
+ */
+const CANDIDATE_PER_SOURCE = NEWS_RAIL_LIMIT;
+const CANDIDATE_LIMIT = NEWS_RAIL_LIMIT * 8;
 
 export type NewsRailData = {
   articles: NewsArticle[];
@@ -36,7 +49,10 @@ export async function loadNewsRail(
   if (!url) return { articles: [], available: false };
   try {
     const sql: NewsSqlExecutor = await newsSqlExecutor(url);
-    return { articles: newsArticlesFromRows(await loadPublishedNews(sql, category, limit)), available: true };
+    const candidates = newsArticlesFromRows(
+      await loadPublishedNews(sql, category, { limit: CANDIDATE_LIMIT, perSource: CANDIDATE_PER_SOURCE }),
+    );
+    return { articles: diversifyBySource(candidates, { limit }), available: true };
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     console.warn(`news: production store unavailable (${detail}); the ${category} rail will render empty`);
@@ -44,7 +60,7 @@ export async function loadNewsRail(
   }
 }
 
-/** Phase 1A: Compute is the one production-backed rail. */
+/** Compute is the production-backed rail; the other five are still mock. */
 export function loadComputeNews(env: ProcessEnvLike = process.env): Promise<NewsRailData> {
   return loadNewsRail("compute", env);
 }

@@ -10,7 +10,7 @@
  */
 
 import { stripMarkup } from "@/lib/news/feed";
-import type { DescriptionPolicy, ImagePolicy, NewsSourceDefinition } from "@/lib/news/types";
+import type { DescriptionPolicy, ImageHost, ImagePolicy, NewsSourceDefinition } from "@/lib/news/types";
 
 export const MAX_TITLE_LENGTH = 400;
 export const MAX_SUMMARY_LENGTH = 500;
@@ -128,17 +128,39 @@ export function normalizePublishedAt(raw: string | null, retrievedAt: string): T
   return { ok: true, value: parsed.toISOString() };
 }
 
-/** Only a thumbnail the feed offered, only where the source opts in, only over https. */
-export function normalizeImageUrl(raw: string | null, policy: ImagePolicy): string | null {
-  if (policy === "none" || raw === null) return null;
+export type ImageResult =
+  | { ok: true; value: string | null }
+  | { ok: false; reason: "host_not_permitted"; url: string };
+
+/**
+ * Only a thumbnail the feed offered, only where the source opts in, only over
+ * https, and only from a host and path the source's own rights finding names.
+ *
+ * The allowlist is enforced here rather than only in the renderer, because the
+ * renderer is a display concern and this is a rights one: a URL Urdais may not
+ * reference should never reach the database in the first place. A URL that
+ * fails the allowlist is reported rather than silently dropped — a publisher
+ * moving its CDN should look like a diagnostic, not like a feed that quietly
+ * stopped having artwork.
+ */
+export function normalizeImageUrl(
+  raw: string | null,
+  policy: ImagePolicy,
+  hosts: readonly ImageHost[] = [],
+): ImageResult {
+  if (policy === "none" || raw === null) return { ok: true, value: null };
+  let url: URL;
   try {
-    const url = new URL(raw.trim());
-    if (url.protocol !== "https:") return null;
-    url.hash = "";
-    return url.toString();
+    url = new URL(raw.trim());
   } catch {
-    return null;
+    return { ok: true, value: null };
   }
+  if (url.protocol !== "https:") return { ok: true, value: null };
+  url.hash = "";
+  const host = url.hostname.toLowerCase();
+  const permitted = hosts.some((entry) => host === entry.host.toLowerCase() && url.pathname.startsWith(entry.pathPrefix));
+  if (!permitted) return { ok: false, reason: "host_not_permitted", url: url.toString() };
+  return { ok: true, value: url.toString() };
 }
 
 /**

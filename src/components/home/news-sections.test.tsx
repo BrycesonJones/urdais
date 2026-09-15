@@ -104,6 +104,41 @@ describe("the homepage news rails", () => {
     expect(within(rail("Compute")).getByText("No Compute stories have been ingested yet.")).toBeInTheDocument();
   });
 
+  it("renders a publisher thumbnail when one was approved, and the fallback otherwise", async () => {
+    computeNews.mockResolvedValue({
+      articles: [
+        { ...PRODUCTION[0]!, imageUrl: "https://blog.cloudflare.com/_emdash/api/media/file/a.png" },
+        PRODUCTION[1]!,
+      ],
+      available: true,
+    });
+    await renderSections();
+
+    const compute = rail("Compute");
+    const images = within(compute).getAllByRole("presentation", { hidden: true });
+    // One card shows the publisher's own image; the other keeps the Urdais
+    // fallback, and neither leaks a broken-image slot.
+    const img = compute.querySelector("img");
+    expect(img).not.toBeNull();
+    expect(img!.getAttribute("src")).toContain("blog.cloudflare.com");
+    expect(compute.querySelectorAll("img")).toHaveLength(1);
+    expect(images.length).toBeGreaterThan(0);
+  });
+
+  it("references the publisher's image rather than proxying it through Urdais", async () => {
+    computeNews.mockResolvedValue({
+      articles: [{ ...PRODUCTION[0]!, imageUrl: "https://blog.cloudflare.com/_emdash/api/media/file/a.png" }],
+      available: true,
+    });
+    await renderSections();
+
+    const img = rail("Compute").querySelector("img")!;
+    // Not /_next/image?url=…: the reader's browser fetches it from the
+    // publisher, and Urdais stores and re-serves nothing.
+    expect(img.getAttribute("src")).toBe("https://blog.cloudflare.com/_emdash/api/media/file/a.png");
+    expect(img.getAttribute("src")).not.toContain("/_next/image");
+  });
+
   it("leaves the five categories that are still mocked working and labelled as demo", async () => {
     computeNews.mockResolvedValue({ articles: PRODUCTION, available: true });
     await renderSections();

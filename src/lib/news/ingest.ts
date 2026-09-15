@@ -115,7 +115,7 @@ function emptyReport(
   };
 }
 
-type Candidate = { row: Omit<NewsArticleRow, "id" | "retrievalId">; };
+type Candidate = { row: Omit<NewsArticleRow, "id" | "retrievalId">; diagnostics: NewsDiagnostic[] };
 
 /** One entry to one record, or one named reason it is not storable. */
 function normalizeEntry(
@@ -144,6 +144,13 @@ function normalizeEntry(
       : { code: "ENTRY_PUBLISHED_AT_IMPLAUSIBLE", detail: `"${title}" published "${entry.published ?? ""}"` };
   }
 
+  // An image the source may not reference is not a reason to drop the story;
+  // the story is stored without one and the refusal is reported.
+  const image = normalizeImageUrl(entry.imageUrl, source.imagePolicy, source.imageHosts);
+  const diagnostics: NewsDiagnostic[] = image.ok
+    ? []
+    : [{ code: "ENTRY_IMAGE_HOST_NOT_PERMITTED", detail: `"${title}" offered an image at ${image.url}` }];
+
   return {
     row: {
       sourceInterfaceId: source.sourceInterfaceId,
@@ -154,10 +161,11 @@ function normalizeEntry(
       articleKey: articleKey(entry.guid, url.value.urlKey),
       title,
       summary: normalizeSummary(entry.description, source.descriptionPolicy),
-      imageUrl: normalizeImageUrl(entry.imageUrl, source.imagePolicy),
+      imageUrl: image.ok ? image.value : null,
       publishedAt: published.value,
       ingestedAt: retrievedAt,
     },
+    diagnostics,
   };
 }
 
@@ -210,6 +218,7 @@ export function ingestNewsSource(input: NewsIngestInput): NewsIngestReport {
       continue;
     }
     seenInFeed.add(result.row.urlKey);
+    diagnostics.push(...result.diagnostics);
     candidates.push({ ...result.row, id: ids(), retrievalId: retrieval.id });
   }
 

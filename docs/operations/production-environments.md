@@ -17,9 +17,15 @@ The local development database is separate again: Postgres on port 54329, create
 
 ## What a runtime needs
 
-A deployed Urdais instance needs exactly one secret:
+A deployed Urdais instance needs two secrets:
 
 - `DATABASE_URL` — the UrdaisProd Postgres connection string.
+- `CRON_SECRET` — a random string of at least 16 characters. Vercel sends it to
+  the scheduled news ingestion route as `Authorization: Bearer <secret>`, and
+  `/api/cron/news` refuses every request that does not match it. When the
+  variable is unset the route refuses **all** requests, so a deployment without
+  it has no ingestion trigger rather than a public one. Set it in the Vercel
+  project's environment variables; it belongs in no file in this repository.
 
 Two facts about that string matter in practice:
 
@@ -28,9 +34,46 @@ Two facts about that string matter in practice:
 
 `NODE_ENV=production` (or `VERCEL_ENV=production`) is what puts the read path into production mode. In that mode the research-preview filter is unavailable and the read path serves only frozen benchmarks whose two leg observations are both production. There is no flag that relaxes this.
 
+## Scheduled news ingestion
+
+`vercel.json` declares one cron job: `GET /api/cron/news` on `0 0 * * *`, the
+shared Urdais news cadence (`src/lib/news/schedule.ts`). It ingests every
+enabled, production-approved news source — Compute today, every category that
+is migrated later — and is safe to run repeatedly, so a duplicate or retried
+invocation writes nothing.
+
+Two things have to be true before it does anything useful, and the failure modes
+are quiet rather than loud:
+
+- **Without `DATABASE_URL`** the route answers 503 and ingests nothing, and the
+  homepage Compute rail renders "Compute news is unavailable right now." That is
+  the correct fail-closed behaviour, not a defect.
+- **Without `CRON_SECRET`** the route answers 401 to everything, including
+  Vercel. The cron job runs, gets refused, and nothing is ingested.
+
+> **The cadence is capped by the plan, not chosen freely.** Vercel's Hobby plan
+> runs cron jobs once per day and rejects a faster expression at deploy time —
+> `0 */4 * * *` was tried on 15 September 2026 and failed the deployment. Once
+> the project is on a Pro team the cadence can be raised in `vercel.json`,
+> `NEWS_REFRESH_CRON` and `NEWS_REFRESH_INTERVAL_HOURS` together; a test
+> requires the three to agree and a second test asserts the current value is one
+> the plan accepts.
+>
+> On Hobby the job also fires at some point within the named hour rather than on
+> the minute, which the pipeline does not care about.
+
+To ingest by hand, or to backfill after a scheduling gap:
+
+```bash
+DATABASE_URL=<UrdaisProd> npm run news:ingest -- --mode production --live --write
+```
+
+That command calls the same function the route does. Add `--source <slug>` to
+run one feed while diagnosing it.
+
 ## Pages that read the database must not be prerendered
 
-`/markets`, `/markets/model-economics` and `/markets/[symbol]` read live benchmark state. The first two declare `export const dynamic = "force-dynamic"`.
+`/markets`, `/markets/model-economics` and `/markets/[symbol]` read live benchmark state. The first two declare `export const dynamic = "force-dynamic"`. The homepage declares it too, for the production Compute news rail.
 
 This is not a preference. Without it Next prerenders them at build time, where no production database is configured, and then serves that build-time snapshot to every visitor. The page renders the "no benchmark" placeholder forever, and no amount of correct data in the database changes it, because the page is never asked again. A healthy database and a permanently blank public surface is precisely the failure this prevents. Any future page that reads benchmark state needs the same declaration.
 
