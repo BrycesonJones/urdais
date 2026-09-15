@@ -460,7 +460,7 @@ export class SqlPersistence {
     }
     return {
       text:
-        "select o.id, o.calculation_date, o.canonical_region_code, o.outcome, o.structural_condition, o.market_breadth, o.price_level, o.currency, o.unit, o.participant_count, o.contributing_source_count, o.largest_source_participant_share, o.dispersion_published, o.p10, o.p50, o.p90, o.iqr, o.percentage_change_1d, o.change_disposition, r.window_start, r.cutoff, r.publication_deadline, r.calculated_at, r.run_kind, p.published_at, p.publication_status " +
+        "select o.id, o.calculation_date, o.canonical_region_code, o.source_attributions, o.outcome, o.structural_condition, o.market_breadth, o.price_level, o.currency, o.unit, o.participant_count, o.contributing_source_count, o.largest_source_participant_share, o.dispersion_published, o.p10, o.p50, o.p90, o.iqr, o.percentage_change_1d, o.change_disposition, r.window_start, r.cutoff, r.publication_deadline, r.calculated_at, r.run_kind, p.published_at, p.publication_status " +
         "from pipeline.regional_observations o join pipeline.calculation_runs r on r.id = o.run_id left join pipeline.regional_publications p on p.regional_observation_id = o.id " +
         `where ${where.join(" and ")} order by o.calculation_date, o.canonical_region_code`,
       params,

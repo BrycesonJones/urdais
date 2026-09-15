@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { MarketDetailPage } from "@/components/market-detail/market-detail-page";
 import { DEFAULT_MARKET_SYMBOL, findMarket } from "@/data/mock/market-detail";
 import { hydrateMarketWithTokenPrices, tokenResearchPreviewActive } from "@/lib/tokens/read/load";
+import { hydrateMarketWithListedCompute } from "@/lib/ucpi/read/load";
 
 /**
  * Rendered per request, never prerendered.
@@ -22,7 +23,9 @@ export const metadata: Metadata = { title: "Information Markets" };
 
 /** The Information Markets workspace, opened on the default market (UCPI). */
 export default async function MarketsPage() {
-  const market = await hydrateMarketWithTokenPrices(findMarket(DEFAULT_MARKET_SYMBOL)!);
+  // Tokens and Compute are hydrated from production independently. Each leaves its family
+  // untouched where production has nothing released, so neither can blank the other.
+  const market = await hydrateMarketWithListedCompute(await hydrateMarketWithTokenPrices(findMarket(DEFAULT_MARKET_SYMBOL)!));
   const researchPreview =
     (await tokenResearchPreviewActive()) &&
     (market.families.find((family) => family.id === "tokens")?.instruments.length ?? 0) > 0;
