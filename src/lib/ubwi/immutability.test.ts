@@ -16,7 +16,7 @@ import { describe, expect, it } from "vitest";
 
 import { METHODOLOGY_VERSION, calculateUbwi } from "./calculate";
 import { evaluateGate } from "./gate";
-import { PRODUCTION_BTC_OBSERVATION } from "./numerator";
+import { REFERENCE_BTC_OBSERVATION } from "./numerator";
 import { cumulativeScheduledSubsidySats, satsToBtc } from "./supply";
 import type { BtcMarketObservation } from "./types";
 
@@ -50,8 +50,8 @@ describe("a frozen point does not move when the world does", () => {
   it("is unchanged by a later block-height observation", () => {
     // The chain advances every ten minutes. A published point must describe the height it
     // was taken at, not the tip as of whenever someone next reads the page.
-    const later = clone(PRODUCTION_BTC_OBSERVATION);
-    later.blockHeight = PRODUCTION_BTC_OBSERVATION.blockHeight + 144;
+    const later = clone(REFERENCE_BTC_OBSERVATION);
+    later.blockHeight = REFERENCE_BTC_OBSERVATION.blockHeight + 144;
     const sats = cumulativeScheduledSubsidySats(later.blockHeight);
     later.supplyBtc = satsToBtc(sats);
     later.supplyDerivation!.scheduledSupplySats = sats.toString();
@@ -67,7 +67,7 @@ describe("a frozen point does not move when the world does", () => {
   });
 
   it("is unchanged by a later Chainlink round", () => {
-    const later = clone(PRODUCTION_BTC_OBSERVATION);
+    const later = clone(REFERENCE_BTC_OBSERVATION);
     later.chainlink!.roundId = "129127208515966885595";
     later.chainlink!.aggregatorRoundId = "24283";
     later.chainlink!.answer = "7800000000000";
@@ -98,7 +98,7 @@ describe("a frozen point does not move when the world does", () => {
     // a restatement years from now would actually have to do.
     const replayed = calculateUbwi({
       calculatedAt: AT,
-      numerator: clone(PRODUCTION_BTC_OBSERVATION),
+      numerator: clone(REFERENCE_BTC_OBSERVATION),
     });
     expect(identity(replayed)).toEqual(frozenIdentity);
   });

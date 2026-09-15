@@ -28,7 +28,7 @@ import {
 } from "./gate";
 import {
   MINIMUM_VENUE_COUNT,
-  PRODUCTION_BTC_OBSERVATION,
+  REFERENCE_BTC_OBSERVATION,
   RETIRED_VENUE_MEDIAN_OBSERVATION,
   checkBlockHeight,
   checkNumerator,
@@ -364,26 +364,26 @@ describe("Bank of Korea: manual publication and automated retrieval are separate
 
 describe("the BTC numerator", () => {
   it("agrees with its own recorded parts", () => {
-    expect(checkNumerator(PRODUCTION_BTC_OBSERVATION)).toEqual([]);
+    expect(checkNumerator(REFERENCE_BTC_OBSERVATION)).toEqual([]);
   });
 
   it("prices from the Chainlink reference feed under methodology 1.1.0", () => {
-    expect(PRODUCTION_BTC_OBSERVATION.priceRule).toBe("chainlink_reference_feed");
-    expect(PRODUCTION_BTC_OBSERVATION.chainlink).toBeDefined();
-    expect(PRODUCTION_BTC_OBSERVATION.venues).toBeUndefined();
-    expect(PRODUCTION_BTC_OBSERVATION.priceUsd).toBe(
-      PRODUCTION_BTC_OBSERVATION.chainlink!.normalizedUsd,
+    expect(REFERENCE_BTC_OBSERVATION.priceRule).toBe("chainlink_reference_feed");
+    expect(REFERENCE_BTC_OBSERVATION.chainlink).toBeDefined();
+    expect(REFERENCE_BTC_OBSERVATION.venues).toBeUndefined();
+    expect(REFERENCE_BTC_OBSERVATION.priceUsd).toBe(
+      REFERENCE_BTC_OBSERVATION.chainlink!.normalizedUsd,
     );
   });
 
   it("records the block height its supply figure belongs to", () => {
-    expect(PRODUCTION_BTC_OBSERVATION.blockHeight).toBeGreaterThan(0);
-    expect(PRODUCTION_BTC_OBSERVATION.heightSources.length).toBeGreaterThanOrEqual(2);
+    expect(REFERENCE_BTC_OBSERVATION.blockHeight).toBeGreaterThan(0);
+    expect(REFERENCE_BTC_OBSERVATION.heightSources.length).toBeGreaterThanOrEqual(2);
   });
 
   it("multiplies supply by the reference price", () => {
-    expect(PRODUCTION_BTC_OBSERVATION.marketCapUsd).toBeCloseTo(
-      PRODUCTION_BTC_OBSERVATION.supplyBtc * PRODUCTION_BTC_OBSERVATION.priceUsd,
+    expect(REFERENCE_BTC_OBSERVATION.marketCapUsd).toBeCloseTo(
+      REFERENCE_BTC_OBSERVATION.supplyBtc * REFERENCE_BTC_OBSERVATION.priceUsd,
       2,
     );
   });
@@ -419,20 +419,20 @@ describe("the BTC numerator", () => {
   });
 
   it("rejects a numerator whose price disagrees with the feed it cites", () => {
-    const tampered = { ...PRODUCTION_BTC_OBSERVATION, priceUsd: 1, marketCapUsd: 1 };
+    const tampered = { ...REFERENCE_BTC_OBSERVATION, priceUsd: 1, marketCapUsd: 1 };
     expect(checkNumerator(tampered)).toContain("PRICE_DISAGREES_WITH_FEED");
   });
 
   it("rejects a numerator that claims one price rule and carries the other's lineage", () => {
     const mixed = {
-      ...PRODUCTION_BTC_OBSERVATION,
+      ...REFERENCE_BTC_OBSERVATION,
       venues: RETIRED_VENUE_MEDIAN_OBSERVATION.venues,
     };
     expect(checkNumerator(mixed)).toContain("PRICE_RULE_LINEAGE_MISMATCH");
   });
 
   it("rejects a Chainlink observation with no frozen round", () => {
-    const bare = { ...PRODUCTION_BTC_OBSERVATION, chainlink: undefined };
+    const bare = { ...REFERENCE_BTC_OBSERVATION, chainlink: undefined };
     expect(checkNumerator(bare)).toContain("PRICE_LINEAGE_MISSING");
   });
 
@@ -490,7 +490,7 @@ describe("the protocol-derived supply leg, through the gate", () => {
   // that they must not collapse into a generic numerator failure: the operator response to
   // "the two height sources disagree" has nothing in common with "the supply exceeds the
   // protocol cap".
-  const n = PRODUCTION_BTC_OBSERVATION;
+  const n = REFERENCE_BTC_OBSERVATION;
   const gateFor = (numerator: typeof n) =>
     evaluateGate(calculateUbwi({ calculatedAt: CALCULATED_AT, numerator }));
 
@@ -762,8 +762,8 @@ describe("disclosure", () => {
 
 describe("no fabricated history", () => {
   it("has exactly one production numerator observation and no back series", () => {
-    expect(PRODUCTION_BTC_OBSERVATION.observedAt).toBe("2026-09-15T04:13:40Z");
-    expect(Date.parse(PRODUCTION_BTC_OBSERVATION.observedAt)).toBeLessThanOrEqual(Date.now());
+    expect(REFERENCE_BTC_OBSERVATION.observedAt).toBe("2026-09-15T04:13:40Z");
+    expect(Date.parse(REFERENCE_BTC_OBSERVATION.observedAt)).toBeLessThanOrEqual(Date.now());
   });
 
   it("gives every observed component a reference date no later than the calculation", () => {
@@ -873,11 +873,11 @@ describe("numerator rights: the venues' own terms", () => {
     expect(effectiveRightsStatus(iface)).not.toBe("cleared");
     expect(iface.termsArtifact).not.toBeNull();
 
-    expect(PRODUCTION_BTC_OBSERVATION.supplySourceInterface).toBeUndefined();
-    expect(numeratorSourceInterfaces(PRODUCTION_BTC_OBSERVATION)).toEqual([
+    expect(REFERENCE_BTC_OBSERVATION.supplySourceInterface).toBeUndefined();
+    expect(numeratorSourceInterfaces(REFERENCE_BTC_OBSERVATION)).toEqual([
       CHAINLINK_SOURCE_INTERFACE,
     ]);
-    expect(numeratorSourceInterfaces(PRODUCTION_BTC_OBSERVATION)).not.toContain(
+    expect(numeratorSourceInterfaces(REFERENCE_BTC_OBSERVATION)).not.toContain(
       "blockchain-info-supply",
     );
 
@@ -892,7 +892,7 @@ describe("numerator rights: the venues' own terms", () => {
     // untouched is the thing this test exists to catch.
     expect(METHODOLOGY_VERSION).toBe("1.2.0");
     expect(PRIOR_METHODOLOGY_VERSION).toBe("1.1.0");
-    expect(PRODUCTION_BTC_OBSERVATION.priceRule).toBe("chainlink_reference_feed");
+    expect(REFERENCE_BTC_OBSERVATION.priceRule).toBe("chainlink_reference_feed");
     for (const slug of ["coinbase-spot", "bitstamp-ticker", "kraken-ticker"]) {
       const iface = sourceInterface(slug);
       expect(iface, `${slug} evidence must survive the retirement`).toBeDefined();

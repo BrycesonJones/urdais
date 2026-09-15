@@ -29,7 +29,7 @@ import {
   WORLD_GDP_2024_USD,
   WORLD_GDP_SOURCE,
 } from "./observations";
-import { PRODUCTION_BTC_OBSERVATION } from "./numerator";
+import { REFERENCE_BTC_OBSERVATION } from "./numerator";
 import type {
   BtcMarketObservation,
   ObservedEconomy,
@@ -198,6 +198,20 @@ export function satisfiesVintageRule(
 
 export type CalculationInput = {
   calculatedAt: string;
+  /**
+   * The BTC numerator. **The publication path always supplies one**, retrieved live at
+   * execution time by ./retrieve/numerator-provider.ts.
+   *
+   * Omitting it falls back to `REFERENCE_BTC_OBSERVATION`, which is a frozen fixture and
+   * not a production source. That default exists for the callers that need a deterministic
+   * calculation and no network -- the read surface's disclosure block, the rights readiness
+   * check, the operator's `ubwi:calculate` preview and the tests -- and every one of them
+   * produces a display or a report, never a published point.
+   *
+   * `runDailyUbwiPublication` never takes this path. If some future caller made it, the
+   * fixture's Chainlink round is years past its 3,600-second heartbeat, so the freshness
+   * check would refuse it rather than let it be published a second time.
+   */
   numerator?: BtcMarketObservation;
   economies?: readonly ObservedEconomy[];
   cwonWeights?: CwonWeights;
@@ -209,7 +223,7 @@ export type CalculationInput = {
  * subtotal, Total Global Wealth, the coverage measures and the sensitivity scenarios.
  */
 export function calculateUbwi(input: CalculationInput): UbwiCalculation {
-  const numerator = input.numerator ?? PRODUCTION_BTC_OBSERVATION;
+  const numerator = input.numerator ?? REFERENCE_BTC_OBSERVATION;
   const economies = input.economies ?? OBSERVED_ECONOMIES;
   const weights = input.cwonWeights ?? PRODUCTION_CWON_WEIGHTS;
 

@@ -13,6 +13,16 @@
  *
  * Everything it does is in @/lib/ubwi/run, which the operator command calls too. The
  * route's whole job is authentication, a database connection, and a summary in the log.
+ *
+ * It passes no numerator, which is what makes it the live path: `runDailyUbwiPublication`
+ * retrieves one at execution time from the Chainlink proxy and the two chain-tip sources.
+ * The route has no way to supply an observation and no way to reach the reference fixture.
+ *
+ * The four things a run can be are distinguishable from the response without reading the
+ * log: `outcome` is `published`, `already_published` (the day already has its point),
+ * `observation_stale` or `retrieval_failed` (fail-closed, nothing written, `retrievalProblem`
+ * naming which), or the request 500s with `reason: "run_failed"` for an unexpected internal
+ * failure. Only the last is an outage.
  */
 
 import { timingSafeEqual } from "node:crypto";

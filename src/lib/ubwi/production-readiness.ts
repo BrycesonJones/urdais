@@ -8,7 +8,7 @@
  */
 import { calculateUbwi } from "./calculate";
 import { evaluateGate, PRODUCTION_V1_THRESHOLDS, type GateThresholds } from "./gate";
-import { PRODUCTION_BTC_OBSERVATION, numeratorSourceInterfaces } from "./numerator";
+import { REFERENCE_BTC_OBSERVATION, numeratorSourceInterfaces } from "./numerator";
 import { OBSERVED_ECONOMIES } from "./observations";
 import {
   SOURCE_INTERFACES,
@@ -116,7 +116,7 @@ export async function checkUbwiProductionReadiness(
   // methodology 1.1.0 the three exchange venues supply nothing: they are retired, their
   // retained terms artifacts are kept as the evidence for that retirement, and reporting
   // them as blockers would send an operator to solve a problem that no longer exists.
-  const liveNumeratorSlugs = new Set(numeratorSourceInterfaces(PRODUCTION_BTC_OBSERVATION));
+  const liveNumeratorSlugs = new Set(numeratorSourceInterfaces(REFERENCE_BTC_OBSERVATION));
 
   for (const iface of SOURCE_INTERFACES) {
     const status = effectiveRightsStatus(iface);

@@ -16,7 +16,7 @@ import {
   validateChainlinkObservation,
   type ChainlinkPriceObservation,
 } from "./chainlink";
-import { PRODUCTION_BTC_OBSERVATION, checkNumerator } from "./numerator";
+import { REFERENCE_BTC_OBSERVATION, checkNumerator } from "./numerator";
 import {
   effectiveRightsStatus,
   mayPublishNumeratorFrom,
@@ -30,7 +30,7 @@ import { checkTermsArtifactShape } from "./terms-integrity";
  * answer 7777948460264 at 8 decimals, read at 2026-09-15T03:10:39Z. Byte-identical
  * through ethereum-rpc.publicnode.com and eth.drpc.org.
  */
-const LIVE_ROUND: ChainlinkPriceObservation = PRODUCTION_BTC_OBSERVATION.chainlink!;
+const LIVE_ROUND: ChainlinkPriceObservation = REFERENCE_BTC_OBSERVATION.chainlink!;
 
 const withRound = (patch: Partial<ChainlinkPriceObservation>): ChainlinkPriceObservation => ({
   ...LIVE_ROUND,
@@ -223,11 +223,11 @@ describe("the validator fails closed", () => {
 
   it("carries every failure through to the numerator check", () => {
     const stale = {
-      ...PRODUCTION_BTC_OBSERVATION,
+      ...REFERENCE_BTC_OBSERVATION,
       chainlink: withRound({ retrievalTimestamp: LIVE_ROUND.updatedAt + 4000 }),
     };
     expect(checkNumerator(stale)).toContain("CHAINLINK_OBSERVATION_STALE");
-    const wrongChain = { ...PRODUCTION_BTC_OBSERVATION, chainlink: withRound({ chainId: 8453 }) };
+    const wrongChain = { ...REFERENCE_BTC_OBSERVATION, chainlink: withRound({ chainId: 8453 }) };
     expect(checkNumerator(wrongChain)).toContain("CHAINLINK_CHAIN_ID_MISMATCH");
   });
 
