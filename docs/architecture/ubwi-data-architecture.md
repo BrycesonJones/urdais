@@ -244,3 +244,80 @@ What *is* settled enough to record now is the **shape**: the gate is a bound on 
 5. Denominator, with the per-economy model above.
 6. `ubwi_calculations`, simulation runs only.
 7. Publication, after methodology approval, an effective date, and a gate the evidence supports.
+
+---
+
+## Phase 2C Amendment — rights come from a cache, failures have kinds, and gates must be feasible
+
+Added 14 September 2026 alongside [the Phase 2C study](../research/ubwi-phase2c-denominator-hardening.md). **Still no migration, and still none should be.** The per-economy model proposed in the Phase 2A and 2B amendments is preserved unchanged. What follows are four revisions those phases could not have anticipated, one gate correction that changes what the schema should be built to enforce, and a sequencing change.
+
+### What changed
+
+Phase 2B's rights position was that 47.66 % of world GDP was cleared and two economies — Germany and Italy — were observed but not publishable. **Both are now cleared, and the Phase 2C denominator is 16 of 16 rights-cleared at 53.99 % of world GDP.** Four economies moved from a harmonisation layer to their national compiler, and the OECD route now supplies three rows rather than seven. **There is no longer any economy Urdais can observe but may not publish**, which means the schema's `rights_status` column exists to keep a state that is currently uniform — and that is exactly when a constraint is cheapest to add and most valuable to keep.
+
+### A rights state is a property of a cached artifact, not of a live fetch
+
+**The OECD's terms host returns HTTP 403 intermittently to the same URL that grants access.** Phase 2B read the terms at that URL; Phase 2C was refused by it twice, twenty minutes later, with identical headers.
+
+A production collector that re-derives a source's rights state from a live retrieval will demote a permitted source at random, and — worse — will do so silently, because a 403 looks like an answer.
+
+**Proposed.** `reference.source_interfaces` gains a **terms-artifact record** rather than a bare state: the retrieved terms document's content hash, its byte length, the URL and HTTP status of the retrieval that produced it, and `terms_retrieved_at`. The rights state is derived from **that artifact**, not from the network.
+
+Two rules follow, and both belong in the schema rather than in a collector:
+
+- A re-confirmation attempt writes a `terms_recheck` row with its own outcome. **A failed recheck may set `terms_last_rechecked_at` and nothing else.** Only a *successfully retrieved* document whose content hash differs from the stored artifact may move `terms_review_state` or `data_use_terms_state`, and then only through the existing review path, never automatically.
+- `terms_retrieved_at` ageing past a configured horizon raises a **review flag**, not a demotion. The distinction is the whole point: "we have not re-read this in a year" and "this is no longer permitted" are different facts and only one of them is evidence.
+
+This generalises past the OECD. Statistics Canada's Open Licence states that it *"may [be modified] at any time, and such modifications shall be effective immediately upon posting … Your use of the Information will be governed by the terms of the licence in force as of the date and time you accessed the Information"* — a licence versioned by access time is unusable unless the access time and the text are both stored.
+
+### A retrieval failure has a kind, and only one kind may touch a source
+
+**Two national compilers were recorded as blocked across two research phases because of this machine's DNS resolver.** `www.esri.cao.go.jp` and `www.stats.gov.cn` both return `SERVFAIL` locally and resolve normally through 8.8.8.8 and 1.1.1.1. Japan's complete national balance sheet was two `nslookup` calls away, and the failure had been written down as a property of Japan.
+
+**Proposed.** `pipeline.source_retrievals` carries a `failure_kind` — `dns`, `transport`, `tls`, `http_status`, `content_shape`, `content_empty` — alongside the HTTP status it already records, and the resolver actually used. **Only `content_shape` and `content_empty` may inform a judgement about a source.** `dns` and `transport` are facts about the environment and must never propagate into a source state, a rights state or a research conclusion.
+
+This is the second consecutive phase in which a retrieval defect was mistaken for a fact about a compiler — Phase 2B's was Eurostat's `HTTP 413`, which was a wrong-dataset error. The pattern is consistent enough to be designed against rather than watched for.
+
+### A sub-annual source needs a stored selection rule
+
+**Canada publishes its National Balance Sheet Accounts quarterly**, with data through 30 June 2026 released on 11 September 2026. Every other economy in the observed set publishes annually. Which of four observations enters a vintage is a methodology decision, and if it is not stored it will be re-derived by whichever script runs.
+
+**Proposed.** `pipeline.wealth_vintage_components` gains `source_frequency` (`annual` | `quarterly` | `other`) and `period_selection_rule_version_id`, referencing versioned reference data in the same way `estimation_rule_version_id` already does. The Phase 2C rule — *the latest published observation at or before 31 December of the latest complete calendar year* — would be one such row. A constraint requires the rule reference whenever `source_frequency <> 'annual'`.
+
+This is a selection rule and not an interpolation rule, and the schema should keep those apart: **no stock may be interpolated across periods at all**, which is why Norway is rejected rather than bridged in all three phases.
+
+### Consumer durables must be stripped from a per-economy line, not assumed
+
+Phase 2B's field list already carries `consumer_durables_treatment`. Phase 2C shows why it needs the *amount* and the *source line*, not just the state: **the United States and Canada both include consumer durables in their published net worth and both expose them as a separate series** (`LM155111005`; StatCan vector 62693716), while **Japan, Korea, Italy and Germany all report them as memoranda outside the total** (ESRI 参考表 IV; Istat asset code `NM`; Bundesbank *Gebrauchsvermögen privater Haushalte*). A denominator that strips them for one compiler and not another is summing different objects.
+
+**Proposed.** Where `consumer_durables_treatment = 'included_and_stripped'`, both `consumer_durables_stripped_usd` **and** the source series identifier for the stripped line are required. `included_not_stripped` remains prohibited for any component entering a published denominator.
+
+### The publication gate the schema should enforce is not the one Phase 2B proposed
+
+This is the amendment that matters most, because Phase 2A and Phase 2B both proposed a constraint — **imputed share ≤ 25 %** — and the Phase 2B amendment above already describes it as the value a future constraint should read.
+
+**It cannot be met.** Own computation in [Phase 2C Part 6.2](../research/ubwi-phase2c-denominator-hardening.md): at the observed-set wealth-to-GDP ratio and the CWON tail calibration, an imputed share of ≤ 25 % requires **68.44 %** observed GDP coverage. The ceiling without China is **62.93 %**, and that ceiling already assumes nineteen statistical offices begin valuing land. A ≤ 35 % bound requires 57.31 %, above the **55.72 %** frontier reachable from publications that exist today.
+
+**A constraint set above the feasible frontier is not a high standard. It is a permanent refusal, expressed as arithmetic, that nobody wrote down as a decision.** Encoding it would have made the database refuse every denominator forever while appearing to encode a quality rule.
+
+**Proposed.** The ceiling remains **configuration, not a literal**, exactly as the Phase 2A amendment said — and the configured value must be **derived from and checked against a stored feasible-frontier figure**, not chosen. `reference.wealth_estimation_rules`, or a sibling table, should carry the frontier measurement itself — its value, its date, and the source study that computed it — so that a gate threshold and the frontier it is supposed to sit below are visible in the same place. Phase 2C's proposal is **≤ 40 %**, met today at 37.7 %, tightening as the frontier moves.
+
+The rest of the Phase 2C gate is unchanged in shape from Phase 2B and still should **not** be written as constraints yet, with one exception worth naming: **every observed constituent rights-cleared** is now both absolute and satisfied, and it is the one gate that should be a hard constraint from the first migration, because it is the only one that can be lost by accident rather than by decision.
+
+### The named-economy rule becomes disclosure, not observation
+
+Phase 2B proposed that *"every economy above 3 % of world GDP must be observed, or the index is not published"*, and noted that this "blocks publication indefinitely on present data". It does, because China does not compile the thing being measured and no schema changes that.
+
+**Proposed instead.** The published surface must name every economy above a configured GDP share that is **not** observed, with its GDP weight and the reason, and the published sensitivity range must span a plausible range of that economy's wealth-to-GDP ratio. Phase 2C measures that band for China at **0.2440 %–0.2927 %** — 17 % of the candidate's value, from one economy's assumed ratio, and a far more informative disclosure than a coverage percentage.
+
+Schema consequence: `pipeline.wealth_vintages` carries an `unobserved_major_economies` child record — economy code, GDP share, reason, and the ratio bounds used in the sensitivity — and publication is refused where a qualifying economy has no such row. **The gate is on the disclosure, not on the observation.**
+
+### Revised sequencing
+
+1. **Rights: finished.** Every source in the Phase 2C denominator reads `permitted` on both axes. The interface records can be written when the slice arrives — World Bank, Federal Reserve, OECD, Eurostat (with per-country exceptions), ABS, CBS, Istat, ONS, Statistics Canada, Cabinet Office ESRI and Bank of Korea.
+2. **One registration remains**: an operational Bank of Korea ECOS API key, which BOK reviews rather than auto-issues. It is a form, not a negotiation, and it is the only item between this denominator and a production-approvable source chain.
+3. **Coverage is still the blocker, and its frontier is now measured rather than estimated**: **55.72 %** on today's publications against 53.99 % achieved. The remaining 1.73 pp is six economies blocked on a matched net-foreign-position year. No schema work changes this.
+4. Numerator only: `btc_market_observations` and `btc_venue_quotes`. Unchanged across four phases — still independently useful, still no licensing dependency, still exercisable against real data today. **This remains the only part of UBWI that is ready to build.**
+5. Denominator, with the per-economy model and the terms-artifact, failure-kind and period-selection additions above.
+6. `ubwi_calculations`, simulation runs only.
+7. Publication, after methodology approval, an effective date, and a gate whose thresholds are checked against the stored frontier.

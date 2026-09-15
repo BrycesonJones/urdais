@@ -2,7 +2,7 @@
 
 **Status: internal research artifact. Not a methodology page, not routed publicly, not registered in the docs catalog.** Prepared 14 September 2026. No production value, ingestion contract, schema, migration or collector is created by this document. Every figure below is either evidence about a source or a labelled research candidate; **none is a published Urdais value**, and no UBWI value is published, seeded or promoted by this phase.
 
-Continues [the Phase 2A source study](./ubwi-phase2a-denominator-source-study.md) and [the Phase 1 source study](./ubwi-phase1-source-study.md), supports [UBWI 0.1.0-draft](/docs/methodology/ubwi), and is accompanied by [the China source study](./ubwi-china-source-study.md). **No amendment to the methodology is proposed or required.** The denominator concept is unchanged: consolidated world net worth at market value, excluding human capital, on national-balance-sheet logic, with Bitcoin inside its own denominator and no lost-coin adjustment.
+Continues [the Phase 2A source study](./ubwi-phase2a-denominator-source-study.md) and [the Phase 1 source study](./ubwi-phase1-source-study.md), supports [UBWI 0.1.0-draft](/docs/methodology/ubwi), and is accompanied by [the China source study](./ubwi-china-source-study.md). **Continued and in three places corrected by [the Phase 2C study](./ubwi-phase2c-denominator-hardening.md)**, which re-sources Japan, the United Kingdom, Canada, Korea, Germany and Italy, corrects the OECD Cloudflare characterisation below, and shows that the publication gate proposed in Part 9 is arithmetically unsatisfiable. **No amendment to the methodology is proposed or required.** The denominator concept is unchanged: consolidated world net worth at market value, excluding human capital, on national-balance-sheet logic, with Bitcoin inside its own denominator and no lost-coin adjustment.
 
 ## The question
 
@@ -51,7 +51,11 @@ Accept:          text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
 Accept-Language: en-US,en;q=0.9
 ```
 
-Two other spellings of the same page (`/termsandconditions/`, `/en/about/terms-and-conditions.html`) and `oecd-ilibrary.org/oecd/terms` still return **HTTP 403** with a Cloudflare interstitial, so the gate is real and path-specific; the canonical path is simply not gated. A Wayback snapshot of the same canonical URL returns the same text, which corroborates it independently.
+Two other spellings of the same page (`/termsandconditions/`, `/en/about/terms-and-conditions.html`) and `oecd-ilibrary.org/oecd/terms` also returned **HTTP 403** with a Cloudflare interstitial.
+
+> **Corrected by Phase 2C, 14 September 2026.** This section originally concluded that "the gate is real and path-specific; the canonical path is simply not gated." **That conclusion is wrong.** The canonical URL was re-run with these exact three headers, twice, roughly twenty minutes after the HTTP 200 above, and returned **HTTP 403 both times**. The gate is **intermittent**, applied to the host, and any URL on it — the canonical one included — can return 403 at any time. The rights conclusion is unaffected: the grant is in the cached 1,482,983-byte artifact and in a Wayback snapshot of the same canonical URL, and both were re-read in Phase 2C. What changes is the production rule — a collector will receive 403 from a URL that grants it access, must never read a 403 as a licence change, and must anchor rights state to the cached terms artifact rather than to a live re-fetch. See [Phase 2C Part 1.1](./ubwi-phase2c-denominator-hardening.md).
+
+A Wayback snapshot of the same canonical URL returns the same text, which corroborates it independently.
 
 **This retires the Phase 2A outreach draft.** See Part 5.
 
