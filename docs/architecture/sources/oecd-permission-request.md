@@ -114,7 +114,13 @@ Accept:          text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
 Accept-Language: en-US,en;q=0.9
 ```
 
-The gate is real but path-specific: `oecd.org/termsandconditions/`, `oecd.org/en/about/terms-and-conditions.html` and `oecd-ilibrary.org/oecd/terms` still return HTTP 403 with Cloudflare interstitials. A Wayback snapshot of the canonical URL returns the same text, corroborating it independently.
+The other spellings — `oecd.org/termsandconditions/`, `oecd.org/en/about/terms-and-conditions.html` and `oecd-ilibrary.org/oecd/terms` — returned HTTP 403 with Cloudflare interstitials. A Wayback snapshot of the canonical URL returns the same text, corroborating it independently.
+
+> **Corrected by Phase 2C, 14 September 2026.** This paragraph originally read "the gate is real but path-specific". **It is not path-specific; it is intermittent.** The canonical URL was re-run with the same three headers, twice, roughly twenty minutes after the HTTP 200 above, and returned **HTTP 403 both times**. The gate is applied to the host and any URL on it can return 403 at any moment, including the one that served the terms.
+>
+> **This does not reopen the outreach question.** The grant is held in a cached 1,482,983-byte artifact and in an independent Wayback snapshot, both re-read in Phase 2C, and both contain the *Permitted Use* sentence verbatim. **Nothing has been sent and nothing should be.**
+>
+> **It does change the production design.** A scheduled collector will be served 403 by a page that grants it access. Rights state must be anchored to a cached, hashed terms artifact with its own retrieval timestamp; a failed re-fetch means "not re-confirmed today", never "no longer permitted"; and only a *successfully retrieved* terms document whose text has changed may move a rights state. See [Phase 2C Part 1.1](../../research/ubwi-phase2c-denominator-hardening.md).
 
 The draft said: *"Recommended before sending: confirm the current terms page from an environment that is not Cloudflare-gated. If the licence turns out to be an open grant that already covers this use, the request is unnecessary and should not be sent at all. That is the likeliest outcome and it is the reason this draft exists rather than a sent message."* **That is what happened.**
 
