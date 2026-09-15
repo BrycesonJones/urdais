@@ -35,14 +35,21 @@ begin
     if n <> 0 then raise exception '% holds % row(s); Phase 3 seeds no external or observed data', tbl, n; end if;
   end loop;
 
-  select count(*) into n from reference.instruments where lifecycle_status = 'live';
-  if n <> 0 then raise exception 'an instrument is marked live'; end if;
+  -- UBWI went live in methodology 1.2.0, when its last external numerator rights
+  -- dependency was removed and the gate passed on its own unchanged thresholds. Every
+  -- other instrument is still pre-launch, and this assertion is narrowed to UBWI by name
+  -- rather than dropped: a second instrument going live silently is exactly what it exists
+  -- to catch. Note that `live` is a statement about the instrument, not about any value --
+  -- the gate is still evaluated at publication time and can still refuse.
+  select count(*) into n from reference.instruments
+   where lifecycle_status = 'live' and symbol <> 'UBWI';
+  if n <> 0 then raise exception 'an instrument other than UBWI is marked live'; end if;
 
   -- UBWI's methodology is approved for production: the document is finished and carries an
   -- effective date. That is a statement about the methodology, not about any value. The
-  -- assertions immediately below are what actually keep the promise of this test file --
-  -- the instrument stays launch_blocked, and no calculation or publication exists -- and
-  -- they are checked rather than inferred from the version status.
+  -- promise this file keeps is that a *bootstrapped* database holds no observed or
+  -- published data: migrations seed none, and the assertions below check that directly
+  -- rather than inferring it from a version status or a lifecycle flag.
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id
    where mv.status <> 'draft' and m.slug <> 'ubwi';
@@ -52,9 +59,12 @@ begin
    where sv.status <> 'draft' and i.symbol <> 'UBWI';
   if n <> 0 then raise exception 'a non-draft spec version exists outside UBWI'; end if;
 
-  -- UBWI specifically: approved methodology, nothing live and nothing published.
-  select count(*) into n from reference.instruments where symbol = 'UBWI' and lifecycle_status <> 'launch_blocked';
-  if n <> 0 then raise exception 'UBWI is not launch_blocked'; end if;
+  -- UBWI specifically: live from methodology 1.2.0, and still nothing published. Those are
+  -- two different facts and the second is the one this file is about. `live` says the
+  -- instrument may publish when its gate passes; it does not seed a value, and the
+  -- assertions below check that no calculation and no publication exist regardless.
+  select count(*) into n from reference.instruments where symbol = 'UBWI' and lifecycle_status <> 'live';
+  if n <> 0 then raise exception 'UBWI must be live from methodology 1.2.0'; end if;
   select count(*) into n from pipeline.ubwi_calculations;
   if n <> 0 then raise exception 'a UBWI calculation exists'; end if;
   select count(*) into n from pipeline.ubwi_publications;

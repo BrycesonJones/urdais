@@ -280,21 +280,20 @@ begin
      and terms_artifact_hash is not null and terms_artifact_status = 200;
   if n <> 3 then raise exception 'the retired venues must keep their retained terms artifacts (found %)', n; end if;
 
-  -- Methodology history is preserved rather than rewritten.
+  -- Methodology history is preserved rather than rewritten. 1.1.0 was superseded by 1.2.0
+  -- in Phase 2F; what this file still guards is that its row survives, superseded rather
+  -- than deleted or rewritten, which is the property a version history exists to have.
   select count(*) into n from reference.methodology_versions
    where methodology_id = 'b0b0b0b0-0000-4000-8000-000000000001'
-     and ((version = '1.0.0' and status = 'superseded') or (version = '1.1.0' and status = 'approved'));
-  if n <> 2 then raise exception 'both methodology versions must exist, 1.0.0 superseded and 1.1.0 approved'; end if;
+     and ((version = '1.0.0' and status = 'superseded') or (version = '1.1.0' and status = 'superseded'));
+  if n <> 2 then raise exception 'both earlier methodology versions must exist and be superseded'; end if;
 
-  -- Nothing is published.
+  -- Nothing is published by a migration. Phase 2F publishes the first point through the
+  -- loader; a bootstrapped database still holds none.
   select count(*) into n from pipeline.ubwi_publications;
   if n <> 0 then raise exception 'a UBWI publication exists'; end if;
 
-  select count(*) into n from reference.instruments
-   where symbol = 'UBWI' and lifecycle_status = 'launch_blocked';
-  if n <> 1 then raise exception 'UBWI must remain launch_blocked'; end if;
-
-  raise notice 'ubwi 2e: nothing was quietly unblocked';
+  raise notice 'ubwi 2e: the evidence survived its own supersession';
 end
 $$;
 

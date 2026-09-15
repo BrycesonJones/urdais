@@ -35,7 +35,9 @@ begin
   if n <> 0 then raise exception 'a legal name was asserted without a services agreement'; end if;
 
   -- Still nothing live, published or newly permitted.
-  select count(*) into n from reference.instruments where lifecycle_status = 'live'; if n <> 0 then raise exception 'an instrument is live'; end if;
+  -- UBWI went live in methodology 1.2.0. No compute instrument has, which is what this
+  -- file is about, so the assertion is narrowed by name rather than dropped.
+  select count(*) into n from reference.instruments where lifecycle_status = 'live' and symbol <> 'UBWI'; if n <> 0 then raise exception 'an instrument other than UBWI is live'; end if;
   select count(*) into n from pipeline.regional_publications; if n <> 0 then raise exception 'a publication exists'; end if;
   select count(*) into n from reference.source_interfaces
    where production_access_state = 'production_approved' and source_class <> 'news_feed';

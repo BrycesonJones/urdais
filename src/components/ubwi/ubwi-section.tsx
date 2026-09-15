@@ -76,12 +76,29 @@ export function UbwiSection({ surface }: { surface: UbwiSurface }) {
             label="Bitcoin market capitalization"
             value={usd(surface.bitcoinMarketCapUsd)}
             note={
-              surface.priceProvenance
-                ? `Issued supply at block ${formatNumber(surface.blockHeight, 0)}, priced at the ` +
-                  `${surface.priceProvenance.feed} reference price on ${surface.priceProvenance.network}.`
-                : `Issued supply at block ${formatNumber(surface.blockHeight, 0)}.`
+              (surface.supplyProvenance
+                ? `Scheduled issuance of ${formatNumber(surface.supplyProvenance.scheduledSupplyBtc, 2)} BTC, ` +
+                  `derived from the Bitcoin subsidy schedule through block ` +
+                  `${formatNumber(surface.blockHeight, 0)}`
+                : `Issued supply at block ${formatNumber(surface.blockHeight, 0)}`) +
+              (surface.priceProvenance
+                ? `, priced at the ${surface.priceProvenance.feed} reference price on ${surface.priceProvenance.network}.`
+                : ".")
             }
           />
+          {surface.supplyProvenance && (
+            <Figure
+              label="Bitcoin supply"
+              value={`${formatNumber(surface.supplyProvenance.scheduledSupplyBtc, 2)} BTC`}
+              note={
+                `${surface.supplyProvenance.basis} through block ` +
+                `${formatNumber(surface.supplyProvenance.referenceBlockHeight, 0)}, inclusive ` +
+                `(halving era ${surface.supplyProvenance.halvingEra}, ` +
+                `${formatNumber(surface.supplyProvenance.blockSubsidyBtc, 3)} BTC per block). ` +
+                surface.supplyProvenance.caveat
+              }
+            />
+          )}
           <Figure
             label="Directly observed"
             value={`${formatNumber(surface.observedSharePercent, 1)} %`}

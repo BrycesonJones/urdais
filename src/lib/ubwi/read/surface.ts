@@ -56,6 +56,30 @@ export type UbwiDisclosure = {
   blockHeight: number;
   /** Null under the retired three-venue rule, which published no single feed. */
   priceProvenance: UbwiPriceProvenance | null;
+  /** Null under the retired retrieved-supply rule, which named a vendor instead. */
+  supplyProvenance: UbwiSupplyProvenance | null;
+};
+
+/**
+ * Where the BTC supply quantity came from, for the published surface.
+ *
+ * There is no provider field and no source name, because under methodology 1.2.0 there is
+ * no supply provider. The surface must never name a supply vendor it does not use.
+ */
+export type UbwiSupplyProvenance = {
+  /** e.g. "Protocol-derived scheduled issuance". */
+  basis: string;
+  /** The reference height, and that the convention includes it. */
+  referenceBlockHeight: number;
+  /** Cumulative scheduled issuance in BTC. */
+  scheduledSupplyBtc: number;
+  /** The same quantity in satoshis, as a string: it does not fit a double safely. */
+  scheduledSupplySats: string;
+  /** The halving era and its per-block subsidy, in BTC. */
+  halvingEra: number;
+  blockSubsidyBtc: number;
+  /** The caveats that must travel with the number. */
+  caveat: string;
 };
 
 export type UbwiSurface =
@@ -79,6 +103,10 @@ export type UbwiSurface =
 
 export const UBWI_WITHHELD_NOTE =
   "No UBWI value is published. The publication gate refuses the current denominator, and Urdais withholds the value rather than relaxing the gate to produce one.";
+
+/** The gate passes and no point has been frozen yet. A history that has not started. */
+export const UBWI_NOT_YET_PUBLISHED_NOTE =
+  "No UBWI value is published yet. The publication gate passes on the current calculation; history begins at the first frozen production point, and Urdais shows no value before then rather than back-filling one.";
 
 /**
  * The one-line explanation of what UBWI measures. Kept on the main surface; the
@@ -115,6 +143,7 @@ export function ubwiSurface(options?: {
     observedAt: calculation.numerator.observedAt,
     blockHeight: calculation.numerator.blockHeight,
     priceProvenance: priceProvenance(calculation),
+    supplyProvenance: supplyProvenance(calculation),
   };
 
   if (options?.publication && gate.passed) {
@@ -135,9 +164,31 @@ export function ubwiSurface(options?: {
   return {
     status: "withheld",
     unit: UBWI_UNIT,
-    reason: UBWI_WITHHELD_NOTE,
+    // Two different silences, and the surface must not conflate them. A gate that refuses
+    // is Urdais declining to publish a number it does not stand behind; a passing gate with
+    // nothing published yet is simply a history that has not started. Telling a reader the
+    // gate refuses when it does not would be a fabricated explanation.
+    reason: gate.passed ? UBWI_NOT_YET_PUBLISHED_NOTE : UBWI_WITHHELD_NOTE,
     gateFailures: gate.findings.map((f) => f.code),
     ...disclosure,
+  };
+}
+
+function supplyProvenance(calculation: UbwiCalculation): UbwiSupplyProvenance | null {
+  const lineage = calculation.numerator.supplyDerivation;
+  if (lineage === undefined) return null;
+  return {
+    basis: "Protocol-derived scheduled issuance",
+    referenceBlockHeight: calculation.numerator.blockHeight,
+    scheduledSupplyBtc: calculation.numerator.supplyBtc,
+    scheduledSupplySats: lineage.scheduledSupplySats,
+    halvingEra: lineage.halvingEra,
+    blockSubsidyBtc: Number(lineage.blockSubsidySats) / 1e8,
+    caveat:
+      "Cumulative block subsidy scheduled by the Bitcoin protocol through this block height, " +
+      "inclusive. Transaction fees are excluded and no lost-coin or spendability adjustment is " +
+      "applied, so this is scheduled issuance rather than an externally reported " +
+      "circulating-supply figure.",
   };
 }
 

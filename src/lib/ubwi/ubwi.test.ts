@@ -30,11 +30,15 @@ import {
   MINIMUM_VENUE_COUNT,
   PRODUCTION_BTC_OBSERVATION,
   RETIRED_VENUE_MEDIAN_OBSERVATION,
+  checkBlockHeight,
   checkNumerator,
+  checkSupplyDerivation,
   median,
+  numeratorSourceInterfaces,
   venueDispersionBasisPoints,
 } from "./numerator";
 import { CHAINLINK_BTC_USD_FEED, CHAINLINK_SOURCE_INTERFACE } from "./chainlink";
+import { cumulativeScheduledSubsidySats, satsToBtc } from "./supply";
 import {
   SOURCE_INTERFACES,
   effectiveRightsStatus,
@@ -480,6 +484,111 @@ describe("sensitivity", () => {
   });
 });
 
+describe("the protocol-derived supply leg, through the gate", () => {
+  // Methodology 1.2.0 replaces one rights requirement with two correctness requirements.
+  // These tests fix each refusal separately, because Part 10 of the amendment is explicit
+  // that they must not collapse into a generic numerator failure: the operator response to
+  // "the two height sources disagree" has nothing in common with "the supply exceeds the
+  // protocol cap".
+  const n = PRODUCTION_BTC_OBSERVATION;
+  const gateFor = (numerator: typeof n) =>
+    evaluateGate(calculateUbwi({ calculatedAt: CALCULATED_AT, numerator }));
+
+  it("publishes a supply that reproduces from its own recorded height", () => {
+    expect(checkSupplyDerivation(n)).toEqual([]);
+    expect(checkBlockHeight(n)).toEqual([]);
+    expect(n.supplyConstruction).toBe("protocol_scheduled");
+    expect(n.supplyDerivation!.rightsBasis).toBe("derived_from_protocol");
+    // The quantity itself, recomputed here from the height rather than restated.
+    expect(BigInt(n.supplyDerivation!.scheduledSupplySats)).toBe(
+      cumulativeScheduledSubsidySats(n.blockHeight),
+    );
+    expect(n.supplyBtc).toBe(satsToBtc(cumulativeScheduledSubsidySats(n.blockHeight)));
+  });
+
+  it("records that fees and lost coins are excluded, rather than leaving it implied", () => {
+    expect(n.supplyDerivation!.excludesTransactionFees).toBe(true);
+    expect(n.supplyDerivation!.excludesLostCoinAdjustment).toBe(true);
+  });
+
+  it("refuses a height its two sources disagree on, and never averages them", () => {
+    const disagreeing = {
+      ...n,
+      heightObservations: [
+        n.heightObservations![0]!,
+        { ...n.heightObservations![1]!, rawValue: "967076", blockHeight: 967_076 },
+      ],
+    };
+    expect(checkBlockHeight(disagreeing)).toContain("HEIGHT_SOURCES_DISAGREE");
+    const found = codes(gateFor(disagreeing).findings);
+    expect(found).toContain("BLOCK_HEIGHT_NOT_CROSS_VERIFIED");
+    // Not collapsed into the generic numerator finding.
+    expect(found).not.toContain("NUMERATOR_INVALID");
+  });
+
+  it("refuses a height supported by only one source", () => {
+    const single = { ...n, heightObservations: [n.heightObservations![0]!] };
+    expect(checkBlockHeight(single)).toContain("HEIGHT_SOURCES_TOO_FEW");
+    expect(codes(gateFor(single).findings)).toContain("BLOCK_HEIGHT_NOT_CROSS_VERIFIED");
+  });
+
+  it("refuses a height whose raw bytes do not parse to the value recorded beside them", () => {
+    const edited = {
+      ...n,
+      heightObservations: [
+        { ...n.heightObservations![0]!, rawValue: "967099" },
+        n.heightObservations![1]!,
+      ],
+    };
+    expect(checkBlockHeight(edited)).toContain("HEIGHT_RAW_VALUE_MISPARSED");
+  });
+
+  it("refuses a height that is not a usable block height at all", () => {
+    for (const bad of [0, -1, 1.5]) {
+      const broken = { ...n, blockHeight: bad };
+      expect(codes(gateFor(broken).findings)).toContain("BLOCK_HEIGHT_INVALID");
+    }
+  });
+
+  it("refuses a supply that does not reproduce from its height", () => {
+    const tampered = {
+      ...n,
+      supplyDerivation: { ...n.supplyDerivation!, scheduledSupplySats: "2008461250000001" },
+    };
+    expect(checkSupplyDerivation(tampered)).toContain("SUPPLY_DISAGREES_WITH_SCHEDULE");
+    const found = codes(gateFor(tampered).findings);
+    expect(found).toContain("SUPPLY_DERIVATION_INVALID");
+    expect(found).not.toContain("SUPPLY_IMPOSSIBLE");
+  });
+
+  it("refuses a supply above the protocol cap under its own distinct code", () => {
+    const impossible = {
+      ...n,
+      supplyDerivation: { ...n.supplyDerivation!, scheduledSupplySats: "2100000000000001" },
+    };
+    expect(checkSupplyDerivation(impossible)).toContain("SUPPLY_ABOVE_PROTOCOL_CAP");
+    expect(codes(gateFor(impossible).findings)).toContain("SUPPLY_IMPOSSIBLE");
+  });
+
+  it("refuses a derived supply that names a supply source interface", () => {
+    const withIface = { ...n, supplySourceInterface: "blockchain-info-supply" };
+    expect(checkSupplyDerivation(withIface)).toContain("SUPPLY_INTERFACE_UNEXPECTED");
+  });
+
+  it("refuses a protocol-scheduled observation carrying no derivation lineage", () => {
+    const bare = { ...n, supplyDerivation: undefined };
+    expect(checkSupplyDerivation(bare)).toContain("SUPPLY_LINEAGE_MISSING");
+    expect(codes(gateFor(bare).findings)).toContain("SUPPLY_DERIVATION_INVALID");
+  });
+
+  it("holds the retired retrieved-supply observation to the rule it was made under", () => {
+    // The 1.0.0 observation still carries an interface and no derivation, and must not be
+    // retroactively judged against a rule that did not exist when it was taken.
+    expect(checkSupplyDerivation(RETIRED_VENUE_MEDIAN_OBSERVATION)).toEqual([]);
+    expect(RETIRED_VENUE_MEDIAN_OBSERVATION.supplyConstruction).toBe("claimed_issuance");
+  });
+});
+
 describe("the publication gate", () => {
   const gate = evaluateGate(calculation);
 
@@ -537,11 +646,17 @@ describe("the publication gate", () => {
     expect(PRODUCTION_V1_THRESHOLDS.minRightsClearedGdpCoverage).toBe(0.52);
   });
 
-  it("still refuses, and now on the one thing Taiwan and Chainlink did not fix", () => {
-    // The whole refusal, so that a later phase reading this test learns the exact shape
-    // of what is left: one finding, one interface, the BTC supply source's own terms.
-    expect(gate.passed).toBe(false);
-    expect(codes(gate.findings)).toEqual(["NUMERATOR_SOURCE_NOT_RIGHTS_CLEARED"]);
+  it("passes, with no finding at all, once the supply leg stops depending on a dataset", () => {
+    // Phase 2E left exactly one finding standing: NUMERATOR_SOURCE_NOT_RIGHTS_CLEARED, on
+    // the BTC supply source's own terms. Methodology 1.2.0 does not clear those terms and
+    // does not waive them -- it removes the dependency, by deriving the supply from the
+    // issuance schedule instead of retrieving it. The finding is gone because the source
+    // is gone.
+    //
+    // Asserted as the empty list rather than as `passed`, so that a future change which
+    // trades one finding for another cannot slip through as "still passing".
+    expect(codes(gate.findings)).toEqual([]);
+    expect(gate.passed).toBe(true);
   });
 
   it("keeps the imputed-share ceiling at the value the frontier supports", () => {
@@ -647,7 +762,7 @@ describe("disclosure", () => {
 
 describe("no fabricated history", () => {
   it("has exactly one production numerator observation and no back series", () => {
-    expect(PRODUCTION_BTC_OBSERVATION.observedAt).toBe("2026-09-15T03:10:39Z");
+    expect(PRODUCTION_BTC_OBSERVATION.observedAt).toBe("2026-09-15T04:13:40Z");
     expect(Date.parse(PRODUCTION_BTC_OBSERVATION.observedAt)).toBeLessThanOrEqual(Date.now());
   });
 
@@ -664,7 +779,7 @@ describe("numerator rights: the venues' own terms", () => {
   // the conclusion was about vendors: reproducing the construction does not reproduce the
   // permission. These tests fix that finding so it cannot be quietly undone.
   const numeratorSlugs = [
-    RETIRED_VENUE_MEDIAN_OBSERVATION.supplySourceInterface,
+    RETIRED_VENUE_MEDIAN_OBSERVATION.supplySourceInterface!,
     ...RETIRED_VENUE_MEDIAN_OBSERVATION.venues!.map((v) => v.sourceInterface),
   ];
 
@@ -747,17 +862,27 @@ describe("numerator rights: the venues' own terms", () => {
     }
   });
 
-  it("refuses publication on the supply source, which the price amendment did not touch", () => {
-    // The crux of Phase 2E, fixed as a test so it cannot be lost in a later edit.
-    // Chainlink clears the price leg under inferred permission. The BTC supply source is
-    // a numerator source too, it is still `under_review`, and the gate still refuses.
-    // Retiring the venues moved the problem; it did not solve it.
+  it("no longer reads any supply source, so there is none left to refuse", () => {
+    // Phase 2E's crux, inverted by Phase 2F and kept as the test that proves the
+    // dependency was removed rather than the standard lowered.
+    //
+    // Blockchain.com's terms are unchanged and still `under_review` for the derived-index
+    // use. The reason the gate no longer refuses is not that the state improved: it is
+    // that the published numerator no longer names a supply interface at all.
+    const iface = sourceInterface("blockchain-info-supply")!;
+    expect(effectiveRightsStatus(iface)).not.toBe("cleared");
+    expect(iface.termsArtifact).not.toBeNull();
+
+    expect(PRODUCTION_BTC_OBSERVATION.supplySourceInterface).toBeUndefined();
+    expect(numeratorSourceInterfaces(PRODUCTION_BTC_OBSERVATION)).toEqual([
+      CHAINLINK_SOURCE_INTERFACE,
+    ]);
+    expect(numeratorSourceInterfaces(PRODUCTION_BTC_OBSERVATION)).not.toContain(
+      "blockchain-info-supply",
+    );
+
     const gate = evaluateGate(calculation);
-    const finding = gate.findings.find((f) => f.code === "NUMERATOR_SOURCE_NOT_RIGHTS_CLEARED");
-    expect(finding, "the gate must refuse a numerator it may not publish").toBeDefined();
-    expect(finding!.detail).toContain("blockchain-info-supply");
-    expect(finding!.detail).not.toContain(CHAINLINK_SOURCE_INTERFACE);
-    expect(gate.passed).toBe(false);
+    expect(gate.findings.find((f) => f.code === "NUMERATOR_SOURCE_NOT_RIGHTS_CLEARED")).toBeUndefined();
   });
 
   it("retires the venue set by methodology amendment, not by silent substitution", () => {
@@ -765,8 +890,8 @@ describe("numerator rights: the venues' own terms", () => {
     // changed, under a version bump, with the retired observation and every retained
     // venue artifact left in place. A substitution that leaves the methodology version
     // untouched is the thing this test exists to catch.
-    expect(METHODOLOGY_VERSION).toBe("1.1.0");
-    expect(PRIOR_METHODOLOGY_VERSION).toBe("1.0.0");
+    expect(METHODOLOGY_VERSION).toBe("1.2.0");
+    expect(PRIOR_METHODOLOGY_VERSION).toBe("1.1.0");
     expect(PRODUCTION_BTC_OBSERVATION.priceRule).toBe("chainlink_reference_feed");
     for (const slug of ["coinbase-spot", "bitstamp-ticker", "kraken-ticker"]) {
       const iface = sourceInterface(slug);

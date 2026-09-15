@@ -1,6 +1,6 @@
 # Urdais Bitcoin Wealth Index (UBWI)
 
-**Version 1.1.0, 15 September 2026.** Status: approved for production. Prepared under the [Urdais methodology framework](/docs/methodology). UBWI is an **estimate calibrated to observed economies, not a census of world wealth**: roughly two fifths of its denominator is a disclosed, versioned model, and every surface carrying the value says so. This version amends the numerator's price rule and admits Taiwan to the observed set. **No UBWI value is published as of this version's effective date.** The denominator now satisfies every gate it previously failed; publication is refused on one remaining condition, the rights state of the Bitcoin supply source, and the gate is not relaxed to produce a number.
+**Version 1.2.0, 15 September 2026.** Status: approved for production. Prepared under the [Urdais methodology framework](/docs/methodology). UBWI is an **estimate calibrated to observed economies, not a census of world wealth**: roughly two fifths of its denominator is a disclosed, versioned model, and every surface carrying the value says so. This version amends the numerator's supply rule, replacing an externally reported circulating-supply dataset with issuance derived deterministically from Bitcoin's own block subsidy schedule. That removes the last external rights dependency from the numerator — by removal, not by clearance — and **the publication gate passes for the first time, with no finding. The first UBWI value is published under this version.** No gate threshold was changed to reach it.
 
 ## Purpose and Scope
 
@@ -26,15 +26,53 @@ $$\text{BTC market cap} = S_t \times P_t$$
 
 ### Supply
 
-$S_t$ is **the quantity of bitcoin issued on the Bitcoin blockchain as of the best block known at time $t$**, expressed in BTC to eight decimal places, together with the block height it was taken at. The block height is recorded on every observation and is the reproducibility key: a supply figure without its height cannot be checked.
+$S_t$ is **the protocol-scheduled cumulative block subsidy through the reference block height at time $t$**, expressed in BTC to eight decimal places, together with the block height it was taken at. The block height is recorded on every observation and is the reproducibility key: a supply figure without its height cannot be checked.
 
-Three supply constructions circulate and they disagree:
+Urdais derives Bitcoin supply deterministically from the Bitcoin block subsidy schedule through the reference block height. This represents protocol-scheduled issuance rather than an externally reported circulating-supply dataset.
 
-- the **nominal subsidy schedule**, the sum over blocks of the scheduled subsidy;
-- **claimed issuance**, the sum of amounts actually taken in coinbase outputs, which is lower wherever a miner under-claimed;
-- **third-party "circulating supply"**, republished by market-data vendors from undisclosed constructions.
+#### The derivation
 
-UBWI uses **claimed issuance**. The observed dispersion between published sources is about two parts per million, which is immaterial at the precision UBWI publishes, but the definition is fixed anyway so that a source change cannot silently move the series.
+The subsidy schedule is consensus arithmetic, not a dataset:
+
+- genesis is block height 0;
+- the initial subsidy is 50 BTC, i.e. `5_000_000_000` satoshis;
+- the subsidy halves every `210_000` blocks, by integer division, which is the protocol's own rule rather than an approximation of it;
+- transaction fees are **not** included: fees are redistributed, not issued, and counting them would double-count coins already counted in an earlier block's subsidy;
+- the subsidy truncates to zero from halving era 33 — block height `6_930_000` — because `5_000_000_000` lies between $2^{32}$ and $2^{33}$, so the integer halving series reaches one satoshi at era 32 and zero at era 33.
+
+**Height convention: the reference height is inclusive.** $S_t$ is the cumulative scheduled subsidy for all blocks up to *and including* the reference height. Cumulative supply at height 0 is therefore 50 BTC — one block's subsidy — and not zero. This is stated explicitly because an off-by-one here is a 3.125 BTC error in the current era that no downstream check would catch.
+
+**Integer arithmetic.** All accumulation is in integer satoshis. A real supply is on the order of $2 \times 10^{15}$ satoshis, within a factor of five of the largest exactly representable integer in IEEE-754 double precision, so a floating-point accumulator would be silently wrong rather than loudly wrong. Conversion to decimal BTC happens once, at the display and market-capitalization boundary.
+
+**Invariants.** Supply is non-negative, monotonically non-decreasing in height, and never exceeds the `2_100_000_000_000_000`-satoshi cap. The schedule in fact asymptotes to 20,999,999.9769 BTC and never reaches 21,000,000, because integer truncation discards a remainder at every halving.
+
+#### What this quantity is not
+
+It is **not** exact circulating supply, spendable supply or recoverable supply, and the published surface never calls it any of those.
+
+Miners have historically, on occasion, **underclaimed** coinbase rewards — claiming less than the schedule permitted — and those coins were never created. Protocol-scheduled issuance is therefore very slightly *above* exact created supply. Urdais's own Phase 1 comparison put the difference at approximately **44 BTC**, but that figure was derived by differencing the schedule against a supply reading from `blockchain.info`, the very source this version retires; **it is an estimate carried over from a retired source and is not independently supported by any artifact Urdais retains.** It is recorded here as an order of magnitude and nothing more. At roughly 0.0002 % of supply it is immaterial at UBWI's published precision, which is the substantive point and does not depend on the exact figure.
+
+The genesis coinbase is famously unspendable and is nonetheless included, because excluding it would be a spendability adjustment and this version makes none.
+
+#### Why the external supply source was retired
+
+Versions 1.0.0 and 1.1.0 read $S_t$ as **claimed issuance** from Blockchain.com's Explorer API. Blockchain.com's retained terms grant retrieval and scope the Explorer "solely for informational purposes"; they do not grant the commercial derived-index publication Urdais performs. That was the last external rights blocker on the numerator, and under 1.1.0 the publication gate refused on exactly that ground.
+
+Version 1.2.0 does not clear those terms and does not waive them. It **removes the dependency**: the quantity is now computed from the block height, and no supply figure is retrieved from Blockchain.com or from anyone else. The Blockchain.com terms artifact is retained as the evidence for the retirement, not as a licence Urdais relies on for any published quantity.
+
+The trade is deliberate and it is a change of construction, versioned as such: claimed issuance is closer to coins actually created, while scheduled issuance is reproducible by anyone from the height alone and depends on no third party's authority. At a difference on the order of 0.0002 % of supply, reproducibility is worth more to a published index than a correction smaller than its own rounding.
+
+#### Rights state
+
+The supply quantity carries the rights basis **`derived_from_protocol`**. It is deliberately not `cleared`, not `expressly granted` and not `inferred_permitted`: no third-party data licence is relied upon for the quantity, so no statement about a third party's permission is made in either direction.
+
+#### Reference block height
+
+The height itself is still observed, and it is treated as a **network fact rather than a proprietary dataset**: it is the same integer for every honest observer of the chain. It is read from **two independent sources** — `mempool.space/api/blocks/tip/height` and `blockchain.info/q/getblockcount` — and every observation freezes each source's identity, its raw returned value, its retrieval timestamp and its provenance.
+
+The production rule is exact agreement and fail-closed. Both readings must be valid non-negative integers and must agree **exactly**. Heights are never averaged, and the higher or lower reading is never taken silently: a tolerance on a block height would be an invented licence to publish a supply the chain never scheduled. On disagreement the gate refuses and the operator re-reads the tip.
+
+Reading `blockchain.info/q/getblockcount` for one consensus integer is a different act from taking a supply quantity on Blockchain.com's authority, and Section 20 of its retained terms grants the access and use that cross-verification requires. The height sources establish the integer and nothing else; they are not the source of the supply value.
 
 ### Lost coins
 
@@ -482,10 +520,24 @@ was changed.
 **The gate is never relaxed to make a calculation pass.** Where any gate fails, no value is published
 and no substitute is shown. The failure is reported with the measured figure against the threshold.
 
-**As at version 1.1.0's effective date** the gate measures a modelled share of **39.76 %** against the
-40 % ceiling and rights-cleared observed GDP coverage of **52.95 %** against the 52 % floor — both
-satisfied for the first time — and refuses on exactly one condition: the Bitcoin supply source is not
-cleared for the use a published numerator makes. No value is published.
+**As at version 1.2.0's effective date** the gate measures a modelled share of **39.76 %** against the
+40 % ceiling and rights-cleared observed GDP coverage of **52.95 %** against the 52 % floor, and the
+numerator's last external rights condition is gone — not cleared, but removed, the supply quantity now
+being derived from the protocol schedule. **The gate passes with no finding, and the first UBWI value
+is published under this version.** No threshold was changed to reach it.
+
+Two gate conditions replace the retired supply-source rights requirement, and both are checks the gate
+performs itself rather than assertions about a third party:
+
+- **the reference block height is valid and cross-verified** — two independent observations, both
+  non-negative integers, agreeing exactly, failing closed on disagreement; and
+- **the protocol supply derivation is valid** — the published supply is recomputed from the reference
+  height and must reproduce exactly.
+
+These are reported under four distinct findings — `BLOCK_HEIGHT_INVALID`,
+`BLOCK_HEIGHT_NOT_CROSS_VERIFIED`, `SUPPLY_DERIVATION_INVALID` and `SUPPLY_IMPOSSIBLE` — because an
+operator's response to two sources disagreeing has nothing in common with a supply above the protocol
+cap.
 
 ## Update Cadence
 
@@ -531,22 +583,17 @@ the purchasing-power conversion and its known bias).
 
 Open, and each is recorded rather than worked around.
 
-1. **The Bitcoin supply source is not cleared for the use UBWI makes of it.** This is the one gate
-   condition version 1.1.0 does not satisfy, and it is the reason no value is published. Issued supply
-   is read from Blockchain.com's Explorer API, whose Terms of Service grant "a revocable, limited,
-   non-exclusive, non-transferable licence to access and use the Explorer API" and state that the
-   service is "provided solely for informational purposes". The grant covers retrieval. It does not
-   address redistribution or retention and does not grant the commercial derived-index publication
-   Urdais performs, so the data-use axis is recorded as open rather than read as permission by silence.
-   A separate "API Terms of Service" is named in the site's own translation bundle but is served from
-   no reachable path, so nothing is assumed from it.
+1. ~~**The Bitcoin supply source is not cleared for the use UBWI makes of it.**~~ **Closed in version
+   1.2.0**, and closed by removal rather than by clearance. Blockchain.com's terms are unchanged and
+   still do not grant the derived-index use; version 1.2.0 stops depending on them, deriving the supply
+   from the block subsidy schedule instead of retrieving it. Version 1.1.0's note that issued supply is
+   "a deterministic property of the chain … reproducible from the issuance schedule at a stated height"
+   was correct, and 1.2.0 acted on it. What replaces the rights condition is stricter than it: the gate
+   now recomputes the supply from the reference height and refuses if it does not reproduce.
 
-   The supply leg is a numerator source and is held to the same standard as the price leg, which is why
-   the price amendment did not resolve it. It is noted, without being relied on, that issued supply is a
-   deterministic property of the chain: it is reproducible from the issuance schedule at a stated
-   height, and this interface is a retrieval path for it rather than the authority for it. Resolving
-   this is a source decision — a retrieval path whose terms permit the use — and deliberately not
-   something version 1.1.0 solved by changing architecture.
+   What this closure does **not** claim: it is not a finding that Blockchain.com permits the use, and
+   the construction did change — from claimed issuance to scheduled issuance, a difference estimated at
+   roughly 44 BTC and disclosed under "Supply" as an estimate inherited from the retired source.
 
 2. **The imputed-share ceiling is met, but narrowly.** Taiwan's admission brings the modelled share to
    39.76 % against the 40 % ceiling, a margin of 0.24 percentage points. A revision to any large
@@ -578,11 +625,31 @@ UBWI appears in the Urdais market catalog as an index symbol. Its unit is a perc
 
 ## Methodology Version
 
-**1.1.0, 15 September 2026.** Status: approved for production, effective 15 September 2026. The
+**1.2.0, 15 September 2026.** Status: approved for production, effective 15 September 2026. The
 residual denominator model carries its own version, **1.0.0**, unchanged by this amendment, and a
 published value is immutable under both: a correction is a new, superseding publication, never an edit.
 
 ## Version History
+
+**1.2.0, 15 September 2026**: numerator supply amendment. Replaces externally reported claimed
+issuance, read from Blockchain.com's Explorer API, with **protocol-scheduled cumulative block subsidy
+derived from the reference block height** — 50 BTC initial subsidy, halving every 210,000 blocks by
+integer division, accumulated in integer satoshis, inclusive of the reference height, excluding
+transaction fees, with no lost-coin and no spendability adjustment. Records the supply rights basis as
+`derived_from_protocol`: no third-party data licence is relied upon for the quantity, so no claim about
+any provider's permission is made in either direction. Retires the external supply source rather than
+clearing it — Blockchain.com's terms are unchanged, still do not grant the derived-index use, and the
+retained artifact is preserved as the evidence for the retirement. Keeps Phase 2E's two-source
+block-height cross-check unchanged, with exact agreement and fail-closed on disagreement, and freezes
+each source's identity, raw value, retrieval timestamp and provenance on every published point.
+Replaces the gate's external-supply rights requirement with two stricter checks the gate performs
+itself — the reference height must be valid and cross-verified, and the supply must reproduce from that
+height by recomputation — under four distinct findings (`BLOCK_HEIGHT_INVALID`,
+`BLOCK_HEIGHT_NOT_CROSS_VERIFIED`, `SUPPLY_DERIVATION_INVALID`, `SUPPLY_IMPOSSIBLE`). **No gate
+threshold was changed, and no gate was weakened**: a rights requirement was removed because the
+dependency it governed was removed. The historical underclaimed-coinbase difference is disclosed and
+explicitly labelled an estimate carried over from the retired source. **This is the first version
+under which a UBWI value is published.**
 
 **1.1.0, 15 September 2026**: numerator price amendment and one denominator admission. Replaces the
 three-venue Coinbase/Bitstamp/Kraken spot median with the Ethereum mainnet Chainlink BTC/USD Data Feed

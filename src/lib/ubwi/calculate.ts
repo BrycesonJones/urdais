@@ -39,14 +39,23 @@ import type {
 } from "./types";
 
 /**
- * Methodology 1.1.0 amends exactly one thing: the BTC price leg moves from the three-venue
- * exchange median to the Chainlink BTC/USD Data Feed on Ethereum mainnet. The denominator,
- * the residual model, the identity and every gate threshold are unchanged, which is why the
- * residual-model version does not move with it. See docs/methodology/ubwi.md.
+ * Methodology 1.2.0 amends exactly one thing: the BTC supply leg moves from an externally
+ * reported circulating-supply dataset to the protocol's own issuance schedule, derived
+ * from the reference block height. The price leg (1.1.0's Chainlink amendment), the
+ * denominator, the residual model, the identity and every gate threshold are unchanged,
+ * which is why the residual-model version does not move with it.
+ *
+ * The version history is kept whole rather than collapsed: 1.0.0 priced from a three-venue
+ * exchange median, 1.1.0 replaced that with the Chainlink reference feed, and 1.2.0
+ * replaces the retrieved supply figure with arithmetic. Each step removed an external
+ * rights dependency; after 1.2.0 the numerator has none for the supply quantity at all.
+ * See docs/methodology/ubwi.md.
  */
-export const METHODOLOGY_VERSION = "1.1.0";
+export const METHODOLOGY_VERSION = "1.2.0";
 /** The superseded version, kept so a stored point can be read against what produced it. */
-export const PRIOR_METHODOLOGY_VERSION = "1.0.0";
+export const PRIOR_METHODOLOGY_VERSION = "1.1.0";
+/** The whole published lineage, oldest first. A history that is not recorded is not a history. */
+export const METHODOLOGY_VERSION_HISTORY = ["1.0.0", "1.1.0", "1.2.0"] as const;
 export const RESIDUAL_MODEL_VERSION = "1.0.0";
 export const UBWI_METHODOLOGY_DOC = "docs/methodology/ubwi.md" as const;
 export const UBWI_SYMBOL = "UBWI" as const;

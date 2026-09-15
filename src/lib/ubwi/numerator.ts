@@ -25,6 +25,14 @@ import {
   CHAINLINK_SOURCE_INTERFACE,
   validateChainlinkObservation,
 } from "./chainlink";
+import {
+  MAX_MONEY_SATS,
+  PROTOCOL_SUPPLY_DERIVATION,
+  SUPPLY_DERIVATION_VERSION,
+  SupplyDerivationError,
+  deriveScheduledSupply,
+  satsToBtc,
+} from "./supply";
 import type { BtcMarketObservation } from "./types";
 
 /** A median needed an odd, independent, and small set; three was the 1.0.0 minimum. */
@@ -74,18 +82,18 @@ export const RETIRED_VENUE_MEDIAN_OBSERVATION: BtcMarketObservation = {
 };
 
 /**
- * The Phase 2E production numerator observation, under methodology 1.1.0.
+ * The Phase 2E numerator observation, under methodology 1.1.0. Retained, not published.
  *
- * Supply and height were read from Blockchain.com with the height independently confirmed
- * by mempool.space. The price is proxy round 129127208515966885593 -- phase 7, aggregator
- * round 24281 -- read through the Chainlink BTC/USD proxy on Ethereum mainnet and
- * confirmed byte-identical through a second, independent public RPC endpoint. The round
- * was 352 seconds old at retrieval, against a documented 3600-second heartbeat.
+ * Its supply leg was read from Blockchain.com's Explorer API, and that is exactly the
+ * dependency methodology 1.2.0 removes: the retained Blockchain.com terms grant retrieval
+ * but scope the Explorer "solely for informational purposes", which does not grant the
+ * commercial derived-index publication Urdais performs. The gate refused this observation
+ * on that ground and was right to.
  *
- * Reading the supply and the price inside one 4.9-second window is what makes the product
- * of the two a market capitalization at an instant rather than a mix of two instants.
+ * It is kept so the retired supply leg is legible from the code rather than only from a
+ * changelog. Nothing computes from it.
  */
-export const PRODUCTION_BTC_OBSERVATION: BtcMarketObservation = {
+export const RETIRED_RETRIEVED_SUPPLY_OBSERVATION: BtcMarketObservation = {
   observedAt: "2026-09-15T03:10:39Z",
   blockHeight: 967_062,
   heightSources: ["mempool.space/api/blocks/tip/height", "blockchain.info/q/getblockcount"],
@@ -120,6 +128,90 @@ export const PRODUCTION_BTC_OBSERVATION: BtcMarketObservation = {
   marketCapUsd: 20_084_546 * 77_779.484_602_64,
 };
 
+/**
+ * The Phase 2F production numerator observation, under methodology 1.2.0.
+ *
+ * The supply leg is no longer retrieved from anybody. The chain tip was read from two
+ * independent endpoints, which agreed exactly on the integer 967,075, and the supply is the
+ * cumulative scheduled block subsidy through that height computed by ./supply.ts:
+ * 2,008,461,250,000,000 satoshis. Height 967,075 is in halving era 4, where the scheduled
+ * subsidy is 312,500,000 satoshis -- 3.125 BTC -- per block.
+ *
+ * Nobody licenses that arithmetic, which is why `supplySourceInterface` is absent rather
+ * than set to some interface that could be said to have supplied it.
+ *
+ * The price is proxy round 129127208515966885594 -- phase 7, aggregator round 24282 --
+ * read through the Chainlink BTC/USD proxy on Ethereum mainnet and confirmed
+ * byte-identical through a second, independent public RPC endpoint. The round was 493
+ * seconds old at retrieval, well inside the documented 3,600-second heartbeat.
+ *
+ * Height and price were read inside one 5.5-second window, which is what makes the product
+ * a market capitalization at an instant rather than a mix of two instants.
+ *
+ * This is the observation the first published UBWI point is frozen against.
+ */
+export const PRODUCTION_BTC_OBSERVATION: BtcMarketObservation = {
+  observedAt: "2026-09-15T04:13:40Z",
+  blockHeight: 967_075,
+  heightSources: ["mempool.space/api/blocks/tip/height", "blockchain.info/q/getblockcount"],
+  heightObservations: [
+    {
+      source: "mempool.space/api/blocks/tip/height",
+      rawValue: "967075",
+      blockHeight: 967_075,
+      retrievedAt: "2026-09-15T04:13:35.623932Z",
+      provenance:
+        "mempool.space's public REST API, read for one integer. The height is a consensus fact, not a dataset: it is identical for every honest observer of the chain and Urdais derives nothing from this endpoint except that integer.",
+    },
+    {
+      source: "blockchain.info/q/getblockcount",
+      rawValue: "967075",
+      blockHeight: 967_075,
+      retrievedAt: "2026-09-15T04:13:36.088456Z",
+      provenance:
+        "Blockchain.com's Explorer query interface, read for one integer. Blockchain.com's retained terms grant retrieval outright; what they do not grant is the derived-index publication of a *supply dataset*, which is why methodology 1.2.0 no longer reads a supply figure from here. Reading the chain tip for cross-verification is a different act from taking a supply quantity on the provider's authority.",
+    },
+  ],
+  supplyBtc: 20_084_612.5,
+  supplyConstruction: "protocol_scheduled",
+  supplyDerivation: {
+    derivation: PROTOCOL_SUPPLY_DERIVATION,
+    derivationVersion: SUPPLY_DERIVATION_VERSION,
+    rightsBasis: "derived_from_protocol",
+    halvingEra: 4,
+    blockSubsidySats: "312500000",
+    scheduledSupplySats: "2008461250000000",
+    excludesTransactionFees: true,
+    excludesLostCoinAdjustment: true,
+  },
+  priceRule: "chainlink_reference_feed",
+  priceSourceInterface: CHAINLINK_SOURCE_INTERFACE,
+  priceUsd: 77_723.013_278_59,
+  chainlink: {
+    chainId: 1,
+    proxyAddress: "0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c",
+    aggregatorAddress: "0x4a3411ac2948b33c69666b35cc6d055b27ea84f1",
+    aggregatorTypeAndVersion: "AccessControlledOCR2Aggregator 1.0.0",
+    description: "BTC / USD",
+    decimals: 8,
+    proxyVersion: 6,
+    roundId: "129127208515966885594",
+    phaseId: 7,
+    aggregatorRoundId: "24282",
+    answer: "7772301327859",
+    normalizedUsd: 77_723.013_278_59,
+    startedAt: 1_789_445_076,
+    updatedAt: 1_789_445_123,
+    answeredInRound: "129127208515966885594",
+    retrievalTimestamp: 1_789_445_616,
+    blockNumber: 25_980_399,
+    blockHash: "0xc3e08685ee80e1b361139c0c940c3410ca502fbfc3ca81f92179d194cc1da74b",
+    rpcSource: "https://ethereum-rpc.publicnode.com",
+    rpcCrossCheckSource: "https://eth.drpc.org",
+  },
+  marketCapUsd: 20_084_612.5 * 77_723.013_278_59,
+};
+
 export function median(values: readonly number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
@@ -138,6 +230,171 @@ export type NumeratorProblem =
   | "PRICE_RULE_LINEAGE_MISMATCH"
   | "PRICE_DISAGREES_WITH_FEED"
   | `CHAINLINK_${string}`;
+
+/**
+ * Why a reference block height could not be trusted.
+ *
+ * Kept apart from the supply problems below, and both kept apart from the general
+ * numerator problems, because the operator response differs entirely: a height
+ * disagreement means re-read the tip, a derivation failure means the arithmetic is broken,
+ * and an impossible supply means something far worse than either. Collapsing them into one
+ * "numerator invalid" would throw away the only information an operator actually needs.
+ */
+export type BlockHeightProblem =
+  | "HEIGHT_NOT_INTEGER"
+  | "HEIGHT_NOT_POSITIVE"
+  | "HEIGHT_EVIDENCE_MISSING"
+  | "HEIGHT_SOURCES_TOO_FEW"
+  | "HEIGHT_SOURCES_NOT_INDEPENDENT"
+  | "HEIGHT_RAW_VALUE_MISPARSED"
+  | "HEIGHT_SOURCES_DISAGREE"
+  | "HEIGHT_DISAGREES_WITH_EVIDENCE";
+
+/** Why a protocol-derived supply could not be trusted. */
+export type SupplyDerivationCheckProblem =
+  | "SUPPLY_LINEAGE_MISSING"
+  | "SUPPLY_LINEAGE_UNEXPECTED"
+  | "SUPPLY_INTERFACE_UNEXPECTED"
+  | "SUPPLY_DERIVATION_FAILED"
+  | "SUPPLY_DISAGREES_WITH_SCHEDULE"
+  | "SUPPLY_SUBSIDY_DISAGREES"
+  | "SUPPLY_ERA_DISAGREES"
+  | "SUPPLY_BTC_DISAGREES_WITH_SATS"
+  | "SUPPLY_ABOVE_PROTOCOL_CAP"
+  | "SUPPLY_NEGATIVE"
+  | "SUPPLY_FEE_EXCLUSION_NOT_RECORDED"
+  | "SUPPLY_RIGHTS_BASIS_WRONG";
+
+/**
+ * The minimum independent observations of the chain tip. Two, because a single reading
+ * cannot be wrong in a detectable way, and because Phase 2E already established the
+ * cross-check at two. Part 4 of the 2F brief is explicit that this is preserved, not
+ * redesigned.
+ */
+export const MINIMUM_HEIGHT_SOURCES = 2;
+
+/**
+ * Check the reference block height against its own evidence.
+ *
+ * The rule is exact agreement and fail-closed. No averaging, no "take the higher", no
+ * bounded tolerance: a tolerance on a block height would be an invented licence to publish
+ * a supply the chain never scheduled. Two honest observers of the same chain either report
+ * the same integer or one of them is lagging, and a lagging observer is a reason to re-read
+ * rather than to interpolate.
+ */
+export function checkBlockHeight(observation: BtcMarketObservation): BlockHeightProblem[] {
+  const problems: BlockHeightProblem[] = [];
+  const height = observation.blockHeight;
+
+  if (!Number.isInteger(height)) {
+    problems.push("HEIGHT_NOT_INTEGER");
+  } else if (height <= 0) {
+    problems.push("HEIGHT_NOT_POSITIVE");
+  }
+
+  // The per-source evidence is required from methodology 1.2.0 onward, where the height is
+  // the sole input to the supply. The retired observations predate it and are not held to
+  // it; they are checked on `heightSources` alone, which is all they ever carried.
+  if (observation.supplyConstruction !== "protocol_scheduled") return problems;
+
+  const evidence = observation.heightObservations;
+  if (evidence === undefined || evidence.length === 0) {
+    problems.push("HEIGHT_EVIDENCE_MISSING");
+    return problems;
+  }
+  if (evidence.length < MINIMUM_HEIGHT_SOURCES) problems.push("HEIGHT_SOURCES_TOO_FEW");
+  if (new Set(evidence.map((e) => e.source)).size !== evidence.length) {
+    problems.push("HEIGHT_SOURCES_NOT_INDEPENDENT");
+  }
+
+  for (const reading of evidence) {
+    // The raw body and the parsed integer must be the same number. This is what catches a
+    // lineage record whose stored evidence was edited without the value being re-derived.
+    if (!/^\d+$/.test(reading.rawValue.trim())) {
+      problems.push("HEIGHT_RAW_VALUE_MISPARSED");
+    } else if (Number(reading.rawValue.trim()) !== reading.blockHeight) {
+      problems.push("HEIGHT_RAW_VALUE_MISPARSED");
+    }
+    if (!Number.isInteger(reading.blockHeight) || reading.blockHeight < 0) {
+      problems.push("HEIGHT_NOT_INTEGER");
+    }
+  }
+
+  const distinct = new Set(evidence.map((e) => e.blockHeight));
+  if (distinct.size > 1) problems.push("HEIGHT_SOURCES_DISAGREE");
+  else if (!distinct.has(height)) problems.push("HEIGHT_DISAGREES_WITH_EVIDENCE");
+
+  return [...new Set(problems)];
+}
+
+/**
+ * Check a protocol-derived supply by recomputing it.
+ *
+ * The recorded quantity is never trusted: it is recomputed from the recorded height and
+ * compared. A published supply that cannot be reproduced from its own stated height is a
+ * lineage failure whatever else is true of it.
+ */
+export function checkSupplyDerivation(
+  observation: BtcMarketObservation,
+): SupplyDerivationCheckProblem[] {
+  const problems: SupplyDerivationCheckProblem[] = [];
+
+  if (observation.supplyConstruction !== "protocol_scheduled") {
+    // The retired leg. It must carry an interface and must not carry a derivation.
+    if (observation.supplyDerivation !== undefined) problems.push("SUPPLY_LINEAGE_UNEXPECTED");
+    return problems;
+  }
+
+  // Under protocol derivation nobody supplies the quantity, so naming a supply interface
+  // would assert a dependency that does not exist.
+  if (observation.supplySourceInterface !== undefined) {
+    problems.push("SUPPLY_INTERFACE_UNEXPECTED");
+  }
+
+  const lineage = observation.supplyDerivation;
+  if (lineage === undefined) {
+    problems.push("SUPPLY_LINEAGE_MISSING");
+    return problems;
+  }
+  if (lineage.rightsBasis !== "derived_from_protocol") problems.push("SUPPLY_RIGHTS_BASIS_WRONG");
+  if (lineage.excludesTransactionFees !== true || lineage.excludesLostCoinAdjustment !== true) {
+    problems.push("SUPPLY_FEE_EXCLUSION_NOT_RECORDED");
+  }
+
+  let recomputed: ReturnType<typeof deriveScheduledSupply>;
+  try {
+    recomputed = deriveScheduledSupply(observation.blockHeight);
+  } catch (error) {
+    problems.push(
+      error instanceof SupplyDerivationError && error.problem === "SUPPLY_ABOVE_CAP"
+        ? "SUPPLY_ABOVE_PROTOCOL_CAP"
+        : error instanceof SupplyDerivationError && error.problem === "SUPPLY_NEGATIVE"
+          ? "SUPPLY_NEGATIVE"
+          : "SUPPLY_DERIVATION_FAILED",
+    );
+    return problems;
+  }
+
+  if (lineage.scheduledSupplySats !== recomputed.scheduledSupplySats) {
+    problems.push("SUPPLY_DISAGREES_WITH_SCHEDULE");
+  }
+  if (lineage.blockSubsidySats !== recomputed.blockSubsidySats) {
+    problems.push("SUPPLY_SUBSIDY_DISAGREES");
+  }
+  if (lineage.halvingEra !== recomputed.halvingEra) problems.push("SUPPLY_ERA_DISAGREES");
+
+  // The one place satoshis become a double. Checked exactly, not approximately: the
+  // conversion is exact for every reachable supply, so any difference at all is a bug.
+  if (satsToBtc(BigInt(lineage.scheduledSupplySats)) !== observation.supplyBtc) {
+    problems.push("SUPPLY_BTC_DISAGREES_WITH_SATS");
+  }
+
+  const sats = BigInt(lineage.scheduledSupplySats);
+  if (sats < 0n) problems.push("SUPPLY_NEGATIVE");
+  if (sats > MAX_MONEY_SATS) problems.push("SUPPLY_ABOVE_PROTOCOL_CAP");
+
+  return [...new Set(problems)];
+}
 
 /**
  * Check a numerator observation against its own recorded parts. Arithmetic the code
@@ -199,7 +456,12 @@ export function checkNumerator(observation: BtcMarketObservation): NumeratorProb
  */
 export function numeratorSourceInterfaces(observation: BtcMarketObservation): string[] {
   return [
-    observation.supplySourceInterface,
+    // Absent under `protocol_scheduled`: there is no supply interface, because there is no
+    // supply provider. This is the line that retires the last external rights dependency
+    // from the UBWI numerator -- not a gate that was relaxed, a dependency that was removed.
+    ...(observation.supplySourceInterface === undefined
+      ? []
+      : [observation.supplySourceInterface]),
     ...(observation.venues?.map((v) => v.sourceInterface) ?? [observation.priceSourceInterface]),
   ];
 }

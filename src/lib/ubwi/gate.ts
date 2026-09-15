@@ -16,7 +16,12 @@
  * The gate is not weakened to make a calculation pass. When it refuses, it refuses.
  */
 import { LATEST_COMPLETE_YEAR } from "./observations";
-import { checkNumerator, numeratorSourceInterfaces } from "./numerator";
+import {
+  checkBlockHeight,
+  checkNumerator,
+  checkSupplyDerivation,
+  numeratorSourceInterfaces,
+} from "./numerator";
 import {
   SOURCE_INTERFACES,
   effectiveRightsStatus,
@@ -93,6 +98,14 @@ export type GateFailureCode =
   | "MAJOR_ECONOMY_NOT_DISCLOSED"
   | "NUMERATOR_INVALID"
   | "NUMERATOR_SOURCE_NOT_RIGHTS_CLEARED"
+  /** The reference height is not a usable block height at all. */
+  | "BLOCK_HEIGHT_INVALID"
+  /** The independent height observations do not agree, or do not support the height used. */
+  | "BLOCK_HEIGHT_NOT_CROSS_VERIFIED"
+  /** The supply could not be derived from the height, or does not reproduce from it. */
+  | "SUPPLY_DERIVATION_INVALID"
+  /** The supply is outside what the protocol can ever have scheduled. */
+  | "SUPPLY_IMPOSSIBLE"
   | "TERMS_ARTIFACT_INTEGRITY_FAILED"
   | "THRESHOLD_ABOVE_FEASIBLE_FRONTIER";
 
@@ -313,6 +326,69 @@ export function evaluateGate(
       code: "MAJOR_ECONOMY_NOT_DISCLOSED",
       detail: `${undisclosed.map((e) => e.economy).join(", ")} exceed the disclosure threshold with no stated reason`,
       remedy: "name the economy, its GDP weight and why it is unobserved on the published surface",
+    });
+  }
+
+  // The reference block height, and the supply derived from it.
+  //
+  // Methodology 1.2.0 replaces one requirement with two. What it removes is the external
+  // supply source's rights requirement: there is no external supply source any more, so
+  // there is nothing to clear. What it adds is stricter than what it removes -- the height
+  // must be cross-verified and the supply must reproduce from it by arithmetic the gate
+  // re-runs itself. A rights check asks whether a provider permitted a number; these ask
+  // whether the number is right. Nothing was weakened to make this calculation pass.
+  //
+  // Four distinct codes, not one. An operator's response to "the two height sources
+  // disagree" (re-read the tip) has nothing in common with "the supply exceeds the
+  // protocol cap" (stop everything).
+  const heightProblems = checkBlockHeight(calculation.numerator);
+  const isStructural = (p: (typeof heightProblems)[number]): boolean =>
+    p === "HEIGHT_NOT_INTEGER" || p === "HEIGHT_NOT_POSITIVE";
+  const structural = heightProblems.filter(isStructural);
+  const crossVerification = heightProblems.filter((p) => !isStructural(p));
+
+  if (structural.length > 0) {
+    findings.push({
+      code: "BLOCK_HEIGHT_INVALID",
+      detail: `the reference block height is not a usable height: ${structural.join(", ")}`,
+      remedy: "a block height is a non-negative integer; re-read the chain tip",
+    });
+  }
+  if (crossVerification.length > 0) {
+    findings.push({
+      code: "BLOCK_HEIGHT_NOT_CROSS_VERIFIED",
+      detail:
+        `the reference block height is not supported by at least two independent, exactly ` +
+        `agreeing observations: ${crossVerification.join(", ")}`,
+      remedy:
+        "re-read the chain tip from both sources until they agree exactly; heights are never " +
+        "averaged, and the higher reading is never taken silently",
+    });
+  }
+
+  const supplyProblems = checkSupplyDerivation(calculation.numerator);
+  const isImpossible = (p: (typeof supplyProblems)[number]): boolean =>
+    p === "SUPPLY_ABOVE_PROTOCOL_CAP" || p === "SUPPLY_NEGATIVE";
+  const impossible = supplyProblems.filter(isImpossible);
+  const derivation = supplyProblems.filter((p) => !isImpossible(p));
+
+  if (impossible.length > 0) {
+    findings.push({
+      code: "SUPPLY_IMPOSSIBLE",
+      detail: `the derived supply is outside what the protocol can schedule: ${impossible.join(", ")}`,
+      remedy:
+        "this cannot happen for any real height; treat it as a defect in the derivation, not as a bad observation",
+    });
+  }
+  if (derivation.length > 0) {
+    findings.push({
+      code: "SUPPLY_DERIVATION_INVALID",
+      detail:
+        `the protocol-scheduled supply does not reproduce from its own recorded height: ` +
+        `${derivation.join(", ")}`,
+      remedy:
+        "recompute the cumulative block subsidy from the reference height; a supply that cannot " +
+        "be reproduced from its stated height may not be published whatever else is true of it",
     });
   }
 
