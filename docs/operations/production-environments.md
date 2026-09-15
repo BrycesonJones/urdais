@@ -94,6 +94,31 @@ ls supabase/migrations/*.sql | sed 's|.*/||; s/_.*//' | paste -sd, -
 
 compared against `select string_agg(version, ',' order by version) from supabase_migrations.schema_migrations`.
 
+> **Apply a migration under the version its filename carries, or the ledger
+> invents one.** `supabase db push` reads the version from the filename. The
+> Supabase management API (`apply_migration`, and the dashboard's SQL editor
+> when it records a migration) takes a *name* and, given no version, stamps the
+> wall clock instead. The schema lands correctly either way, so nothing fails
+> loudly; what breaks is the bookkeeping, and the next deploy reads the
+> repository's version as pending and offers to replay a migration that has
+> already run.
+>
+> That happened once, on 15 September 2026, to
+> `20260915010000_news_wave2_and_image_rights`, which the ledger had recorded as
+> `20260915042926` — the minute it was applied. Both sides still counted forty
+> migrations, so only a version-by-version comparison showed it. The applied
+> body was proven identical to the repository file apart from SQL comments, which
+> the management API strips, and the row was rekeyed to the canonical version in
+> a single transaction. No migration SQL was re-run and no schema object changed.
+>
+> Two habits avoid the repeat: apply through `supabase db push` wherever it can
+> reach the database, and run the version comparison above after *any* path that
+> writes the ledger — the row counts agreeing is not the check.
+>
+> The ledger's `statements` column holds the SQL that actually ran and `created_by`
+> holds who ran it. Rekeying a row preserves both, which is why it is a safe
+> repair and why deleting a ledger row is not.
+
 ### 2. Verify Wave-1 token prices into production
 
 This is an operator verification event. It is not seeding, and it is not automated collection.
