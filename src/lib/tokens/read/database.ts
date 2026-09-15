@@ -50,24 +50,47 @@ export function resolveTokenDatabaseUrl(
   return null;
 }
 
+type SharedTokenExecutor = TokenSqlExecutor & { url: string };
+
 type GlobalTokenPool = {
-  __urdaisTokenPool?: { url: string; query: TokenSqlExecutor["query"]; end: () => Promise<void> };
+  __urdaisTokenPool?: SharedTokenExecutor;
 };
 
-export async function tokenSqlExecutor(url: string): Promise<TokenSqlExecutor & { end?: () => Promise<void> }> {
+/**
+ * The process-wide pooled executor, shared by the token, UBWI and news reads.
+ *
+ * It deliberately offers no way to close the pool. Every caller here is a
+ * borrower serving one request out of a pool that outlives it, and `pg` makes
+ * closing a shared pool unrecoverable: `Pool.end()` sets `ending` immediately
+ * and every later `query()` on that pool rejects with "Cannot use a pool after
+ * calling end on the pool". A reader that closed the pool on its way out would
+ * not be releasing its connection -- the pool does that by itself -- it would
+ * be revoking the database from every request still in flight.
+ *
+ * That is not hypothetical. The UBWI read paths used to close this pool in a
+ * `finally`, and on a warm server a homepage request that finished reading
+ * UBWI could leave a concurrent request with no database at all: the UBWI row
+ * gone from the Urdais Indices panel and all three production News rails
+ * showing "unavailable right now", over a database that was healthy
+ * throughout, healing on the next request because the closing call also
+ * cleared this global. Returning the bare `TokenSqlExecutor` is what keeps it
+ * fixed: there is no `end` to call, so TypeScript rejects any attempt to
+ * reintroduce one at a call site.
+ *
+ * Work that really does own its connection -- the cron routes, which run once
+ * and exit -- uses `createTokenSqlExecutor` below and closes that, which is
+ * private to the caller and safe to end.
+ */
+export async function tokenSqlExecutor(url: string): Promise<TokenSqlExecutor> {
   const globalForPool = globalThis as typeof globalThis & GlobalTokenPool;
   if (globalForPool.__urdaisTokenPool?.url === url) return globalForPool.__urdaisTokenPool;
 
   const pool = new pg.Pool({ connectionString: url, max: 4 });
-  const executor = {
+  const executor: SharedTokenExecutor = {
     url,
     async query(text: string, params: readonly unknown[]) {
       const result = await pool.query(text, params as unknown[]);
       return { rows: result.rows as Record<string, unknown>[] };
-    },
-    async end() {
-      if (globalForPool.__urdaisTokenPool === executor) delete globalForPool.__urdaisTokenPool;
-      await pool.end();
     },
   };
   globalForPool.__urdaisTokenPool = executor;

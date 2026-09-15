@@ -81,21 +81,22 @@ export async function loadFrozenUbwiHistory(
     const url = resolveTokenDatabaseUrl(env, { allowLocalDefault: false });
     if (!url) return [];
 
+    // The executor is process-wide and shared; it is borrowed here, never closed.
     const sql = await tokenSqlExecutor(url);
-    try {
-      const { rows } = await sql.query(
-        `select published_at, frozen_at, superseded_by_id, published_value_percent,
-                methodology_version, residual_model_version
-           from pipeline.ubwi_publications
-          where frozen_at is not null and superseded_by_id is null
-          order by published_at asc, frozen_at asc, id asc`,
-        [],
-      );
-      return ubwiHistoryFromRows(rows);
-    } finally {
-      await sql.end?.();
-    }
-  } catch {
+    const { rows } = await sql.query(
+      `select published_at, frozen_at, superseded_by_id, published_value_percent,
+              methodology_version, residual_model_version
+         from pipeline.ubwi_publications
+        where frozen_at is not null and superseded_by_id is null
+        order by published_at asc, frozen_at asc, id asc`,
+      [],
+    );
+    return ubwiHistoryFromRows(rows);
+  } catch (error) {
+    // An empty history and an unreachable database both draw no chart, so the reason
+    // has to reach the log or it is lost entirely.
+    const detail = error instanceof Error ? error.message : String(error);
+    console.warn(`ubwi: history unavailable (${detail}); the chart will not render`);
     return [];
   }
 }
