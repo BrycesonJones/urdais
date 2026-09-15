@@ -19,7 +19,7 @@
 import { WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
 import { loadPricingFixture } from "@/lib/tokens/fixtures";
 import { ingestTokenPricing } from "@/lib/tokens/ingest";
-import { constituentInForce, isEligibleLeg, methodologyInForce, tokenBenchmarkPrice } from "@/lib/tokens/read/benchmark";
+import { constituentInForce, isEligibleLeg, methodologyInForce, tokenBenchmarkPrice, withholdingFor } from "@/lib/tokens/read/benchmark";
 import { persistProviderBenchmarks } from "@/lib/tokens/read/benchmark-store";
 import { tokenReadCatalogFromStore } from "@/lib/tokens/read/load";
 import { listVisibleTokenSeries } from "@/lib/tokens/read/series";
@@ -112,13 +112,21 @@ export function verifyProviderProduction(input: ProductionVerificationInput): { 
 
 export type ProductionVerificationRun = {
   verifications: { provider: Wave1Provider; legs: VerifiedLegs }[];
+  /** Providers collected in full but deliberately not published, with the reason. */
+  withheld: { provider: Wave1Provider; reason: string; detail: string; observations: number }[];
   written: { retrievalsInserted: number; observationsInserted: number };
-  benchmarks: { inserted: number };
+  benchmarks: { inserted: number; conflicts: string[] };
 };
 
 /**
- * Verifies every Wave-1 provider from its retained artifact and freezes the
- * resulting production benchmarks. Idempotent: re-running writes nothing new.
+ * Verifies every provider from its retained artifact and freezes the resulting
+ * production benchmarks. Idempotent: re-running writes nothing new.
+ *
+ * A provider with no designation is still collected. Its observations are
+ * ingested and retained exactly like any other, and only the headline value is
+ * withheld. That distinction is the point: "we have not looked" and "we looked
+ * and the price cannot be expressed under this methodology" are different
+ * states, and the second is reported rather than left as an absence.
  */
 export async function runProductionVerification(
   sql: TokenSqlExecutor,
@@ -131,9 +139,46 @@ export async function runProductionVerification(
     observations: existing.observations,
   });
 
+  const onDate = verification.verifiedAt.slice(0, 10);
   const verifications: { provider: Wave1Provider; legs: VerifiedLegs }[] = [];
+  const withheld: ProductionVerificationRun["withheld"] = [];
   for (const provider of WAVE1_PROVIDERS) {
     const fixture = loadPricingFixture(provider);
+    const constituent = constituentInForce(provider, onDate);
+    const withholding = withholdingFor(provider, onDate);
+
+    if (!constituent) {
+      // No designation. Ingest the artifact anyway, so the canonical record is
+      // complete, then report why no value is published.
+      if (!withholding) {
+        throw new VerificationMismatchError(
+          `${provider}: no benchmark model is designated on ${onDate}, and no withholding is recorded either. A provider must be designated or deliberately withheld, never silently absent.`,
+        );
+      }
+      const before = store.allObservations().length;
+      ingestTokenPricing({
+        provider,
+        mode: "production",
+        artifact: {
+          body: fixture.body,
+          contentType: fixture.contentType,
+          url: fixture.sourceUrl,
+          method: "manual_read",
+          requestedAt: verification.verifiedAt,
+          retrievedAt: verification.verifiedAt,
+        },
+        store,
+        verification: { ...verification, sourceUrl: fixture.sourceUrl },
+      });
+      withheld.push({
+        provider,
+        reason: withholding.reason,
+        detail: withholding.detail,
+        observations: store.allObservations().length - before,
+      });
+      continue;
+    }
+
     const { legs } = verifyProviderProduction({
       provider,
       verification: { ...verification, sourceUrl: fixture.sourceUrl },
@@ -145,6 +190,6 @@ export async function runProductionVerification(
 
   const catalog = tokenReadCatalogFromStore(store);
   const written = await persistTokenReadCatalog(sql, catalog);
-  const benchmarks = await persistProviderBenchmarks(sql, catalog, "production", verification.verifiedAt.slice(0, 10), "urdais-token-price/manual-verification");
-  return { verifications, written, benchmarks: { inserted: benchmarks.inserted } };
+  const benchmarks = await persistProviderBenchmarks(sql, catalog, "production", onDate, "urdais-token-price/manual-verification");
+  return { verifications, withheld, written, benchmarks: { inserted: benchmarks.inserted, conflicts: benchmarks.conflicts } };
 }

@@ -30,6 +30,10 @@ const EXPECTED: Partial<Record<Wave1Provider, { input: number; output: number }>
   anthropic: { input: 10, output: 50 },
   openai: { input: 10, output: 50 },
   xai: { input: 2, output: 6 },
+  google: { input: 2, output: 12 },
+  alibaba: { input: 2, output: 6 },
+  // DeepSeek has no expectation because it has no designated legs: it publishes
+  // no standard rate, so its headline value is withheld by design.
 };
 
 async function main(): Promise<void> {
@@ -76,6 +80,9 @@ async function main(): Promise<void> {
       `  ${row.provider.padEnd(10)} ${row.legs.providerModelId.padEnd(18)} input $${row.legs.input.toFixed(2)}  output $${row.legs.output.toFixed(2)}  Token Price $${row.legs.benchmark.toFixed(2)} per 1M tokens`,
     );
   }
+  for (const row of run.withheld) {
+    console.log(`  ${row.provider.padEnd(10)} ${"(withheld)".padEnd(18)} ${row.reason}, ${row.observations} observation(s) collected`);
+  }
   const inserted = run.written.observationsInserted;
   const retrievals = run.written.retrievalsInserted;
   const frozen = run.benchmarks.inserted;
@@ -87,6 +94,12 @@ async function main(): Promise<void> {
       ? "nothing inserted: this verification was already recorded, and the frozen benchmarks already exist."
       : `inserted ${inserted} observation(s) and ${retrievals} retrieval(s); froze ${frozen} benchmark(s).`,
   );
+  for (const conflict of run.benchmarks.conflicts) console.error(`  conflict: ${conflict}`);
+  if (run.withheld.length > 0) {
+    console.log(
+      `withheld: ${run.withheld.map((row) => row.provider).join(", ")} collected in full, no headline value published. This is a recorded decision, not a gap.`,
+    );
+  }
   console.log("no source-rights column was written; automated production collection remains gated as before.");
 }
 

@@ -49,3 +49,7 @@ next-env.d.ts
 
 # local PostgreSQL cluster managed by scripts/db/local.sh
 /.local/
+
+# Agent worktrees created by concurrent Claude Code sessions. Never committed,
+# and never linted: they contain another session branch and its build output.
+.claude/

@@ -15,22 +15,30 @@ begin
   -- Six providers and six interfaces were reviewed and recorded.
   -- The six providers of the terms review plus the licensed market-data source cleared later on its own terms.
   -- Model-API labs seeded for token-pricing research are a different population and are not this review.
-  select count(*) into n from reference.providers where slug <> 'price-of-compute' and provider_kind <> 'model_api_provider';
+  -- News publishers and their feeds are a later, separate review (Phase 1A news
+  -- ingestion) and are excluded by the interface class that identifies them.
+  select count(*) into n from reference.providers p
+   where p.slug <> 'price-of-compute' and p.provider_kind <> 'model_api_provider'
+     and exists (select 1 from reference.source_interfaces si
+                  where si.provider_id = p.id and si.source_class <> 'news_feed');
   if n <> 6 then raise exception 'expected 6 reviewed providers, found %', n; end if;
   select count(*) into n from reference.source_interfaces si
     join reference.providers p on p.id = si.provider_id
-    where si.slug <> 'price-of-compute-prices' and p.provider_kind <> 'model_api_provider';
+    where si.slug <> 'price-of-compute-prices' and p.provider_kind <> 'model_api_provider'
+      and si.source_class <> 'news_feed';
   if n <> 6 then raise exception 'expected 6 reviewed interfaces, found %', n; end if;
 
   -- Nothing is production-approved. Phase 4 collection is not yet authorised anywhere.
-  select count(*) into n from reference.source_interfaces where production_access_state = 'production_approved' and slug <> 'price-of-compute-prices';
+  select count(*) into n from reference.source_interfaces
+   where production_access_state = 'production_approved' and slug <> 'price-of-compute-prices'
+     and source_class <> 'news_feed';
   if n <> 0 then raise exception '% reviewed interface(s) marked production_approved', n; end if;
 
   -- Every reviewed compute interface carries verbatim evidence with a review date.
   -- Token-pricing interfaces are research-usable and still under_review; they are not this review.
   select count(*) into n from reference.source_interfaces si
     join reference.providers p on p.id = si.provider_id
-   where p.provider_kind <> 'model_api_provider'
+   where p.provider_kind <> 'model_api_provider' and si.source_class <> 'news_feed'
      and (si.terms_evidence is null or si.terms_evidence->>'reviewed_on' is null
       or jsonb_array_length(si.terms_evidence->'documents') = 0);
   if n <> 0 then raise exception '% interface(s) lack dated terms evidence', n; end if;

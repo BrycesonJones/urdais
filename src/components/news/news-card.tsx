@@ -15,12 +15,16 @@ function formatPublished(iso: string): string {
 /**
  * One editorial story: thumbnail, headline, dek, and source metadata.
  * The headline becomes a link only when the article has a canonical URL,
- * so mock content never links anywhere.
+ * so mock content never links anywhere. A real destination is always the
+ * publisher's own page and always opens away from Urdais, which is a
+ * discovery layer and never the host of the article.
  */
 export function NewsCard({ article }: { article: NewsArticle }) {
   const headline = article.url ? (
     <a
       href={article.url}
+      target="_blank"
+      rel="noopener noreferrer"
       className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400"
     >
       {article.title}
@@ -36,7 +40,10 @@ export function NewsCard({ article }: { article: NewsArticle }) {
         <h3 className="line-clamp-2 text-base font-semibold leading-snug tracking-tight text-neutral-50">
           {headline}
         </h3>
-        <p className="line-clamp-3 text-sm leading-relaxed text-neutral-400">{article.summary}</p>
+        {/* A publisher that offers no snippet gets none. Urdais writes no dek. */}
+        {article.summary !== null && (
+          <p className="line-clamp-3 text-sm leading-relaxed text-neutral-400">{article.summary}</p>
+        )}
         <p className="text-xs text-neutral-500">
           {article.source} · {formatPublished(article.publishedAt)}
         </p>

@@ -15,16 +15,16 @@ begin
   select id into provider from reference.providers where slug = 'anthropic' and provider_kind = 'model_api_provider';
   if provider is null then raise exception 'anthropic model_api_provider was not seeded'; end if;
   select count(*) into n from reference.providers where provider_kind = 'model_api_provider';
-  if n <> 6 then raise exception 'expected 6 model API providers, found %', n; end if;
+  if n <> 7 then raise exception 'expected 7 model API providers, found %', n; end if;
   select count(*) into n from reference.source_interfaces si
     join reference.providers p on p.id = si.provider_id
     where p.provider_kind = 'model_api_provider' and si.is_machine_readable = false
       and si.production_access_state = 'research_usable'
       and si.terms_review_state = 'under_review'
       and si.data_use_terms_state = 'under_review';
-  if n <> 6 then raise exception 'expected 6 research-usable token pricing interfaces, found %', n; end if;
+  if n <> 7 then raise exception 'expected 7 research-usable token pricing interfaces, found %', n; end if;
   select count(*) into n from reference.models;
-  if n <> 18 then raise exception 'expected 18 wave-1 models, found %', n; end if;
+  if n <> 38 then raise exception 'expected 38 models across all waves, found %', n; end if;
   select count(*) into n from pipeline.token_price_observations;
   if n <> 0 then raise exception 'token prices were seeded'; end if;
 

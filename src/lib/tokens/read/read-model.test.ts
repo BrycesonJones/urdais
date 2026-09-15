@@ -7,6 +7,7 @@ import { pickDefaultTokenSeries } from "@/lib/tokens/read/default-selection";
 import { tokenInstrumentsFromSeries } from "@/lib/tokens/read/instruments";
 import { tokenReadCatalogFromStore } from "@/lib/tokens/read/load";
 import { listPublicTokenSeries } from "@/lib/tokens/read/series";
+import { WAVE1_PROVIDERS } from "@/lib/tokens/types";
 import { seedTokenReadCatalog } from "@/lib/tokens/read/test-support";
 import { InMemoryTokenPricingStore } from "@/lib/tokens/store";
 import { WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
@@ -146,7 +147,7 @@ describe("canonical token-price read model", () => {
     expect(series).toEqual([]);
   });
 
-  it("does not include Wave 2 providers", () => {
+  it("does not include a provider that is not on the roster", () => {
     const catalog = seedTokenReadCatalog([
       { provider: "anthropic", providerModelId: "claude-sonnet-5", dimension: "input", price: 2, retrievedAt: "2026-09-14T03:10:00Z" },
     ]);
@@ -156,16 +157,17 @@ describe("canonical token-price read model", () => {
         ...catalog.observations,
         {
           ...catalog.observations[0]!,
-          id: "obs-google",
-          providerSlug: "google",
-          providerModelId: "gemini-2.5-pro",
-          observationKey: "google::gemini-2.5-pro|input|||standard||",
+          id: "obs-offroster",
+          providerSlug: "mistral",
+          providerModelId: "mistral-large",
+          observationKey: "mistral::mistral-large|input|||standard||",
         },
       ],
     };
     const series = listPublicTokenSeries(leaked);
-    expect(series.every((row) => ["anthropic", "openai", "xai"].includes(row.providerSlug))).toBe(true);
-    expect(series.some((row) => row.providerSlug === "google")).toBe(false);
+    // Fail-closed: an unrecognised slug is never publicable, whatever it is.
+    expect(series.every((row) => (WAVE1_PROVIDERS as readonly string[]).includes(row.providerSlug))).toBe(true);
+    expect(series.some((row) => row.providerSlug === "mistral")).toBe(false);
   });
 
   it("strips internal rights-state and retrieval fields from the public response", () => {

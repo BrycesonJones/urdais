@@ -113,10 +113,25 @@ export async function loadPersistedBenchmarks(sql: BenchmarkSqlExecutor): Promis
   return result.rows.map(benchmarkRowFromSql);
 }
 
+/** The two leg observations a value rests on, as one key. */
+function lineageKey(providerSlug: string, providerModelId: string, inputId: string | null, outputId: string | null): string {
+  return [providerSlug, providerModelId, inputId ?? "", outputId ?? ""].join("|");
+}
+
 /**
  * Freezes every calculation the engine produces that is not already recorded.
- * Idempotent: the unique lineage index makes a repeat a no-op, so this may be
- * run after every collection without creating duplicate points.
+ *
+ * Idempotent twice over. The unique lineage index makes a repeat insert a no-op
+ * within one methodology version, and the guard below makes it a no-op across
+ * versions as well.
+ *
+ * That second guard is not redundant. The index includes the methodology
+ * version, so introducing a new version would let the identical two leg
+ * observations be frozen a second time under the new label, and a reader would
+ * see two points at one instant for one provider. A published series must not
+ * gain a point because the rulebook was edited; it gains points when prices
+ * move. A genuinely different value from the same legs is a correction, which
+ * is a supersession decision and is reported here rather than written.
  */
 export async function persistProviderBenchmarks(
   sql: BenchmarkSqlExecutor,
@@ -124,13 +139,29 @@ export async function persistProviderBenchmarks(
   mode: TokenVisibilityMode,
   onDate?: string,
   calculatorIdentity = "urdais-token-price",
-): Promise<{ inserted: number; points: BenchmarkPoint[] }> {
+): Promise<{ inserted: number; points: BenchmarkPoint[]; conflicts: string[] }> {
   // Lineage comes from the catalog, so every frozen row names the exact leg observations it consumed.
   const points = benchmarkPoints(listVisibleTokenSeries(catalog, mode), onDate, legObservationIndex(catalog, mode));
+  const frozen = await loadPersistedBenchmarks(sql);
+  const already = new Map<string, PersistedBenchmarkRow>();
+  for (const row of frozen) {
+    if (row.calculationStatus !== "value") continue;
+    already.set(lineageKey(row.providerSlug, row.benchmarkModelId, row.inputObservationId, row.outputObservationId), row);
+  }
+  const conflicts: string[] = [];
   let inserted = 0;
   await sql.query("begin", []);
   try {
     for (const point of points) {
+      const seen = already.get(lineageKey(point.providerSlug, point.providerModelId, point.inputObservationId, point.outputObservationId));
+      if (seen) {
+        if (seen.priceUsdPer1m !== point.priceUsdPer1m) {
+          conflicts.push(
+            `${point.providerSlug}: the same leg observations are already frozen at ${seen.priceUsdPer1m} under methodology ${seen.methodologyVersion}, but recalculate to ${point.priceUsdPer1m} under ${point.methodologyVersion}. That is a correction, which needs a supersession, and nothing was written.`,
+          );
+        }
+        continue;
+      }
       const result = await sql.query(INSERT_BENCHMARK_SQL, [
         point.providerSlug,
         point.methodologyVersion,
@@ -154,7 +185,7 @@ export async function persistProviderBenchmarks(
     await sql.query("rollback", []);
     throw error;
   }
-  return { inserted, points };
+  return { inserted, points, conflicts };
 }
 
 function percentageChange(previous: number, current: number): number | null {

@@ -1,0 +1,588 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>Infrastructure</title><link>https://cloud.google.com/blog/products/infrastructure/</link><description>Infrastructure</description><atom:link href="https://cloudblog.withgoogle.com/blog/products/infrastructure/rss/" rel="self"></atom:link><language>en</language><lastBuildDate>Tue, 11 Aug 2026 10:00:03 +0000</lastBuildDate><image><url>https://cloud.google.com/blog/products/infrastructure/static/blog/images/google.a51985becaa6.png</url><title>Infrastructure</title><link>https://cloud.google.com/blog/products/infrastructure/</link></image><item><title>Expanding connectivity in the Americas: Introducing Alisios, Canoa, and OlaLuz subsea cables</title><link>https://cloud.google.com/blog/products/infrastructure/introducing-americas-connect/</link><description>&lt;div class="block-paragraph_advanced"&gt;&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;The global digital economy relies on robust, resilient, and highly secure infrastructure to support everything from daily internet use to telehealth and scientific research breakthroughs. Today, Google is announcing a major expansion of our global network infrastructure in the Americas with three new subsea cable systems — Alisios, Canoa, and OlaLuz. These systems, alongside a new branch for the &lt;/span&gt;&lt;a href="https://cloud.google.com/blog/products/infrastructure/announcing-the-firmina-subsea-cable?e=48754805"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;Firmina&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt; cable and previous investments in &lt;/span&gt;&lt;a href="https://www.submarinecablemap.com/submarine-cable/curie" rel="noopener" target="_blank"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;Curie&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt;, &lt;/span&gt;&lt;a href="https://cloud.google.com/blog/products/infrastructure/introducing-the-nuvem-subsea-cable?e=48754805"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;Nuvem&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt;, and &lt;/span&gt;&lt;a href="https://cloud.google.com/blog/products/infrastructure/announcing-sol-transatlantic-cable?e=48754805"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;Sol&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt;, form &lt;/span&gt;&lt;strong style="vertical-align: baseline;"&gt;Americas Connect&lt;/strong&gt;&lt;span style="vertical-align: baseline;"&gt;.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;The &lt;/span&gt;&lt;strong style="vertical-align: baseline;"&gt;Alisios&lt;/strong&gt;&lt;span style="vertical-align: baseline;"&gt; subsea cable system will connect the Dominican Republic, Panama, and Chile. The cable is named after the &lt;/span&gt;&lt;span style="font-style: italic; vertical-align: baseline;"&gt;vientos alisios &lt;/span&gt;&lt;span style="vertical-align: baseline;"&gt;— the Spanish term for the trade winds that blow across the tropics and the Caribbean, historically used by sailors to navigate between continents. The name "Alisios" nods to the flows of data that will navigate these new subsea routes to connect communities.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;Furthering regional connectivity, &lt;/span&gt;&lt;strong style="vertical-align: baseline;"&gt;Canoa&lt;/strong&gt;&lt;span style="vertical-align: baseline;"&gt; is a new subsea cable system connecting the Dominican Republic to Bermuda. Canoa comes from the Taíno word for canoe, harkening to the longstanding maritime culture in the Caribbean and North Atlantic. When combined with the Nuvem and Sol cable systems, the Canoa cable will enable a highly reliable and resilient connection from Latin America and the Caribbean directly to Europe and North America. &lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;The &lt;/span&gt;&lt;strong style="vertical-align: baseline;"&gt;OlaLuz&lt;/strong&gt;&lt;span style="vertical-align: baseline;"&gt; subsea cable system will connect the Dominican Republic directly to Florida. The name "OlaLuz" combines the Spanish words for "wave" (ola) and "light" (luz), referencing the waves of light that carry data along the cable on the ocean floor. This new route significantly strengthens network capacity between the Caribbean and the U.S. East Coast, providing a pathway that enhances resilience for the region.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;To further strengthen network diversity, Google is also introducing a new branch of the &lt;/span&gt;&lt;a href="https://cloud.google.com/blog/products/infrastructure/announcing-the-firmina-subsea-cable?e=48754805"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;Firmina&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt; subsea cable that will land directly in the Dominican Republic. Originally built to connect North and South America, this new branch extends Firmina’s high-capacity reach and brings additional network connectivity to the Caribbean.&lt;/span&gt;&lt;/p&gt;
+&lt;h3&gt;&lt;strong style="vertical-align: baseline;"&gt;Reach, reliability and resilience&lt;/strong&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;With its diverse subsea cable routes to geographically separated cloud regions, Americas Connect improves the reach, reliability and resilience of connectivity infrastructure. &lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;span style="vertical-align: baseline;"&gt;Pacific Coast:&lt;/span&gt;&lt;/strong&gt;&lt;span style="vertical-align: baseline;"&gt; In the Pacific, a subsea ring will create redundant paths connecting Chile to Panama with a third link from Panama to the U.S. West Coast, providing connectivity to Google Cloud regions in Chile, Los Angeles, and Las Vegas.&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div class="block-image_full_width"&gt;
+
+
+
+
+
+
+  
+    &lt;div class="article-module h-c-page"&gt;
+      &lt;div class="h-c-grid"&gt;
+  
+
+    &lt;figure class="article-image--medium
+      
+      
+        h-c-grid__col
+        
+        h-c-grid__col--4 h-c-grid__col--offset-4
+        
+      "
+      &gt;
+
+      
+      
+        
+        &lt;img
+            src="https://storage.googleapis.com/gweb-cloudblog-publish/images/1_Americas.max-1000x1000.jpg"
+        
+          alt="1 Americas"&gt;
+        
+        &lt;/a&gt;
+      
+    &lt;/figure&gt;
+
+  
+      &lt;/div&gt;
+    &lt;/div&gt;
+  
+
+
+
+
+&lt;/div&gt;
+&lt;div class="block-paragraph_advanced"&gt;&lt;p&gt;&lt;strong&gt;&lt;span style="vertical-align: baseline;"&gt;Caribbean Sea:&lt;/span&gt;&lt;/strong&gt;&lt;span style="vertical-align: baseline;"&gt; &lt;span style="vertical-align: baseline;"&gt;In the Caribbean, the Alisios cable from Panama to the Dominican Republic will interlink with a ring from the Dominican Republic to the U.S. East Coast and Google Cloud regions in South Carolina and Virginia.&lt;/span&gt;&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div class="block-image_full_width"&gt;
+
+
+
+
+
+
+  
+    &lt;div class="article-module h-c-page"&gt;
+      &lt;div class="h-c-grid"&gt;
+  
+
+    &lt;figure class="article-image--large
+      
+      
+        h-c-grid__col
+        h-c-grid__col--6 h-c-grid__col--offset-3
+        
+        
+      "
+      &gt;
+
+      
+      
+        
+        &lt;img
+            src="https://storage.googleapis.com/gweb-cloudblog-publish/images/2_Americas.max-1000x1000.jpg"
+        
+          alt="2 Americas"&gt;
+        
+        &lt;/a&gt;
+      
+    &lt;/figure&gt;
+
+  
+      &lt;/div&gt;
+    &lt;/div&gt;
+  
+
+
+
+
+&lt;/div&gt;
+&lt;div class="block-paragraph_advanced"&gt;&lt;p&gt;&lt;strong&gt;&lt;span style="vertical-align: baseline;"&gt;Atlantic Ocean:&lt;/span&gt;&lt;/strong&gt;&lt;span style="vertical-align: baseline;"&gt; The Canoa subsea cable from the Dominican Republic to Bermuda will interlink with the Nuvem and Sol cables, while cable rings to both the United States and Europe provide connectivity to the Google Cloud regions on the U.S. East Coast (South Carolina and Virginia) and Europe (Madrid).&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div class="block-image_full_width"&gt;
+
+
+
+
+
+
+  
+    &lt;div class="article-module h-c-page"&gt;
+      &lt;div class="h-c-grid"&gt;
+  
+
+    &lt;figure class="article-image--large
+      
+      
+        h-c-grid__col
+        h-c-grid__col--6 h-c-grid__col--offset-3
+        
+        
+      "
+      &gt;
+
+      
+      
+        
+        &lt;img
+            src="https://storage.googleapis.com/gweb-cloudblog-publish/images/3_Americas.max-1000x1000.jpg"
+        
+          alt="3 Americas"&gt;
+        
+        &lt;/a&gt;
+      
+    &lt;/figure&gt;
+
+  
+      &lt;/div&gt;
+    &lt;/div&gt;
+  
+
+
+
+
+&lt;/div&gt;
+&lt;div class="block-paragraph_advanced"&gt;&lt;p&gt;&lt;span style="font-style: italic; vertical-align: baseline;"&gt;“As we welcome the announcement of the Alisios, OlaLuz, and Canoa subsea cable systems, the Dominican Republic is pleased to continue partnering with Google to bolster digital connectivity and innovation as part of Americas Connect.  &lt;/span&gt;&lt;span style="font-style: italic; vertical-align: baseline;"&gt;Our participation in the Caribbean and Latin America telecommunications network allows us to join our partners in strengthening connectivity across the Americas, serving as an integral node in this expanding digital ecosystem&lt;/span&gt;&lt;span style="font-style: italic; vertical-align: baseline;"&gt;. Our shared vision supports a leap forward in the DR government’s quest to bridge the digital divide, foster local talent, and drive tech-based economic opportunity for our people. This milestone is yet another piece of our collaboration with Google propelling the Dominican Republic into a new era of global digital integration.” - &lt;/span&gt;&lt;strong style="vertical-align: baseline;"&gt;Luis Rodolfo Abinader Corona, President of the Dominican Republic&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="font-style: italic; vertical-align: baseline;"&gt;“We are delighted to welcome this new Google project and take pride in the fact that Panama is considered a strategic location for this subsea infrastructure. The announcement of the new subsea cables marks a transformative milestone and aligns with Panama’s Digital Hub Initiative and the digital infrastructure pillar of the National Digital Strategy. We recognize that building a more prosperous future requires this kind of transformative infrastructure. It fosters opportunities for both our country and the region, propelling us into a new era of secure and competitive global integration. By strengthening regional connectivity, we accelerate our efforts to bridge the digital divide, cultivate local tech talent, and drive high-tech economic growth. Building on this momentum, we look forward to continuing our collaboration with Google on other strategic initiatives to ensure that digital transformation benefits the citizens of Panama.” &lt;/span&gt;&lt;span style="vertical-align: baseline;"&gt;- &lt;/span&gt;&lt;strong style="vertical-align: baseline;"&gt;José Raúl Mulino, President of Panama&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="font-style: italic; vertical-align: baseline;"&gt;“We are pleased to welcome Canoa as the first subsea cable system to connect Bermuda directly to the Dominican Republic. It follows the Nuvem and Sol landings, and the expansion of the Bermuda Digital Exchange Port announced in June 2026. The name carries a maritime heritage that moved people and goods across these waters long before any cable did. This connection creates new digital pathways and partnerships between Bermuda and the Caribbean Community, while strengthening resilience for Bermudian households and businesses. We are encouraged that global infrastructure leaders such as Google continue to choose Bermuda. This investment reflects growing confidence in our island as a trusted digital gateway and strategic landing point in the Atlantic.” -&lt;/span&gt;&lt;span style="vertical-align: baseline;"&gt; &lt;/span&gt;&lt;strong style="vertical-align: baseline;"&gt;The&lt;/strong&gt;&lt;span style="vertical-align: baseline;"&gt; &lt;/span&gt;&lt;strong style="vertical-align: baseline;"&gt;Hon. Alexa N.H. Lightbourne, JP, MP, Minister of Home Affairs, Government of Bermuda&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="font-style: italic; vertical-align: baseline;"&gt;“The new Alisios submarine cable, which will connect Chile, Panama, and the Dominican Republic, will be a strategic milestone, as it will strengthen our country’s position as a digital leader in Latin America. Beyond this technological achievement, this infrastructure will translate into direct benefits for our citizens. Providing faster, more resilient, and more secure connectivity would undoubtedly boost local businesses, foster economic growth, and bring the opportunities of the global digital economy directly into the homes of millions of Chileans.” - &lt;/span&gt;&lt;strong style="vertical-align: baseline;"&gt;Louis de Grange, Minister of Transportation and Telecommunications and Minister of Public Works, Government of Chile&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;&lt;span style="vertical-align: baseline;"&gt;With these new investments, Google continues to pave the way for a more connected and open global cloud network centered on increasing reach, reliability, and resilience for all. New systems can further facilitate future connectivity through strategically placed branching units, mirroring the approach of our &lt;/span&gt;&lt;a href="https://cloud.google.com/blog/products/infrastructure/honomoana-and-tabua-subsea-cables-connect-south-pacific/?e=48754805"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;Pacific Connect initiative&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt; to ensure the network and our partners can grow alongside the needs and opportunities of the region. &lt;/span&gt;&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;</description><pubDate>Tue, 11 Aug 2026 10:00:00 +0000</pubDate><guid>https://cloud.google.com/blog/products/infrastructure/introducing-americas-connect/</guid><category>Infrastructure</category><media:content height="540" url="https://storage.googleapis.com/gweb-cloudblog-publish/images/image1_jORda9l.max-600x600.png" width="540"></media:content><og xmlns:og="http://ogp.me/ns#"><type>article</type><title>Expanding connectivity in the Americas: Introducing Alisios, Canoa, and OlaLuz subsea cables</title><description></description><image>https://storage.googleapis.com/gweb-cloudblog-publish/images/image1_jORda9l.max-600x600.png</image><site_name>Google</site_name><url>https://cloud.google.com/blog/products/infrastructure/introducing-americas-connect/</url></og><author xmlns:author="http://www.w3.org/2005/Atom"><name>Brian Quigley</name><title>VP, Global Network Infrastructure, Google Cloud</title><department></department><company></company></author></item><item><title>Introducing Brazos: Bringing liquid cooling to air-cooled data centers</title><link>https://cloud.google.com/blog/topics/systems/brazos-liquid-cooling-system-for-air-cooled-data-centers/</link><description>&lt;div class="block-paragraph_advanced"&gt;&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;Next-generation artificial intelligence (AI) and high-performance computing (HPC) chips routinely exceed 1000 W Thermal Design Power (TDP). Simply put, standard air cooling cannot manage these extreme heat loads. The alternative — retrofitting entire data center facilities with chilled water loops — requires extensive amounts of capital and time. To solve this problem, Google developed Brazos, a rack-mounted, closed-loop liquid-to-air cooling system that lets you deploy high-density, liquid-cooled equipment inside existing air-cooled environments. Brazos is generally available, and our manufacturing suppliers are ready to engage the broader industry to market and produce the Google Brazos design.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;Data center facility updates can take months. Brazos breaks with this by allowing simple, one-rack-at-a-time installations. By separating the internal-to-IT liquid loop from the facility water supply, Brazos delivers high-performance liquid cooling with the operational simplicity of standard air systems.&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div class="block-image_full_width"&gt;
+
+
+
+
+
+
+  
+    &lt;div class="article-module h-c-page"&gt;
+      &lt;div class="h-c-grid"&gt;
+  
+
+    &lt;figure class="article-image--large
+      
+      
+        h-c-grid__col
+        h-c-grid__col--6 h-c-grid__col--offset-3
+        
+        
+      "
+      &gt;
+
+      
+      
+        
+        &lt;img
+            src="https://storage.googleapis.com/gweb-cloudblog-publish/images/image1_qDK9NzQ.max-1000x1000.png"
+        
+          alt="image1"&gt;
+        
+        &lt;/a&gt;
+      
+        &lt;figcaption class="article-image__caption "&gt;&lt;p data-block-key="ft1lp"&gt;Figure 1: Brazos OCP ORV3 Sidecar Configuration showing three units providing cooling to an adjacent IT rack.&lt;/p&gt;&lt;/figcaption&gt;
+      
+    &lt;/figure&gt;
+
+  
+      &lt;/div&gt;
+    &lt;/div&gt;
+  
+
+
+
+
+&lt;/div&gt;
+&lt;div class="block-paragraph_advanced"&gt;&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;Brazos functions as a self-contained liquid ecosystem, capturing heat via liquid at the component level and rejecting it into the data center's hot aisle using high-efficiency liquid-to-air heat exchangers.&lt;/span&gt;&lt;span style="vertical-align: baseline;"&gt; &lt;/span&gt;&lt;span style="vertical-align: baseline;"&gt;This plug-and-play architecture can be rapidly installed in any legacy facility that has sufficient power and standard air handling.&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div class="block-paragraph_with_image"&gt;&lt;div class="article-module h-c-page"&gt;
+  &lt;div class="h-c-grid uni-paragraph-wrap"&gt;
+    &lt;div class="uni-paragraph
+      h-c-grid__col h-c-grid__col--8 h-c-grid__col-m--6 h-c-grid__col-l--6
+      h-c-grid__col--offset-2 h-c-grid__col-m--offset-3 h-c-grid__col-l--offset-3"&gt;
+
+      
+
+
+
+
+
+
+  
+
+    &lt;figure class="article-image--wrap-small
+      
+      "
+      &gt;
+
+      
+      
+        
+        &lt;img
+            src="https://storage.googleapis.com/gweb-cloudblog-publish/images/image2_9FaZN3B.max-1000x1000.png"
+        
+          alt="image2"&gt;
+        
+        &lt;/a&gt;
+      
+        &lt;figcaption class="article-image__caption "&gt;&lt;p data-block-key="vlns8"&gt;Figure 2: Photograph of three Brazos modular units in a sidecar rack.&lt;/p&gt;&lt;/figcaption&gt;
+      
+    &lt;/figure&gt;
+
+  
+
+
+
+
+
+      &lt;h3 data-block-key="rk46q"&gt;&lt;b&gt;System design and technical specifications&lt;/b&gt;&lt;/h3&gt;&lt;p data-block-key="47unj"&gt;Brazos is a modular system that includes three cooling units and integrated rack manifolds, all engineered for high reliability. Each modular chassis occupies 11 Open Units (OU) of rack height and interfaces with standard Open Compute Project (OCP) ORv3 form-factor racks. Key design and performance parameters include:&lt;/p&gt;&lt;ul&gt;&lt;li data-block-key="v5nu"&gt;&lt;b&gt;Rack thermal capacity&lt;/b&gt;: Supports a 60 kW nominal thermal load per rack across three modular units&lt;/li&gt;&lt;li data-block-key="99sol"&gt;&lt;b&gt;Coolant compatibility&lt;/b&gt;: Runs using either deionized (DI) water or a 25% propylene glycol mixture (PG25)&lt;/li&gt;&lt;li data-block-key="2v2un"&gt;&lt;b&gt;Power delivery&lt;/b&gt;: Operates on a 40–60 V DC input designed to connect directly with standard rack busbars&lt;/li&gt;&lt;li data-block-key="38la7"&gt;&lt;b&gt;Safety features&lt;/b&gt;: Certified to UL/CSA/IEC 62368-1 standards and features built-in leak detection alongside pressure relief valves&lt;/li&gt;&lt;li data-block-key="h8gl"&gt;&lt;b&gt;Control plane&lt;/b&gt;: Local monitoring uses a built-in human-machine interface (HMI), while remote management connects via Modbus over TCP&lt;/li&gt;&lt;/ul&gt;&lt;p data-block-key="5s1ta"&gt;The mechanical design prioritizes field serviceability. The chassis sits on low-friction slides so it can easily be extended for rapid component access. Crucial components like pumps and fans are designed as hot-swappable, field-replaceable units (FRUs) to minimize mean time to repair (MTTR).&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="block-paragraph_advanced"&gt;&lt;h3&gt;&lt;strong style="vertical-align: baseline;"&gt;Rapid deployment and industry adoption&lt;/strong&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;In the coming months, we will formally open-source the technical specifications, design principles, and visual assets of Brazos through industry forums. As part of a broader infrastructure portfolio that continues to leverage waterless air-cooled systems alongside liquid cooling, Brazos represents one of many innovations we are contributing to the open hardware ecosystem. We invite system architects, manufacturers, and thermal engineers to evaluate these designs to scale rack-mounted cooling infrastructure for the high-power computing demands of the future.&lt;/span&gt;&lt;/p&gt;
+&lt;h3&gt;&lt;strong style="vertical-align: baseline;"&gt;Next steps&lt;/strong&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;To optimize your legacy data center infrastructure for liquid cooling, follow our upcoming open-source design submissions through the &lt;/span&gt;&lt;a href="http://opencompute.org" rel="noopener" target="_blank"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;Open Compute Project&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt; forum.&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;</description><pubDate>Tue, 16 Jun 2026 16:00:00 +0000</pubDate><guid>https://cloud.google.com/blog/topics/systems/brazos-liquid-cooling-system-for-air-cooled-data-centers/</guid><category>Infrastructure</category><category>Sustainability</category><category>Systems</category><og xmlns:og="http://ogp.me/ns#"><type>article</type><title>Introducing Brazos: Bringing liquid cooling to air-cooled data centers</title><description></description><site_name>Google</site_name><url>https://cloud.google.com/blog/topics/systems/brazos-liquid-cooling-system-for-air-cooled-data-centers/</url></og><author xmlns:author="http://www.w3.org/2005/Atom"><name>Jorge Padilla</name><title>Senior Staff Product Design Engineer, Google</title><department></department><company></company></author><author xmlns:author="http://www.w3.org/2005/Atom"><name>Madhusudan Iyengar</name><title>Distinguished Engineer, Google</title><department></department><company></company></author></item><item><title>How we evolved Google’s global and data center networks for the AI era</title><link>https://cloud.google.com/blog/products/networking/data-center-and-global-networks-built-for-ai-era/</link><description>&lt;div class="block-paragraph_advanced"&gt;&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;Over the last 25 years of building Google’s global network, we’ve &lt;/span&gt;&lt;a href="https://cloud.google.com/blog/products/networking/google-global-network-principles-and-innovations?e=48754805"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;navigated major architectural eras&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt; — from the Internet, to streaming, and the cloud. Today, we are squarely in the midst of a fourth: the AI era. The applications in the AI era are fundamentally different from the consumer and enterprise applications of the previous eras and impose a set of novel and demanding requirements — on compute resources, of course, but also on the network. &lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;Consider the fundamental physical challenge, which is that it is far more difficult to move electrons (electrical power) than it is to move photons (data over fiber). Because the demand for AI compute frequently outpaces the space and power capacities of individual facilities, we strategically locate data centers near sustainable energy sources, or in locations with pathways to add clean energy sources to the local grid. Then, by utilizing the network to distribute AI workloads across campuses, we create a massive-scale, pooled hypercomputing resource that overcomes the power limitations of any single site.&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div class="block-image_full_width"&gt;
+
+
+
+
+
+
+  
+    &lt;div class="article-module h-c-page"&gt;
+      &lt;div class="h-c-grid"&gt;
+  
+
+    &lt;figure class="article-image--large
+      
+      
+        h-c-grid__col
+        h-c-grid__col--6 h-c-grid__col--offset-3
+        
+        
+      "
+      &gt;
+
+      
+      
+        
+        &lt;img
+            src="https://storage.googleapis.com/gweb-cloudblog-publish/images/1_R90253L.max-1000x1000.jpg"
+        
+          alt="1"&gt;
+        
+        &lt;/a&gt;
+      
+    &lt;/figure&gt;
+
+  
+      &lt;/div&gt;
+    &lt;/div&gt;
+  
+
+
+
+
+&lt;/div&gt;
+&lt;div class="block-paragraph_advanced"&gt;&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;To deliver this, we created an end-to-end, vertically integrated AI technology stack that comprises everything from chips to systems, to platforms and application and agentic ecosystems. This stack includes a portfolio of pre-built agents and applications; our &lt;/span&gt;&lt;a href="https://cloud.google.com/blog/products/ai-machine-learning/introducing-gemini-enterprise-agent-platform?e=48754805"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;Gemini Enterprise Agent Platform&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt; for you to build, scale, govern, and optimize your AI-enabled applications; world-class AI models; as well as our unified data platform. All this is anchored by our &lt;/span&gt;&lt;a href="https://cloud.google.com/solutions/ai-hypercomputer?e=48754805"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;AI Hypercomputer&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt;, a unified infrastructure that combines purpose-built hardware and open software, and that comes with flexible consumption options. Our network, forged through decades of innovation, is the essential fabric of the AI Hypercomputer. &lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div class="block-image_full_width"&gt;
+
+
+
+
+
+
+  
+    &lt;div class="article-module h-c-page"&gt;
+      &lt;div class="h-c-grid"&gt;
+  
+
+    &lt;figure class="article-image--large
+      
+      
+        h-c-grid__col
+        h-c-grid__col--6 h-c-grid__col--offset-3
+        
+        
+      "
+      &gt;
+
+      
+      
+        
+        &lt;img
+            src="https://storage.googleapis.com/gweb-cloudblog-publish/images/2_bZdv9ks.max-1000x1000.jpg"
+        
+          alt="2"&gt;
+        
+        &lt;/a&gt;
+      
+    &lt;/figure&gt;
+
+  
+      &lt;/div&gt;
+    &lt;/div&gt;
+  
+
+
+
+
+&lt;/div&gt;
+&lt;div class="block-paragraph_advanced"&gt;&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;The network supporting this stack must meet the stringent bandwidth, scale, and performance needs of AI workloads. This applies not only within the campus, where the network must scale up and out, but also across the wide area network (WAN) along with high-bandwidth interconnects, to bring AI training data from its source to AI compute resources. &lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;To address these challenges, we’ve reimagined three key pillars of our network infrastructure: the fabric inside the AI Hypercomputer, the fabric across the AI Hypercomputer, and our global network. Let’s take a closer look at each of these. &lt;/span&gt;&lt;/p&gt;
+&lt;h3 role="presentation"&gt;&lt;strong style="vertical-align: baseline;"&gt;1. The fabric inside AI Hypercomputer&lt;/strong&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;The massive scale of today’s AI models, fueled by the explosive growth of foundational AI model parameters, makes AI training very compute- and network-intensive.&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div class="block-image_full_width"&gt;
+
+
+
+
+
+
+  
+    &lt;div class="article-module h-c-page"&gt;
+      &lt;div class="h-c-grid"&gt;
+  
+
+    &lt;figure class="article-image--large
+      
+      
+        h-c-grid__col
+        h-c-grid__col--6 h-c-grid__col--offset-3
+        
+        
+      "
+      &gt;
+
+      
+      
+        
+        &lt;img
+            src="https://storage.googleapis.com/gweb-cloudblog-publish/images/3_eO2Dxet.max-1000x1000.jpg"
+        
+          alt="3"&gt;
+        
+        &lt;/a&gt;
+      
+    &lt;/figure&gt;
+
+  
+      &lt;/div&gt;
+    &lt;/div&gt;
+  
+
+
+
+
+&lt;/div&gt;
+&lt;div class="block-paragraph_advanced"&gt;&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;This necessitates &lt;/span&gt;&lt;span style="vertical-align: baseline;"&gt;an exponential increase in required network bandwidth, with strict bounds on delay (e.g., tail latency) to accommodate AI workloads’ peculiar traffic patterns, which are characterized by sensitivity to performance variation and synchronized bursts, i.e., intense, coordinated, millisecond-level traffic spikes. Furthermore, since large-scale training jobs are uniquely vulnerable to failures and performance stragglers, maintaining high reliability and predictable performance is absolutely essential. &lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;To address the scale, low latency, and high predictability that modern AI workloads require — as well as protection from extreme bursts — we’ve adopted a "campus as a computer" philosophy, decoupling our network into three distinct domains: &lt;/span&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li aria-level="1" style="list-style-type: disc; vertical-align: baseline;"&gt;
+&lt;p role="presentation"&gt;&lt;span style="vertical-align: baseline;"&gt;a scale-up domain for intra-pod connectivity&lt;/span&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li aria-level="1" style="list-style-type: disc; vertical-align: baseline;"&gt;
+&lt;p role="presentation"&gt;&lt;span style="vertical-align: baseline;"&gt;a dedicated east-west scale-out accelerator fabric&lt;/span&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li aria-level="1" style="list-style-type: disc; vertical-align: baseline;"&gt;
+&lt;p role="presentation"&gt;&lt;span style="vertical-align: baseline;"&gt;the &lt;/span&gt;&lt;a href="https://cloud.google.com/blog/products/networking/speed-scale-reliability-25-years-of-data-center-networking?e=48754805"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;Jupiter&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt; &lt;/span&gt;&lt;span style="vertical-align: baseline;"&gt;frontend network for north-south compute and storage access &lt;/span&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;This decoupled architecture provides three strategic advantages: it allows domains to evolve independently for faster innovation; provides a non-blocking scale-out network with massive training bandwidth; and helps ensure the network can be co-designed in lockstep with new ML accelerators, for superior hardware support.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;Recently, we unveiled &lt;/span&gt;&lt;a href="https://cloud.google.com/blog/products/networking/introducing-virgo-megascale-data-center-fabric"&gt;&lt;strong style="text-decoration: underline; vertical-align: baseline;"&gt;Virgo Network&lt;/strong&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt;, our scale-out data center fabric specifically engineered for modern AI. Virgo utilizes high-radix switches and a flat, two-layer non-blocking topology to provide massive bisection bandwidth, while minimizing latency by reducing network tiers. Its multi-planar design, featuring independent control domains for each plane, provides hardware-level resilience and fault isolation. Furthermore, Virgo can expand across multiple data centers, removing physical building limitations and enabling flexible AI compute scaling.&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div class="block-image_full_width"&gt;
+
+
+
+
+
+
+  
+    &lt;div class="article-module h-c-page"&gt;
+      &lt;div class="h-c-grid"&gt;
+  
+
+    &lt;figure class="article-image--large
+      
+      
+        h-c-grid__col
+        h-c-grid__col--6 h-c-grid__col--offset-3
+        
+        
+      "
+      &gt;
+
+      
+      
+        
+        &lt;img
+            src="https://storage.googleapis.com/gweb-cloudblog-publish/images/virgo_network_architecture_figure.max-1000x1000.jpg"
+        
+          alt="4"&gt;
+        
+        &lt;/a&gt;
+      
+    &lt;/figure&gt;
+
+  
+      &lt;/div&gt;
+    &lt;/div&gt;
+  
+
+
+
+
+&lt;/div&gt;
+&lt;div class="block-paragraph_advanced"&gt;&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;The effectiveness of our network and accelerator codesign is perfectly illustrated by the recently debuted &lt;/span&gt;&lt;a href="https://blog.google/innovation-and-ai/infrastructure-and-cloud/google-cloud/eighth-generation-tpu-agentic-era/" rel="noopener" target="_blank"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;eighth generation TPUs&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt;. Within this architecture, Virgo Network can link 134,000 TPU 8t chips with up to 47 petabits/sec of non-blocking bi-sectional bandwidth in a single fabric. Virgo Network delivers up to 4x the bandwidth per TPU 8t accelerator over the previous generation, and 40% lower unloaded fabric latency for TPU 8t compared to the previous generation network for TPUs. In this setup, Virgo Network manages the raw accelerator traffic, while Jupiter provides reliable and rapid access to the global WAN and storage. When integrated with &lt;/span&gt;&lt;a href="https://docs.cloud.google.com/ai-hypercomputer/docs/workloads/pathways-on-cloud/pathways-intro"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;Pathways&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt; and &lt;/span&gt;&lt;a href="https://github.com/jax-ml/jax" rel="noopener" target="_blank"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;JAX&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt;, this AI Hypercomputer networking engine facilitates near-linear scaling for up&lt;/span&gt;&lt;strong style="vertical-align: baseline;"&gt; &lt;/strong&gt;&lt;span style="vertical-align: baseline;"&gt;to a million TPU 8t chips in a single logical cluster.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong style="vertical-align: baseline;"&gt;Autonomous reliability: protecting workload goodput&lt;/strong&gt;&lt;span style="vertical-align: baseline;"&gt; &lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;Building a resilient megascale fabric represents only part of the challenge. &lt;/span&gt;&lt;span style="vertical-align: baseline;"&gt;In a cluster of hundreds of thousands of chips, hardware failures are a statistical certainty. A single stalled instance can stop an entire synchronous training job, wasting valuable compute cycles. As such, efficient fault localization is critical.&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;We engineered Virgo Network with &lt;/span&gt;&lt;strong style="vertical-align: baseline;"&gt;autonomous reliability &lt;/strong&gt;&lt;span style="vertical-align: baseline;"&gt;capabilities to maximize workload efficiency at scale, a.k.a., &lt;/span&gt;&lt;a href="https://cloud.google.com/blog/products/ai-machine-learning/goodput-metric-as-measure-of-ml-productivity"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;goodput&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt;. Expanding on our existing &lt;/span&gt;&lt;a href="https://cloud.google.com/blog/products/compute/stragglers-in-ai-a-guide-to-automated-straggler-detection?e=48754805"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;straggler detection&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt;, Virgo Network now also features automated &lt;/span&gt;&lt;strong style="vertical-align: baseline;"&gt;hang detection.&lt;/strong&gt;&lt;span style="vertical-align: baseline;"&gt; The moment a fail-stop event occurs, our specialized agents immediately localize the fault, isolate the faulty instance, and enable you to restore the training job from a checkpoint — getting your training timeline back on track, with minimal manual intervention. Learn more by watching this demo:&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div class="block-video"&gt;
+
+
+
+&lt;div class="article-module article-video "&gt;
+  &lt;figure&gt;
+    &lt;a class="h-c-video h-c-video--marquee"
+      href="https://youtube.com/watch?v=0yKGILWlngY"
+      data-glue-modal-trigger="uni-modal-0yKGILWlngY-"
+      data-glue-modal-disabled-on-mobile="true"&gt;
+
+      
+        
+
+        &lt;div class="article-video__aspect-image"
+          style="background-image: url(https://storage.googleapis.com/gweb-cloudblog-publish/images/maxresdefault_aGs9w20.max-1000x1000.jpg);"&gt;
+          &lt;span class="h-u-visually-hidden"&gt;[Demo] Autonomous ML Reliability - Data Center Network&lt;/span&gt;
+        &lt;/div&gt;
+      
+      &lt;svg role="img" class="h-c-video__play h-c-icon h-c-icon--color-white"&gt;
+        &lt;use xlink:href="#mi-youtube-icon"&gt;&lt;/use&gt;
+      &lt;/svg&gt;
+    &lt;/a&gt;
+
+    
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;div class="h-c-modal--video"
+     data-glue-modal="uni-modal-0yKGILWlngY-"
+     data-glue-modal-close-label="Close Dialog"&gt;
+   &lt;a class="glue-yt-video"
+      data-glue-yt-video-autoplay="true"
+      data-glue-yt-video-height="99%"
+      data-glue-yt-video-vid="0yKGILWlngY"
+      data-glue-yt-video-width="100%"
+      href="https://youtube.com/watch?v=0yKGILWlngY"
+      ng-cloak&gt;
+   &lt;/a&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="block-paragraph_advanced"&gt;&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;To complement these capabilities, we also use high-resolution, sub-millisecond telemetry to identify elusive network micro-bursts that are usually missed by conventional 30-second monitoring intervals. These high-resolution telemetry advancements enable more efficient network operations, better provisioning, and a lower mean time to recovery.&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div class="block-video"&gt;
+
+
+
+&lt;div class="article-module article-video "&gt;
+  &lt;figure&gt;
+    &lt;a class="h-c-video h-c-video--marquee"
+      href="https://youtube.com/watch?v=jah2yf2rARg"
+      data-glue-modal-trigger="uni-modal-jah2yf2rARg-"
+      data-glue-modal-disabled-on-mobile="true"&gt;
+
+      
+        
+
+        &lt;div class="article-video__aspect-image"
+          style="background-image: url(https://storage.googleapis.com/gweb-cloudblog-publish/images/maxresdefault-1_rh3wgyf.max-1000x1000.jpg);"&gt;
+          &lt;span class="h-u-visually-hidden"&gt;[Demo] High Resolution Network Telemetry: Data Center Network&lt;/span&gt;
+        &lt;/div&gt;
+      
+      &lt;svg role="img" class="h-c-video__play h-c-icon h-c-icon--color-white"&gt;
+        &lt;use xlink:href="#mi-youtube-icon"&gt;&lt;/use&gt;
+      &lt;/svg&gt;
+    &lt;/a&gt;
+
+    
+  &lt;/figure&gt;
+&lt;/div&gt;
+
+&lt;div class="h-c-modal--video"
+     data-glue-modal="uni-modal-jah2yf2rARg-"
+     data-glue-modal-close-label="Close Dialog"&gt;
+   &lt;a class="glue-yt-video"
+      data-glue-yt-video-autoplay="true"
+      data-glue-yt-video-height="99%"
+      data-glue-yt-video-vid="jah2yf2rARg"
+      data-glue-yt-video-width="100%"
+      href="https://youtube.com/watch?v=jah2yf2rARg"
+      ng-cloak&gt;
+   &lt;/a&gt;
+&lt;/div&gt;
+
+&lt;/div&gt;
+&lt;div class="block-paragraph_advanced"&gt;&lt;h3 role="presentation"&gt;&lt;strong style="vertical-align: baseline;"&gt;2. The fabric across AI Hypercomputer&lt;/strong&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;The exponential growth of modern AI workloads requires us to scale and distribute AI workloads across multiple campuses over a WAN. &lt;/span&gt;&lt;span style="vertical-align: baseline;"&gt;At the same time, traditional networks weren’t built for the high bandwidth and extreme burstiness of AI traffic, and often fail to detect microbursts that can lead to severe performance degradation. We have developed a suite of innovations to optimize WAN performance for cross-site AI deployments, including:&lt;/span&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li aria-level="1" style="list-style-type: disc; vertical-align: baseline;"&gt;
+&lt;p role="presentation"&gt;&lt;span style="vertical-align: baseline;"&gt;A multi-shard global network that enables horizontal scaling. &lt;/span&gt;&lt;span style="vertical-align: baseline;"&gt;Our global network sustained a 10X WAN traffic growth from 2020 to 2025. &lt;/span&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li aria-level="1" style="list-style-type: disc; vertical-align: baseline;"&gt;
+&lt;p role="presentation"&gt;&lt;span style="vertical-align: baseline;"&gt;T&lt;/span&gt;&lt;span style="vertical-align: baseline;"&gt;uning the fabric for essential availability, latency, and quality of service (QoS) attributes. Real-time microburst management helps ensure fair bandwidth allocation and infrastructure isolation across our multi-tenant infrastructure. &lt;/span&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li aria-level="1" style="list-style-type: disc; vertical-align: baseline;"&gt;
+&lt;p role="presentation"&gt;&lt;span style="vertical-align: baseline;"&gt;Multi-shard isolation to ensure each network shard operates with its own control, data, and management planes. &lt;/span&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;Combined with regional isolation and &lt;/span&gt;&lt;a href="https://dl.acm.org/doi/10.1145/3603269.3604867" rel="noopener" target="_blank"&gt;&lt;span style="text-decoration: underline; vertical-align: baseline;"&gt;Protective Reroute&lt;/span&gt;&lt;/a&gt;&lt;span style="vertical-align: baseline;"&gt;, this architecture minimizes failure impact and shortens user-visible outages — delivering the beyond-nines reliability essential for AI workloads.  &lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;Providing high-speed, flexible, and cost-effective interconnectivity is also a priority. AI training relies on vast datasets that are often located on-premises or across various clouds. Given the high cost of AI compute, minimizing idle time is essential; for instance, upgrading from a 100 Gbps link to a 3.2 Tbps connection reduces the time to transfer a petabyte of data from 22.2 hours to just 0.7 hours — a 97% reduction in AI compute idle time spent waiting for data. Our &lt;/span&gt;&lt;strong style="vertical-align: baseline;"&gt;AI-native Cloud Interconnect&lt;/strong&gt;&lt;span style="vertical-align: baseline;"&gt; is purpose-built for the high-bandwidth and low-latency needs of AI workloads, featuring an optimized data path with 400 Gbps links that scale in 3.2 Tbps increments to reach petabit-per-second capacity. It also offers traffic differentiation and flexible connection options, including direct fiber peering and colocation facilities. AI-native Cloud Interconnect supports petabit-scale data transfer with reliable, private connectivity necessary for your cross-cloud AI training and serving.&lt;/span&gt;&lt;/p&gt;
+&lt;h3 role="presentation"&gt;&lt;strong style="vertical-align: baseline;"&gt;3. A resilient global network for the age of inference &lt;/strong&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;Applications serving AI inference to a global user population or supporting an agentic enterprise are far more demanding than conventional web apps. The need for opportunistic use of expensive AI compute available at distant locations, distributed service dependencies, and the burstiness of the traffic demand high bandwidth network with a global footprint, as well as deep peering to SaaS providers, ISPs, and hyperscalers. To maintain responsiveness and "always-on" availability, applications need low latency and a highly resilient network.&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;
+&lt;div class="block-image_full_width"&gt;
+
+
+
+
+
+
+  
+    &lt;div class="article-module h-c-page"&gt;
+      &lt;div class="h-c-grid"&gt;
+  
+
+    &lt;figure class="article-image--large
+      
+      
+        h-c-grid__col
+        h-c-grid__col--6 h-c-grid__col--offset-3
+        
+        
+      "
+      &gt;
+
+      
+      
+        
+        &lt;img
+            src="https://storage.googleapis.com/gweb-cloudblog-publish/images/5_bogYf7C.max-1000x1000.jpg"
+        
+          alt="5"&gt;
+        
+        &lt;/a&gt;
+      
+    &lt;/figure&gt;
+
+  
+      &lt;/div&gt;
+    &lt;/div&gt;
+  
+
+
+
+
+&lt;/div&gt;
+&lt;div class="block-paragraph_advanced"&gt;&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;With its connectivity, scale, and resilience, Google’s global network is well-equipped to handle the demands of the age of AI inference. Our network spans more than 10 million kilometers of terrestrial and subsea fiber, connects our 43 cloud regions, and features 200+ edge locations, providing the essential footprint for serving AI inference. Our Premium Tier network delivers the low latency and reliability needed for consistent, high-quality global user experience. By optimizing traffic entry and exit points, the network significantly boosts application performance, with &lt;/span&gt;&lt;span style="vertical-align: baseline;"&gt;resilience at the core of this "always-on" infrastructure. &lt;/span&gt;&lt;/p&gt;
+&lt;h3&gt;&lt;strong style="vertical-align: baseline;"&gt;Building the future, together &lt;/strong&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;As a Google Cloud customer, these network innovations are built directly into your environment. Google’s network delivers the massive scale, capacity, reliability and performance essential for your AI workloads. &lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;&lt;span style="vertical-align: baseline;"&gt;The AI era demands more than just raw compute; it necessitates a robust network fabric to scale. Our vertically integrated AI technology stack — from silicon to software ecosystems — is powered by the AI Hypercomputer to accelerate your transformation and make AI helpful for everyone. Whether through our megascale fabric, resilient global network for inference, or AI-native Cloud Interconnect, we ensure your AI journey is efficient and reliable. We look forward to building this future with you.&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;</description><pubDate>Tue, 26 May 2026 16:00:00 +0000</pubDate><guid>https://cloud.google.com/blog/products/networking/data-center-and-global-networks-built-for-ai-era/</guid><category>AI Hypercomputer</category><category>AI infrastructure</category><category>Infrastructure</category><category>Systems</category><category>Networking</category><og xmlns:og="http://ogp.me/ns#"><type>article</type><title>How we evolved Google’s global and data center networks for the AI era</title><description></description><site_name>Google</site_name><url>https://cloud.google.com/blog/products/networking/data-center-and-global-networks-built-for-ai-era/</url></og><author xmlns:author="http://www.w3.org/2005/Atom"><name>Bikash Koley</name><title>VP, Google Global Infrastructure</title><department></department><company></company></author><author xmlns:author="http://www.w3.org/2005/Atom"><name>Arjun Singh</name><title>Engineering Fellow, Google Cloud</title><department></department><company></company></author></item></channel></rss>

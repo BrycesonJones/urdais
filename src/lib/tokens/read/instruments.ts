@@ -16,7 +16,7 @@ import type { CacheTtl, ServiceTier, SourcePricingDimension } from "@/lib/tokens
 import { pickDefaultTokenSeries } from "@/lib/tokens/read/default-selection";
 import { TOKEN_CHART_UNIT, pricingDimensionLabel, tokenFacetLabel, tokenSeriesLabel, tokenUnitCaption } from "@/lib/tokens/read/labels";
 import type { PublicTokenSeries } from "@/lib/tokens/read/api-contract";
-import { TOKEN_PRICE_UNIT_CAPTION } from "@/lib/tokens/read/benchmark";
+import { TOKEN_PRICE_DEFAULT_PROVIDER, TOKEN_PRICE_UNIT_CAPTION } from "@/lib/tokens/read/benchmark";
 import type { PublicTokenBenchmarkSeries } from "@/lib/tokens/read/api-contract";
 import type { MarketDetail, MarketInstrumentDetail, TokenInstrumentIdentity } from "@/types/market";
 
@@ -152,6 +152,13 @@ function asPublicSeries(instrument: MarketInstrumentDetail): PublicTokenSeries |
 }
 
 export function pickDefaultTokenInstrument(instruments: readonly MarketInstrumentDetail[]): MarketInstrumentDetail | undefined {
+  // A benchmark surface opens on the designated provider. This is a product
+  // choice stated in one place, not a consequence of how slugs happen to sort:
+  // without it, adding a provider whose slug sorts earlier silently changes
+  // what every reader sees first.
+  const designated = instruments.find((instrument) => instrument.benchmarkIdentity?.providerSlug === TOKEN_PRICE_DEFAULT_PROVIDER);
+  if (designated) return designated;
+
   const series = instruments.flatMap((instrument) => {
     const row = asPublicSeries(instrument);
     return row ? [row] : [];
