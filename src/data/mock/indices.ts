@@ -12,13 +12,17 @@
  * row needs a number, and inventing one for a market that publishes nothing is
  * exactly the demo-data problem this file still has for the others. Its detail
  * page renders the withheld state with its full disclosure instead.
+ *
+ * Unpublished markets produce no row either: the rail is a public surface, and a
+ * withheld index stays out of it while keeping its detail model intact.
  */
 
+import { isPublishedMarket } from "@/data/market-catalog";
 import { MARKETS } from "@/data/mock/market-detail";
 import type { IndexSnapshot } from "@/types/market";
 
 export const INDEX_SNAPSHOTS: IndexSnapshot[] = MARKETS.filter(
-  (market) => market.symbol !== "UCPI",
+  (market) => market.symbol !== "UCPI" && isPublishedMarket(market.symbol),
 )
   .map((market) => {
     const instrument = market.families

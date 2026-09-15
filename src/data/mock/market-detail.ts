@@ -459,16 +459,20 @@ function headlineInstrumentId(symbol: string): string {
 }
 
 /**
- * An index compares with every other routed market's headline instrument.
- * Their units and scales differ, so the comparison is relative: both series
- * are rebased to percentage change over the selected range.
- */
-/**
  * Markets that publish no series, and so cannot be charted against another one. Offering
  * a comparison that resolves to no instrument would put a dead option in the menu.
  */
 const MARKETS_WITHOUT_SERIES = new Set(["UBWI"]);
 
+/**
+ * An index compares with every other published market's headline instrument.
+ * Their units and scales differ, so the comparison is relative: both series
+ * are rebased to percentage change over the selected range.
+ *
+ * The source is MARKET_CATALOG, the published catalog, so a withheld index is
+ * never offered in a Compare with menu — including on its own detail page,
+ * which still compares against the published family.
+ */
 function indexComparisons(symbol: string): ComparisonOption[] {
   return MARKET_CATALOG.filter(
     (market) => market.symbol !== symbol && !MARKETS_WITHOUT_SERIES.has(market.symbol),
@@ -544,6 +548,12 @@ const UAVI_MARKET = buildIndexMarket(
  * markets). The aggregate is quoted in points. This is a placeholder demo
  * walk that methodology-backed data replaces; it is not a blend of the two
  * former chip and accelerator series.
+ *
+ * UACI is currently withheld from the public product: the data-source research
+ * does not yet support a defensible basket, so the index is listed in
+ * UNPUBLISHED_SYMBOLS (src/data/market-catalog.ts) and appears in no listing,
+ * search result, watchlist row, or comparison menu. The detail model is built
+ * here regardless, unchanged, so republishing is a one-line catalog change.
  */
 const UACI_MARKET = buildIndexMarket(
   "UACI",
@@ -580,7 +590,13 @@ const UBWI_MARKET: MarketDetail = {
 
 /* ---------- Lookup ---------- */
 
-/** Routed markets in display order; the first is the default for /markets. */
+/**
+ * Routed markets in display order; the first is the default for /markets.
+ *
+ * Routing is not publication: a withheld market keeps its detail model and its
+ * /markets/<symbol> route, and is simply absent from every surface that lists or
+ * searches markets, so nothing in the product navigates to it.
+ */
 export const MARKETS: MarketDetail[] = [
   UCPI_MARKET,
   UGAI_MARKET,

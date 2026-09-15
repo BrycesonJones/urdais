@@ -38,3 +38,34 @@ describe("MarketDetailPage Tokens family", () => {
     expect(screen.queryByText("Demo data")).toBeNull();
   });
 });
+
+/*
+ * UACI is withheld from the public product. The comparison menu is built from the
+ * published catalog, so it is offered nowhere — while the published indices stay
+ * selectable and the withheld index's own page keeps working.
+ */
+describe("MarketDetailPage Compare with", () => {
+  function openCompareOn(symbol: string) {
+    render(<MarketDetailPage market={findMarket(symbol)!} />);
+    fireEvent.click(screen.getByRole("button", { name: "Compare with" }));
+    return screen.getAllByRole("option").map((option) => option.textContent);
+  }
+
+  it("offers the published indices, and never UACI, on a published index page", () => {
+    expect(openCompareOn("ugai")).toEqual(["UCPI", "UAVI", "UMPI", "UPPI", "UEPI"]);
+  });
+
+  it("offers no UACI option on any published index page", () => {
+    for (const symbol of ["ugai", "uavi", "umpi", "uppi", "uepi"]) {
+      const { unmount } = render(<MarketDetailPage market={findMarket(symbol)!} />);
+      fireEvent.click(screen.getByRole("button", { name: "Compare with" }));
+      expect(screen.queryAllByRole("option").map((option) => option.textContent)).not.toContain("UACI");
+      unmount();
+    }
+  });
+
+  it("keeps the withheld index's own page working, comparing against the published family", () => {
+    expect(openCompareOn("uaci")).toEqual(["UCPI", "UGAI", "UAVI", "UMPI", "UPPI", "UEPI"]);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("UACI");
+  });
+});

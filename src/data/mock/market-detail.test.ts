@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { CHIP_ACCELERATOR_INDEX } from "@/data/market-catalog";
+import { CHIP_ACCELERATOR_INDEX, isPublishedMarket } from "@/data/market-catalog";
 import { INDEX_SNAPSHOTS } from "@/data/mock/indices";
 import { MARKETS, defaultInstrument, findMarket } from "@/data/mock/market-detail";
 
@@ -21,25 +21,48 @@ describe("market detail dataset: chip and accelerator consolidation", () => {
     expect(findMarket("ucpi")?.description).toBeUndefined();
   });
 
-  it("offers UACI once, and never UAXI, in every cross-index comparison list", () => {
+  it("never offers UAXI in a comparison list", () => {
     for (const market of MARKETS) {
       // A market that publishes no series has no headline instrument to compare from.
       if (market.families.every((family) => family.instruments.length === 0)) continue;
-      const labels = defaultInstrument(market).comparisons.map((option) => option.label);
-      const standalone = market.families.length === 1 && market.families[0]!.instruments.length === 1;
-      if (standalone && market.symbol !== "UACI") expect(labels.filter((label) => label === "UACI")).toHaveLength(1);
-      expect(labels).not.toContain("UAXI");
+      expect(defaultInstrument(market).comparisons.map((option) => option.label)).not.toContain("UAXI");
     }
-    expect(defaultInstrument(findMarket("ugai")!).comparisons.map((option) => option.label)).toEqual(["UCPI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI"]);
+  });
+});
+
+/*
+ * UACI is withheld from the public product, not deleted. The detail model is
+ * built exactly as before — so republishing is a one-line catalog change — and
+ * every surface that lists, searches, or compares markets leaves it out.
+ */
+describe("market detail dataset: UACI is withheld from public surfaces", () => {
+  it("keeps the UACI detail model intact, with its series and its headline instrument", () => {
+    const uaci = findMarket("uaci")!;
+    expect(isPublishedMarket(uaci.symbol)).toBe(false);
+    expect(defaultInstrument(uaci).series.daily.length).toBeGreaterThan(0);
+    expect(defaultInstrument(uaci).snapshot.value).toBeGreaterThan(0);
   });
 
-  it("shows one chip / accelerator row on the homepage rail with the canonical name", () => {
-    const rows = INDEX_SNAPSHOTS.filter((snapshot) => /chip|accelerator/i.test(snapshot.name));
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ symbol: "UACI", name: "Urdais Chip & Accelerator Index", unit: "pts" });
-    // UBWI is deliberately absent: it publishes no value, so it gets no watchlist row
-    // rather than a fabricated one. Its detail page carries the withheld state instead.
-    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).toEqual(["UGAI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI"]);
+  it("offers UACI in no cross-index comparison list", () => {
+    for (const market of MARKETS) {
+      if (market.families.every((family) => family.instruments.length === 0)) continue;
+      expect(defaultInstrument(market).comparisons.map((option) => option.label)).not.toContain("UACI");
+    }
+    expect(defaultInstrument(findMarket("ugai")!).comparisons.map((option) => option.label)).toEqual(["UCPI", "UAVI", "UMPI", "UPPI", "UEPI"]);
+  });
+
+  it("compares the withheld index itself against the published family", () => {
+    // Its own page keeps working: the comparison menu simply carries published indices.
+    expect(defaultInstrument(findMarket("uaci")!).comparisons.map((option) => option.label)).toEqual(["UCPI", "UGAI", "UAVI", "UMPI", "UPPI", "UEPI"]);
+  });
+
+  it("shows no chip / accelerator row on the homepage rail", () => {
+    expect(INDEX_SNAPSHOTS.filter((snapshot) => /chip|accelerator/i.test(snapshot.name))).toEqual([]);
+    // UBWI is deliberately absent too, for a different reason: it publishes no value,
+    // so it gets no watchlist row rather than a fabricated one. Its detail page carries
+    // the withheld state instead.
+    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).toEqual(["UGAI", "UAVI", "UMPI", "UPPI", "UEPI"]);
+    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).not.toContain("UACI");
     expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).not.toContain("UBWI");
   });
 });
