@@ -290,6 +290,56 @@ export const OBSERVED_ECONOMIES: readonly ObservedEconomy[] = [
     note: "OECD BF90(W) carries the disagreement documented in Part 4",
   },
   {
+    // Taiwan, admitted in Phase 2E. The only new denominator constituent since Production
+    // V1, and the one that brings the modelled share under the 40 % ceiling.
+    //
+    // Two caveats travel with it and neither is hidden. Land is valued at 公告現值, the
+    // announced current land value -- an administrative assessment, not a market price --
+    // which DGBAS states in Table 1 note 3 and which almost certainly understates the land
+    // stock: DGBAS's own alternative household-sector series, re-valuing residential,
+    // industrial and commercial land at market price, raises net worth by NT$10,119 x 10^8,
+    // or 0.39 %. Urdais takes the announced-value headline, so Taiwan's contribution is if
+    // anything conservative. And Taiwan is absent from the World Bank's Changing Wealth of
+    // Nations 150-economy cross section, so it contributes wealth to the denominator while
+    // contributing nothing to the residual model's calibration weights; `observedWealthCoverage`
+    // is therefore a slight understatement from this phase onward.
+    economy: "TWN",
+    referenceDate: "2024-12-31",
+    referenceYear: 2024,
+    // DGBAS Table 4 (C) Net Worth 2,589,685 less household durables 27,885 + 31,921, in
+    // units of 100 million NT$. Taken from Table 4 rather than Table 1 because Table 1 is
+    // published to two decimal places of NT$ trillions and Table 4 is not rounded.
+    valueNationalCurrency: 252987900000000,
+    currency: "TWD",
+    fx: {
+      basis: "end_period",
+      rateLcuPerUsd: 32.781,
+      fixingDate: "2024-12-31",
+      sourceInterface: "cbc-exchange-rates",
+    },
+    valueUsd: 7717516244165.828,
+    sourceInterface: "dgbas-national-wealth",
+    sourceType: "primary",
+    sourceSeries:
+      "DGBAS National Wealth Statistics table4e113 (C) Net Worth 2,589,685 less items 4 and 5, Household Durable and Semi-durable Properties 27,885 and Household Cars and Motorcycles 31,921 (100 million NT$)",
+    acquisitionMode: "automated",
+    observationStatus: "observed",
+    rightsStatus: "cleared",
+    landTreatment: "included",
+    consumerDurablesTreatment: "included_and_stripped",
+    consumerDurablesStrippedUsd: 182441048168.14618,
+    consumerDurablesSourceSeries:
+      "DGBAS National Wealth Statistics table4e113 items 4 and 5, Household Durable and Semi-durable Properties (excluding household cars and motorcycles) and Household Cars and Motorcycles",
+    // Taiwan is not a WDI country, so its GDP weight cannot come from the same source as
+    // every other component's. It is DGBAS's own nominal GDP in US dollars. The World Bank
+    // states that Taiwan is nonetheless added to the WDI world aggregate, which is what
+    // makes the coverage ratio and the residual's unobserved-GDP term consistent.
+    gdpUsd2024: 801529000000,
+    gdpUsdReferenceYear: 801529000000,
+    note:
+      "DGBAS National Wealth Statistics for 2024, released 29 April 2026; the accounting identity reproduces exactly, 2,080,329 net non-financial + 509,356 net financial = 2,589,685 (100 million NT$), and net financial assets are net foreign financial assets by DGBAS's own Table 1 note 1. Land is included in full but valued at announced current land value. FX is the CBC interbank spot market closing rate for 31 December 2024.",
+  },
+  {
     economy: "NLD",
     referenceDate: "2025-12-31",
     referenceYear: 2025,

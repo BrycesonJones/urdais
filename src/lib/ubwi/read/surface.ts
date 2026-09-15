@@ -10,8 +10,32 @@
  * second one exists: there is no such thing as a change from nothing.
  */
 import { calculateUbwi, METHODOLOGY_VERSION, RESIDUAL_MODEL_VERSION, UBWI_UNIT } from "../calculate";
+import { CHAINLINK_BTC_USD_FEED } from "../chainlink";
 import { evaluateGate, PRODUCTION_V1_THRESHOLDS } from "../gate";
-import type { UnobservedMajorEconomy } from "../types";
+import { effectiveRightsStatus, sourceInterface } from "../rights";
+import type { UbwiCalculation, UnobservedMajorEconomy } from "../types";
+
+/**
+ * Where the BTC price came from, in the terms a reader needs to check it.
+ *
+ * The surface names the feed, the network and the round's own update timestamp, because
+ * "Bitcoin market capitalization" with no price provenance is an assertion. It stops
+ * short of the aggregator address and the phase id: those are audit lineage, frozen on
+ * the point and reachable from the methodology, not something a reader of the index
+ * needs on the page.
+ */
+export type UbwiPriceProvenance = {
+  /** e.g. "Chainlink BTC/USD". */
+  feed: string;
+  network: string;
+  proxyAddress: string;
+  /** The round the price came from. */
+  roundId: string;
+  /** When the feed itself last updated, ISO 8601. Not when Urdais read it. */
+  feedUpdatedAt: string;
+  /** How Urdais holds the right to use it, in the reader's words. */
+  rightsNote: string;
+};
 
 export type UbwiDisclosure = {
   /** Total Global Wealth, in USD. */
@@ -30,6 +54,8 @@ export type UbwiDisclosure = {
   /** The instant the numerator was observed. */
   observedAt: string;
   blockHeight: number;
+  /** Null under the retired three-venue rule, which published no single feed. */
+  priceProvenance: UbwiPriceProvenance | null;
 };
 
 export type UbwiSurface =
@@ -88,6 +114,7 @@ export function ubwiSurface(options?: {
     residualModelVersion: RESIDUAL_MODEL_VERSION,
     observedAt: calculation.numerator.observedAt,
     blockHeight: calculation.numerator.blockHeight,
+    priceProvenance: priceProvenance(calculation),
   };
 
   if (options?.publication && gate.passed) {
@@ -111,6 +138,27 @@ export function ubwiSurface(options?: {
     reason: UBWI_WITHHELD_NOTE,
     gateFailures: gate.findings.map((f) => f.code),
     ...disclosure,
+  };
+}
+
+function priceProvenance(calculation: UbwiCalculation): UbwiPriceProvenance | null {
+  const feed = calculation.numerator.chainlink;
+  if (feed === undefined) return null;
+  const iface = sourceInterface(calculation.numerator.priceSourceInterface);
+  const status = iface === undefined ? "under_review" : effectiveRightsStatus(iface);
+  return {
+    feed: `Chainlink ${feed.description.replace(/ /g, "")}`,
+    network: CHAINLINK_BTC_USD_FEED.networkName,
+    proxyAddress: feed.proxyAddress,
+    roundId: feed.roundId,
+    feedUpdatedAt: new Date(feed.updatedAt * 1000).toISOString(),
+    // The surface says the rights state plainly rather than implying a licence. An
+    // inference presented as a grant on a public page is the failure this phase was
+    // most at risk of, so the page carries the qualification too.
+    rightsNote:
+      status === "inferred_permitted"
+        ? "Read from the public feed under inferred permission, not an express licence from Chainlink."
+        : "Read from the public feed.",
   };
 }
 

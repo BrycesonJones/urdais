@@ -22,7 +22,7 @@
  * with no retained artifact carries `termsArtifact: null` and is not cleared -- the
  * absence is visible rather than assumed away.
  */
-import type { RightsStatus } from "./types";
+import type { SourceRightsStatus } from "./types";
 
 /** Whether automated retrieval through this interface is permitted by its own terms. */
 export type TermsReviewState = "not_reviewed" | "under_review" | "permitted" | "not_permitted";
@@ -71,10 +71,40 @@ export type UsageTerms = {
   rateLimit: string | null;
 };
 
+/**
+ * An explicit product decision to proceed on inferred permission rather than on a grant.
+ *
+ * This exists because Phase 2E needed a state the model could not express. Chainlink's
+ * BTC/USD Data Feed is published through a documented public interface and Urdais found
+ * no prohibition on using an observed reference price as an input to a derived index --
+ * but Chainlink granted nothing, its terms page could not be read at all, and the
+ * upstream providers' terms are undisclosed. Recording that as `permitted` would assert a
+ * permission nobody gave. Recording it as `under_review` would assert an open review that
+ * an explicit decision has in fact closed.
+ *
+ * The three lists are the whole point and none is optional. `basis` is what was found,
+ * `notFound` is what was looked for and was not there -- which is the half a confident
+ * record always loses -- and `limits` is what the inference does not cover. A decision
+ * that cannot state what it does not cover has not been thought about.
+ */
+export type InferredPermission = {
+  /** Stable identifier for the decision, so a published point can cite it. */
+  decisionId: string;
+  decidedOn: string;
+  /** The phase and document the decision was taken in. Never a person's name. */
+  decidedIn: string;
+  /** The affirmative evidence, each item checkable against the retained artifact or docs. */
+  basis: readonly string[];
+  /** What was searched for and not found. Absence of a prohibition, recorded as absence. */
+  notFound: readonly string[];
+  /** What this inference does not extend to. */
+  limits: readonly string[];
+};
+
 export type UbwiSourceInterface = {
   slug: string;
   providerName: string;
-  providerKind: "statistical_compiler" | "spot_venue" | "chain_data";
+  providerKind: "statistical_compiler" | "spot_venue" | "chain_data" | "oracle_network";
   canonicalUrl: string;
   /** Question 1: may Urdais retrieve this automatically? */
   termsReviewState: TermsReviewState;
@@ -86,6 +116,12 @@ export type UbwiSourceInterface = {
    * statistical compilers, whose licences answer all six axes with one sentence.
    */
   usageTerms?: UsageTerms;
+  /**
+   * Present only where an explicit product decision proceeds on inference rather than on
+   * a grant. Its presence is what produces `inferred_permitted` from
+   * `effectiveRightsStatus`, and it can never produce `cleared`.
+   */
+  inferredPermission?: InferredPermission;
   termsArtifact: TermsArtifact | null;
   /**
    * Whether an automated production collector exists and is usable today. False does
@@ -345,6 +381,60 @@ export const SOURCE_INTERFACES: readonly UbwiSourceInterface[] = [
   },
 
   {
+    slug: "dgbas-national-wealth",
+    providerName: "Directorate-General of Budget, Accounting and Statistics, Executive Yuan (Taiwan)",
+    providerKind: "statistical_compiler",
+    canonicalUrl: "https://eng.stat.gov.tw/cp.aspx?n=2415",
+    termsReviewState: "permitted",
+    dataUseTermsState: "permitted",
+    termsArtifact: {
+      url: "https://www.stat.gov.tw/cp.aspx?n=3164",
+      contentHash: "1ca109054477863b4718e05249f2b341f1376fc9cde6ef523fd8aa123922c0da",
+      byteLength: 74_986,
+      httpStatus: 200,
+      retrievedAt: "2026-09-15T03:02:00Z",
+      // DGBAS's own open-data declaration, quoted in the original. It releases everything
+      // the site publishes under the Open Government Data License, Taiwan 1.0: free of
+      // charge, non-exclusive, sublicensable, unlimited in time and territory, covering
+      // reproduction, adaptation, editing, public transmission and the development of
+      // derivative products and services -- and it says in terms that the grant is not
+      // afterwards withdrawn and needs no separate written permission. Attribution is the
+      // one condition, and it is a condition rather than a formality: the licence text
+      // states that a user who fails to attribute is treated as never having been granted
+      // the rights at all.
+      decisiveClause:
+        "為利各界廣為利用網站資料，行政院主計總處網站上刊載之所有資料與素材，其得受著作權保護之範圍，採政府資料開放授權條款-第1版發布，以無償、非專屬、得由使用者再授權之方式提供公眾使用，使用者得不限時間及地域，重製、改作、編輯、公開傳輸或為其他方式之利用，開發各種產品或服務（簡稱加值衍生物），此一授權行為不會嗣後撤回，使用者亦無須取得本機關之書面或其他方式授權；然使用時應註明出處。",
+      attributionRequired:
+        "行政院主計總處 (Directorate-General of Budget, Accounting and Statistics, Executive Yuan, R.O.C. (Taiwan))",
+    },
+    automatedRetrievalAvailable: true,
+    note:
+      "National Wealth Statistics, reference years 2020-2024, updated 29 April 2026. Table 4 carries the sector balance sheet in units of 100 million NT$ and is the series Urdais reads; Table 1 publishes the same totals rounded to two decimal places of NT$ trillions. The licence is the Open Government Data License, Taiwan 1.0, which data.gov.tw's own English text states is compatible with CC BY 4.0. Land is included in the published total at announced current land value rather than market price, which DGBAS states in Table 1 note 3; that is an asset-valuation caveat recorded on the component, not a rights question.",
+  },
+
+  {
+    slug: "cbc-exchange-rates",
+    providerName: "Central Bank of the Republic of China (Taiwan)",
+    providerKind: "statistical_compiler",
+    canonicalUrl: "https://www.cbc.gov.tw/en/cp-4237-165072-15ec2-2.html",
+    termsReviewState: "permitted",
+    dataUseTermsState: "permitted",
+    termsArtifact: {
+      url: "https://www.cbc.gov.tw/en/cp-958-40419-F8209-2.html",
+      contentHash: "443105f3af2316087daa9a37092d21737881bb48e7db1b1d199e4bf3b6703f20",
+      byteLength: 23_719,
+      httpStatus: 200,
+      retrievedAt: "2026-09-15T03:02:00Z",
+      decisiveClause:
+        'all of data and materials on the Central Bank of the Republic of China (Taiwan)(herein known as CBC) website, which are deemed as protected under copyrights and published publicly, are provided under "Open Government Data License, version 1.0 (OGDL-Taiwan-1.0), Link: https://data.gov.tw/license" in a free of charge, non-exclusive, and sublicensable method for the public.',
+      attributionRequired: "Central Bank of the Republic of China (Taiwan)",
+    },
+    automatedRetrievalAvailable: true,
+    note:
+      "The NT$/US$ interbank spot market closing rate. Taiwan's stock is converted at the 31 December 2024 fixing of 32.781, matched to the component's own reference date; DGBAS's national-accounts workbook publishes a 32.11 rate for 2024 but labels it 'Average of daily figures', which is a period average and would be the wrong basis for a year-end stock. The same OGDL-Taiwan 1.0 licence as DGBAS, declared by the CBC in English on its own site.",
+  },
+
+  {
     slug: "statsnz-annual-balance-sheets",
     providerName: "Stats NZ",
     providerKind: "statistical_compiler",
@@ -499,6 +589,87 @@ export const SOURCE_INTERFACES: readonly UbwiSourceInterface[] = [
     note:
       "Kraken's Global Terms of Service define 'Our Content' as the services and platforms and all content and materials found on them, which reaches a published ticker price. The permission granted is to use it 'only for your own benefit'; commercially exploiting it or making it available to a third party is listed among the prohibited acts, and the document directs anyone wanting another purpose to seek prior permission first. Publishing an index derived from the price, and displaying the venue row that produced it, is the other purpose. The Global Terms are the applicable ones: Kraken serves separate Canadian, EEA and Brazil terms and the Global terms apply everywhere else.",
   },
+
+  // ------------------------------------------------------- the 1.1.0 price source
+  //
+  // The one interface in this record whose state is `inferred_permitted`, and the reasons
+  // for that are worth stating plainly rather than leaving in a field.
+  //
+  // What could be retrieved: Chainlink's own documentation of the Data Feed interface, and
+  // Chainlink's own feed metadata document -- the file docs.chain.link itself renders --
+  // giving the proxy address, the aggregator, the 3600-second heartbeat, the 0.5 % deviation
+  // threshold and the product code `BTC/USD-RefPrice-DF-Ethereum-001`. Both HTTP 200, both
+  // retained, and every figure in ./chainlink.ts was additionally read from the live
+  // contract through two independent RPC endpoints.
+  //
+  // What could not: the terms. https://chain.link/terms -- the document docs.chain.link's
+  // own footer names as governing -- returned HTTP 200 and 3,441 characters of navigation
+  // chrome to a plain HTTP client. The page renders its text client-side; the retained
+  // bytes contain no occurrence of "licence", "license", "grant", "warrant", "liability" or
+  // "arbitration". That is a retrieval fact. It is not a refusal and it is not permission,
+  // and nothing here is quoted from a document Urdais has not read.
+  //
+  // So the state cannot be `cleared`: no grant was read. It is also not honestly
+  // `under_review`: the review is closed by an explicit decision to proceed. It is
+  // `inferred_permitted`, which is a weaker thing that the model now says out loud.
+  {
+    slug: "chainlink-btc-usd-ethereum",
+    providerName: "Chainlink",
+    providerKind: "oracle_network",
+    canonicalUrl:
+      "https://etherscan.io/address/0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c#readContract",
+    // Reading a public Ethereum contract through a public RPC endpoint is not an act the
+    // provider's terms gate: the data is published onchain by design and any node serves
+    // it. That axis is genuinely permitted, and it is the only one that is.
+    termsReviewState: "permitted",
+    // The axis that decides publication, and the one no document answered.
+    dataUseTermsState: "under_review",
+    usageTerms: {
+      automatedRetrieval: "permitted",
+      commercialDerivedIndex: "not_reviewed",
+      redistribution: "not_reviewed",
+      attribution: null,
+      cachingAndRetention: "not_reviewed",
+      rateLimit: null,
+    },
+    inferredPermission: {
+      decisionId: "ubwi-chainlink-inferred-2026-09-15",
+      decidedOn: "2026-09-15",
+      decidedIn: "UBWI Phase 2E; docs/methodology/ubwi.md v1.1.0",
+      basis: [
+        "The feed is exposed through Chainlink's documented public interface: docs.chain.link/data-feeds documents the AggregatorV3Interface read path, and Chainlink's own feed metadata document publishes this proxy address, its heartbeat and its deviation threshold.",
+        "The data is published onchain by the oracle network and is readable by any Ethereum node; Urdais reads it through public RPC endpoints requiring no key, no account and no acceptance of a click-through agreement.",
+        "Urdais is not reselling or redistributing the raw Chainlink feed. It reads one reference price at one instant.",
+        "That single observed reference price is an input to Urdais's own derived wealth index, alongside a Bitcoin supply figure and a wealth denominator Chainlink has no part in.",
+      ],
+      notFound: [
+        "No Chainlink terms document could be read at all: https://chain.link/terms returns HTTP 200 with a client-rendered shell carrying 3,441 characters of navigation text and no terms prose.",
+        "No explicit prohibition of the Coinbase or Kraken kind -- on caching, on automated recording, or on creating an external financial index from the data -- was found in any Chainlink document Urdais was able to retrieve.",
+        "No explicit affirmative grant of a derived-index right was found either. The absence runs in both directions and both directions are recorded.",
+      ],
+      limits: [
+        "This is an inference, not a licence. Chainlink has granted Urdais nothing, has not been contacted, and no outreach was sent.",
+        "It extends to reading one reference price as an index input. It does not extend to redistributing the feed, to mirroring it, or to presenting Urdais's output as a Chainlink product.",
+        "The terms of the upstream data providers whose data the oracle network aggregates are undisclosed to Urdais and are not covered by this inference.",
+        "One successful retrieval of Chainlink's terms text settles this either way and supersedes the inference.",
+      ],
+    },
+    termsArtifact: {
+      // Chainlink's documentation of the interface, which is what the inference rests on.
+      // It is not a licence and is not cited as one.
+      url: "https://docs.chain.link/data-feeds",
+      contentHash: "cd1500be9c7fbc512ba304e30626bf7c7c4f41b92c8c0e6eabc81d8d3ad585e6",
+      byteLength: 361_460,
+      httpStatus: 200,
+      retrievedAt: "2026-09-15T03:13:35Z",
+      decisiveClause:
+        "Chainlink Data Feeds are the quickest way to connect your smart contracts to real-world data such as asset prices, reserve balances, and L2 sequencer health. [...] Data Feeds aggregate many data sources and publish them onchain using a combination of the Decentralized Data Model and Offchain Reporting. [...] Chainlink Data Feeds do not provide streaming data. Rather, the aggregator updates its latestAnswer when the value deviates beyond a specified threshold or when the heartbeat idle time has passed. [...] Your application should track the latestTimestamp variable or use the updatedAt value from the latestRoundData() function to make sure that the latest answer is recent enough for your application to use it.",
+      attributionRequired: "",
+    },
+    automatedRetrievalAvailable: true,
+    note:
+      "Chainlink BTC/USD Data Feed on Ethereum mainnet, proxy 0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c. Verified live through two independent public RPC endpoints on 15 September 2026: chain id 1, description() 'BTC / USD', decimals() 8, version() 6, phaseId() 7, aggregator() 0x4a3411ac2948b33c69666b35cc6d055b27ea84f1 reporting typeAndVersion 'AccessControlledOCR2Aggregator 1.0.0'. Chainlink's own feed metadata document gives heartbeat 3600 s, deviation threshold 0.5 % and product name BTC/USD-RefPrice-DF-Ethereum-001, confirming a standard push-based Data Feed reference price rather than Data Streams or Smart Value Recapture. The quoted clause is the documentation of the interface, not a grant: it is retained because the inference rests on the interface being publicly documented, and because its last two sentences are the source of the staleness rule Urdais applies. Chainlink is not a spot exchange and Urdais cannot reconstruct the underlying source basket; the documentation says the feed aggregates many data sources and names none of them.",
+  },
 ];
 
 const BY_SLUG = new Map(SOURCE_INTERFACES.map((iface) => [iface.slug, iface]));
@@ -511,8 +682,14 @@ export function sourceInterface(slug: string): UbwiSourceInterface | undefined {
  * A source's effective rights state, derived from the retained artifact. This is the
  * only function that decides whether a source may enter a published denominator.
  * A source with no retained artifact is never cleared, whatever its states claim.
+ *
+ * The order of the tests is the policy. A refusal on either axis wins over everything,
+ * including an inference: an explicit "no" is never something a product decision may
+ * infer its way past. A grant on both axes, evidenced by a retained artifact, is
+ * `cleared`. Only then may a recorded inference apply, and the most it can produce is
+ * `inferred_permitted` -- never `cleared`, so no downstream check can mistake the two.
  */
-export function effectiveRightsStatus(iface: UbwiSourceInterface): RightsStatus {
+export function effectiveRightsStatus(iface: UbwiSourceInterface): SourceRightsStatus {
   if (iface.termsReviewState === "not_permitted" || iface.dataUseTermsState === "not_permitted") {
     return "blocked";
   }
@@ -523,7 +700,21 @@ export function effectiveRightsStatus(iface: UbwiSourceInterface): RightsStatus 
   ) {
     return "cleared";
   }
+  // An inference must still rest on a retained document. "We inferred it from nothing" is
+  // the failure mode the whole terms-integrity mechanism exists to refuse.
+  if (iface.inferredPermission !== undefined && iface.termsArtifact !== null) {
+    return "inferred_permitted";
+  }
   return "under_review";
+}
+
+/**
+ * Whether a state may supply a *numerator* source. Inferred permission is admissible here
+ * and nowhere else: the denominator's constituents are checked against `"cleared"`
+ * directly, so no denominator path can reach this function by accident.
+ */
+export function mayPublishNumeratorFrom(status: SourceRightsStatus): boolean {
+  return status === "cleared" || status === "inferred_permitted";
 }
 
 /**
@@ -562,7 +753,7 @@ export type TermsRecheckAttempt = {
 export type TermsRecheckResult = {
   slug: string;
   /** The rights state after the recheck. Never worse than the retained artifact supports. */
-  rightsStatus: RightsStatus;
+  rightsStatus: SourceRightsStatus;
   /** True only where the recheck actually re-read the document. */
   reconfirmed: boolean;
   /** True where a retrieved document differs from the stored artifact. */

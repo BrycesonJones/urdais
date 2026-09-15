@@ -75,7 +75,12 @@ export function UbwiSection({ surface }: { surface: UbwiSurface }) {
           <Figure
             label="Bitcoin market capitalization"
             value={usd(surface.bitcoinMarketCapUsd)}
-            note={`Issued supply at block ${formatNumber(surface.blockHeight, 0)}, median of three venue prices.`}
+            note={
+              surface.priceProvenance
+                ? `Issued supply at block ${formatNumber(surface.blockHeight, 0)}, priced at the ` +
+                  `${surface.priceProvenance.feed} reference price on ${surface.priceProvenance.network}.`
+                : `Issued supply at block ${formatNumber(surface.blockHeight, 0)}.`
+            }
           />
           <Figure
             label="Directly observed"
@@ -121,6 +126,24 @@ export function UbwiSection({ surface }: { surface: UbwiSurface }) {
                 </li>
               ))}
             </ul>
+          </div>
+        ) : null}
+
+        {surface.priceProvenance ? (
+          <div className="mt-6">
+            <h3 className="text-xs uppercase tracking-wide text-neutral-500">Price provenance</h3>
+            <p className="mt-2 text-sm text-neutral-400">
+              <span className="text-neutral-300">{surface.priceProvenance.feed}</span> on{" "}
+              {surface.priceProvenance.network}, round {surface.priceProvenance.roundId}, feed
+              updated{" "}
+              {formatUpdatedAt(
+                Math.floor(Date.parse(surface.priceProvenance.feedUpdatedAt) / 1000),
+              )}
+              .
+            </p>
+            {/* The rights qualification travels with the provenance. An inferred permission
+                shown as if it were a licence would be the one dishonest thing on this page. */}
+            <p className="mt-1 text-xs text-neutral-500">{surface.priceProvenance.rightsNote}</p>
           </div>
         ) : null}
 

@@ -60,7 +60,10 @@ begin
   select count(*) into n from reference.source_interfaces
    where source_class in ('statistical_dataset', 'exchange_rate_series')
      and terms_review_state = 'permitted' and data_use_terms_state = 'permitted';
-  if n <> 11 then raise exception 'expected 11 evidenced denominator/FX sources, found %', n; end if;
+  -- Eleven at Production V1; thirteen from Phase 2E, which admitted Taiwan and with it
+  -- both DGBAS's National Wealth Statistics and the CBC's exchange rates, the second FX
+  -- source the observed set has ever had.
+  if n <> 13 then raise exception 'expected 13 evidenced denominator/FX sources, found %', n; end if;
 
   -- Phase 2D retrieved the numerator venues' terms. Every one now rests on a retained,
   -- hashed, successfully retrieved artifact -- and not one of them is permitted on both
@@ -75,11 +78,11 @@ begin
      and terms_review_state = 'permitted' and data_use_terms_state = 'permitted';
   if n <> 0 then raise exception '% numerator source(s) read cleared on both axes, which no artifact supports', n; end if;
 
-  -- Four sources, four distinct documents. One hash cited twice would mean one of them
-  -- was never retrieved.
+  -- One source, one document. Four at Production V1, five from Phase 2E, which added the
+  -- Chainlink feed. A hash cited twice would mean one of them was never retrieved.
   select count(distinct terms_artifact_hash) into n from reference.source_interfaces
    where source_class in ('chain_data_interface', 'spot_price_interface');
-  if n <> 4 then raise exception 'expected 4 distinct numerator terms artifacts, found %', n; end if;
+  if n <> 5 then raise exception 'expected 5 distinct numerator terms artifacts, found %', n; end if;
 
   -- Coinbase is the one interface whose terms forbid the retrieval itself, so it is the
   -- one whose retrieval axis is blocked rather than merely unresolved.
@@ -317,10 +320,10 @@ begin
   -- ------------------------------------------------------------------ numerator
   insert into pipeline.btc_market_observations (
     observed_at, block_height, height_confirmed_by, supply_btc, supply_construction,
-    supply_source_interface_id, venue_count, median_price_usd, market_cap_usd, retrieved_at
+    supply_source_interface_id, price_rule, venue_count, price_usd, market_cap_usd, retrieved_at
   ) values (
     now(), 967044, array['mempool.space', 'blockchain.info'], 100.0, 'claimed_issuance',
-    chain, 3, 10.0, 1000.0, now()
+    chain, 'median_of_venues', 3, 10.0, 1000.0, now()
   ) returning id into btc;
 
   -- Supply times price is the market capitalization, and it is checked.
@@ -328,10 +331,10 @@ begin
   begin
     insert into pipeline.btc_market_observations (
       observed_at, block_height, height_confirmed_by, supply_btc, supply_construction,
-      supply_source_interface_id, venue_count, median_price_usd, market_cap_usd, retrieved_at
+      supply_source_interface_id, price_rule, venue_count, price_usd, market_cap_usd, retrieved_at
     ) values (
       now(), 967045, array['mempool.space', 'blockchain.info'], 100.0, 'claimed_issuance',
-      chain, 3, 10.0, 999999.0, now()
+      chain, 'median_of_venues', 3, 10.0, 999999.0, now()
     );
   exception when check_violation then ok := true;
   end;
@@ -342,10 +345,10 @@ begin
   begin
     insert into pipeline.btc_market_observations (
       observed_at, block_height, height_confirmed_by, supply_btc, supply_construction,
-      supply_source_interface_id, venue_count, median_price_usd, market_cap_usd, retrieved_at
+      supply_source_interface_id, price_rule, venue_count, price_usd, market_cap_usd, retrieved_at
     ) values (
       now(), 967046, array['mempool.space', 'blockchain.info'], 100.0, 'claimed_issuance',
-      chain, 2, 10.0, 1000.0, now()
+      chain, 'median_of_venues', 2, 10.0, 1000.0, now()
     );
   exception when check_violation then ok := true;
   end;

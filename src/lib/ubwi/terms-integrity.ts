@@ -38,7 +38,12 @@ export type TermsArtifactShapeProblem =
   | "DECISIVE_CLAUSE_TOO_SHORT"
   | "TERMS_URL_NOT_ABSOLUTE"
   | "HASH_REUSED_FOR_A_DIFFERENT_DOCUMENT"
-  | "CLEARED_WITHOUT_ARTIFACT";
+  | "CLEARED_WITHOUT_ARTIFACT"
+  | "INFERRED_WITHOUT_ARTIFACT"
+  | "INFERRED_WITHOUT_BASIS"
+  | "INFERRED_WITHOUT_LIMITS"
+  | "INFERRED_OVER_AN_EXPRESS_GRANT"
+  | "INFERRED_OVER_A_REFUSAL";
 
 export type TermsArtifactShapeFinding = {
   slug: string;
@@ -64,6 +69,55 @@ export function checkTermsArtifactShape(
 
   for (const iface of interfaces) {
     const artifact = iface.termsArtifact;
+
+    // An inference is the weakest state that still permits publication, so it is the one
+    // that most needs a shape. The same reasoning as everywhere else in this file: the
+    // failure mode is not a wrong judgement, it is a judgement with nothing behind it.
+    const inferred = iface.inferredPermission;
+    if (inferred !== undefined) {
+      if (artifact === null) {
+        findings.push({
+          slug: iface.slug,
+          problem: "INFERRED_WITHOUT_ARTIFACT",
+          detail: "permission is inferred with no retained document to infer it from",
+        });
+      }
+      if (inferred.basis.length === 0 || inferred.basis.some((s) => s.trim() === "")) {
+        findings.push({
+          slug: iface.slug,
+          problem: "INFERRED_WITHOUT_BASIS",
+          detail: "an inferred permission states no evidentiary basis",
+        });
+      }
+      if (inferred.limits.length === 0 || inferred.limits.some((s) => s.trim() === "")) {
+        findings.push({
+          slug: iface.slug,
+          problem: "INFERRED_WITHOUT_LIMITS",
+          detail:
+            "an inferred permission states nothing it does not cover; an inference with no stated limit is being used as a grant",
+        });
+      }
+      if (iface.termsReviewState === "permitted" && iface.dataUseTermsState === "permitted") {
+        findings.push({
+          slug: iface.slug,
+          problem: "INFERRED_OVER_AN_EXPRESS_GRANT",
+          detail:
+            "both axes read permitted, so the source is cleared outright and recording an inference over it understates evidence that exists",
+        });
+      }
+      if (
+        iface.termsReviewState === "not_permitted" ||
+        iface.dataUseTermsState === "not_permitted"
+      ) {
+        findings.push({
+          slug: iface.slug,
+          problem: "INFERRED_OVER_A_REFUSAL",
+          detail:
+            "a retained document refuses this use; an inference may never be recorded over an express refusal",
+        });
+      }
+    }
+
     if (artifact === null) {
       // Not a problem by itself -- an unreviewed source is honestly recorded as one.
       // It is a problem only if the source also claims to be permitted on both axes,

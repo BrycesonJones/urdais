@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   CENTRAL_SCENARIO_KEY,
   METHODOLOGY_VERSION,
+  PRIOR_METHODOLOGY_VERSION,
   RESIDUAL_MODEL_VERSION,
   UBWI_UNIT,
   calculateUbwi,
@@ -28,10 +29,12 @@ import {
 import {
   MINIMUM_VENUE_COUNT,
   PRODUCTION_BTC_OBSERVATION,
+  RETIRED_VENUE_MEDIAN_OBSERVATION,
   checkNumerator,
   median,
   venueDispersionBasisPoints,
 } from "./numerator";
+import { CHAINLINK_BTC_USD_FEED, CHAINLINK_SOURCE_INTERFACE } from "./chainlink";
 import {
   SOURCE_INTERFACES,
   effectiveRightsStatus,
@@ -212,7 +215,20 @@ describe("FX lineage", () => {
         expect(economy.fx.rateLcuPerUsd).toBe(1);
         continue;
       }
-      expect(economy.fx.sourceInterface).toBe("ecb-euro-reference-rates");
+      // The ECB's reference rates cover every European and OECD-mirrored component.
+      // Taiwan is the one economy no ECB fixing exists for -- the ECB has published no
+      // TWD reference rate -- so its conversion uses the Central Bank of the Republic of
+      // China's own interbank closing rate, under the same OGDL-Taiwan 1.0 licence as the
+      // stock itself. A second FX source is a thing to notice, which is why it is named
+      // here rather than allowed in by a blanket relaxation.
+      expect(["ecb-euro-reference-rates", "cbc-exchange-rates"]).toContain(
+        economy.fx.sourceInterface,
+      );
+      if (economy.economy === "TWN") {
+        expect(economy.fx.sourceInterface).toBe("cbc-exchange-rates");
+      } else {
+        expect(economy.fx.sourceInterface).toBe("ecb-euro-reference-rates");
+      }
       const iface = sourceInterface(economy.fx.sourceInterface);
       expect(iface).toBeDefined();
       expect(effectiveRightsStatus(iface!)).toBe("cleared");
@@ -347,11 +363,13 @@ describe("the BTC numerator", () => {
     expect(checkNumerator(PRODUCTION_BTC_OBSERVATION)).toEqual([]);
   });
 
-  it("takes the median of at least three independent venues", () => {
-    expect(PRODUCTION_BTC_OBSERVATION.venues.length).toBeGreaterThanOrEqual(MINIMUM_VENUE_COUNT);
-    const prices = PRODUCTION_BTC_OBSERVATION.venues.map((v) => v.priceUsd);
-    expect(PRODUCTION_BTC_OBSERVATION.medianPriceUsd).toBe(median(prices));
-    expect(PRODUCTION_BTC_OBSERVATION.venues.filter((v) => v.selected)).toHaveLength(1);
+  it("prices from the Chainlink reference feed under methodology 1.1.0", () => {
+    expect(PRODUCTION_BTC_OBSERVATION.priceRule).toBe("chainlink_reference_feed");
+    expect(PRODUCTION_BTC_OBSERVATION.chainlink).toBeDefined();
+    expect(PRODUCTION_BTC_OBSERVATION.venues).toBeUndefined();
+    expect(PRODUCTION_BTC_OBSERVATION.priceUsd).toBe(
+      PRODUCTION_BTC_OBSERVATION.chainlink!.normalizedUsd,
+    );
   });
 
   it("records the block height its supply figure belongs to", () => {
@@ -359,32 +377,65 @@ describe("the BTC numerator", () => {
     expect(PRODUCTION_BTC_OBSERVATION.heightSources.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("multiplies supply by the median price", () => {
+  it("multiplies supply by the reference price", () => {
     expect(PRODUCTION_BTC_OBSERVATION.marketCapUsd).toBeCloseTo(
-      PRODUCTION_BTC_OBSERVATION.supplyBtc * PRODUCTION_BTC_OBSERVATION.medianPriceUsd,
+      PRODUCTION_BTC_OBSERVATION.supplyBtc * PRODUCTION_BTC_OBSERVATION.priceUsd,
       2,
     );
   });
 
-  it("keeps venue dispersion far below denominator uncertainty", () => {
-    const dispersionBps = venueDispersionBasisPoints(PRODUCTION_BTC_OBSERVATION);
-    expect(dispersionBps).toBeLessThan(5);
+  it("preserves the retired three-venue observation rather than deleting it", () => {
+    // Methodology history is not a changelog entry. The 1.0.0 observation stays in the
+    // codebase, stays checkable, and stays labelled with the rule that produced it.
+    expect(RETIRED_VENUE_MEDIAN_OBSERVATION.priceRule).toBe("median_of_venues");
+    expect(RETIRED_VENUE_MEDIAN_OBSERVATION.venues!.map((v) => v.venue)).toEqual([
+      "coinbase",
+      "bitstamp",
+      "kraken",
+    ]);
+    expect(checkNumerator(RETIRED_VENUE_MEDIAN_OBSERVATION)).toEqual([]);
+    expect(RETIRED_VENUE_MEDIAN_OBSERVATION.venues!.length).toBeGreaterThanOrEqual(
+      MINIMUM_VENUE_COUNT,
+    );
+    const prices = RETIRED_VENUE_MEDIAN_OBSERVATION.venues!.map((v) => v.priceUsd);
+    expect(RETIRED_VENUE_MEDIAN_OBSERVATION.priceUsd).toBe(median(prices));
+  });
+
+  it("keeps numerator price uncertainty far below denominator uncertainty", () => {
+    // The retired rule measured this directly as venue dispersion. The reference feed has
+    // no dispersion to measure, so the comparable quantity is its deviation threshold:
+    // the feed may sit up to 0.5 % from the reported market before it re-reports.
+    const numeratorBps = CHAINLINK_BTC_USD_FEED.deviationThresholdPercent * 100;
     const denominatorSpread =
       ((calculation.sensitivity.highPercent - calculation.sensitivity.lowPercent) /
         calculation.ubwiPercent) *
       10_000;
-    expect(denominatorSpread).toBeGreaterThan(dispersionBps * 100);
+    expect(denominatorSpread).toBeGreaterThan(numeratorBps * 10);
+    expect(venueDispersionBasisPoints(RETIRED_VENUE_MEDIAN_OBSERVATION)).toBeLessThan(5);
   });
 
-  it("rejects a numerator whose median disagrees with its venues", () => {
-    const tampered = { ...PRODUCTION_BTC_OBSERVATION, medianPriceUsd: 1 };
-    expect(checkNumerator(tampered)).toContain("MEDIAN_DISAGREES_WITH_VENUES");
+  it("rejects a numerator whose price disagrees with the feed it cites", () => {
+    const tampered = { ...PRODUCTION_BTC_OBSERVATION, priceUsd: 1, marketCapUsd: 1 };
+    expect(checkNumerator(tampered)).toContain("PRICE_DISAGREES_WITH_FEED");
   });
 
-  it("rejects a numerator with fewer than three venues", () => {
-    const thin = {
+  it("rejects a numerator that claims one price rule and carries the other's lineage", () => {
+    const mixed = {
       ...PRODUCTION_BTC_OBSERVATION,
-      venues: PRODUCTION_BTC_OBSERVATION.venues.slice(0, 2),
+      venues: RETIRED_VENUE_MEDIAN_OBSERVATION.venues,
+    };
+    expect(checkNumerator(mixed)).toContain("PRICE_RULE_LINEAGE_MISMATCH");
+  });
+
+  it("rejects a Chainlink observation with no frozen round", () => {
+    const bare = { ...PRODUCTION_BTC_OBSERVATION, chainlink: undefined };
+    expect(checkNumerator(bare)).toContain("PRICE_LINEAGE_MISSING");
+  });
+
+  it("rejects a retired-rule observation with fewer than three venues", () => {
+    const thin = {
+      ...RETIRED_VENUE_MEDIAN_OBSERVATION,
+      venues: RETIRED_VENUE_MEDIAN_OBSERVATION.venues!.slice(0, 2),
     };
     expect(checkNumerator(thin)).toContain("TOO_FEW_VENUES");
   });
@@ -468,15 +519,29 @@ describe("the publication gate", () => {
     }
   });
 
-  it("refuses publication on the imputed-share ceiling", () => {
-    // This is the honest state of the index after the vintage cleanup: dropping New
-    // Zealand and Russia costs 2.19 pp of coverage and pushes the modeled share above
-    // the ceiling. The gate refuses, and the ceiling is not moved to make it pass.
-    expect(codes(gate.findings)).toContain("IMPUTED_SHARE_ABOVE_CEILING");
-    expect(gate.measures.imputedShareOfWealth).toBeGreaterThan(
+  it("clears the imputed-share ceiling and the coverage floor once Taiwan is admitted", () => {
+    // Production V1 refused here: dropping New Zealand and Russia on vintage and rights
+    // cost 2.19 pp of coverage and pushed the modelled share above the ceiling. Taiwan
+    // is what closes that gap, and it closes it by 0.24 pp -- narrowly, which is worth
+    // stating, because a bound cleared by a quarter of a point is a bound that a single
+    // revision can un-clear. Neither threshold moved.
+    expect(codes(gate.findings)).not.toContain("IMPUTED_SHARE_ABOVE_CEILING");
+    expect(codes(gate.findings)).not.toContain("COVERAGE_BELOW_FLOOR");
+    expect(gate.measures.imputedShareOfWealth).toBeLessThanOrEqual(
       PRODUCTION_V1_THRESHOLDS.maxImputedShareOfWealth,
     );
+    expect(gate.measures.rightsClearedGdpCoverage).toBeGreaterThanOrEqual(
+      PRODUCTION_V1_THRESHOLDS.minRightsClearedGdpCoverage,
+    );
+    expect(PRODUCTION_V1_THRESHOLDS.maxImputedShareOfWealth).toBe(0.4);
+    expect(PRODUCTION_V1_THRESHOLDS.minRightsClearedGdpCoverage).toBe(0.52);
+  });
+
+  it("still refuses, and now on the one thing Taiwan and Chainlink did not fix", () => {
+    // The whole refusal, so that a later phase reading this test learns the exact shape
+    // of what is left: one finding, one interface, the BTC supply source's own terms.
     expect(gate.passed).toBe(false);
+    expect(codes(gate.findings)).toEqual(["NUMERATOR_SOURCE_NOT_RIGHTS_CLEARED"]);
   });
 
   it("keeps the imputed-share ceiling at the value the frontier supports", () => {
@@ -582,7 +647,7 @@ describe("disclosure", () => {
 
 describe("no fabricated history", () => {
   it("has exactly one production numerator observation and no back series", () => {
-    expect(PRODUCTION_BTC_OBSERVATION.observedAt).toBe("2026-09-15T00:48:04Z");
+    expect(PRODUCTION_BTC_OBSERVATION.observedAt).toBe("2026-09-15T03:10:39Z");
     expect(Date.parse(PRODUCTION_BTC_OBSERVATION.observedAt)).toBeLessThanOrEqual(Date.now());
   });
 
@@ -599,8 +664,8 @@ describe("numerator rights: the venues' own terms", () => {
   // the conclusion was about vendors: reproducing the construction does not reproduce the
   // permission. These tests fix that finding so it cannot be quietly undone.
   const numeratorSlugs = [
-    PRODUCTION_BTC_OBSERVATION.supplySourceInterface,
-    ...PRODUCTION_BTC_OBSERVATION.venues.map((v) => v.sourceInterface),
+    RETIRED_VENUE_MEDIAN_OBSERVATION.supplySourceInterface,
+    ...RETIRED_VENUE_MEDIAN_OBSERVATION.venues!.map((v) => v.sourceInterface),
   ];
 
   it("names a registered source interface for every venue and for the supply", () => {
@@ -665,26 +730,49 @@ describe("numerator rights: the venues' own terms", () => {
     expect(chain.termsArtifact!.decisiveClause).toContain("solely for informational purposes");
   });
 
-  it("refuses publication on the numerator's rights, naming every uncleared interface", () => {
-    const gate = evaluateGate(calculation);
-    const finding = gate.findings.find((f) => f.code === "NUMERATOR_SOURCE_NOT_RIGHTS_CLEARED");
-    expect(finding, "the gate must refuse a numerator it may not publish").toBeDefined();
+  it("would still refuse the retired three-venue numerator", () => {
+    // The venues did not become publishable by being retired. Feeding the 1.0.0
+    // observation back through today's gate must still name all three, or the finding
+    // Phase 2D fixed has been lost rather than superseded.
+    const retired = calculateUbwi({
+      calculatedAt: calculation.calculatedAt,
+      numerator: RETIRED_VENUE_MEDIAN_OBSERVATION,
+    });
+    const finding = evaluateGate(retired).findings.find(
+      (f) => f.code === "NUMERATOR_SOURCE_NOT_RIGHTS_CLEARED",
+    );
+    expect(finding).toBeDefined();
     for (const slug of numeratorSlugs) {
       expect(finding!.detail).toContain(slug);
     }
+  });
+
+  it("refuses publication on the supply source, which the price amendment did not touch", () => {
+    // The crux of Phase 2E, fixed as a test so it cannot be lost in a later edit.
+    // Chainlink clears the price leg under inferred permission. The BTC supply source is
+    // a numerator source too, it is still `under_review`, and the gate still refuses.
+    // Retiring the venues moved the problem; it did not solve it.
+    const gate = evaluateGate(calculation);
+    const finding = gate.findings.find((f) => f.code === "NUMERATOR_SOURCE_NOT_RIGHTS_CLEARED");
+    expect(finding, "the gate must refuse a numerator it may not publish").toBeDefined();
+    expect(finding!.detail).toContain("blockchain-info-supply");
+    expect(finding!.detail).not.toContain(CHAINLINK_SOURCE_INTERFACE);
     expect(gate.passed).toBe(false);
   });
 
-  it("does not swap a venue to make the rights easier", () => {
-    // The methodology names the venue set and carries no eligibility rule for changing
-    // it. Replacing a venue for rights reasons is a methodology decision, not a fix, and
-    // the production observation must still carry the three venues that were read.
-    expect(PRODUCTION_BTC_OBSERVATION.venues.map((v) => v.venue)).toEqual([
-      "coinbase",
-      "bitstamp",
-      "kraken",
-    ]);
-    expect(PRODUCTION_BTC_OBSERVATION.priceRule).toBe("median_of_venues");
+  it("retires the venue set by methodology amendment, not by silent substitution", () => {
+    // The venues were not swapped to make the rights easier: the price rule itself
+    // changed, under a version bump, with the retired observation and every retained
+    // venue artifact left in place. A substitution that leaves the methodology version
+    // untouched is the thing this test exists to catch.
+    expect(METHODOLOGY_VERSION).toBe("1.1.0");
+    expect(PRIOR_METHODOLOGY_VERSION).toBe("1.0.0");
+    expect(PRODUCTION_BTC_OBSERVATION.priceRule).toBe("chainlink_reference_feed");
+    for (const slug of ["coinbase-spot", "bitstamp-ticker", "kraken-ticker"]) {
+      const iface = sourceInterface(slug);
+      expect(iface, `${slug} evidence must survive the retirement`).toBeDefined();
+      expect(iface!.termsArtifact).not.toBeNull();
+    }
   });
 });
 

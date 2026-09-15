@@ -16,8 +16,13 @@
  * The gate is not weakened to make a calculation pass. When it refuses, it refuses.
  */
 import { LATEST_COMPLETE_YEAR } from "./observations";
-import { checkNumerator } from "./numerator";
-import { SOURCE_INTERFACES, effectiveRightsStatus, sourceInterface } from "./rights";
+import { checkNumerator, numeratorSourceInterfaces } from "./numerator";
+import {
+  SOURCE_INTERFACES,
+  effectiveRightsStatus,
+  mayPublishNumeratorFrom,
+  sourceInterface,
+} from "./rights";
 import { checkTermsArtifactShape } from "./terms-integrity";
 import { satisfiesVintageRule } from "./calculate";
 import type { UbwiCalculation } from "./types";
@@ -325,10 +330,12 @@ export function evaluateGate(
   // meant the gate could pass a calculation whose price Urdais was not permitted to
   // publish. The numerator's sources are held to the same standard as the denominator's:
   // cleared against a retained terms artifact, for the use actually performed.
-  const numeratorSlugs = [
-    calculation.numerator.supplySourceInterface,
-    ...calculation.numerator.venues.map((v) => v.sourceInterface),
-  ];
+  // Phase 2E widens what satisfies this by exactly one state and no more.
+  // `inferred_permitted` passes here because an explicit product decision says Urdais
+  // proceeds on the inference; `under_review` and `blocked` still refuse. The denominator
+  // is untouched by this: its constituents are checked against `"cleared"` literally,
+  // above, and cannot reach `mayPublishNumeratorFrom` at all.
+  const numeratorSlugs = numeratorSourceInterfaces(calculation.numerator);
   const numeratorProblemsBySlug = new Map<string, string>();
   for (const slug of numeratorSlugs) {
     const iface = sourceInterface(slug);
@@ -337,7 +344,7 @@ export function evaluateGate(
       continue;
     }
     const status = effectiveRightsStatus(iface);
-    if (status !== "cleared") numeratorProblemsBySlug.set(slug, status);
+    if (!mayPublishNumeratorFrom(status)) numeratorProblemsBySlug.set(slug, status);
   }
   if (numeratorProblemsBySlug.size > 0) {
     findings.push({

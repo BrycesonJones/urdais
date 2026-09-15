@@ -18,6 +18,7 @@ import {
 } from "@/lib/ubwi/calculate";
 import { evaluateGate, PRODUCTION_V1_THRESHOLDS, FEASIBLE_FRONTIER } from "@/lib/ubwi/gate";
 import { venueDispersionBasisPoints } from "@/lib/ubwi/numerator";
+import { validateChainlinkObservation } from "@/lib/ubwi/chainlink";
 import { sourceInterface } from "@/lib/ubwi/rights";
 
 const tn = (usd: number) => `${(usd / 1e12).toFixed(4)} tn`;
@@ -78,10 +79,26 @@ function main(): void {
   console.log(`  observed at    : ${n.observedAt}`);
   console.log(`  block height   : ${n.blockHeight}  confirmed by ${n.heightSources.join(", ")}`);
   console.log(`  issued supply  : ${n.supplyBtc.toFixed(8)} BTC  (${n.supplyConstruction})`);
-  for (const v of n.venues) {
+  console.log(`  price rule     : ${n.priceRule}`);
+  for (const v of n.venues ?? []) {
     console.log(`  venue ${v.venue.padEnd(10)}: ${v.priceUsd.toFixed(2)}${v.selected ? "   <- median" : ""}`);
   }
-  console.log(`  median price   : ${n.medianPriceUsd.toFixed(2)} USD  (dispersion ${venueDispersionBasisPoints(n).toFixed(2)} bp)`);
+  if (n.venues !== undefined) {
+    console.log(`  dispersion     : ${venueDispersionBasisPoints(n).toFixed(2)} bp across venues`);
+  }
+  const feed = n.chainlink;
+  if (feed !== undefined) {
+    const check = validateChainlinkObservation(feed);
+    console.log(`  feed           : ${feed.description} on chain ${feed.chainId} via proxy ${feed.proxyAddress}`);
+    console.log(`  aggregator     : ${feed.aggregatorAddress ?? "not determined"}  ${feed.aggregatorTypeAndVersion ?? ""}`);
+    console.log(`  round          : ${feed.roundId}  (phase ${feed.phaseId}, aggregator round ${feed.aggregatorRoundId})`);
+    console.log(`  answer         : ${feed.answer} / 1e${feed.decimals}`);
+    console.log(`  updated at     : ${new Date(feed.updatedAt * 1000).toISOString()}`);
+    console.log(`  age at read    : ${check.ageSeconds} s against a ${check.heartbeatSeconds} s heartbeat  ${check.valid ? "valid" : `INVALID: ${check.problems.join(", ")}`}`);
+    console.log(`  block          : ${feed.blockNumber}  ${feed.blockHash}`);
+    console.log(`  rpc            : ${feed.rpcSource}${feed.rpcCrossCheckSource ? ` (cross-checked against ${feed.rpcCrossCheckSource})` : ""}`);
+  }
+  console.log(`  price          : ${n.priceUsd.toFixed(2)} USD`);
   console.log(`  market cap     : ${tn(n.marketCapUsd)}`);
 
   console.log("\nTOTAL GLOBAL WEALTH");

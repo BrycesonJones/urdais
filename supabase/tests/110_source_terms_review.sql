@@ -21,14 +21,14 @@ begin
   -- publishers and the UBWI statistical compilers and venues are reviewed elsewhere.
   select count(*) into n from reference.providers p
    where p.slug <> 'price-of-compute'
-     and p.provider_kind not in ('model_api_provider', 'statistical_compiler', 'spot_venue', 'chain_data')
+     and p.provider_kind not in ('model_api_provider', 'statistical_compiler', 'spot_venue', 'chain_data', 'oracle_network')
      and exists (select 1 from reference.source_interfaces si
                   where si.provider_id = p.id and si.source_class <> 'news_feed');
   if n <> 6 then raise exception 'expected 6 reviewed compute providers, found %', n; end if;
   select count(*) into n from reference.source_interfaces si
     join reference.providers p on p.id = si.provider_id
     where si.slug <> 'price-of-compute-prices'
-      and p.provider_kind not in ('model_api_provider', 'statistical_compiler', 'spot_venue', 'chain_data')
+      and p.provider_kind not in ('model_api_provider', 'statistical_compiler', 'spot_venue', 'chain_data', 'oracle_network')
       and si.source_class <> 'news_feed';
   if n <> 6 then raise exception 'expected 6 reviewed compute interfaces, found %', n; end if;
 
@@ -40,12 +40,14 @@ begin
 
   -- Every reviewed compute interface carries verbatim evidence with a review date.
   -- Token-pricing interfaces are research-usable and still under_review; they are not this
-  -- review. UBWI's interfaces record their evidence in the dedicated terms-artifact columns
-  -- (url, hash, byte length, status, retrieval time) rather than in this jsonb, so they are
-  -- excluded here and asserted on their own columns in 090 and 230.
+  -- review. UBWI's interfaces -- the statistical compilers, the spot venues, the chain-data
+  -- endpoints and, from Phase 2E, the oracle network -- record their evidence in the
+  -- dedicated terms-artifact columns (url, hash, byte length, status, retrieval time)
+  -- rather than in this jsonb, so they are excluded here and asserted on their own columns
+  -- in 090 and 230.
   select count(*) into n from reference.source_interfaces si
     join reference.providers p on p.id = si.provider_id
-   where p.provider_kind not in ('model_api_provider', 'statistical_compiler', 'spot_venue', 'chain_data')
+   where p.provider_kind not in ('model_api_provider', 'statistical_compiler', 'spot_venue', 'chain_data', 'oracle_network')
      and si.source_class <> 'news_feed'
      and (si.terms_evidence is null or si.terms_evidence->>'reviewed_on' is null
       or jsonb_array_length(si.terms_evidence->'documents') = 0);
