@@ -117,13 +117,38 @@ export async function checkUbwiProductionReadiness(
       });
     }
     if (!used && status !== "cleared") {
-      // The numerator venues sit here: usable in research, never reviewed. Reported
-      // separately because it is a different fact from a denominator rights failure.
+      // The numerator venues sit here. Reported separately from a denominator rights
+      // failure because the operator response differs, and reported with the reason the
+      // artifact actually gives rather than as a generic "not reviewed": Phase 2D
+      // retrieved all four, and "we never looked" and "we looked and it says no" are
+      // different facts that would take different actions to resolve.
+      const reviewed = iface.termsArtifact !== null;
+      // Categorised by what the interface is, not by whether the observed set happens to
+      // reference it. A statistical compiler Urdais cannot yet publish from is a
+      // denominator-coverage finding even while it supplies nothing -- which is exactly
+      // Stats NZ's position.
+      if (iface.providerKind === "statistical_compiler") {
+        findings.push({
+          kind: "RIGHTS_BLOCKED",
+          code: "DENOMINATOR_CANDIDATE_NOT_CLEARED",
+          detail: `${iface.slug} is ${status} and therefore supplies no denominator component`,
+          remedy: iface.note ?? "retrieve, review and retain the interface's terms",
+          // It costs coverage rather than corrupting a published value, and the gate
+          // already refuses on the coverage it costs.
+          blocking: false,
+        });
+        continue;
+      }
       findings.push({
         kind: "RIGHTS_BLOCKED",
-        code: "NUMERATOR_SOURCE_TERMS_NOT_REVIEWED",
-        detail: `${iface.slug} has no reviewed, retained terms artifact (${status})`,
-        remedy: "retrieve, review and retain the interface's terms before production publication",
+        code: reviewed ? "NUMERATOR_SOURCE_NOT_CLEARED" : "NUMERATOR_SOURCE_TERMS_NOT_REVIEWED",
+        detail: reviewed
+          ? `${iface.slug} is ${status} for the use a published numerator makes, against ` +
+            `${iface.termsArtifact!.url} retained ${iface.termsArtifact!.retrievedAt}`
+          : `${iface.slug} has no reviewed, retained terms artifact (${status})`,
+        remedy: reviewed
+          ? iface.note ?? "obtain the permission the retained terms require, or do not publish from this interface"
+          : "retrieve, review and retain the interface's terms before production publication",
         blocking: true,
       });
     }

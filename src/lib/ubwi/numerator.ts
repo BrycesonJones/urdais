@@ -40,18 +40,21 @@ export const PRODUCTION_BTC_OBSERVATION: BtcMarketObservation = {
   venues: [
     {
       venue: "coinbase",
+      sourceInterface: "coinbase-spot",
       endpoint: "https://api.coinbase.com/v2/prices/BTC-USD/spot",
       priceUsd: 77_948.285,
       selected: false,
     },
     {
       venue: "bitstamp",
+      sourceInterface: "bitstamp-ticker",
       endpoint: "https://www.bitstamp.net/api/v2/ticker/btcusd/",
       priceUsd: 77_941.37,
       selected: true,
     },
     {
       venue: "kraken",
+      sourceInterface: "kraken-ticker",
       endpoint: "https://api.kraken.com/0/public/Ticker?pair=XBTUSD",
       priceUsd: 77_940.9,
       selected: false,

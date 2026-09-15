@@ -208,10 +208,12 @@ begin
   end;
   if not ok then raise exception 'invented data-use state was accepted'; end if;
 
-  -- Three settled prohibitions are blocked: the marketplace and Runpod on both axes,
-  -- Lambda on data use. An unresolved source is review-pending, never blocked.
+  -- Five settled prohibitions are blocked: the marketplace and Runpod on both axes,
+  -- Lambda on data use, and -- since UBWI Phase 2D retrieved the numerator venues' own
+  -- terms -- Coinbase on both axes and Kraken on data use. An unresolved source is
+  -- review-pending, never blocked, which is why Bitstamp and Blockchain.com are not here.
   select count(*) into n from reference.source_interfaces where production_access_state = 'production_blocked';
-  if n <> 3 then raise exception 'expected 3 blocked interfaces (settled prohibitions only), found %', n; end if;
+  if n <> 5 then raise exception 'expected 5 blocked interfaces (settled prohibitions only), found %', n; end if;
   select count(*) into n from reference.source_interfaces
    where terms_review_state = 'under_review' or data_use_terms_state = 'under_review';
   if n < 3 then raise exception 'expected at least 3 interfaces with an unresolved axis, found %', n; end if;
