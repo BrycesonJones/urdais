@@ -119,7 +119,7 @@ begin
   if (select production_access_state from reference.source_interfaces where slug = 'skhynix-newsroom-feed') <> 'production_blocked' then
     raise exception 'the Memory research record was disturbed';
   end if;
-  select count(*) into n from reference.news_sources where category in ('memory', 'photonics', 'ai-chips', 'crypto');
+  select count(*) into n from reference.news_sources where category in ('memory', 'photonics', 'ai-chips');
   if n <> 0 then raise exception 'a deferred category gained a source'; end if;
 
   raise notice 'news energy power: ok';

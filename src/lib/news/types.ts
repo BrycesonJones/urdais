@@ -25,6 +25,9 @@ export const NEWS_SOURCE_SLUGS = [
   "pjm-inside-lines",
   "power-magazine",
   "power-magazine-data-centers",
+  "bitcoin-optech",
+  "the-block",
+  "chainalysis-blog",
 ] as const;
 
 export type NewsSourceSlug = (typeof NEWS_SOURCE_SLUGS)[number];

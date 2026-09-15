@@ -318,6 +318,68 @@ Pointing it at a deployment means replacing, in the Porkbun DNS panel:
 
 with the records the chosen host issues. Do not call the domain step complete until `https://urdais.com/api/tokens/prices` answers `200` from the application rather than `302` to the parking page.
 
+## Applying a news-source migration to production
+
+Merging a news phase does not put its sources in production. The repository and
+the production database are separate things, and a green PR says nothing about
+the second. This has bitten twice: a rail rendered `Live` with nothing behind it
+because the migration had not been applied.
+
+There is also a trap in the migrations themselves. Every news source migration
+ends with an assertion block written for a database replayed from zero, and the
+last line of it is:
+
+```sql
+select count(*) into n from pipeline.news_articles;
+if n <> 0 then raise exception 'news articles were seeded'; end if;
+```
+
+**That assertion fails against a populated production database**, because
+production holds articles from earlier ingestion runs. It is correct for the
+replay CI runs and wrong for production, so the file cannot be applied verbatim
+with `psql -f`. Apply the migration in two parts: everything above the final
+`do $$ ... $$` guard, then check the guard's other assertions by hand. The guard
+is a statement about a fresh database, not a production precondition.
+
+### The sequence, after a news PR merges
+
+1. **Apply the migration to UrdaisProd.** Everything above the final assertion
+   block. Record it in `supabase_migrations.schema_migrations` with the file's
+   version and name, or the next replay will try to apply it again.
+2. **Verify the source rows exist:**
+   ```sql
+   select category, count(*) from reference.news_sources where is_enabled group by category;
+   ```
+   Expect `compute=8`, `energy-power=4`, `crypto=3` as of News V1.
+3. **Verify nothing already stored was disturbed:**
+   ```sql
+   select category, count(*) from pipeline.news_articles group by category;
+   ```
+   The counts for categories that migrated earlier must not move.
+4. **Run ingestion from current `main`:**
+   ```bash
+   DATABASE_URL=<UrdaisProd> npm run news:ingest -- --mode production --live --write
+   ```
+5. **Check the attempt count.** `sourcesAttempted` must equal the number of
+   enabled sources — 15 at News V1. A lower number means the registry rows did
+   not land, not that a feed was quiet.
+6. **Verify the new category's articles arrived**, by source:
+   ```sql
+   select p.name, count(*) from pipeline.news_articles a
+     join reference.source_interfaces si on si.id = a.source_interface_id
+     join reference.providers p on p.id = si.provider_id
+    where a.category = '<category>' group by p.name;
+   ```
+7. **Run ingestion again.** `articlesInserted` must be `0`. A non-zero second
+   run means identity is not deterministic for one of the new sources, which is
+   a defect rather than a surprise.
+8. **Load the homepage** and confirm the rail shows real stories rather than its
+   empty state.
+
+A rail that renders `Live` with an empty state after step 8 has one of two
+causes, and they are distinguishable: the deployment has no `DATABASE_URL`, or
+the migration did not reach production. The read path logs which.
+
 ## What this document does not authorize
 
 Nothing here grants a source right. The Wave-1 token pricing interfaces remain `research_usable` with terms and data-use both `under_review`, and the only `production_approved` interface in either database is the licensed compute source. A production `GET` scraper does not become permitted because a deployment exists.

@@ -1,6 +1,6 @@
 # News ingestion
 
-**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 14 September 2026 when the homepage Compute rail stopped reading mock data (Phase 1A); rewritten 15 September 2026 when Compute was finished (Phase 1B); §12 added the same day when the Memory qualification pass found nothing it could ingest (Phase 2A); §13 when Energy / Power became the second production category (Phase 2B).
+**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 14 September 2026 when the homepage Compute rail stopped reading mock data (Phase 1A); rewritten 15 September 2026 when Compute was finished (Phase 1B); §12 added the same day when the Memory qualification pass found nothing it could ingest (Phase 2A); §13 when Energy / Power became the second production category (Phase 2B); §14 when Crypto became the third and News V1 was complete (Phase 2C).
 
 The homepage Compute rail reads production data from eight approved publisher
 feeds, refreshed once a day. This document records how, from which
@@ -17,7 +17,7 @@ item, no article page, and no public news API; the only reader is the homepage.
 | --- | --- | --- |
 | Compute | shown | **production** — eight approved feeds, seven publishers, thumbnails where permitted |
 | Energy / Power | shown | **production** — four approved feeds, three publishers, no images; see §13 |
-| Crypto | shown | mock, pending its own migration |
+| Crypto | shown | **production** — three approved feeds, three publishers; see §14 |
 | Memory | hidden | mock — qualified in Phase 2A, no source passed; see §12 |
 | Photonics | hidden | mock |
 | AI Chips | hidden | mock |
@@ -32,11 +32,11 @@ is the visible set and is the only thing that decides what renders;
 category constraint, the source registry, the ingestion runner and the read path
 all still know about all six. Restoring a category is adding its id back.
 
-Three are shown because three is what Urdais can stand behind. Memory is
-deferred because its qualification pass approved no source at all; Photonics and
-AI Chips are deferred because a rail of invented stories is a worse thing to
-ship than no rail. Crypto stays visible and labelled demo because it is next to
-migrate on its own. A deferred category returns when
+Three are shown because three is what Urdais can stand behind, and as of
+News V1 all three are production-backed: no visible rail carries a demo badge.
+Memory is deferred because its qualification pass approved no source at all;
+Photonics and AI Chips are deferred because a rail of invented stories is a
+worse thing to ship than no rail. A deferred category returns when
 production-grade sourcing exists for it.
 
 ### What each phase did
@@ -697,6 +697,111 @@ not resolved. Adopting it would require either deterministic topic selection on
 publisher-supplied metadata — which EIA does not supply — or a semantic
 classifier, which the pipeline deliberately does not have and which was not
 added here. If Urdais ever adopts one, EIA is the first source to revisit.
+
+---
+
+## 14. Crypto, and News V1
+
+The third production category, and the last of News V1. Three approved feeds
+across three publishers — out of fourteen candidates with live, working feeds.
+
+Crypto has the most restrictive terms of any category Urdais has qualified.
+Eight publishers whose feeds were live, well-scoped and technically sound
+prohibit exactly what Urdais does, most of them in the same two sentences: no
+robots, and personal non-commercial use only. The three that survived are the
+three that said something different.
+
+### Approved
+
+| Publisher | Endpoint | Basis | Description | Image |
+| --- | --- | --- | --- | --- |
+| Bitcoin Optech | `bitcoinops.org/feed.xml` (Atom) | **open licence (MIT)** | publisher abstract | none taken |
+| The Block | `theblock.co/rss.xml` | **machine-readable grant** | publisher dek | `www.tbstat.com/wp/uploads/` |
+| Chainalysis | `chainalysis.com/feed/` | feed syndication | publisher summary | none offered |
+
+**Bitcoin Optech** states that "all material produced by Bitcoin Optech is open
+source and released under the MIT license" — an express licence permitting
+commercial reuse with attribution. That is a third kind of basis, neither a
+written permission addressed to Urdais nor public domain, so `open_licence`
+joins the enum rather than being squeezed into either. The site publishes no
+robots file at all, so there are no machine-readable instructions to violate.
+Its one media element is the Optech logo, identical on all ten entries; a logo
+repeated down the rail is not article artwork, so no image is referenced.
+
+**The Block** is the only crypto news publisher in the field that published a
+grant rather than a prohibition: `Content-Signal: search=yes` in its robots
+file, the same instrument that settled Cloudflare for Compute, above a preamble
+stating that a yes signal means content may be collected for that use. Its terms
+pages return 403 to a non-browser agent and could not be read; the review rests
+on the signal alone, and that limitation is recorded on the interface rather
+than assumed away.
+
+**Chainalysis** publishes no website terms of use. Its only policy is an
+Acceptable Use Policy addressed to licensees of its compliance products — the
+same interface distinction already recorded for Lambda and DigitalOcean — and
+its robots file permits the feed.
+
+### Refused
+
+Eight on terms, which is the highest proportion of any category:
+
+| Source | The clause that decided it |
+| --- | --- |
+| CoinDesk | "you will not use any robot, spider, scraper, or other automated means"; content licensed for "personal, informational, and non-commercial purposes only" |
+| Decrypt | "use robots, spiders, scripts… designed to data mine or scrape the Content"; "The Services shall be used only in a noncommercial manner" |
+| Blockworks | "You must not conduct any systematic or automated data collection activities"; no republication for "a commercial purpose" |
+| Cointelegraph | prohibits "creation of independent content pipelines" by name, and limits use to "personal non-commercial" |
+| CryptoSlate | names "scrape, crawl, harvest, cache, sell, license, syndicate, frame, mirror" individually |
+| Bitcoin Magazine | "Unauthorized reproduction, distribution, or modification is prohibited", with no syndication carve-out |
+| Solana Foundation | three independent clauses: robots, "systematically retrieve data… to create or compile… a collection", and no commercial endeavours |
+| **Ethereum Foundation** | **the case the two axes exist for** — see below |
+
+Plus DL News (`abandoned`: newest item four months old despite a permissive
+robots file) and the SEC press-release feed (`relevance`: public domain and
+rights-settled, but the agency's whole press output, of which crypto is a
+minority, with no category element to select on — the same shape as the EIA
+refusal in §13).
+
+### The Ethereum Foundation, and why there are two axes
+
+The Foundation licenses all non-code content under **Creative Commons
+Attribution 4.0**, which permits precisely what Urdais would display, including
+commercially. The same Terms of Use prohibit "any robot, spider, or other
+automatic device, process or means to access the Websites for any purpose,
+including monitoring or copying any of the material".
+
+The content may be used. It may not be fetched this way. Production requires
+both axes, so the source is blocked with `data_use_terms_state = permitted` and
+`terms_review_state = not_permitted` — a state no single flag could express, and
+the clearest justification in the registry for keeping the two questions apart.
+A written permission covering retrieval would make it immediately usable,
+because the content licence is already in place. It is the best outreach
+candidate in the category.
+
+### What the rail looks like
+
+Bitcoin protocol engineering, market structure and regulation reporting, and
+blockchain forensics. None of the meme-coin, price-prediction or token-promotion
+content the editorial scope rules out — largely because the publishers who
+produce that are also the ones whose terms refused us.
+
+---
+
+## News V1
+
+**Production:** Compute (8 feeds, 7 publishers) · Energy / Power (4 feeds, 3
+publishers) · Crypto (3 feeds, 3 publishers). Fifteen feeds, thirteen
+publishers, one daily cron, one runner, one read path.
+
+**Deferred:** Memory, Photonics, AI Chips. They remain in the Urdais taxonomy
+and in the database category constraint; only `HOMEPAGE_NEWS_CATEGORY_IDS`
+hides them. Memory was deferred after its qualification pass approved no source
+at all (§12); Photonics and AI Chips were never qualified. Any of them returns
+by qualifying sources and adding its id back.
+
+News is now supporting infrastructure. The next work on it should be
+operational — a refused source's terms changing, a feed going stale — rather
+than architectural.
 
 ---
 

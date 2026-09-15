@@ -28,6 +28,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "cdn.prod.website-files.com", pathname: "/69654e88dce9154b5f12070c/**" },
       // Cloudflare blog, served from the publisher's own host.
       { protocol: "https", hostname: "blog.cloudflare.com", pathname: "/_emdash/api/media/file/**" },
+      // The Block, its own asset host.
+      { protocol: "https", hostname: "www.tbstat.com", pathname: "/wp/uploads/**" },
     ],
   },
 };

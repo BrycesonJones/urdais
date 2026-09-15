@@ -152,6 +152,36 @@ const META: Record<NewsSourceSlug, Omit<FeedFixture, "body">> = {
     provenance:
       "First three items of the live response retrieved 2026-09-15 (HTTP 200, application/rss+xml; charset=UTF-8, 30561 bytes, RSS 2.0, 10 items), with content:encoded removed from each. Channel header verbatim. Items carry the publisher's own category terms, Data Centers among them, which is how this endpoint is scoped.",
   },
+  "bitcoin-optech": {
+    source: "bitcoin-optech",
+    sourceUrl: "https://bitcoinops.org/feed.xml",
+    retrievedAt: "2026-09-15T15:10:00Z",
+    contentType: "application/xml",
+    bodyFile: "bitcoin-optech.xml",
+    sha256: "f64cc521eb11e1f81021077dfdb9f785063c2765922d5da7e8be0b4d7c1cdf88",
+    provenance:
+      "First three entries of the live response retrieved 2026-09-15 (HTTP 200, application/xml, 627631 bytes, Atom 1.0, 10 entries), with the content element removed from each. Feed header verbatim. The summary elements are kept as published because they are the element the parser reads; the content elements carry the whole newsletter and are not retained.",
+  },
+  "the-block": {
+    source: "the-block",
+    sourceUrl: "https://www.theblock.co/rss.xml",
+    retrievedAt: "2026-09-15T15:10:00Z",
+    contentType: "text/xml; charset=UTF-8",
+    bodyFile: "the-block.xml",
+    sha256: "98927d093bfa86a5dd8067fe16022c8cc24f0a86ef139fa7da46deb2e8a49b28",
+    provenance:
+      "First four items of the live response retrieved 2026-09-15 (HTTP 200, text/xml; charset=UTF-8, 28904 bytes, RSS 2.0, 20 items), with content:encoded removed from each. Channel header verbatim. UUID guids distinct from the canonical link, short publisher descriptions, and media:content on every item.",
+  },
+  "chainalysis-blog": {
+    source: "chainalysis-blog",
+    sourceUrl: "https://www.chainalysis.com/feed/",
+    retrievedAt: "2026-09-15T15:10:00Z",
+    contentType: "application/rss+xml; charset=UTF-8",
+    bodyFile: "chainalysis-blog.xml",
+    sha256: "5c873117ecf9ec3c00ef59935c091ff29595c01db3cfbc5dd4547236c1756769",
+    provenance:
+      "First three items of the live response retrieved 2026-09-15 (HTTP 200, application/rss+xml; charset=UTF-8, 12503 bytes, RSS 2.0, 10 items). Channel header verbatim. Descriptions are summary paragraphs of around 450 characters; no media element.",
+  },
 };
 
 export function loadFeedFixture(source: NewsSourceSlug): FeedFixture {
