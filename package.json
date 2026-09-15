@@ -28,6 +28,7 @@
     "db:types": "scripts/db/local.sh types",
     "db:check-types": "scripts/db/local.sh check-types",
     "db:ci": "scripts/db/local.sh ci",
+    "migrations:check": "tsx scripts/db/migration-integrity.ts",
     "tokens:verify": "tsx scripts/tokens/verify.ts",
     "tokens:verify-production": "tsx scripts/tokens/verify-production.ts",
     "tokens:production:check": "tsx scripts/tokens/production-check.ts",

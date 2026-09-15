@@ -34,6 +34,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Cheap, credential-free, and first: a duplicate migration version prefix
+      # makes `supabase db push` record one file and silently never run the
+      # other, which is expensive to find and costs nothing to prevent.
+      #
+      # `--base-ref` closes the window a branch cannot see on its own. Two open
+      # pull requests can each add a migration, each be green, and the second to
+      # merge lands a duplicate version. On a pull request this checks the union
+      # of this branch's migrations and the merge target's, so the collision is
+      # caught before the merge; on a push to main the union is the repository
+      # itself and the check fails immediately after it.
+      - name: Check migration integrity
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            git fetch --no-tags --depth=1 origin "${GITHUB_BASE_REF}"
+            npm run migrations:check -- --base-ref FETCH_HEAD
+          else
+            npm run migrations:check
+          fi
+
       - name: Lint
         run: npm run lint
 
@@ -78,6 +97,47 @@ jobs:
             exit 0
           fi
           npm run tokens:production:check
+
+  # Production migration-ledger integrity. Separate from the static check in
+  # `validate` because it is a different claim: that one says the repository is
+  # structurally valid, this one says production's bookkeeping agrees with the
+  # repository about what it has applied. It needs production credentials, so it
+  # runs on the production-readiness path rather than on every unit-test run,
+  # and it is its own job so that an unrelated production *data* condition
+  # cannot mask it, or be masked by it.
+  #
+  # It reads one query and repairs nothing. A repository migration production has
+  # not applied yet is reported as pending and passes; drift -- a ledger row
+  # carrying a repository migration under a different version or an ad hoc
+  # `_prod` name, or a production-only row -- fails and names the remedy.
+  migration-production-integrity:
+    name: production migration ledger
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compare the production migration ledger against the repository
+        env:
+          DATABASE_URL: ${{ secrets.URDAIS_PRODUCTION_DATABASE_URL }}
+        run: |
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "no production database configured for this repository; skipping the ledger check."
+            echo "set the URDAIS_PRODUCTION_DATABASE_URL secret to enforce it."
+            exit 0
+          fi
+          npm run migrations:check -- --production --require-database
 
   # Database foundation: migrations bootstrap from zero on a real PostgreSQL 17
   # (matching the hosted engine), pass the database tests, and replay
