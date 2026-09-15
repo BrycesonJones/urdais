@@ -47,7 +47,7 @@ export type InstrumentOutcome = {
   instrument: string;
   collection: "collected" | "duplicate" | "failed" | "skipped";
   collectionDetail?: string;
-  calculation: "published" | "delayed" | "unavailable" | "blocked" | "not_approved" | "no_observations" | "already_calculated" | "failed";
+  calculation: "published" | "delayed" | "unavailable" | "blocked" | "not_approved" | "no_coverage" | "no_observations" | "already_calculated" | "failed";
   calculationDetail?: string;
   priceLevel?: number | null;
   participantCount?: number;
@@ -271,6 +271,27 @@ export async function runDailyUcpi(sql: SqlExecutor, options: DailyRunOptions = 
     }
 
     // Calculation phase, for the date whose window has closed.
+    //
+    // A date Urdais did not collect for is not calculated at all. Running the pipeline over
+    // an empty set would produce a perfectly valid NO_ELIGIBLE_PARTICIPANT under the
+    // structural rule, and recording it would put a point on the public series asserting
+    // that the market was observed and found wanting on a day nobody looked. A child's
+    // series begins at its first real production observation date; before that there is no
+    // point, rather than an Unavailable one.
+    try {
+      if (!(await persistence.hasProductionCoverage(calculationDate))) {
+        outcome.calculation = "no_coverage";
+        outcome.calculationDetail = `no production observation was collected for ${calculationDate}; the series has not begun`;
+        instruments.push(outcome);
+        continue;
+      }
+    } catch (error) {
+      outcome.calculation = "failed";
+      outcome.calculationDetail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+      instruments.push(outcome);
+      continue;
+    }
+
     try {
       const calculation = await runCalculationPhase({
         calculationDate,

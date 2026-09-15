@@ -172,3 +172,32 @@ describe("an observation is re-readable as what it was", () => {
     expect(sql.calls[0]!.text).toContain("o.superseded_by_id is null");
   });
 });
+
+describe("coverage is asked of the retrievals, not the observations", () => {
+  // NO_ELIGIBLE_PARTICIPANT means the market was observed and produced nobody eligible. A
+  // date before collection began produces the same zero for a different reason, and the two
+  // must not be published as the same statement.
+  it("reports coverage when a production retrieval produced observations for the date", async () => {
+    const sql = recorder([{ "?column?": 1 }]);
+    const p = new DatabasePersistence(sql, LINEAGE);
+    expect(await p.hasProductionCoverage("2026-09-15")).toBe(true);
+  });
+
+  it("reports no coverage when nothing was collected for the date", async () => {
+    const p = new DatabasePersistence(recorder([]), LINEAGE);
+    expect(await p.hasProductionCoverage("2026-09-14")).toBe(false);
+  });
+
+  it("scopes the question to production retrievals, this instrument, and the UTC day", async () => {
+    const sql = recorder();
+    await new DatabasePersistence(sql, LINEAGE).hasProductionCoverage("2026-09-15");
+    const q = sql.calls[0]!;
+    expect(q.text).toContain("r.retrieval_purpose = 'production'");
+    expect(q.text).toContain("o.instrument_id = $3");
+    expect(q.params[0]).toBe("2026-09-15T00:00:00.000Z");
+    expect(q.params[1]).toBe("2026-09-16T00:00:00.000Z");
+    expect(q.params[2]).toBe(LINEAGE.instrumentId);
+    // A research or validation retrieval is evidence and is not coverage.
+    expect(q.text).not.toContain("'validation'");
+  });
+});
