@@ -38,10 +38,29 @@ begin
   select count(*) into n from reference.instruments where lifecycle_status = 'live';
   if n <> 0 then raise exception 'an instrument is marked live'; end if;
 
-  select count(*) into n from reference.methodology_versions where status <> 'draft';
-  if n <> 0 then raise exception 'a non-draft methodology version exists'; end if;
-  select count(*) into n from reference.instrument_spec_versions where status <> 'draft';
-  if n <> 0 then raise exception 'a non-draft spec version exists'; end if;
+  -- UBWI's methodology is approved for production: the document is finished and carries an
+  -- effective date. That is a statement about the methodology, not about any value. The
+  -- assertions immediately below are what actually keep the promise of this test file --
+  -- the instrument stays launch_blocked, and no calculation or publication exists -- and
+  -- they are checked rather than inferred from the version status.
+  select count(*) into n from reference.methodology_versions mv
+    join reference.methodologies m on m.id = mv.methodology_id
+   where mv.status <> 'draft' and m.slug <> 'ubwi';
+  if n <> 0 then raise exception 'a non-draft methodology version exists outside UBWI'; end if;
+  select count(*) into n from reference.instrument_spec_versions sv
+    join reference.instruments i on i.id = sv.instrument_id
+   where sv.status <> 'draft' and i.symbol <> 'UBWI';
+  if n <> 0 then raise exception 'a non-draft spec version exists outside UBWI'; end if;
+
+  -- UBWI specifically: approved methodology, nothing live and nothing published.
+  select count(*) into n from reference.instruments where symbol = 'UBWI' and lifecycle_status <> 'launch_blocked';
+  if n <> 0 then raise exception 'UBWI is not launch_blocked'; end if;
+  select count(*) into n from pipeline.ubwi_calculations;
+  if n <> 0 then raise exception 'a UBWI calculation exists'; end if;
+  select count(*) into n from pipeline.ubwi_publications;
+  if n <> 0 then raise exception 'a UBWI publication exists'; end if;
+  select count(*) into n from pipeline.wealth_vintages;
+  if n <> 0 then raise exception 'a wealth vintage exists'; end if;
 
   -- Exactly one compute-market source is cleared for production collection: the
   -- licensed Price of Compute dataset, on written terms. No direct provider
@@ -51,10 +70,23 @@ begin
   select count(*) into n from reference.source_interfaces
    where production_access_state = 'production_approved' and source_class <> 'news_feed';
   if n <> 1 then raise exception 'expected exactly one production-approved compute source, found %', n; end if;
+  -- No *compute-market* provider interface is cleared on both axes. The UBWI denominator
+  -- and FX sources are: they were reviewed in Phases 2B and 2C and each is anchored to a
+  -- retained, hashed terms artifact, which the constraint on those source classes
+  -- requires. Clearing a source's terms is not publishing anything, and the assertions
+  -- above already prove nothing is published.
   select count(*) into n from reference.source_interfaces
    where terms_review_state = 'permitted' and data_use_terms_state = 'permitted'
-     and slug <> 'price-of-compute-prices' and source_class <> 'news_feed';
+     and slug <> 'price-of-compute-prices' and source_class <> 'news_feed'
+     and source_class not in ('statistical_dataset', 'exchange_rate_series');
   if n <> 0 then raise exception '% direct source(s) cleared on both terms axes without review', n; end if;
+
+  -- Every UBWI source that is cleared shows the artifact its state rests on.
+  select count(*) into n from reference.source_interfaces
+   where source_class in ('statistical_dataset', 'exchange_rate_series')
+     and terms_review_state = 'permitted' and data_use_terms_state = 'permitted'
+     and (terms_artifact_hash is null or terms_artifact_status <> 200 or terms_retrieved_at is null);
+  if n <> 0 then raise exception '% UBWI source(s) cleared without a retained terms artifact', n; end if;
 
   -- The publication layer exists (implementation readiness) and no value has been published.
   if not exists (select 1 from information_schema.tables where table_schema = 'pipeline' and table_name = 'regional_observations') then

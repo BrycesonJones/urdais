@@ -6,6 +6,8 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { MarketDetailPage } from "@/components/market-detail/market-detail-page";
 import { findMarket } from "@/data/mock/market-detail";
 import { hydrateMarketWithTokenPrices, tokenResearchPreviewActive } from "@/lib/tokens/read/load";
+import { UbwiSection } from "@/components/ubwi/ubwi-section";
+import { ubwiSurface } from "@/lib/ubwi/read/surface";
 
 type PageProps = { params: Promise<{ symbol: string }> };
 
@@ -22,6 +24,24 @@ export default async function MarketIndexPage({ params }: PageProps) {
   const researchPreview =
     (await tokenResearchPreviewActive()) &&
     (market.families.find((family) => family.id === "tokens")?.instruments.length ?? 0) > 0;
+
+  // UBWI publishes no series, so the chart page would render a stretched blank above a
+  // surface that already carries everything real. It gets its own surface instead: the
+  // value where one is published, and the reason plus the full observed/modelled
+  // disclosure where none is.
+  if (market.symbol === "UBWI") {
+    return (
+      <>
+        <SiteHeader />
+        <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-10 text-neutral-50 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-screen-2xl">
+            <UbwiSection surface={ubwiSurface()} />
+          </div>
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
 
   return (
     <>

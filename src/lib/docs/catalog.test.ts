@@ -196,16 +196,21 @@ describe("Bitcoin wealth index methodology", () => {
     expect(read("methodology.md")).toContain(`](${docHref(ubwi!.slug)})`);
   });
 
-  it("is a draft that states its unit, its exclusions and why it cannot publish", () => {
+  it("states its unit, its exclusions, its modelled share and its publication gate", () => {
     const doc = readFileSync(path.join(process.cwd(), "docs", ubwi!.file), "utf8");
-    expect(doc).toContain("version 0.1.0-draft");
+    expect(doc).toContain("Version 1.0.0");
     expect(doc).toContain("Total Global Wealth");
     // The term is named once, only to prohibit it, and never used as a label.
     expect(doc.match(/global wealth supply/gi)).toHaveLength(1);
     expect(doc).toContain('"Global wealth supply" is not used anywhere in Urdais');
     expect(doc).toContain("Human capital is excluded");
     expect(doc).toContain("Asset-class market values are never summed");
-    expect(doc).toContain("labelled candidate");
+    // The modelled share is never hidden, and the document says so in those words.
+    expect(doc).toContain("Modelled wealth is never described as observed");
+    expect(doc).toContain("estimate calibrated to observed economies, not a census of world wealth");
+    expect(doc).toContain("Publication Gates");
+    // The gate is stated as a refusal that is not relaxed to produce a number.
+    expect(doc).toContain("The gate is never relaxed to make a calculation pass");
   });
 });
 

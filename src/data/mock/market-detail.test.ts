@@ -23,19 +23,24 @@ describe("market detail dataset: chip and accelerator consolidation", () => {
 
   it("offers UACI once, and never UAXI, in every cross-index comparison list", () => {
     for (const market of MARKETS) {
+      // A market that publishes no series has no headline instrument to compare from.
+      if (market.families.every((family) => family.instruments.length === 0)) continue;
       const labels = defaultInstrument(market).comparisons.map((option) => option.label);
       const standalone = market.families.length === 1 && market.families[0]!.instruments.length === 1;
       if (standalone && market.symbol !== "UACI") expect(labels.filter((label) => label === "UACI")).toHaveLength(1);
       expect(labels).not.toContain("UAXI");
     }
-    expect(defaultInstrument(findMarket("ugai")!).comparisons.map((option) => option.label)).toEqual(["UCPI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI", "UBWI"]);
+    expect(defaultInstrument(findMarket("ugai")!).comparisons.map((option) => option.label)).toEqual(["UCPI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI"]);
   });
 
   it("shows one chip / accelerator row on the homepage rail with the canonical name", () => {
     const rows = INDEX_SNAPSHOTS.filter((snapshot) => /chip|accelerator/i.test(snapshot.name));
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ symbol: "UACI", name: "Urdais Chip & Accelerator Index", unit: "pts" });
-    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).toEqual(["UGAI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI", "UBWI"]);
+    // UBWI is deliberately absent: it publishes no value, so it gets no watchlist row
+    // rather than a fabricated one. Its detail page carries the withheld state instead.
+    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).toEqual(["UGAI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI"]);
+    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).not.toContain("UBWI");
   });
 });
 
@@ -45,23 +50,20 @@ describe("market detail dataset: chip and accelerator consolidation", () => {
  * that "any presentation of UBWI as a points series is wrong", and that it is
  * bounded in [0, 100] because Bitcoin sits inside its own denominator.
  */
-describe("market detail dataset: UBWI is a percentage, not a points index", () => {
+describe("market detail dataset: UBWI publishes a percentage or nothing at all", () => {
   const ubwi = findMarket("ubwi")!;
-  const instrument = defaultInstrument(ubwi);
 
-  it("carries a percentage unit everywhere it is surfaced", () => {
+  it("carries a percentage unit and no points unit", () => {
     expect(ubwi.unit).toBe("%");
-    expect(instrument.unit).toBe("%");
-    expect(instrument.unit).not.toBe("pts");
-    expect(INDEX_SNAPSHOTS.find((snapshot) => snapshot.symbol === "UBWI")!.unit).toBe("%");
+    expect(ubwi.unit).not.toBe("pts");
   });
 
-  it("keeps every demo point inside the bounds a share of a whole can take", () => {
-    for (const point of [...instrument.series.daily, ...instrument.series.intraday]) {
-      expect(point.value).toBeGreaterThan(0);
-      expect(point.value).toBeLessThanOrEqual(100);
-    }
-    expect(instrument.snapshot.value).toBeLessThanOrEqual(100);
+  it("carries no demo series, no demo level and no watchlist row", () => {
+    // The production gate refuses the current denominator, so there is no published value.
+    // A synthetic walk in its place would be fake history on a public surface.
+    const instruments = ubwi.families.flatMap((family) => family.instruments);
+    expect(instruments).toHaveLength(0);
+    expect(INDEX_SNAPSHOTS.find((snapshot) => snapshot.symbol === "UBWI")).toBeUndefined();
   });
 
   it("states the percentage definition and the question the index answers", () => {
