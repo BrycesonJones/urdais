@@ -126,16 +126,33 @@ Phase 2B found land to be the binding constraint. Phase 2D re-measured it direct
 
 > **Every one of the ten Eurostat geographies that publishes land is already in the observed set.** AT, CZ, DE, EE, FI, FR, NL, SE, SK are observed through Eurostat; the UK is observed through the ONS (and Eurostat's UK row is stale at 2019 and excluded from commercial reuse in any case). Italy is observed through Istat's own service. **Eurostat is exhausted.**
 
-The OECD's national accounts matrix publishes `N211N` for seventeen reference areas: AUS, AUT, CAN, CZE, DEU, EST, FIN, FRA, GBR, **HRV**, JPN, KOR, MEX, NLD, **NZL**, SVK, SWE. Fifteen are already observed. **Croatia and New Zealand are the only land-publishing geographies in either harmonised compiler that Urdais does not observe**, and neither is enough:
+The OECD's `DSD_NASEC10@DF_TABLE9B` was re-queried directly on 15 September 2026 (HTTP 200 on every asset code) rather than read out of the Phase 2C matrix, because a claim about what a compiler publishes today should be measured today.
+
+| Asset code | Reference areas | Not already observed |
+|---|---:|---|
+| `N211N` (land) | 17 | **HRV 2020, NZL 2017** |
+| `NN` (total non-financial) | 10 | NZL 2017, RUS 2019 |
+| `N2N` (non-produced) | 10 | NZL 2017 |
+| `N1N` (produced) | 18 | HUN 2021, ISR 2021, LVA 2021, NOR 2020, PRT 2021, RUS 2019 |
+| `N11N` (fixed assets) | 37 | most of the EU, plus CHL |
+
+**Croatia and New Zealand are the only land-publishing geographies in either harmonised compiler that Urdais does not observe, and neither survives the vintage rule.**
+
+- **Croatia**: land at **2020**, five years before the latest complete calendar year, past the four-year bound. Its fixed-asset series runs to 2021 and its land to 2020, so even ignoring vintage the two legs are different years, and the OECD publishes no `N1N`, `N2N` or `NN` for Croatia at all. **It is not constructible.**
+- **New Zealand**: every code stops at 2017, which is why it already sits in `EXCLUDED_ECONOMIES`.
+
+For completeness, what they would have been worth if either were current:
 
 | Addition | Coverage | Modelled share | Gate |
 |---|---:|---:|---|
 | Production V1 as it stands | 52.2340 % | **40.4392 %** | refused |
-| + Croatia | 52.3173 % | 40.3974 % | refused |
-| + New Zealand *(if a current balance sheet existed)* | 52.4682 % | 39.9999 % | passes by 0.0001 pp |
-| + Croatia + New Zealand | 52.5515 % | 39.9581 % | passes |
+| + Croatia *(counterfactual)* | 52.3173 % | 40.3974 % | still refused |
+| + New Zealand *(counterfactual)* | 52.4682 % | 39.9999 % | passes by 0.0001 pp |
+| + both *(counterfactual)* | 52.5515 % | 39.9581 % | passes |
 
-New Zealand's OECD row is 2017, eight years stale, and the vintage rule excludes it — which is why it is in `EXCLUDED_ECONOMIES` rather than in the observed set. **A gate that passes by one ten-thousandth of a percentage point is not a margin**, and building the first published UBWI on it would be a worse decision than not publishing.
+Croatia would not have been enough on its own in any case. And **a gate that passes by one ten-thousandth of a percentage point is not a margin** — building the first published UBWI on New Zealand alone would have been a worse decision than not publishing.
+
+> **There is no economy outside the observed set, in either harmonised compiler, with a land-inclusive balance sheet that satisfies the vintage rule. Not one.** The remaining route to the denominator is national compilers, one at a time.
 
 ### 2.3 The "near-term frontier" is softer than it reads
 
@@ -275,6 +292,7 @@ All retrieved 15 September 2026 by direct `urllib` call, saved, and hashed over 
 | 6 | Bitstamp terms-of-use (Imperva stub) | `www.bitstamp.net/terms-of-use/` | 200 | 212 | `d02032286070b4dd` |
 | 7 | Eurostat `nama_10_nfa_bs`, `N211N`, all geographies | `ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/` | 200 | — | dataset updated 2026-09-08 |
 | 8 | Eurostat `nama_10_nfa_bs`, `N2N` / `N21N` / `N1N` / `N11N` | same | 200 | — | same |
+| 9 | OECD `DSD_NASEC10@DF_TABLE9B`, `N211N` / `NN` / `N2N` / `N1N` / `N11N` | `sdmx.oecd.org/public/rest/data/` | 200 | — | re-measured this phase, not read from the Phase 2C matrix |
 
 Full hashes are recorded in `src/lib/ubwi/rights.ts` and in migration `20260915000300_ubwi_numerator_terms_evidence.sql`, and are re-derivable from the retained bytes with `npm run ubwi:verify-terms`.
 
