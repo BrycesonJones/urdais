@@ -1,0 +1,916 @@
+{
+ "_retrieved": "2026-09-16T00:12Z",
+ "_source": "https://openrouter.ai/openapi.json",
+ "_note": "Datasets paths and ranking schemas only, extracted verbatim from OpenRouter's published OpenAPI document.",
+ "paths": {
+  "/datasets/app-rankings": {
+   "get": {
+    "description": "Returns the top public apps on OpenRouter ranked by token usage inside the requested\ndate window, matching the public apps marketplace on openrouter.ai/apps. Token totals\nare `prompt_tokens + completion_tokens`; hidden and private apps are excluded and\ntraffic from related app aliases is merged into the canonical visible app.\n\n`sort=popular` (default) ranks by total token volume inside the window.\n`sort=trending` ranks by absolute excess token growth: window volume minus the average\nvolume of the three equal-length periods immediately preceding the window. Apps with\nno excess growth are omitted, so `trending` may return fewer than `limit` rows.\n\nFilter with `category` (marketplace category group, e.g. `coding`) or `subcategory`\n(e.g. `cli-agent`). Ranks are re-numbered 1..N after filtering. Page with `offset` —\n`rank` stays absolute, so the first row of `offset=50` is `rank: 51`.\n\nAuthenticate with any valid OpenRouter API key (same key used for inference).\nRate-limited to 30 requests/minute per key and 500 requests/day per account.\n\nWhen republishing or quoting this dataset, OpenRouter must be cited as:\n\"Source: OpenRouter (openrouter.ai/apps), as of {as_of}.\"\n\nToken counts come from each upstream provider's own tokenizer, so a token attributed\nto one app is not directly comparable to a token attributed to another app whose\ntraffic flows through a different provider.\n\nLicensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): reuse and republish with attribution to OpenRouter.",
+    "operationId": "getAppRankings",
+    "parameters": [
+     {
+      "description": "Marketplace category group to filter by (e.g. `coding`). Only apps tagged with a subcategory inside this group are returned. Mutually combinable with `subcategory` — when both are supplied the `subcategory` must belong to the `category` group.",
+      "in": "query",
+      "name": "category",
+      "required": false,
+      "schema": {
+       "description": "Marketplace category group to filter by (e.g. `coding`). Only apps tagged with a subcategory inside this group are returned. Mutually combinable with `subcategory` — when both are supplied the `subcategory` must belong to the `category` group.",
+       "enum": [
+        "coding",
+        "creative",
+        "productivity",
+        "entertainment"
+       ],
+       "example": "coding",
+       "type": "string",
+       "x-speakeasy-unknown-values": "allow"
+      }
+     },
+     {
+      "description": "Marketplace subcategory to filter by (e.g. `cli-agent`). Takes precedence over `category` for the actual filter; when `category` is also supplied the pair must be consistent.",
+      "in": "query",
+      "name": "subcategory",
+      "required": false,
+      "schema": {
+       "description": "Marketplace subcategory to filter by (e.g. `cli-agent`). Takes precedence over `category` for the actual filter; when `category` is also supplied the pair must be consistent.",
+       "enum": [
+        "cli-agent",
+        "ide-extension",
+        "cloud-agent",
+        "programming-app",
+        "native-app-builder",
+        "creative-writing",
+        "video-gen",
+        "image-gen",
+        "audio-gen",
+        "roleplay",
+        "game",
+        "writing-assistant",
+        "general-chat",
+        "personal-agent",
+        "legal"
+       ],
+       "example": "cli-agent",
+       "type": "string",
+       "x-speakeasy-unknown-values": "allow"
+      }
+     },
+     {
+      "description": "`popular` ranks apps by total token volume inside the date window. `trending` ranks apps by absolute excess token growth: window volume minus the average volume of the three equal-length periods immediately preceding the window. Apps with no excess growth are omitted from `trending` results.",
+      "in": "query",
+      "name": "sort",
+      "required": false,
+      "schema": {
+       "default": "popular",
+       "description": "`popular` ranks apps by total token volume inside the date window. `trending` ranks apps by absolute excess token growth: window volume minus the average volume of the three equal-length periods immediately preceding the window. Apps with no excess growth are omitted from `trending` results.",
+       "enum": [
+        "popular",
+        "trending"
+       ],
+       "example": "popular",
+       "type": "string",
+       "x-speakeasy-unknown-values": "allow"
+      }
+     },
+     {
+      "description": "Start of the date window in YYYY-MM-DD (UTC), inclusive. Defaults to 30 days before `end_date`. The dataset begins at 2025-01-01; earlier values are clamped forward to that floor and the resolved value is echoed in `meta.start_date`.",
+      "in": "query",
+      "name": "start_date",
+      "required": false,
+      "schema": {
+       "description": "Start of the date window in YYYY-MM-DD (UTC), inclusive. Defaults to 30 days before `end_date`. The dataset begins at 2025-01-01; earlier values are clamped forward to that floor and the resolved value is echoed in `meta.start_date`.",
+       "example": "2026-04-12",
+       "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+       "type": "string"
+      }
+     },
+     {
+      "description": "End of the date window in YYYY-MM-DD (UTC), inclusive. Defaults to the most recent completed UTC day. Must be on or after 2025-01-01; earlier values are rejected with a 400.",
+      "in": "query",
+      "name": "end_date",
+      "required": false,
+      "schema": {
+       "description": "End of the date window in YYYY-MM-DD (UTC), inclusive. Defaults to the most recent completed UTC day. Must be on or after 2025-01-01; earlier values are rejected with a 400.",
+       "example": "2026-05-11",
+       "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+       "type": "string"
+      }
+     },
+     {
+      "description": "Maximum number of apps to return (1-100). Defaults to 50.",
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "description": "Maximum number of apps to return (1-100). Defaults to 50.",
+       "example": 50,
+       "maximum": 100,
+       "minimum": 1,
+       "type": "integer"
+      }
+     },
+     {
+      "description": "Number of ranked apps to skip before the first returned row (0-100). Defaults to 0. `rank` stays absolute, so the first row of `offset=50` is `rank: 51`.",
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "description": "Number of ranked apps to skip before the first returned row (0-100). Defaults to 0. `rank` stays absolute, so the first row of `offset=50` is `rank: 51`.",
+       "example": 0,
+       "maximum": 100,
+       "minimum": 0,
+       "type": [
+        "integer",
+        "null"
+       ]
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "example": {
+         "data": [
+          {
+           "app_id": 12345,
+           "app_name": "Cline",
+           "rank": 1,
+           "total_requests": 4321,
+           "total_tokens": "12345678"
+          },
+          {
+           "app_id": 67890,
+           "app_name": "Roo Code",
+           "rank": 2,
+           "total_requests": 2109,
+           "total_tokens": "9876543"
+          }
+         ],
+         "meta": {
+          "as_of": "2026-05-12T02:00:00Z",
+          "end_date": "2026-05-11",
+          "start_date": "2026-04-12",
+          "version": "v1"
+         }
+        },
+        "schema": {
+         "$ref": "#/components/schemas/AppRankingsResponse"
+        }
+       }
+      },
+      "description": "Apps ranked per the requested `sort`, re-numbered 1..N. `popular` sorts by `total_tokens` descending; `trending` sorts by absolute excess token growth descending and may return fewer than `limit` rows."
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "example": {
+         "error": {
+          "code": 400,
+          "message": "Invalid request parameters"
+         }
+        },
+        "schema": {
+         "$ref": "#/components/schemas/BadRequestResponse"
+        }
+       }
+      },
+      "description": "Bad Request - Invalid request parameters or malformed input"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "example": {
+         "error": {
+          "code": 401,
+          "message": "Missing Authentication header"
+         }
+        },
+        "schema": {
+         "$ref": "#/components/schemas/UnauthorizedResponse"
+        }
+       }
+      },
+      "description": "Unauthorized - Authentication required or invalid credentials"
+     },
+     "429": {
+      "content": {
+       "application/json": {
+        "example": {
+         "error": {
+          "code": 429,
+          "message": "Rate limit exceeded"
+         }
+        },
+        "schema": {
+         "$ref": "#/components/schemas/TooManyRequestsResponse"
+        }
+       }
+      },
+      "description": "Too Many Requests - Rate limit exceeded"
+     },
+     "500": {
+      "content": {
+       "application/json": {
+        "example": {
+         "error": {
+          "code": 500,
+          "message": "Internal Server Error"
+         }
+        },
+        "schema": {
+         "$ref": "#/components/schemas/InternalServerResponse"
+        }
+       }
+      },
+      "description": "Internal Server Error - Unexpected server error"
+     }
+    },
+    "summary": "Top apps by token usage",
+    "tags": [
+     "Datasets"
+    ],
+    "x-speakeasy-pagination": {
+     "inputs": [
+      {
+       "in": "parameters",
+       "name": "offset",
+       "type": "offset"
+      },
+      {
+       "in": "parameters",
+       "name": "limit",
+       "type": "limit"
+      }
+     ],
+     "outputs": {
+      "results": "$.data"
+     },
+     "type": "offsetLimit"
+    }
+   },
+   "parameters": [
+    {
+     "$ref": "#/components/parameters/AppIdentifier"
+    },
+    {
+     "$ref": "#/components/parameters/AppDisplayName"
+    },
+    {
+     "$ref": "#/components/parameters/AppCategories"
+    }
+   ]
+  },
+  "/datasets/rankings-daily": {
+   "get": {
+    "description": "Returns the top 50 public models per day by total token usage on OpenRouter, plus a\nsingle aggregated `other` row per day that sums every model outside that top 50.\nToken totals are `prompt_tokens + completion_tokens`, matching the public rankings\nchart on openrouter.ai/rankings.\n\nEach row is a distinct `(date, model_permaslug)` pair. The `other` row uses the\nreserved permaslug `other` and is always returned last within its date, so callers\ncan compute `top-50 traffic / total daily traffic` without a second request.\n\nOptional filters slice the dataset. `period` (`day`/`week`/`month`) sets the time\ngrain. `modality` and `context_bucket` narrow the exact dataset by output/input\nmodality (or tool-calling activity) and request context length. `category` and\n`language_type` instead read a sampled, upsampled dataset whose `total_tokens` are\nweekly-grain estimates — they cannot be combined with each other or with the exact\nfilters, and reject `period=day` with a 400.\n\nAuthenticate with any valid OpenRouter API key (same key used for inference).\nRate-limited to 30 requests/minute per key and 500 requests/day per account.\n\nWhen republishing or quoting this dataset, OpenRouter must be cited as:\n\"Source: OpenRouter (openrouter.ai/rankings), as of {as_of}.\"\n\nToken counts come from each upstream provider's own tokenizer (Anthropic counts\nare as reported by Anthropic, OpenAI counts are as reported by OpenAI, etc.), so\na token in one row is not directly comparable to a token in another row from a\ndifferent provider.\n\nLicensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): reuse and republish with attribution to OpenRouter.",
+    "operationId": "getRankingsDaily",
+    "parameters": [
+     {
+      "description": "Start of the date window in YYYY-MM-DD (UTC), inclusive. Defaults to 30 days before `end_date`. The dataset begins at 2025-01-01; earlier values are clamped forward to that floor and the resolved value is echoed in `meta.start_date`.",
+      "in": "query",
+      "name": "start_date",
+      "required": false,
+      "schema": {
+       "description": "Start of the date window in YYYY-MM-DD (UTC), inclusive. Defaults to 30 days before `end_date`. The dataset begins at 2025-01-01; earlier values are clamped forward to that floor and the resolved value is echoed in `meta.start_date`.",
+       "example": "2026-04-12",
+       "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+       "type": "string"
+      }
+     },
+     {
+      "description": "End of the date window in YYYY-MM-DD (UTC), inclusive. Defaults to the most recent completed UTC day. Must be on or after 2025-01-01; earlier values are rejected with a 400.",
+      "in": "query",
+      "name": "end_date",
+      "required": false,
+      "schema": {
+       "description": "End of the date window in YYYY-MM-DD (UTC), inclusive. Defaults to the most recent completed UTC day. Must be on or after 2025-01-01; earlier values are rejected with a 400.",
+       "example": "2026-05-11",
+       "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+       "type": "string"
+      }
+     },
+     {
+      "description": "Time grain of each row. `day` (default) returns the per-UTC-day series; `week` buckets by ISO week start; `month` buckets by month start. With `category` or `language_type` only `week` (default) and `month` are available — `day` is rejected with a 400 because those datasets are aggregated weekly. For those sampled datasets `period=month` buckets each week by its week-start month, so totals are approximate at month boundaries.",
+      "in": "query",
+      "name": "period",
+      "required": false,
+      "schema": {
+       "description": "Time grain of each row. `day` (default) returns the per-UTC-day series; `week` buckets by ISO week start; `month` buckets by month start. With `category` or `language_type` only `week` (default) and `month` are available — `day` is rejected with a 400 because those datasets are aggregated weekly. For those sampled datasets `period=month` buckets each week by its week-start month, so totals are approximate at month boundaries.",
+       "enum": [
+        "day",
+        "week",
+        "month"
+       ],
+       "example": "day",
+       "type": "string",
+       "x-speakeasy-unknown-values": "allow"
+      }
+     },
+     {
+      "description": "Restrict to models for a modality surface: `text` / `image_output` match output modality, `image` / `audio` match input modality, and `tool_calling` keeps only rows that recorded at least one tool call. Exact dataset — cannot be combined with `category` or `language_type`.",
+      "in": "query",
+      "name": "modality",
+      "required": false,
+      "schema": {
+       "description": "Restrict to models for a modality surface: `text` / `image_output` match output modality, `image` / `audio` match input modality, and `tool_calling` keeps only rows that recorded at least one tool call. Exact dataset — cannot be combined with `category` or `language_type`.",
+       "enum": [
+        "text",
+        "image",
+        "image_output",
+        "audio",
+        "tool_calling"
+       ],
+       "example": "text",
+       "type": "string",
+       "x-speakeasy-unknown-values": "allow"
+      }
+     },
+     {
+      "description": "Restrict to requests whose context length falls in this bucket (`1K`, `10K`, `100K`, `1M`, or `10M`). Exact dataset — cannot be combined with `category` or `language_type`.",
+      "in": "query",
+      "name": "context_bucket",
+      "required": false,
+      "schema": {
+       "description": "Restrict to requests whose context length falls in this bucket (`1K`, `10K`, `100K`, `1M`, or `10M`). Exact dataset — cannot be combined with `category` or `language_type`.",
+       "enum": [
+        "1K",
+        "10K",
+        "100K",
+        "1M",
+        "10M"
+       ],
+       "example": "100K",
+       "type": "string",
+       "x-speakeasy-unknown-values": "allow"
+      }
+     },
+     {
+      "description": "Restrict to a use-case category (e.g. `programming`, `roleplay`). Sourced from a sampled, upsampled dataset, so `total_tokens` is an estimate and is aggregated weekly (the trailing weekly bucket may include traffic past `end_date`). Cannot be combined with `modality`, `context_bucket`, or `language_type`.",
+      "in": "query",
+      "name": "category",
+      "required": false,
+      "schema": {
+       "description": "Restrict to a use-case category (e.g. `programming`, `roleplay`). Sourced from a sampled, upsampled dataset, so `total_tokens` is an estimate and is aggregated weekly (the trailing weekly bucket may include traffic past `end_date`). Cannot be combined with `modality`, `context_bucket`, or `language_type`.",
+       "enum": [
+        "programming",
+        "roleplay",
+        "marketing",
+        "marketing/seo",
+        "technology",
+        "science",
+        "translation",
+        "legal",
+        "finance",
+        "health",
+        "trivia",
+        "academia"
+       ],
+       "example": "programming",
+       "type": "string",
+       "x-speakeasy-unknown-values": "allow"
+      }
+     },
+     {
+      "description": "Restrict to natural-language or programming-language tagged activity. Sourced from a sampled, upsampled dataset, so `total_tokens` is an estimate and is aggregated weekly (the trailing weekly bucket may include traffic past `end_date`). Cannot be combined with `modality`, `context_bucket`, or `category`.",
+      "in": "query",
+      "name": "language_type",
+      "required": false,
+      "schema": {
+       "description": "Restrict to natural-language or programming-language tagged activity. Sourced from a sampled, upsampled dataset, so `total_tokens` is an estimate and is aggregated weekly (the trailing weekly bucket may include traffic past `end_date`). Cannot be combined with `modality`, `context_bucket`, or `category`.",
+       "enum": [
+        "natural",
+        "programming"
+       ],
+       "example": "natural",
+       "type": "string",
+       "x-speakeasy-unknown-values": "allow"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "example": {
+         "data": [
+          {
+           "date": "2026-05-11",
+           "model_permaslug": "openai/gpt-4o-2024-05-13",
+           "total_tokens": "12345678"
+          },
+          {
+           "date": "2026-05-11",
+           "model_permaslug": "anthropic/claude-3.5-sonnet-20241022",
+           "total_tokens": "9876543"
+          },
+          {
+           "date": "2026-05-11",
+           "model_permaslug": "other",
+           "total_tokens": "4321098"
+          }
+         ],
+         "meta": {
+          "as_of": "2026-05-12T02:00:00Z",
+          "end_date": "2026-05-11",
+          "start_date": "2026-04-12",
+          "version": "v1"
+         }
+        },
+        "schema": {
+         "$ref": "#/components/schemas/RankingsDailyResponse"
+        }
+       }
+      },
+      "description": "Up to 51 rows per day — the top 50 public models by `total_tokens` plus a single aggregated `other` row covering every model outside that top 50. Sorted by `date` ascending, then by `total_tokens` descending, with `other` pinned last within its date."
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "example": {
+         "error": {
+          "code": 400,
+          "message": "Invalid request parameters"
+         }
+        },
+        "schema": {
+         "$ref": "#/components/schemas/BadRequestResponse"
+        }
+       }
+      },
+      "description": "Bad Request - Invalid request parameters or malformed input"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "example": {
+         "error": {
+          "code": 401,
+          "message": "Missing Authentication header"
+         }
+        },
+        "schema": {
+         "$ref": "#/components/schemas/UnauthorizedResponse"
+        }
+       }
+      },
+      "description": "Unauthorized - Authentication required or invalid credentials"
+     },
+     "429": {
+      "content": {
+       "application/json": {
+        "example": {
+         "error": {
+          "code": 429,
+          "message": "Rate limit exceeded"
+         }
+        },
+        "schema": {
+         "$ref": "#/components/schemas/TooManyRequestsResponse"
+        }
+       }
+      },
+      "description": "Too Many Requests - Rate limit exceeded"
+     },
+     "500": {
+      "content": {
+       "application/json": {
+        "example": {
+         "error": {
+          "code": 500,
+          "message": "Internal Server Error"
+         }
+        },
+        "schema": {
+         "$ref": "#/components/schemas/InternalServerResponse"
+        }
+       }
+      },
+      "description": "Internal Server Error - Unexpected server error"
+     }
+    },
+    "summary": "Daily token totals for top 50 models",
+    "tags": [
+     "Datasets"
+    ]
+   },
+   "parameters": [
+    {
+     "$ref": "#/components/parameters/AppIdentifier"
+    },
+    {
+     "$ref": "#/components/parameters/AppDisplayName"
+    },
+    {
+     "$ref": "#/components/parameters/AppCategories"
+    }
+   ]
+  },
+  "/datasets/session-cost": {
+   "get": {
+    "description": "Returns weekly refreshed, aggregated cost-per-session cells for the published harnesses.\nSessions are never pooled across apps. Medians are of per-session USD spend, and\nprivacy-preserving aggregation never exposes clerk_user_id values or per-session rows.\n\nFilter by `app_slug`, `model`, or `turn_range`. Filtering by `model` alone works across apps\nfor harness-vs-harness comparison at a fixed model. Results refresh weekly and include the source snapshot\nwindow in `meta`.\n\nLicensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): reuse and republish with attribution to OpenRouter.",
+    "operationId": "getSessionCost",
+    "parameters": [
+     {
+      "description": "Filter to one published harness slug.",
+      "in": "query",
+      "name": "app_slug",
+      "required": false,
+      "schema": {
+       "description": "Filter to one published harness slug.",
+       "example": "hermes-agent",
+       "type": "string"
+      }
+     },
+     {
+      "description": "Exact model permaslug filter. Works across all harness apps.",
+      "in": "query",
+      "name": "model",
+      "required": false,
+      "schema": {
+       "description": "Exact model permaslug filter. Works across all harness apps.",
+       "example": "anthropic/claude-4.8-opus",
+       "type": "string"
+      }
+     },
+     {
+      "description": "Filter by the inclusive number of turns in a session.",
+      "in": "query",
+      "name": "turn_range",
+      "required": false,
+      "schema": {
+       "description": "Filter by the inclusive number of turns in a session.",
+       "enum": [
+        "1-turn",
+        "2-9-turns",
+        "10-49-turns",
+        "50-plus-turns"
+       ],
+       "example": "10-49-turns",
+       "type": "string",
+       "x-speakeasy-unknown-values": "allow"
+      }
+     },
+     {
+      "description": "Maximum number of cells to return (1-500). Defaults to 100.",
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 100,
+       "description": "Maximum number of cells to return (1-500). Defaults to 100.",
+       "example": 100,
+       "maximum": 500,
+       "minimum": 1,
+       "type": "integer"
+      }
+     },
+     {
+      "description": "Number of sorted cells to skip (0-5000). Defaults to 0.",
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "description": "Number of sorted cells to skip (0-5000). Defaults to 0.",
+       "example": 0,
+       "maximum": 5000,
+       "minimum": 0,
+       "type": [
+        "integer",
+        "null"
+       ]
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "example": {
+         "data": [
+          {
+           "app_name": "Hermes Agent",
+           "app_slug": "hermes-agent",
+           "median_session_cost_usd": 1.74,
+           "model_permaslug": "anthropic/claude-4.8-opus",
+           "turn_range": "10-49-turns"
+          }
+         ],
+         "meta": {
+          "as_of": "2026-05-12T02:00:00.000Z",
+          "version": "v1",
+          "window_days": 30,
+          "window_end_date": "2026-05-11"
+         }
+        },
+        "schema": {
+         "$ref": "#/components/schemas/SessionCostResponse"
+        }
+       }
+      },
+      "description": "Aggregated cost-per-session cells for the requested filters."
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "example": {
+         "error": {
+          "code": 400,
+          "message": "Invalid request parameters"
+         }
+        },
+        "schema": {
+         "$ref": "#/components/schemas/BadRequestResponse"
+        }
+       }
+      },
+      "description": "Bad Request - Invalid request parameters or malformed input"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "example": {
+         "error": {
+          "code": 401,
+          "message": "Missing Authentication header"
+         }
+        },
+        "schema": {
+         "$ref": "#/components/schemas/UnauthorizedResponse"
+        }
+       }
+      },
+      "description": "Unauthorized - Authentication required or invalid credentials"
+     },
+     "429": {
+      "content": {
+       "application/json": {
+        "example": {
+         "error": {
+          "code": 429,
+          "message": "Rate limit exceeded"
+         }
+        },
+        "schema": {
+         "$ref": "#/components/schemas/TooManyRequestsResponse"
+        }
+       }
+      },
+      "description": "Too Many Requests - Rate limit exceeded"
+     },
+     "500": {
+      "content": {
+       "application/json": {
+        "example": {
+         "error": {
+          "code": 500,
+          "message": "Internal Server Error"
+         }
+        },
+        "schema": {
+         "$ref": "#/components/schemas/InternalServerResponse"
+        }
+       }
+      },
+      "description": "Internal Server Error - Unexpected server error"
+     }
+    },
+    "summary": "Cost per session by harness and model",
+    "tags": [
+     "Datasets"
+    ],
+    "x-speakeasy-pagination": {
+     "inputs": [
+      {
+       "in": "parameters",
+       "name": "offset",
+       "type": "offset"
+      },
+      {
+       "in": "parameters",
+       "name": "limit",
+       "type": "limit"
+      }
+     ],
+     "outputs": {
+      "results": "$.data"
+     },
+     "type": "offsetLimit"
+    }
+   },
+   "parameters": [
+    {
+     "$ref": "#/components/parameters/AppIdentifier"
+    },
+    {
+     "$ref": "#/components/parameters/AppDisplayName"
+    },
+    {
+     "$ref": "#/components/parameters/AppCategories"
+    }
+   ]
+  }
+ },
+ "components": {
+  "schemas": {
+   "AppRankingsItem": {
+    "example": {
+     "app_id": 12345,
+     "app_name": "Cline",
+     "rank": 1,
+     "total_requests": 4321,
+     "total_tokens": "12345678"
+    },
+    "properties": {
+     "app_id": {
+      "description": "Stable numeric identifier of the app on OpenRouter.",
+      "example": 12345,
+      "type": "integer"
+     },
+     "app_name": {
+      "description": "Public display name of the app.",
+      "example": "Cline",
+      "type": "string"
+     },
+     "rank": {
+      "description": "1-based position of the app within this response, per the requested `sort`.",
+      "example": 1,
+      "type": "integer"
+     },
+     "total_requests": {
+      "description": "Number of requests attributed to the app inside the date window.",
+      "example": 4321,
+      "type": "integer"
+     },
+     "total_tokens": {
+      "description": "Sum of `prompt_tokens + completion_tokens` attributed to the app inside the date window, returned as a decimal string so 64-bit values are not truncated.",
+      "example": "12345678",
+      "type": "string"
+     }
+    },
+    "required": [
+     "rank",
+     "app_id",
+     "app_name",
+     "total_tokens",
+     "total_requests"
+    ],
+    "type": "object"
+   },
+   "AppRankingsResponse": {
+    "example": {
+     "data": [
+      {
+       "app_id": 12345,
+       "app_name": "Cline",
+       "rank": 1,
+       "total_requests": 4321,
+       "total_tokens": "12345678"
+      },
+      {
+       "app_id": 67890,
+       "app_name": "Roo Code",
+       "rank": 2,
+       "total_requests": 2109,
+       "total_tokens": "9876543"
+      }
+     ],
+     "meta": {
+      "as_of": "2026-05-12T02:00:00.000Z",
+      "end_date": "2026-05-11",
+      "start_date": "2026-04-12",
+      "version": "v1"
+     }
+    },
+    "properties": {
+     "data": {
+      "description": "Apps ranked per the requested `sort`, re-numbered 1..N after category filtering. `popular` sorts by `total_tokens` descending; `trending` sorts by absolute excess token growth descending and may return fewer than `limit` rows when few apps are growing.",
+      "items": {
+       "$ref": "#/components/schemas/AppRankingsItem"
+      },
+      "type": "array"
+     },
+     "meta": {
+      "$ref": "#/components/schemas/RankingsDailyMeta"
+     }
+    },
+    "required": [
+     "data",
+     "meta"
+    ],
+    "type": "object"
+   },
+   "RankingsDailyItem": {
+    "example": {
+     "date": "2026-05-11",
+     "model_permaslug": "openai/gpt-4o-2024-05-13",
+     "total_tokens": "12345678"
+    },
+    "properties": {
+     "date": {
+      "description": "UTC calendar date the row is aggregated over (YYYY-MM-DD).",
+      "example": "2026-05-11",
+      "type": "string"
+     },
+     "model_permaslug": {
+      "description": "Model variant permaslug (e.g. `openai/gpt-4o-2024-05-13`, `openai/gpt-4o-2024-05-13:free`). Non-default variants include a `:variant` suffix and are ranked as their own entry. The reserved value `other` denotes the aggregated row covering every model outside the daily top 50 for that date — always sorted last within its date.",
+      "example": "openai/gpt-4o-2024-05-13",
+      "type": "string"
+     },
+     "total_tokens": {
+      "description": "Sum of `prompt_tokens + completion_tokens` for the day, returned as a decimal string so 64-bit values are not truncated.",
+      "example": "12345678",
+      "type": "string"
+     }
+    },
+    "required": [
+     "date",
+     "model_permaslug",
+     "total_tokens"
+    ],
+    "type": "object"
+   },
+   "RankingsDailyMeta": {
+    "example": {
+     "as_of": "2026-05-12T02:00:00.000Z",
+     "end_date": "2026-05-11",
+     "start_date": "2026-04-12",
+     "version": "v1"
+    },
+    "properties": {
+     "as_of": {
+      "description": "ISO-8601 timestamp of when the response was generated. Reflects data-freshness because the underlying materialized view continuously ingests upstream events.",
+      "example": "2026-05-12T02:00:00.000Z",
+      "type": "string"
+     },
+     "end_date": {
+      "description": "Resolved end of the date window (UTC, inclusive).",
+      "example": "2026-05-11",
+      "type": "string"
+     },
+     "start_date": {
+      "description": "Resolved start of the date window (UTC, inclusive).",
+      "example": "2026-04-12",
+      "type": "string"
+     },
+     "version": {
+      "description": "Dataset version. Field names and grain are stable for the life of `v1`.",
+      "enum": [
+       "v1"
+      ],
+      "type": "string"
+     }
+    },
+    "required": [
+     "as_of",
+     "version",
+     "start_date",
+     "end_date"
+    ],
+    "type": "object"
+   },
+   "RankingsDailyResponse": {
+    "example": {
+     "data": [
+      {
+       "date": "2026-05-11",
+       "model_permaslug": "openai/gpt-4o-2024-05-13",
+       "total_tokens": "12345678"
+      },
+      {
+       "date": "2026-05-11",
+       "model_permaslug": "anthropic/claude-3.5-sonnet-20241022",
+       "total_tokens": "9876543"
+      }
+     ],
+     "meta": {
+      "as_of": "2026-05-12T02:00:00.000Z",
+      "end_date": "2026-05-11",
+      "start_date": "2026-04-12",
+      "version": "v1"
+     }
+    },
+    "properties": {
+     "data": {
+      "description": "Up to 51 rows per day — the top 50 public models by `total_tokens` for each UTC calendar date in the window, plus one aggregated `other` row summing every model outside that top 50 (omitted when the long tail is empty). Rows are sorted by `date` ascending, then by `total_tokens` descending, with `other` pinned last within its date. Ties between real models break alphabetically on `model_permaslug` so the order is stable across requests.",
+      "items": {
+       "$ref": "#/components/schemas/RankingsDailyItem"
+      },
+      "type": "array"
+     },
+     "meta": {
+      "$ref": "#/components/schemas/RankingsDailyMeta"
+     }
+    },
+    "required": [
+     "data",
+     "meta"
+    ],
+    "type": "object"
+   }
+  }
+ }
+}
