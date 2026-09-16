@@ -25,7 +25,18 @@ import { loadApprovedLineage, loadRegistry } from "@/lib/ucpi/runtime/daily-run"
 import type { UcpiSeriesPoint } from "@/lib/ucpi/api-contract";
 import { resolveTokenDatabaseUrl, tokenSqlExecutor } from "@/lib/tokens/read/database";
 import type { ProcessEnvLike } from "@/lib/tokens/read/publication";
-import type { MarketDetail, MarketInstrumentDetail } from "@/types/market";
+import { describeDatabaseError } from "@/lib/db/connection";
+import { catalogEntry } from "@/data/market-catalog";
+import { TIME_RANGES } from "@/types/market";
+import type {
+  IndexSeries,
+  MarketDetail,
+  MarketIndex,
+  MarketInstrumentDetail,
+  MarketSnapshot,
+  TimeRange,
+  TimeSeriesPoint,
+} from "@/types/market";
 
 /** The unit caption the listed children publish in. Never "market price": these are asking prices. */
 export const LISTED_GPU_UNIT_CAPTION = "$/GPU-hour (listed)";
@@ -107,8 +118,14 @@ export function listedInstrumentsFrom(children: readonly ListedChildState[]): Ma
       id: child.symbol.toLowerCase(),
       shortLabel: child.gpuLabel,
       symbol: child.symbol,
+      // The headline is rendered as `<market>-<benchmarkCode ?? symbol>`. Without this
+      // the child's own symbol already carries the index prefix and the page reads
+      // "UCPI-UCPI-H100-SXM-LISTED", which is what production was serving.
+      benchmarkCode: child.gpuLabel,
       name: child.displayName,
       unit: LISTED_GPU_UNIT_CAPTION,
+      // Released production values. The surface must not label these demo data.
+      provenance: "production",
       snapshot: {
         value: child.latest.priceLevel,
         changePercent: child.latest.percentageChange1d,
@@ -147,4 +164,79 @@ export function withListedComputeInstruments(market: MarketDetail, instruments: 
 export async function hydrateMarketWithListedCompute(market: MarketDetail, env: ProcessEnvLike = process.env): Promise<MarketDetail> {
   if (!market.families.some((family) => family.id === "compute")) return market;
   return withListedComputeInstruments(market, listedInstrumentsFrom(await loadListedChildren(env)));
+}
+
+/**
+ * The homepage UCPI panel, built from the same production instruments the market
+ * surface shows.
+ *
+ * It is deliberately derived from `listedInstrumentsFrom` rather than from its own
+ * query, so the landing page and the UCPI market page cannot disagree: the headline
+ * here is the instrument `withListedComputeInstruments` makes the market's default,
+ * which is the first listed child with a released value.
+ *
+ * The panel keeps the catalog's UCPI identity -- the heading and its link to the
+ * detail page are the index's, not the child's -- while the value, timestamp, change
+ * and series are the child's, and the unit caption says "listed" because that is what
+ * the children publish.
+ */
+export type UcpiHeadline = {
+  index: MarketIndex;
+  snapshot: MarketSnapshot;
+  series: IndexSeries;
+};
+
+/** How far back each selectable range reaches from the latest released point. */
+const RANGE_SPAN_DAYS: Record<TimeRange, number | null> = {
+  "1D": 1,
+  "1W": 7,
+  "1M": 30,
+  "3M": 90,
+  "1Y": 365,
+  ALL: null,
+};
+
+/**
+ * The released daily points, windowed per range.
+ *
+ * Every range is populated from the one daily series; none is synthesised and none is
+ * padded. Which ranges a history is *long enough* to offer is a separate question this
+ * does not answer -- the panel's range buttons are unchanged.
+ */
+function windowedSeries(daily: readonly TimeSeriesPoint[]): IndexSeries {
+  const latest = daily.length === 0 ? 0 : daily[daily.length - 1]!.time;
+  const out = {} as IndexSeries;
+  for (const range of TIME_RANGES) {
+    const span = RANGE_SPAN_DAYS[range];
+    out[range] = span === null ? [...daily] : daily.filter((point) => point.time >= latest - span * DAY);
+  }
+  return out;
+}
+
+/** The headline panel for the released listed instruments, or null where none has a value. */
+export function ucpiHeadlineFrom(instruments: readonly MarketInstrumentDetail[]): UcpiHeadline | null {
+  const headline = instruments[0];
+  if (headline === undefined) return null;
+  const ucpi = catalogEntry("UCPI");
+  return {
+    index: { symbol: ucpi.symbol, name: ucpi.name, unit: headline.unit },
+    snapshot: headline.snapshot,
+    series: windowedSeries(headline.series.daily),
+  };
+}
+
+/**
+ * The production UCPI headline, or null when production has nothing to show.
+ *
+ * A database failure is null too, and deliberately: the caller's job is then to say so,
+ * not to reach for the fixtures. Returning null rather than throwing keeps one
+ * unreachable database from taking the whole homepage down with it.
+ */
+export async function loadUcpiHeadline(env: ProcessEnvLike = process.env): Promise<UcpiHeadline | null> {
+  try {
+    return ucpiHeadlineFrom(listedInstrumentsFrom(await loadListedChildren(env)));
+  } catch (error) {
+    console.warn(`ucpi headline: database unavailable (${describeDatabaseError(error)}); no production value`);
+    return null;
+  }
 }

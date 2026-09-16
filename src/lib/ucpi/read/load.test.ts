@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { listedInstrumentsFrom, withListedComputeInstruments, LISTED_GPU_UNIT_CAPTION, type ListedChildState } from "@/lib/ucpi/read/load";
+import { listedInstrumentsFrom, ucpiHeadlineFrom, withListedComputeInstruments, LISTED_GPU_UNIT_CAPTION, type ListedChildState } from "@/lib/ucpi/read/load";
 import { findMarket, DEFAULT_MARKET_SYMBOL } from "@/data/mock/market-detail";
+import { instrumentDisplaySymbol } from "@/lib/market-display";
 import type { UcpiSeriesPoint } from "@/lib/ucpi/api-contract";
 
 const ATTRIBUTION = "Data: Price of Compute — priceofcompute.com";
@@ -109,5 +110,102 @@ describe("hydrating the Compute family", () => {
 
   it("carries the source attribution on the released point", () => {
     expect(child().latest!.attributions).toContain(ATTRIBUTION);
+  });
+});
+
+describe("the homepage headline is the production series, not the fixture", () => {
+  // Deliberately not the fixture's values. The fixture is frozen at 2.41 on
+  // 2026-09-04T16:00Z; every assertion below would still pass if the panel were
+  // rendering that, were it not for these being different numbers on a later day.
+  const FIXTURE_VALUE = 2.41;
+  const FIXTURE_AS_OF = Date.UTC(2026, 8, 4, 16, 0, 0) / 1000;
+
+  it("takes value, timestamp and unit from the released point", () => {
+    const headline = ucpiHeadlineFrom(listedInstrumentsFrom([child()]))!;
+    expect(headline.snapshot.value).toBe(3.628);
+    expect(headline.snapshot.value).not.toBe(FIXTURE_VALUE);
+    // The published instant, not the calculation date and not the fixture's.
+    expect(headline.snapshot.asOf).toBe(Math.floor(Date.parse("2026-09-16T01:00:00.000Z") / 1000));
+    expect(headline.snapshot.asOf).toBeGreaterThan(FIXTURE_AS_OF);
+    expect(headline.index.unit).toBe(LISTED_GPU_UNIT_CAPTION);
+  });
+
+  it("keeps the index's own identity, so the panel still links to the UCPI page", () => {
+    const headline = ucpiHeadlineFrom(listedInstrumentsFrom([child()]))!;
+    expect(headline.index.symbol).toBe("UCPI");
+    expect(headline.index.name).toBe("Urdais Compute Price Index");
+  });
+
+  it("follows the freshest released point when a later one arrives", () => {
+    const older = point({ calculationDate: "2026-09-15", priceLevel: 3.5, publishedAt: "2026-09-16T01:00:00.000Z" });
+    const newer = point({ calculationDate: "2026-09-16", priceLevel: 3.91, publishedAt: "2026-09-17T01:00:00.000Z" });
+    const headline = ucpiHeadlineFrom(listedInstrumentsFrom([child({ latest: newer, points: [older, newer] })]))!;
+    expect(headline.snapshot.value).toBe(3.91);
+    expect(headline.snapshot.asOf).toBe(Math.floor(Date.parse("2026-09-17T01:00:00.000Z") / 1000));
+    // Both released points are in the series; the fresher one is last.
+    expect(headline.series.ALL.map((p) => p.value)).toEqual([3.5, 3.91]);
+  });
+
+  it("is the same instrument the market page makes its default, so the surfaces agree", () => {
+    const instruments = listedInstrumentsFrom([child()]);
+    const hydrated = withListedComputeInstruments(findMarket(DEFAULT_MARKET_SYMBOL)!, instruments);
+    const headline = ucpiHeadlineFrom(instruments)!;
+    const shown = hydrated.families
+      .find((f) => f.id === "compute")!
+      .instruments.find((i) => i.id === hydrated.defaultInstrumentId)!;
+    expect(headline.snapshot).toEqual(shown.snapshot);
+    expect(headline.index.unit).toBe(shown.unit);
+  });
+
+  it("windows each range against the released history and synthesises nothing", () => {
+    const day = 24 * 60 * 60;
+    const latest = Date.parse("2026-09-16T01:00:00.000Z") / 1000;
+    const points = [200, 40, 3, 0].map((back, n) =>
+      point({
+        calculationDate: `2026-09-${String(10 + n).padStart(2, "0")}`,
+        priceLevel: 3 + n,
+        publishedAt: new Date((latest - back * day) * 1000).toISOString(),
+      }),
+    );
+    const headline = ucpiHeadlineFrom(
+      listedInstrumentsFrom([child({ latest: points[3]!, points })]),
+    )!;
+    expect(headline.series.ALL).toHaveLength(4);
+    expect(headline.series["1Y"]).toHaveLength(4);
+    expect(headline.series["3M"]).toHaveLength(3);
+    expect(headline.series["1M"]).toHaveLength(2);
+    expect(headline.series["1D"]).toHaveLength(1);
+    // No range is padded out to a length it has not earned.
+    for (const range of Object.values(headline.series)) {
+      expect(range.length).toBeLessThanOrEqual(4);
+    }
+  });
+
+  it("is null when production has released nothing, so no caller can mistake it for a value", () => {
+    expect(ucpiHeadlineFrom([])).toBeNull();
+    expect(ucpiHeadlineFrom(listedInstrumentsFrom([child({ latest: null, points: [] })]))).toBeNull();
+  });
+});
+
+describe("production instruments declare their provenance", () => {
+  it("marks released listed children as production, so the surface cannot label them demo", () => {
+    expect(listedInstrumentsFrom([child()])[0]!.provenance).toBe("production");
+  });
+
+  it("leaves the mock markets without a declaration, so they keep the demo label", () => {
+    const compute = findMarket(DEFAULT_MARKET_SYMBOL)!.families.find((f) => f.id === "compute")!;
+    for (const instrument of compute.instruments) expect(instrument.provenance).toBeUndefined();
+  });
+});
+
+describe("the headline reads as an index benchmark, not a doubled ticker", () => {
+  it("names the child by its GPU label so the page does not read UCPI-UCPI-...", () => {
+    const instruments = listedInstrumentsFrom([child()]);
+    expect(instruments[0]!.benchmarkCode).toBe("H100 SXM");
+    // As the page renders it: the hydrated market, where this child is the headline.
+    const hydrated = withListedComputeInstruments(findMarket(DEFAULT_MARKET_SYMBOL)!, instruments);
+    const shown = instrumentDisplaySymbol(hydrated, instruments[0]!);
+    expect(shown).toBe("UCPI-H100 SXM");
+    expect(shown).not.toContain("UCPI-UCPI");
   });
 });

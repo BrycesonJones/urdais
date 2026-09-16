@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { MarketDetailPage } from "@/components/market-detail/market-detail-page";
 import { findMarket } from "@/data/mock/market-detail";
 import { hydrateMarketWithTokenPrices, tokenResearchPreviewActive } from "@/lib/tokens/read/load";
+import { hydrateMarketWithListedCompute } from "@/lib/ucpi/read/load";
 import { UbwiSection } from "@/components/ubwi/ubwi-section";
 import { ubwiSurface } from "@/lib/ubwi/read/surface";
 import { loadFrozenUbwiPublication } from "@/lib/ubwi/read/publication-store";
@@ -34,7 +35,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function MarketIndexPage({ params }: PageProps) {
   const found = findMarket((await params).symbol);
   if (!found) notFound();
-  const market = await hydrateMarketWithTokenPrices(found);
+  // The same two hydrations /markets performs, in the same order. This route used to run
+  // only the token one, so /markets served the live listed-GPU children while
+  // /markets/ucpi -- the page the homepage links to -- served the mock Compute family.
+  const market = await hydrateMarketWithListedCompute(await hydrateMarketWithTokenPrices(found));
   const researchPreview =
     (await tokenResearchPreviewActive()) &&
     (market.families.find((family) => family.id === "tokens")?.instruments.length ?? 0) > 0;
