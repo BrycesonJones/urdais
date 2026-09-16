@@ -56,10 +56,20 @@ describe("available ranges", () => {
     expect(view.instrument.availableRanges).toEqual(["1D", "1W"]);
   });
 
-  it("offers every range once the history spans a year", () => {
+  it("offers only the horizons a gapped history can honestly measure", () => {
+    // Two consecutive days, then nothing back to 2025-01-01. The span reaches past a year,
+    // but nothing observed sits anywhere near the 1W/1M/3M/6M window starts. Offering those
+    // would measure a 620-day move and label it a week: the 2025 point is not a stand-in for
+    // observations that were never made. 1Y survives because that lone point is within a
+    // year of its own window start, and 1D because the consecutive pair supports it.
     const view = utviInstrumentFrom(
       buildReadModel([...contiguous(2), publication("2025-01-01", "10")]),
     )!;
+    expect(view.instrument.availableRanges).toEqual(["1D", "1Y"]);
+  });
+
+  it("offers every range once the history is continuous across a year", () => {
+    const view = utviInstrumentFrom(buildReadModel(contiguous(400)))!;
     expect(view.instrument.availableRanges).toEqual(["1D", "1W", "1M", "3M", "6M", "1Y"]);
   });
 

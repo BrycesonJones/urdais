@@ -104,6 +104,37 @@ function baseIndex(points: TimeSeriesPoint[], time: number): number {
 }
 
 /**
+ * The earliest instant a window's base may sit at: one further window back.
+ *
+ * The base is the last observation at or before the window start, which is right for a
+ * regularly sampled series -- a daily close a few seconds either side of the boundary is
+ * plainly the observation the window means. It is wrong without a bound. Two observations
+ * four hundred days apart used to make every range "available", each reporting the same
+ * figure, so a "1 day" return was measured across four hundred days; that is the oldest
+ * available point being used merely because it exists.
+ *
+ * Bounding the base by one further window is calendar-aware and introduces no constant of
+ * its own: a `1D` base must fall within the preceding day, a `1M` base within the preceding
+ * calendar month. A series with a genuine gap therefore loses the short horizons it cannot
+ * honestly measure and keeps the long ones it can.
+ */
+function earliestAcceptableBase(range: DetailRange, asOf: number): number {
+  return rangeStart(range, rangeStart(range, asOf));
+}
+
+/**
+ * Index of the window's base observation, or -1 where there is none within reach.
+ *
+ * This is the one place availability is decided, so the chart window, the range buttons and
+ * the period returns cannot disagree about whether a horizon is real.
+ */
+function windowBaseIndex(points: TimeSeriesPoint[], range: DetailRange, asOf: number): number {
+  const index = baseIndex(points, rangeStart(range, asOf));
+  if (index < 0) return -1;
+  return points[index]!.time >= earliestAcceptableBase(range, asOf) ? index : -1;
+}
+
+/**
  * Points inside the window, starting at the base observation. Intraday
  * windows draw the 15-minute series; when that series begins after the
  * window opens, the daily close at the window start stands in as the base,
@@ -124,13 +155,19 @@ export function windowPoints(series: DetailedSeries, range: DetailRange, asOf: n
   return base < 0 ? series.daily : series.daily.slice(base);
 }
 
-/** A range is supported when the history reaches back to the window's base. */
+/**
+ * A range is supported when the history reaches back to the window's base and that base is
+ * within reach of the window start. Never when the only candidate is an observation so much
+ * older than the window that the return would measure a different period than its label.
+ */
 export function isRangeAvailable(series: DetailedSeries, range: DetailRange, asOf: number): boolean {
-  const start = rangeStart(range, asOf);
   if (usesIntradaySeries(series, range)) {
-    return series.intraday.length >= 2 && (baseIndex(series.intraday, start) >= 0 || baseIndex(series.daily, start) >= 0);
+    return (
+      series.intraday.length >= 2 &&
+      (windowBaseIndex(series.intraday, range, asOf) >= 0 || windowBaseIndex(series.daily, range, asOf) >= 0)
+    );
   }
-  return series.daily.length >= 2 && baseIndex(series.daily, start) >= 0;
+  return series.daily.length >= 2 && windowBaseIndex(series.daily, range, asOf) >= 0;
 }
 
 export function availableRanges(series: DetailedSeries, asOf: number): DetailRange[] {
@@ -198,7 +235,9 @@ export function isLowFrequencyRangeAvailable(
   asOf: number,
 ): boolean {
   if (points.length < 2) return false;
-  if (baseIndex(points as TimeSeriesPoint[], rangeStart(range, asOf)) < 0) return false;
+  // Same base-within-reach rule as the continuously quoted path, so the two conventions
+  // cannot drift into disagreeing about what counts as a real horizon.
+  if (windowBaseIndex(points as TimeSeriesPoint[], range, asOf) < 0) return false;
   return lowFrequencyWindowPoints(points, range, asOf).length >= 2;
 }
 
