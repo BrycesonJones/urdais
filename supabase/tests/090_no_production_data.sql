@@ -96,18 +96,27 @@ begin
   -- interface is. News feeds are a separate population with a separate data-use
   -- question, reviewed in 220_news_ingestion.sql; they are excluded here so this
   -- assertion keeps saying what it has always said about the compute market.
+  -- UTVI's usage dataset is a third population with its own data-use question, answered by a
+  -- public CC BY grant and reviewed in 290_utvi_observed_token_volume.sql. Excluded here for
+  -- the same reason news feeds are, so this assertion keeps saying what it has always said
+  -- about the compute market.
   select count(*) into n from reference.source_interfaces
-   where production_access_state = 'production_approved' and source_class <> 'news_feed';
+   where production_access_state = 'production_approved'
+     and source_class not in ('news_feed', 'usage_dataset_interface');
   if n <> 1 then raise exception 'expected exactly one production-approved compute source, found %', n; end if;
   -- No *compute-market* provider interface is cleared on both axes. The UBWI denominator
   -- and FX sources are: they were reviewed in Phases 2B and 2C and each is anchored to a
   -- retained, hashed terms artifact, which the constraint on those source classes
   -- requires. Clearing a source's terms is not publishing anything, and the assertions
   -- above already prove nothing is published.
+  -- UTVI's usage dataset is a fourth reviewed population. Its clearance rests on a public
+  -- licence rather than a retained bilateral artifact: OpenRouter publishes the dataset under
+  -- CC BY 4.0, including commercially, which is the grant recorded against it. Reviewed in
+  -- docs/architecture/sources/openrouter-datasets.md and exercised in 290.
   select count(*) into n from reference.source_interfaces
    where terms_review_state = 'permitted' and data_use_terms_state = 'permitted'
      and slug <> 'price-of-compute-prices' and source_class <> 'news_feed'
-     and source_class not in ('statistical_dataset', 'exchange_rate_series');
+     and source_class not in ('statistical_dataset', 'exchange_rate_series', 'usage_dataset_interface');
   if n <> 0 then raise exception '% direct source(s) cleared on both terms axes without review', n; end if;
 
   -- Every UBWI source that is cleared shows the artifact its state rests on.
@@ -128,7 +137,7 @@ begin
   select count(*) into n from pipeline.source_retrievals where retrieval_purpose <> 'research';
   if n <> 0 then raise exception 'a non-research retrieval exists'; end if;
   select count(*) into n from reference.permission_grants g join reference.source_interfaces si on si.id = g.source_interface_id
-   where si.source_class <> 'news_feed'
+   where si.source_class not in ('news_feed', 'usage_dataset_interface')
      and (si.slug <> 'price-of-compute-prices' or g.grant_kind <> 'provider_terms');
   if n <> 0 then raise exception 'a permission grant exists for a direct provider interface'; end if;
   -- No operator attribution and no tenancy evidence were seeded.

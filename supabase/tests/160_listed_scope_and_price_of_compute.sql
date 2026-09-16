@@ -25,9 +25,12 @@ begin
   end if;
   select id into grant_id from reference.permission_grants where source_interface_id = iface and grant_kind = 'provider_terms' and covers_collection and covers_index_use;
   if grant_id is null then raise exception 'no provider_terms grant covering both axes'; end if;
+  -- Scoped to the compute market by class. News feeds were already excluded; UTVI's usage
+  -- dataset is excluded for the same reason, being a token-volume source rather than a
+  -- compute-price one. Narrowed by name rather than dropped.
   select count(*) into n from reference.permission_grants g
     join reference.source_interfaces si on si.id = g.source_interface_id
-   where si.source_class <> 'news_feed';
+   where si.source_class not in ('news_feed', 'usage_dataset_interface');
   if n <> 1 then raise exception 'expected one compute-market grant, found %', n; end if;
 
   -- The attribution string is recorded verbatim in the evidence.

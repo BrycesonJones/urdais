@@ -14,8 +14,13 @@ declare
 begin
   select id into provider from reference.providers where slug = 'anthropic' and provider_kind = 'model_api_provider';
   if provider is null then raise exception 'anthropic model_api_provider was not seeded'; end if;
-  select count(*) into n from reference.providers where provider_kind = 'model_api_provider';
-  if n <> 7 then raise exception 'expected 7 model API providers, found %', n; end if;
+  -- Asserted by name rather than by count. The count was a proxy for "the wave-1 labs were
+  -- seeded", and it broke the moment UTVI added the labs whose models appear in OpenRouter's
+  -- rankings -- which is a fact about a different product, not a regression in this one.
+  select count(*) into n from reference.providers
+   where provider_kind = 'model_api_provider'
+     and slug in ('openai', 'anthropic', 'google', 'xai', 'deepseek', 'alibaba', 'moonshot');
+  if n <> 7 then raise exception 'expected the 7 wave-1 model API providers, found %', n; end if;
   select count(*) into n from reference.source_interfaces si
     join reference.providers p on p.id = si.provider_id
     where p.provider_kind = 'model_api_provider' and si.is_machine_readable = false

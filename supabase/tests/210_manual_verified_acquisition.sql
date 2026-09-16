@@ -62,7 +62,8 @@ begin
     raise exception 'recording a manual verification changed the source registry';
   end if;
   if (select count(*) from reference.source_interfaces
-       where production_access_state = 'production_approved' and source_class <> 'news_feed') <> 1 then
+       where production_access_state = 'production_approved'
+         and source_class not in ('news_feed', 'usage_dataset_interface')) <> 1 then
     raise exception 'the set of production-approved compute interfaces changed';
   end if;
 

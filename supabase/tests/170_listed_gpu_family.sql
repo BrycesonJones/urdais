@@ -39,8 +39,11 @@ begin
   -- file is about, so the assertion is narrowed by name rather than dropped.
   select count(*) into n from reference.instruments where lifecycle_status = 'live' and symbol <> 'UBWI'; if n <> 0 then raise exception 'an instrument other than UBWI is live'; end if;
   select count(*) into n from pipeline.regional_publications; if n <> 0 then raise exception 'a publication exists'; end if;
+  -- UTVI's usage dataset is production-approved on its own CC BY grant. It is not a compute
+  -- source, so it is excluded by class here exactly as news feeds are.
   select count(*) into n from reference.source_interfaces
-   where production_access_state = 'production_approved' and source_class <> 'news_feed';
+   where production_access_state = 'production_approved'
+     and source_class not in ('news_feed', 'usage_dataset_interface');
   if n <> 1 then raise exception 'approved compute sources: %', n; end if;
 
   raise notice 'listed gpu family: ok';
