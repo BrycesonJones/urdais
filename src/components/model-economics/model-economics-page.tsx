@@ -5,6 +5,7 @@ import { TokenPriceSection } from "@/components/model-economics/token-price-sect
 import { UtviSection } from "@/components/model-economics/utvi-section";
 import type { MarketInstrumentDetail } from "@/types/market";
 import type { MarketShareView } from "@/lib/market-share/view";
+import type { ModelFrontierView } from "@/lib/frontier/read/surface";
 import type { UtviInstrumentView } from "@/lib/utvi/read/instrument";
 
 const SECTIONS = [
@@ -19,20 +20,21 @@ const SECTIONS = [
  * Model Economics: the deeper analytical view of the model economy. Five
  * derived views stacked as full-width sections separated by hairlines, with
  * anchor navigation beneath the introduction. Token Price, Observed Token
- * Volume and Market Share read production; the Frontier and the open-weight
- * analytics are still one deterministic demo data graph, and the badge says
- * which is which. The quick model-level token-price view remains inside
+ * Volume, Market Share and the Frontier read production; only the open-weight
+ * analytics still run on the deterministic demo graph, and the badge says so. The quick model-level token-price view remains inside
  * UCPI; this page is its deeper destination.
  */
 export function ModelEconomicsPage({
   tokenInstruments = [],
   utvi = null,
   marketShare = null,
+  frontier = null,
   researchPreview = false,
 }: {
   tokenInstruments?: readonly MarketInstrumentDetail[];
   utvi?: UtviInstrumentView | null;
   marketShare?: MarketShareView | null;
+  frontier?: ModelFrontierView | null;
   researchPreview?: boolean;
 }) {
   return (
@@ -41,12 +43,12 @@ export function ModelEconomicsPage({
         <header>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="text-3xl font-semibold tracking-tight text-neutral-50 md:text-4xl">Model Economics</h1>
-            {/* Token Price, Observed Token Volume and Market Share are production. Frontier and
-                Open-weight are not, so the badge names them rather than the page: a page-level
-                "Demo data" would now be false about three sections, and removing it entirely
-                would be false about two. */}
+            {/* Four of the five sections are production. Only the open-weight analytics still
+                run on the demo graph, so the badge names it rather than the page: a page-level
+                "Demo data" would now be false about four sections, and removing it entirely
+                would be false about one. */}
             <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
-              Frontier and Open-weight are demo data
+              Open-weight is demo data
             </span>
           </div>
           <p className="mt-2 text-base text-neutral-300 md:text-lg">The economics of machine intelligence.</p>
@@ -74,7 +76,7 @@ export function ModelEconomicsPage({
           <TokenPriceSection instruments={tokenInstruments} researchPreview={researchPreview} />
           <UtviSection view={utvi} />
           <MarketShareChart view={marketShare} />
-          <ModelFrontierChart />
+          <ModelFrontierChart view={frontier} />
           <OpenWeightAnalysis />
         </div>
       </div>

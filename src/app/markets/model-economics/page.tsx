@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ModelEconomicsPage } from "@/components/model-economics/model-economics-page";
 import { loadMarketShareView } from "@/lib/market-share/surface";
+import { loadModelFrontierView } from "@/lib/frontier/read/surface";
 import { loadVisibleTokenInstruments, tokenResearchPreviewActive } from "@/lib/tokens/read/load";
 import { loadUtviInstrumentView } from "@/lib/utvi/read/surface";
 
@@ -31,6 +32,7 @@ export default async function ModelEconomicsRoute() {
   const researchPreview = (await tokenResearchPreviewActive()) && tokenInstruments.length > 0;
   const utvi = await loadUtviInstrumentView();
   const marketShare = await loadMarketShareView();
+  const frontier = await loadModelFrontierView();
   return (
     <>
       <SiteHeader />
@@ -38,6 +40,7 @@ export default async function ModelEconomicsRoute() {
         tokenInstruments={tokenInstruments}
         utvi={utvi}
         marketShare={marketShare}
+        frontier={frontier}
         researchPreview={researchPreview}
       />
       <SiteFooter />

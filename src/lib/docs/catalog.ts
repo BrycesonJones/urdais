@@ -125,6 +125,13 @@ export const docPages: readonly DocPage[] = [
     file: "methodology/utvi.md",
   },
   {
+    slug: "methodology/model-frontier",
+    title: "Model Frontier",
+    description: "Production methodology for Model Frontier: benchmark capability against provider list price per 1M tokens, as benchmark-specific Pareto frontiers over source-declared model configurations, with the cost boundary that equal unit token prices do not imply equal total cost.",
+    section: "Methodology",
+    file: "methodology/model-frontier.md",
+  },
+  {
     slug: "methodology/market-share",
     title: "Market Share",
     description: "Production methodology for Market Share: share of observed OpenRouter token volume represented in UTVI, by model and by canonical lab, with one denominator for both views, the source residual and the lab-attribution residual reported as separate rows, and unresolved lab mappings left unattributed rather than guessed.",
