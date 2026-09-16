@@ -1,0 +1,5 @@
+User-Agent: *
+Allow: /
+Disallow: /seo/
+
+Sitemap: https://openrouter.ai/sitemap.xml
