@@ -43,12 +43,23 @@ export const UTVI_SYMBOL = "UTVI" as const;
 export const UTVI_DISPLAY_NAME = "Observed Token Volume Index" as const;
 
 /**
- * The universe this version observes, in the words that are published with every
- * value. Frozen onto each publication so a later change of universe cannot
- * rewrite what an old point meant.
+ * The universe this version observes, in the exact words published with every value and
+ * frozen onto each publication, so a later change of universe cannot rewrite what an old
+ * point meant.
+ *
+ * It defers to the source rather than describing it. OpenRouter documents that the dataset
+ * covers the top fifty public models per day, and documents nothing about bring-your-own-key
+ * traffic or traffic from hidden applications; Urdais asked and has no answer. A plausible
+ * guess would cost nothing to write and could not be corrected later without superseding
+ * every point carrying it, so this sentence is a refusal to guess.
+ *
+ * Do not broaden this string. Widening it is a methodology change with an effective date, and
+ * it requires OpenRouter to have documented the thing being claimed.
  */
 export const UTVI_UNIVERSE_DESCRIPTOR =
-  "Public model traffic on the OpenRouter marketplace, as reported in its rankings-daily dataset" as const;
+  "Token volume exposed by OpenRouter's rankings-daily dataset for the traffic included by " +
+  "that dataset. Urdais makes no claim about inclusion of BYOK or hidden/private application " +
+  "traffic unless OpenRouter explicitly documents it.";
 
 /** One row of the source response, exactly as returned. Three fields, no more. */
 export type SourceRow = {

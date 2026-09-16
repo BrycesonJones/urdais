@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ModelEconomicsPage } from "@/components/model-economics/model-economics-page";
 import { loadVisibleTokenInstruments, tokenResearchPreviewActive } from "@/lib/tokens/read/load";
+import { loadUtviInstrumentView } from "@/lib/utvi/read/surface";
 
 /**
  * Rendered per request, never prerendered.
@@ -26,10 +27,11 @@ export const metadata: Metadata = {
 export default async function ModelEconomicsRoute() {
   const tokenInstruments = await loadVisibleTokenInstruments();
   const researchPreview = (await tokenResearchPreviewActive()) && tokenInstruments.length > 0;
+  const utvi = await loadUtviInstrumentView();
   return (
     <>
       <SiteHeader />
-      <ModelEconomicsPage tokenInstruments={tokenInstruments} researchPreview={researchPreview} />
+      <ModelEconomicsPage tokenInstruments={tokenInstruments} utvi={utvi} researchPreview={researchPreview} />
       <SiteFooter />
     </>
   );

@@ -41,9 +41,11 @@ begin
   -- rather than dropped: a second instrument going live silently is exactly what it exists
   -- to catch. Note that `live` is a statement about the instrument, not about any value --
   -- the gate is still evaluated at publication time and can still refuse.
+  -- UTVI went live with methodology 1.0.0 and UBWI with 1.2.0. No *compute* instrument has,
+  -- which is what this file is about, so the assertion is narrowed by name rather than dropped.
   select count(*) into n from reference.instruments
-   where lifecycle_status = 'live' and symbol <> 'UBWI';
-  if n <> 0 then raise exception 'an instrument other than UBWI is marked live'; end if;
+   where lifecycle_status = 'live' and symbol not in ('UBWI', 'UTVI');
+  if n <> 0 then raise exception 'a compute instrument is marked live'; end if;
 
   -- UBWI's methodology is approved for production: the document is finished and carries an
   -- effective date. That is a statement about the methodology, not about any value. The
@@ -54,10 +56,15 @@ begin
   -- specification is finished and carries an effective date. It admits no
   -- observation and publishes no value on its own; the pipeline assertions below
   -- are what establish that a bootstrapped database holds neither.
+  -- UTVI 1.0.0 is approved for the same class of reason as the two above: the methodology is
+  -- finished, it carries an effective date, and its approval is what lets the index publish.
+  -- Note that this file is about a *bootstrapped* database holding no production data, and
+  -- the pipeline assertions below are what establish that; an approved methodology on its own
+  -- seeds no observation and no value.
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id
-   where mv.status <> 'draft' and m.slug not in ('ubwi', 'ucpi-listed-gpu');
-  if n <> 0 then raise exception 'a non-draft methodology version exists outside UBWI and UCPI-LISTED-GPU'; end if;
+   where mv.status <> 'draft' and m.slug not in ('ubwi', 'ucpi-listed-gpu', 'utvi');
+  if n <> 0 then raise exception 'a non-draft methodology version exists outside UBWI, UCPI-LISTED-GPU and UTVI'; end if;
   -- The accessible-price UCPI family is not approved by anything.
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id
@@ -65,8 +72,8 @@ begin
   if n <> 0 then raise exception 'the accessible-price UCPI family has a non-draft version'; end if;
   select count(*) into n from reference.instrument_spec_versions sv
     join reference.instruments i on i.id = sv.instrument_id
-   where sv.status <> 'draft' and i.symbol <> 'UBWI' and i.symbol not like 'UCPI-%-LISTED';
-  if n <> 0 then raise exception 'a non-draft spec version exists outside UBWI and the listed children'; end if;
+   where sv.status <> 'draft' and i.symbol not in ('UBWI', 'UTVI') and i.symbol not like 'UCPI-%-LISTED';
+  if n <> 0 then raise exception 'a non-draft spec version exists outside UBWI, UTVI and the listed children'; end if;
   -- Exactly the five listed children are approved, and each at 1.0.0.
   select count(*) into n from reference.instrument_spec_versions sv
     join reference.instruments i on i.id = sv.instrument_id

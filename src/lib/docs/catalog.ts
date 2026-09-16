@@ -120,7 +120,7 @@ export const docPages: readonly DocPage[] = [
   {
     slug: "methodology/utvi",
     title: "UTVI",
-    description: "Draft, unapproved methodology for the Urdais Observed Token Volume Index: observed model token consumption per day across the platforms Urdais can defensibly observe, with explicit coverage, token-accounting and deduplication rules. No value is published under it.",
+    description: "Production methodology for the Urdais Observed Token Volume Index: token volume exposed by OpenRouter's rankings-daily dataset, in tokens per day, with a universe that defers to the source rather than asserting what it does not document, explicit coverage semantics, and settlement and revision rules.",
     section: "Methodology",
     file: "methodology/utvi.md",
   },

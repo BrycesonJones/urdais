@@ -375,6 +375,17 @@ async function insertSnapshot(
   // from it. A static credit line could not satisfy a template that interpolates as_of.
   const citation = renderCitation(sourceAsOf);
 
+  // One statement for the whole date, not one per row.
+  //
+  // A day is fifty-one rows and a full backfill is six hundred days, so row-at-a-time
+  // inserts are thirty thousand round trips. Against a local socket that is nine seconds;
+  // against a pooler in another region it was several hours, and a backfill nobody can
+  // finish is a backfill nobody runs. The rows, the columns and every constraint they must
+  // satisfy are identical — only the number of round trips changes.
+  const columns = 12;
+  const values: unknown[] = [];
+  const tuples: string[] = [];
+
   for (const observation of snapshot.observations) {
     const labProviderId =
       observation.labAttributionState === "evidenced" && observation.labSlug !== null
@@ -390,26 +401,37 @@ async function insertSnapshot(
         ? observation.qualityFlags
         : [...observation.qualityFlags, "LAB_PROVIDER_ROW_MISSING"];
 
+    const base = values.length;
+    tuples.push(
+      `($${base + 1},$${base + 2},$${base + 3},$${base + 4},$${base + 5},$${base + 6},$${base + 7},null,$${base + 8},$${base + 9},$${base + 10},$${base + 11},$${base + 12})`,
+    );
+    values.push(
+      snapshotId,
+      snapshot.observationDate,
+      observation.permaslug,
+      observation.namespace,
+      observation.variant,
+      observation.tokens.toString(),
+      observation.isResidual,
+      labProviderId,
+      lineage.servingPlatformId,
+      state,
+      citation,
+      flags,
+    );
+  }
+
+  if (tuples.length > 0) {
+    if (values.length !== tuples.length * columns) {
+      throw new UtviContractError("observation parameter count does not match its tuples");
+    }
     await sql.query(
       `insert into pipeline.utvi_model_observations (
          daily_snapshot_id, observation_date, source_model_permaslug, source_namespace,
          source_variant, source_total_tokens, is_residual, model_id, lab_provider_id,
          serving_platform_id, lab_attribution_state, source_attribution, quality_flags
-       ) values ($1,$2,$3,$4,$5,$6,$7,null,$8,$9,$10,$11,$12)`,
-      [
-        snapshotId,
-        snapshot.observationDate,
-        observation.permaslug,
-        observation.namespace,
-        observation.variant,
-        observation.tokens.toString(),
-        observation.isResidual,
-        labProviderId,
-        lineage.servingPlatformId,
-        state,
-        citation,
-        flags,
-      ],
+       ) values ${tuples.join(", ")}`,
+      values,
     );
   }
 
@@ -557,6 +579,23 @@ export async function publishCalculation(
     [existing.id, publicationId, `revised to ${calculation.totalObservedTokens} tokens/day after a source revision`],
   );
   return { kind: "superseded", publicationId, supersededId: String(existing.id), revisionNumber };
+}
+
+/**
+ * Whether a snapshot already has a calculation.
+ *
+ * Asked whenever a re-read confirms an unchanged date, because "the rows did not change" and
+ * "this date has a value" are different facts and a run can be interrupted between them. A
+ * process killed after writing a snapshot but before writing its calculation leaves a date
+ * with coverage and no value, and without this check every later run would confirm the
+ * snapshot and skip straight past the hole. Found in production: one date of 621.
+ */
+export async function snapshotHasCalculation(sql: SqlExecutor, snapshotId: string): Promise<boolean> {
+  const { rows } = await sql.query(
+    `select 1 from pipeline.utvi_calculations where daily_snapshot_id = $1 limit 1`,
+    [snapshotId],
+  );
+  return rows.length > 0;
 }
 
 /** Dates that already have a live snapshot, so a backfill can skip what it has. */
