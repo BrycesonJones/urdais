@@ -13,7 +13,9 @@ export default defineConfig({
   resolve: { alias: { "@": path.resolve(__dirname, "src") } },
   test: {
     environment: "jsdom",
-    include: ["src/**/*.test.{ts,tsx}"],
+    // The UTVI settlement study is research code under scripts/, and its arithmetic is
+    // exactly the part that has to be tested rather than trusted.
+    include: ["src/**/*.test.{ts,tsx}", "scripts/**/*.test.ts"],
     setupFiles: ["./vitest.setup.ts"],
     css: false,
   },
