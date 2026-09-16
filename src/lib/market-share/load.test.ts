@@ -186,3 +186,57 @@ describe("the reconciliation gate", () => {
     expect(usableForMarketShare(share!)).toBe(true);
   });
 });
+
+describe("the documented failure contract", () => {
+  /**
+   * What happens when a *new* date arrives broken while yesterday is perfectly healthy.
+   *
+   * The contract is fail-closed, matching the UTVI surface: the section states that no shares
+   * are published rather than quietly serving the older date. That is the established Urdais
+   * behaviour and this test pins it, because the alternative -- silently substituting the last
+   * healthy date -- is a one-line change that would look like a bug fix and would mean the page
+   * shows a date the reader did not ask for without anything having failed visibly.
+   */
+  it("does not silently fall back to an older healthy date when the newest is broken", async () => {
+    const sql = scripted([
+      // The newest publication is the broken one; the loader only ever looks at the newest.
+      [publication({ date: "2026-09-16", snapshot_id: "snap-broken", total_observed_tokens: "10000" })],
+      [observationRow({ tokens: "3000" })], // 3,000 of a claimed 10,000
+    ]);
+
+    expect(await loadLatestShare(sql)).toBeNull();
+    // And it did not go looking for an earlier date to serve instead.
+    expect(sql.calls).toHaveLength(2);
+    expect(sql.calls.some((c) => c.text.includes("order by p.calculation_date desc limit 1"))).toBe(true);
+  });
+
+  it("advances to a new date with a different row count, because completeness is reconciliation", async () => {
+    // The source's top set can change size. A date of three named models plus a residual is
+    // complete if its rows account for the total, and must serve.
+    const sql = scripted([
+      [publication({ date: "2026-09-16", total_observed_tokens: "10000" })],
+      [
+        observationRow({ permaslug: "a/one", tokens: "5000" }),
+        observationRow({ permaslug: "b/two", tokens: "3000" }),
+        observationRow({ permaslug: "c/three", tokens: "1000" }),
+        { ...residualRow(), tokens: "1000" },
+      ],
+    ]);
+
+    const share = await loadLatestShare(sql);
+    expect(share).not.toBeNull();
+    expect(share!.derivation.date).toBe("2026-09-16");
+    expect(share!.derivation.namedModelCount).toBe(3);
+    expect(share!.failures).toEqual([]);
+  });
+
+  it("serves a new date whose source residual is legitimately absent", async () => {
+    const sql = scripted([
+      [publication({ date: "2026-09-16", total_observed_tokens: "10000" })],
+      [observationRow({ tokens: "10000" })],
+    ]);
+    const share = await loadLatestShare(sql);
+    expect(share!.derivation.sourceResidual).toBeNull();
+    expect(share!.failures).toEqual([]);
+  });
+});
