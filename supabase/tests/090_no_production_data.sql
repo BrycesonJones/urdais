@@ -63,8 +63,8 @@ begin
   -- seeds no observation and no value.
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id
-   where mv.status <> 'draft' and m.slug not in ('ubwi', 'ucpi-listed-gpu', 'utvi');
-  if n <> 0 then raise exception 'a non-draft methodology version exists outside UBWI, UCPI-LISTED-GPU and UTVI'; end if;
+   where mv.status <> 'draft' and m.slug not in ('ubwi', 'ucpi-listed-gpu', 'utvi', 'model-frontier');
+  if n <> 0 then raise exception 'a non-draft methodology version exists outside UBWI, UCPI-LISTED-GPU, UTVI and Model Frontier'; end if;
   -- The accessible-price UCPI family is not approved by anything.
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id
@@ -109,7 +109,7 @@ begin
   -- about the compute market.
   select count(*) into n from reference.source_interfaces
    where production_access_state = 'production_approved'
-     and source_class not in ('news_feed', 'usage_dataset_interface');
+     and source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface');
   if n <> 1 then raise exception 'expected exactly one production-approved compute source, found %', n; end if;
   -- No *compute-market* provider interface is cleared on both axes. The UBWI denominator
   -- and FX sources are: they were reviewed in Phases 2B and 2C and each is anchored to a
@@ -123,7 +123,11 @@ begin
   select count(*) into n from reference.source_interfaces
    where terms_review_state = 'permitted' and data_use_terms_state = 'permitted'
      and slug <> 'price-of-compute-prices' and source_class <> 'news_feed'
-     and source_class not in ('statistical_dataset', 'exchange_rate_series', 'usage_dataset_interface');
+     and source_class not in ('statistical_dataset', 'exchange_rate_series', 'usage_dataset_interface',
+                              -- Epoch's benchmark bundle is cleared on both axes by its own
+                              -- CC BY 4.0 grant, stated in the bundle README. Reviewed in
+                              -- docs/research/model-frontier/ and exercised in 300.
+                              'benchmark_dataset_interface');
   if n <> 0 then raise exception '% direct source(s) cleared on both terms axes without review', n; end if;
 
   -- Every UBWI source that is cleared shows the artifact its state rests on.
@@ -144,7 +148,7 @@ begin
   select count(*) into n from pipeline.source_retrievals where retrieval_purpose <> 'research';
   if n <> 0 then raise exception 'a non-research retrieval exists'; end if;
   select count(*) into n from reference.permission_grants g join reference.source_interfaces si on si.id = g.source_interface_id
-   where si.source_class not in ('news_feed', 'usage_dataset_interface')
+   where si.source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface')
      and (si.slug <> 'price-of-compute-prices' or g.grant_kind <> 'provider_terms');
   if n <> 0 then raise exception 'a permission grant exists for a direct provider interface'; end if;
   -- No operator attribution and no tenancy evidence were seeded.
