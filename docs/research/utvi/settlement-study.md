@@ -5,7 +5,7 @@ append-only ledger and touches no network. Method and operation: [settlement-stu
 
 **Status: internal research artifact. Not routed publicly, not registered in the docs catalog.** Read-only. No
 production table was written, no migration created, no methodology status changed, no UI touched.
-Generated 2026-09-16T02:39:27.431Z.
+Generated 2026-09-16T02:57:21.691Z.
 
 ## The question
 
@@ -23,7 +23,7 @@ nothing about a batch correction days later, which is what this study is looking
 | Study started (UTC) | 2026-09-16 |
 | Last run (UTC) | 2026-09-16 |
 | Runs remaining | 13 |
-| Earliest possible completion | 2026-09-28 |
+| Earliest possible completion | 2026-09-29 |
 | Missed run dates | None. |
 
 ## Settlement verdict

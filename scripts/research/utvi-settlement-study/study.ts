@@ -458,8 +458,17 @@ export function deriveState(entries: readonly StudyEntry[], now: Date): StudySta
 
   const runsCompleted = runDates.length;
   const runsRemaining = Math.max(0, TARGET_RUN_COUNT - runsCompleted);
+
+  // The earliest the study could finish, counting from the next day that can still carry a
+  // run. Whether today is one of those depends on whether today has already been run: with
+  // thirteen runs left and today already recorded, the last of them lands thirteen days out,
+  // not twelve. A finished study reports the day it actually finished rather than today.
   const projectedEndUtc =
-    startedOnUtc === null ? null : shiftUtcDate(today, runsRemaining === 0 ? 0 : runsRemaining - 1);
+    startedOnUtc === null
+      ? null
+      : runsRemaining === 0
+        ? lastRunUtc
+        : shiftUtcDate(today, runDates.includes(today) ? runsRemaining : runsRemaining - 1);
 
   return {
     study: "utvi-settlement-study",

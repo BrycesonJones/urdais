@@ -500,6 +500,22 @@ describe("study state", () => {
     const state = deriveState(entries, new Date("2026-09-30T02:00:00Z"));
     expect(state.runsCompleted).toBe(14);
     expect(state.runsRemaining).toBe(0);
+    // A finished study reports the day it finished, not the day someone asked.
+    expect(state.projectedEndUtc).toBe("2026-09-29");
+  });
+
+  it("does not project a remaining run onto a day already run", () => {
+    // Asked on 09-16, which has already been run: the 13 remaining start tomorrow.
+    const state = deriveState([runOn("2026-09-16")], new Date("2026-09-16T23:00:00Z"));
+    expect(state.runsRemaining).toBe(13);
+    expect(state.projectedEndUtc).toBe("2026-09-29");
+  });
+
+  it("projects a remaining run onto today when today is still free", () => {
+    // Same run count, asked on 09-17, which is still available: the 13 start today.
+    const state = deriveState([runOn("2026-09-16")], new Date("2026-09-17T08:00:00Z"));
+    expect(state.runsRemaining).toBe(13);
+    expect(state.projectedEndUtc).toBe("2026-09-29");
   });
 
   it("reports an empty study without inventing a start date", () => {
