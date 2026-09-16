@@ -26,6 +26,7 @@ import type { UcpiSeriesPoint } from "@/lib/ucpi/api-contract";
 import { resolveTokenDatabaseUrl, tokenSqlExecutor } from "@/lib/tokens/read/database";
 import type { ProcessEnvLike } from "@/lib/tokens/read/publication";
 import { describeDatabaseError } from "@/lib/db/connection";
+import { availableRanges } from "@/lib/market-ranges";
 import { catalogEntry } from "@/data/market-catalog";
 import { TIME_RANGES } from "@/types/market";
 import type {
@@ -114,6 +115,8 @@ export function listedInstrumentsFrom(children: readonly ListedChildState[]): Ma
     if (child.latest === null || child.latest.priceLevel === null) continue;
     const released = child.points.filter((p) => (p.status === "published" || p.status === "delayed") && p.priceLevel !== null);
     const daily = released.map((p) => ({ time: asOf(p), value: p.priceLevel! }));
+    const series = { daily, intraday: [] };
+    const latestAt = asOf(child.latest);
     instruments.push({
       id: child.symbol.toLowerCase(),
       shortLabel: child.gpuLabel,
@@ -129,11 +132,14 @@ export function listedInstrumentsFrom(children: readonly ListedChildState[]): Ma
       snapshot: {
         value: child.latest.priceLevel,
         changePercent: child.latest.percentageChange1d,
-        asOf: asOf(child.latest),
+        asOf: latestAt,
       },
-      series: { daily, intraday: [] },
-      // One released point supports no window. Ranges appear as history earns them.
-      availableRanges: daily.length < 2 ? [] : daily[daily.length - 1]!.time - daily[0]!.time >= 7 * DAY ? ["1W", "1M"] : ["1D"],
+      series,
+      // The shared rule every other surface uses, rather than a span test of this family's
+      // own. The span test claimed a month of history the moment seven days existed, never
+      // offered 3M/6M/1Y however long the series grew, and called any two points a day apart
+      // however far apart they actually were. Ranges now appear as history earns them.
+      availableRanges: availableRanges(series, latestAt),
       comparisons: [],
     });
   }
