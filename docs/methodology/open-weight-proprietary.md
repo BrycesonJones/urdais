@@ -1,6 +1,8 @@
 # Urdais Open-weight vs Proprietary Methodology
 
-**Version 1.0.0, approved 16 September 2026. Status: approved for production, effective from 16 September 2026.** Prepared from the Phase 4A codebase and production-substrate audit, and approved after the implementation was built and verified against published publisher artifacts.
+**Version 1.0.1, approved 16 September 2026. Status: approved for production, effective from 16 September 2026.** Supersedes 1.0.0, which remains on record. Prepared from the Phase 4A codebase and production-substrate audit, and approved after the implementation was built and verified against published publisher artifacts.
+
+1.0.1 is a wording-only clarification of §8: it splits the explanation of unlinked volume into identifiers Urdais has not mapped and identifiers that cannot be resolved at all. **It changes no number.** The public classes, the denominator, the fold, the capability rule and the price rule are byte-identical to 1.0.0. A successor version exists rather than an edit in place because an approved version's content hash pins the document as it was approved, and re-pointing it at a later edit would destroy the history the hash exists to keep.
 
 Open-weight vs Proprietary has no ingestion of its own. It is a classification laid over data three other Urdais products already collect: observed token volume from UTVI, benchmark capability from Epoch AI, and list price from Urdais Token Price. The only thing this product persists is the classification itself, because a licence finding is evidence rather than a derived statistic.
 
@@ -92,11 +94,14 @@ Share of observed token volume over a trailing 30-day window, anchored to the ne
 **Unclassified is a published number, not a rounding error,** and its four causes are reported separately because they are different work:
 
 - **source-aggregated** — the source-defined residual: the source's own aggregate tail row, which names no model and can never be resolved by Urdais.
-- **unlinked** — a permaslug with no evidenced canonical model. Identity work Urdais has not done.
-- **undetermined** — a linked model whose access class is `unknown` or `not_applicable`. Evidence work, or a permanent property of the identifier.
+- **unmapped** — a source permaslug that exists but carries no evidenced canonical link yet. Genuine research debt, and the number that should fall as identity work is done.
+- **unresolvable identity** — an identifier that cannot be defensibly resolved to the exact model that served the observation: an alias, an anonymous or stealth endpoint, a routing identity. **Not unfinished work.** No amount of research produces a model here, because the source names none.
+- **undetermined access** — the canonical model is known and its access class is not yet established. Evidence work.
 - **non-commercial** — a linked model whose weights are published for non-commercial use only. A settled finding rather than missing work, and the one Unclassified cause that looks like Open-weight from the outside.
 
-The largest single unresolved identifier in the initial set is an anonymised stealth endpoint. Its publisher later stated publicly which model had been behind it, but the permaslug names a routing alias rather than a published model, and Urdais cannot establish which model served the volume recorded under it on any given date. Its volume is kept and reported as Unclassified rather than assigned to a class on a press statement.
+Unlinked volume is therefore split between identifiers Urdais has not yet mapped and identifiers that cannot be defensibly resolved to an exact canonical model, such as anonymous or routing aliases. Reporting the two as one figure would imply that all unresolved identity is a backlog that effort will clear, and a large part of it is not.
+
+The largest single unresolved identifier in the initial set is an anonymised stealth endpoint. Its publisher later stated publicly which model had been behind it, but the permaslug names a routing alias rather than a published model, and Urdais cannot establish which model served the volume recorded under it on any given date. Its volume is kept and reported as **unresolvable identity** rather than assigned to a class on a press statement, and rather than counted as research Urdais has yet to do. A later public attribution does not convert an alias into an evidenced link.
 
 ## 9. Capability gap
 
@@ -116,7 +121,8 @@ Median blended list price per 1M tokens in each class, taken over the **Pareto-e
 
 Three further rules:
 
-- **The sample is reported.** Each class publishes how many efficient configurations it contributed.
+- **The sample is reported.** Each class publishes how many efficient configurations it contributed, as `n`.
+- **Each class is reported independently.** A class with no efficient configuration shows `—` and `n = 0`; its absence never suppresses the other class's median. One-sided coverage is itself a fact about the frontier, and withholding the side that does exist would publish less than the data supports. No fallback median is substituted for the absent side.
 - **A headline ratio is published only when both classes carry at least three.** Below that, the section renders *Insufficient comparable frontier coverage* and publishes the per-class medians and samples without a multiple. A median over one or two points is an artefact of which models happened to be evaluated and priced, and a ratio drawn from it would be unfalsifiable in a different way from a tunable threshold but no less unfalsifiable. Thin coverage is an expected product state; widening the population until a ratio appears is not an available response.
 - **The median averages the two middle values** when the count is even. Either convention is defensible; this one is stated so the number is reproducible from the published rows.
 

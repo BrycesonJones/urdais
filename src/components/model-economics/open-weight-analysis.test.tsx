@@ -20,8 +20,9 @@ const view = (over: Partial<OpenWeightView> = {}): OpenWeightView => ({
     ],
     unclassifiedBreakdown: {
       sourceAggregated: "90000000000000",
-      unlinked: "60000000000000",
-      undetermined: "30000000000000",
+      unmapped: "40000000000000",
+      unresolvableIdentity: "20000000000000",
+      undeterminedAccess: "30000000000000",
       noncommercial: "20000000000000",
     },
     modelCounts: { open_weight: 9, proprietary: 5, unclassified: 0 },
@@ -68,13 +69,12 @@ describe("with a published comparison", () => {
     expect(screen.getByText("Unclassified")).toBeInTheDocument();
   });
 
-  it("says why volume is unclassified, in the three separable causes", () => {
+  it("says why volume is unclassified, in the five separable causes", () => {
     render(<OpenWeightAnalysis view={view()} />);
     const note = screen.getByText(/in the source’s own\s+residual row/);
-    expect(note).toHaveTextContent("90.0T");
-    expect(note).toHaveTextContent("60.0T");
-    expect(note).toHaveTextContent("30.0T");
-    expect(note).toHaveTextContent("20.0T");
+    for (const amount of ["90.0T", "40.0T", "20.0T", "30.0T"]) {
+      expect(note).toHaveTextContent(amount);
+    }
     expect(note).toHaveTextContent("reported rather than redistributed");
   });
 
@@ -96,8 +96,8 @@ describe("with a published comparison", () => {
 
   it("reports each class's sample as a configuration count", () => {
     render(<OpenWeightAnalysis view={view()} />);
-    expect(screen.getByText("(3 configurations)")).toBeInTheDocument();
-    expect(screen.getByText("(4 configurations)")).toBeInTheDocument();
+    expect(screen.getByText("(n = 3)")).toBeInTheDocument();
+    expect(screen.getByText("(n = 4)")).toBeInTheDocument();
   });
 
   it("labels the highest-scoring configuration as a companion, not the headline", () => {
@@ -112,12 +112,21 @@ describe("with a published comparison", () => {
     expect(screen.getByText(/published for non-commercial use only/)).toHaveTextContent("20.0T");
   });
 
+  it("distinguishes an unresolvable alias from an identifier merely not mapped yet", () => {
+    render(<OpenWeightAnalysis view={view()} />);
+    const note = screen.getByText(/in the source’s own\s+residual row/);
+    expect(note).toHaveTextContent("20.0T under aliases and anonymous endpoints that cannot be resolved");
+    expect(note).toHaveTextContent("40.0T under identifiers Urdais has not mapped yet");
+    // The old wording described every unresolved identity as pending work.
+    expect(note).not.toHaveTextContent("under identifiers Urdais has not linked to a model");
+  });
+
   it("counts models in grammatical English, singular included", () => {
     const v = view();
     v.benchmarks[0]!.priceGap.openWeight = { publicClass: "open_weight", medianBlendedUsdPer1m: 0.6, configurationCount: 1 };
     render(<OpenWeightAnalysis view={v} />);
-    expect(screen.getByText("(1 configuration)")).toBeInTheDocument();
-    expect(screen.getByText("(4 configurations)")).toBeInTheDocument();
+    expect(screen.getByText("(n = 1)")).toBeInTheDocument();
+    expect(screen.getByText("(n = 4)")).toBeInTheDocument();
   });
 
   it("carries the semantic boundary verbatim rather than a paraphrase", () => {
@@ -139,8 +148,10 @@ describe("switching benchmark", () => {
     // classified model on a side, price has no efficient configuration on one.
     expect(screen.queryByText("90.0%")).not.toBeInTheDocument();
     expect(screen.getByText(/No comparison on this benchmark/)).toBeInTheDocument();
-    expect(screen.getByText("Insufficient comparable frontier coverage.")).toBeInTheDocument();
+    expect(screen.getByText("Insufficient comparable frontier coverage")).toBeInTheDocument();
+    // GPQA's medians are gone rather than lingering under the other benchmark's label.
     expect(screen.queryByText("$9.00")).not.toBeInTheDocument();
+    expect(screen.getAllByText("—")).toHaveLength(2);
   });
 
   it("leaves volume share untouched, because it is not a benchmark measurement", () => {
@@ -151,27 +162,74 @@ describe("switching benchmark", () => {
 });
 
 describe("the sample floor", () => {
-  it("withholds the ratio below three efficient configurations in a class", () => {
+  const withPrice = (openWeight: unknown, proprietary: unknown) => {
     const v = view();
     v.benchmarks[0]!.priceGap = {
-      openWeight: { publicClass: "open_weight", medianBlendedUsdPer1m: 0.6, configurationCount: 2 },
-      proprietary: { publicClass: "proprietary", medianBlendedUsdPer1m: 9, configurationCount: 4 },
+      openWeight: openWeight as never,
+      proprietary: proprietary as never,
       ratio: null,
       ratioPublishable: false,
     };
-    render(<OpenWeightAnalysis view={v} />);
+    return v;
+  };
+  const OW = (median: number, n: number) => ({ publicClass: "open_weight", medianBlendedUsdPer1m: median, configurationCount: n });
+  const PROP = (median: number, n: number) => ({ publicClass: "proprietary", medianBlendedUsdPer1m: median, configurationCount: n });
+
+  it("withholds the ratio below three efficient configurations in a class", () => {
+    render(<OpenWeightAnalysis view={withPrice(OW(0.6, 2), PROP(9, 4))} />);
     expect(screen.getByText("Insufficient comparable frontier coverage")).toBeInTheDocument();
     // The per-class medians and samples still publish: only the multiple is withheld.
     expect(screen.getByText("$0.60")).toBeInTheDocument();
-    expect(screen.getByText("(2 configurations)")).toBeInTheDocument();
+    expect(screen.getByText("$9.00")).toBeInTheDocument();
+    expect(screen.getByText("(n = 2)")).toBeInTheDocument();
     expect(screen.queryByText(/×/)).not.toBeInTheDocument();
   });
 
-  it("says so plainly when a class has no efficient configuration at all", () => {
+  it("shows the proprietary side when open-weight has no efficient configuration", () => {
+    // Production's actual state. Suppressing the whole panel told the reader less than the
+    // data holds, and a one-sided frontier is itself a finding.
+    render(<OpenWeightAnalysis view={withPrice(null, PROP(0.7, 1))} />);
+    expect(screen.getByText("$0.70")).toBeInTheDocument();
+    expect(screen.getByText("(n = 1)")).toBeInTheDocument();
+    expect(screen.getByText("(n = 0)")).toBeInTheDocument();
+    expect(screen.getByText("—")).toBeInTheDocument();
+    expect(screen.getByText("Insufficient comparable frontier coverage")).toBeInTheDocument();
+  });
+
+  it("shows the open-weight side when proprietary has no efficient configuration", () => {
+    render(<OpenWeightAnalysis view={withPrice(OW(0.6, 2), null)} />);
+    expect(screen.getByText("$0.60")).toBeInTheDocument();
+    expect(screen.getByText("(n = 2)")).toBeInTheDocument();
+    expect(screen.getByText("(n = 0)")).toBeInTheDocument();
+    expect(screen.getByText("—")).toBeInTheDocument();
+  });
+
+  it("shows an em dash on both sides when neither class has an efficient configuration", () => {
+    render(<OpenWeightAnalysis view={withPrice(null, null)} />);
+    expect(screen.getAllByText("—")).toHaveLength(2);
+    expect(screen.getAllByText("(n = 0)")).toHaveLength(2);
+    expect(screen.getByText("Insufficient comparable frontier coverage")).toBeInTheDocument();
+  });
+
+  it("never substitutes a zero price for an absent median", () => {
+    // The failure this guards: an em dash replaced by $0.00, which reads as free rather than
+    // as absent and would make the open-weight side look unbeatable.
+    render(<OpenWeightAnalysis view={withPrice(null, PROP(0.7, 1))} />);
+    expect(screen.queryByText("$0.00")).not.toBeInTheDocument();
+    expect(screen.queryByText("$—")).not.toBeInTheDocument();
+  });
+
+  it("publishes the ratio only when both classes clear the floor", () => {
     const v = view();
-    v.benchmarks[0]!.priceGap = { openWeight: null, proprietary: null, ratio: null, ratioPublishable: false };
+    v.benchmarks[0]!.priceGap = {
+      openWeight: OW(0.6, 3) as never,
+      proprietary: PROP(9, 4) as never,
+      ratio: 15,
+      ratioPublishable: true,
+    };
     render(<OpenWeightAnalysis view={v} />);
-    expect(screen.getByText("Insufficient comparable frontier coverage.")).toBeInTheDocument();
+    expect(screen.getByText(/15.0×/)).toBeInTheDocument();
+    expect(screen.queryByText("Insufficient comparable frontier coverage")).not.toBeInTheDocument();
   });
 });
 

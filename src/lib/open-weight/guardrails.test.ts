@@ -117,6 +117,27 @@ describe("the methodology states the decisions a reader could otherwise not chec
     expect(methodology).toMatch(/source-defined residual/i);
   });
 
+  it("does not describe all unresolved identity as work Urdais has not done", () => {
+    // The production finding this wording correction came from: an anonymous alias names no
+    // model to research, so calling it backlog misdescribes a fifth of observed volume.
+    expect(methodology).toMatch(/unresolvable identity/i);
+    expect(methodology).toMatch(/Not unfinished work/i);
+    expect(methodology).not.toMatch(/Identity work Urdais has not done/i);
+  });
+
+  it("states that each price class is reported independently of the other", () => {
+    expect(methodology).toMatch(/Each class is reported independently/i);
+    expect(methodology).toMatch(/never suppresses the other class/i);
+  });
+
+  it("records why a successor version exists rather than an edit in place", () => {
+    // Governance: an approved version's hash pins the document as approved. A reader must be
+    // able to see that the change was versioned deliberately, not slipped into 1.0.0.
+    expect(methodology).toMatch(/Version 1\.0\.1/);
+    expect(methodology).toMatch(/Supersedes 1\.0\.0, which remains on record/);
+    expect(methodology).toMatch(/It changes no number/i);
+  });
+
   it("states that failing to find weights is not evidence", () => {
     expect(methodology).toMatch(/Failing to find weights is not evidence/i);
   });
