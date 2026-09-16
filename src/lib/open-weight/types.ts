@@ -70,23 +70,32 @@ export type VolumeSlice = {
 };
 
 /**
- * Why volume is unclassified, kept apart because the three causes are different work.
+ * Why volume is unclassified, kept apart because the causes are not the same kind of thing.
  *
- * `sourceAggregated` is OpenRouter's own `other` row: the source-defined residual, named by
- * the source rather than by Urdais, and never resolvable here. `unlinked` is a permaslug with
- * no evidenced canonical model -- resolvable, and the number to watch. `undetermined` is a
- * linked model whose access class Urdais has not established. `noncommercial` is a model whose
- * weights are published but not for commercial use.
+ * The distinction that matters most is between the second and the third. Calling all
+ * unresolved identity "work Urdais has not done" implies a backlog that will shrink with
+ * effort, and one large slice of it never will: an anonymous or routing alias names no model
+ * to research. Reporting them as one number would misdescribe both.
+ *
+ * `sourceAggregated`      the source-defined residual -- OpenRouter's own `other` row, which
+ *                         names no individual model in the source data at all.
+ * `unmapped`              a source permaslug with no evidenced canonical link yet. Genuine
+ *                         research debt, and the number that should fall over time.
+ * `unresolvableIdentity`  an identifier that cannot be defensibly resolved to the exact model
+ *                         that served the observation: an alias, an anonymous or stealth
+ *                         endpoint, a routing identity. Not unfinished work.
+ * `undeterminedAccess`    the canonical model is known; its access class is not.
+ * `noncommercial`         a known model whose weights are published for non-commercial use
+ *                         only. Unclassified by methodology rather than by ignorance, and the
+ *                         one cause that looks like Open-weight from the outside.
+ *
+ * Their sum is the Unclassified total, unchanged by this split.
  */
 export type UnclassifiedBreakdown = {
   sourceAggregated: string;
-  unlinked: string;
-  undetermined: string;
-  /**
-   * Downloadable weights that may not serve commercial inference. Broken out because it is the
-   * one Unclassified cause that looks like Open-weight from the outside, and a reader comparing
-   * this section against a licence table needs to see where it went.
-   */
+  unmapped: string;
+  unresolvableIdentity: string;
+  undeterminedAccess: string;
   noncommercial: string;
 };
 

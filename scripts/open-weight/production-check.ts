@@ -101,8 +101,26 @@ async function main(): Promise<void> {
       const models = slice.publicClass === "unclassified" ? "" : ` (${volume.modelCounts[slice.publicClass]} models)`;
       console.log(`  ${slice.publicClass.padEnd(14)}${slice.sharePercent.toFixed(2).padStart(7)} %  ${trillions(slice.tokens)}T${models}`);
     }
+    // The five causes, reported separately and never as one "unresolved" number. The split
+    // between researchable and unresolvable is the operationally useful one: only the first
+    // can be reduced by doing work, and a report that merged them would keep suggesting a
+    // backlog that does not exist.
     const u = volume.unclassifiedBreakdown;
-    console.log(`  unclassified is source-aggregated ${trillions(u.sourceAggregated)}T, unlinked ${trillions(u.unlinked)}T, undetermined ${trillions(u.undetermined)}T, non-commercial ${trillions(u.noncommercial)}T`);
+    console.log("  unclassified by cause");
+    console.log(`    source-aggregated     ${trillions(u.sourceAggregated).padStart(8)}T  (the source's own residual row; no model named)`);
+    console.log(`    unmapped              ${trillions(u.unmapped).padStart(8)}T  (researchable: an identifier with no evidenced link yet)`);
+    console.log(`    unresolvable identity ${trillions(u.unresolvableIdentity).padStart(8)}T  (alias or anonymous endpoint; not backlog)`);
+    console.log(`    undetermined access   ${trillions(u.undeterminedAccess).padStart(8)}T  (model known, access class not established)`);
+    console.log(`    non-commercial        ${trillions(u.noncommercial).padStart(8)}T  (published weights, barred from commercial use)`);
+
+    // The split is explanatory: if it ever moved a token it would be a methodology change.
+    const causeSum =
+      BigInt(u.sourceAggregated) + BigInt(u.unmapped) + BigInt(u.unresolvableIdentity)
+      + BigInt(u.undeterminedAccess) + BigInt(u.noncommercial);
+    const unclassifiedSlice = volume.slices.find((slice) => slice.publicClass === "unclassified");
+    if (unclassifiedSlice !== undefined && causeSum.toString() !== unclassifiedSlice.tokens) {
+      fail(`unclassified causes sum to ${causeSum}, not the ${unclassifiedSlice.tokens} reported`);
+    }
 
     const sum = volume.slices.reduce((total, slice) => total + slice.sharePercent, 0);
     if (Math.abs(sum - 100) > RECONCILIATION_TOLERANCE_POINTS) {

@@ -100,32 +100,67 @@ describe("volume share", () => {
     expect(share.totalObservedTokens).toBe(huge.toString());
   });
 
-  it("separates the four reasons volume is unclassified", () => {
-    // They are different work: one can never be resolved, one is identity work, one is
-    // evidence work, one is a settled licence finding. A single Unclassified number would
-    // hide which is growing.
+  it("separates the five reasons volume is unclassified", () => {
+    // They are not the same kind of thing: one names no model, one is research debt, one can
+    // never be resolved, one is evidence work, one is a settled licence finding. A single
+    // Unclassified number would hide which is growing.
     const share = deriveVolumeShare(
       [
         volumeRow({ permaslug: "other", isResidual: true, tokens: 100n, providerModelId: null, linkState: "unmapped", accessClass: null }),
+        volumeRow({ permaslug: "who/knows", tokens: 400n, providerModelId: null, linkState: "unmapped", accessClass: null }),
         volumeRow({ permaslug: "stealth/x", tokens: 200n, providerModelId: null, linkState: "not_applicable", accessClass: null }),
         volumeRow({ permaslug: "v/m", tokens: 300n, providerModelId: "m", accessClass: "unknown" }),
+        volumeRow({ permaslug: "v/nc", tokens: 500n, providerModelId: "nc", accessClass: "open_weights_noncommercial" }),
       ],
       30,
     );
     expect(share.unclassifiedBreakdown).toEqual({
       sourceAggregated: "100",
-      unlinked: "200",
-      undetermined: "300",
-      noncommercial: "0",
+      unmapped: "400",
+      unresolvableIdentity: "200",
+      undeterminedAccess: "300",
+      noncommercial: "500",
     });
   });
 
-  it("does not count an unlinked permaslug as an unestablished class", () => {
+  it("does not describe a permanent alias as research Urdais has not done", () => {
+    // The distinction the split exists for: a stealth endpoint names no model to look up, so
+    // it must never be counted alongside permaslugs that a day's research could resolve.
+    const share = deriveVolumeShare(
+      [
+        volumeRow({ permaslug: "stealth/ox-alpha", tokens: 560n, providerModelId: null, linkState: "not_applicable", accessClass: null }),
+        volumeRow({ permaslug: "someone/new-model", tokens: 440n, providerModelId: null, linkState: "unmapped", accessClass: null }),
+      ],
+      30,
+    );
+    expect(share.unclassifiedBreakdown.unresolvableIdentity).toBe("560");
+    expect(share.unclassifiedBreakdown.unmapped).toBe("440");
+  });
+
+  it("keeps the Unclassified total unchanged by the split", () => {
+    // The refinement is explanatory. If it moved a token, it would be a methodology change.
+    const share = deriveVolumeShare(
+      [
+        volumeRow({ permaslug: "other", isResidual: true, tokens: 100n, providerModelId: null, linkState: "unmapped", accessClass: null }),
+        volumeRow({ permaslug: "a", tokens: 400n, providerModelId: null, linkState: "unmapped", accessClass: null }),
+        volumeRow({ permaslug: "s", tokens: 200n, providerModelId: null, linkState: "not_applicable", accessClass: null }),
+        volumeRow({ permaslug: "u", tokens: 300n, providerModelId: "u", accessClass: "unknown" }),
+      ],
+      30,
+    );
+    const b = share.unclassifiedBreakdown;
+    const sum = BigInt(b.sourceAggregated) + BigInt(b.unmapped) + BigInt(b.unresolvableIdentity)
+      + BigInt(b.undeterminedAccess) + BigInt(b.noncommercial);
+    const unclassified = share.slices.find((slice) => slice.publicClass === "unclassified")!;
+    expect(sum.toString()).toBe(unclassified.tokens);
+  });
+
+  it("does not count an unmapped permaslug as an unestablished access class", () => {
     // The distinction that matters operationally: identity work not done is not the same as
     // evidence work not done, and conflating them would misdirect the next hour of research.
     const share = deriveVolumeShare([volumeRow({ providerModelId: null, linkState: "unmapped", accessClass: null })], 30);
-    expect(share.unclassifiedBreakdown.unlinked).toBe("1000");
-    expect(share.unclassifiedBreakdown.undetermined).toBe("0");
+    expect(share.unclassifiedBreakdown.unmapped).toBe("1000");
+    expect(share.unclassifiedBreakdown.undeterminedAccess).toBe("0");
   });
 
   it("counts distinct models per class, not observations", () => {
@@ -383,6 +418,6 @@ describe("what the derivation never does", () => {
     expect(by.unclassified).toBe(60);
     // Separated from `undetermined`, because it is a finding rather than missing work.
     expect(share.unclassifiedBreakdown.noncommercial).toBe("600");
-    expect(share.unclassifiedBreakdown.undetermined).toBe("0");
+    expect(share.unclassifiedBreakdown.undeterminedAccess).toBe("0");
   });
 });

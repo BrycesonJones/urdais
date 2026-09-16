@@ -83,11 +83,13 @@ const EMPTY_COUNTS = (): ClassConfigurationCounts => ({
 /**
  * Trailing-window volume share by public access class.
  *
- * The four unclassified causes are separated as they are counted, because they are different
- * work: the source's aggregated tail can never be resolved, an unlinked permaslug is identity
- * work Urdais has not done, an undetermined model is evidence research not yet done, and a
- * non-commercial model is a settled finding that simply does not belong in a commercial
- * comparison. Collapsing them would hide which of the four is actually growing.
+ * The five unclassified causes are separated as they are counted, because they are not the
+ * same kind of thing. The source's aggregated tail names no model at all; an unmapped
+ * permaslug is research debt that should shrink; an unresolvable alias never will, because
+ * there is no model to research; an undetermined model is evidence work not yet done; and a
+ * non-commercial model is a settled finding that does not belong in a commercial comparison.
+ * Collapsing them would hide which is growing, and would let a permanent alias masquerade as
+ * a backlog item.
  */
 export function deriveVolumeShare(rows: readonly VolumeRow[], windowDays: number): VolumeShare {
   if (rows.length === 0) {
@@ -100,7 +102,13 @@ export function deriveVolumeShare(rows: readonly VolumeRow[], windowDays: number
     ["proprietary", 0n],
     ["unclassified", 0n],
   ]);
-  const breakdown = { sourceAggregated: 0n, unlinked: 0n, undetermined: 0n, noncommercial: 0n };
+  const breakdown = {
+    sourceAggregated: 0n,
+    unmapped: 0n,
+    unresolvableIdentity: 0n,
+    undeterminedAccess: 0n,
+    noncommercial: 0n,
+  };
   const modelsByClass = new Map<PublicAccessClass, Set<string>>([
     ["open_weight", new Set()],
     ["proprietary", new Set()],
@@ -115,26 +123,33 @@ export function deriveVolumeShare(rows: readonly VolumeRow[], windowDays: number
     total += row.tokens;
 
     // The order of these tests is the semantics. A residual row has no model by construction,
-    // so it is never asked about its link state; a non-evidenced link is unresolved identity
-    // whatever else is known; and only then can an absent class mean unestablished evidence.
+    // so it is never asked about its link state. A link the bridge marked `not_applicable` is
+    // a decided refusal and is separated before the general unmapped case, or a permanent
+    // alias would be counted as backlog. Only then can an absent class mean missing evidence.
     let publicClass: PublicAccessClass;
     if (row.isResidual) {
       breakdown.sourceAggregated += row.tokens;
       publicClass = "unclassified";
+    } else if (row.linkState === "not_applicable") {
+      // The identity bridge has already ruled on this one: the identifier names no model that
+      // can be pinned to the observation. Research will not move it, so it is never counted
+      // as backlog.
+      breakdown.unresolvableIdentity += row.tokens;
+      publicClass = "unclassified";
     } else if (row.linkState !== "evidenced" || row.providerModelId === null) {
-      breakdown.unlinked += row.tokens;
+      breakdown.unmapped += row.tokens;
       publicClass = "unclassified";
     } else if (row.accessClass === null) {
-      breakdown.undetermined += row.tokens;
+      breakdown.undeterminedAccess += row.tokens;
       publicClass = "unclassified";
     } else {
       publicClass = publicClassOf(row.accessClass);
       if (publicClass === "unclassified") {
         // Non-commercial weights are a settled finding, not missing work, so they are counted
-        // apart from `undetermined`. It is the one Unclassified cause that looks like
+        // apart from undetermined access. It is the one Unclassified cause that looks like
         // Open-weight from the outside.
         if (row.accessClass === "open_weights_noncommercial") breakdown.noncommercial += row.tokens;
-        else breakdown.undetermined += row.tokens;
+        else breakdown.undeterminedAccess += row.tokens;
       }
     }
 
@@ -159,8 +174,9 @@ export function deriveVolumeShare(rows: readonly VolumeRow[], windowDays: number
 
   const unclassifiedBreakdown: UnclassifiedBreakdown = {
     sourceAggregated: breakdown.sourceAggregated.toString(),
-    unlinked: breakdown.unlinked.toString(),
-    undetermined: breakdown.undetermined.toString(),
+    unmapped: breakdown.unmapped.toString(),
+    unresolvableIdentity: breakdown.unresolvableIdentity.toString(),
+    undeterminedAccess: breakdown.undeterminedAccess.toString(),
     noncommercial: breakdown.noncommercial.toString(),
   };
 

@@ -16,7 +16,6 @@ const FILL: Record<PublicAccessClass, string> = {
 };
 
 const models = (n: number) => `${n} ${n === 1 ? "model" : "models"}`;
-const configurations = (n: number) => `${n} ${n === 1 ? "configuration" : "configurations"}`;
 
 /** Tokens are exact decimal strings, and a window's count exceeds what a double holds. */
 function trillions(tokens: string): string {
@@ -139,9 +138,11 @@ export function OpenWeightAnalysis({ view = null }: { view?: OpenWeightView | nu
           </dl>
           <p className="mt-3 text-xs leading-relaxed text-neutral-500">
             Unclassified is {trillions(unclassified.sourceAggregated)} in the source&rsquo;s own
-            residual row, which names no model; {trillions(unclassified.unlinked)} under identifiers
-            Urdais has not linked to a model; {trillions(unclassified.undetermined)} whose access
-            Urdais has not established; and {trillions(unclassified.noncommercial)} whose weights are
+            residual row, which names no model; {trillions(unclassified.unresolvableIdentity)} under
+            aliases and anonymous endpoints that cannot be resolved to the model that served
+            them; {trillions(unclassified.unmapped)} under identifiers Urdais has not mapped
+            yet; {trillions(unclassified.undeterminedAccess)} whose model is known but whose
+            access is not; and {trillions(unclassified.noncommercial)} whose weights are
             published for non-commercial use only. It is reported rather than redistributed.
           </p>
         </div>
@@ -195,31 +196,39 @@ export function OpenWeightAnalysis({ view = null }: { view?: OpenWeightView | nu
           <p className="mt-1 text-xs text-neutral-500">
             Median blended list price among Pareto-efficient configurations{benchmark ? `, ${benchmark.label}` : ""}
           </p>
-          {price === null || price.openWeight === null || price.proprietary === null ? (
+          {price === null ? (
             <p className="mt-5 text-sm text-neutral-400">Insufficient comparable frontier coverage.</p>
           ) : (
             <>
+              {/* Each class is reported on its own terms. A class with no efficient
+                  configuration shows an em dash and n = 0 rather than disappearing, and its
+                  absence never suppresses the other side: one-sided coverage is still a fact
+                  about the frontier, and hiding it told the reader less than the data holds.
+                  No fallback median is substituted, and the population is not widened. */}
               <dl className="mt-5 space-y-2 text-sm tabular-nums">
-                <div className="flex items-baseline justify-between gap-4">
-                  <dt className="text-neutral-300">
-                    Proprietary{" "}
-                    <span className="text-xs text-neutral-500">({configurations(price.proprietary.configurationCount)})</span>
-                  </dt>
-                  <dd className="text-2xl font-semibold text-neutral-50">
-                    ${formatNumber(price.proprietary.medianBlendedUsdPer1m)}
-                  </dd>
-                </div>
-                <div className="flex items-baseline justify-between gap-4">
-                  <dt className="text-neutral-300">
-                    Open-weight{" "}
-                    <span className="text-xs text-neutral-500">({configurations(price.openWeight.configurationCount)})</span>
-                  </dt>
-                  <dd className="text-2xl font-semibold text-neutral-50">
-                    ${formatNumber(price.openWeight.medianBlendedUsdPer1m)}
-                  </dd>
-                </div>
+                {(["proprietary", "openWeight"] as const).map((key) => {
+                  const side = price[key];
+                  const count = side?.configurationCount ?? 0;
+                  return (
+                    <div key={key} className="flex items-baseline justify-between gap-4">
+                      <dt className="text-neutral-300">
+                        {key === "proprietary" ? "Proprietary" : "Open-weight"}{" "}
+                        <span className="text-xs text-neutral-500">(n = {count})</span>
+                      </dt>
+                      <dd className="text-2xl font-semibold text-neutral-50">
+                        {side === null ? (
+                          <span className="text-neutral-500" aria-label="no efficient configuration">
+                            &mdash;
+                          </span>
+                        ) : (
+                          `$${formatNumber(side.medianBlendedUsdPer1m)}`
+                        )}
+                      </dd>
+                    </div>
+                  );
+                })}
                 <div className="flex items-baseline justify-between gap-4 border-t border-white/[0.08] pt-2">
-                  <dt className="text-neutral-400">Gap</dt>
+                  <dt className="text-neutral-400">Ratio</dt>
                   <dd className="font-medium text-neutral-100">
                     {/* A median over fewer than three efficient configurations is an artefact of
                         which models happened to be evaluated, so the multiple is withheld and the
