@@ -44,59 +44,77 @@ Running twice in a UTC day is safe: the second run records nothing and says so. 
 source's 60-second cache window, because a read there returns a byte-identical body and would record a stability that
 was never measured.
 
-## Schedule it daily
+## The scheduled agent (installed)
 
-The study needs **one run per UTC day for fourteen days**. Any fixed local time works as long as it sits well away
-from UTC midnight, so that a daylight-saving shift cannot move a run into the neighbouring UTC day. **09:00 local**
-(13:00–14:00 UTC) is safe in both regimes.
+A launchd agent runs the study **once per day at 09:00 local**. 09:00 lands at 13:00–14:00 UTC in both
+daylight-saving regimes — far enough from UTC midnight that a clock shift cannot carry a run into the neighbouring
+UTC day, which is what keeps "one run per UTC day" true across all fourteen.
 
-### launchd (macOS, preferred)
+| | |
+|---|---|
+| Label | `com.urdais.utvi-settlement-study` |
+| Plist | `~/Library/LaunchAgents/com.urdais.utvi-settlement-study.plist` |
+| Runs from | `/Users/bryceson/GitHub/urdais-utvi-study` |
+| Command | `npm run utvi:settlement-study` |
+| Schedule | Daily, 09:00 local |
+| stdout | `~/Library/Logs/urdais/utvi-settlement-study.log` |
+| stderr | `~/Library/Logs/urdais/utvi-settlement-study.err` |
 
-Write `~/Library/LaunchAgents/com.urdais.utvi-settlement-study.plist`:
+### Why it runs from a dedicated checkout
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key>
-  <string>com.urdais.utvi-settlement-study</string>
-  <key>ProgramArguments</key>
-  <array>
-    <string>/bin/zsh</string>
-    <string>-lc</string>
-    <string>cd /Users/bryceson/GitHub/urdais &amp;&amp; npm run utvi:settlement-study</string>
-  </array>
-  <key>StartCalendarInterval</key>
-  <dict>
-    <key>Hour</key><integer>9</integer>
-    <key>Minute</key><integer>0</integer>
-  </dict>
-  <key>StandardOutPath</key>
-  <string>/tmp/utvi-settlement-study.log</string>
-  <key>StandardErrorPath</key>
-  <string>/tmp/utvi-settlement-study.err</string>
-</dict>
-</plist>
-```
+`/Users/bryceson/GitHub/urdais-utvi-study` is a worktree of this repository, checked out on
+`research/utvi-settlement-study`. It exists so that the scheduled job is unambiguous about **which** harness it runs.
+The main checkout is routinely on another branch, and a second, unrelated settlement-study script has existed there
+under a near-identical name — pointing a daily job at a directory whose branch moves underneath it is how you end up
+measuring something other than what you believe you are measuring.
+
+Daily observations accumulate in that worktree. Commit and push them as the study proceeds: they are the evidence, and
+they belong on the branch.
+
+### The credential
+
+The plist contains **no secret**. The key reaches the process through `.env.local` in that worktree — untracked,
+matched by the repo's `.env*.local` ignore rule — which the script reads at startup. A plist under
+`~/Library/LaunchAgents` is world-readable and is backed up and synced like any other file in the home directory, so a
+key embedded there would travel much further than one in a gitignored dotfile.
+
+Neither log receives the key: the script never prints it, never logs a request header, and the source client keeps it
+out of every error message.
+
+### Managing it
 
 ```bash
-launchctl load  ~/Library/LaunchAgents/com.urdais.utvi-settlement-study.plist   # start
-launchctl list | grep utvi-settlement                                           # confirm
-launchctl unload ~/Library/LaunchAgents/com.urdais.utvi-settlement-study.plist  # stop when done
+launchctl print gui/$UID/com.urdais.utvi-settlement-study          # state, next fire, last exit status
+launchctl kickstart -p gui/$UID/com.urdais.utvi-settlement-study   # run once, now
+tail -f ~/Library/Logs/urdais/utvi-settlement-study.log
 ```
 
-`-lc` runs a login shell so that `nvm`'s `node` is on the `PATH`. launchd catches up a missed fire once the machine
-wakes; if it does not, the miss is recorded honestly rather than reconstructed.
+Firing it by hand is safe at any time. A second run inside the same UTC day records nothing, says so, and **makes no
+request at all** — the idempotency check short-circuits before the fetch.
 
-### cron (alternative)
+### Retiring it after day 14
+
+Confirm `settlement-study-state.json` reports `runsCompleted: 14` first, and make sure the ledger is committed and
+pushed. Then:
+
+```bash
+launchctl bootout gui/$UID/com.urdais.utvi-settlement-study
+rm ~/Library/LaunchAgents/com.urdais.utvi-settlement-study.plist
+rm -f /Users/bryceson/GitHub/urdais-utvi-study/.env.local
+```
+
+The dedicated worktree can then be removed with the usual worktree-removal command. The study ends after fourteen
+**runs**, not fourteen calendar days, so a missed day pushes the end date out rather than truncating the evidence.
+
+### cron (alternative, not installed)
 
 ```cron
-0 9 * * * cd /Users/bryceson/GitHub/urdais && /bin/zsh -lc 'npm run utvi:settlement-study' >> /tmp/utvi-settlement-study.log 2>&1
+0 9 * * * cd /Users/bryceson/GitHub/urdais-utvi-study && /bin/zsh -lc 'npm run utvi:settlement-study' >> ~/Library/Logs/urdais/utvi-settlement-study.log 2>&1
 ```
 
-**Not a Vercel cron and not a deployment.** The study is local by design: it writes files into the working tree, which
-a serverless run could not do.
+**Not a Vercel cron and not a deployment.** The study is local by design: it writes files into a working tree, which a
+serverless run could not do. `-lc` runs a login shell so that Homebrew's `node` is on the `PATH`; launchd's own
+environment does not include `/opt/homebrew/bin`.
 
 ## Inspect progress
 
