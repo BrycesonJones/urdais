@@ -22,17 +22,17 @@ begin
   select count(*) into n from reference.providers p
    where p.slug <> 'price-of-compute'
      and p.provider_kind not in ('model_api_provider', 'statistical_compiler', 'spot_venue', 'chain_data',
-                                 'oracle_network', 'inference_marketplace')
+                                 'oracle_network', 'inference_marketplace', 'research_organization')
      and exists (select 1 from reference.source_interfaces si
                   where si.provider_id = p.id
-                    and si.source_class not in ('news_feed', 'usage_dataset_interface'));
+                    and si.source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface'));
   if n <> 6 then raise exception 'expected 6 reviewed compute providers, found %', n; end if;
   select count(*) into n from reference.source_interfaces si
     join reference.providers p on p.id = si.provider_id
     where si.slug <> 'price-of-compute-prices'
       and p.provider_kind not in ('model_api_provider', 'statistical_compiler', 'spot_venue', 'chain_data',
                                   'oracle_network', 'inference_marketplace')
-      and si.source_class not in ('news_feed', 'usage_dataset_interface');
+      and si.source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface');
   if n <> 6 then raise exception 'expected 6 reviewed compute interfaces, found %', n; end if;
 
   -- No *compute* interface reviewed in this file is production-approved. Phase 4 collection is
@@ -40,7 +40,7 @@ begin
   -- populations with their own approvals and are excluded by class, as above.
   select count(*) into n from reference.source_interfaces
    where production_access_state = 'production_approved' and slug <> 'price-of-compute-prices'
-     and source_class not in ('news_feed', 'usage_dataset_interface');
+     and source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface');
   if n <> 0 then raise exception '% reviewed interface(s) marked production_approved', n; end if;
 
   -- Every reviewed compute interface carries verbatim evidence with a review date.

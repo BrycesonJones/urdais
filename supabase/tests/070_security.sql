@@ -36,7 +36,11 @@ declare
     -- UTVI, the Observed Token Volume Index.
     'pipeline.utvi_retrievals', 'pipeline.utvi_daily_snapshots',
     'pipeline.utvi_model_observations', 'pipeline.utvi_calculations',
-    'pipeline.utvi_publications'
+    'pipeline.utvi_publications',
+    -- Model Frontier: capability observations and the two reference layers that join them
+    -- to a priced product.
+    'pipeline.capability_retrievals', 'pipeline.capability_observations',
+    'reference.capability_model_links', 'reference.model_price_selections'
   ];
   n integer;
 begin

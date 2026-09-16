@@ -1,134 +1,191 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { SectionHeading } from "@/components/analytics/section-heading";
+import { SELECTOR_FOCUS, SELECTOR_SURFACE } from "@/components/market-detail/select-menu";
 import { useContainerSize } from "@/components/charts/use-container-size";
-import { FRONTIER_POINTS, SHARE_WINDOW_DAYS } from "@/data/mock/model-economics";
-import { TOKEN_UNIT } from "@/data/mock/token-providers";
-import { formatCompact, formatNumber } from "@/lib/format";
-import type { FrontierPoint } from "@/types/model-economics";
+import { configurationLabel } from "@/lib/frontier/read/derive";
+import { formatNumber } from "@/lib/format";
+import type { ModelFrontierView } from "@/lib/frontier/read/surface";
 
-// Same identity as the detailed chart: icy blue on near-black, cool-gray guides.
-const OPEN_FILL = "#8ca4ff";
-const PROPRIETARY_STROKE = "#b6c7ff";
+// The identity the detailed chart uses: icy blue on near-black, cool-gray guides.
+const POINT_FILL = "#8ca4ff";
 const FRONTIER_LINE = "#aab2c5";
 const AXIS_TEXT = "#8a8a8a";
 const GRID_LINE = "rgba(255,255,255,0.06)";
 const SURFACE = "#0a0a0a";
 const LABEL_TEXT = "#c9ccd6";
 
-const PADDING = { top: 20, right: 24, bottom: 44, left: 44 };
-const MIN_RADIUS = 4;
-const MAX_RADIUS = 16;
-/** Prices span more than an order of magnitude, so the x axis is logarithmic. */
-const PRICE_TICKS = [0.25, 0.5, 1, 2, 5, 10, 20];
+const PADDING = { top: 20, right: 28, bottom: 46, left: 48 };
+const RADIUS = 5;
+const FRONTIER_RADIUS = 6.5;
+const PRICE_TICKS = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 50];
 const NARROW_CHART_WIDTH = 560;
 
-const accessLabel = (point: FrontierPoint) => (point.accessClass === "open-weight" ? "Open-weight" : "Proprietary");
-
 /**
- * Model Frontier: capability against blended token price for every model in
- * the roster, point size by observed volume, with open-weight models drawn
- * solid and proprietary models drawn as outlined rings so the classes differ
- * by more than colour. A thin dashed line traces the Pareto frontier of
- * non-dominated models. Hovering a point shows its full readout. The SVG is
- * a named group rather than a single image so that each point's own
- * accessible name, carrying the same facts, stays reachable.
+ * Model Frontier: benchmark capability against provider list price per 1M tokens.
+ *
+ * Four properties of this chart are load bearing rather than decorative.
+ *
+ * **A point is a configuration, not a model.** Epoch identifies a run as a model plus a
+ * reasoning effort, and those are never collapsed — so `gpt-6-astra` appears once per effort
+ * level the source published, at the same x. Choosing one would mean choosing which score
+ * speaks for the model, and there is no non-arbitrary way to choose.
+ *
+ * **Which is why the cost boundary sits under the chart, not in the methodology.** Per-token
+ * price does not move with effort; token consumption does. Two points at one x are two prices
+ * per token, not two equal-cost options, and where one dominates the other it bought that
+ * capability with tokens this chart does not count.
+ *
+ * **The model is the primary label and the configuration is secondary.** Effort variants are
+ * one purchasable product observed under settings, and must never read as separate SKUs.
+ *
+ * **Points are neutral.** The demo distinguished open-weight from proprietary; that
+ * classification does not exist in production yet and inferring it from a model's name is
+ * exactly what the identity rules forbid, so every point is drawn the same until the
+ * evidence-backed access class is built.
  */
-export function ModelFrontierChart() {
+export function ModelFrontierChart({ view = null }: { view?: ModelFrontierView | null }) {
+  const [selected, setSelected] = useState(0);
   const { ref: containerRef, size } = useContainerSize<HTMLDivElement>();
   const [activeId, setActiveId] = useState<string | null>(null);
 
+  const benchmark = view?.benchmarks[selected] ?? null;
+  const points = useMemo(() => benchmark?.points ?? [], [benchmark]);
+
   const geometry = useMemo(() => {
-    if (!size || size.width <= 0 || size.height <= 0) return null;
+    if (!size || size.width <= 0 || size.height <= 0 || points.length === 0) return null;
     const plotLeft = PADDING.left;
     const plotRight = size.width - PADDING.right;
     const plotTop = PADDING.top;
     const plotBottom = size.height - PADDING.bottom;
 
-    const prices = FRONTIER_POINTS.map((point) => point.blendedPrice);
-    const xMin = Math.log10(Math.min(...prices) / 1.3);
-    const xMax = Math.log10(Math.max(...prices) * 1.3);
-    const capabilities = FRONTIER_POINTS.map((point) => point.capabilityScore);
-    const yMin = Math.floor((Math.min(...capabilities) - 3) / 5) * 5;
-    const yMax = Math.min(100, Math.ceil((Math.max(...capabilities) + 2) / 5) * 5);
-    const volumes = FRONTIER_POINTS.map((point) => point.tokenVolume);
-    const volumeMax = Math.max(...volumes);
+    const prices = points.map((point) => point.blendedPrice);
+    const xMin = Math.log10(Math.min(...prices) / 1.4);
+    const xMax = Math.log10(Math.max(...prices) * 1.4);
+    const scores = points.map((point) => point.score);
+    const lo = Math.max(0, Math.min(...scores) - 0.05);
+    const hi = Math.min(1, Math.max(...scores) + 0.05);
 
     const x = (price: number) => plotLeft + ((Math.log10(price) - xMin) / (xMax - xMin)) * (plotRight - plotLeft);
-    const y = (score: number) => plotBottom - ((score - yMin) / (yMax - yMin)) * (plotBottom - plotTop);
-    // Area, not radius, scales with volume, so a point twice as busy looks twice as big.
-    const r = (volume: number) => MIN_RADIUS + Math.sqrt(volume / volumeMax) * (MAX_RADIUS - MIN_RADIUS);
+    const y = (score: number) => plotBottom - ((score - lo) / (hi - lo || 1)) * (plotBottom - plotTop);
 
     const yTicks: number[] = [];
-    for (let value = yMin; value <= yMax; value += 5) yTicks.push(value);
+    for (let value = Math.ceil(lo * 10) / 10; value <= hi + 1e-9; value += 0.1) yTicks.push(Number(value.toFixed(1)));
     const xTicks = PRICE_TICKS.filter((price) => Math.log10(price) >= xMin && Math.log10(price) <= xMax);
 
-    const frontier = FRONTIER_POINTS.filter((point) => point.onFrontier).sort((a, b) => a.blendedPrice - b.blendedPrice);
-    const frontierPath = `M${frontier.map((point) => `${x(point.blendedPrice).toFixed(1)},${y(point.capabilityScore).toFixed(1)}`).join("L")}`;
+    const frontier = points.filter((point) => point.onFrontier);
+    const path = `M${frontier.map((point) => `${x(point.blendedPrice).toFixed(1)},${y(point.score).toFixed(1)}`).join("L")}`;
 
-    return { plotLeft, plotRight, plotTop, plotBottom, x, y, r, xTicks, yTicks, frontierPath };
-  }, [size]);
+    // One model's configurations sit at one x, so without this they read as several models
+    // that happen to cost the same. The connector says they are one product, and the label
+    // beside it names which -- which is the whole reason the stack is legible at all.
+    const stacks = new Map<string, { label: string; cx: number; top: number; bottom: number; labelled: boolean }>();
+    for (const point of points) {
+      const existing = stacks.get(point.providerModelId);
+      const at = y(point.score);
+      if (existing === undefined) {
+        stacks.set(point.providerModelId, {
+          label: point.displayName,
+          cx: x(point.blendedPrice),
+          top: at,
+          bottom: at,
+          // A frontier point already carries the model's name beside it; naming the stack
+          // again would print it twice for the same mark.
+          labelled: point.onFrontier,
+        });
+      } else {
+        existing.top = Math.min(existing.top, at);
+        existing.bottom = Math.max(existing.bottom, at);
+        existing.labelled = existing.labelled || point.onFrontier;
+      }
+    }
+    const connectors = [...stacks.values()].filter((stack) => stack.bottom - stack.top > 1);
 
-  const active = activeId ? FRONTIER_POINTS.find((point) => point.id === activeId) : null;
+    return { plotLeft, plotRight, plotTop, plotBottom, x, y, xTicks, yTicks, path, connectors };
+  }, [size, points]);
+
   const narrow = size ? size.width < NARROW_CHART_WIDTH : false;
 
-  const description = `${FRONTIER_POINTS.length} models plotted by capability score against blended price in ${TOKEN_UNIT}; ${
-    FRONTIER_POINTS.filter((point) => point.onFrontier).length
-  } are on the frontier: ${FRONTIER_POINTS.filter((point) => point.onFrontier)
-    .sort((a, b) => a.blendedPrice - b.blendedPrice)
-    .map((point) => point.modelName)
-    .join(", ")}.`;
+  if (view === null || benchmark === null) {
+    return (
+      <section id="frontier" aria-labelledby="frontier-heading" className="scroll-mt-24 border-t border-white/10 pt-8">
+        <SectionHeading id="frontier-heading" title="Model Frontier" subtitle="Capability against price" />
+        <p className="mt-5 max-w-2xl text-sm text-neutral-400">
+          No frontier is published. Model Frontier derives from published benchmark results joined to
+          Urdais Token Price, and no substitute is shown.
+        </p>
+      </section>
+    );
+  }
+
+  const active = activeId === null ? null : points.find((point) => point.id === activeId) ?? null;
+  const excluded = benchmark.exclusions;
+  const totalExcluded = excluded.unmapped + excluded.ambiguous + excluded.not_applicable + excluded.no_eligible_price;
 
   return (
     <section id="frontier" aria-labelledby="frontier-heading" className="scroll-mt-24 border-t border-white/10 pt-8">
       <SectionHeading
         id="frontier-heading"
         title="Model Frontier"
-        subtitle="Capability against price"
+        subtitle={view.claim}
         aside={
-          <ul className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-neutral-400">
-            <li className="flex items-center gap-2">
-              <span aria-hidden="true" className="inline-block size-2.5 rounded-full" style={{ backgroundColor: OPEN_FILL }} />
-              Open-weight
-            </li>
-            <li className="flex items-center gap-2">
-              <span
-                aria-hidden="true"
-                className="inline-block size-2.5 rounded-full border-[1.5px]"
-                style={{ borderColor: PROPRIETARY_STROKE, backgroundColor: SURFACE }}
-              />
-              Proprietary
-            </li>
-            <li className="flex items-center gap-2">
-              <span aria-hidden="true" className="inline-block w-4 border-t border-dashed" style={{ borderColor: FRONTIER_LINE }} />
-              Frontier
-            </li>
-            <li className="text-neutral-500">Size = observed volume, trailing {SHARE_WINDOW_DAYS} days</li>
-          </ul>
+          <div
+            role="group"
+            aria-label="Benchmark"
+            className={`inline-flex items-center self-start p-0.5 ${SELECTOR_SURFACE} hover:bg-[#111111]`}
+          >
+            {view.benchmarks.map((entry, index) => (
+              <button
+                key={entry.slug}
+                type="button"
+                aria-pressed={index === selected}
+                onClick={() => {
+                  setSelected(index);
+                  setActiveId(null);
+                }}
+                className={`flex h-full items-center justify-center rounded-[2px] px-3 text-sm font-medium transition-colors ${
+                  index === selected ? "bg-white/[0.09] text-neutral-50" : "text-neutral-500 hover:text-neutral-200"
+                } ${SELECTOR_FOCUS}`}
+              >
+                {entry.label}
+              </button>
+            ))}
+          </div>
         }
       />
 
-      <div ref={containerRef} className="relative mt-6 h-[360px] sm:h-[420px]">
+      <p className="mt-4 text-xs text-neutral-500 tabular-nums">
+        {benchmark.points.length} configurations across {benchmark.distinctModelCount} models ·{" "}
+        {benchmark.frontierCount} on the frontier · prices as of {benchmark.priceAsOf}
+        {benchmark.capabilityAsOfRange && (
+          <> · scores evaluated {benchmark.capabilityAsOfRange.first} to {benchmark.capabilityAsOfRange.last}</>
+        )}
+      </p>
+
+      <div ref={containerRef} className="relative mt-5 h-[360px] sm:h-[420px]">
         {geometry && size && (
           <svg
             role="group"
-            aria-label="Model Frontier: capability score against blended token price"
+            aria-label={`Model Frontier: ${benchmark.label} score against blended token price`}
             width={size.width}
             height={size.height}
             viewBox={`0 0 ${size.width} ${size.height}`}
             className="block select-none"
             onPointerLeave={() => setActiveId(null)}
           >
-            <title>Model Frontier: capability score against blended token price</title>
-            <desc>{description}</desc>
+            <title>{`Model Frontier: ${benchmark.label} score against blended token price`}</title>
+            <desc>
+              {`${points.length} model configurations plotted by ${benchmark.label} score against blended price in USD per 1M tokens. ${benchmark.frontierCount} are on the frontier.`}
+            </desc>
 
             {geometry.yTicks.map((tick) => (
               <g key={tick}>
                 <line x1={geometry.plotLeft} x2={geometry.plotRight} y1={geometry.y(tick)} y2={geometry.y(tick)} stroke={GRID_LINE} />
                 <text x={geometry.plotLeft - 8} y={geometry.y(tick)} fill={AXIS_TEXT} fontSize={11} textAnchor="end" dominantBaseline="middle" className="tabular-nums">
-                  {tick}
+                  {Math.round(tick * 100)}%
                 </text>
               </g>
             ))}
@@ -136,12 +193,12 @@ export function ModelFrontierChart() {
               <g key={tick}>
                 <line x1={geometry.x(tick)} x2={geometry.x(tick)} y1={geometry.plotTop} y2={geometry.plotBottom} stroke={GRID_LINE} />
                 <text x={geometry.x(tick)} y={geometry.plotBottom + 16} fill={AXIS_TEXT} fontSize={11} textAnchor="middle" className="tabular-nums">
-                  ${formatNumber(tick, tick < 1 ? 2 : 0)}
+                  ${tick < 1 ? tick.toFixed(2) : tick}
                 </text>
               </g>
             ))}
             <text x={geometry.plotRight} y={size.height - 6} fill={AXIS_TEXT} fontSize={10} textAnchor="end">
-              Blended price, {TOKEN_UNIT} (log scale) →
+              Blended list price, USD per 1M tokens (log scale) →
             </text>
             <text
               x={12}
@@ -151,41 +208,59 @@ export function ModelFrontierChart() {
               textAnchor="end"
               transform={`rotate(-90 12 ${geometry.plotTop})`}
             >
-              Capability score →
+              {benchmark.label} score →
             </text>
 
-            <path d={geometry.frontierPath} fill="none" stroke={FRONTIER_LINE} strokeOpacity={0.55} strokeWidth={1} strokeDasharray="4 4" />
+            <path d={geometry.path} fill="none" stroke={FRONTIER_LINE} strokeOpacity={0.55} strokeWidth={1} strokeDasharray="4 4" />
 
-            {FRONTIER_POINTS.map((point) => {
+            {/* Drawn before the points so the marks sit on top of their own connector. */}
+            {geometry.connectors.map((stack) => (
+              <g key={`stack-${stack.label}-${stack.cx.toFixed(1)}`} aria-hidden="true">
+                <line
+                  x1={stack.cx}
+                  x2={stack.cx}
+                  y1={stack.top}
+                  y2={stack.bottom}
+                  stroke={POINT_FILL}
+                  strokeOpacity={0.35}
+                  strokeWidth={1.5}
+                />
+                {!narrow && !stack.labelled && (
+                  <text
+                    x={stack.cx}
+                    y={stack.bottom + 14}
+                    fill={AXIS_TEXT}
+                    fontSize={9}
+                    textAnchor="middle"
+                  >
+                    {stack.label}
+                  </text>
+                )}
+              </g>
+            ))}
+
+            {points.map((point) => {
               const cx = geometry.x(point.blendedPrice);
-              const cy = geometry.y(point.capabilityScore);
-              const radius = geometry.r(point.tokenVolume);
-              const open = point.accessClass === "open-weight";
+              const cy = geometry.y(point.score);
               const isActive = point.id === activeId;
-              const name = `${point.modelName} (${point.labName}): capability ${formatNumber(point.capabilityScore, 1)}, $${formatNumber(point.blendedPrice)} per 1M tokens, ${formatCompact(point.tokenVolume)} tokens per day, ${accessLabel(point).toLowerCase()}${point.onFrontier ? ", on the frontier" : ""}`;
+              const label = `${point.displayName} (${point.providerName}), ${configurationLabel(point.configuration)}: ${benchmark.label} ${formatNumber(point.score * 100, 1)} %, $${formatNumber(point.blendedPrice, 2)} per 1M tokens${point.onFrontier ? ", on the frontier" : ""}`;
               return (
-                <g
-                  key={point.id}
-                  role="img"
-                  aria-label={name}
-                  onPointerEnter={() => setActiveId(point.id)}
-                  className="cursor-default"
-                >
-                  <title>{name}</title>
-                  {/* Hit target larger than the mark. */}
-                  <circle cx={cx} cy={cy} r={Math.max(radius + 6, 12)} fill="transparent" />
+                <g key={point.id} role="img" aria-label={label} onPointerEnter={() => setActiveId(point.id)} className="cursor-default">
+                  <title>{label}</title>
+                  <circle cx={cx} cy={cy} r={14} fill="transparent" />
                   <circle
                     cx={cx}
                     cy={cy}
-                    r={radius}
-                    fill={open ? OPEN_FILL : SURFACE}
-                    fillOpacity={open ? (isActive ? 1 : 0.85) : 1}
-                    stroke={open ? SURFACE : PROPRIETARY_STROKE}
-                    strokeWidth={open ? 1.5 : isActive ? 2.5 : 1.75}
+                    r={point.onFrontier ? FRONTIER_RADIUS : RADIUS}
+                    fill={point.onFrontier ? POINT_FILL : SURFACE}
+                    fillOpacity={point.onFrontier ? (isActive ? 1 : 0.9) : 1}
+                    stroke={POINT_FILL}
+                    strokeWidth={point.onFrontier ? 1 : isActive ? 2.25 : 1.5}
+                    strokeOpacity={point.onFrontier ? 1 : 0.75}
                   />
                   {point.onFrontier && !narrow && (
-                    <text x={cx + radius + 5} y={cy} fill={LABEL_TEXT} fontSize={11} dominantBaseline="middle">
-                      {point.modelName}
+                    <text x={cx + FRONTIER_RADIUS + 5} y={cy} fill={LABEL_TEXT} fontSize={11} dominantBaseline="middle">
+                      {point.displayName}
                     </text>
                   )}
                 </g>
@@ -198,31 +273,66 @@ export function ModelFrontierChart() {
           <div
             className="pointer-events-none absolute z-10 rounded-md border border-white/10 bg-neutral-900/95 px-3 py-2 text-xs shadow-lg shadow-black/40"
             style={{
-              top: Math.max(0, geometry.y(active.capabilityScore) - 96),
+              top: Math.max(0, geometry.y(active.score) - 132),
               ...(geometry.x(active.blendedPrice) > size.width * 0.6
                 ? { right: size.width - geometry.x(active.blendedPrice) + 16 }
                 : { left: geometry.x(active.blendedPrice) + 16 }),
             }}
           >
-            <p className="font-semibold text-neutral-50">{active.modelName}</p>
+            {/* Model primary, configuration secondary: one product observed under settings. */}
+            <p className="font-semibold text-neutral-50">{active.displayName}</p>
             <p className="text-neutral-400">
-              {active.labName} · {accessLabel(active)}
+              {active.providerName} · {configurationLabel(active.configuration)}
               {active.onFrontier ? " · frontier" : ""}
             </p>
             <dl className="mt-1.5 grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 tabular-nums">
-              <dt className="text-neutral-500">Capability</dt>
-              <dd className="text-right font-medium text-neutral-50">{formatNumber(active.capabilityScore, 1)}</dd>
+              <dt className="text-neutral-500">{benchmark.label}</dt>
+              <dd className="text-right font-medium text-neutral-50">{formatNumber(active.score * 100, 1)}%</dd>
+              <dt className="text-neutral-500">Score dated</dt>
+              <dd className="text-right text-neutral-300">{active.capabilityAsOf}</dd>
               <dt className="text-neutral-500">Blended price</dt>
-              <dd className="text-right font-medium text-neutral-50">${formatNumber(active.blendedPrice)} / 1M</dd>
-              <dt className="text-neutral-500">Volume</dt>
-              <dd className="text-right font-medium text-neutral-50">{formatCompact(active.tokenVolume)}/day</dd>
+              <dd className="text-right font-medium text-neutral-50">${formatNumber(active.blendedPrice, 2)} / 1M</dd>
+              <dt className="text-neutral-500">Price dated</dt>
+              <dd className="text-right text-neutral-300">{active.priceAsOf}</dd>
             </dl>
+            <p className="mt-1.5 border-t border-white/10 pt-1.5 font-mono text-[10px] text-neutral-500">
+              {active.sourceModelIdentifier}
+            </p>
           </div>
         )}
       </div>
-      <p className="mt-3 text-xs text-neutral-500">
-        Blended price is a provisional normalised average of input and output economics; the capability score is a 0–100 demo
-        measure, not a benchmark. A model is on the frontier when no other model is both cheaper and more capable.
+
+      {/* The boundary that makes configuration-level plotting honest. Beside the chart, not
+          behind a link, because it is the thing most likely to be misread. */}
+      <p className="mt-4 max-w-3xl text-xs leading-relaxed text-neutral-400">{view.costBoundary}</p>
+
+      {totalExcluded > 0 && (
+        <p className="mt-3 max-w-3xl text-xs leading-relaxed text-neutral-500">
+          Not plotted on {benchmark.label}: {excluded.unmapped} scored models Urdais has not linked to a
+          priced product, {excluded.ambiguous} whose identity is ambiguous, and {excluded.no_eligible_price}{" "}
+          linked models with no comparable standard list price. They are excluded rather than estimated.
+        </p>
+      )}
+
+      <p className="mt-3 max-w-3xl text-[11px] leading-relaxed text-neutral-500">
+        Capability: {view.attribution.citation} Licensed under{" "}
+        <a
+          href="https://creativecommons.org/licenses/by/4.0/"
+          className="underline decoration-neutral-700 underline-offset-2 hover:text-neutral-300"
+          rel="noreferrer noopener"
+          target="_blank"
+        >
+          CC BY 4.0
+        </a>
+        . Price: Urdais Token Price, a 500k input plus 500k output workload weighted evenly. Methodology{" "}
+        <Link
+          href="/docs/methodology/model-frontier"
+          className="underline decoration-neutral-700 underline-offset-2 hover:text-neutral-300"
+        >
+          Model Frontier {view.methodologyVersion}
+        </Link>
+        . A point is one model under one source-declared configuration; capability and price carry
+        different dates and are not reconciled.
       </p>
     </section>
   );
