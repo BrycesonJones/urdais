@@ -7,6 +7,8 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { INDEX_SNAPSHOTS } from "@/data/mock/indices";
 import { loadFrozenUbwiPublication } from "@/lib/ubwi/read/publication-store";
 import { ubwiIndexSnapshot } from "@/lib/ubwi/read/surface";
+import { loadUcpiHeadline } from "@/lib/ucpi/read/load";
+import { isProductionRuntime } from "@/lib/tokens/read/publication";
 
 /**
  * The Compute news rail and the UBWI watchlist row read production data, so the
@@ -23,12 +25,21 @@ export default async function HomePage() {
   const ubwiRow = ubwiIndexSnapshot(await loadFrozenUbwiPublication());
   const indices = ubwiRow === null ? INDEX_SNAPSHOTS : [...INDEX_SNAPSHOTS, ubwiRow];
 
+  // The UCPI panel now reads the same released listed-GPU children the UCPI market page
+  // shows, so the two surfaces cannot disagree. Sequential for the reason the UBWI
+  // loaders are: these share the process-wide pooled executor.
+  const ucpi = await loadUcpiHeadline();
+
   return (
     <>
       <SiteHeader />
       <main className="flex flex-1 flex-col">
         <LiquidChromeSection />
-        <InformationMarketsSection indices={indices} />
+        <InformationMarketsSection
+          indices={indices}
+          ucpi={ucpi}
+          fixturesPermitted={!isProductionRuntime(process.env)}
+        />
         <NewsSections />
         <MeasurementTaxonomySection />
       </main>

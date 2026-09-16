@@ -162,6 +162,14 @@ export type MarketInstrumentDetail = MarketIndex & {
   tokenIdentity?: TokenInstrumentIdentity;
   /** Present on the Urdais Token Price benchmark market. */
   benchmarkIdentity?: BenchmarkInstrumentIdentity;
+  /**
+   * Where this instrument's values came from. Stated, never inferred: the surface
+   * used to decide by asking whether the instrument carried a token identity, which
+   * silently stamped "Demo data" on the live listed-GPU children the moment UCPI
+   * began publishing. An instrument loaded from a production read declares
+   * "production"; anything omitting this is mock data and is labelled as such.
+   */
+  provenance?: "production" | "demo";
   snapshot: MarketSnapshot;
   series: DetailedSeries;
   /** Ranges the history is long enough to support; others are shown disabled. */

@@ -10,6 +10,13 @@ type UcpiSummaryProps = {
   index: MarketIndex;
   snapshot: MarketSnapshot;
   series: IndexSeries;
+  /**
+   * Where these values came from, on the same model the news rails use: a panel
+   * on fixtures is labelled demo, a panel on a released production series is not.
+   * The badge used to be unconditional, so the first published UCPI value would
+   * have appeared under a "Demo data" label.
+   */
+  provenance?: "production" | "demo";
 };
 
 /**
@@ -20,7 +27,7 @@ type UcpiSummaryProps = {
  * those inside an anchor would be invalid. `group` lets the title arrow and
  * border respond when any part of the panel is hovered or focused.
  */
-export function UcpiSummary({ index, snapshot, series }: UcpiSummaryProps) {
+export function UcpiSummary({ index, snapshot, series, provenance = "demo" }: UcpiSummaryProps) {
   return (
     <article
       aria-labelledby="ucpi-heading"
@@ -45,7 +52,7 @@ export function UcpiSummary({ index, snapshot, series }: UcpiSummaryProps) {
           </h3>
           <span className="text-sm text-neutral-400">{index.name}</span>
           <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
-            Demo data
+            {provenance === "demo" ? "Demo data" : "Live"}
           </span>
         </div>
 

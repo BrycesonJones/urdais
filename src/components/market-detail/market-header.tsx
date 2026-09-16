@@ -41,7 +41,10 @@ export function MarketHeader({ market, instrument, emptyFamilyLabel, emptyNote, 
   const { snapshot } = instrument;
   const token = instrument.benchmarkIdentity ?? instrument.tokenIdentity;
   const unitCaption = token?.unitCaption ?? instrument.unit;
-  const showDemoBadge = token === undefined;
+  // Provenance is read off the instrument where it states one. Falling back to the
+  // token check preserves the mock markets' behaviour exactly; what it no longer does
+  // is label a production instrument demo merely because it is not a token benchmark.
+  const showDemoBadge = instrument.provenance === undefined ? token === undefined : instrument.provenance === "demo";
   const movement = snapshot.changePercent === null ? null : movementClass(snapshot.changePercent);
 
   return (
