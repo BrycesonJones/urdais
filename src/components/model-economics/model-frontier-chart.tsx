@@ -79,8 +79,35 @@ export function ModelFrontierChart({ view = null }: { view?: ModelFrontierView |
     const frontier = points.filter((point) => point.onFrontier);
     const path = `M${frontier.map((point) => `${x(point.blendedPrice).toFixed(1)},${y(point.score).toFixed(1)}`).join("L")}`;
 
-    return { plotLeft, plotRight, plotTop, plotBottom, x, y, xTicks, yTicks, path };
+    // One model's configurations sit at one x, so without this they read as several models
+    // that happen to cost the same. The connector says they are one product, and the label
+    // beside it names which -- which is the whole reason the stack is legible at all.
+    const stacks = new Map<string, { label: string; cx: number; top: number; bottom: number; labelled: boolean }>();
+    for (const point of points) {
+      const existing = stacks.get(point.providerModelId);
+      const at = y(point.score);
+      if (existing === undefined) {
+        stacks.set(point.providerModelId, {
+          label: point.displayName,
+          cx: x(point.blendedPrice),
+          top: at,
+          bottom: at,
+          // A frontier point already carries the model's name beside it; naming the stack
+          // again would print it twice for the same mark.
+          labelled: point.onFrontier,
+        });
+      } else {
+        existing.top = Math.min(existing.top, at);
+        existing.bottom = Math.max(existing.bottom, at);
+        existing.labelled = existing.labelled || point.onFrontier;
+      }
+    }
+    const connectors = [...stacks.values()].filter((stack) => stack.bottom - stack.top > 1);
+
+    return { plotLeft, plotRight, plotTop, plotBottom, x, y, xTicks, yTicks, path, connectors };
   }, [size, points]);
+
+  const narrow = size ? size.width < NARROW_CHART_WIDTH : false;
 
   if (view === null || benchmark === null) {
     return (
@@ -95,7 +122,6 @@ export function ModelFrontierChart({ view = null }: { view?: ModelFrontierView |
   }
 
   const active = activeId === null ? null : points.find((point) => point.id === activeId) ?? null;
-  const narrow = size ? size.width < NARROW_CHART_WIDTH : false;
   const excluded = benchmark.exclusions;
   const totalExcluded = excluded.unmapped + excluded.ambiguous + excluded.not_applicable + excluded.no_eligible_price;
 
@@ -186,6 +212,32 @@ export function ModelFrontierChart({ view = null }: { view?: ModelFrontierView |
             </text>
 
             <path d={geometry.path} fill="none" stroke={FRONTIER_LINE} strokeOpacity={0.55} strokeWidth={1} strokeDasharray="4 4" />
+
+            {/* Drawn before the points so the marks sit on top of their own connector. */}
+            {geometry.connectors.map((stack) => (
+              <g key={`stack-${stack.label}-${stack.cx.toFixed(1)}`} aria-hidden="true">
+                <line
+                  x1={stack.cx}
+                  x2={stack.cx}
+                  y1={stack.top}
+                  y2={stack.bottom}
+                  stroke={POINT_FILL}
+                  strokeOpacity={0.35}
+                  strokeWidth={1.5}
+                />
+                {!narrow && !stack.labelled && (
+                  <text
+                    x={stack.cx}
+                    y={stack.bottom + 14}
+                    fill={AXIS_TEXT}
+                    fontSize={9}
+                    textAnchor="middle"
+                  >
+                    {stack.label}
+                  </text>
+                )}
+              </g>
+            ))}
 
             {points.map((point) => {
               const cx = geometry.x(point.blendedPrice);
