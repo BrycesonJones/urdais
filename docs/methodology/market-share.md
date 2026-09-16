@@ -13,7 +13,7 @@ That sentence is the whole of what Urdais asserts here, and every surface carryi
 - total industry usage
 - total lab market share
 
-The denominator is the traffic exposed by the OpenRouter `rankings-daily` dataset and represented by UTVI. UTVI's own methodology measures that universe at roughly **5 %** of world token throughput against the disclosure floor in the Phase 1 source study. A share of 5 % of a market is a legitimate market-data product; a share of 5 % of a market described as a share of the market is not.
+The denominator is the traffic exposed by the OpenRouter `rankings-daily` dataset and represented by UTVI. Urdais publishes no estimate of how that traffic relates to global model usage, here or on any surface carrying a share. The universe is **stated**, not sized against an outside total: naming what was observed is a fact Urdais can stand behind indefinitely, while a ratio to a world figure would depend on third-party disclosures that move, disagree and are not auditable — and it would be quoted as the coverage of a product that never claimed it.
 
 **A lab's traffic on one marketplace is not its traffic.** A lab that sells mostly through its own API can appear small here while being enormous in the market. This is the single most likely misreading of the table and the reason the universe is rendered beside it rather than behind a link.
 
