@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 import type { ChartSeries } from "@/components/charts/detailed-market-chart";
 import { chartSeriesLabel } from "@/lib/market-display";
-import { isIntradayRange, periodPerformance, RANGE_LABELS, windowPoints } from "@/lib/market-ranges";
+import { periodPerformance, RANGE_LABELS, usesIntradaySeries, windowPoints } from "@/lib/market-ranges";
 import type { ComparisonBasis, DetailRange, MarketDetail, MarketInstrumentDetail, PeriodPerformance } from "@/types/market";
 
 const DEFAULT_RANGE: DetailRange = "1M";
@@ -78,7 +78,12 @@ export function useInstrumentChart(
     ? range
     : (instrument.availableRanges[instrument.availableRanges.length - 1] ?? "1D");
   const asOf = instrument.snapshot.asOf;
-  const intraday = isIntradayRange(effectiveRange);
+  // Whether this chart is *drawn from* the fine series, not whether the range is nominally an
+  // intraday one. The axis reads it to decide between hour ticks and date ticks, and an
+  // instrument with no fine tail — UTVI publishes one figure per completed UTC day — would
+  // otherwise label two daily closes as hours of a single day, asserting a resolution its data
+  // does not have.
+  const intraday = usesIntradaySeries(instrument.series, effectiveRange);
 
   // Windows are memoised so the chart's hover state, which is keyed on the
   // points array, survives re-renders that do not change the window.

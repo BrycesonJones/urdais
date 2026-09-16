@@ -211,7 +211,7 @@ export function DetailedMarketChart({
     const top = (points: PlotPoint[]) => y(Math.max(...points.map((point) => point.plotted)));
 
     const xTickCount = Math.max(3, Math.floor(plotWidth / X_LABEL_SPACING));
-    const xTicks = timeTicks(tMin, tMax, xTickCount).map((tick) => ({ ...tick, x: x(tick.time) }));
+    const xTicks = timeTicks(tMin, tMax, xTickCount, intraday).map((tick) => ({ ...tick, x: x(tick.time) }));
 
     return {
       plotLeft,
@@ -233,7 +233,7 @@ export function DetailedMarketChart({
       vMin,
       vMax,
     };
-  }, [primaryPlot, comparisonPlots, fieldedComparison, relative, size, fractionDigits]);
+  }, [primaryPlot, comparisonPlots, fieldedComparison, relative, size, fractionDigits, intraday]);
 
   function handlePointerMove(event: PointerEvent<SVGSVGElement>) {
     if (!geometry) return;
@@ -780,11 +780,22 @@ const MONTH_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Se
  * years, UTC) that fits within `maxCount` labels across the span. Labels
  * show only what changes at that step, with the year named at January and
  * the date named at midnight for intraday spans longer than a day.
+ *
+ * `allowHours` is false for a series with no intraday resolution. Without it, two daily
+ * closes a day apart produced an axis labelled 02:00, 04:00 and so on — offering to read a
+ * value at two in the afternoon from a series that has one figure for the whole day. The
+ * ticks then start at whole days, which is the finest thing the data actually distinguishes.
  */
-function timeTicks(tMin: number, tMax: number, maxCount: number): { time: number; label: string }[] {
+function timeTicks(
+  tMin: number,
+  tMax: number,
+  maxCount: number,
+  allowHours: boolean,
+): { time: number; label: string }[] {
   const span = tMax - tMin;
+  const candidates = allowHours ? TIME_STEPS : TIME_STEPS.filter((candidate) => candidate.unit !== "hour");
   const step =
-    TIME_STEPS.find((candidate) => span / candidate.approxSeconds <= maxCount) ?? TIME_STEPS[TIME_STEPS.length - 1]!;
+    candidates.find((candidate) => span / candidate.approxSeconds <= maxCount) ?? candidates[candidates.length - 1]!;
   const ticks: { time: number; label: string }[] = [];
   const multiDay = span > DAY;
 

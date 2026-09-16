@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { availableUtviRanges, coverageGapsIn, utviInstrumentFrom } from "@/lib/utvi/read/instrument";
+import { coverageGapsIn, utviInstrumentFrom } from "@/lib/utvi/read/instrument";
+import { windowPoints } from "@/lib/market-ranges";
 import { buildReadModel, type PublicationRow } from "@/lib/utvi/read/read-model";
 
 const AS_OF = "2026-09-16T01:00:33.578Z";
@@ -44,17 +45,44 @@ describe("coverage gaps", () => {
 });
 
 describe("available ranges", () => {
+  /** A continuous daily series of published points ending on 2026-09-15. */
+  const contiguous = (days: number) =>
+    Array.from({ length: days }, (_, i) =>
+      new Date(Date.parse("2026-09-15T00:00:00Z") - (days - 1 - i) * 86_400_000).toISOString().slice(0, 10),
+    ).map((date, i) => publication(date, String(1_000 + i)));
+
   it("offers only the ranges the published history actually spans", () => {
-    const twoWeeks = Array.from({ length: 15 }, (_, i) => `2026-09-${String(i + 1).padStart(2, "0")}`);
-    expect(availableUtviRanges(twoWeeks)).toEqual(["1D", "1W"]);
+    const view = utviInstrumentFrom(buildReadModel(contiguous(15)))!;
+    expect(view.instrument.availableRanges).toEqual(["1D", "1W"]);
   });
 
   it("offers every range once the history spans a year", () => {
-    expect(availableUtviRanges(["2025-01-01", "2026-09-15"])).toEqual(["1D", "1W", "1M", "3M", "6M", "1Y"]);
+    const view = utviInstrumentFrom(
+      buildReadModel([...contiguous(2), publication("2025-01-01", "10")]),
+    )!;
+    expect(view.instrument.availableRanges).toEqual(["1D", "1W", "1M", "3M", "6M", "1Y"]);
   });
 
-  it("offers nothing on an empty history", () => {
-    expect(availableUtviRanges([])).toEqual([]);
+  it("offers nothing when a single point cannot fill any window", () => {
+    const view = utviInstrumentFrom(buildReadModel([publication("2026-09-15", "100")]))!;
+    expect(view.instrument.availableRanges).toEqual([]);
+  });
+
+  it("offers no range the chart cannot then fill with more than one point", () => {
+    // The defect this guards: availability was computed one way and the window another, so
+    // 1D and 1W were offered and then drawn with a single point and no line.
+    const view = utviInstrumentFrom(buildReadModel(contiguous(40)))!;
+    for (const range of view.instrument.availableRanges) {
+      const points = windowPoints(view.instrument.series, range, view.instrument.snapshot.asOf);
+      expect(points.length).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it("draws 1D as two points and 1W as eight on a continuous series", () => {
+    const view = utviInstrumentFrom(buildReadModel(contiguous(40)))!;
+    const asOf = view.instrument.snapshot.asOf;
+    expect(windowPoints(view.instrument.series, "1D", asOf)).toHaveLength(2);
+    expect(windowPoints(view.instrument.series, "1W", asOf)).toHaveLength(8);
   });
 });
 
