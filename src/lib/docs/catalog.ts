@@ -124,6 +124,13 @@ export const docPages: readonly DocPage[] = [
     section: "Methodology",
     file: "methodology/utvi.md",
   },
+  {
+    slug: "methodology/market-share",
+    title: "Market Share",
+    description: "Production methodology for Market Share: share of observed OpenRouter token volume represented in UTVI, by model and by canonical lab, with one denominator for both views, the source residual and the lab-attribution residual reported as separate rows, and unresolved lab mappings left unattributed rather than guessed.",
+    section: "Methodology",
+    file: "methodology/market-share.md",
+  },
 ];
 
 export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];

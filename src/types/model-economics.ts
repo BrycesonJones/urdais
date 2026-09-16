@@ -21,16 +21,6 @@ export type ModelRecord = {
   capabilityScore: number;
 };
 
-/** One row of a ranked share table. `share` is a percentage of the window total. */
-export type ShareRow = {
-  id: string;
-  label: string;
-  /** Secondary label, e.g. the lab name on a model row. */
-  detail?: string;
-  volume: number;
-  share: number;
-};
-
 export type FrontierPoint = ModelRecord & {
   /** Mean observed tokens per day over the share window. */
   tokenVolume: number;
