@@ -1,0 +1,14 @@
+{
+  "study": "utvi-settlement-study",
+  "targetRunCount": 14,
+  "startedOnUtc": "2026-09-16",
+  "lastRunUtc": "2026-09-16",
+  "completedRunDates": [
+    "2026-09-16"
+  ],
+  "missedRunDates": [],
+  "runsCompleted": 1,
+  "runsRemaining": 13,
+  "observationCount": 3,
+  "projectedEndUtc": "2026-09-29"
+}

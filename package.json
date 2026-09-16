@@ -35,7 +35,9 @@
     "ubwi:calculate": "tsx scripts/ubwi/calculate.ts",
     "ubwi:load": "tsx scripts/ubwi/load-and-publish.ts",
     "ubwi:production:check": "tsx scripts/ubwi/production-check.ts",
-    "ubwi:verify-terms": "tsx scripts/ubwi/verify-terms.ts"
+    "ubwi:verify-terms": "tsx scripts/ubwi/verify-terms.ts",
+    "utvi:settlement-study": "tsx scripts/research/utvi-settlement-study/run.ts",
+    "utvi:settlement-study:report": "tsx scripts/research/utvi-settlement-study/run.ts --report-only"
   },
   "dependencies": {
     "github-slugger": "^2.0.0",
