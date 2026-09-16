@@ -14,7 +14,7 @@ That is the whole of it.
 
 Three over-readings are refused explicitly, because a reader would otherwise make all three for free.
 
-> Open-weight means the publisher offers the weights for download. **It does not mean open source**, and several of the licences counted as open-weight here restrict commercial use.
+> Open-weight means the publisher offers the weights for download **under a licence permitting commercial use**. It does not mean open source, and several of the licences counted as open-weight here restrict commercial use in some conditions. Weights published for non-commercial or research use only are reported as **Unclassified**, not as Open-weight.
 
 > Volume is share of **observed OpenRouter token volume**, not of the industry.
 
@@ -48,11 +48,15 @@ Six internal classes are recorded, because the licences are that different:
 
 Three public classes are shown:
 
-- **Open-weight** — the three open classes above.
+- **Open-weight** — open_weights_unrestricted and open_weights_restricted.
 - **Proprietary** — api_only_closed_weights.
-- **Unclassified** — unknown and not_applicable, plus volume that never reached a classification at all.
+- **Unclassified** — open_weights_noncommercial, unknown and not_applicable, plus volume that never reached a classification at all, plus the source's own residual row.
 
-**The fold is stated rather than hidden.** Restricted and non-commercial weights roll up to Open-weight because the question the product asks is whether the publisher released the weights, and that is what changes the economics: a downloadable model can be self-hosted, fine-tuned and served by anyone with the hardware, whatever the licence says about who owes a notice email. Folding them into Proprietary would make the headline number wrong about the thing it names. Folding them in silently would be worse, so the internal class survives in the data and the licence name travels with the model.
+**The fold is stated rather than hidden.** Restricted weights roll up to Open-weight because the obligations they impose — a notice above a revenue line, an attribution in a product's interface — still leave a model that can be self-hosted, fine-tuned and sold from. That is what changes the economics this section measures.
+
+**Non-commercial weights do not.** They are downloadable, which is why they are an `open_weights_*` class internally, but they may not lawfully serve the paid inference whose volume and price this section compares. Counting them as Open-weight would place them inside a commercial comparison they are excluded from, and would inflate the open-weight share with traffic that cannot legitimately exist. They are reported as Unclassified, counted separately from the other unclassified causes, and the internal class is preserved so the distinction stays recoverable.
+
+The source's own residual row stays separately identified throughout. It is the **source-defined residual** — volume OpenRouter aggregates without naming a model — and it is never merged with the identities Urdais failed to resolve, because one is a property of the source and the other is work Urdais has not done.
 
 ## 5. Evidence rules
 
@@ -85,11 +89,12 @@ Share of observed token volume over a trailing 30-day window, anchored to the ne
 
 **The denominator is total observed tokens, the same one Market Share 1.1.0 uses.** Dividing by classified-only volume would make the two known classes sum to 100% while a large share of traffic sat outside the calculation, which turns "of what we could classify" into "of the market" in the reader's head. Two Urdais products disagreeing about the size of the market would be worse than either answer.
 
-**Unclassified is a published number, not a rounding error,** and its three causes are reported separately because they are different work:
+**Unclassified is a published number, not a rounding error,** and its four causes are reported separately because they are different work:
 
-- **source-aggregated** — the source's own aggregate tail row, which names no model and can never be resolved by Urdais.
+- **source-aggregated** — the source-defined residual: the source's own aggregate tail row, which names no model and can never be resolved by Urdais.
 - **unlinked** — a permaslug with no evidenced canonical model. Identity work Urdais has not done.
 - **undetermined** — a linked model whose access class is `unknown` or `not_applicable`. Evidence work, or a permanent property of the identifier.
+- **non-commercial** — a linked model whose weights are published for non-commercial use only. A settled finding rather than missing work, and the one Unclassified cause that looks like Open-weight from the outside.
 
 The largest single unresolved identifier in the initial set is an anonymised stealth endpoint. Its publisher later stated publicly which model had been behind it, but the permaslug names a routing alias rather than a published model, and Urdais cannot establish which model served the volume recorded under it on any given date. Its volume is kept and reported as Unclassified rather than assigned to a class on a press statement.
 
@@ -97,20 +102,25 @@ The largest single unresolved identifier in the initial set is an anonymised ste
 
 For each benchmark, the highest-scoring configuration in each public class, and the difference between them.
 
-The unit is the same one Model Frontier plots: a canonical priced model SKU under one source-declared configuration. Ties resolve on the canonical model identifier, so the reported model does not depend on row order. Only models carrying a live classification participate; a model with no classification has nothing to contribute to "the most capable open-weight model," and the production check reports how many observations that excludes.
+The unit is the same one Model Frontier plots: a canonical priced model SKU under one source-declared configuration. Ties resolve on the canonical model identifier, so the reported model does not depend on row order. Only models carrying a live classification in one of the two public classes participate; a model that folds to Unclassified has nothing to contribute to "the most capable open-weight model," and the production check reports how many configurations that excludes on each benchmark.
 
 Where one class has no measured model on a benchmark, the gap is **not reported**. There is no comparison to make, and a gap against an absent side would be an artefact of coverage.
 
 ## 10. Price gap
 
-Median blended list price per 1M tokens in each class, **among models at or above a capability threshold on the selected benchmark**.
+Median blended list price per 1M tokens in each class, taken over the **Pareto-efficient configurations of the Model Frontier** for the selected benchmark.
 
-**The threshold is derived, never chosen.** It is the lower of the two classes' best scores on that benchmark. This makes the comparison symmetric, guarantees both sides are non-empty, and removes the one degree of freedom that could be tuned to produce a flattering ratio. Comparing every open model against every proprietary model instead would measure the composition of each class's tail rather than the price of comparable capability. The demo surface this replaced used a fixed capability score as the threshold, which is exactly the free parameter that makes a price ratio unfalsifiable.
+**The population is not selected here.** It is exactly the set of configurations Model Frontier marks efficient — the same objects, from the same derivation, through the same `markFrontier` call the chart uses. There is **no capability threshold**, fixed or derived. A second selection rule in this section could drift from the one the chart draws, and then two panels of one page would disagree about which models are efficient.
 
-Two further rules:
+**Configurations remain the unit, and are never collapsed first.** Domination is configuration-level: a model can be efficient at high reasoning effort and dominated at low effort. Deduplicating to one price per model before the efficient set is determined would decide which of a model's configurations speaks for it — exactly the choice §9 and the Model Frontier methodology refuse to make.
 
-- **One model contributes one price.** A model measured at three reasoning efforts is one product at one price, and letting it contribute three identical values would weight the median by how thoroughly the capability source happened to evaluate it.
+Three further rules:
+
+- **The sample is reported.** Each class publishes how many efficient configurations it contributed.
+- **A headline ratio is published only when both classes carry at least three.** Below that, the section renders *Insufficient comparable frontier coverage* and publishes the per-class medians and samples without a multiple. A median over one or two points is an artefact of which models happened to be evaluated and priced, and a ratio drawn from it would be unfalsifiable in a different way from a tunable threshold but no less unfalsifiable. Thin coverage is an expected product state; widening the population until a ratio appears is not an available response.
 - **The median averages the two middle values** when the count is even. Either convention is defensible; this one is stated so the number is reproducible from the published rows.
+
+The price of each class's **highest-scoring configuration** is carried beside the median as a clearly labelled companion metric. It is one configuration's price, not a central tendency, and it is never the headline.
 
 The price is the same 50/50 input-output blend Model Frontier plots, computed by the same function, so a price quoted in one section cannot disagree with the same model's price in the other.
 

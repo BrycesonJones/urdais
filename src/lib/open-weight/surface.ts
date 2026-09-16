@@ -11,11 +11,17 @@
  * A benchmark with no classified model on one side is a real and reportable state -- it means
  * the comparison cannot be made, not that the section is broken -- so the view carries the
  * benchmarks it could build and the chart says so for the ones it could not.
+ *
+ * The same applies to a benchmark whose frontier is too thin to support a ratio. Too few
+ * efficient configurations in a class is a fact about coverage, reported as such; it is never
+ * a reason to widen the population until a number appears.
  */
 
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
+import { deriveAll } from "@/lib/frontier/read/derive";
+import { loadJoinableRows } from "@/lib/frontier/read/load";
 import { deriveComparisons, deriveVolumeShare } from "@/lib/open-weight/derive";
-import { loadComparisonRows, loadVolumeRows, methodologyApproved } from "@/lib/open-weight/load";
+import { loadAccessClasses, loadVolumeRows, methodologyApproved } from "@/lib/open-weight/load";
 import {
   OPEN_WEIGHT_BOUNDARY,
   OPEN_WEIGHT_CLAIM,
@@ -62,7 +68,9 @@ export async function loadOpenWeightView(): Promise<OpenWeightView | null> {
       boundary: OPEN_WEIGHT_BOUNDARY,
       methodologyVersion: methodology.version,
       volume: deriveVolumeShare(volumeRows, VOLUME_WINDOW_DAYS),
-      benchmarks: deriveComparisons(await loadComparisonRows(sql)),
+      // Model Frontier's own rows, through Model Frontier's own derivation, so the efficient
+      // set reported here is the set the chart above it draws.
+      benchmarks: deriveComparisons(deriveAll(await loadJoinableRows(sql)), await loadAccessClasses(sql)),
     };
   } catch (error) {
     const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);

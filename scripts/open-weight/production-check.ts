@@ -16,10 +16,12 @@
  *   npm run open-weight:production:check -- --local     allow the local development database
  */
 
+import { deriveAll } from "@/lib/frontier/read/derive";
+import { loadJoinableRows } from "@/lib/frontier/read/load";
 import { deriveComparisons, deriveVolumeShare } from "@/lib/open-weight/derive";
-import { loadClassificationCensus, loadComparisonRows, loadVolumeRows, methodologyApproved } from "@/lib/open-weight/load";
+import { loadAccessClasses, loadClassificationCensus, loadVolumeRows, methodologyApproved } from "@/lib/open-weight/load";
 import { publicClassOf } from "@/lib/open-weight/classification";
-import { OPEN_WEIGHT_BOUNDARY, VOLUME_WINDOW_DAYS } from "@/lib/open-weight/types";
+import { MINIMUM_FRONTIER_SAMPLE, OPEN_WEIGHT_BOUNDARY, VOLUME_WINDOW_DAYS } from "@/lib/open-weight/types";
 import { resolveTokenDatabaseUrl, tokenSqlExecutor } from "@/lib/tokens/read/database";
 
 /** Percentage-point tolerance: truncating integer division can fall short of 100 by a hair. */
@@ -100,7 +102,7 @@ async function main(): Promise<void> {
       console.log(`  ${slice.publicClass.padEnd(14)}${slice.sharePercent.toFixed(2).padStart(7)} %  ${trillions(slice.tokens)}T${models}`);
     }
     const u = volume.unclassifiedBreakdown;
-    console.log(`  unclassified is source-aggregated ${trillions(u.sourceAggregated)}T, unlinked ${trillions(u.unlinked)}T, undetermined ${trillions(u.undetermined)}T`);
+    console.log(`  unclassified is source-aggregated ${trillions(u.sourceAggregated)}T, unlinked ${trillions(u.unlinked)}T, undetermined ${trillions(u.undetermined)}T, non-commercial ${trillions(u.noncommercial)}T`);
 
     const sum = volume.slices.reduce((total, slice) => total + slice.sharePercent, 0);
     if (Math.abs(sum - 100) > RECONCILIATION_TOLERANCE_POINTS) {
@@ -117,22 +119,29 @@ async function main(): Promise<void> {
   }
 
   // ---- capability and price, per benchmark
-  const comparisonRows = await loadComparisonRows(sql);
-  const comparisons = deriveComparisons(comparisonRows);
+  //
+  // The points are Model Frontier's, through Model Frontier's derivation. That is the property
+  // worth stating: this command cannot report a different efficient set from the one the chart
+  // draws, because there is only one set.
+  const views = deriveAll(await loadJoinableRows(sql));
+  const classes = await loadAccessClasses(sql);
+  const comparisons = deriveComparisons(views, classes);
   console.log("");
   if (comparisons.length === 0) {
-    console.log("no benchmark carries a classified, scored model; capability and price panels report no comparison");
+    console.log("no benchmark carries a plotted configuration; capability and price panels report no comparison");
   }
   for (const comparison of comparisons) {
-    const { capabilityGap: capability, priceGap: price } = comparison;
+    const { capabilityGap: capability, priceGap: price, configurations: all, frontierConfigurations: eff } = comparison;
+    const view = views.find((candidate) => candidate.slug === comparison.slug)!;
     console.log(comparison.label);
-    console.log(`  open-weight best  ${capability.openWeight ? `${(capability.openWeight.score * 100).toFixed(1)} % ${capability.openWeight.label}` : "-"}`);
-    console.log(`  proprietary best  ${capability.proprietary ? `${(capability.proprietary.score * 100).toFixed(1)} % ${capability.proprietary.label}` : "-"}`);
+    console.log(`  configurations    open-weight ${all.open_weight}, proprietary ${all.proprietary}, unclassified ${all.unclassified}`);
+    console.log(`  pareto-efficient  open-weight ${eff.open_weight}, proprietary ${eff.proprietary}, unclassified ${eff.unclassified}`);
+    console.log(`  open-weight best  ${capability.openWeight ? `${(capability.openWeight.score * 100).toFixed(1)} % ${capability.openWeight.label} @ $${capability.openWeight.blendedUsdPer1m.toFixed(2)}` : "-"}`);
+    console.log(`  proprietary best  ${capability.proprietary ? `${(capability.proprietary.score * 100).toFixed(1)} % ${capability.proprietary.label} @ $${capability.proprietary.blendedUsdPer1m.toFixed(2)}` : "-"}`);
     console.log(`  gap               ${capability.gap === null ? "not comparable" : `${(capability.gap * 100).toFixed(1)} points`}`);
-    console.log(`  price band        score >= ${(price.capabilityThreshold * 100).toFixed(1)} %`);
-    console.log(`  open-weight median${price.openWeight ? ` $${price.openWeight.medianBlendedUsdPer1m.toFixed(2)} (${price.openWeight.modelCount} models)` : " -"}`);
-    console.log(`  proprietary median${price.proprietary ? ` $${price.proprietary.medianBlendedUsdPer1m.toFixed(2)} (${price.proprietary.modelCount} models)` : " -"}`);
-    console.log(`  ratio             ${price.ratio === null ? "not comparable" : `${price.ratio.toFixed(2)}x`}`);
+    console.log(`  open-weight median${price.openWeight ? ` $${price.openWeight.medianBlendedUsdPer1m.toFixed(2)} (n=${price.openWeight.configurationCount})` : " -"}`);
+    console.log(`  proprietary median${price.proprietary ? ` $${price.proprietary.medianBlendedUsdPer1m.toFixed(2)} (n=${price.proprietary.configurationCount})` : " -"}`);
+    console.log(`  ratio             ${price.ratioPublishable && price.ratio !== null ? `${price.ratio.toFixed(2)}x` : `withheld (n < ${MINIMUM_FRONTIER_SAMPLE} in a class)`}`);
     console.log(`  prices as of      ${comparison.priceAsOf ?? "-"}`);
 
     // Everything below would make a reported number wrong rather than absent.
@@ -141,21 +150,30 @@ async function main(): Promise<void> {
         fail(`${comparison.label}: ${side.publicClass} median price is not positive`);
       }
     }
-    if (capability.openWeight !== null && capability.proprietary !== null) {
-      const expected = Math.min(capability.openWeight.score, capability.proprietary.score);
-      if (Math.abs(price.capabilityThreshold - expected) > 1e-12) {
-        fail(`${comparison.label}: price band ${price.capabilityThreshold} is not the lower class best ${expected}`);
-      }
+
+    // The sample floor, asserted rather than trusted to the renderer: a ratio present without
+    // the sample behind it is the one number this design exists to prevent.
+    const meetsFloor =
+      (price.openWeight?.configurationCount ?? 0) >= MINIMUM_FRONTIER_SAMPLE &&
+      (price.proprietary?.configurationCount ?? 0) >= MINIMUM_FRONTIER_SAMPLE;
+    if (price.ratio !== null && !meetsFloor) {
+      fail(`${comparison.label}: a ratio is published on fewer than ${MINIMUM_FRONTIER_SAMPLE} efficient configurations`);
+    }
+    if (price.ratioPublishable !== meetsFloor) {
+      fail(`${comparison.label}: ratioPublishable disagrees with the sample counts`);
+    }
+
+    // The efficient set must partition exactly into the three classes, and must equal the
+    // count Model Frontier itself reports. A disagreement here means this section is
+    // describing a frontier the chart above it is not drawing.
+    const partition = eff.open_weight + eff.proprietary + eff.unclassified;
+    if (partition !== view.frontierCount) {
+      fail(`${comparison.label}: ${partition} classified efficient configurations against Model Frontier's ${view.frontierCount}`);
+    }
+    if (all.open_weight + all.proprietary + all.unclassified !== view.points.length) {
+      fail(`${comparison.label}: configuration counts do not partition the plotted points`);
     }
     console.log("");
-  }
-
-  // A capability observation that reached a comparison without a live classification would put
-  // an unclassified model inside a two-class claim. Checked against the loaded rows, so the
-  // assertion does not depend on the derivation it is checking.
-  const unclassifiedInComparison = comparisonRows.filter((row) => publicClassOf(row.accessClass) === "unclassified");
-  if (unclassifiedInComparison.length > 0) {
-    fail(`${unclassifiedInComparison.length} comparison row(s) carry a model that folds to Unclassified`);
   }
 
   console.log(`boundary        "${OPEN_WEIGHT_BOUNDARY.slice(0, 72)}..."`);

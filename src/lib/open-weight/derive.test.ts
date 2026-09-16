@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { deriveComparison, deriveVolumeShare, median, type ComparisonRow, type VolumeRow } from "@/lib/open-weight/derive";
+import { deriveAll, type JoinableRow } from "@/lib/frontier/read/derive";
+import { accessKey, deriveComparison, deriveVolumeShare, median, type VolumeRow } from "@/lib/open-weight/derive";
 
 const volumeRow = (over: Partial<VolumeRow> = {}): VolumeRow => ({
   date: "2026-09-16",
@@ -13,19 +14,54 @@ const volumeRow = (over: Partial<VolumeRow> = {}): VolumeRow => ({
   ...over,
 });
 
-const comparisonRow = (over: Partial<ComparisonRow> = {}): ComparisonRow => ({
+/**
+ * Comparison fixtures are built as Model Frontier's own joinable rows and pushed through its
+ * own `deriveAll`, so these tests exercise the real Pareto rule rather than a hand-marked
+ * `onFrontier`. If the frontier definition ever changes, these move with it -- which is the
+ * whole point of not owning a second one.
+ */
+const joinable = (over: Partial<JoinableRow> = {}): JoinableRow => ({
   benchmarkSlug: "gpqa-diamond",
-  benchmarkLabel: "GPQA Diamond",
+  sourceModelIdentifier: "model",
+  sourceConfiguration: null,
   score: 0.5,
-  configuration: null,
+  scoreMin: 0,
+  scoreMax: 1,
   capabilityAsOf: "2026-09-01",
+  linkState: "evidenced",
   providerModelId: "model",
+  providerSlug: "vendor",
+  providerName: "Vendor",
   displayName: "Model",
-  accessClass: "open_weights_unrestricted",
-  blendedUsdPer1m: 1,
+  inputPrice: 1,
+  outputPrice: 1,
   priceAsOf: "2026-09-14",
   ...over,
 });
+
+/** One model, one configuration, one price: the shorthand most of these tests need. */
+const point = (id: string, score: number, price: number, over: Partial<JoinableRow> = {}) =>
+  joinable({
+    providerModelId: id,
+    sourceModelIdentifier: id,
+    displayName: id,
+    score,
+    inputPrice: price,
+    outputPrice: price,
+    ...over,
+  });
+
+const classes = (entries: [string, string][]) =>
+  new Map(entries.map(([id, accessClass]) => [accessKey("vendor", id), accessClass]));
+
+const OPEN = "open_weights_unrestricted";
+const PROP = "api_only_closed_weights";
+
+/** Derive the gpqa-diamond comparison from raw rows, through the production frontier. */
+const comparisonOf = (rows: JoinableRow[], lookup: Map<string, string>) => {
+  const view = deriveAll(rows).find((candidate) => candidate.slug === "gpqa-diamond")!;
+  return deriveComparison(view, lookup);
+};
 
 describe("volume share", () => {
   it("divides by every observed token, including the ones it cannot classify", () => {
@@ -64,9 +100,10 @@ describe("volume share", () => {
     expect(share.totalObservedTokens).toBe(huge.toString());
   });
 
-  it("separates the three reasons volume is unclassified", () => {
+  it("separates the four reasons volume is unclassified", () => {
     // They are different work: one can never be resolved, one is identity work, one is
-    // evidence work. A single Unclassified number would hide which is growing.
+    // evidence work, one is a settled licence finding. A single Unclassified number would
+    // hide which is growing.
     const share = deriveVolumeShare(
       [
         volumeRow({ permaslug: "other", isResidual: true, tokens: 100n, providerModelId: null, linkState: "unmapped", accessClass: null }),
@@ -79,6 +116,7 @@ describe("volume share", () => {
       sourceAggregated: "100",
       unlinked: "200",
       undetermined: "300",
+      noncommercial: "0",
     });
   });
 
@@ -135,98 +173,172 @@ describe("the median", () => {
 
 describe("capability gap", () => {
   it("names the best-scoring configuration in each class", () => {
-    const comparison = deriveComparison("gpqa-diamond", "GPQA Diamond", [
-      comparisonRow({ providerModelId: "open-lo", displayName: "Open Low", score: 0.6 }),
-      comparisonRow({ providerModelId: "open-hi", displayName: "Open High", score: 0.8 }),
-      comparisonRow({ providerModelId: "prop", displayName: "Prop", score: 0.9, accessClass: "api_only_closed_weights" }),
-    ]);
-    expect(comparison.capabilityGap.openWeight?.label).toBe("Open High");
-    expect(comparison.capabilityGap.proprietary?.label).toBe("Prop");
+    const comparison = comparisonOf(
+      [point("open-lo", 0.6, 1), point("open-hi", 0.8, 2), point("prop", 0.9, 10)],
+      classes([["open-lo", OPEN], ["open-hi", OPEN], ["prop", PROP]]),
+    );
+    expect(comparison.capabilityGap.openWeight?.label).toBe("open-hi");
+    expect(comparison.capabilityGap.proprietary?.label).toBe("prop");
     expect(comparison.capabilityGap.gap).toBeCloseTo(0.1, 10);
   });
 
   it("reports a negative gap when open-weight leads", () => {
-    const comparison = deriveComparison("b", "B", [
-      comparisonRow({ providerModelId: "o", score: 0.9 }),
-      comparisonRow({ providerModelId: "p", score: 0.7, accessClass: "api_only_closed_weights" }),
-    ]);
+    const comparison = comparisonOf(
+      [point("o", 0.9, 1), point("p", 0.7, 10)],
+      classes([["o", OPEN], ["p", PROP]]),
+    );
     expect(comparison.capabilityGap.gap).toBeLessThan(0);
   });
 
   it("does not report a gap against an absent class", () => {
     // A gap measured against nothing would be an artefact of coverage, not a finding.
-    const comparison = deriveComparison("b", "B", [comparisonRow()]);
+    const comparison = comparisonOf([point("o", 0.8, 1)], classes([["o", OPEN]]));
     expect(comparison.capabilityGap.proprietary).toBeNull();
     expect(comparison.capabilityGap.gap).toBeNull();
   });
 
   it("breaks ties deterministically rather than on row order", () => {
-    const rows = [
-      comparisonRow({ providerModelId: "zeta", displayName: "Zeta", score: 0.7 }),
-      comparisonRow({ providerModelId: "alpha", displayName: "Alpha", score: 0.7 }),
-    ];
-    expect(deriveComparison("b", "B", rows).capabilityGap.openWeight?.label).toBe("Alpha");
-    expect(deriveComparison("b", "B", [...rows].reverse()).capabilityGap.openWeight?.label).toBe("Alpha");
+    const rows = [point("zeta", 0.7, 1), point("alpha", 0.7, 1)];
+    const lookup = classes([["zeta", OPEN], ["alpha", OPEN]]);
+    expect(comparisonOf(rows, lookup).capabilityGap.openWeight?.label).toBe("alpha");
+    expect(comparisonOf([...rows].reverse(), lookup).capabilityGap.openWeight?.label).toBe("alpha");
+  });
+
+  it("carries the best configuration's price, as the companion metric beside the ratio", () => {
+    const comparison = comparisonOf(
+      [point("o", 0.8, 2), point("p", 0.9, 10)],
+      classes([["o", OPEN], ["p", PROP]]),
+    );
+    expect(comparison.capabilityGap.proprietary?.blendedUsdPer1m).toBe(10);
+    expect(comparison.capabilityGap.openWeight?.blendedUsdPer1m).toBe(2);
   });
 });
 
 describe("price gap", () => {
-  it("takes the threshold from the weaker of the two class frontiers", () => {
-    const comparison = deriveComparison("b", "B", [
-      comparisonRow({ providerModelId: "o", score: 0.7, blendedUsdPer1m: 1 }),
-      comparisonRow({ providerModelId: "p", score: 0.9, blendedUsdPer1m: 10, accessClass: "api_only_closed_weights" }),
+  /** Three efficient configurations per class: the smallest publishable shape. */
+  const publishable = () => {
+    const rows = [
+      point("o1", 0.50, 1), point("o2", 0.60, 2), point("o3", 0.70, 3),
+      point("p1", 0.75, 10), point("p2", 0.85, 20), point("p3", 0.95, 30),
+    ];
+    const lookup = classes([
+      ["o1", OPEN], ["o2", OPEN], ["o3", OPEN],
+      ["p1", PROP], ["p2", PROP], ["p3", PROP],
     ]);
-    expect(comparison.priceGap.capabilityThreshold).toBe(0.7);
+    return comparisonOf(rows, lookup);
+  };
+
+  it("takes its population from the Pareto frontier, with no capability threshold", () => {
+    const comparison = publishable();
+    // Every point here is efficient: each costs more and scores more than the last.
+    expect(comparison.frontierConfigurations.open_weight).toBe(3);
+    expect(comparison.frontierConfigurations.proprietary).toBe(3);
+    expect(comparison.priceGap.openWeight?.medianBlendedUsdPer1m).toBe(2);
+    expect(comparison.priceGap.proprietary?.medianBlendedUsdPer1m).toBe(20);
+    expect(comparison.priceGap.ratio).toBe(10);
+    expect(comparison.priceGap.ratioPublishable).toBe(true);
   });
 
-  it("guarantees both sides are non-empty, because each class clears its own best", () => {
-    const comparison = deriveComparison("b", "B", [
-      comparisonRow({ providerModelId: "o", score: 0.2, blendedUsdPer1m: 1 }),
-      comparisonRow({ providerModelId: "p", score: 0.95, blendedUsdPer1m: 20, accessClass: "api_only_closed_weights" }),
+  it("excludes dominated configurations, because the frontier already did", () => {
+    // `o-bad` is more expensive and less capable than `o2`, so it is off the frontier and
+    // must not drag the median. Nothing in this module filters it: markFrontier did.
+    const rows = [
+      point("o1", 0.50, 1), point("o2", 0.60, 2), point("o3", 0.70, 3), point("o-bad", 0.55, 9),
+      point("p1", 0.75, 10), point("p2", 0.85, 20), point("p3", 0.95, 30),
+    ];
+    const lookup = classes([
+      ["o1", OPEN], ["o2", OPEN], ["o3", OPEN], ["o-bad", OPEN],
+      ["p1", PROP], ["p2", PROP], ["p3", PROP],
     ]);
-    expect(comparison.priceGap.openWeight?.modelCount).toBe(1);
-    expect(comparison.priceGap.proprietary?.modelCount).toBe(1);
-    expect(comparison.priceGap.ratio).toBe(20);
-  });
-
-  it("excludes models below the band rather than letting a cheap tail set the median", () => {
-    const comparison = deriveComparison("b", "B", [
-      comparisonRow({ providerModelId: "cheap-weak", score: 0.1, blendedUsdPer1m: 0.01 }),
-      comparisonRow({ providerModelId: "open-best", score: 0.8, blendedUsdPer1m: 2 }),
-      comparisonRow({ providerModelId: "prop", score: 0.85, blendedUsdPer1m: 10, accessClass: "api_only_closed_weights" }),
-    ]);
-    expect(comparison.priceGap.capabilityThreshold).toBe(0.8);
-    expect(comparison.priceGap.openWeight?.modelCount).toBe(1);
+    const comparison = comparisonOf(rows, lookup);
+    expect(comparison.configurations.open_weight).toBe(4);
+    expect(comparison.frontierConfigurations.open_weight).toBe(3);
+    expect(comparison.priceGap.openWeight?.configurationCount).toBe(3);
     expect(comparison.priceGap.openWeight?.medianBlendedUsdPer1m).toBe(2);
   });
 
-  it("counts one model once, however many configurations it was evaluated at", () => {
-    // Otherwise the median is weighted by how thoroughly the source happened to evaluate a
-    // model, which is a property of the evaluator rather than of the market.
-    const comparison = deriveComparison("b", "B", [
-      comparisonRow({ providerModelId: "o", configuration: "low", score: 0.8, blendedUsdPer1m: 2 }),
-      comparisonRow({ providerModelId: "o", configuration: "high", score: 0.9, blendedUsdPer1m: 2 }),
-      comparisonRow({ providerModelId: "o2", score: 0.85, blendedUsdPer1m: 6 }),
-      comparisonRow({ providerModelId: "p", score: 0.8, blendedUsdPer1m: 10, accessClass: "api_only_closed_weights" }),
-    ]);
-    expect(comparison.priceGap.openWeight?.modelCount).toBe(2);
-    expect(comparison.priceGap.openWeight?.medianBlendedUsdPer1m).toBe(4);
+  it("counts configurations, not models, and never collapses them first", () => {
+    // One model at three efforts, all efficient, is three members of the frontier. Collapsing
+    // it to one price would change the population the median describes.
+    const rows = [
+      point("o", 0.50, 1, { sourceConfiguration: "low", sourceModelIdentifier: "o_low" }),
+      point("o", 0.60, 1, { sourceConfiguration: "med", sourceModelIdentifier: "o_med" }),
+      point("o", 0.70, 1, { sourceConfiguration: "high", sourceModelIdentifier: "o_high" }),
+      point("p1", 0.75, 10), point("p2", 0.85, 20), point("p3", 0.95, 30),
+    ];
+    const lookup = classes([["o", OPEN], ["p1", PROP], ["p2", PROP], ["p3", PROP]]);
+    const comparison = comparisonOf(rows, lookup);
+    // Same price, rising score: only the best is undominated at that x.
+    expect(comparison.frontierConfigurations.open_weight).toBe(1);
+    expect(comparison.priceGap.openWeight?.configurationCount).toBe(1);
+    expect(comparison.priceGap.ratioPublishable).toBe(false);
   });
 
-  it("does not compare against a class with no priced model in the band", () => {
-    const comparison = deriveComparison("b", "B", [
-      comparisonRow({ providerModelId: "o", score: 0.8, blendedUsdPer1m: 2 }),
-      comparisonRow({ providerModelId: "p", score: 0.9, blendedUsdPer1m: null, accessClass: "api_only_closed_weights" }),
-    ]);
-    expect(comparison.priceGap.proprietary).toBeNull();
+  it("keeps every efficient configuration of one model when each is undominated", () => {
+    const rows = [
+      point("o", 0.50, 1, { sourceConfiguration: "low", sourceModelIdentifier: "o_low" }),
+      point("o2", 0.60, 2), point("o3", 0.70, 3),
+      point("p1", 0.75, 10), point("p2", 0.85, 20), point("p3", 0.95, 30),
+    ];
+    const lookup = classes([["o", OPEN], ["o2", OPEN], ["o3", OPEN], ["p1", PROP], ["p2", PROP], ["p3", PROP]]);
+    expect(comparisonOf(rows, lookup).priceGap.openWeight?.configurationCount).toBe(3);
+  });
+
+  it("publishes no ratio below three efficient configurations in either class", () => {
+    const rows = [
+      point("o1", 0.50, 1), point("o2", 0.60, 2),
+      point("p1", 0.75, 10), point("p2", 0.85, 20), point("p3", 0.95, 30),
+    ];
+    const lookup = classes([["o1", OPEN], ["o2", OPEN], ["p1", PROP], ["p2", PROP], ["p3", PROP]]);
+    const comparison = comparisonOf(rows, lookup);
+    expect(comparison.priceGap.openWeight?.configurationCount).toBe(2);
+    expect(comparison.priceGap.ratioPublishable).toBe(false);
+    // Not merely hidden: never computed, so no careless render can surface it.
     expect(comparison.priceGap.ratio).toBeNull();
   });
 
-  it("reports the newest price date it used", () => {
-    const comparison = deriveComparison("b", "B", [
-      comparisonRow({ priceAsOf: "2026-09-01" }),
-      comparisonRow({ providerModelId: "p", priceAsOf: "2026-09-14", accessClass: "api_only_closed_weights" }),
+  it("still reports each class's sample and median when the ratio is withheld", () => {
+    const rows = [
+      point("o1", 0.50, 1), point("o2", 0.60, 2),
+      point("p1", 0.75, 10), point("p2", 0.85, 20), point("p3", 0.95, 30),
+    ];
+    const lookup = classes([["o1", OPEN], ["o2", OPEN], ["p1", PROP], ["p2", PROP], ["p3", PROP]]);
+    const comparison = comparisonOf(rows, lookup);
+    expect(comparison.priceGap.openWeight?.medianBlendedUsdPer1m).toBe(1.5);
+    expect(comparison.priceGap.proprietary?.configurationCount).toBe(3);
+  });
+
+  it("does not compare against a class with no efficient configuration at all", () => {
+    const rows = [point("o1", 0.50, 1), point("o2", 0.60, 2), point("o3", 0.70, 3)];
+    const comparison = comparisonOf(rows, classes([["o1", OPEN], ["o2", OPEN], ["o3", OPEN]]));
+    expect(comparison.priceGap.proprietary).toBeNull();
+    expect(comparison.priceGap.ratio).toBeNull();
+    expect(comparison.priceGap.ratioPublishable).toBe(false);
+  });
+
+  it("counts unclassified configurations without letting them into either side", () => {
+    const rows = [
+      point("o1", 0.50, 1), point("o2", 0.60, 2), point("o3", 0.70, 3),
+      point("p1", 0.75, 10), point("p2", 0.85, 20), point("p3", 0.95, 30),
+      point("nc", 0.99, 40), point("mystery", 0.40, 0.5),
+    ];
+    const lookup = classes([
+      ["o1", OPEN], ["o2", OPEN], ["o3", OPEN],
+      ["p1", PROP], ["p2", PROP], ["p3", PROP],
+      ["nc", "open_weights_noncommercial"],
+      // `mystery` is deliberately absent from the lookup: no row at all.
     ]);
+    const comparison = comparisonOf(rows, lookup);
+    expect(comparison.configurations.unclassified).toBe(2);
+    expect(comparison.priceGap.openWeight?.configurationCount).toBe(3);
+    expect(comparison.priceGap.proprietary?.configurationCount).toBe(3);
+    // The non-commercial model is the most capable thing on the benchmark and still does not
+    // become the open-weight frontier.
+    expect(comparison.capabilityGap.openWeight?.label).toBe("o3");
+  });
+
+  it("reports the newest price date the frontier used", () => {
+    const comparison = comparisonOf([point("o", 0.5, 1)], classes([["o", OPEN]]));
     expect(comparison.priceAsOf).toBe("2026-09-14");
   });
 });
@@ -255,5 +367,22 @@ describe("what the derivation never does", () => {
     const by = Object.fromEntries(share.slices.map((slice) => [slice.publicClass, slice.sharePercent]));
     expect(by.open_weight).toBe(0);
     expect(by.unclassified).toBe(100);
+  });
+
+  it("does not count non-commercial weights as open-weight volume", () => {
+    // Downloadable, and not usable for the commercial inference this section measures.
+    const share = deriveVolumeShare(
+      [
+        volumeRow({ permaslug: "a", providerModelId: "a", tokens: 400n }),
+        volumeRow({ permaslug: "nc", providerModelId: "nc", tokens: 600n, accessClass: "open_weights_noncommercial" }),
+      ],
+      30,
+    );
+    const by = Object.fromEntries(share.slices.map((slice) => [slice.publicClass, slice.sharePercent]));
+    expect(by.open_weight).toBe(40);
+    expect(by.unclassified).toBe(60);
+    // Separated from `undetermined`, because it is a finding rather than missing work.
+    expect(share.unclassifiedBreakdown.noncommercial).toBe("600");
+    expect(share.unclassifiedBreakdown.undetermined).toBe("0");
   });
 });

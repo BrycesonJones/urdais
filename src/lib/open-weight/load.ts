@@ -22,15 +22,14 @@
  * `left join` on the link and on the class, never inner. An inner join would make unlinked and
  * unclassified volume vanish from the denominator instead of appearing as the Unclassified
  * slice, which is precisely the failure that turns ignorance into a confident number.
+ *
+ * Capability and price are not loaded here at all. They come from Model Frontier's own loader,
+ * so the Pareto set this section reports is the one the chart draws rather than a second
+ * frontier computed over a classified subset.
  */
 
-import type { ComparisonRow, VolumeRow } from "@/lib/open-weight/derive";
-import { blendedPrice } from "@/lib/frontier/price";
-import { FRONTIER_BENCHMARKS } from "@/lib/frontier/types";
+import { accessKey, type VolumeRow } from "@/lib/open-weight/derive";
 import type { SqlExecutor } from "@/lib/utvi/store";
-
-const SLUGS = FRONTIER_BENCHMARKS.map((benchmark) => benchmark.slug);
-const LABELS = new Map<string, string>(FRONTIER_BENCHMARKS.map((benchmark) => [benchmark.slug, benchmark.label]));
 
 /** Whether the Open-weight methodology version is approved. Nothing publishes under a draft. */
 export async function methodologyApproved(
@@ -100,78 +99,30 @@ export async function loadVolumeRows(sql: SqlExecutor, windowDays: number): Prom
 }
 
 /**
- * Capability observations that carry a canonical model, a live class, and a selected price.
+ * The live access class of every classified model, keyed by provider and model id.
  *
- * Inner-joined on the class here, unlike the volume query, and for a different reason: the
- * capability and price panels compare two named classes against each other. A model with no
- * classification has nothing to contribute to "the best open-weight model" or to either
- * median, and counting it as a third slice of a comparison would be meaningless. The
- * production check reports how many observations this drops, so the exclusion is visible
- * rather than silent.
+ * This replaces what used to be a second capability query. Capability and price now come from
+ * Model Frontier's own loader and derivation, so the only thing this module still needs from
+ * the database is the classification to hang on each point -- which also guarantees the two
+ * sections cannot disagree about which configurations are Pareto-efficient, because they are
+ * literally the same objects.
+ *
+ * Unclassified models are absent from the map rather than present with a null, and the
+ * derivation treats a miss as Unclassified. That keeps "no row" and "a row saying unknown"
+ * folding to the same public bucket without either one needing a special case here.
  */
-export async function loadComparisonRows(sql: SqlExecutor): Promise<ComparisonRow[]> {
+export async function loadAccessClasses(sql: SqlExecutor): Promise<Map<string, string>> {
   const { rows } = await sql.query(
-    `select o.benchmark_slug,
-            o.score::float8            as score,
-            l.source_configuration     as configuration,
-            o.capability_as_of::text   as capability_as_of,
-            m.provider_model_id        as provider_model_id,
-            m.display_name             as display_name,
-            a.access_class             as access_class,
-            pin.canonical_price_usd_per_1m::float8  as input_price,
-            pout.canonical_price_usd_per_1m::float8 as output_price,
-            greatest(pin.retrieved_at, pout.retrieved_at)::date::text as price_as_of
-       from pipeline.capability_observations o
-       join reference.capability_model_links l
-              on l.source_model_identifier = o.source_model_identifier
-             and l.source_interface_id = o.source_interface_id
-             and l.link_state = 'evidenced'
-       join reference.models m on m.id = l.model_id
-       join reference.model_access_classes a
-              on a.model_id = m.id and a.superseded_by_id is null
-       left join reference.model_price_selections s on s.model_id = m.id
-       left join pipeline.token_price_observations pin
-              on pin.model_id = m.id
-             and pin.pricing_dimension = 'input'
-             and pin.service_tier is not distinct from s.service_tier
-             and pin.context_tier  is not distinct from s.context_tier
-             and pin.region        is not distinct from s.region
-       left join pipeline.token_price_observations pout
-              on pout.model_id = m.id
-             and pout.pricing_dimension = 'output'
-             and pout.service_tier is not distinct from s.service_tier
-             and pout.context_tier  is not distinct from s.context_tier
-             and pout.region        is not distinct from s.region
-      where o.superseded_by_id is null
-        and o.benchmark_slug = any($1)
-        -- A model classified unknown or not_applicable is classified: Urdais established that
-        -- it could not establish the answer. It belongs in the volume panel's Unclassified
-        -- slice and nowhere in a two-class comparison, so it is excluded here rather than
-        -- folded into a third side that would mean nothing.
-        and a.access_class not in ('unknown', 'not_applicable')
-      order by o.benchmark_slug, m.provider_model_id`,
-    [SLUGS],
+    `select p.slug as provider_slug, m.provider_model_id, a.access_class
+       from reference.model_access_classes a
+       join reference.models m on m.id = a.model_id
+       join reference.providers p on p.id = m.provider_id
+      where a.superseded_by_id is null`,
+    [],
   );
-
-  return rows.map((row) => {
-    const input = row.input_price === null ? null : Number(row.input_price);
-    const output = row.output_price === null ? null : Number(row.output_price);
-    return {
-      benchmarkSlug: String(row.benchmark_slug),
-      benchmarkLabel: LABELS.get(String(row.benchmark_slug)) ?? String(row.benchmark_slug),
-      score: Number(row.score),
-      configuration: row.configuration === null ? null : String(row.configuration),
-      capabilityAsOf: String(row.capability_as_of),
-      providerModelId: String(row.provider_model_id),
-      displayName: String(row.display_name),
-      accessClass: String(row.access_class),
-      // Model Frontier's own blend function, imported rather than restated: two sections
-      // quoting different prices for the same model would be a defect no test would catch if
-      // each owned its own arithmetic.
-      blendedUsdPer1m: input === null || output === null ? null : blendedPrice(input, output),
-      priceAsOf: row.price_as_of === null ? null : String(row.price_as_of),
-    };
-  });
+  return new Map(
+    rows.map((row) => [accessKey(String(row.provider_slug), String(row.provider_model_id)), String(row.access_class)]),
+  );
 }
 
 /** How many classifications are live, by class. For the production check, not the page. */

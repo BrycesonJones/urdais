@@ -1,11 +1,12 @@
 /**
  * Deriving the three open-weight views from rows the platform already holds.
  *
- * Nothing here reads a source. Volume comes from UTVI's observations, capability from Epoch's
- * ingested scores, price from the Token Price selections Model Frontier already makes. This
- * module's whole job is to group them by access class without losing what it cannot group.
+ * Nothing here reads a source, and nothing here computes a frontier. Volume comes from UTVI's
+ * observations; capability and price come from Model Frontier's own derivation, already joined,
+ * already priced and already marked `onFrontier`. This module's whole job is to group them by
+ * access class without losing what it cannot group.
  *
- * Three rules, each a decision that could have gone the other way:
+ * Four rules, each a decision that could have gone the other way:
  *
  * **One denominator, and it is UTVI's.** Volume share divides by total observed tokens in the
  * window -- including the source's own aggregated tail, including permaslugs with no canonical
@@ -19,25 +20,35 @@
  * to a tenth of a point, so the sums and the division happen in `bigint` and narrow once, at
  * the end, through Market Share's own `percentOf`.
  *
- * **The price band is derived, never chosen.** See `PriceGap`: the threshold is the lower of
- * the two class bests, so there is no constant anyone could tune. The demo this replaces used
- * a hardcoded capability score of 80, which is exactly the degree of freedom that makes a
- * price ratio unfalsifiable.
+ * **The price population is Model Frontier's Pareto set, not a band of this module's
+ * invention.** The configurations compared are exactly the ones the Frontier chart marks
+ * efficient -- the same objects, from the same `markFrontier` call -- partitioned by class.
+ * There is no capability threshold, fixed or derived. A second selection rule here could drift
+ * from the one the chart draws, and then two sections of one page would disagree about which
+ * models are efficient.
+ *
+ * **Configurations are the unit, and are never collapsed first.** Domination is
+ * configuration-level: a model can be efficient at high effort and dominated at low effort.
+ * Deduplicating to one price per model before the population is determined would decide which
+ * of its configurations speaks for it, which is the choice the Frontier methodology refuses.
  */
 
 import { percentOf } from "@/lib/market-share/derive";
 import { publicClassOf, type PublicAccessClass } from "@/lib/open-weight/classification";
 import {
+  MINIMUM_FRONTIER_SAMPLE,
   OpenWeightDerivationError,
   type BenchmarkComparison,
   type CapabilityGap,
   type ClassBest,
+  type ClassConfigurationCounts,
   type ClassPrice,
   type PriceGap,
   type UnclassifiedBreakdown,
   type VolumeShare,
   type VolumeSlice,
 } from "@/lib/open-weight/types";
+import type { BenchmarkView } from "@/lib/frontier/read/derive";
 
 /** One UTVI observation, already joined to its link state and access class by the loader. */
 export type VolumeRow = {
@@ -52,22 +63,18 @@ export type VolumeRow = {
   providerModelId: string | null;
 };
 
-/** One capability observation joined to a canonical model, its class, and its selected price. */
-export type ComparisonRow = {
-  benchmarkSlug: string;
-  benchmarkLabel: string;
-  score: number;
-  configuration: string | null;
-  capabilityAsOf: string;
-  providerModelId: string;
-  displayName: string;
-  accessClass: string;
-  /** The blended list price per 1M tokens, or null when no eligible price was selected. */
-  blendedUsdPer1m: number | null;
-  priceAsOf: string | null;
-};
+/**
+ * The access class of a canonical model, keyed by provider and model id.
+ *
+ * Keyed on both because `provider_model_id` alone is not unique across providers, and a
+ * collision would silently attach one publisher's licence to another publisher's model.
+ */
+export type AccessClassLookup = ReadonlyMap<string, string>;
 
-const EMPTY_COUNTS = (): Record<PublicAccessClass, number> => ({
+export const accessKey = (providerSlug: string, providerModelId: string): string =>
+  `${providerSlug}/${providerModelId}`;
+
+const EMPTY_COUNTS = (): ClassConfigurationCounts => ({
   open_weight: 0,
   proprietary: 0,
   unclassified: 0,
@@ -76,10 +83,11 @@ const EMPTY_COUNTS = (): Record<PublicAccessClass, number> => ({
 /**
  * Trailing-window volume share by public access class.
  *
- * The three unclassified causes are separated as they are counted, because they are different
+ * The four unclassified causes are separated as they are counted, because they are different
  * work: the source's aggregated tail can never be resolved, an unlinked permaslug is identity
- * work Urdais has not done, and an undetermined model is evidence research not yet done.
- * Collapsing them would hide which of the three is actually growing.
+ * work Urdais has not done, an undetermined model is evidence research not yet done, and a
+ * non-commercial model is a settled finding that simply does not belong in a commercial
+ * comparison. Collapsing them would hide which of the four is actually growing.
  */
 export function deriveVolumeShare(rows: readonly VolumeRow[], windowDays: number): VolumeShare {
   if (rows.length === 0) {
@@ -92,7 +100,7 @@ export function deriveVolumeShare(rows: readonly VolumeRow[], windowDays: number
     ["proprietary", 0n],
     ["unclassified", 0n],
   ]);
-  const breakdown = { sourceAggregated: 0n, unlinked: 0n, undetermined: 0n };
+  const breakdown = { sourceAggregated: 0n, unlinked: 0n, undetermined: 0n, noncommercial: 0n };
   const modelsByClass = new Map<PublicAccessClass, Set<string>>([
     ["open_weight", new Set()],
     ["proprietary", new Set()],
@@ -121,9 +129,13 @@ export function deriveVolumeShare(rows: readonly VolumeRow[], windowDays: number
       publicClass = "unclassified";
     } else {
       publicClass = publicClassOf(row.accessClass);
-      // `unknown` and `not_applicable` fold to unclassified but are *established* answers, so
-      // they are counted as undetermined rather than as a gap in the identity bridge.
-      if (publicClass === "unclassified") breakdown.undetermined += row.tokens;
+      if (publicClass === "unclassified") {
+        // Non-commercial weights are a settled finding, not missing work, so they are counted
+        // apart from `undetermined`. It is the one Unclassified cause that looks like
+        // Open-weight from the outside.
+        if (row.accessClass === "open_weights_noncommercial") breakdown.noncommercial += row.tokens;
+        else breakdown.undetermined += row.tokens;
+      }
     }
 
     tokensByClass.set(publicClass, tokensByClass.get(publicClass)! + row.tokens);
@@ -149,6 +161,7 @@ export function deriveVolumeShare(rows: readonly VolumeRow[], windowDays: number
     sourceAggregated: breakdown.sourceAggregated.toString(),
     unlinked: breakdown.unlinked.toString(),
     undetermined: breakdown.undetermined.toString(),
+    noncommercial: breakdown.noncommercial.toString(),
   };
 
   return {
@@ -176,14 +189,30 @@ export function median(values: readonly number[]): number {
   return sorted.length % 2 === 1 ? sorted[middle]! : (sorted[middle - 1]! + sorted[middle]!) / 2;
 }
 
-/** The best-scoring configuration in one class, or null when the class has no measured model. */
-function bestOf(rows: readonly ComparisonRow[], publicClass: PublicAccessClass): ClassBest | null {
-  const mine = rows.filter((row) => publicClassOf(row.accessClass) === publicClass);
+/** A Frontier point with the class its model folds to. The only thing this module adds. */
+type ClassifiedPoint = BenchmarkView["points"][number] & { publicClass: PublicAccessClass };
+
+function classify(view: BenchmarkView, classes: AccessClassLookup): ClassifiedPoint[] {
+  return view.points.map((point) => {
+    const accessClass = classes.get(accessKey(point.providerSlug, point.providerModelId)) ?? null;
+    return { ...point, publicClass: accessClass === null ? "unclassified" : publicClassOf(accessClass) };
+  });
+}
+
+function countByClass(points: readonly ClassifiedPoint[]): ClassConfigurationCounts {
+  const counts = EMPTY_COUNTS();
+  for (const point of points) counts[point.publicClass] += 1;
+  return counts;
+}
+
+/** The best-scoring configuration in one class, or null when the class has none measured. */
+function bestOf(points: readonly ClassifiedPoint[], publicClass: PublicAccessClass): ClassBest | null {
+  const mine = points.filter((point) => point.publicClass === publicClass);
   if (mine.length === 0) return null;
   // Ties resolve on the model's canonical id, so the chosen row does not depend on row order.
-  const best = mine.reduce((winner, row) =>
-    row.score > winner.score || (row.score === winner.score && row.providerModelId < winner.providerModelId)
-      ? row
+  const best = mine.reduce((winner, point) =>
+    point.score > winner.score || (point.score === winner.score && point.providerModelId < winner.providerModelId)
+      ? point
       : winner,
   );
   return {
@@ -192,74 +221,72 @@ function bestOf(rows: readonly ComparisonRow[], publicClass: PublicAccessClass):
     label: best.displayName,
     configuration: best.configuration,
     capabilityAsOf: best.capabilityAsOf,
+    blendedUsdPer1m: best.blendedPrice,
+    onFrontier: best.onFrontier,
   };
 }
 
 /**
- * Median blended list price among the models of one class at or above the threshold.
+ * Median blended price among one class's Pareto-efficient configurations.
  *
- * Deduplicated by canonical model before the median is taken. A model measured at three
- * reasoning efforts is one product at one price, and letting it contribute three identical
- * prices would weight the median by how thoroughly Epoch happened to evaluate it.
+ * No threshold, no deduplication, no reordering of the population. The filter is membership of
+ * the frontier Model Frontier already computed, and nothing else.
  */
-function priceOf(
-  rows: readonly ComparisonRow[],
-  publicClass: PublicAccessClass,
-  threshold: number,
-): ClassPrice | null {
-  const byModel = new Map<string, number>();
-  for (const row of rows) {
-    if (publicClassOf(row.accessClass) !== publicClass) continue;
-    if (row.score < threshold) continue;
-    if (row.blendedUsdPer1m === null) continue;
-    byModel.set(row.providerModelId, row.blendedUsdPer1m);
-  }
-  if (byModel.size === 0) return null;
+function priceOf(points: readonly ClassifiedPoint[], publicClass: PublicAccessClass): ClassPrice | null {
+  const efficient = points.filter((point) => point.onFrontier && point.publicClass === publicClass);
+  if (efficient.length === 0) return null;
   return {
     publicClass,
-    medianBlendedUsdPer1m: median([...byModel.values()]),
-    modelCount: byModel.size,
+    medianBlendedUsdPer1m: median(efficient.map((point) => point.blendedPrice)),
+    configurationCount: efficient.length,
   };
 }
 
-/** Capability and price for one benchmark's rows. */
-export function deriveComparison(slug: string, label: string, rows: readonly ComparisonRow[]): BenchmarkComparison {
-  const openBest = bestOf(rows, "open_weight");
-  const proprietaryBest = bestOf(rows, "proprietary");
+/** Capability and price for one benchmark's already-derived Frontier points. */
+export function deriveComparison(view: BenchmarkView, classes: AccessClassLookup): BenchmarkComparison {
+  const points = classify(view, classes);
 
+  const openBest = bestOf(points, "open_weight");
+  const proprietaryBest = bestOf(points, "proprietary");
   const capabilityGap: CapabilityGap = {
     openWeight: openBest,
     proprietary: proprietaryBest,
     gap: openBest === null || proprietaryBest === null ? null : proprietaryBest.score - openBest.score,
   };
 
-  // The band both classes can clear. With one class absent there is no comparison to make, and
-  // a threshold of zero would quietly compare a frontier against a tail.
-  const threshold =
-    openBest === null || proprietaryBest === null ? null : Math.min(openBest.score, proprietaryBest.score);
+  const openPrice = priceOf(points, "open_weight");
+  const proprietaryPrice = priceOf(points, "proprietary");
+  const publishable =
+    openPrice !== null &&
+    proprietaryPrice !== null &&
+    openPrice.configurationCount >= MINIMUM_FRONTIER_SAMPLE &&
+    proprietaryPrice.configurationCount >= MINIMUM_FRONTIER_SAMPLE &&
+    openPrice.medianBlendedUsdPer1m > 0;
 
   const priceGap: PriceGap = {
-    capabilityThreshold: threshold ?? 0,
-    openWeight: threshold === null ? null : priceOf(rows, "open_weight", threshold),
-    proprietary: threshold === null ? null : priceOf(rows, "proprietary", threshold),
-    ratio: null,
+    openWeight: openPrice,
+    proprietary: proprietaryPrice,
+    // Computed only when publishable. A ratio held in the view "but not shown" is a ratio one
+    // careless render away from being shown.
+    ratio: publishable ? proprietaryPrice!.medianBlendedUsdPer1m / openPrice!.medianBlendedUsdPer1m : null,
+    ratioPublishable: publishable,
   };
-  if (priceGap.openWeight !== null && priceGap.proprietary !== null && priceGap.openWeight.medianBlendedUsdPer1m > 0) {
-    priceGap.ratio = priceGap.proprietary.medianBlendedUsdPer1m / priceGap.openWeight.medianBlendedUsdPer1m;
-  }
 
-  const priceDates = rows.map((row) => row.priceAsOf).filter((date): date is string => date !== null).sort();
-
-  return { slug, label, capabilityGap, priceGap, priceAsOf: priceDates.at(-1) ?? null };
+  return {
+    slug: view.slug,
+    label: view.label,
+    capabilityGap,
+    priceGap,
+    configurations: countByClass(points),
+    frontierConfigurations: countByClass(points.filter((point) => point.onFrontier)),
+    priceAsOf: view.priceAsOf,
+  };
 }
 
-/** Every benchmark present in the rows, in the order the rows name them. */
-export function deriveComparisons(rows: readonly ComparisonRow[]): BenchmarkComparison[] {
-  const bySlug = new Map<string, { label: string; rows: ComparisonRow[] }>();
-  for (const row of rows) {
-    const entry = bySlug.get(row.benchmarkSlug) ?? { label: row.benchmarkLabel, rows: [] };
-    entry.rows.push(row);
-    bySlug.set(row.benchmarkSlug, entry);
-  }
-  return [...bySlug.entries()].map(([slug, entry]) => deriveComparison(slug, entry.label, entry.rows));
+/** Every benchmark Model Frontier derived, classified. */
+export function deriveComparisons(
+  views: readonly BenchmarkView[],
+  classes: AccessClassLookup,
+): BenchmarkComparison[] {
+  return views.map((view) => deriveComparison(view, classes));
 }

@@ -41,6 +41,7 @@ const REFUSAL_WINDOW = 6;
 describe("the semantic boundary is stated, not merely intended", () => {
   it("says all three things it has to say", () => {
     expect(OPEN_WEIGHT_BOUNDARY).toMatch(/does not mean open source/);
+    expect(OPEN_WEIGHT_BOUNDARY).toMatch(/non-commercial use only are reported as Unclassified/);
     expect(OPEN_WEIGHT_BOUNDARY).toMatch(/observed OpenRouter token volume, not of the industry/);
     expect(OPEN_WEIGHT_BOUNDARY).toMatch(/list prices per token, not total inference cost/);
   });
@@ -82,20 +83,64 @@ describe("prohibited claims", () => {
   }
 });
 
+describe("the section owns no second frontier", () => {
+  it("computes no Pareto rule of its own", () => {
+    // The requirement is not merely that the answers agree today; it is that there is one
+    // implementation, so they cannot disagree tomorrow.
+    const derive = read("src/lib/open-weight/derive.ts");
+    expect(derive).not.toMatch(/\bdominates\b/);
+    expect(derive).not.toMatch(/function markFrontier/);
+    // Membership is read off the points Model Frontier already marked.
+    expect(derive).toContain("point.onFrontier");
+  });
+
+  it("draws its points from Model Frontier's loader and derivation", () => {
+    const surface = read("src/lib/open-weight/surface.ts");
+    expect(surface).toContain("@/lib/frontier/read/derive");
+    expect(surface).toContain("@/lib/frontier/read/load");
+  });
+});
+
 describe("the methodology states the decisions a reader could otherwise not check", () => {
   const methodology = read("docs/methodology/open-weight-proprietary.md");
 
   it("states the fold rather than performing it silently", () => {
-    expect(methodology).toMatch(/restricted and non-commercial weights roll up to open-weight/i);
+    expect(methodology).toMatch(/Restricted weights roll up to Open-weight/i);
+  });
+
+  it("states that non-commercial weights are excluded from the open-weight bucket", () => {
+    expect(methodology).toMatch(/\*\*Non-commercial weights do not\.\*\*/);
+    expect(methodology).toMatch(/\*\*Unclassified\*\* — open_weights_noncommercial/);
+  });
+
+  it("keeps the source-defined residual separately identified", () => {
+    expect(methodology).toMatch(/source-defined residual/i);
   });
 
   it("states that failing to find weights is not evidence", () => {
     expect(methodology).toMatch(/Failing to find weights is not evidence/i);
   });
 
-  it("states that the price threshold is derived rather than chosen", () => {
-    expect(methodology).toMatch(/The threshold is derived, never chosen/i);
-    expect(methodology).toMatch(/lower of the two classes' best scores/i);
+  it("takes the price population from the Model Frontier's own Pareto set", () => {
+    expect(methodology).toMatch(/Pareto-efficient configurations of the Model Frontier/i);
+    expect(methodology).toMatch(/The population is not selected here/i);
+  });
+
+  it("states that there is no capability threshold of any kind", () => {
+    // The correction this replaced: a derived threshold is still a threshold, and a second
+    // selection rule here could drift from the frontier the chart draws.
+    expect(methodology).toMatch(/no capability threshold\*\*, fixed or derived/i);
+    expect(methodology).not.toMatch(/capability-matched/i);
+    expect(methodology).not.toMatch(/lower of the two class/i);
+  });
+
+  it("states the sample floor below which no ratio is published", () => {
+    expect(methodology).toMatch(/only when both classes carry at least three/i);
+    expect(methodology).toMatch(/Insufficient comparable frontier coverage/);
+  });
+
+  it("keeps configurations as the unit and refuses to collapse them first", () => {
+    expect(methodology).toMatch(/Configurations remain the unit, and are never collapsed first/i);
   });
 
   it("states the denominator it shares with Market Share", () => {

@@ -11,7 +11,7 @@ insert into reference.methodology_versions
   ('4a000000-0000-4000-8000-000000000011', '4a000000-0000-4000-8000-000000000010',
    '1.0.0', 'approved', 'docs/methodology/open-weight-proprietary.md',
    -- sha256 of docs/methodology/open-weight-proprietary.md at this commit.
-   '79067ac117dfcfd30035e3a1a846e402908025c25a0d3022b606424e5bb1a1c6', date '2026-09-16')
+   '6fae7a64c1424f3db9e3ac4deebe884c317c0e070d6ffa5eb992982ea9fd7dff', date '2026-09-16')
 on conflict (methodology_id, version) do nothing;
 
 do $$

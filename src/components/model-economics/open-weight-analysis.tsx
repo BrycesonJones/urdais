@@ -16,6 +16,7 @@ const FILL: Record<PublicAccessClass, string> = {
 };
 
 const models = (n: number) => `${n} ${n === 1 ? "model" : "models"}`;
+const configurations = (n: number) => `${n} ${n === 1 ? "configuration" : "configurations"}`;
 
 /** Tokens are exact decimal strings, and a window's count exceeds what a double holds. */
 function trillions(tokens: string): string {
@@ -36,9 +37,10 @@ function trillions(tokens: string): string {
  * benchmark beside a price gap measured on another would invite a comparison neither number
  * supports, so there is one selection and both panels move together.
  *
- * **The price threshold is shown.** It is derived — the lower of the two class bests — and
- * printing it is what lets a reader check that the comparison is capability-matched rather
- * than a median over two differently-shaped tails.
+ * **The price population is the Model Frontier's own Pareto set.** There is no capability
+ * threshold to show, because there is none: the configurations compared are the ones the chart
+ * above marks efficient. The sample size is printed instead, and below three efficient
+ * configurations in either class the multiple is withheld rather than estimated.
  *
  * **A missing side is stated, never zeroed.** Where a benchmark has no classified model in one
  * class, the gap is absent and says so. Zero would read as a measurement.
@@ -136,10 +138,11 @@ export function OpenWeightAnalysis({ view = null }: { view?: OpenWeightView | nu
             ))}
           </dl>
           <p className="mt-3 text-xs leading-relaxed text-neutral-500">
-            Unclassified is {trillions(unclassified.sourceAggregated)} the source aggregates without
-            naming a model, {trillions(unclassified.unlinked)} under identifiers Urdais has not linked
-            to a model, and {trillions(unclassified.undetermined)} whose access Urdais has not
-            established. It is reported rather than redistributed.
+            Unclassified is {trillions(unclassified.sourceAggregated)} in the source&rsquo;s own
+            residual row, which names no model; {trillions(unclassified.unlinked)} under identifiers
+            Urdais has not linked to a model; {trillions(unclassified.undetermined)} whose access
+            Urdais has not established; and {trillions(unclassified.noncommercial)} whose weights are
+            published for non-commercial use only. It is reported rather than redistributed.
           </p>
         </div>
 
@@ -190,44 +193,62 @@ export function OpenWeightAnalysis({ view = null }: { view?: OpenWeightView | nu
         <div className="pt-8 lg:pl-8 lg:pt-0">
           <h3 className="font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">Price gap</h3>
           <p className="mt-1 text-xs text-neutral-500">
-            Median blended list price, models scoring ≥{" "}
-            {price === null ? "—" : `${formatNumber(price.capabilityThreshold * 100, 1)}%`}
+            Median blended list price among Pareto-efficient configurations{benchmark ? `, ${benchmark.label}` : ""}
           </p>
           {price === null || price.openWeight === null || price.proprietary === null ? (
-            <p className="mt-5 text-sm text-neutral-400">
-              No comparison on this benchmark: a capability-matched band needs a classified model with a
-              comparable list price on both sides.
-            </p>
+            <p className="mt-5 text-sm text-neutral-400">Insufficient comparable frontier coverage.</p>
           ) : (
-            <dl className="mt-5 space-y-2 text-sm tabular-nums">
-              <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-neutral-300">
-                  Proprietary{" "}
-                  <span className="text-xs text-neutral-500">({models(price.proprietary.modelCount)})</span>
-                </dt>
-                <dd className="text-2xl font-semibold text-neutral-50">
-                  ${formatNumber(price.proprietary.medianBlendedUsdPer1m)}
-                </dd>
-              </div>
-              <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-neutral-300">
-                  Open-weight{" "}
-                  <span className="text-xs text-neutral-500">({models(price.openWeight.modelCount)})</span>
-                </dt>
-                <dd className="text-2xl font-semibold text-neutral-50">
-                  ${formatNumber(price.openWeight.medianBlendedUsdPer1m)}
-                </dd>
-              </div>
-              <div className="flex items-baseline justify-between gap-4 border-t border-white/[0.08] pt-2">
-                <dt className="text-neutral-400">Gap</dt>
-                <dd className="font-medium text-neutral-100">
-                  {price.ratio === null ? "—" : `${formatNumber(price.ratio, 1)}×`}
-                  <span className="ml-1.5 text-xs font-normal text-neutral-500">
-                    proprietary median per 1M tokens
-                  </span>
-                </dd>
-              </div>
-            </dl>
+            <>
+              <dl className="mt-5 space-y-2 text-sm tabular-nums">
+                <div className="flex items-baseline justify-between gap-4">
+                  <dt className="text-neutral-300">
+                    Proprietary{" "}
+                    <span className="text-xs text-neutral-500">({configurations(price.proprietary.configurationCount)})</span>
+                  </dt>
+                  <dd className="text-2xl font-semibold text-neutral-50">
+                    ${formatNumber(price.proprietary.medianBlendedUsdPer1m)}
+                  </dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-4">
+                  <dt className="text-neutral-300">
+                    Open-weight{" "}
+                    <span className="text-xs text-neutral-500">({configurations(price.openWeight.configurationCount)})</span>
+                  </dt>
+                  <dd className="text-2xl font-semibold text-neutral-50">
+                    ${formatNumber(price.openWeight.medianBlendedUsdPer1m)}
+                  </dd>
+                </div>
+                <div className="flex items-baseline justify-between gap-4 border-t border-white/[0.08] pt-2">
+                  <dt className="text-neutral-400">Gap</dt>
+                  <dd className="font-medium text-neutral-100">
+                    {/* A median over fewer than three efficient configurations is an artefact of
+                        which models happened to be evaluated, so the multiple is withheld and the
+                        reason is given rather than a number nobody could stand behind. */}
+                    {price.ratioPublishable && price.ratio !== null ? (
+                      <>
+                        {formatNumber(price.ratio, 1)}×
+                        <span className="ml-1.5 text-xs font-normal text-neutral-500">
+                          proprietary median per 1M tokens
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-sm font-normal text-neutral-400">
+                        Insufficient comparable frontier coverage
+                      </span>
+                    )}
+                  </dd>
+                </div>
+              </dl>
+              {/* The companion metric: not the headline, and labelled so it cannot be read as
+                  one. It is a single configuration's price, not a central tendency. */}
+              {capability?.openWeight && capability.proprietary && (
+                <p className="mt-3 text-xs leading-relaxed text-neutral-500 tabular-nums">
+                  Highest-scoring configuration in each class: {capability.proprietary.label} at $
+                  {formatNumber(capability.proprietary.blendedUsdPer1m)}, {capability.openWeight.label} at $
+                  {formatNumber(capability.openWeight.blendedUsdPer1m)} per 1M tokens.
+                </p>
+              )}
+            </>
           )}
           {benchmark?.priceAsOf && (
             <p className="mt-3 text-xs text-neutral-500 tabular-nums">Prices as of {benchmark.priceAsOf}</p>

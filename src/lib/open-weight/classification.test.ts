@@ -15,11 +15,17 @@ describe("the public fold", () => {
     }
   });
 
-  it("counts restricted and non-commercial weights as open-weight", () => {
-    // The question is whether the publisher released the weights. Both of these did.
-    expect(publicClassOf("open_weights_restricted")).toBe("open_weight");
-    expect(publicClassOf("open_weights_noncommercial")).toBe("open_weight");
+  it("counts commercially usable downloadable weights as open-weight", () => {
+    // A revenue threshold or an attribution obligation still leaves a model that can be
+    // self-hosted and sold from, which is the thing the section measures.
     expect(publicClassOf("open_weights_unrestricted")).toBe("open_weight");
+    expect(publicClassOf("open_weights_restricted")).toBe("open_weight");
+  });
+
+  it("does not count non-commercial weights as open-weight", () => {
+    // Downloadable, and barred from the paid inference whose volume and price are compared.
+    // Counting it here would place it inside a commercial comparison it is excluded from.
+    expect(publicClassOf("open_weights_noncommercial")).toBe("unclassified");
   });
 
   it("counts only hosted-access models as proprietary", () => {
