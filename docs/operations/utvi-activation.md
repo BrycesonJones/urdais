@@ -1,6 +1,8 @@
 # UTVI Activation Checklist
 
-**Status: internal operations document. Not routed publicly, not registered in the docs catalog.** Prepared 16 September 2026, at the end of Phase 1B.
+**Status: internal operations document. Not routed publicly, not registered in the docs catalog.** Prepared 16 September 2026 at the end of Phase 1B, and revised the same day during activation.
+
+> **Activation executed 16 September 2026.** Methodology 1.0.0 is approved, both migrations are applied to UrdaisProd, history is backfilled, the cron is registered, and the Model Economics section reads production. **One operator step remains: `OPENROUTER_API_KEY` is not set in the Vercel production environment**, and until it is, the daily cron answers `503 no_source_credential` and the series does not advance. The published history is unaffected. See [What remains](#what-remains).
 
 The UTVI backend is built, migrated locally, and verified end to end against the live source and a real database. **Nothing is activated in production.** This document is the list of deliberate steps that would activate it, in the order they have to happen, and the reason each one is a separate decision rather than part of the build.
 
@@ -71,6 +73,16 @@ Add to `vercel.json`:
 
 Out of scope for Phase 1B and deliberately last. `UtviSection` takes an instrument prop, the page-level "Demo data" badge stays until every section on the page is real, and the covered universe is rendered beside the value rather than behind a link.
 
+## What activation found
+
+Two defects, both found by running against production rather than by review, and both fixed in the activation change.
+
+**A publication the database refused was reported as a failed calculation.** Calculation and publication shared one `try` block, so when the gate rejected a publication the catch overwrote the calculation's outcome — while the calculation itself had already committed. The first backfill recorded 621 values and reported that it had recorded none. Each step now reports its own outcome, and `publication: "failed"` is a distinct state from `calculation: "failed"`.
+
+**A run interrupted between writing a snapshot and writing its calculation left a date with coverage and no value, permanently.** Every later run confirmed the unchanged snapshot and skipped past the hole, because "the rows did not change" was being read as "there is nothing to do". One date of 621 — `2025-09-16` — reached production in that state. A confirmation now asks whether the value actually exists rather than inferring it, so the next run heals the date; the re-run that found this recorded exactly one calculation and one publication, which is what a self-heal looks like from the outside.
+
+**And one performance fix.** The backfill wrote one statement per observation row: fifty-one round trips per date, thirty-one thousand for the full history. Nine seconds against a local socket, and about one date per minute against the pooler in another region — several hours. Each date's rows are now written in a single statement, which took the full production backfill to **185 seconds**. The daily job writes about a hundred rows and was never affected, but a backfill nobody can finish is a backfill nobody runs.
+
 ## Operational notes
 
 **The daily run makes two requests**, not one: the day that just closed, and the day before it. The second is the settlement confirmation, and dropping it to save a request would mean calling a date final because the calendar said so rather than because the source did.
@@ -82,6 +94,25 @@ Out of scope for Phase 1B and deliberately last. `UtviSection` takes an instrume
 **Two dates in the source's history are permanently empty**: 2025-06-15 and 2025-07-15 return zero rows while their neighbours return the usual fifty-one. They have no UTVI point and never will. That is reported separately from a real gap, because a run that cried failure every day over two known holes would train an operator to ignore the check.
 
 **A failed retrieval is recoverable.** The source retains twenty months, so a date missed today can be collected tomorrow — a materially better failure mode than a series that carries permanent holes.
+
+## What remains
+
+**One operator step, and it is the only thing between a registered cron and a self-advancing series.**
+
+### `OPENROUTER_API_KEY` is not set in Vercel production
+
+The key exists in `.env.local` and was used for every retrieval during activation, including the production backfill. It is **not** in the Vercel project's production environment, and this session had no Vercel credential with which to set it.
+
+**What to do**: in the Vercel dashboard, Project → Settings → Environment Variables, add `OPENROUTER_API_KEY` to the **Production** environment with the same value that is in `.env.local`. Server-side only — never `NEXT_PUBLIC_`. Then redeploy, because environment variables are read at invocation but a running deployment holds the environment it was built with.
+
+**What happens until then**: the daily cron answers `503 {"ok": false, "reason": "no_source_credential"}` and writes nothing. That is fail-closed and deliberate — the route checks for the key before it opens a database connection, so an unconfigured deployment refuses rather than half-running. The published history is unaffected and the page keeps serving it; the series simply stops gaining new days.
+
+**How to confirm it worked**: call the cron once by hand with the project's `CRON_SECRET` and read the response. `snapshot: "created"` on the newest date is a working run.
+
+### Not blockers
+
+- **The fourteen-day settlement study** runs alongside production and changes nothing automatically. See [the study](../research/utvi/settlement-study.md).
+- **OpenRouter's reply** about BYOK and hidden-application traffic has not arrived. The universe statement was written to be true either way, so a reply is an opportunity to say more rather than a correction to make. Silence is not evidence of inclusion or exclusion.
 
 ## Rollback
 

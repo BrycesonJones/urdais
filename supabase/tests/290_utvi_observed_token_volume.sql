@@ -51,11 +51,21 @@ begin
     raise exception 'the OpenRouter dataset interface is no longer approved on both axes';
   end if;
 
-  -- ----------------------------------------------------------- the methodology is a draft
-  -- This is the state Phase 1B intends. If it ever reads 'approved' without a deliberate
-  -- governance decision, the publication gate below stops protecting anything.
-  if (select status from reference.methodology_versions where id = method_ver_id) <> 'draft' then
-    raise exception 'the UTVI methodology version is no longer a draft; publication governance changed';
+  -- ----------------------------------------------------------- the methodology is approved
+  -- UTVI 1.0.0 is approved and effective from the first date of the series, which is what lets
+  -- a value publish at all. The gate still has to refuse everything else, which is what the
+  -- rest of this file is for: a gate that only ever said no was easy to keep honest, and one
+  -- that says yes to the right thing is the one worth testing.
+  if (select status from reference.methodology_versions where id = method_ver_id) <> 'approved' then
+    raise exception 'the UTVI methodology version is not approved; no value can publish';
+  end if;
+  if (select effective_from from reference.methodology_versions where id = method_ver_id) is null then
+    raise exception 'the approved UTVI methodology version carries no effective date';
+  end if;
+  if (select count(*) from reference.methodology_versions mv
+       join reference.methodologies m on m.id = mv.methodology_id
+      where m.slug = 'utvi' and mv.status = 'draft') <> 0 then
+    raise exception 'a UTVI methodology draft is still active alongside the approved version';
   end if;
 
   -- a base retrieval to hang snapshots from
@@ -409,9 +419,29 @@ begin
     'provisional', hash_a
   ) returning id into calc_a;
 
-  -- ----------------------------------------------------------- publication needs approval
-  -- The governance gate. While the methodology is a draft, no value may be published, and
-  -- this is the refusal that enforces it rather than a convention in application code.
+  -- ----------------------------------------------------------- the publication gate
+  -- Four refusals and one acceptance. Each refusal exists because the alternative is a
+  -- published number that means something other than it appears to.
+
+  -- A value that disagrees with its calculation.
+  failed := false;
+  begin
+    insert into pipeline.utvi_publications (
+      calculation_id, calculation_date, published_at, value_tokens_per_day,
+      published_model_residual, published_lab_residual, settlement_state,
+      methodology_version, universe_descriptor, source_attribution, source_content_hash
+    ) values (
+      calc_a, date '2026-09-15', now(), 999, 100, 500, 'provisional',
+      '1.0.0', 'the covered universe',
+      'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-16T00:00:00Z.', hash_a
+    );
+  exception when check_violation then failed := true;
+  end;
+  if not failed then
+    raise exception 'a published value disagreeing with its calculation was accepted';
+  end if;
+
+  -- A methodology version string that disagrees with the calculation's own.
   failed := false;
   begin
     insert into pipeline.utvi_publications (
@@ -420,13 +450,79 @@ begin
       methodology_version, universe_descriptor, source_attribution, source_content_hash
     ) values (
       calc_a, date '2026-09-15', now(), 1000, 100, 500, 'provisional',
-      '0.1.1-draft', 'Public model traffic on the OpenRouter marketplace',
+      '9.9.9', 'the covered universe',
       'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-16T00:00:00Z.', hash_a
     );
   exception when check_violation then failed := true;
   end;
   if not failed then
-    raise exception 'a value was published under a draft methodology; publication governance is not enforced';
+    raise exception 'a published value naming the wrong methodology version was accepted';
+  end if;
+
+  -- A publication date that disagrees with the calculation's date.
+  failed := false;
+  begin
+    insert into pipeline.utvi_publications (
+      calculation_id, calculation_date, published_at, value_tokens_per_day,
+      published_model_residual, published_lab_residual, settlement_state,
+      methodology_version, universe_descriptor, source_attribution, source_content_hash
+    ) values (
+      calc_a, date '2026-09-14', now(), 1000, 100, 500, 'provisional',
+      '1.0.0', 'the covered universe',
+      'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-16T00:00:00Z.', hash_a
+    );
+  exception when check_violation then failed := true;
+  end;
+  if not failed then
+    raise exception 'a published value dated differently from its calculation was accepted';
+  end if;
+
+  -- An empty universe descriptor. Coverage is part of what is published, so a value cannot
+  -- be published without saying what it observed.
+  failed := false;
+  begin
+    insert into pipeline.utvi_publications (
+      calculation_id, calculation_date, published_at, value_tokens_per_day,
+      published_model_residual, published_lab_residual, settlement_state,
+      methodology_version, universe_descriptor, source_attribution, source_content_hash
+    ) values (
+      calc_a, date '2026-09-15', now(), 1000, 100, 500, 'provisional',
+      '1.0.0', '   ',
+      'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-16T00:00:00Z.', hash_a
+    );
+  exception when check_violation then failed := true;
+  end;
+  if not failed then
+    raise exception 'a value was published with no universe descriptor';
+  end if;
+
+  -- And the acceptance: a calculation that agrees with itself publishes.
+  insert into pipeline.utvi_publications (
+    calculation_id, calculation_date, published_at, value_tokens_per_day,
+    published_model_residual, published_lab_residual, settlement_state,
+    methodology_version, universe_descriptor, source_attribution, source_content_hash
+  ) values (
+    calc_a, date '2026-09-15', now(), 1000, 100, 500, 'provisional',
+    '1.0.0', 'Token volume exposed by OpenRouter''s rankings-daily dataset for the traffic included by that dataset.',
+    'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-16T00:00:00Z.', hash_a
+  );
+
+  -- One live publication per date.
+  failed := false;
+  begin
+    insert into pipeline.utvi_publications (
+      calculation_id, calculation_date, published_at, value_tokens_per_day,
+      published_model_residual, published_lab_residual, settlement_state,
+      methodology_version, universe_descriptor, source_attribution, source_content_hash
+    ) values (
+      calc_a, date '2026-09-15', now(), 1000, 100, 500, 'provisional',
+      '1.0.0', 'the covered universe',
+      'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-16T00:00:00Z.', hash_a
+    );
+  exception when unique_violation then failed := true;
+  end;
+  if not failed then
+    raise exception 'two live publications for one date were accepted';
   end if;
 
   -- ----------------------------------------------------------- append-only and supersession

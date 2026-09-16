@@ -1,6 +1,8 @@
 # Urdais Observed Token Volume Index (UTVI) Methodology
 
-**Status: draft, version 0.1.1-draft, no production effective date.** Prepared 16 September 2026; revised the same day against measurements from the live source. **Nothing may be published under this version.** It is a draft in the sense the registry means: a methodology version with no effective date, which the database will not allow a publication to reference.
+**Version 1.0.0, approved 16 September 2026. Status: approved for production, effective from 1 January 2025.** Prepared 16 September 2026 from the Phase 1 source study and the Phase 1A characterization of the live authenticated source, and approved after the backend was built and verified end to end.
+
+**This is the first version under which UTVI may publish a value.** A methodology version carries an effective date only when it is approved, and a database trigger refuses any publication whose methodology version is not approved — so the promotion of this document from draft to approved is the activation switch, and nothing else is.
 
 Prepared under the [Urdais methodology framework](/docs/methodology). This draft rests on the Urdais's internal Phase 1 source study and the Phase 1A source characterization, which measured the live authenticated endpoint, and it is accompanied by an internal data-architecture proposal. Facts below marked *measured* were observed against real responses; facts marked *documented* come from the source's own documents. Its purpose is to state what UTVI would measure, precisely enough that the decision to build it can be taken on evidence — and precisely enough that the decision *not* to build it remains available.
 
@@ -38,13 +40,17 @@ What UTVI is **not** an estimator of, and must not be presented as a proxy for:
 
 Under this version, the observed universe is:
 
-> **Public, non-hidden model traffic on the OpenRouter marketplace, as OpenRouter reports it in its `rankings-daily` dataset.**
+> **UTVI measures token volume exposed by OpenRouter's `rankings-daily` dataset for the traffic included by that dataset. Urdais makes no claim about inclusion of BYOK or hidden/private application traffic unless OpenRouter explicitly documents it.**
 
-Recorded explicitly with every value, because each of these is a real narrowing.
+That second sentence is the load-bearing one, and it is deliberately a refusal rather than a description. The dataset documents that it covers "the top 50 public models per day"; it does not document how bring-your-own-key traffic or traffic from applications their owners have hidden is treated. Urdais asked and has no answer. **So the universe is defined by deference to the source rather than by an Urdais assertion about it**, and it stays that way until OpenRouter documents otherwise.
 
-**Included**: traffic routed through the observed platform; public models on that platform; both proprietary and open-weight models it serves; all modalities it serves.
+The alternative was to write down a plausible guess. The reason not to is specific rather than fastidious: the universe descriptor is frozen onto every published value, and a descriptor that turns out to be wrong cannot be corrected without superseding every point that carries it. A narrower claim costs nothing and cannot become false.
 
-**Excluded**: first-party API traffic direct to a lab; consumer assistants such as ChatGPT, the Gemini app and Doubao; self-hosted and on-premise inference; other routers, gateways and clouds; and training and fine-tuning of any kind.
+**Included, on the source's own documentation**: traffic the `rankings-daily` dataset reports; the models it names, both proprietary and open-weight; all modalities it serves; and its aggregate tail row.
+
+**Excluded, by construction rather than by inference**: first-party API traffic direct to a lab; consumer assistants such as ChatGPT, the Gemini app and Doubao; self-hosted and on-premise inference; other routers, gateways and clouds; and training and fine-tuning of any kind. None of these reaches the dataset at all.
+
+**Undetermined, and published as undetermined**: BYOK traffic, and traffic from hidden or private applications. Urdais does not know whether the dataset includes them and does not imply either answer. If a shift in one of them ever moved the series, Urdais could not detect or explain it — that limitation is real, it is stated here, and it is the price of a source that reports a total without documenting its edges.
 
 **The serving platform is not a market participant and is never aggregated as a lab.** OpenRouter is the *observer*; the labs whose models it serves are the subjects. This separation is structural, mirrors the UCPI rule that a technical source is never a participant, and is why §6 keeps lab identity and platform identity in different columns.
 
@@ -73,7 +79,7 @@ A source is eligible only when **all** of the following hold. This is the UCPI g
 5. **Machine-readable, with a stable documented contract.**
 6. **Daily or finer grain, at point-in-time date identity.** A source publishing only rolling or trailing aggregates is not a source of daily values (§11).
 
-Under 0.1.1-draft **no source is production-approved**, so no value may be calculated. The candidate is OpenRouter's Datasets API, whose two rights axes both read permitted under a Creative Commons Attribution 4.0 grant that covers commercial reuse and adapted material.
+Under 1.0.0 exactly one source is production-approved: **OpenRouter's `rankings-daily` Datasets endpoint**, whose two rights axes both read permitted under a Creative Commons Attribution 4.0 grant that covers commercial reuse and adapted material. No second source is admitted, and admitting one would be a methodology-version break under §9.
 
 ### 4.1 Source hierarchy
 
@@ -227,7 +233,11 @@ The settlement rule, applied identically to backfilled and to current dates:
 2. The published value for a date is the value from its **most recent retrieval**.
 3. A date is **provisional** until the settlement lag has elapsed, then **final**; a final date is not re-read, and a change after finality is a correction by supersession, never an edit.
 4. The published value carries its state, so a reader can tell provisional from final.
-5. **The settlement lag is a parameter of this methodology version.** **Measured**: the just-closed day continues to accrue at roughly 16 parts per million per day, monotonically, without ever changing rank order; days closed 25 hours or more showed exactly zero movement over the observed interval. On that evidence this version sets the lag provisionally at **one further calculation day** — `D` is published as provisional on the run after it closes and finalised on the next run — and requires the fourteen-day protocol in the characterization to confirm it before any version is approved.
+5. **The settlement lag is one further calculation day.** `D` is published as **provisional** on the run after it closes, and **final** on the next run, once the source has reported it unchanged a second time.
+
+   **Measured**: the just-closed day continues to accrue at roughly 16 parts per million per day, monotonically, without ever changing rank order; days closed twenty-five hours or more showed exactly zero movement over the observed interval.
+
+   **`final` is a settlement state, not a claim of immutability.** The evidence for older days being frozen spans minutes, not weeks, and a batch correction days later would not have shown up in it. A final date therefore remains supersedable, and the database enforces that rather than trusting this document: a late revision is a fact about the source, not a permission Urdais grants itself. A fourteen-day study runs alongside production to refine this parameter; it does not gate publication, because the revision and supersession machinery already handles whatever it finds.
 
 One consequence worth stating, because it is the kind of thing that silently splices two statistics into one series: a backfill retrieved today returns *settled* values while a forward daily job records *first prints*. Publishing the latest retrieval of every date is what makes both halves the same statistic.
 
@@ -237,6 +247,8 @@ One consequence worth stating, because it is the kind of thing that silently spl
 - **Retrieval failure → no point**, and a retry. A gap is recoverable while the date remains inside the source's retained window, which is a materially better failure mode than a permanent hole.
 - **A model with no traffic → zero for that model**, on a covered date. The source expresses this by omitting the row, so an absent row inside a successful retrieval is a zero and not a failure.
 - **Never a placeholder.** A date with no calculation is reported as having none.
+
+**The source's own history contains empty dates, and they stay empty.** `2025-06-15` and `2025-07-15` return zero rows from the source while their neighbours return the usual fifty-one; both were re-requested individually and both returned a well-formed response with no data. **Neither has a UTVI point and neither ever will.** A zero there would claim the platform processed no tokens that day, and would sit mid-series at a fraction of a per cent of its neighbours — a false point that looks like a collapse. The two dates are absent from the published series, absent from every percentage change that would otherwise span them, and reported as source gaps rather than as retrieval failures.
 
 Unlike a price series, **UTVI has no last-known-good carry**. A price persists between observations because a list price is a standing offer; a *quantity consumed on a day* does not persist, and carrying yesterday's volume forward would assert consumption that was never observed.
 
@@ -317,13 +329,17 @@ A value whose attribution cannot be rendered is **not published**. This is the s
 
 Fail-closed, and each condition independently necessary:
 
-1. An **approved** version of this methodology, with an effective date. 0.1.0-draft has none, so nothing publishes.
+1. An **approved** version of this methodology, with an effective date. 1.0.0 is approved and effective from **1 January 2025**, which is where the source's retained history begins and therefore where the series begins. A calculation dated before that is still refused.
+
+   The approval date and the effective date differ on purpose. A value is computed under the version in force on its own calculation date; UTVI has never had any other version, and no date in the series was ever computed under anything else, so 1.0.0 governs the whole of it. That is a statement of fact rather than a backdating convenience — there is no earlier version whose values would be restated.
 2. At least one **production-approved** source, both rights axes permitted.
 3. **Valid coverage** for the date (§7).
 4. Every constituent observation itself production-publicable. Research observations are never promoted.
 5. Required attribution renderable (§18).
 
 Where any condition fails, **no value is published and no substitute is shown**. A candidate value computed before approval is a labelled candidate, never a published one, and is never reclassified into the series.
+
+Every one of these is checked by the database rather than by the application alone. `pipeline.check_utvi_publication()` refuses a publication whose methodology version is not approved, whose calculation date precedes the effective date, whose run is a simulation, or whose value, residuals, settlement state or content hash disagree with the calculation it claims to come from.
 
 ## 20. Public wording
 
@@ -349,6 +365,12 @@ This document is versioned and effective-dated on the family pattern. A value is
 **A new version is not required to** add a model that a source begins reporting inside an already-declared universe (§9, case 1), or to correct a value under §17.
 
 ## Version history
+
+**1.0.0, approved 16 September 2026, effective from 1 January 2025**: approved for production. This is the first version under which a UTVI value may be published, and the first value is published under it.
+
+The substantive change from 0.1.1-draft is the observation universe, which is narrowed to a statement of deference: UTVI measures what the source's dataset exposes, and Urdais makes no claim about BYOK or hidden and private application traffic unless OpenRouter documents it. The draft had described the universe as *public, non-hidden* traffic, which was an assertion the source's documentation does not support. Because the universe descriptor is frozen onto every published value, a claim that later proved wrong could not be corrected without superseding every point carrying it; the narrower statement cannot become false.
+
+Also fixed: the settlement lag at one calculation day, with `final` stated explicitly as a settlement state rather than a claim of immutability, so that a late revision still supersedes; and the source's two empty historical dates, `2025-06-15` and `2025-07-15`, recorded as permanently absent from the series rather than as failures. The economic object, the unit, the aggregation, the coverage states, the deduplication rule, the token categories and the attribution requirement are unchanged from 0.1.1-draft.
 
 **0.1.1-draft, 16 September 2026**: revised against the first authenticated measurements of the live source. Corrects the coverage figure from ~1 % to ~5 % on a measured level of 17.75 T tokens/day. Resolves cached-input treatment as included and not separable; records embeddings as **included**, against 0.1.0-draft's presumption that they were out of scope; states that input and output legs can never be published from this source; and states the ~0.2–0.4 % non-text inclusion as irreducible. Adds measured evidence that variant folding is required and that the source's namespace is not a lab identity. Sets a provisional settlement lag of one calculation day, with a confirmation protocol required before approval. Splits the attribution hole into a **volume residual** and a **lab residual**, both published. Records the 366-day request limit. The objective, the universe, the aggregation formula, the coverage states and the publication gate are unchanged. No production effective date.
 
