@@ -21,7 +21,8 @@
  * are the ones that reach the page.
  */
 
-import { DETAIL_RANGES, type DetailRange, type MarketInstrumentDetail, type TimeSeriesPoint } from "@/types/market";
+import type { MarketInstrumentDetail, TimeSeriesPoint } from "@/types/market";
+import { availableRanges } from "@/lib/market-ranges";
 import { UTVI_DISPLAY_NAME, UTVI_SYMBOL, UTVI_UNIT } from "@/lib/utvi/types";
 import type { UtviChangePeriod } from "@/lib/utvi/calculate";
 import type { UtviReadModel } from "@/lib/utvi/read/read-model";
@@ -68,22 +69,6 @@ export function coverageGapsIn(dates: readonly string[]): string[] {
 }
 
 /**
- * Which ranges the published history is long enough to support.
- *
- * Decided by the span of real points, so a range is offered only when there is a point at or
- * before its start. The alternative — offering every range and letting the chart show a
- * truncated window as though it were a year — would misdescribe the data.
- */
-export function availableUtviRanges(dates: readonly string[]): DetailRange[] {
-  if (dates.length === 0) return [];
-  const latest = Date.parse(`${dates[dates.length - 1]!}T00:00:00Z`);
-  const earliest = Date.parse(`${dates[0]!}T00:00:00Z`);
-  const spanDays = Math.round((latest - earliest) / 86_400_000);
-  const needed: Record<DetailRange, number> = { "1D": 1, "1W": 7, "1M": 30, "3M": 90, "6M": 182, "1Y": 365 };
-  return DETAIL_RANGES.filter((range) => spanDays >= needed[range]);
-}
-
-/**
  * Build the instrument, or return null when nothing is published.
  *
  * Null rather than an empty instrument: a chart with no points is a different thing from a
@@ -102,7 +87,10 @@ export function utviInstrumentFrom(model: UtviReadModel): UtviInstrumentView | n
   }));
 
   const dates = model.series.map((point) => point.date);
+  // The anchor for every window, and it is the latest published point rather than the clock.
+  // A daily series published after midnight draws the same chart all day, in any timezone.
   const asOf = secondsAtUtcMidnight(snapshot.asOfDate);
+  const series = { daily, intraday: [] };
 
   const instrument: MarketInstrumentDetail = {
     id: "utvi",
@@ -117,9 +105,13 @@ export function utviInstrumentFrom(model: UtviReadModel): UtviInstrumentView | n
       changePercent: snapshot.changePercent["1D"],
       asOf,
     },
-    // No intraday tail exists and none is synthesised: the source serves completed days only.
-    series: { daily, intraday: [] },
-    availableRanges: availableUtviRanges(dates),
+    // No intraday tail exists and none is synthesised: the source serves completed days only,
+    // and `market-ranges` draws every range from the daily closes when the tail is empty.
+    series,
+    // The shared helper, not a second implementation. An availability rule that disagreed with
+    // the windowing rule is exactly how 1D and 1W came to be offered and then drawn with one
+    // point: the chart was asked for a range its own window function could not fill.
+    availableRanges: availableRanges(series, asOf),
     comparisons: [],
   };
 

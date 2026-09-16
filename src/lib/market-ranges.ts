@@ -7,6 +7,10 @@
  * start, so the return is measured from the close that precedes the window.
  * Pure functions of the series and the as-of time, so the same history
  * always yields the same numbers.
+ *
+ * Every window ends at the caller's `asOf`, which every surface takes from the instrument's
+ * own latest observation rather than from the clock. A daily series published after midnight
+ * therefore draws the same chart all day, and a browser in any timezone draws the same one.
  */
 
 import { DETAIL_RANGES } from "@/types/market";
@@ -23,11 +27,28 @@ export const RANGE_LABELS: Record<DetailRange, string> = {
   "1Y": "1 year",
 };
 
-/** Ranges drawn from the 15-minute series rather than daily closes. */
+/** Ranges drawn from the 15-minute series rather than daily closes, where one exists. */
 const INTRADAY_RANGES: ReadonlySet<DetailRange> = new Set(["1D", "1W"]);
 
 export function isIntradayRange(range: DetailRange): boolean {
   return INTRADAY_RANGES.has(range);
+}
+
+/**
+ * Whether a range should be drawn from the fine series *for this series*.
+ *
+ * `1D` and `1W` are intraday ranges for an instrument that has a 15-minute tail. Some
+ * instruments have none and never will: UTVI publishes one figure per completed UTC day and
+ * its source refuses to serve a partial day at all, so synthesising a tail would be a
+ * fabrication rather than a missing feature.
+ *
+ * Without this distinction a daily-only series drew its short ranges from an empty array and
+ * fell back to the single daily point at the window's base — one point, which is not a line.
+ * A daily-only series therefore draws every range from its daily closes, where `1D` is the
+ * latest point and the one before it, and `1W` is the inclusive seven-calendar-day span.
+ */
+export function usesIntradaySeries(series: DetailedSeries, range: DetailRange): boolean {
+  return isIntradayRange(range) && series.intraday.length > 0;
 }
 
 /** Shift a UTC timestamp by calendar months/years, keeping day and time of day. */
@@ -92,7 +113,7 @@ function baseIndex(points: TimeSeriesPoint[], time: number): number {
  */
 export function windowPoints(series: DetailedSeries, range: DetailRange, asOf: number): TimeSeriesPoint[] {
   const start = rangeStart(range, asOf);
-  if (isIntradayRange(range)) {
+  if (usesIntradaySeries(series, range)) {
     const base = baseIndex(series.intraday, start);
     if (base >= 0) return series.intraday.slice(base);
     const dailyBase = baseIndex(series.daily, start);
@@ -106,7 +127,7 @@ export function windowPoints(series: DetailedSeries, range: DetailRange, asOf: n
 /** A range is supported when the history reaches back to the window's base. */
 export function isRangeAvailable(series: DetailedSeries, range: DetailRange, asOf: number): boolean {
   const start = rangeStart(range, asOf);
-  if (isIntradayRange(range)) {
+  if (usesIntradaySeries(series, range)) {
     return series.intraday.length >= 2 && (baseIndex(series.intraday, start) >= 0 || baseIndex(series.daily, start) >= 0);
   }
   return series.daily.length >= 2 && baseIndex(series.daily, start) >= 0;
