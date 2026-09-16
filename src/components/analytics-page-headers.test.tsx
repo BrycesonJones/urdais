@@ -53,8 +53,12 @@ describe.each(PAGES)("$title header", ({ Page, title, subtitle, description, tab
     expect(within(header).getByRole("heading", { level: 1, name: title })).toBeInTheDocument();
     // The page title appears exactly once in the header: the H1 itself.
     expect(within(header).getAllByText(title)).toHaveLength(1);
-    // The H1 row is the first thing in the header, with no leftover top margin.
-    const h1Row = within(header).getByRole("heading", { level: 1 }).parentElement;
+    // The H1 row is the first thing in the header, with no leftover top margin. A page may
+    // put the H1 directly in the header or wrap it in a row beside a badge, so the row is
+    // whichever of the two the header actually holds -- the property under test is that
+    // nothing sits above it, not which of the two shapes was used.
+    const h1 = within(header).getByRole("heading", { level: 1 });
+    const h1Row = h1.parentElement === header ? h1 : h1.parentElement;
     expect(header.firstElementChild).toBe(h1Row);
     expect(h1Row).not.toHaveClass("mt-3");
   });

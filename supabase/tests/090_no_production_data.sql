@@ -58,13 +58,16 @@ begin
   -- are what establish that a bootstrapped database holds neither.
   -- UTVI 1.0.0 is approved for the same class of reason as the two above: the methodology is
   -- finished, it carries an effective date, and its approval is what lets the index publish.
+  -- Model Frontier 1.0.0 and Open-weight vs Proprietary 1.0.0 are approved on the same footing:
+  -- both derive entirely at read time from rows other products collect, so approving either
+  -- seeds no observation and publishes no value by itself.
   -- Note that this file is about a *bootstrapped* database holding no production data, and
   -- the pipeline assertions below are what establish that; an approved methodology on its own
   -- seeds no observation and no value.
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id
-   where mv.status <> 'draft' and m.slug not in ('ubwi', 'ucpi-listed-gpu', 'utvi', 'model-frontier');
-  if n <> 0 then raise exception 'a non-draft methodology version exists outside UBWI, UCPI-LISTED-GPU, UTVI and Model Frontier'; end if;
+   where mv.status <> 'draft' and m.slug not in ('ubwi', 'ucpi-listed-gpu', 'utvi', 'model-frontier', 'open-weight-proprietary');
+  if n <> 0 then raise exception 'a non-draft methodology version exists outside UBWI, UCPI-LISTED-GPU, UTVI, Model Frontier and Open-weight vs Proprietary'; end if;
   -- The accessible-price UCPI family is not approved by anything.
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id

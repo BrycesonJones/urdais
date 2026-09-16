@@ -138,6 +138,14 @@ export const docPages: readonly DocPage[] = [
     section: "Methodology",
     file: "methodology/market-share.md",
   },
+  {
+    slug: "methodology/open-weight-proprietary",
+    title: "Open-weight vs Proprietary",
+    description:
+      "Production methodology for Open-weight vs Proprietary: whether each model's publisher released downloadable weights, classified per exact model version on positive publisher evidence, with volume share against UTVI's own denominator, a capability gap per benchmark, and a price gap taken over a capability-matched band rather than a chosen threshold.",
+    section: "Methodology",
+    file: "methodology/open-weight-proprietary.md",
+  },
 ];
 
 export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];
