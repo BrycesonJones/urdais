@@ -1,6 +1,6 @@
 # Model Frontier — Phase 3A: capability-source research and architecture audit
 
-**Status: research. No implementation, no production data, no methodology approved.** Prepared 16 September 2026 against the live codebase and the UrdaisProd database. Every count in §2 is a query result, not an estimate.
+**Status: internal research artifact. Not a methodology page, not routed publicly, not registered in the docs catalog.** Prepared 16 September 2026 against the live codebase and the UrdaisProd database. No implementation, no production data, no schema, no collector, no migration and no approved methodology is created by this document. Every count in §2 is a query result, not an estimate.
 
 The conclusion in one line: **the price axis is nearly ready and the capability axis has no legal source yet in the form the product needs** — and the most obvious candidate is the one Urdais may not use.
 
