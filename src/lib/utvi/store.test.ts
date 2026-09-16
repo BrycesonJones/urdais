@@ -5,6 +5,7 @@ import {
   publishCalculation,
   recordRetrieval,
   retrievalIdempotencyKey,
+  snapshotHasCalculation,
   type SqlExecutor,
   type UtviLineage,
 } from "@/lib/utvi/store";
@@ -186,8 +187,7 @@ describe("applying a snapshot", () => {
     const sql = scripted([
       [], // no active snapshot
       [{ id: "s1" }], // insert snapshot
-      [], // observation 1
-      [], // observation 2
+      [], // observations, in one statement
     ]);
     const outcome = await applySnapshot(sql, LINEAGE, "u1", snapshot(), AS_OF);
     expect(outcome).toEqual({ kind: "created", snapshotId: "s1" });
@@ -201,6 +201,17 @@ describe("applying a snapshot", () => {
     expect(outcome).toEqual({ kind: "confirmed", snapshotId: "99999999-9999-4999-8999-999999999999" });
     expect(sql.calls).toHaveLength(1);
     expect(sql.calls.some((c) => c.text.includes("insert into"))).toBe(false);
+  });
+
+  it("can tell a snapshot that has a calculation from one that does not", async () => {
+    // A run interrupted between the two writes leaves a date with coverage and no value, and a
+    // later run that inferred "unchanged rows, therefore nothing to do" would skip it for ever.
+    const withCalculation = scripted([[{ "?column?": 1 }]]);
+    expect(await snapshotHasCalculation(withCalculation, "s1")).toBe(true);
+    const without = scripted([[]]);
+    expect(await snapshotHasCalculation(without, "s1")).toBe(false);
+    expect(without.calls[0]!.text).toContain("pipeline.utvi_calculations");
+    expect(without.calls[0]!.params).toEqual(["s1"]);
   });
 
   it("settles an identical re-read whose date has since stopped moving, and nothing else", async () => {
@@ -226,7 +237,7 @@ describe("applying a snapshot", () => {
     // rejected. The order is load-bearing, and the transaction is what lets the deferred
     // self-reference point at a row that does not exist yet.
     // activeSnapshot, begin, update, insert snapshot, two observations, commit.
-    const sql = scripted([activeRow(HASH_A), [], [], [{ id: "generated" }], [], [], []]);
+    const sql = scripted([activeRow(HASH_A), [], [], [{ id: "generated" }], [], []]);
     await applySnapshot(sql, LINEAGE, "u2", snapshot(HASH_B), AS_OF);
     const statements = sql.calls.map((c) => c.text.trim().split("\n")[0]!.trim());
     const begin = statements.findIndex((t) => t === "begin");
@@ -265,7 +276,6 @@ describe("applying a snapshot", () => {
       [{ id: "generated" }],
       [],
       [],
-      [],
     ]);
     const outcome = await applySnapshot(sql, LINEAGE, "u2", snapshot(HASH_B), AS_OF);
     expect(outcome).toMatchObject({
@@ -284,7 +294,7 @@ describe("applying a snapshot", () => {
   });
 
   it("supersedes a date that had already settled, because a late revision is still a fact", async () => {
-    const sql = scripted([activeRow(HASH_A, "final"), [], [], [{ id: "x" }], [], [], []]);
+    const sql = scripted([activeRow(HASH_A, "final"), [], [], [{ id: "x" }], [], []]);
     const outcome = await applySnapshot(
       sql,
       LINEAGE,
@@ -317,25 +327,36 @@ describe("applying a snapshot", () => {
   });
 
   it("carries the interpolated citation onto every observation row", async () => {
-    const sql = scripted([[], [{ id: "s1" }], [], []]);
+    const sql = scripted([[], [{ id: "s1" }], []]);
     await applySnapshot(sql, LINEAGE, "u1", snapshot(), AS_OF);
-    const observationInserts = sql.calls.filter((c) => c.text.includes("utvi_model_observations"));
-    expect(observationInserts).toHaveLength(2);
-    for (const insert of observationInserts) {
-      expect(insert.params).toContain(`Source: OpenRouter (openrouter.ai/rankings), as of ${AS_OF}.`);
-    }
+    const insert = sql.calls.find((c) => c.text.includes("utvi_model_observations"))!;
+    const citation = `Source: OpenRouter (openrouter.ai/rankings), as of ${AS_OF}.`;
+    expect(insert.params.filter((p) => p === citation)).toHaveLength(2);
+  });
+
+  it("writes a date's observations in one statement, not one per row", async () => {
+    // A full backfill is six hundred days of fifty-one rows. Row-at-a-time was nine seconds
+    // against a local socket and hours against a pooler in another region, which is the
+    // difference between a backfill an operator runs and one they abandon.
+    const sql = scripted([[], [{ id: "s1" }], []]);
+    await applySnapshot(sql, LINEAGE, "u1", snapshot(), AS_OF);
+    const inserts = sql.calls.filter((c) => c.text.includes("insert into pipeline.utvi_model_observations"));
+    expect(inserts).toHaveLength(1);
+    // Two rows, twelve bound columns each, and the placeholders numbered through.
+    expect(inserts[0]!.params).toHaveLength(24);
+    expect(inserts[0]!.text).toContain("$12)");
+    expect(inserts[0]!.text).toContain("$24)");
   });
 
   it("degrades an evidenced lab with no provider row to unmapped rather than dropping the volume", async () => {
-    const sql = scripted([[], [{ id: "s1" }], [], []]);
+    const sql = scripted([[], [{ id: "s1" }], []]);
     const lineageWithoutLab: UtviLineage = { ...LINEAGE, labProviderIds: new Map() };
     await applySnapshot(sql, lineageWithoutLab, "u1", snapshot(), AS_OF);
-    const named = sql.calls.find(
-      (c) => c.text.includes("utvi_model_observations") && c.params.includes("deepseek/deepseek-v4"),
-    )!;
-    expect(named.params).toContain("unmapped");
-    expect(named.params).toContain(1000n.toString());
-    expect((named.params.find((p) => Array.isArray(p)) as string[]) ?? []).toContain("LAB_PROVIDER_ROW_MISSING");
+    const insert = sql.calls.find((c) => c.text.includes("utvi_model_observations"))!;
+    expect(insert.params).toContain("unmapped");
+    expect(insert.params).toContain(1000n.toString());
+    const flagArrays = insert.params.filter((p) => Array.isArray(p)) as string[][];
+    expect(flagArrays.some((flags) => flags.includes("LAB_PROVIDER_ROW_MISSING"))).toBe(true);
   });
 });
 

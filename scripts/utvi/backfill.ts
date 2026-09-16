@@ -157,14 +157,22 @@ async function main(): Promise<void> {
       console.log(`  DUPLICATED           ${result.coverage.duplicated.join(", ")}`);
     }
 
-    const refusals = new Map<string, number>();
+    const published = result.dates.filter((d) => d.publication === "published").length;
+    const superseded = result.dates.filter((d) => d.publication === "superseded").length;
+    console.log(`  publications         ${published} published, ${superseded} superseded`);
+
+    const outcomes = new Map<string, number>();
     for (const date of result.dates) {
-      if (date.publication.startsWith("refused")) {
-        refusals.set(date.publication, (refusals.get(date.publication) ?? 0) + 1);
+      if (date.publication.startsWith("refused") || date.publication === "failed") {
+        outcomes.set(date.publication, (outcomes.get(date.publication) ?? 0) + 1);
       }
     }
-    for (const [reason, count] of refusals) {
+    for (const [reason, count] of outcomes) {
       console.log(`  publication          ${reason}: ${count}`);
+    }
+    const firstFailure = result.dates.find((d) => d.publication === "failed" || d.calculation === "failed");
+    if (firstFailure) {
+      console.log(`  first failure        ${firstFailure.observationDate}: ${firstFailure.publicationDetail ?? firstFailure.calculationDetail}`);
     }
 
     if (!result.ok) {

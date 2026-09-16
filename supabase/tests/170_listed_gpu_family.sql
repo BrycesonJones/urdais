@@ -37,7 +37,7 @@ begin
   -- Still nothing live, published or newly permitted.
   -- UBWI went live in methodology 1.2.0. No compute instrument has, which is what this
   -- file is about, so the assertion is narrowed by name rather than dropped.
-  select count(*) into n from reference.instruments where lifecycle_status = 'live' and symbol <> 'UBWI'; if n <> 0 then raise exception 'an instrument other than UBWI is live'; end if;
+  select count(*) into n from reference.instruments where lifecycle_status = 'live' and symbol not in ('UBWI', 'UTVI'); if n <> 0 then raise exception 'a compute instrument is live'; end if;
   select count(*) into n from pipeline.regional_publications; if n <> 0 then raise exception 'a publication exists'; end if;
   -- UTVI's usage dataset is production-approved on its own CC BY grant. It is not a compute
   -- source, so it is excluded by class here exactly as news feeds are.

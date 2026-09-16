@@ -4,6 +4,7 @@ import { OpenWeightAnalysis } from "@/components/model-economics/open-weight-ana
 import { TokenPriceSection } from "@/components/model-economics/token-price-section";
 import { UtviSection } from "@/components/model-economics/utvi-section";
 import type { MarketInstrumentDetail } from "@/types/market";
+import type { UtviInstrumentView } from "@/lib/utvi/read/instrument";
 
 const SECTIONS = [
   { id: "price", label: "Price" },
@@ -22,9 +23,11 @@ const SECTIONS = [
  */
 export function ModelEconomicsPage({
   tokenInstruments = [],
+  utvi = null,
   researchPreview = false,
 }: {
   tokenInstruments?: readonly MarketInstrumentDetail[];
+  utvi?: UtviInstrumentView | null;
   researchPreview?: boolean;
 }) {
   return (
@@ -33,8 +36,12 @@ export function ModelEconomicsPage({
         <header>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="text-3xl font-semibold tracking-tight text-neutral-50 md:text-4xl">Model Economics</h1>
+            {/* Token Price and Observed Token Volume are production. Market Share, Frontier and
+                Open-weight are not, so the badge names them rather than the page: a page-level
+                "Demo data" would now be false about two sections, and removing it entirely
+                would be false about three. */}
             <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
-              Demo data
+              Share, Frontier and Open-weight are demo data
             </span>
           </div>
           <p className="mt-2 text-base text-neutral-300 md:text-lg">The economics of machine intelligence.</p>
@@ -60,7 +67,7 @@ export function ModelEconomicsPage({
 
         <div className="mt-10 flex flex-col gap-14">
           <TokenPriceSection instruments={tokenInstruments} researchPreview={researchPreview} />
-          <UtviSection />
+          <UtviSection view={utvi} />
           <MarketShareChart />
           <ModelFrontierChart />
           <OpenWeightAnalysis />

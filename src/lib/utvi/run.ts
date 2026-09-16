@@ -23,6 +23,7 @@ import {
   recordCalculation,
   recordRetrieval,
   resolveLineage,
+  snapshotHasCalculation,
   type SnapshotOutcome,
   type SqlExecutor,
   type UtviLineage,
@@ -47,6 +48,7 @@ export type DateOutcome = {
     | "superseded"
     | "refused_methodology_not_approved"
     | "refused_no_change"
+    | "failed"
     | "not_attempted";
   publicationDetail?: string;
   totalTokens?: string;
@@ -148,18 +150,33 @@ async function ingestDate(
 
   if (applied.kind === "no_rows") return outcome;
 
-  // A confirmation changed nothing, so there is nothing new to calculate. Recording a second
-  // identical calculation would grow the ledger without adding a fact.
-  if (applied.kind === "confirmed") {
-    outcome.calculation = "skipped_unchanged";
-    return outcome;
+  // A confirmation usually changed nothing, so there is usually nothing new to calculate:
+  // recording a second identical calculation would grow the ledger without adding a fact.
+  //
+  // Usually. A run interrupted between writing a snapshot and writing its calculation leaves a
+  // date with coverage and no value, and every later run would confirm the snapshot and skip
+  // past the hole for ever. So a confirmation asks whether the value actually exists rather
+  // than inferring it from the rows being unchanged. This is not hypothetical: it is how one
+  // date of 621 came to have a snapshot and no published value.
+  if (applied.kind === "confirmed" || applied.kind === "settled") {
+    if (await snapshotHasCalculation(sql, applied.snapshotId)) {
+      outcome.calculation = "skipped_unchanged";
+      return outcome;
+    }
+    outcome.calculationDetail = "snapshot had no calculation; a previous run did not finish this date";
   }
 
   if (!canCalculate(snapshot)) return outcome;
 
+  // Calculation and publication are reported separately, and the two try blocks are not
+  // tidiness. A shared one meant a publication the database refused was reported as a failed
+  // calculation -- while the calculation itself had committed -- so a backfill that recorded
+  // 621 values claimed it had recorded none. A step's outcome must describe that step.
+  let calculationId: string;
+  let calculation: ReturnType<typeof calculateUtvi>;
   try {
-    const calculation = calculateUtvi(snapshot);
-    const calculationId = await recordCalculation(
+    calculation = calculateUtvi(snapshot);
+    calculationId = await recordCalculation(
       sql,
       lineage,
       applied.snapshotId,
@@ -168,9 +185,15 @@ async function ingestDate(
     );
     outcome.calculation = "recorded";
     outcome.totalTokens = calculation.totalObservedTokens.toString();
+  } catch (error) {
+    outcome.calculation = "failed";
+    outcome.calculationDetail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    return outcome;
+  }
 
-    if (!publish) return outcome;
+  if (!publish) return outcome;
 
+  try {
     const published = await publishCalculation(
       sql,
       lineage,
@@ -190,8 +213,11 @@ async function ingestDate(
       outcome.publicationDetail = published.refusal.detail;
     }
   } catch (error) {
-    outcome.calculation = "failed";
-    outcome.calculationDetail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    // The database's publication gate raises rather than returning, so a refusal it enforces
+    // arrives here. It is a publication outcome and is named as one; the calculation above
+    // stands and stays recorded.
+    outcome.publication = "failed";
+    outcome.publicationDetail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
   }
 
   return outcome;
@@ -359,6 +385,9 @@ export function utviRunSummary(result: UtviRunResult): Record<string, unknown> {
     publicationRefusals: result.dates
       .filter((d) => d.publication.startsWith("refused"))
       .map((d) => ({ date: d.observationDate, reason: d.publication })),
+    publicationFailures: result.dates
+      .filter((d) => d.publication === "failed")
+      .map((d) => ({ date: d.observationDate, detail: d.publicationDetail })),
     ok: result.ok,
   };
 }

@@ -16,11 +16,10 @@
  * MOCK_AS_OF, and none of it is a real observation.
  */
 
-import { buildDailySeries, buildIntradaySeries } from "@/data/mock/series-generator";
+import { buildDailySeries } from "@/data/mock/series-generator";
 import { findTokenLab } from "@/data/mock/token-providers";
 import { MOCK_AS_OF } from "@/data/mock/ucpi";
-import { availableRanges, periodReturn } from "@/lib/market-ranges";
-import type { MarketInstrumentDetail, TimeSeriesPoint } from "@/types/market";
+import type { TimeSeriesPoint } from "@/types/market";
 import type { AccessClass, FrontierPoint, ModelRecord, OpenWeightAnalysis, ShareRow } from "@/types/model-economics";
 
 export const MODEL_ECONOMICS_AS_OF = MOCK_AS_OF;
@@ -118,42 +117,14 @@ function volumeSeries(modelId: string): TimeSeriesPoint[] {
 }
 
 /** Sum of every model's observed volume on each date. */
-function aggregateVolume(modelIds: string[]): TimeSeriesPoint[] {
-  const first = volumeSeries(modelIds[0]!);
-  return first.map((point, index) => ({
-    time: point.time,
-    value: modelIds.reduce((sum, id) => sum + volumeSeries(id)[index]!.value, 0),
-  }));
-}
 
-/* ---------- UTVI ---------- */
+/* ---------- UTVI: removed ---------- */
 
-/**
- * UTVI, the Urdais Token Volume Index: UTVI(date) = sum of observed token
- * volume across every model in the demo universe on that date, in tokens
- * per day. The intraday tail is a bridge across the daily aggregate, pinned
- * to each day's total. The headline move is the trailing one-month change.
- */
-const utviDaily = aggregateVolume(MODEL_SPECS.map((spec) => spec.id));
-const utviIntraday = buildIntradaySeries(utviDaily, { seed: 42_000, days: 7, volatility: 0.01 });
-const utviSeries = { daily: utviDaily, intraday: utviIntraday };
-const utviLatest = utviDaily[utviDaily.length - 1]!;
-
-export const UTVI: MarketInstrumentDetail = {
-  id: "utvi",
-  shortLabel: "UTVI",
-  symbol: "UTVI",
-  name: "Urdais Token Volume Index",
-  unit: "tokens/day",
-  snapshot: {
-    value: utviLatest.value,
-    changePercent: periodReturn(utviSeries, "1M", utviLatest.time) ?? 0,
-    asOf: utviLatest.time,
-  },
-  series: utviSeries,
-  availableRanges: availableRanges(utviSeries, utviLatest.time),
-  comparisons: [],
-};
+// The synthetic UTVI instrument that used to live here is gone. UTVI publishes from
+// production under methodology 1.0.0, and its series comes from
+// `@/lib/utvi/read/instrument`. The volume *observations* below stay, because Market Share,
+// the Frontier and the open-weight analytics are still demo and still derive from them; only
+// UTVI is detached.
 
 /* ---------- Market share ---------- */
 
