@@ -11,7 +11,6 @@
  * nothing downstream would catch it, and a reader would have no way to tell.
  */
 
-import { checkDerivation } from "@/lib/market-share/checks";
 import { loadLatestShare } from "@/lib/market-share/load";
 import { buildMarketShareView, validateMarketShareView, type MarketShareView } from "@/lib/market-share/view";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
@@ -26,19 +25,9 @@ export async function loadMarketShareView(): Promise<MarketShareView | null> {
   let sql: Awaited<ReturnType<typeof createTokenSqlExecutor>> | null = null;
   try {
     sql = await createTokenSqlExecutor(databaseUrl);
+    // `loadLatestShare` returns null for a date whose decomposition does not close, so the
+    // reconciliation gate is upstream of this and cannot be skipped here.
     const share = await loadLatestShare(sql);
-
-    if (share !== null) {
-      const failures = checkDerivation(share.derivation);
-      if (failures.length > 0) {
-        console.error(
-          `market share: ${share.derivation.date} failed reconciliation ` +
-            `(${failures.map((failure) => `${failure.check}: ${failure.detail}`).join("; ")})`,
-        );
-        return null;
-      }
-    }
-
     const { view, unavailableReason } = buildMarketShareView(share);
     if (view === null) {
       console.info(`market share: no shares served (${unavailableReason})`);

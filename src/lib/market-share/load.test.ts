@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { loadAllShares, loadLatestShare } from "@/lib/market-share/load";
+import { loadAllShares, loadLatestShare, usableForMarketShare } from "@/lib/market-share/load";
 import type { SqlExecutor } from "@/lib/utvi/store";
 
 /**
@@ -145,5 +145,44 @@ describe("token exactness", () => {
     expect(share!.derivation.totalObservedTokens).toBe("17750424011492");
     expect(share!.derivation.models[0]!.tokens).toBe("16563583113598");
     expect(share!.derivation.sourceResidual!.tokens).toBe("1186840897894");
+  });
+});
+
+describe("the reconciliation gate", () => {
+  /** The real 2025-09-16 shape: sixteen of fifty-one rows beneath a correct snapshot total. */
+  const defective = () =>
+    scripted([
+      [publication({ date: "2025-09-16", total_observed_tokens: "803652511533" })],
+      [
+        observationRow({ permaslug: "google/gemini-2.5-flash", tokens: "53276122800" }),
+        observationRow({ permaslug: "x-ai/grok-code-fast-1", tokens: "193570496921" }),
+        observationRow({ permaslug: "anthropic/claude-4-sonnet-20250522", tokens: "108649341574" }),
+      ],
+    ]);
+
+  it("does not serve a date whose persisted rows do not account for its published total", async () => {
+    // Every figure such a table produced would look reasonable and all of them would be wrong,
+    // because the denominator is right and the numerators are missing two thirds of the volume.
+    expect(await loadLatestShare(defective())).toBeNull();
+  });
+
+  it("reports the failing date in a historical sweep rather than dropping it", async () => {
+    // The gate refuses to *serve*; the sweep must still *name* it, or a report over a damaged
+    // series would come back clean for ever.
+    const shares = await loadAllShares(defective());
+    expect(shares).toHaveLength(1);
+    expect(usableForMarketShare(shares[0]!)).toBe(false);
+    expect(shares[0]!.failures.map((f) => f.check)).toContain("model_token_reconciliation");
+    expect(shares[0]!.failures[0]!.date).toBe("2025-09-16");
+  });
+
+  it("serves a date whose rows do account for it", async () => {
+    const sql = scripted([
+      [publication({ total_observed_tokens: "10000" })],
+      [observationRow({ tokens: "9000" }), residualRow()],
+    ]);
+    const share = await loadLatestShare(sql);
+    expect(share).not.toBeNull();
+    expect(usableForMarketShare(share!)).toBe(true);
   });
 });

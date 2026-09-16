@@ -19,9 +19,11 @@
  * published for that date.
  */
 
+import { checkDerivation } from "@/lib/market-share/checks";
 import { deriveMarketShare } from "@/lib/market-share/derive";
 import {
   type MarketShareDerivation,
+  type ShareCheckFailure,
   type ShareObservation,
 } from "@/lib/market-share/types";
 import type { SqlExecutor } from "@/lib/utvi/store";
@@ -47,7 +49,26 @@ export type ShareLineage = {
 export type DatedShare = {
   derivation: MarketShareDerivation;
   lineage: ShareLineage;
+  /** Empty when the date's persisted observations account for its published total. */
+  failures: ShareCheckFailure[];
 };
+
+/**
+ * Whether a date may be served.
+ *
+ * The gate exists because a UTVI snapshot's aggregates and its child observation rows are
+ * separate facts, and production proved they can disagree: 2025-09-16 carried sixteen of its
+ * fifty-one rows beneath a snapshot whose totals were computed from all fifty-one. UTVI's own
+ * value was unaffected, because UTVI reads the aggregates — but Market Share reads the rows,
+ * and rows that do not account for the denominator produce a table where every figure looks
+ * reasonable and all of them are wrong.
+ *
+ * So a share is usable only if its decomposition closes. This is enforced here rather than left
+ * to each caller, so there is no path to a rendered share that skipped the check.
+ */
+export function usableForMarketShare(share: DatedShare): boolean {
+  return share.failures.length === 0;
+}
 
 /**
  * Live publications only, joined to the live snapshot behind each.
@@ -139,16 +160,22 @@ export async function loadLatestShare(sql: SqlExecutor): Promise<DatedShare | nu
   if (row === undefined) return null;
 
   const lineage = toLineage(row);
+  const share = await deriveFor(sql, lineage);
+  // A date that does not reconcile is not served at all. Returning it with a flag would put the
+  // decision in every caller, and one of them would eventually get it wrong.
+  return usableForMarketShare(share) ? share : null;
+}
+
+/** Derive one date and check it, in the one place both loaders go through. */
+async function deriveFor(sql: SqlExecutor, lineage: ShareLineage): Promise<DatedShare> {
   const observations = await loadObservations(sql, lineage.snapshotId);
-  return {
-    derivation: deriveMarketShare(
-      lineage.date,
-      lineage.settlementState,
-      lineage.totalObservedTokens,
-      observations,
-    ),
-    lineage,
-  };
+  const derivation = deriveMarketShare(
+    lineage.date,
+    lineage.settlementState,
+    lineage.totalObservedTokens,
+    observations,
+  );
+  return { derivation, lineage, failures: checkDerivation(derivation) };
 }
 
 /**
@@ -164,19 +191,9 @@ export async function loadAllShares(sql: SqlExecutor): Promise<DatedShare[]> {
     [],
   );
 
+  // Every date, checked but not filtered: the report's job is to name what is wrong, and a
+  // sweep that silently dropped the failing dates would report a clean series for ever.
   const shares: DatedShare[] = [];
-  for (const row of rows) {
-    const lineage = toLineage(row);
-    const observations = await loadObservations(sql, lineage.snapshotId);
-    shares.push({
-      derivation: deriveMarketShare(
-        lineage.date,
-        lineage.settlementState,
-        lineage.totalObservedTokens,
-        observations,
-      ),
-      lineage,
-    });
-  }
+  for (const row of rows) shares.push(await deriveFor(sql, toLineage(row)));
   return shares;
 }

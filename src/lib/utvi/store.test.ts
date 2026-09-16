@@ -4,6 +4,7 @@ import {
   applySnapshot,
   publishCalculation,
   recordRetrieval,
+  representationComplete,
   retrievalIdempotencyKey,
   snapshotHasCalculation,
   type SqlExecutor,
@@ -99,7 +100,20 @@ const CALCULATION: UtviCalculation = {
   sourceContentHash: HASH_A,
 };
 
-const activeRow = (hash: string, settlement = "provisional", total = "1050") => [
+/**
+ * An active snapshot row as the database returns it.
+ *
+ * `persisted` defaults to a *complete* representation -- rows summing to the snapshot's own
+ * total -- because that is the normal case and every pre-existing test assumes it. Passing a
+ * smaller sum is how a test describes the 2025-09-16 defect: a snapshot whose aggregates are
+ * correct and whose child rows are not all there.
+ */
+const activeRow = (
+  hash: string,
+  settlement = "provisional",
+  total = "1050",
+  persisted: { rows: number; sum: string } = { rows: 2, sum: total },
+) => [
   {
     id: "99999999-9999-4999-8999-999999999999",
     observation_date: "2026-09-15",
@@ -107,6 +121,8 @@ const activeRow = (hash: string, settlement = "provisional", total = "1050") => 
     date_content_hash: hash,
     settlement_state: settlement,
     total_tokens: total,
+    persisted_row_count: persisted.rows,
+    persisted_token_sum: persisted.sum,
   },
 ];
 
@@ -186,8 +202,10 @@ describe("applying a snapshot", () => {
   it("creates the first snapshot for a date", async () => {
     const sql = scripted([
       [], // no active snapshot
+      [], // begin: the snapshot and its observations commit together or not at all
       [{ id: "s1" }], // insert snapshot
       [], // observations, in one statement
+      [], // commit
     ]);
     const outcome = await applySnapshot(sql, LINEAGE, "u1", snapshot(), AS_OF);
     expect(outcome).toEqual({ kind: "created", snapshotId: "s1" });
@@ -326,10 +344,90 @@ describe("applying a snapshot", () => {
     expect(sql.calls).toHaveLength(0);
   });
 
+  it("commits the snapshot and its observations together, or neither", async () => {
+    // The 2025-09-16 defect, as a test. The snapshot row and its observations are two
+    // statements; before this transaction a crash between them left a snapshot claiming fifty
+    // rows with sixteen behind it, and nothing noticed for eleven months because nothing read
+    // the child rows. What must be true is that the observation insert failing takes the
+    // snapshot insert down with it.
+    const attempted: string[] = [];
+    let call = 0;
+    const sql: SqlExecutor = {
+      async query(text: string) {
+        attempted.push(text.trim().split("\n")[0]!.trim());
+        call += 1;
+        if (call === 1) return { rows: [] }; // no active snapshot
+        if (text.includes("insert into pipeline.utvi_model_observations")) {
+          throw new Error("connection terminated unexpectedly");
+        }
+        if (text.includes("insert into pipeline.utvi_daily_snapshots")) return { rows: [{ id: "s1" }] };
+        return { rows: [] };
+      },
+    };
+
+    await expect(applySnapshot(sql, LINEAGE, "u1", snapshot(), AS_OF)).rejects.toThrow(
+      "connection terminated unexpectedly",
+    );
+
+    // The snapshot insert was attempted inside the transaction, and the transaction was undone.
+    const begin = attempted.indexOf("begin");
+    const snapshotInsert = attempted.findIndex((t) => t.startsWith("insert into pipeline.utvi_daily_snapshots"));
+    expect(begin).toBeGreaterThanOrEqual(0);
+    expect(snapshotInsert).toBeGreaterThan(begin);
+    expect(attempted).toContain("rollback");
+    // The one thing that must never happen: a commit that leaves the half-written date behind.
+    expect(attempted).not.toContain("commit");
+  });
+
+  it("repairs a date whose stored rows do not account for its own snapshot", async () => {
+    // Identical content hash, incomplete storage: exactly 2025-09-16. Sixteen rows summing to
+    // 610,905,052,424 beneath a snapshot claiming 803,652,511,533. The hash matched because the
+    // hash describes the source, and the source had not changed.
+    const sql = scripted([
+      activeRow(HASH_A, "final", "1050", { rows: 1, sum: "1000" }),
+      [], // begin
+      [], // supersede the defective row
+      [{ id: "generated" }], // insert the replacement
+      [], // its observations
+      [], // commit
+    ]);
+    const outcome = await applySnapshot(sql, LINEAGE, "u9", snapshot(HASH_A), AS_OF);
+
+    expect(outcome).toMatchObject({
+      kind: "repaired",
+      supersededId: "99999999-9999-4999-8999-999999999999",
+      recoveredRowCount: 1,
+    });
+    const supersede = sql.calls.find((c) => c.text.includes("set superseded_by_id"))!;
+    // The reason has to say this was Urdais's storage and not the source, or a later reader
+    // will mistake a repair for a revision of the data.
+    expect(String(supersede.params[2])).toContain("repaired defective persisted representation");
+    expect(String(supersede.params[2])).toContain("no value is revised");
+    expect(String(supersede.params[2])).not.toContain("source revised");
+  });
+
+  it("does not repair, or rewrite anything, when the representation is complete", async () => {
+    const sql = scripted([activeRow(HASH_A, "provisional", "1050", { rows: 2, sum: "1050" })]);
+    const outcome = await applySnapshot(sql, LINEAGE, "u2", snapshot(HASH_A), AS_OF);
+    expect(outcome.kind).toBe("confirmed");
+    expect(sql.calls).toHaveLength(1);
+  });
+
+  it("refuses to repair when the content hash does not match, because that is a revision", async () => {
+    // A repair asserts the source did not move. If it did, the revision path owns the date and
+    // this one must not quietly rewrite history under the wrong reason.
+    const sql = scripted([
+      activeRow(HASH_A, "final", "1050", { rows: 1, sum: "1000" }),
+      [], [], [{ id: "x" }], [], [],
+    ]);
+    const outcome = await applySnapshot(sql, LINEAGE, "u9", snapshot(HASH_B), AS_OF);
+    expect(outcome.kind).toBe("revised");
+  });
+
   it("carries the interpolated citation onto every observation row", async () => {
-    const sql = scripted([[], [{ id: "s1" }], []]);
+    const sql = scripted([[], [], [{ id: "s1" }], [], []]);
     await applySnapshot(sql, LINEAGE, "u1", snapshot(), AS_OF);
-    const insert = sql.calls.find((c) => c.text.includes("utvi_model_observations"))!;
+    const insert = sql.calls.find((c) => c.text.includes("insert into pipeline.utvi_model_observations"))!;
     const citation = `Source: OpenRouter (openrouter.ai/rankings), as of ${AS_OF}.`;
     expect(insert.params.filter((p) => p === citation)).toHaveLength(2);
   });
@@ -338,7 +436,7 @@ describe("applying a snapshot", () => {
     // A full backfill is six hundred days of fifty-one rows. Row-at-a-time was nine seconds
     // against a local socket and hours against a pooler in another region, which is the
     // difference between a backfill an operator runs and one they abandon.
-    const sql = scripted([[], [{ id: "s1" }], []]);
+    const sql = scripted([[], [], [{ id: "s1" }], [], []]);
     await applySnapshot(sql, LINEAGE, "u1", snapshot(), AS_OF);
     const inserts = sql.calls.filter((c) => c.text.includes("insert into pipeline.utvi_model_observations"));
     expect(inserts).toHaveLength(1);
@@ -349,10 +447,10 @@ describe("applying a snapshot", () => {
   });
 
   it("degrades an evidenced lab with no provider row to unmapped rather than dropping the volume", async () => {
-    const sql = scripted([[], [{ id: "s1" }], []]);
+    const sql = scripted([[], [], [{ id: "s1" }], [], []]);
     const lineageWithoutLab: UtviLineage = { ...LINEAGE, labProviderIds: new Map() };
     await applySnapshot(sql, lineageWithoutLab, "u1", snapshot(), AS_OF);
-    const insert = sql.calls.find((c) => c.text.includes("utvi_model_observations"))!;
+    const insert = sql.calls.find((c) => c.text.includes("insert into pipeline.utvi_model_observations"))!;
     expect(insert.params).toContain("unmapped");
     expect(insert.params).toContain(1000n.toString());
     const flagArrays = insert.params.filter((p) => Array.isArray(p)) as string[][];
@@ -370,24 +468,66 @@ describe("publication governance", () => {
 
   it("publishes a first point once the methodology is approved", async () => {
     const approved: UtviLineage = { ...LINEAGE, methodologyStatus: "approved", methodologyVersion: "1.0.0" };
-    const sql = scripted([[], [{ id: "p1" }]]);
+    const sql = scripted([[], []]);
     const outcome = await publishCalculation(sql, approved, "c1", CALCULATION, "universe", AS_OF, "test");
-    expect(outcome).toMatchObject({ kind: "published", publicationId: "p1", revisionNumber: 1 });
+    expect(outcome).toMatchObject({ kind: "published", revisionNumber: 1 });
+    // The id is the writer's, because a supersession must be able to name the replacement
+    // before it exists. A first publication takes the same path, without the transaction.
+    expect((outcome as { publicationId: string }).publicationId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+    );
+    expect(sql.calls.some((c) => c.text.trim() === "begin")).toBe(false);
   });
 
   it("declines a revision that did not move the value, rather than printing the same point twice", async () => {
     const approved: UtviLineage = { ...LINEAGE, methodologyStatus: "approved", methodologyVersion: "1.0.0" };
-    const sql = scripted([[{ id: "p1", value: "1050", revision_number: 1 }]]);
+    const sql = scripted([[{ id: "p1", value: "1050", revision_number: 1, evidence_is_live: true }]]);
     const outcome = await publishCalculation(sql, approved, "c2", CALCULATION, "universe", AS_OF, "test");
     expect(outcome).toMatchObject({ kind: "refused", refusal: { reason: "no_change" } });
     expect(sql.calls).toHaveLength(1);
   });
 
+  it("re-points an unchanged value whose evidence is no longer live", async () => {
+    // After a storage repair the snapshot behind the standing publication is superseded. The
+    // value has not moved, so the usual rule would decline to republish -- but declining leaves
+    // the public point anchored to a representation the database no longer serves, and every
+    // consumer that reads through live snapshots loses the date. So it is re-pointed, and the
+    // reason says plainly that the number did not change.
+    const approved: UtviLineage = { ...LINEAGE, methodologyStatus: "approved", methodologyVersion: "1.1.0" };
+    const sql = scripted([
+      [{ id: "p1", value: "1050", revision_number: 1, evidence_is_live: false }],
+      [], [], [], [],
+    ]);
+    const outcome = await publishCalculation(sql, approved, "c9", CALCULATION, "universe", AS_OF, "test");
+
+    expect(outcome).toMatchObject({ kind: "superseded", supersededId: "p1", revisionNumber: 2 });
+    const published = sql.calls.find((c) => c.text.includes("insert into pipeline.utvi_publications"))!;
+    // The value published is identical to the one it replaces.
+    expect(published.params).toContain("1050");
+    const supersede = sql.calls.find((c) => c.text.includes("set superseded_by_id"))!;
+    expect(String(supersede.params[2])).toContain("re-pointed to the live snapshot");
+    expect(String(supersede.params[2])).toContain("value is unchanged");
+    expect(String(supersede.params[2])).not.toContain("source revision");
+  });
+
   it("supersedes the prior point when the value did move, and numbers the revision", async () => {
     const approved: UtviLineage = { ...LINEAGE, methodologyStatus: "approved", methodologyVersion: "1.0.0" };
-    const sql = scripted([[{ id: "p1", value: "1000", revision_number: 1 }], [{ id: "p2" }]]);
+    const sql = scripted([[{ id: "p1", value: "1000", revision_number: 1, evidence_is_live: true }], [], [], [], []]);
     const outcome = await publishCalculation(sql, approved, "c2", CALCULATION, "universe", AS_OF, "test");
-    expect(outcome).toMatchObject({ kind: "superseded", publicationId: "p2", supersededId: "p1", revisionNumber: 2 });
+    expect(outcome).toMatchObject({ kind: "superseded", supersededId: "p1", revisionNumber: 2 });
+
+    // Supersede before insert: one live publication per date is a unique index, so the other
+    // order puts two live points on the date for an instant and is rejected. This had never
+    // fired in production because no point had ever been superseded.
+    const statements = sql.calls.map((c) => c.text.trim().split("\n")[0]!.trim());
+    const begin = statements.indexOf("begin");
+    const update = statements.findIndex((t) => t.startsWith("update pipeline.utvi_publications"));
+    const insert = statements.findIndex((t) => t.startsWith("insert into pipeline.utvi_publications"));
+    const commit = statements.indexOf("commit");
+    expect(begin).toBeGreaterThanOrEqual(0);
+    expect(update).toBeGreaterThan(begin);
+    expect(insert).toBeGreaterThan(update);
+    expect(commit).toBeGreaterThan(insert);
     expect(sql.calls[2]!.text).toContain("set superseded_by_id");
   });
 
@@ -396,5 +536,43 @@ describe("publication governance", () => {
     const sql = scripted([[], [{ id: "p1" }]]);
     await publishCalculation(sql, approved, "c1", CALCULATION, "the covered universe", AS_OF, "test");
     expect(sql.calls[1]!.params).toContain("the covered universe");
+  });
+});
+
+describe("representation completeness", () => {
+  const snap = (over: Partial<Parameters<typeof representationComplete>[0]> = {}) => ({
+    id: "s1",
+    observationDate: "2025-09-16",
+    coverageState: "covered_observed",
+    dateContentHash: HASH_A,
+    settlementState: "final" as const,
+    totalTokens: 803_652_511_533n,
+    persistedRowCount: 51,
+    persistedTokenSum: 803_652_511_533n,
+    ...over,
+  });
+
+  it("accepts rows that account for the snapshot exactly", () => {
+    expect(representationComplete(snap())).toBe(true);
+  });
+
+  it("rejects the real 2025-09-16 shape", () => {
+    expect(
+      representationComplete(snap({ persistedRowCount: 16, persistedTokenSum: 610_905_052_424n })),
+    ).toBe(false);
+  });
+
+  it("rejects a snapshot with no rows at all", () => {
+    expect(representationComplete(snap({ persistedRowCount: 0, persistedTokenSum: 0n }))).toBe(false);
+  });
+
+  it("is exact rather than tolerant, because these are integers copied from one source", () => {
+    expect(representationComplete(snap({ persistedTokenSum: 803_652_511_532n }))).toBe(false);
+  });
+
+  it("expects no rows beneath a date the source served empty", () => {
+    const empty = snap({ coverageState: "covered_no_rows", totalTokens: null, persistedRowCount: 0, persistedTokenSum: 0n });
+    expect(representationComplete(empty)).toBe(true);
+    expect(representationComplete({ ...empty, persistedRowCount: 3 })).toBe(false);
   });
 });

@@ -64,6 +64,7 @@ function productionShaped(): MarketShareView {
 
   const { view } = buildMarketShareView({
     derivation,
+    failures: [],
     lineage: {
       date: "2026-09-15",
       publicationId: "pub-1",

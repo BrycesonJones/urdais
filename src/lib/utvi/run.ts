@@ -23,7 +23,8 @@ import {
   recordCalculation,
   recordRetrieval,
   resolveLineage,
-  snapshotHasCalculation,
+  calculationIdForSnapshot,
+  publicationEvidenceIsLive,
   type SnapshotOutcome,
   type SqlExecutor,
   type UtviLineage,
@@ -158,12 +159,28 @@ async function ingestDate(
   // past the hole for ever. So a confirmation asks whether the value actually exists rather
   // than inferring it from the rows being unchanged. This is not hypothetical: it is how one
   // date of 621 came to have a snapshot and no published value.
+  // Whether the date's public point is still anchored to evidence the database serves. A repair
+  // or a revision supersedes a snapshot underneath a publication, and until the publication is
+  // re-pointed the value is readable while its evidence is not -- which is how 2025-09-16 sat
+  // with a complete snapshot, a calculation on it, and a public point still naming the
+  // defective representation it replaced.
+  const evidenceIsLive = await publicationEvidenceIsLive(sql, snapshot.observationDate);
+  let reusableCalculationId: string | null = null;
+
   if (applied.kind === "confirmed" || applied.kind === "settled") {
-    if (await snapshotHasCalculation(sql, applied.snapshotId)) {
+    const existingCalculationId = await calculationIdForSnapshot(sql, applied.snapshotId);
+    if (existingCalculationId !== null && evidenceIsLive) {
       outcome.calculation = "skipped_unchanged";
       return outcome;
     }
-    outcome.calculationDetail = "snapshot had no calculation; a previous run did not finish this date";
+    if (existingCalculationId !== null) {
+      // The value is already computed against the live snapshot; only the publication is
+      // stranded. Reuse the calculation rather than recording an identical second one.
+      reusableCalculationId = existingCalculationId;
+      outcome.calculationDetail = "calculation already recorded; re-pointing a publication left on superseded evidence";
+    } else {
+      outcome.calculationDetail = "snapshot had no calculation; a previous run did not finish this date";
+    }
   }
 
   if (!canCalculate(snapshot)) return outcome;
@@ -176,14 +193,19 @@ async function ingestDate(
   let calculation: ReturnType<typeof calculateUtvi>;
   try {
     calculation = calculateUtvi(snapshot);
-    calculationId = await recordCalculation(
-      sql,
-      lineage,
-      applied.snapshotId,
-      calculation,
-      UTVI_COLLECTOR_IDENTITY,
-    );
-    outcome.calculation = "recorded";
+    if (reusableCalculationId !== null) {
+      calculationId = reusableCalculationId;
+      outcome.calculation = "skipped_unchanged";
+    } else {
+      calculationId = await recordCalculation(
+        sql,
+        lineage,
+        applied.snapshotId,
+        calculation,
+        UTVI_COLLECTOR_IDENTITY,
+      );
+      outcome.calculation = "recorded";
+    }
     outcome.totalTokens = calculation.totalObservedTokens.toString();
   } catch (error) {
     outcome.calculation = "failed";
@@ -270,6 +292,8 @@ export type UtviBackfillResult = {
   snapshotsCreated: number;
   snapshotsConfirmed: number;
   snapshotsRevised: number;
+  /** Dates whose stored rows did not account for their own snapshot and were rewritten. */
+  snapshotsRepaired: number;
   snapshotsSettled: number;
   datesWithoutRows: number;
   calculationsRecorded: number;
@@ -309,6 +333,7 @@ export async function backfillUtvi(
     snapshotsCreated: 0,
     snapshotsConfirmed: 0,
     snapshotsRevised: 0,
+    snapshotsRepaired: 0,
     snapshotsSettled: 0,
     datesWithoutRows: 0,
     calculationsRecorded: 0,
@@ -349,6 +374,7 @@ export async function backfillUtvi(
     if (date.snapshot === "created") base.snapshotsCreated += 1;
     else if (date.snapshot === "confirmed") base.snapshotsConfirmed += 1;
     else if (date.snapshot === "revised") base.snapshotsRevised += 1;
+    else if (date.snapshot === "repaired") base.snapshotsRepaired += 1;
     else if (date.snapshot === "settled") base.snapshotsSettled += 1;
     else if (date.snapshot === "no_rows") base.datesWithoutRows += 1;
     if (date.calculation === "recorded") base.calculationsRecorded += 1;
