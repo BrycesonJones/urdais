@@ -2,11 +2,13 @@
 
 **Status: internal research artifact. Not a methodology page, not routed publicly, not registered in the docs catalog.** Prepared 15–16 September 2026. No production value, ingestion contract, schema, collector or migration is created by this document. Every figure below is evidence about sources; none is a published Urdais value.
 
-This study supports [UTVI 0.1.0-draft](../../methodology/utvi.md) and the [data-model proposal](../../architecture/utvi-data-architecture.md). Its question was narrow and prior to any implementation: **is there a source that can carry a daily token-volume series into production, on terms Urdais may accept?**
+> **Partly superseded, 16 September 2026.** [Phase 1A](source-characterization.md) measured the live authenticated endpoint and corrected six factual claims made here: the observed level is **17.75 T tokens/day, not ~3.6 T**, so coverage is nearer **5 %** than 1 %; embeddings **are** in the dataset; cached-input treatment is **resolved**; a **366-day** request limit means the backfill is two requests; revision is real but confined to the just-closed day; and the rows carry **no `prompt_tokens`/`completion_tokens` fields**. Corrections are marked inline below. The rights analysis and the structural conclusions are unchanged.
+
+This study supports [UTVI 0.1.1-draft](../../methodology/utvi.md) and the [data-model proposal](../../architecture/utvi-data-architecture.md). Its question was narrow and prior to any implementation: **is there a source that can carry a daily token-volume series into production, on terms Urdais may accept?**
 
 ## Headline Result
 
-**Yes, on terms that are the cleanest Urdais has yet obtained — and the measure it can support is roughly one per cent of the thing a reader will assume it measures.**
+**Yes, on terms that are the cleanest Urdais has yet obtained — and the measure it can support is a small minority of the thing a reader will assume it measures.** *(Phase 1A: about 5 %, measured; this study estimated 1 % from stale secondary reporting.)*
 
 Four findings, in the order that matters.
 
@@ -14,7 +16,7 @@ Four findings, in the order that matters.
 
 **Two. The rights are settled; the access is not.** The endpoint requires an OpenRouter API key. Urdais does not have one, the repository holds no `OPENROUTER_API_KEY`, and an unauthenticated call returns `401`. **No row of this dataset has ever been retrieved by Urdais.** Everything below about field semantics comes from OpenRouter's published OpenAPI document and documentation, not from an observed response. The licence question is answered; the data-quality question is entirely unmeasured.
 
-**Three. The observable universe is one marketplace, and it is about 1 % of world token throughput.** OpenRouter's platform traffic is on the order of 3–4 trillion tokens per day. Google alone disclosed over 3.2 quadrillion tokens per month at I/O 2026 — about 105 trillion per day — and China's National Data Administration put the national figure at 140 trillion per day in March 2026, with ByteDance's Doubao alone exceeding 180 trillion per day by June. A headline reading `17.45T tokens/day` under the words *Token Volume Index* will be read as the market's token volume. It cannot be that, by roughly two orders of magnitude, and the gap is not closable by adding sources: the large volumes are inside first-party platforms that publish no daily series at all.
+**Three. The observable universe is one marketplace, and it is a single-digit percentage of world token throughput.** *(Corrected by Phase 1A: the measured level is **17.75 T tokens/day** on 2026-09-15, so coverage is nearer **5 %**. The estimate below was **wrong by ~5×**.)* OpenRouter's platform traffic was estimated here at 3–4 trillion tokens per day. Google alone disclosed over 3.2 quadrillion tokens per month at I/O 2026 — about 105 trillion per day — and China's National Data Administration put the national figure at 140 trillion per day in March 2026, with ByteDance's Doubao alone exceeding 180 trillion per day by June. A headline reading `17.45T tokens/day` under the words *Token Volume Index* will be read as the market's token volume. It cannot be that, by roughly two orders of magnitude, and the gap is not closable by adding sources: the large volumes are inside first-party platforms that publish no daily series at all.
 
 **Four. Nothing else can carry a daily series.** Every other candidate is one of three things. Episodic company disclosures with excellent provenance but no cadence (Epoch AI's dataset holds **12 token observations across 4 companies**, last dated 2025-10-29 — ten months stale). Shares without levels (Vercel AI Gateway, Poe). Or inferred estimates with no licence (tokensperday.com). None is a series; several are useful as cross-checks, and one class is admissible only as context, never as a constituent.
 
@@ -159,11 +161,11 @@ The phase brief asks for a canonical treatment of eleven token categories. The h
 | Output (completion) tokens | **Yes** | `completion_tokens`, documented | **Included**, not separable |
 | Reasoning / thinking tokens | **Yes** | The OpenRouter/a16z study: "reasoning tokens represent internal reasoning steps in models with native reasoning capabilities and are **included within completion tokens**" | **Included**, and stated |
 | Multimodal image / audio tokens | **Yes, as the provider reports them** | A `modality` filter exists over `text`, `image`, `image_output`, `audio`; the unfiltered total spans all | **Included**, no image↔text equivalence asserted |
-| Cached input tokens | **Undocumented** | Neither endpoint nor schema mentions cache treatment | **Open question 1.** Presumed inside `prompt_tokens`; not asserted |
+| Cached input tokens | **Resolved by Phase 1A** | `prompt_tokens_details.cached_tokens` is documented as a breakdown *beneath* `prompt_tokens` | **Included**, inside `prompt_tokens`, not separable |
 | Batch inference | Not separable | No field | Included if present; cannot be isolated |
 | Speculative decoding | Not exposed | No field | Whatever the provider bills as completion tokens |
 | Internal hidden tokens | Not exposed | No field | Out of reach; not claimed |
-| Embeddings | **Undocumented** | The dataset matches the rankings chart over chat-completion models | **Open question 2.** Presumed out of scope |
+| Embeddings | **Present — this row was wrong** | Phase 1A measured four embedding models in the top 50 (`openai/text-embedding-3-large`, `qwen/qwen3-embedding-8b`, …), 0.19 % of 90-day attributed tokens | **Included**, and not removable: image-generation tokens also sit inside the opaque residual |
 | Fine-tuning / training tokens | **No** | Inference-traffic dataset by construction | **Excluded**, per the brief |
 | BYOK traffic | **Undocumented for this endpoint** | The study dataset "excludes BYOK activity to isolate standardized, platform-mediated usage"; `app-rankings` documents that "hidden and private apps are excluded"; **`rankings-daily` documents neither** | **Open question 3.** Not asserted |
 
@@ -191,7 +193,9 @@ Both behaviours are correct and neither is a defect; they just have to be writte
 
 Coverage is where this product is either defensible or dishonest, so the arithmetic is set out in full.
 
-**Own computation.** OpenRouter's platform traffic was reported at ~25 trillion tokens/week in May 2026, having grown 5× in six months, which is **~3.6 T/day** (2.5e13 ÷ 7). Against the disclosure floor:
+> **Superseded by measurement.** The estimate in this subsection is retained to show what secondary reporting supported and how far wrong it was. The measured figure is **17,750,400,225,262 tokens on 2026-09-15**, and the platform grew ~2.4× over the preceding 90 days. Use [Phase 1A §13](source-characterization.md#13-coverage-magnitude-and-the-correction-to-phase-1).
+
+**Own computation (superseded).** OpenRouter's platform traffic was reported at ~25 trillion tokens/week in May 2026, having grown 5× in six months, which is **~3.6 T/day** (2.5e13 ÷ 7). Against the disclosure floor:
 
 | Reference | Tokens/day | UTVI's share if the level were ~3.6 T/day |
 |---|---|---|
@@ -201,7 +205,7 @@ Coverage is where this product is either defensible or dishonest, so the arithme
 | OpenAI API (Apr 2026) | ~21.6 T | ~16.7 % |
 | tokensperday.com global estimate (Jul 2026) | ~360 T | **~1.0 %** |
 
-**UTVI observes on the order of one per cent of world token throughput.** The number in the UI today — `17.45T tokens/day` — is demo data and happens to sit ~5× above the platform's real magnitude, which is worth knowing before anyone compares the first production print to the mock and concludes something moved.
+**UTVI observes a single-digit percentage of world token throughput — about 5 % on the measured level, not the 1 % the superseded estimate above implies.** The number in the UI today, `17.45T tokens/day`, is demo data that turns out to sit within 2 % of the real 2026-09-15 figure, so nobody should read the first production print as a change from the mock.
 
 The gap is **structural, not a coverage backlog**. The three largest known volumes — Doubao, Google's surfaces, China's national total — are first-party consumption inside platforms that publish no daily series to anyone. No amount of source acquisition brings them into a daily index. A source-expansion roadmap that implies otherwise would be selling a closing gap that cannot close.
 
@@ -228,13 +232,13 @@ The semantics already settled for UCPI in commit `99a5ad8` transfer intact and w
 
 The precondition pattern is already built: `hasProductionCoverage(calculationDate)` in [`database-persistence.ts:231`](../../../src/lib/ucpi/runtime/database-persistence.ts#L231), consulted by [`daily-run.ts:282`](../../../src/lib/ucpi/runtime/daily-run.ts#L282), which reports `no_coverage` and writes nothing. UTVI needs the same guard asked of **retrievals rather than observations** — a retrieval that returned nothing is still coverage — and it needs it before any aggregation, because `Σ ∅ = 0` is a silent, plausible, wrong answer rather than an error.
 
-Backfill changes the shape of this but not the rule: with history from 2025-01-01 retrievable in one pass, the pre-coverage region is *before 2025-01-01*, and the floor is a property of the source rather than of when Urdais started.
+Backfill changes the shape of this but not the rule: with history retrievable from 2025-01-01, the pre-coverage region is *before 2025-01-01*, and the floor is a property of the source rather than of when Urdais started. *(Phase 1A: an undocumented **366-day** maximum range makes the backfill **two requests**, not one.)*
 
 ### Revisions: the source's own freshness warning
 
 `meta.as_of` "reflects data-freshness because the underlying **materialized view continuously ingests upstream events**." Read plainly: **a date's total can change after Urdais first reads it.** A value read at 01:00 UTC for yesterday may not be the value the same query returns a week later.
 
-Urdais has no measurement of how large or how long-lived that drift is, and cannot get one without a key. It is **Open question 4**, and it is the one that most directly determines whether a first print is publishable. It also interacts with backfill in a way that must be decided rather than stumbled into: a 20-month backfill retrieved today returns *settled* values, while a daily job going forward records *first prints*. Publishing both without a rule would splice two different statistics into one series at the join. The methodology draft resolves this with a single settlement rule applied identically to both.
+*(Phase 1A measured it: the just-closed day accrues at ~16 ppm/day and days closed 25 hours or more showed **zero** drift. See [Phase 1A §12](source-characterization.md#12-revision-behaviour--measured).)* At the time of writing Urdais had no measurement of how large or how long-lived that drift is, and could not get one without a key. It was **Open question 4**, and it is the one that most directly determines whether a first print is publishable. It also interacts with backfill in a way that must be decided rather than stumbled into: a 20-month backfill retrieved today returns *settled* values, while a daily job going forward records *first prints*. Publishing both without a rule would splice two different statistics into one series at the join. The methodology draft resolves this with a single settlement rule applied identically to both.
 
 ## Part 4 — Ranked Shortlist
 
@@ -242,7 +246,7 @@ Suitability is scored against the one question that matters: can this source put
 
 | Rank | Source | Suitability | Permission | Production-ready | Completeness | Bias | Alone, or component? |
 |---|---|---|---|---|---|---|---|
-| **1** | **OpenRouter Datasets API** | **High** — the only daily series | **CC BY 4.0, commercial, explicit** | **Terms yes; access unexercised** | Total complete; attribution top-50 | Developer/API skew; open-weight under-counted; ~1 % of world | **Can stand alone as the whole observed universe** |
+| **1** | **OpenRouter Datasets API** | **High** — the only daily series | **CC BY 4.0, commercial, explicit** | **Terms yes; access unexercised** | Total complete; attribution top-50 | Developer/API skew; open-weight under-counted; ~5 % of world | **Can stand alone as the whole observed universe** |
 | 2 | Epoch AI, AI Companies | Low as a series | CC BY, citation | Yes | 12 rows, 4 companies, 10 months stale | Disclosure selection; incomparable product scopes | **Cross-check / context only** |
 | 3 | China NDA official figure | Context | `unknown` | No | National aggregate only | Official, unauditable | Context only |
 | 4 | Google / OpenAI / ByteDance disclosures | Context | `unknown` | No | Episodic | Self-reported, favourable timing | Context only |
@@ -269,12 +273,14 @@ Suitability is scored against the one question that matters: can this source put
 
 Measurable with a key; otherwise worth one email to OpenRouter, whose `/data` page invites data collaborations.
 
-1. **Cached input tokens** — are cache-read prompt tokens inside `prompt_tokens`?
-2. **Embeddings** — in scope, or chat-completions only?
-3. **BYOK and private requests** — the study dataset excludes BYOK and `app-rankings` excludes hidden/private apps; does `rankings-daily` do either? A change in BYOK share would otherwise move the series for a non-market reason.
-4. **Revision behaviour** — how long does a date's `total_tokens` keep moving, and by how much? Measurable directly: read the same date daily for two weeks and record the deltas.
+**Status after [Phase 1A](source-characterization.md): three of four closed.**
 
-Two further questions are Urdais's own and need no answer from anyone: whether `Σ(top 50) + other` reconciles with the platform total the rankings page shows, and whether row counts behave as documented at the 2025-01-01 floor.
+1. ~~**Cached input tokens**~~ — **closed.** Documented as a breakdown beneath `prompt_tokens`, so included and not separable.
+2. ~~**Embeddings**~~ — **closed, against the presumption here.** Four embedding models measured in the top 50; the dataset is not chat-completions only.
+3. **BYOK and private requests** — **still open, and the one that matters.** `rankings-daily` documents neither. Phase 1A established that per-request token metadata is stored for *every* request and powers model ranking, which resolves ZDR by inference but not BYOK. A shift in BYOK share would move the series for a non-market reason Urdais could neither detect nor explain. One email to OpenRouter.
+4. ~~**Revision behaviour**~~ — **measured.** The just-closed day accrues at ~16 ppm/day; days closed ≥25 hours showed zero drift. A fourteen-day protocol to fix the settlement lag is specified in [Phase 1A §14](source-characterization.md#14-a-revision-measurement-protocol).
+
+Urdais's own two questions also resolved: the same date returns byte-identical totals across four window shapes, and the 50+1 row structure holds at every date from the 2025-01-01 floor. There is **no API-returned daily total**, so `Σ(top 50) + other = the platform's public-model traffic` rests on documentation plus that internal consistency.
 
 ## Recommendation on the Index Question
 
@@ -282,9 +288,9 @@ The brief's §3 asks whether UTVI is truly an index. The recommendation is **Opt
 
 ## Implementation Readiness
 
-> **Blocked pending source access.**
+> **Superseded. This phase's verdict was "blocked pending source access"; the key was created and [Phase 1A](source-characterization.md#21-verdict) reports ready for Phase 1B**, with the BYOK question carried forward as a carve-out on the universe descriptor rather than a blocker on building.
 
-Terms are settled and are the best Urdais has obtained. The blocker is narrow, named, and cheap: **an OpenRouter API key, then four measurements.** No schema, collector or migration should be written before the first successful authenticated retrieval, because four field semantics and the revision behaviour are still unknown, and each of them changes the data model that would be written to hold them.
+Terms are settled and are the best Urdais has obtained. The blocker named here was narrow and cheap — an OpenRouter API key, then four measurements — and it was correct to hold the schema until then: measurement corrected six claims in this document, including two that would have produced wrong columns.
 
 ## Sources
 

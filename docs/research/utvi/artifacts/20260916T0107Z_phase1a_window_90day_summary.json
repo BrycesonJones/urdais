@@ -1,0 +1,1111 @@
+{
+ "_note": "Derived summary of the 90-day window 2026-06-18..2026-09-15. Raw body not retained (470KB).",
+ "meta": {
+  "as_of": "2026-09-16T01:00:53.868Z",
+  "version": "v1",
+  "start_date": "2026-06-18",
+  "end_date": "2026-09-15"
+ },
+ "dates": 90,
+ "rows": 4590,
+ "daily": [
+  {
+   "date": "2026-06-18",
+   "total_tokens": "7306047428112",
+   "residual_tokens": "422420250754",
+   "residual_share_pct": 5.7818
+  },
+  {
+   "date": "2026-06-19",
+   "total_tokens": "6557231537116",
+   "residual_tokens": "412641021820",
+   "residual_share_pct": 6.2929
+  },
+  {
+   "date": "2026-06-20",
+   "total_tokens": "5830058052003",
+   "residual_tokens": "335952986717",
+   "residual_share_pct": 5.7624
+  },
+  {
+   "date": "2026-06-21",
+   "total_tokens": "5775767190996",
+   "residual_tokens": "342419878216",
+   "residual_share_pct": 5.9286
+  },
+  {
+   "date": "2026-06-22",
+   "total_tokens": "6924964211885",
+   "residual_tokens": "420402502405",
+   "residual_share_pct": 6.0708
+  },
+  {
+   "date": "2026-06-23",
+   "total_tokens": "7148395020746",
+   "residual_tokens": "405284604052",
+   "residual_share_pct": 5.6696
+  },
+  {
+   "date": "2026-06-24",
+   "total_tokens": "7249457010532",
+   "residual_tokens": "428304812928",
+   "residual_share_pct": 5.9081
+  },
+  {
+   "date": "2026-06-25",
+   "total_tokens": "6972685667926",
+   "residual_tokens": "431994854804",
+   "residual_share_pct": 6.1955
+  },
+  {
+   "date": "2026-06-26",
+   "total_tokens": "6781230881257",
+   "residual_tokens": "400593717881",
+   "residual_share_pct": 5.9074
+  },
+  {
+   "date": "2026-06-27",
+   "total_tokens": "5693223633861",
+   "residual_tokens": "310264137118",
+   "residual_share_pct": 5.4497
+  },
+  {
+   "date": "2026-06-28",
+   "total_tokens": "5950391766228",
+   "residual_tokens": "315209092441",
+   "residual_share_pct": 5.2973
+  },
+  {
+   "date": "2026-06-29",
+   "total_tokens": "7085048648169",
+   "residual_tokens": "413244930947",
+   "residual_share_pct": 5.8326
+  },
+  {
+   "date": "2026-06-30",
+   "total_tokens": "7167154681834",
+   "residual_tokens": "446741507037",
+   "residual_share_pct": 6.2332
+  },
+  {
+   "date": "2026-07-01",
+   "total_tokens": "6977198358528",
+   "residual_tokens": "426150290974",
+   "residual_share_pct": 6.1078
+  },
+  {
+   "date": "2026-07-02",
+   "total_tokens": "6974615024174",
+   "residual_tokens": "470148579188",
+   "residual_share_pct": 6.7409
+  },
+  {
+   "date": "2026-07-03",
+   "total_tokens": "6991826989221",
+   "residual_tokens": "432060364337",
+   "residual_share_pct": 6.1795
+  },
+  {
+   "date": "2026-07-04",
+   "total_tokens": "5714894093924",
+   "residual_tokens": "367344985200",
+   "residual_share_pct": 6.4279
+  },
+  {
+   "date": "2026-07-05",
+   "total_tokens": "5809000468188",
+   "residual_tokens": "353332193585",
+   "residual_share_pct": 6.0825
+  },
+  {
+   "date": "2026-07-06",
+   "total_tokens": "7153369575731",
+   "residual_tokens": "467647486853",
+   "residual_share_pct": 6.5374
+  },
+  {
+   "date": "2026-07-07",
+   "total_tokens": "7795823788771",
+   "residual_tokens": "455156619859",
+   "residual_share_pct": 5.8385
+  },
+  {
+   "date": "2026-07-08",
+   "total_tokens": "7866992584618",
+   "residual_tokens": "489015766855",
+   "residual_share_pct": 6.216
+  },
+  {
+   "date": "2026-07-09",
+   "total_tokens": "7769244336449",
+   "residual_tokens": "508880798382",
+   "residual_share_pct": 6.5499
+  },
+  {
+   "date": "2026-07-10",
+   "total_tokens": "7814025791624",
+   "residual_tokens": "487930209591",
+   "residual_share_pct": 6.2443
+  },
+  {
+   "date": "2026-07-11",
+   "total_tokens": "7239751697474",
+   "residual_tokens": "393041245439",
+   "residual_share_pct": 5.4289
+  },
+  {
+   "date": "2026-07-12",
+   "total_tokens": "6980460924641",
+   "residual_tokens": "383716322122",
+   "residual_share_pct": 5.497
+  },
+  {
+   "date": "2026-07-13",
+   "total_tokens": "8945200747827",
+   "residual_tokens": "499118026867",
+   "residual_share_pct": 5.5797
+  },
+  {
+   "date": "2026-07-14",
+   "total_tokens": "9313408516626",
+   "residual_tokens": "532599115700",
+   "residual_share_pct": 5.7186
+  },
+  {
+   "date": "2026-07-15",
+   "total_tokens": "9480961115469",
+   "residual_tokens": "500965987844",
+   "residual_share_pct": 5.2839
+  },
+  {
+   "date": "2026-07-16",
+   "total_tokens": "9619203914649",
+   "residual_tokens": "564521122708",
+   "residual_share_pct": 5.8687
+  },
+  {
+   "date": "2026-07-17",
+   "total_tokens": "9621566458152",
+   "residual_tokens": "527002330514",
+   "residual_share_pct": 5.4773
+  },
+  {
+   "date": "2026-07-18",
+   "total_tokens": "8050764751145",
+   "residual_tokens": "404487745369",
+   "residual_share_pct": 5.0242
+  },
+  {
+   "date": "2026-07-19",
+   "total_tokens": "7742838835750",
+   "residual_tokens": "409493546360",
+   "residual_share_pct": 5.2887
+  },
+  {
+   "date": "2026-07-20",
+   "total_tokens": "8440173824425",
+   "residual_tokens": "490584313123",
+   "residual_share_pct": 5.8125
+  },
+  {
+   "date": "2026-07-21",
+   "total_tokens": "8372722163355",
+   "residual_tokens": "571651059916",
+   "residual_share_pct": 6.8275
+  },
+  {
+   "date": "2026-07-22",
+   "total_tokens": "9013659246552",
+   "residual_tokens": "637783973895",
+   "residual_share_pct": 7.0757
+  },
+  {
+   "date": "2026-07-23",
+   "total_tokens": "8751994182349",
+   "residual_tokens": "648555787080",
+   "residual_share_pct": 7.4104
+  },
+  {
+   "date": "2026-07-24",
+   "total_tokens": "8661084724352",
+   "residual_tokens": "680766143273",
+   "residual_share_pct": 7.8601
+  },
+  {
+   "date": "2026-07-25",
+   "total_tokens": "7305381415398",
+   "residual_tokens": "550830109473",
+   "residual_share_pct": 7.5401
+  },
+  {
+   "date": "2026-07-26",
+   "total_tokens": "7496481859549",
+   "residual_tokens": "526920222115",
+   "residual_share_pct": 7.0289
+  },
+  {
+   "date": "2026-07-27",
+   "total_tokens": "8784326010554",
+   "residual_tokens": "653090397264",
+   "residual_share_pct": 7.4347
+  },
+  {
+   "date": "2026-07-28",
+   "total_tokens": "8890418317802",
+   "residual_tokens": "660890320788",
+   "residual_share_pct": 7.4337
+  },
+  {
+   "date": "2026-07-29",
+   "total_tokens": "8196705797925",
+   "residual_tokens": "648118752252",
+   "residual_share_pct": 7.9071
+  },
+  {
+   "date": "2026-07-30",
+   "total_tokens": "8321933504398",
+   "residual_tokens": "663947492654",
+   "residual_share_pct": 7.9783
+  },
+  {
+   "date": "2026-07-31",
+   "total_tokens": "8296221899663",
+   "residual_tokens": "641967083670",
+   "residual_share_pct": 7.7381
+  },
+  {
+   "date": "2026-08-01",
+   "total_tokens": "7066940419625",
+   "residual_tokens": "491666845309",
+   "residual_share_pct": 6.9573
+  },
+  {
+   "date": "2026-08-02",
+   "total_tokens": "7232042961954",
+   "residual_tokens": "444596072774",
+   "residual_share_pct": 6.1476
+  },
+  {
+   "date": "2026-08-03",
+   "total_tokens": "9143823075351",
+   "residual_tokens": "627725196653",
+   "residual_share_pct": 6.865
+  },
+  {
+   "date": "2026-08-04",
+   "total_tokens": "9996550853376",
+   "residual_tokens": "659985342984",
+   "residual_share_pct": 6.6021
+  },
+  {
+   "date": "2026-08-05",
+   "total_tokens": "10787614259704",
+   "residual_tokens": "672819435716",
+   "residual_share_pct": 6.237
+  },
+  {
+   "date": "2026-08-06",
+   "total_tokens": "11001204844264",
+   "residual_tokens": "686475695250",
+   "residual_share_pct": 6.24
+  },
+  {
+   "date": "2026-08-07",
+   "total_tokens": "10378071121073",
+   "residual_tokens": "608327059162",
+   "residual_share_pct": 5.8617
+  },
+  {
+   "date": "2026-08-08",
+   "total_tokens": "8765239038152",
+   "residual_tokens": "491863148880",
+   "residual_share_pct": 5.6115
+  },
+  {
+   "date": "2026-08-09",
+   "total_tokens": "8974034656012",
+   "residual_tokens": "488571340482",
+   "residual_share_pct": 5.4443
+  },
+  {
+   "date": "2026-08-10",
+   "total_tokens": "10613720303759",
+   "residual_tokens": "609494353205",
+   "residual_share_pct": 5.7425
+  },
+  {
+   "date": "2026-08-11",
+   "total_tokens": "10931401727980",
+   "residual_tokens": "696650876293",
+   "residual_share_pct": 6.3729
+  },
+  {
+   "date": "2026-08-12",
+   "total_tokens": "11234116355431",
+   "residual_tokens": "755881590697",
+   "residual_share_pct": 6.7284
+  },
+  {
+   "date": "2026-08-13",
+   "total_tokens": "11135113794296",
+   "residual_tokens": "784369463581",
+   "residual_share_pct": 7.0441
+  },
+  {
+   "date": "2026-08-14",
+   "total_tokens": "11486043370983",
+   "residual_tokens": "774737017267",
+   "residual_share_pct": 6.745
+  },
+  {
+   "date": "2026-08-15",
+   "total_tokens": "9565041906391",
+   "residual_tokens": "641140079526",
+   "residual_share_pct": 6.703
+  },
+  {
+   "date": "2026-08-16",
+   "total_tokens": "10375143625991",
+   "residual_tokens": "593538679936",
+   "residual_share_pct": 5.7208
+  },
+  {
+   "date": "2026-08-17",
+   "total_tokens": "13311262793704",
+   "residual_tokens": "750927751436",
+   "residual_share_pct": 5.6413
+  },
+  {
+   "date": "2026-08-18",
+   "total_tokens": "12704870921171",
+   "residual_tokens": "821706010109",
+   "residual_share_pct": 6.4676
+  },
+  {
+   "date": "2026-08-19",
+   "total_tokens": "12119291448118",
+   "residual_tokens": "788097347929",
+   "residual_share_pct": 6.5028
+  },
+  {
+   "date": "2026-08-20",
+   "total_tokens": "12130101854803",
+   "residual_tokens": "816508604660",
+   "residual_share_pct": 6.7313
+  },
+  {
+   "date": "2026-08-21",
+   "total_tokens": "13888795396670",
+   "residual_tokens": "792156003410",
+   "residual_share_pct": 5.7036
+  },
+  {
+   "date": "2026-08-22",
+   "total_tokens": "14075709916673",
+   "residual_tokens": "659829885282",
+   "residual_share_pct": 4.6877
+  },
+  {
+   "date": "2026-08-23",
+   "total_tokens": "15147544875185",
+   "residual_tokens": "697376916734",
+   "residual_share_pct": 4.6039
+  },
+  {
+   "date": "2026-08-24",
+   "total_tokens": "18352938225742",
+   "residual_tokens": "866492516072",
+   "residual_share_pct": 4.7213
+  },
+  {
+   "date": "2026-08-25",
+   "total_tokens": "18775140916501",
+   "residual_tokens": "890724159160",
+   "residual_share_pct": 4.7442
+  },
+  {
+   "date": "2026-08-26",
+   "total_tokens": "18436449188941",
+   "residual_tokens": "845925247320",
+   "residual_share_pct": 4.5883
+  },
+  {
+   "date": "2026-08-27",
+   "total_tokens": "15797679821005",
+   "residual_tokens": "885960411768",
+   "residual_share_pct": 5.6082
+  },
+  {
+   "date": "2026-08-28",
+   "total_tokens": "15116796693545",
+   "residual_tokens": "872532545153",
+   "residual_share_pct": 5.7719
+  },
+  {
+   "date": "2026-08-29",
+   "total_tokens": "13204155770914",
+   "residual_tokens": "716456021345",
+   "residual_share_pct": 5.426
+  },
+  {
+   "date": "2026-08-30",
+   "total_tokens": "13313663519421",
+   "residual_tokens": "715323574202",
+   "residual_share_pct": 5.3729
+  },
+  {
+   "date": "2026-08-31",
+   "total_tokens": "14318704603016",
+   "residual_tokens": "909894757593",
+   "residual_share_pct": 6.3546
+  },
+  {
+   "date": "2026-09-01",
+   "total_tokens": "16194588394672",
+   "residual_tokens": "987361403043",
+   "residual_share_pct": 6.0969
+  },
+  {
+   "date": "2026-09-02",
+   "total_tokens": "18488527970063",
+   "residual_tokens": "1062628638846",
+   "residual_share_pct": 5.7475
+  },
+  {
+   "date": "2026-09-03",
+   "total_tokens": "18567158117428",
+   "residual_tokens": "1104257911801",
+   "residual_share_pct": 5.9474
+  },
+  {
+   "date": "2026-09-04",
+   "total_tokens": "18269560527417",
+   "residual_tokens": "1028435342562",
+   "residual_share_pct": 5.6292
+  },
+  {
+   "date": "2026-09-05",
+   "total_tokens": "15344774218059",
+   "residual_tokens": "906770192908",
+   "residual_share_pct": 5.9093
+  },
+  {
+   "date": "2026-09-06",
+   "total_tokens": "14279989875501",
+   "residual_tokens": "887226605377",
+   "residual_share_pct": 6.2131
+  },
+  {
+   "date": "2026-09-07",
+   "total_tokens": "19050916850409",
+   "residual_tokens": "1101104334131",
+   "residual_share_pct": 5.7798
+  },
+  {
+   "date": "2026-09-08",
+   "total_tokens": "19046273585455",
+   "residual_tokens": "1114824363473",
+   "residual_share_pct": 5.8532
+  },
+  {
+   "date": "2026-09-09",
+   "total_tokens": "17947794799521",
+   "residual_tokens": "1207525471730",
+   "residual_share_pct": 6.728
+  },
+  {
+   "date": "2026-09-10",
+   "total_tokens": "19184120113922",
+   "residual_tokens": "1248420577072",
+   "residual_share_pct": 6.5076
+  },
+  {
+   "date": "2026-09-11",
+   "total_tokens": "17751297946007",
+   "residual_tokens": "1244996318057",
+   "residual_share_pct": 7.0136
+  },
+  {
+   "date": "2026-09-12",
+   "total_tokens": "17051827575447",
+   "residual_tokens": "952021411974",
+   "residual_share_pct": 5.5831
+  },
+  {
+   "date": "2026-09-13",
+   "total_tokens": "16730791173422",
+   "residual_tokens": "859836271950",
+   "residual_share_pct": 5.1392
+  },
+  {
+   "date": "2026-09-14",
+   "total_tokens": "18120484812487",
+   "residual_tokens": "1162488089396",
+   "residual_share_pct": 6.4153
+  },
+  {
+   "date": "2026-09-15",
+   "total_tokens": "17750400225262",
+   "residual_tokens": "1186819997857",
+   "residual_share_pct": 6.6862
+  }
+ ],
+ "namespaces": [
+  {
+   "namespace": "deepseek",
+   "tokens": "191436135541683",
+   "distinct_models": 7,
+   "models": [
+    "deepseek/deepseek-v3.2-20251201",
+    "deepseek/deepseek-v4-flash-20260423",
+    "deepseek/deepseek-v4-flash-20260731",
+    "deepseek/deepseek-v4-flash-vision-exp-20260821",
+    "deepseek/deepseek-v4-pro-20260423",
+    "deepseek/deepseek-v4-pro-20260813",
+    "deepseek/deepseek-v4.1-flash-20260910"
+   ]
+  },
+  {
+   "namespace": "tencent",
+   "tokens": "117485831355983",
+   "distinct_models": 4,
+   "models": [
+    "tencent/hy3-20260706",
+    "tencent/hy3-20260706:free",
+    "tencent/hy3-preview-20260421",
+    "tencent/hy4-preview-20260827"
+   ]
+  },
+  {
+   "namespace": "openai",
+   "tokens": "103583650425271",
+   "distinct_models": 21,
+   "models": [
+    "openai/gpt-4.1-mini-2025-04-14",
+    "openai/gpt-4o-mini",
+    "openai/gpt-5-mini-2025-08-07",
+    "openai/gpt-5-nano-2025-08-07",
+    "openai/gpt-5.2-20251211",
+    "openai/gpt-5.3-codex-20260224",
+    "openai/gpt-5.4-20260305",
+    "openai/gpt-5.4-mini-20260317",
+    "openai/gpt-5.4-nano-20260317",
+    "openai/gpt-5.5-20260423",
+    "openai/gpt-5.6-luna-20260709",
+    "openai/gpt-5.6-luna-pro-20260709",
+    "openai/gpt-5.6-sol-20260709",
+    "openai/gpt-5.6-sol-pro-20260709",
+    "openai/gpt-5.6-terra-20260709",
+    "openai/gpt-6-astra-20260903",
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-120b:free",
+    "openai/gpt-oss-20b",
+    "openai/text-embedding-3-large",
+    "openai/text-embedding-3-small"
+   ]
+  },
+  {
+   "namespace": "xiaomi",
+   "tokens": "89751077399283",
+   "distinct_models": 2,
+   "models": [
+    "xiaomi/mimo-v2.5-20260422",
+    "xiaomi/mimo-v2.5-pro-20260422"
+   ]
+  },
+  {
+   "namespace": "z-ai",
+   "tokens": "81527964526700",
+   "distinct_models": 7,
+   "models": [
+    "z-ai/glm-4.7-20251222",
+    "z-ai/glm-4.7-flash-20260119",
+    "z-ai/glm-5-20260211",
+    "z-ai/glm-5.1-20260406",
+    "z-ai/glm-5.2-20260616",
+    "z-ai/glm-5.3-20260816",
+    "z-ai/glm-5.3-flash-20260826"
+   ]
+  },
+  {
+   "namespace": "anthropic",
+   "tokens": "70776188834571",
+   "distinct_models": 10,
+   "models": [
+    "anthropic/claude-4.5-haiku-20251001",
+    "anthropic/claude-4.5-sonnet-20250929",
+    "anthropic/claude-4.6-opus-20260205",
+    "anthropic/claude-4.6-sonnet-20260217",
+    "anthropic/claude-4.7-opus-20260416",
+    "anthropic/claude-4.8-opus-20260528",
+    "anthropic/claude-5-fable-20260609",
+    "anthropic/claude-fable-5.1-20260831",
+    "anthropic/claude-opus-5-20260723",
+    "anthropic/claude-sonnet-5-20260630"
+   ]
+  },
+  {
+   "namespace": "google",
+   "tokens": "68347567247407",
+   "distinct_models": 15,
+   "models": [
+    "google/gemini-2.5-flash",
+    "google/gemini-2.5-flash-lite",
+    "google/gemini-2.5-pro",
+    "google/gemini-3-flash-preview-20251217",
+    "google/gemini-3.1-flash-lite-20260507",
+    "google/gemini-3.1-flash-lite-preview-20260303",
+    "google/gemini-3.1-pro-preview-20260219",
+    "google/gemini-3.5-flash-20260519",
+    "google/gemini-3.5-flash-lite-20260721",
+    "google/gemini-3.6-flash-20260721",
+    "google/gemini-3.7-flash-20260813",
+    "google/gemini-3.8-flash-20260902",
+    "google/gemma-3-27b-it",
+    "google/gemma-4-26b-a4b-it-20260403",
+    "google/gemma-4-31b-it-20260402"
+   ]
+  },
+  {
+   "namespace": "nvidia",
+   "tokens": "43768613073762",
+   "distinct_models": 4,
+   "models": [
+    "nvidia/nemotron-3-super-120b-a12b-20230311:free",
+    "nvidia/nemotron-3-ultra-550b-a55b-20260604",
+    "nvidia/nemotron-3-ultra-550b-a55b-20260604:free",
+    "nvidia/nemotron-3.5-lightning-20260807:free"
+   ]
+  },
+  {
+   "namespace": "minimax",
+   "tokens": "42091051348321",
+   "distinct_models": 4,
+   "models": [
+    "minimax/minimax-m2.7-20260318",
+    "minimax/minimax-m2.7-20260318:free",
+    "minimax/minimax-m3-20260531",
+    "minimax/minimax-m3-20260531:free"
+   ]
+  },
+  {
+   "namespace": "stealth",
+   "tokens": "27237502959584",
+   "distinct_models": 1,
+   "models": [
+    "stealth/ox-alpha"
+   ]
+  },
+  {
+   "namespace": "moonshotai",
+   "tokens": "16924405146171",
+   "distinct_models": 4,
+   "models": [
+    "moonshotai/kimi-k2.5-0127",
+    "moonshotai/kimi-k2.6-20260420",
+    "moonshotai/kimi-k2.7-code-20260612",
+    "moonshotai/kimi-k3-20260715"
+   ]
+  },
+  {
+   "namespace": "poolside",
+   "tokens": "14175702022859",
+   "distinct_models": 5,
+   "models": [
+    "poolside/laguna-m.1-20260312:free",
+    "poolside/laguna-s-2.1-20260720",
+    "poolside/laguna-s-2.1-20260720:free",
+    "poolside/laguna-xs-2.1-20260625:free",
+    "poolside/laguna-xs.2-20260421:free"
+   ]
+  },
+  {
+   "namespace": "stepfun",
+   "tokens": "12904384640009",
+   "distinct_models": 1,
+   "models": [
+    "stepfun/step-3.7-flash-20260528"
+   ]
+  },
+  {
+   "namespace": "qwen",
+   "tokens": "6554428666939",
+   "distinct_models": 15,
+   "models": [
+    "qwen/qwen3-235b-a22b-07-25",
+    "qwen/qwen3-coder-480b-a35b-07-25",
+    "qwen/qwen3-embedding-8b",
+    "qwen/qwen3-next-80b-a3b-instruct-2509",
+    "qwen/qwen3.5-397b-a17b-20260216",
+    "qwen/qwen3.5-flash-20260224",
+    "qwen/qwen3.6-35b-a3b-20260415",
+    "qwen/qwen3.6-plus-04-02",
+    "qwen/qwen3.7-flash-20260727",
+    "qwen/qwen3.7-max-20260520",
+    "qwen/qwen3.7-plus-20260602",
+    "qwen/qwen3.8-27b-20260814",
+    "qwen/qwen3.8-flash-20260826",
+    "qwen/qwen3.8-max-20260803",
+    "qwen/qwen3.8-max-20260902"
+   ]
+  },
+  {
+   "namespace": "inclusionai",
+   "tokens": "6159453922271",
+   "distinct_models": 5,
+   "models": [
+    "inclusionai/ling-2.6-flash-20260421",
+    "inclusionai/ling-3.0-flash-20260723:free",
+    "inclusionai/ling-3.0-flash-fin-20260827:free",
+    "inclusionai/ling-3.0-flash-sante-20260904:free",
+    "inclusionai/ling-3.0-flash-vl-20260910:free"
+   ]
+  },
+  {
+   "namespace": "openrouter",
+   "tokens": "5828287905012",
+   "distinct_models": 1,
+   "models": [
+    "openrouter/owl-alpha"
+   ]
+  },
+  {
+   "namespace": "upstage",
+   "tokens": "4892400028176",
+   "distinct_models": 1,
+   "models": [
+    "upstage/solar-pro4-20260810"
+   ]
+  },
+  {
+   "namespace": "x-ai",
+   "tokens": "4289847470220",
+   "distinct_models": 3,
+   "models": [
+    "x-ai/grok-4.3-20260430",
+    "x-ai/grok-4.5-20260708",
+    "x-ai/grok-4.6-20260810"
+   ]
+  },
+  {
+   "namespace": "meta",
+   "tokens": "4206911009571",
+   "distinct_models": 5,
+   "models": [
+    "meta/muse-spark-1.1-20260709",
+    "meta/muse-spark-1.2-20260805",
+    "meta/muse-spark-1.2-contributor-20260805",
+    "meta/muse-spark-1.3-20260902",
+    "meta/muse-spark-1.3-contributor-20260902"
+   ]
+  },
+  {
+   "namespace": "mistralai",
+   "tokens": "2157622822335",
+   "distinct_models": 1,
+   "models": [
+    "mistralai/mistral-nemo"
+   ]
+  },
+  {
+   "namespace": "cohere",
+   "tokens": "1654037055217",
+   "distinct_models": 1,
+   "models": [
+    "cohere/north-mini-code-20260617:free"
+   ]
+  },
+  {
+   "namespace": "dots-studio",
+   "tokens": "847310321571",
+   "distinct_models": 1,
+   "models": [
+    "dots-studio/dots-3-note-preview-20260813:free"
+   ]
+  },
+  {
+   "namespace": "nex-agi",
+   "tokens": "797393121644",
+   "distinct_models": 3,
+   "models": [
+    "nex-agi/nex-n2-mini",
+    "nex-agi/nex-n2-pro:free",
+    "nex-agi/nex-n2.5-pro-20260907:free"
+   ]
+  },
+  {
+   "namespace": "thinkingmachines",
+   "tokens": "757924836439",
+   "distinct_models": 1,
+   "models": [
+    "thinkingmachines/inkling-20260715:free"
+   ]
+  },
+  {
+   "namespace": "perplexity",
+   "tokens": "504274075077",
+   "distinct_models": 1,
+   "models": [
+    "perplexity/pplx-embed-v1-0.6B"
+   ]
+  },
+  {
+   "namespace": "baai",
+   "tokens": "62890682787",
+   "distinct_models": 1,
+   "models": [
+    "baai/bge-m3-20251117"
+   ]
+  },
+  {
+   "namespace": "bytedance-seed",
+   "tokens": "11797232989",
+   "distinct_models": 1,
+   "models": [
+    "bytedance-seed/seed-2.0-mini-20260224"
+   ]
+  },
+  {
+   "namespace": "meta-llama",
+   "tokens": "11303852484",
+   "distinct_models": 1,
+   "models": [
+    "meta-llama/llama-3.1-8b-instruct"
+   ]
+  }
+ ],
+ "same_date_variant_collisions": [
+  {
+   "date": "2026-06-18",
+   "base": "openai/gpt-oss-120b",
+   "slugs": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-120b:free"
+   ]
+  },
+  {
+   "date": "2026-06-19",
+   "base": "openai/gpt-oss-120b",
+   "slugs": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-120b:free"
+   ]
+  },
+  {
+   "date": "2026-06-20",
+   "base": "openai/gpt-oss-120b",
+   "slugs": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-120b:free"
+   ]
+  },
+  {
+   "date": "2026-06-21",
+   "base": "openai/gpt-oss-120b",
+   "slugs": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-120b:free"
+   ]
+  },
+  {
+   "date": "2026-06-22",
+   "base": "openai/gpt-oss-120b",
+   "slugs": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-120b:free"
+   ]
+  },
+  {
+   "date": "2026-06-23",
+   "base": "openai/gpt-oss-120b",
+   "slugs": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-120b:free"
+   ]
+  },
+  {
+   "date": "2026-06-24",
+   "base": "openai/gpt-oss-120b",
+   "slugs": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-120b:free"
+   ]
+  },
+  {
+   "date": "2026-06-25",
+   "base": "openai/gpt-oss-120b",
+   "slugs": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-120b:free"
+   ]
+  },
+  {
+   "date": "2026-06-26",
+   "base": "openai/gpt-oss-120b",
+   "slugs": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-120b:free"
+   ]
+  },
+  {
+   "date": "2026-06-27",
+   "base": "openai/gpt-oss-120b",
+   "slugs": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-120b:free"
+   ]
+  },
+  {
+   "date": "2026-06-29",
+   "base": "nvidia/nemotron-3-ultra-550b-a55b-20260604",
+   "slugs": [
+    "nvidia/nemotron-3-ultra-550b-a55b-20260604",
+    "nvidia/nemotron-3-ultra-550b-a55b-20260604:free"
+   ]
+  },
+  {
+   "date": "2026-06-30",
+   "base": "nvidia/nemotron-3-ultra-550b-a55b-20260604",
+   "slugs": [
+    "nvidia/nemotron-3-ultra-550b-a55b-20260604",
+    "nvidia/nemotron-3-ultra-550b-a55b-20260604:free"
+   ]
+  },
+  {
+   "date": "2026-07-09",
+   "base": "nvidia/nemotron-3-ultra-550b-a55b-20260604",
+   "slugs": [
+    "nvidia/nemotron-3-ultra-550b-a55b-20260604",
+    "nvidia/nemotron-3-ultra-550b-a55b-20260604:free"
+   ]
+  },
+  {
+   "date": "2026-07-12",
+   "base": "openai/gpt-oss-120b",
+   "slugs": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-120b:free"
+   ]
+  },
+  {
+   "date": "2026-07-22",
+   "base": "poolside/laguna-s-2.1-20260720",
+   "slugs": [
+    "poolside/laguna-s-2.1-20260720",
+    "poolside/laguna-s-2.1-20260720:free"
+   ]
+  },
+  {
+   "date": "2026-08-25",
+   "base": "minimax/minimax-m3-20260531",
+   "slugs": [
+    "minimax/minimax-m3-20260531",
+    "minimax/minimax-m3-20260531:free"
+   ]
+  },
+  {
+   "date": "2026-08-26",
+   "base": "minimax/minimax-m3-20260531",
+   "slugs": [
+    "minimax/minimax-m3-20260531",
+    "minimax/minimax-m3-20260531:free"
+   ]
+  },
+  {
+   "date": "2026-08-27",
+   "base": "minimax/minimax-m3-20260531",
+   "slugs": [
+    "minimax/minimax-m3-20260531",
+    "minimax/minimax-m3-20260531:free"
+   ]
+  },
+  {
+   "date": "2026-08-28",
+   "base": "minimax/minimax-m3-20260531",
+   "slugs": [
+    "minimax/minimax-m3-20260531",
+    "minimax/minimax-m3-20260531:free"
+   ]
+  },
+  {
+   "date": "2026-08-29",
+   "base": "minimax/minimax-m3-20260531",
+   "slugs": [
+    "minimax/minimax-m3-20260531",
+    "minimax/minimax-m3-20260531:free"
+   ]
+  },
+  {
+   "date": "2026-08-30",
+   "base": "minimax/minimax-m3-20260531",
+   "slugs": [
+    "minimax/minimax-m3-20260531",
+    "minimax/minimax-m3-20260531:free"
+   ]
+  },
+  {
+   "date": "2026-08-31",
+   "base": "minimax/minimax-m3-20260531",
+   "slugs": [
+    "minimax/minimax-m3-20260531",
+    "minimax/minimax-m3-20260531:free"
+   ]
+  },
+  {
+   "date": "2026-09-01",
+   "base": "minimax/minimax-m3-20260531",
+   "slugs": [
+    "minimax/minimax-m3-20260531",
+    "minimax/minimax-m3-20260531:free"
+   ]
+  },
+  {
+   "date": "2026-09-02",
+   "base": "minimax/minimax-m3-20260531",
+   "slugs": [
+    "minimax/minimax-m3-20260531",
+    "minimax/minimax-m3-20260531:free"
+   ]
+  },
+  {
+   "date": "2026-09-03",
+   "base": "minimax/minimax-m3-20260531",
+   "slugs": [
+    "minimax/minimax-m3-20260531",
+    "minimax/minimax-m3-20260531:free"
+   ]
+  },
+  {
+   "date": "2026-09-04",
+   "base": "minimax/minimax-m3-20260531",
+   "slugs": [
+    "minimax/minimax-m3-20260531",
+    "minimax/minimax-m3-20260531:free"
+   ]
+  },
+  {
+   "date": "2026-09-05",
+   "base": "minimax/minimax-m3-20260531",
+   "slugs": [
+    "minimax/minimax-m3-20260531",
+    "minimax/minimax-m3-20260531:free"
+   ]
+  },
+  {
+   "date": "2026-09-06",
+   "base": "minimax/minimax-m3-20260531",
+   "slugs": [
+    "minimax/minimax-m3-20260531",
+    "minimax/minimax-m3-20260531:free"
+   ]
+  },
+  {
+   "date": "2026-09-07",
+   "base": "minimax/minimax-m3-20260531",
+   "slugs": [
+    "minimax/minimax-m3-20260531",
+    "minimax/minimax-m3-20260531:free"
+   ]
+  }
+ ]
+}
