@@ -125,6 +125,27 @@ describe("the ledger", () => {
     writeFileSync(paths.ledger, corrupted, "utf8");
     expect(() => readLedger(paths)).toThrow(/not parseable JSON/);
   });
+
+  it("refuses a line written by the other settlement-study harness, and names it", () => {
+    // Valid JSON, wrong study. Its flat records land at this same default path, so parsing
+    // alone would admit one and every field of the resulting entry would be undefined.
+    appendEntries(paths, [entry(observation())]);
+    const foreign = JSON.stringify({
+      observedAt: "2026-09-16T02:49:15.156Z",
+      observationDate: "2026-09-15",
+      ageDays: 0,
+      contentHash: "a".repeat(64),
+      totalTokens: "17750424011492",
+      outcome: "succeeded",
+    });
+    writeFileSync(paths.ledger, `${readFileSync(paths.ledger, "utf8")}${foreign}\n`, "utf8");
+    expect(() => readLedger(paths)).toThrow(/other settlement-study script/);
+  });
+
+  it("refuses any line missing the fields every observation carries", () => {
+    writeFileSync(paths.ledger, `${JSON.stringify({ observation: { targetDate: "2026-09-15" } })}\n`, "utf8");
+    expect(() => readLedger(paths)).toThrow(/not a settlement-study observation/);
+  });
 });
 
 describe("idempotency", () => {

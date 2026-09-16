@@ -146,22 +146,57 @@ export function csvRow(entry: StudyEntry): string {
   return values.map(cell).join(",");
 }
 
-/** Read the ledger. A missing file is an empty study, not an error. */
+/**
+ * Read the ledger. A missing file is an empty study, not an error.
+ *
+ * Every line is shape-checked rather than merely parsed. A second, unrelated settlement-study
+ * script has existed in this repository writing flat `{observedAt, observationDate, …}`
+ * records to *this exact path*, and such a line is valid JSON — so parsing alone would admit
+ * it, and it would then flow into the comparisons as an entry whose every field is
+ * `undefined`. Two harnesses interleaved in one ledger do not produce a merged study; they
+ * produce a file that looks like evidence and is not. Refusing loudly, naming the file and
+ * the line, is the only safe response.
+ */
 export function readLedger(paths: ArtifactPaths): StudyEntry[] {
   if (!existsSync(paths.ledger)) return [];
   const entries: StudyEntry[] = [];
   for (const [index, line] of readFileSync(paths.ledger, "utf8").split("\n").entries()) {
     const text = line.trim();
     if (text === "") continue;
+    let parsed: unknown;
     try {
-      entries.push(JSON.parse(text) as StudyEntry);
+      parsed = JSON.parse(text);
     } catch (error) {
       throw new Error(
         `${paths.ledger}:${index + 1} is not parseable JSON: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
+    entries.push(assertStudyEntry(parsed, paths.ledger, index + 1));
   }
   return entries;
+}
+
+/** The fields this harness's own records always carry. */
+function assertStudyEntry(parsed: unknown, file: string, line: number): StudyEntry {
+  const entry = parsed as Partial<StudyEntry> | null;
+  const observation = entry && typeof entry === "object" ? entry.observation : undefined;
+  if (
+    observation === undefined ||
+    typeof observation !== "object" ||
+    observation === null ||
+    typeof observation.targetDate !== "string" ||
+    typeof observation.studyRunDateUtc !== "string"
+  ) {
+    const foreign =
+      parsed !== null && typeof parsed === "object" && "observationDate" in (parsed as object)
+        ? " It carries `observationDate`, which is the shape written by the other settlement-study" +
+          " script — two harnesses must never share one ledger."
+        : "";
+    throw new Error(
+      `${file}:${line} is not a settlement-study observation: no { observation: { targetDate, studyRunDateUtc } }.${foreign}`,
+    );
+  }
+  return parsed as StudyEntry;
 }
 
 /**
