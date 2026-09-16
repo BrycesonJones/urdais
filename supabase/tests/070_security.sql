@@ -40,7 +40,8 @@ declare
     -- Model Frontier: capability observations and the two reference layers that join them
     -- to a priced product.
     'pipeline.capability_retrievals', 'pipeline.capability_observations',
-    'reference.capability_model_links', 'reference.model_price_selections'
+    'reference.capability_model_links', 'reference.model_price_selections',
+    'pipeline.capability_check_runs'
   ];
   n integer;
 begin

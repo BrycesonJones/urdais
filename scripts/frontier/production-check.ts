@@ -14,6 +14,10 @@
 
 import { deriveAll } from "@/lib/frontier/read/derive";
 import { loadAttribution, loadJoinableRows, methodologyApproved } from "@/lib/frontier/read/load";
+import { assessFreshness, freshnessLine } from "@/lib/frontier/freshness";
+import { lastScheduledCheckAt } from "@/lib/frontier/store";
+import { loadPersistedBenchmarks } from "@/lib/tokens/read/benchmark-store";
+import { verificationFreshness } from "@/lib/tokens/verification-freshness";
 import { resolveTokenDatabaseUrl, tokenSqlExecutor } from "@/lib/tokens/read/database";
 import { MODEL_FRONTIER_COST_BOUNDARY } from "@/lib/frontier/types";
 
@@ -38,6 +42,59 @@ async function main(): Promise<void> {
   const attribution = await loadAttribution(sql);
   if (attribution === null) fail("no successful source retrieval, so no citation can be rendered");
   else console.log(`source          retrieved ${attribution.retrievedAt}, ${attribution.license}`);
+
+  // ---- the two clocks. Reported before the chart, because a correct chart drawn from data
+  // nobody has touched in a month is exactly the condition this command exists to catch.
+  const { rows: retrievalRows } = await sql.query(
+    `select bundle_content_hash, retrieved_at from pipeline.capability_retrievals
+      where outcome = 'succeeded' order by retrieved_at desc limit 1`,
+    [],
+  );
+  const { rows: priceRows } = await sql.query(
+    `select max(retrieved_at)::date::text as latest from pipeline.token_price_observations`,
+    [],
+  );
+  const frozenBenchmarks = await loadPersistedBenchmarks(sql);
+  const now = new Date();
+  const verification = verificationFreshness(frozenBenchmarks, now);
+  const newestVerification = verification.providers
+    .map((provider) => provider.lastVerifiedAt)
+    .filter((at): at is string => at !== null)
+    .sort()
+    .at(-1) ?? null;
+
+  const freshness = assessFreshness({
+    lastRetrievalAt: retrievalRows[0] === undefined ? null : new Date(String(retrievalRows[0].retrieved_at)).toISOString(),
+    lastBundleHash: retrievalRows[0] === undefined ? null : String(retrievalRows[0].bundle_content_hash),
+    schedulerLastRanAt: await lastScheduledCheckAt(sql),
+    priceLastVerifiedAt: newestVerification,
+    priceLatestObservationDate: priceRows[0]?.latest === null || priceRows[0] === undefined ? null : String(priceRows[0].latest),
+    priceReviewDue: verification.reviewDue,
+    priceNeverVerified: verification.neverVerified,
+    now,
+  });
+
+  console.log("");
+  console.log(`operational     ${freshness.state}`);
+  console.log("");
+  console.log("capability (machine-collected, Epoch CC BY 4.0)");
+  console.log(`  scheduler     ${freshness.capability.detail}`);
+  console.log(`  last ingested ${freshness.capability.lastRetrievalAt ?? "never"} (${freshness.capability.retrievalAgeDays ?? "?"} day(s) ago)`);
+  console.log(`  active hash   ${freshness.capability.lastBundleHash ?? "none"}`);
+  console.log("");
+  console.log("price (human-verified; no source is cleared for automated retrieval)");
+  console.log(`  verification  ${freshness.price.detail}`);
+  console.log(`  last verified ${freshness.price.lastVerifiedAt ?? "never"}`);
+  console.log(`  latest prices ${freshness.price.latestObservationDate ?? "none"}`);
+  console.log(`  threshold     ${freshness.price.intervalDays} days`);
+  if (freshness.price.reviewDue.length > 0) console.log(`  review due    ${freshness.price.reviewDue.join(", ")}`);
+  if (freshness.price.neverVerified.length > 0) console.log(`  never verified ${freshness.price.neverVerified.join(", ")}`);
+  console.log("");
+
+  if (!freshness.capability.healthy) fail(`capability scheduler: ${freshness.capability.detail}`);
+  // A stale price clock fails even though the Frontier still renders. Renderability is not
+  // freshness, and the whole point of this command is to refuse to equate them.
+  if (!freshness.price.healthy) fail(`Token Price verification: ${freshness.price.detail}`);
 
   const rows = await loadJoinableRows(sql);
   const benchmarks = deriveAll(rows);
@@ -86,6 +143,7 @@ async function main(): Promise<void> {
   if (leaked.length > 0) fail(`${leaked.length} observation(s) carry a model without an evidenced link`);
 
   console.log(`boundary        "${MODEL_FRONTIER_COST_BOUNDARY.slice(0, 72)}..."`);
+  console.log(`freshness       ${freshnessLine(freshness)}`);
   console.log("");
 
   if (failures.length === 0) {
