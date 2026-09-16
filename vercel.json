@@ -16,6 +16,10 @@
     {
       "path": "/api/cron/ubwi",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/token-verification",
+      "schedule": "0 7 * * *"
     }
   ]
 }
