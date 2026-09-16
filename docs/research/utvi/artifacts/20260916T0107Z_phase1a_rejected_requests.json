@@ -1,0 +1,41 @@
+{
+ "_note": "Verbatim 400 response bodies from the live endpoint, 2026-09-16.",
+ "errors": {
+  "history-below-floor": {
+   "error": {
+    "message": "Data is only available from 2025-01-01 onward; end_date must be on or after that.",
+    "code": 400
+   }
+  },
+  "window-full-history": {
+   "error": {
+    "message": "Date range cannot exceed 366 days (requested 623).",
+    "code": 400
+   }
+  },
+  "window-inverted": {
+   "error": {
+    "message": "start_date must be on or before end_date.",
+    "code": 400
+   }
+  },
+  "current-day-explicit": {
+   "error": {
+    "message": "start_date must be on or before end_date.",
+    "code": 400
+   }
+  },
+  "future-day": {
+   "error": {
+    "message": "start_date must be on or before end_date.",
+    "code": 400
+   }
+  },
+  "filter-category-day": {
+   "error": {
+    "message": "`period=day` is unavailable for `category` or `language_type`; these sampled datasets are aggregated weekly. Use `period=week` (default) or `period=month`.",
+    "code": 400
+   }
+  }
+ }
+}

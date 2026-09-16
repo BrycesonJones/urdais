@@ -1,0 +1,1280 @@
+{
+ "generatedAt": "2026-09-16T01:00:30.433Z",
+ "endpoint": "https://openrouter.ai/api/v1/datasets/rankings-daily",
+ "envVar": "OPENROUTER_API_KEY",
+ "envVarPresent": true,
+ "utcToday": "2026-09-16",
+ "lastCompletedUtcDay": "2026-09-15",
+ "auth": {
+  "status": 200,
+  "ok": true,
+  "headers": {
+   "content-type": "application/json",
+   "date": "Wed, 16 Sep 2026 01:00:30 GMT",
+   "cache-control": "private, max-age=60, stale-while-revalidate=300"
+  },
+  "rateLimitHeadersExposed": [],
+  "topLevelKeys": [
+   "data",
+   "meta"
+  ],
+  "meta": {
+   "as_of": "2026-09-16T00:59:43.162Z",
+   "version": "v1",
+   "start_date": "2026-08-17",
+   "end_date": "2026-09-15"
+  },
+  "rowCount": 1530
+ },
+ "singleDay": {
+  "requestedDate": "2026-09-15",
+  "meta": {
+   "as_of": "2026-09-16T01:00:33.578Z",
+   "version": "v1",
+   "start_date": "2026-09-15",
+   "end_date": "2026-09-15"
+  },
+  "metaKeys": [
+   "as_of",
+   "end_date",
+   "start_date",
+   "version"
+  ],
+  "rowCount": 51,
+  "rowsForRequestedDate": 51,
+  "namedRowCount": 50,
+  "residualRowPresent": true,
+  "residualRowCount": 1,
+  "fieldInventory": {
+   "date": 51,
+   "model_permaslug": 51,
+   "total_tokens": 51
+  },
+  "valueShapes": {
+   "date": [
+    "string"
+   ],
+   "model_permaslug": [
+    "string"
+   ],
+   "total_tokens": [
+    "string"
+   ]
+  },
+  "promptTokensFieldPresent": false,
+  "completionTokensFieldPresent": false,
+  "rankFieldPresent": false,
+  "modelNameFieldPresent": false,
+  "integrity": {
+   "nonIntegerTotals": 0,
+   "negativeTotals": 0,
+   "zeroTotals": 0,
+   "nullTotals": 0,
+   "aboveNumberMaxSafeInteger": 0,
+   "problems": []
+  },
+  "namedTokens": "16563580227405",
+  "residualTokens": "1186819992880",
+  "dayTotalTokens": "17750400220285",
+  "residualSharePercent": 6.6861,
+  "orderingIsDescendingByTokens": true,
+  "residualIsLastRow": true,
+  "firstRows": [
+   {
+    "date": "2026-09-15",
+    "model_permaslug": "tencent/hy4-preview-20260827",
+    "total_tokens": "1818993365232"
+   },
+   {
+    "date": "2026-09-15",
+    "model_permaslug": "deepseek/deepseek-v4.1-flash-20260910",
+    "total_tokens": "1799484808057"
+   },
+   {
+    "date": "2026-09-15",
+    "model_permaslug": "z-ai/glm-5.3-flash-20260826",
+    "total_tokens": "1585634881777"
+   }
+  ],
+  "lastRows": [
+   {
+    "date": "2026-09-15",
+    "model_permaslug": "meta/muse-spark-1.3-20260902",
+    "total_tokens": "39766295532"
+   },
+   {
+    "date": "2026-09-15",
+    "model_permaslug": "other",
+    "total_tokens": "1186819992880"
+   }
+  ]
+ },
+ "identity": {
+  "namedModels": 50,
+  "distinctNamespaces": 19,
+  "namespaces": [
+   {
+    "namespace": "deepseek",
+    "rows": 6,
+    "tokens": "4409688613892",
+    "sharePercentOfNamed": 26.6227
+   },
+   {
+    "namespace": "tencent",
+    "rows": 2,
+    "tokens": "2601371667087",
+    "sharePercentOfNamed": 15.7053
+   },
+   {
+    "namespace": "z-ai",
+    "rows": 3,
+    "tokens": "2240544015283",
+    "sharePercentOfNamed": 13.5269
+   },
+   {
+    "namespace": "openai",
+    "rows": 6,
+    "tokens": "2010340966740",
+    "sharePercentOfNamed": 12.1371
+   },
+   {
+    "namespace": "xiaomi",
+    "rows": 1,
+    "tokens": "1157793655223",
+    "sharePercentOfNamed": 6.9899
+   },
+   {
+    "namespace": "google",
+    "rows": 8,
+    "tokens": "987675563140",
+    "sharePercentOfNamed": 5.9629
+   },
+   {
+    "namespace": "anthropic",
+    "rows": 5,
+    "tokens": "645872436634",
+    "sharePercentOfNamed": 3.8993
+   },
+   {
+    "namespace": "nvidia",
+    "rows": 2,
+    "tokens": "567612707582",
+    "sharePercentOfNamed": 3.4268
+   },
+   {
+    "namespace": "meta",
+    "rows": 2,
+    "tokens": "345937089321",
+    "sharePercentOfNamed": 2.0885
+   },
+   {
+    "namespace": "inclusionai",
+    "rows": 3,
+    "tokens": "287206718604",
+    "sharePercentOfNamed": 1.7339
+   },
+   {
+    "namespace": "upstage",
+    "rows": 1,
+    "tokens": "225297347290",
+    "sharePercentOfNamed": 1.3601
+   },
+   {
+    "namespace": "minimax",
+    "rows": 1,
+    "tokens": "222635815484",
+    "sharePercentOfNamed": 1.3441
+   },
+   {
+    "namespace": "moonshotai",
+    "rows": 1,
+    "tokens": "204411193019",
+    "sharePercentOfNamed": 1.2341
+   },
+   {
+    "namespace": "qwen",
+    "rows": 4,
+    "tokens": "202350368654",
+    "sharePercentOfNamed": 1.2216
+   },
+   {
+    "namespace": "poolside",
+    "rows": 1,
+    "tokens": "173383794656",
+    "sharePercentOfNamed": 1.0467
+   },
+   {
+    "namespace": "dots-studio",
+    "rows": 1,
+    "tokens": "90509125793",
+    "sharePercentOfNamed": 0.5464
+   },
+   {
+    "namespace": "nex-agi",
+    "rows": 1,
+    "tokens": "78956470033",
+    "sharePercentOfNamed": 0.4766
+   },
+   {
+    "namespace": "x-ai",
+    "rows": 1,
+    "tokens": "60215327328",
+    "sharePercentOfNamed": 0.3635
+   },
+   {
+    "namespace": "thinkingmachines",
+    "rows": 1,
+    "tokens": "51777351642",
+    "sharePercentOfNamed": 0.3125
+   }
+  ],
+  "variantSuffixes": [
+   "free"
+  ],
+  "variantRowCount": 9,
+  "variantRowExamples": [
+   "nvidia/nemotron-3-ultra-550b-a55b-20260604:free",
+   "poolside/laguna-s-2.1-20260720:free",
+   "inclusionai/ling-3.0-flash-fin-20260827:free",
+   "nvidia/nemotron-3.5-lightning-20260807:free",
+   "dots-studio/dots-3-note-preview-20260813:free",
+   "inclusionai/ling-3.0-flash-vl-20260910:free",
+   "nex-agi/nex-n2.5-pro-20260907:free",
+   "thinkingmachines/inkling-20260715:free",
+   "inclusionai/ling-3.0-flash-sante-20260904:free"
+  ],
+  "basesWithMultipleVariantRows": [],
+  "looksLikeLatestPointer": [],
+  "allPermaslugs": [
+   {
+    "permaslug": "tencent/hy4-preview-20260827",
+    "namespace": "tencent",
+    "base": "tencent/hy4-preview-20260827",
+    "variant": null,
+    "tokens": "1818993365232"
+   },
+   {
+    "permaslug": "deepseek/deepseek-v4.1-flash-20260910",
+    "namespace": "deepseek",
+    "base": "deepseek/deepseek-v4.1-flash-20260910",
+    "variant": null,
+    "tokens": "1799484808057"
+   },
+   {
+    "permaslug": "z-ai/glm-5.3-flash-20260826",
+    "namespace": "z-ai",
+    "base": "z-ai/glm-5.3-flash-20260826",
+    "variant": null,
+    "tokens": "1585634881777"
+   },
+   {
+    "permaslug": "deepseek/deepseek-v4-flash-20260731",
+    "namespace": "deepseek",
+    "base": "deepseek/deepseek-v4-flash-20260731",
+    "variant": null,
+    "tokens": "1506862103085"
+   },
+   {
+    "permaslug": "openai/gpt-5.6-luna-20260709",
+    "namespace": "openai",
+    "base": "openai/gpt-5.6-luna-20260709",
+    "variant": null,
+    "tokens": "1261229812236"
+   },
+   {
+    "permaslug": "xiaomi/mimo-v2.5-20260422",
+    "namespace": "xiaomi",
+    "base": "xiaomi/mimo-v2.5-20260422",
+    "variant": null,
+    "tokens": "1157793655223"
+   },
+   {
+    "permaslug": "tencent/hy3-20260706",
+    "namespace": "tencent",
+    "base": "tencent/hy3-20260706",
+    "variant": null,
+    "tokens": "782378301855"
+   },
+   {
+    "permaslug": "deepseek/deepseek-v4-flash-20260423",
+    "namespace": "deepseek",
+    "base": "deepseek/deepseek-v4-flash-20260423",
+    "variant": null,
+    "tokens": "668011906315"
+   },
+   {
+    "permaslug": "nvidia/nemotron-3-ultra-550b-a55b-20260604:free",
+    "namespace": "nvidia",
+    "base": "nvidia/nemotron-3-ultra-550b-a55b-20260604",
+    "variant": "free",
+    "tokens": "442497528444"
+   },
+   {
+    "permaslug": "z-ai/glm-5.3-20260816",
+    "namespace": "z-ai",
+    "base": "z-ai/glm-5.3-20260816",
+    "variant": null,
+    "tokens": "421935269991"
+   },
+   {
+    "permaslug": "google/gemini-3.8-flash-20260902",
+    "namespace": "google",
+    "base": "google/gemini-3.8-flash-20260902",
+    "variant": null,
+    "tokens": "414576677239"
+   },
+   {
+    "permaslug": "openai/gpt-5.6-sol-20260709",
+    "namespace": "openai",
+    "base": "openai/gpt-5.6-sol-20260709",
+    "variant": null,
+    "tokens": "368963765594"
+   },
+   {
+    "permaslug": "meta/muse-spark-1.3-contributor-20260902",
+    "namespace": "meta",
+    "base": "meta/muse-spark-1.3-contributor-20260902",
+    "variant": null,
+    "tokens": "306170793789"
+   },
+   {
+    "permaslug": "anthropic/claude-sonnet-5-20260630",
+    "namespace": "anthropic",
+    "base": "anthropic/claude-sonnet-5-20260630",
+    "variant": null,
+    "tokens": "252951904975"
+   },
+   {
+    "permaslug": "z-ai/glm-5.2-20260616",
+    "namespace": "z-ai",
+    "base": "z-ai/glm-5.2-20260616",
+    "variant": null,
+    "tokens": "232973863515"
+   },
+   {
+    "permaslug": "upstage/solar-pro4-20260810",
+    "namespace": "upstage",
+    "base": "upstage/solar-pro4-20260810",
+    "variant": null,
+    "tokens": "225297347290"
+   },
+   {
+    "permaslug": "minimax/minimax-m3-20260531",
+    "namespace": "minimax",
+    "base": "minimax/minimax-m3-20260531",
+    "variant": null,
+    "tokens": "222635815484"
+   },
+   {
+    "permaslug": "deepseek/deepseek-v4-pro-20260423",
+    "namespace": "deepseek",
+    "base": "deepseek/deepseek-v4-pro-20260423",
+    "variant": null,
+    "tokens": "211419532056"
+   },
+   {
+    "permaslug": "moonshotai/kimi-k3-20260715",
+    "namespace": "moonshotai",
+    "base": "moonshotai/kimi-k3-20260715",
+    "variant": null,
+    "tokens": "204411193019"
+   },
+   {
+    "permaslug": "anthropic/claude-opus-5-20260723",
+    "namespace": "anthropic",
+    "base": "anthropic/claude-opus-5-20260723",
+    "variant": null,
+    "tokens": "194165839363"
+   },
+   {
+    "permaslug": "poolside/laguna-s-2.1-20260720:free",
+    "namespace": "poolside",
+    "base": "poolside/laguna-s-2.1-20260720",
+    "variant": "free",
+    "tokens": "173383794656"
+   },
+   {
+    "permaslug": "inclusionai/ling-3.0-flash-fin-20260827:free",
+    "namespace": "inclusionai",
+    "base": "inclusionai/ling-3.0-flash-fin-20260827",
+    "variant": "free",
+    "tokens": "159044723584"
+   },
+   {
+    "permaslug": "deepseek/deepseek-v4-pro-20260813",
+    "namespace": "deepseek",
+    "base": "deepseek/deepseek-v4-pro-20260813",
+    "variant": null,
+    "tokens": "158699018247"
+   },
+   {
+    "permaslug": "openai/gpt-oss-120b",
+    "namespace": "openai",
+    "base": "openai/gpt-oss-120b",
+    "variant": null,
+    "tokens": "127779971291"
+   },
+   {
+    "permaslug": "nvidia/nemotron-3.5-lightning-20260807:free",
+    "namespace": "nvidia",
+    "base": "nvidia/nemotron-3.5-lightning-20260807",
+    "variant": "free",
+    "tokens": "125115179138"
+   },
+   {
+    "permaslug": "google/gemini-3-flash-preview-20251217",
+    "namespace": "google",
+    "base": "google/gemini-3-flash-preview-20251217",
+    "variant": null,
+    "tokens": "120316281642"
+   },
+   {
+    "permaslug": "openai/gpt-6-astra-20260903",
+    "namespace": "openai",
+    "base": "openai/gpt-6-astra-20260903",
+    "variant": null,
+    "tokens": "107608562554"
+   },
+   {
+    "permaslug": "google/gemini-2.5-flash-lite",
+    "namespace": "google",
+    "base": "google/gemini-2.5-flash-lite",
+    "variant": null,
+    "tokens": "102523689937"
+   },
+   {
+    "permaslug": "openai/gpt-5.6-terra-20260709",
+    "namespace": "openai",
+    "base": "openai/gpt-5.6-terra-20260709",
+    "variant": null,
+    "tokens": "93676488019"
+   },
+   {
+    "permaslug": "dots-studio/dots-3-note-preview-20260813:free",
+    "namespace": "dots-studio",
+    "base": "dots-studio/dots-3-note-preview-20260813",
+    "variant": "free",
+    "tokens": "90509125793"
+   },
+   {
+    "permaslug": "inclusionai/ling-3.0-flash-vl-20260910:free",
+    "namespace": "inclusionai",
+    "base": "inclusionai/ling-3.0-flash-vl-20260910",
+    "variant": "free",
+    "tokens": "86483587581"
+   },
+   {
+    "permaslug": "google/gemini-3.7-flash-20260813",
+    "namespace": "google",
+    "base": "google/gemini-3.7-flash-20260813",
+    "variant": null,
+    "tokens": "84352906738"
+   },
+   {
+    "permaslug": "nex-agi/nex-n2.5-pro-20260907:free",
+    "namespace": "nex-agi",
+    "base": "nex-agi/nex-n2.5-pro-20260907",
+    "variant": "free",
+    "tokens": "78956470033"
+   },
+   {
+    "permaslug": "google/gemini-3.1-flash-lite-20260507",
+    "namespace": "google",
+    "base": "google/gemini-3.1-flash-lite-20260507",
+    "variant": null,
+    "tokens": "77176920688"
+   },
+   {
+    "permaslug": "google/gemini-2.5-flash",
+    "namespace": "google",
+    "base": "google/gemini-2.5-flash",
+    "variant": null,
+    "tokens": "74352816528"
+   },
+   {
+    "permaslug": "google/gemma-4-31b-it-20260402",
+    "namespace": "google",
+    "base": "google/gemma-4-31b-it-20260402",
+    "variant": null,
+    "tokens": "71488436838"
+   },
+   {
+    "permaslug": "anthropic/claude-fable-5.1-20260831",
+    "namespace": "anthropic",
+    "base": "anthropic/claude-fable-5.1-20260831",
+    "variant": null,
+    "tokens": "70249790343"
+   },
+   {
+    "permaslug": "qwen/qwen3.8-flash-20260826",
+    "namespace": "qwen",
+    "base": "qwen/qwen3.8-flash-20260826",
+    "variant": null,
+    "tokens": "68620347291"
+   },
+   {
+    "permaslug": "anthropic/claude-4.6-sonnet-20260217",
+    "namespace": "anthropic",
+    "base": "anthropic/claude-4.6-sonnet-20260217",
+    "variant": null,
+    "tokens": "68306285567"
+   },
+   {
+    "permaslug": "deepseek/deepseek-v3.2-20251201",
+    "namespace": "deepseek",
+    "base": "deepseek/deepseek-v3.2-20251201",
+    "variant": null,
+    "tokens": "65211246132"
+   },
+   {
+    "permaslug": "x-ai/grok-4.6-20260810",
+    "namespace": "x-ai",
+    "base": "x-ai/grok-4.6-20260810",
+    "variant": null,
+    "tokens": "60215327328"
+   },
+   {
+    "permaslug": "anthropic/claude-4.8-opus-20260528",
+    "namespace": "anthropic",
+    "base": "anthropic/claude-4.8-opus-20260528",
+    "variant": null,
+    "tokens": "60198616386"
+   },
+   {
+    "permaslug": "thinkingmachines/inkling-20260715:free",
+    "namespace": "thinkingmachines",
+    "base": "thinkingmachines/inkling-20260715",
+    "variant": "free",
+    "tokens": "51777351642"
+   },
+   {
+    "permaslug": "openai/gpt-5.6-luna-pro-20260709",
+    "namespace": "openai",
+    "base": "openai/gpt-5.6-luna-pro-20260709",
+    "variant": null,
+    "tokens": "51082367046"
+   },
+   {
+    "permaslug": "qwen/qwen3.7-flash-20260727",
+    "namespace": "qwen",
+    "base": "qwen/qwen3.7-flash-20260727",
+    "variant": null,
+    "tokens": "50850643298"
+   },
+   {
+    "permaslug": "google/gemma-4-26b-a4b-it-20260403",
+    "namespace": "google",
+    "base": "google/gemma-4-26b-a4b-it-20260403",
+    "variant": null,
+    "tokens": "42887833530"
+   },
+   {
+    "permaslug": "inclusionai/ling-3.0-flash-sante-20260904:free",
+    "namespace": "inclusionai",
+    "base": "inclusionai/ling-3.0-flash-sante-20260904",
+    "variant": "free",
+    "tokens": "41678407439"
+   },
+   {
+    "permaslug": "qwen/qwen3.8-max-20260902",
+    "namespace": "qwen",
+    "base": "qwen/qwen3.8-max-20260902",
+    "variant": null,
+    "tokens": "41590160868"
+   },
+   {
+    "permaslug": "qwen/qwen3.8-27b-20260814",
+    "namespace": "qwen",
+    "base": "qwen/qwen3.8-27b-20260814",
+    "variant": null,
+    "tokens": "41289217197"
+   },
+   {
+    "permaslug": "meta/muse-spark-1.3-20260902",
+    "namespace": "meta",
+    "base": "meta/muse-spark-1.3-20260902",
+    "variant": null,
+    "tokens": "39766295532"
+   }
+  ]
+ },
+ "aggregation": {
+  "date": "2026-09-15",
+  "attributedTokens": "16563580227405",
+  "residualTokens": "1186819992880",
+  "totalTokens": "17750400220285",
+  "distinctCanonicalModelsAfterVariantFold": 50,
+  "topModels": [
+   {
+    "label": "tencent/hy4-preview-20260827",
+    "tokens": "1818993365232",
+    "sharePercentOfAttributed": 10.9818,
+    "sharePercentOfTotal": 10.2476
+   },
+   {
+    "label": "deepseek/deepseek-v4.1-flash-20260910",
+    "tokens": "1799484808057",
+    "sharePercentOfAttributed": 10.8641,
+    "sharePercentOfTotal": 10.1377
+   },
+   {
+    "label": "z-ai/glm-5.3-flash-20260826",
+    "tokens": "1585634881777",
+    "sharePercentOfAttributed": 9.573,
+    "sharePercentOfTotal": 8.9329
+   },
+   {
+    "label": "deepseek/deepseek-v4-flash-20260731",
+    "tokens": "1506862103085",
+    "sharePercentOfAttributed": 9.0974,
+    "sharePercentOfTotal": 8.4891
+   },
+   {
+    "label": "openai/gpt-5.6-luna-20260709",
+    "tokens": "1261229812236",
+    "sharePercentOfAttributed": 7.6144,
+    "sharePercentOfTotal": 7.1053
+   },
+   {
+    "label": "xiaomi/mimo-v2.5-20260422",
+    "tokens": "1157793655223",
+    "sharePercentOfAttributed": 6.9899,
+    "sharePercentOfTotal": 6.5226
+   },
+   {
+    "label": "tencent/hy3-20260706",
+    "tokens": "782378301855",
+    "sharePercentOfAttributed": 4.7234,
+    "sharePercentOfTotal": 4.4076
+   },
+   {
+    "label": "deepseek/deepseek-v4-flash-20260423",
+    "tokens": "668011906315",
+    "sharePercentOfAttributed": 4.033,
+    "sharePercentOfTotal": 3.7633
+   },
+   {
+    "label": "nvidia/nemotron-3-ultra-550b-a55b-20260604",
+    "tokens": "442497528444",
+    "sharePercentOfAttributed": 2.6715,
+    "sharePercentOfTotal": 2.4928
+   },
+   {
+    "label": "z-ai/glm-5.3-20260816",
+    "tokens": "421935269991",
+    "sharePercentOfAttributed": 2.5473,
+    "sharePercentOfTotal": 2.377
+   }
+  ],
+  "topNamespaces": [
+   {
+    "label": "deepseek",
+    "tokens": "4409688613892",
+    "sharePercentOfAttributed": 26.6227,
+    "sharePercentOfTotal": 24.8427
+   },
+   {
+    "label": "tencent",
+    "tokens": "2601371667087",
+    "sharePercentOfAttributed": 15.7053,
+    "sharePercentOfTotal": 14.6552
+   },
+   {
+    "label": "z-ai",
+    "tokens": "2240544015283",
+    "sharePercentOfAttributed": 13.5269,
+    "sharePercentOfTotal": 12.6224
+   },
+   {
+    "label": "openai",
+    "tokens": "2010340966740",
+    "sharePercentOfAttributed": 12.1371,
+    "sharePercentOfTotal": 11.3256
+   },
+   {
+    "label": "xiaomi",
+    "tokens": "1157793655223",
+    "sharePercentOfAttributed": 6.9899,
+    "sharePercentOfTotal": 6.5226
+   },
+   {
+    "label": "google",
+    "tokens": "987675563140",
+    "sharePercentOfAttributed": 5.9629,
+    "sharePercentOfTotal": 5.5642
+   },
+   {
+    "label": "anthropic",
+    "tokens": "645872436634",
+    "sharePercentOfAttributed": 3.8993,
+    "sharePercentOfTotal": 3.6386
+   },
+   {
+    "label": "nvidia",
+    "tokens": "567612707582",
+    "sharePercentOfAttributed": 3.4268,
+    "sharePercentOfTotal": 3.1977
+   },
+   {
+    "label": "meta",
+    "tokens": "345937089321",
+    "sharePercentOfAttributed": 2.0885,
+    "sharePercentOfTotal": 1.9488
+   },
+   {
+    "label": "inclusionai",
+    "tokens": "287206718604",
+    "sharePercentOfAttributed": 1.7339,
+    "sharePercentOfTotal": 1.618
+   },
+   {
+    "label": "upstage",
+    "tokens": "225297347290",
+    "sharePercentOfAttributed": 1.3601,
+    "sharePercentOfTotal": 1.2692
+   },
+   {
+    "label": "minimax",
+    "tokens": "222635815484",
+    "sharePercentOfAttributed": 1.3441,
+    "sharePercentOfTotal": 1.2542
+   }
+  ]
+ },
+ "history": [
+  {
+   "label": "history-floor",
+   "parameters": {
+    "start_date": "2025-01-01",
+    "end_date": "2025-01-01"
+   },
+   "status": 200,
+   "meta": {
+    "as_of": "2026-09-16T01:00:36.299Z",
+    "version": "v1",
+    "start_date": "2025-01-01",
+    "end_date": "2025-01-01"
+   },
+   "rowCount": 51,
+   "datesReturned": [
+    "2025-01-01"
+   ],
+   "namedRowCountFirstDate": 50,
+   "residualPresentFirstDate": true,
+   "fieldInventory": {
+    "date": 51,
+    "model_permaslug": 51,
+    "total_tokens": 51
+   },
+   "integrity": {
+    "nonIntegerTotals": 0,
+    "negativeTotals": 0,
+    "zeroTotals": 0,
+    "nullTotals": 0,
+    "aboveNumberMaxSafeInteger": 0,
+    "problems": []
+   },
+   "sampleRow": {
+    "date": "2025-01-01",
+    "model_permaslug": "anthropic/claude-3.5-sonnet:beta",
+    "total_tokens": "11646035656"
+   }
+  },
+  {
+   "label": "history-below-floor",
+   "parameters": {
+    "start_date": "2024-06-01",
+    "end_date": "2024-06-01"
+   },
+   "status": 400,
+   "meta": {
+    "error": {
+     "message": "Data is only available from 2025-01-01 onward; end_date must be on or after that.",
+     "code": 400
+    }
+   },
+   "rowCount": 0,
+   "datesReturned": [],
+   "namedRowCountFirstDate": 0,
+   "residualPresentFirstDate": null,
+   "fieldInventory": {},
+   "integrity": {
+    "nonIntegerTotals": 0,
+    "negativeTotals": 0,
+    "zeroTotals": 0,
+    "nullTotals": 0,
+    "aboveNumberMaxSafeInteger": 0,
+    "problems": []
+   },
+   "sampleRow": null
+  },
+  {
+   "label": "history-clamp",
+   "parameters": {
+    "start_date": "2024-01-01",
+    "end_date": "2025-01-02"
+   },
+   "status": 200,
+   "meta": {
+    "as_of": "2026-09-16T01:00:41.788Z",
+    "version": "v1",
+    "start_date": "2025-01-01",
+    "end_date": "2025-01-02"
+   },
+   "rowCount": 102,
+   "datesReturned": [
+    "2025-01-01",
+    "2025-01-02"
+   ],
+   "namedRowCountFirstDate": 50,
+   "residualPresentFirstDate": true,
+   "fieldInventory": {
+    "date": 102,
+    "model_permaslug": 102,
+    "total_tokens": 102
+   },
+   "integrity": {
+    "nonIntegerTotals": 0,
+    "negativeTotals": 0,
+    "zeroTotals": 0,
+    "nullTotals": 0,
+    "aboveNumberMaxSafeInteger": 0,
+    "problems": []
+   },
+   "sampleRow": {
+    "date": "2025-01-01",
+    "model_permaslug": "anthropic/claude-3.5-sonnet:beta",
+    "total_tokens": "11646035656"
+   }
+  },
+  {
+   "label": "history-mid",
+   "parameters": {
+    "start_date": "2025-12-15",
+    "end_date": "2025-12-15"
+   },
+   "status": 200,
+   "meta": {
+    "as_of": "2026-09-16T01:00:44.643Z",
+    "version": "v1",
+    "start_date": "2025-12-15",
+    "end_date": "2025-12-15"
+   },
+   "rowCount": 51,
+   "datesReturned": [
+    "2025-12-15"
+   ],
+   "namedRowCountFirstDate": 50,
+   "residualPresentFirstDate": true,
+   "fieldInventory": {
+    "date": 51,
+    "model_permaslug": 51,
+    "total_tokens": 51
+   },
+   "integrity": {
+    "nonIntegerTotals": 0,
+    "negativeTotals": 0,
+    "zeroTotals": 0,
+    "nullTotals": 0,
+    "aboveNumberMaxSafeInteger": 0,
+    "problems": []
+   },
+   "sampleRow": {
+    "date": "2025-12-15",
+    "model_permaslug": "x-ai/grok-code-fast-1",
+    "total_tokens": "76249011009"
+   }
+  },
+  {
+   "label": "history-mid-2026",
+   "parameters": {
+    "start_date": "2026-05-11",
+    "end_date": "2026-05-11"
+   },
+   "status": 200,
+   "meta": {
+    "as_of": "2026-09-16T01:00:47.519Z",
+    "version": "v1",
+    "start_date": "2026-05-11",
+    "end_date": "2026-05-11"
+   },
+   "rowCount": 51,
+   "datesReturned": [
+    "2026-05-11"
+   ],
+   "namedRowCountFirstDate": 50,
+   "residualPresentFirstDate": true,
+   "fieldInventory": {
+    "date": 51,
+    "model_permaslug": 51,
+    "total_tokens": 51
+   },
+   "integrity": {
+    "nonIntegerTotals": 0,
+    "negativeTotals": 0,
+    "zeroTotals": 0,
+    "nullTotals": 0,
+    "aboveNumberMaxSafeInteger": 0,
+    "problems": []
+   },
+   "sampleRow": {
+    "date": "2026-05-11",
+    "model_permaslug": "tencent/hy3-preview-20260421",
+    "total_tokens": "439093253413"
+   }
+  }
+ ],
+ "window": [
+  {
+   "label": "window-3-days",
+   "parameters": {
+    "start_date": "2026-09-13",
+    "end_date": "2026-09-15"
+   },
+   "status": 200,
+   "byteLength": 16026,
+   "meta": {
+    "as_of": "2026-09-16T01:00:50.496Z",
+    "version": "v1",
+    "start_date": "2026-09-13",
+    "end_date": "2026-09-15"
+   },
+   "rowCount": 153,
+   "distinctDates": 3,
+   "firstDate": "2026-09-13",
+   "lastDate": "2026-09-15",
+   "rowsPerDateMin": 51,
+   "rowsPerDateMax": 51,
+   "datesAscending": true,
+   "includesStart": true,
+   "includesEnd": true,
+   "paginationKeysInMeta": []
+  },
+  {
+   "label": "window-90-days",
+   "parameters": {
+    "start_date": "2026-06-18",
+    "end_date": "2026-09-15"
+   },
+   "status": 200,
+   "byteLength": 469895,
+   "meta": {
+    "as_of": "2026-09-16T01:00:53.868Z",
+    "version": "v1",
+    "start_date": "2026-06-18",
+    "end_date": "2026-09-15"
+   },
+   "rowCount": 4590,
+   "distinctDates": 90,
+   "firstDate": "2026-06-18",
+   "lastDate": "2026-09-15",
+   "rowsPerDateMin": 51,
+   "rowsPerDateMax": 51,
+   "datesAscending": true,
+   "includesStart": true,
+   "includesEnd": true,
+   "paginationKeysInMeta": []
+  },
+  {
+   "label": "window-full-history",
+   "parameters": {
+    "start_date": "2025-01-01",
+    "end_date": "2026-09-15"
+   },
+   "status": 400,
+   "byteLength": 85,
+   "meta": {
+    "error": {
+     "message": "Date range cannot exceed 366 days (requested 623).",
+     "code": 400
+    }
+   },
+   "rowCount": 0,
+   "distinctDates": 0,
+   "firstDate": null,
+   "lastDate": null,
+   "rowsPerDateMin": null,
+   "rowsPerDateMax": null,
+   "datesAscending": true,
+   "includesStart": false,
+   "includesEnd": false,
+   "paginationKeysInMeta": []
+  },
+  {
+   "label": "window-inverted",
+   "parameters": {
+    "start_date": "2026-09-15",
+    "end_date": "2026-09-13"
+   },
+   "status": 400,
+   "byteLength": 76,
+   "meta": {
+    "error": {
+     "message": "start_date must be on or before end_date.",
+     "code": 400
+    }
+   },
+   "rowCount": 0,
+   "distinctDates": 0,
+   "firstDate": null,
+   "lastDate": null,
+   "rowsPerDateMin": null,
+   "rowsPerDateMax": null,
+   "datesAscending": true,
+   "includesStart": false,
+   "includesEnd": false,
+   "paginationKeysInMeta": []
+  },
+  {
+   "label": "window-period-week",
+   "parameters": {
+    "start_date": "2026-08-17",
+    "end_date": "2026-09-15",
+    "period": "week"
+   },
+   "status": 200,
+   "byteLength": 26679,
+   "meta": {
+    "as_of": "2026-09-16T01:01:02.906Z",
+    "version": "v1",
+    "start_date": "2026-08-17",
+    "end_date": "2026-09-15"
+   },
+   "rowCount": 255,
+   "distinctDates": 5,
+   "firstDate": "2026-08-17",
+   "lastDate": "2026-09-14",
+   "rowsPerDateMin": 51,
+   "rowsPerDateMax": 51,
+   "datesAscending": true,
+   "includesStart": true,
+   "includesEnd": false,
+   "paginationKeysInMeta": []
+  },
+  {
+   "label": "window-period-month",
+   "parameters": {
+    "start_date": "2026-06-01",
+    "end_date": "2026-09-15",
+    "period": "month"
+   },
+   "status": 200,
+   "byteLength": 21272,
+   "meta": {
+    "as_of": "2026-09-16T01:01:06.220Z",
+    "version": "v1",
+    "start_date": "2026-06-01",
+    "end_date": "2026-09-15"
+   },
+   "rowCount": 204,
+   "distinctDates": 4,
+   "firstDate": "2026-06-01",
+   "lastDate": "2026-09-01",
+   "rowsPerDateMin": 51,
+   "rowsPerDateMax": 51,
+   "datesAscending": true,
+   "includesStart": true,
+   "includesEnd": false,
+   "paginationKeysInMeta": []
+  }
+ ],
+ "currentDay": {
+  "explicitRequest": {
+   "status": 400,
+   "meta": {
+    "error": {
+     "message": "start_date must be on or before end_date.",
+     "code": 400
+    }
+   },
+   "rowCount": 0,
+   "datesReturned": [],
+   "totalTokens": null
+  },
+  "futureRequest": {
+   "status": 400,
+   "meta": {
+    "error": {
+     "message": "start_date must be on or before end_date.",
+     "code": 400
+    }
+   },
+   "rowCount": null
+  },
+  "defaultWindowEndDate": "2026-09-15"
+ },
+ "estimatedFilters": {
+  "categoryWithPeriodDay": {
+   "status": 400,
+   "body": {
+    "error": {
+     "message": "`period=day` is unavailable for `category` or `language_type`; these sampled datasets are aggregated weekly. Use `period=week` (default) or `period=month`.",
+     "code": 400
+    }
+   }
+  },
+  "languageTypeWeek": {
+   "status": 200,
+   "meta": {
+    "as_of": "2026-09-16T01:01:15.518Z",
+    "version": "v1",
+    "start_date": "2026-09-02",
+    "end_date": "2026-09-15"
+   },
+   "rowCount": 153,
+   "sampleRow": {
+    "date": "2026-08-31",
+    "model_permaslug": "deepseek/deepseek-v4-flash-20260731",
+    "total_tokens": "4717815275999.996"
+   }
+  },
+  "modalityText": {
+   "status": 200,
+   "meta": {
+    "as_of": "2026-09-16T01:01:18.548Z",
+    "version": "v1",
+    "start_date": "2026-09-15",
+    "end_date": "2026-09-15"
+   },
+   "rowCount": 51,
+   "totalTokens": "17667038535657"
+  }
+ },
+ "revision": {
+  "first": {
+   "label": "single-day",
+   "readAt": "2026-09-16T01:00:33.561Z",
+   "bodyHash": "e4a68039b37cb6b5d97298ce52b6885be7ecafc24846a5baf754812e8115af8f",
+   "asOf": "2026-09-16T01:00:33.578Z",
+   "namedRowCount": 50,
+   "namedTokens": "16563580227405",
+   "residualTokens": "1186819992880",
+   "totalTokens": "17750400220285",
+   "rankOrder": [
+    "tencent/hy4-preview-20260827",
+    "deepseek/deepseek-v4.1-flash-20260910",
+    "z-ai/glm-5.3-flash-20260826",
+    "deepseek/deepseek-v4-flash-20260731",
+    "openai/gpt-5.6-luna-20260709",
+    "xiaomi/mimo-v2.5-20260422",
+    "tencent/hy3-20260706",
+    "deepseek/deepseek-v4-flash-20260423",
+    "nvidia/nemotron-3-ultra-550b-a55b-20260604:free",
+    "z-ai/glm-5.3-20260816",
+    "google/gemini-3.8-flash-20260902",
+    "openai/gpt-5.6-sol-20260709",
+    "meta/muse-spark-1.3-contributor-20260902",
+    "anthropic/claude-sonnet-5-20260630",
+    "z-ai/glm-5.2-20260616",
+    "upstage/solar-pro4-20260810",
+    "minimax/minimax-m3-20260531",
+    "deepseek/deepseek-v4-pro-20260423",
+    "moonshotai/kimi-k3-20260715",
+    "anthropic/claude-opus-5-20260723",
+    "poolside/laguna-s-2.1-20260720:free",
+    "inclusionai/ling-3.0-flash-fin-20260827:free",
+    "deepseek/deepseek-v4-pro-20260813",
+    "openai/gpt-oss-120b",
+    "nvidia/nemotron-3.5-lightning-20260807:free",
+    "google/gemini-3-flash-preview-20251217",
+    "openai/gpt-6-astra-20260903",
+    "google/gemini-2.5-flash-lite",
+    "openai/gpt-5.6-terra-20260709",
+    "dots-studio/dots-3-note-preview-20260813:free",
+    "inclusionai/ling-3.0-flash-vl-20260910:free",
+    "google/gemini-3.7-flash-20260813",
+    "nex-agi/nex-n2.5-pro-20260907:free",
+    "google/gemini-3.1-flash-lite-20260507",
+    "google/gemini-2.5-flash",
+    "google/gemma-4-31b-it-20260402",
+    "anthropic/claude-fable-5.1-20260831",
+    "qwen/qwen3.8-flash-20260826",
+    "anthropic/claude-4.6-sonnet-20260217",
+    "deepseek/deepseek-v3.2-20251201",
+    "x-ai/grok-4.6-20260810",
+    "anthropic/claude-4.8-opus-20260528",
+    "thinkingmachines/inkling-20260715:free",
+    "openai/gpt-5.6-luna-pro-20260709",
+    "qwen/qwen3.7-flash-20260727",
+    "google/gemma-4-26b-a4b-it-20260403",
+    "inclusionai/ling-3.0-flash-sante-20260904:free",
+    "qwen/qwen3.8-max-20260902",
+    "qwen/qwen3.8-27b-20260814",
+    "meta/muse-spark-1.3-20260902"
+   ]
+  },
+  "second": {
+   "label": "revision-recheck",
+   "readAt": "2026-09-16T01:01:21.211Z",
+   "bodyHash": "e4a68039b37cb6b5d97298ce52b6885be7ecafc24846a5baf754812e8115af8f",
+   "asOf": "2026-09-16T01:00:33.578Z",
+   "namedRowCount": 50,
+   "namedTokens": "16563580227405",
+   "residualTokens": "1186819992880",
+   "totalTokens": "17750400220285",
+   "rankOrder": [
+    "tencent/hy4-preview-20260827",
+    "deepseek/deepseek-v4.1-flash-20260910",
+    "z-ai/glm-5.3-flash-20260826",
+    "deepseek/deepseek-v4-flash-20260731",
+    "openai/gpt-5.6-luna-20260709",
+    "xiaomi/mimo-v2.5-20260422",
+    "tencent/hy3-20260706",
+    "deepseek/deepseek-v4-flash-20260423",
+    "nvidia/nemotron-3-ultra-550b-a55b-20260604:free",
+    "z-ai/glm-5.3-20260816",
+    "google/gemini-3.8-flash-20260902",
+    "openai/gpt-5.6-sol-20260709",
+    "meta/muse-spark-1.3-contributor-20260902",
+    "anthropic/claude-sonnet-5-20260630",
+    "z-ai/glm-5.2-20260616",
+    "upstage/solar-pro4-20260810",
+    "minimax/minimax-m3-20260531",
+    "deepseek/deepseek-v4-pro-20260423",
+    "moonshotai/kimi-k3-20260715",
+    "anthropic/claude-opus-5-20260723",
+    "poolside/laguna-s-2.1-20260720:free",
+    "inclusionai/ling-3.0-flash-fin-20260827:free",
+    "deepseek/deepseek-v4-pro-20260813",
+    "openai/gpt-oss-120b",
+    "nvidia/nemotron-3.5-lightning-20260807:free",
+    "google/gemini-3-flash-preview-20251217",
+    "openai/gpt-6-astra-20260903",
+    "google/gemini-2.5-flash-lite",
+    "openai/gpt-5.6-terra-20260709",
+    "dots-studio/dots-3-note-preview-20260813:free",
+    "inclusionai/ling-3.0-flash-vl-20260910:free",
+    "google/gemini-3.7-flash-20260813",
+    "nex-agi/nex-n2.5-pro-20260907:free",
+    "google/gemini-3.1-flash-lite-20260507",
+    "google/gemini-2.5-flash",
+    "google/gemma-4-31b-it-20260402",
+    "anthropic/claude-fable-5.1-20260831",
+    "qwen/qwen3.8-flash-20260826",
+    "anthropic/claude-4.6-sonnet-20260217",
+    "deepseek/deepseek-v3.2-20251201",
+    "x-ai/grok-4.6-20260810",
+    "anthropic/claude-4.8-opus-20260528",
+    "thinkingmachines/inkling-20260715:free",
+    "openai/gpt-5.6-luna-pro-20260709",
+    "qwen/qwen3.7-flash-20260727",
+    "google/gemma-4-26b-a4b-it-20260403",
+    "inclusionai/ling-3.0-flash-sante-20260904:free",
+    "qwen/qwen3.8-max-20260902",
+    "qwen/qwen3.8-27b-20260814",
+    "meta/muse-spark-1.3-20260902"
+   ]
+  },
+  "delta": {
+   "secondsBetweenReads": 47.65,
+   "bodyHashChanged": false,
+   "asOfChanged": false,
+   "totalTokensChanged": false,
+   "totalTokenDelta": "0",
+   "namedRowCountDelta": 0,
+   "rankOrderChanged": false,
+   "movedRowCount": 0,
+   "movedRows": []
+  }
+ }
+}

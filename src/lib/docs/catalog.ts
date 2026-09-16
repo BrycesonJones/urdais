@@ -117,6 +117,13 @@ export const docPages: readonly DocPage[] = [
     section: "Methodology",
     file: "methodology/ubwi.md",
   },
+  {
+    slug: "methodology/utvi",
+    title: "UTVI",
+    description: "Draft, unapproved methodology for the Urdais Observed Token Volume Index: observed model token consumption per day across the platforms Urdais can defensibly observe, with explicit coverage, token-accounting and deduplication rules. No value is published under it.",
+    section: "Methodology",
+    file: "methodology/utvi.md",
+  },
 ];
 
 export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];

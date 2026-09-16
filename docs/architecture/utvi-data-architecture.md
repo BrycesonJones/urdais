@@ -1,8 +1,10 @@
 # UTVI Data Architecture and Implementation Plan
 
-**Status: internal architecture artifact. Not a methodology page, not routed publicly, not registered in the docs catalog.** Prepared 16 September 2026 alongside [UTVI 0.1.0-draft](../methodology/utvi.md) and the [Phase 1 source study](../research/utvi/source-study.md).
+**Status: internal architecture artifact. Not a methodology page, not routed publicly, not registered in the docs catalog.** Prepared 16 September 2026 alongside [UTVI 0.1.1-draft](../methodology/utvi.md), the [Phase 1 source study](../research/utvi/source-study.md) and the [Phase 1A source characterization](../research/utvi/source-characterization.md).
 
-**No migration is created by this phase, and none should be.** The methodology is a draft, no source is production-approved, four field semantics are undocumented, and the development rules prohibit introducing tables before the slice that needs them. This document says what the tables should be when that slice arrives, and — more usefully — which existing Urdais patterns UTVI reuses and which it must not.
+> **Revised 16 September 2026 against live measurements.** Six changes to the schema below, each forced by something observed rather than reasoned: the leg columns are **dropped** (the source returns no leg fields), `rank` is **dropped** (not returned), `response_hash` becomes **load-bearing** (the only revision detector), the lab id becomes **nullable by necessity** rather than convenience, a `lab_attribution_state` column is **added**, and the window columns must store **resolved** dates because the source clamps silently.
+
+**No migration is created by this phase, and none should be.** The methodology is a draft, the source is not yet production-approved in the registry, and the development rules prohibit introducing tables before the slice that needs them. The characterization has now removed the *technical* reason to wait — the contract is measured — so the remaining reason is process, which is the right reason. This document says what the tables should be when that slice arrives, and — more usefully — which existing Urdais patterns UTVI reuses and which it must not.
 
 ## Current Architecture: what UTVI is today
 
@@ -26,7 +28,7 @@ The lineage, rights and calculation patterns in `reference` and `pipeline` fit U
 
 | Existing object | Use for UTVI |
 |---|---|
-| `reference.methodologies`, `reference.methodology_versions` | The UTVI document and its versions. The draft-has-no-effective-date constraint is precisely the rule that must hold: nothing may publish under 0.1.0-draft |
+| `reference.methodologies`, `reference.methodology_versions` | The UTVI document and its versions. The draft-has-no-effective-date constraint is precisely the rule that must hold: nothing may publish under 0.1.1-draft |
 | `reference.providers` | Labs already exist as `model_api_provider`. **One value must be added**: `inference_marketplace`, for the serving platform. OpenRouter is not a lab and must never aggregate as one |
 | `reference.source_interfaces` | The datasets endpoint, with both terms axes, `production_access_state`, `written_agreement_required` and `terms_evidence`. The existing constraints already encode what blocks UTVI today |
 | `reference.models`, `reference.model_aliases` | Canonical model identity keyed `(provider, provider_model_id)`, with floating pointers kept out of the identity table. **Already exactly right** for §6 |
@@ -66,12 +68,12 @@ Wraps `pipeline.source_retrievals` semantics for a dataset window. Whether this 
 | `request_url` | text | |
 | `request_parameters` | jsonb | **Must record the exact parameter set.** A constraint should reject `category` and `language_type`, which read an estimated dataset (§4.1) |
 | `response_status` | int | |
-| `response_hash`, `response_byte_length` | text, int | Reproducibility |
-| `source_window_start`, `source_window_end` | date | Resolved window echoed by the source, not the requested one |
+| `response_hash`, `response_byte_length` | text, int | Reproducibility — and `response_hash` is **the only revision detector**. **Measured**: the source's own freshness timestamp changes on every request whether the data moved or not, so it cannot serve this purpose |
+| `source_window_start`, `source_window_end` | date | **Resolved** window echoed by the source, never the requested one. **Measured**: a request ending on the current UTC day silently returns a narrower window, and only the echoed value says so |
 | `source_as_of` | timestamptz | **The source's freshness timestamp. Required — the attribution string interpolates it (§18)** |
 | `dataset_version` | text | The source's own contract version |
 | `record_count` | int | Rows returned |
-| `residual_row_present` | boolean | Whether the aggregate residual row was present; it is omitted when the tail is empty |
+| `residual_row_present` | boolean | Whether the aggregate residual row was present. **Measured**: it genuinely can be absent, so a collector must not treat its row count as invariant |
 | `collector_identity` | text | |
 | `permission_grant_id` | uuid fk null | Required for production |
 
@@ -87,7 +89,7 @@ Append-only, exactly as returned. One row per `(retrieval, source date, source m
 | `source_provider_namespace` | text | The namespace segment, stored as read. **Not a lab identity** until mapped on evidence |
 | `observation_date` | date | The source's UTC date |
 | `total_tokens` | **numeric** | Parsed from the source's decimal string. Never a float, never a JS number on the write path |
-| `input_tokens`, `output_tokens` | numeric null | Null under the candidate source, which does not separate legs. Present so a future source that does needs no migration |
+| ~~`input_tokens`, `output_tokens`~~ | — | **Dropped.** **Measured**: the source returns neither field, and never will. A column that can only ever be null is a claim the source might one day fill it |
 | `is_residual_aggregate` | boolean | True for the unattributed tail row (§13) |
 | `created_at` | timestamptz | |
 
@@ -102,7 +104,8 @@ Normalised, one row per raw row, carrying resolved identity and quality flags.
 | `id` | uuid pk | |
 | `raw_observation_id` | uuid fk | Lineage to the exact bytes |
 | `model_id` | uuid fk null | → `reference.models`, after variant folding. **Null for the residual row**, which has no model |
-| `lab_provider_id` | uuid fk null | → `reference.providers`. Null where the namespace has no evidenced lab mapping |
+| `lab_provider_id` | uuid fk null | → `reference.providers`. **Nullable by necessity, not convenience.** **Measured**: an anonymous namespace carried ~3 % of attributed volume with no disclosable lab |
+| `lab_attribution_state` | text | **New.** `evidenced` \| `undisclosed` \| `ambiguous`. Required because "no lab" and "lab we have not yet mapped" are different facts, and one of them is permanent |
 | `serving_platform_provider_id` | uuid fk | → `reference.providers`, `inference_marketplace`. **Never equal to the lab in meaning** (§6) |
 | `observation_date` | date | |
 | `token_category` | text | `inference_input_output` under 0.1.0-draft. A closed set, extended only by a methodology version |
@@ -143,6 +146,7 @@ Unique on `(coverage_date, source_interface_id)`.
 | `attributed_tokens` | numeric null | Total minus the residual — the denominator for shares (§13) |
 | `residual_tokens` | numeric null | **Published, never hidden** |
 | `constituent_count` | int null | Attributed models |
+| `lab_unattributed_tokens` | numeric null | **New.** The second residual: tokens on named models with no evidenced lab. **Published, never hidden** |
 | `contributing_source_count` | int null | |
 | `exclusions` | jsonb | Reason-coded |
 | `settlement_state` | text | `provisional` \| `final` (§11) |
@@ -169,6 +173,8 @@ Both encode a rule the prose states, and a rule the database enforces cannot be 
 
 1. **No zero value without coverage.** `total_observed_tokens` may be non-null only when `coverage_state = 'covered_observed'`. This makes the `Σ ∅ = 0` failure unrepresentable rather than merely discouraged.
 2. **No estimate in the observation table.** `provenance` admits only ranks 1–3. An estimate cannot be inserted and later mistaken for an observation.
+3. **No estimated-dataset parameters on a production retrieval.** `request_parameters` must reject `category` and `language_type`. **Measured**: those parameters return a sampled dataset whose token totals arrive as genuine fractions — an estimate wearing the same field name as an observation, which is the one substitution this schema exists to prevent.
+4. **No non-daily grain on a production retrieval.** `request_parameters` must pin `period=day`. **Measured**: the weekly and monthly grains return an incomplete trailing bucket that is not labelled as incomplete, so differencing them fabricates a collapse at the series end.
 
 ## How the UI Would Change
 
@@ -190,17 +196,14 @@ Deliberately little, because the demo's shape is close to right.
 
 Source study, methodology draft, terms note, data model, plan. Documentation only; no code, schema or migration.
 
-### Phase 1A — unblock. **Prerequisite for everything after it.**
+### Phase 1A — characterization. **Complete, 16 September 2026.**
 
-Small, and nothing may proceed without it.
+Key obtained, 26 authenticated requests made, contract measured, six Phase 1 assumptions corrected. See the [characterization](../research/utvi/source-characterization.md). Two items carry forward rather than closing:
 
-1. Create an OpenRouter account; obtain an API key; hold it as `OPENROUTER_API_KEY`, in `.env.example` with no value and in `.env.local` / Vercel with one.
-2. One authenticated retrieval, archived with headers, as a research artifact.
-3. **Answer the four open questions** — cached input, embeddings, BYOK/private, revision behaviour — by measurement, or by asking OpenRouter, whose data page invites collaborations.
-4. **Measure revision behaviour**: read a fixed date daily for ~14 days, record deltas, and set the settlement lag from the result.
-5. Reconcile: does `Σ(individual rows) + residual` match the platform total, and what is the residual's share?
+- **BYOK and hidden-app inclusion is still undocumented.** It does not block a schema — no answer to it changes a column — but it blocks a *final* universe descriptor. Ask OpenRouter in parallel with 1B.
+- **The settlement lag is provisional.** The fourteen-day protocol in the characterization must run before 1.0.0 is approved. It needs no storage and can run alongside the build.
 
-**Exit criterion: a real response on disk, the four questions answered, a settlement lag with evidence behind it.** If any answer contradicts the draft, the draft changes before code is written — which is the entire reason this order is what it is.
+The exit criterion was met and it earned its keep: measurement would have caught two columns that could only ever have been null, and one presumption (embeddings out of scope) that was simply wrong.
 
 ### Phase 1B — methodology approval
 
@@ -226,13 +229,15 @@ Daily cron at the UCPI pattern; read model and API contract; wire `UtviSection` 
 
 | Risk | Severity | Mitigation | Residual |
 |---|---|---|---|
-| **Coverage misread as the market** | **High** | *Observed* in the name; universe published with every value; context disclosure beside it | **Cannot be eliminated.** A headline number will be screenshotted without its caption |
+| **Coverage misread as the market** | **High** | *Observed* in the name; universe published with every value; context disclosure beside it | **Cannot be eliminated.** A headline number will be screenshotted without its caption. Measured coverage is ~5 %, not the ~1 % first estimated — better, and still a small minority |
 | **Source concentration: one source, one company** | **High** | No mirrors, no substitutes. Rights and interface could change with notice or without | Accepted and disclosed. There is no second daily source to diversify into |
 | **Coverage-expansion growth read as market growth** | High | Version break, no restatement, change withheld across it, coverage descriptor in the data | Low once the rule holds |
 | **Licensing** | **Low** | CC BY 4.0, commercial and derivative works express; attribution carried on the data | Lowest of any Urdais source. Revisit if Urdais ever redistributes the dataset rather than an index over it |
 | **Double counting** | Low now, High later | Deduplicate traffic paths not models; precedence to the serving platform; exclude where undeterminable | Zero at one source. Real the moment a second is admitted |
 | **Tokenizer non-comparability** | Medium | Unit defined as provider-reported tokens; disclosed; no synthetic normalisation | Structural. A composition shift between labs moves the total for a non-market reason |
-| **Silent revision** | Medium | Append-only retrievals; settlement lag; provisional/final state published | Unquantified until 1A measures it |
+| **BYOK share shifting** | **Medium, unresolved** | Ask OpenRouter; publish the universe descriptor and change it if the answer changes | If BYOK is excluded, a commercial migration moves UTVI with no change in consumption, undetectably |
+| **Lab attribution hole** | Medium | `lab_attribution_state`; publish the lab residual separately | An anonymous namespace carried ~3 % of measured volume. Structural, and disclosed rather than closed |
+| **Silent revision** | **Low, measured** | Append-only retrievals; `response_hash` as the detector; provisional/final by day age | ~16 ppm/day on the just-closed day only; zero on older days; rank order never moved. Below any sane materiality threshold |
 | **`Σ ∅ = 0`** | **High if unguarded** | Coverage precondition before aggregation, plus a database constraint | Low. The pattern exists and is tested |
 | **Attribution not rendered** | Medium | Interpolated per retrieval; fail-closed if unrenderable | Low |
 
@@ -240,9 +245,9 @@ Daily cron at the UCPI pattern; read model and API contract; wire `UtviSection` 
 
 Recorded because a research phase should be able to conclude *no*, and because these are the findings that should stop it rather than be worked around:
 
-- **1A finds the series is not reproducible** — the same date returns materially different totals indefinitely, with no settlement.
+- ~~**1A finds the series is not reproducible**~~ — **tested and passed.** The same date returned byte-identical totals across four window shapes, and older days showed zero drift.
 - **BYOK or private-traffic treatment changes over time**, so the series moves for platform-composition reasons that cannot be distinguished from market movement.
-- **The residual dominates**, so attribution is too thin for the breakdowns the page depends on.
+- ~~**The residual dominates**~~ — **tested and passed.** The volume residual ran 4.59–7.98 % over 90 days, so attribution covers ~94 %.
 - **The rights position changes.**
 
 If any of these holds, the honest product may be narrower: the covered-platform series as an explicitly platform-scoped statistic, or a source-cited disclosure table with no index at all. Either beats a daily number that cannot bear its own headline.
