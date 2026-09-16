@@ -91,18 +91,19 @@ async function main(): Promise<void> {
   const inserted = run.written.observationsInserted;
   const retrievals = run.written.retrievalsInserted;
   const frozen = run.benchmarks.inserted;
+  const decisions = run.benchmarks.withheld;
   // Retrievals count. Reporting "nothing inserted" while writing a retrieval row
   // into an append-only table is how a verification that is not idempotent looks
   // exactly like one that is.
   console.log(
-    inserted === 0 && retrievals === 0 && frozen === 0
-      ? "nothing inserted: this verification was already recorded, and the frozen benchmarks already exist."
-      : `inserted ${inserted} observation(s) and ${retrievals} retrieval(s); froze ${frozen} benchmark(s).`,
+    inserted === 0 && retrievals === 0 && frozen === 0 && decisions === 0
+      ? "nothing inserted: this verification was already recorded, and the frozen benchmarks and withholding decisions already exist."
+      : `inserted ${inserted} observation(s) and ${retrievals} retrieval(s); froze ${frozen} benchmark(s) and recorded ${decisions} withholding decision(s).`,
   );
   for (const conflict of run.benchmarks.conflicts) console.error(`  conflict: ${conflict}`);
   if (run.withheld.length > 0) {
     console.log(
-      `withheld: ${run.withheld.map((row) => row.provider).join(", ")} collected in full, no headline value published. This is a recorded decision, not a gap.`,
+      `withheld: ${run.withheld.map((row) => row.provider).join(", ")} collected in full, no headline value published. This is a recorded decision, not a gap -- and it is now written to pipeline.token_price_benchmarks as one.`,
     );
   }
   console.log("no source-rights column was written; automated production collection remains gated as before.");
