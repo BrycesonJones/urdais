@@ -2,7 +2,7 @@
 
 **Status: internal research artifact. Not a methodology page, not routed publicly, not registered in the docs catalog.** Prepared 16 September 2026 by measuring Epoch AI's published benchmark bundle against UrdaisProd. No implementation, no ingestion, no schema, no migration and no approved methodology is created by this document.
 
-**Outcome: two of the three blockers are closed. Measurement opened a new one, and it is material.** Phase 3A is not complete.
+**Outcome: all blockers closed.** Two were closed by evidence; measurement opened a third, and it was resolved by decision on 16 September 2026 — recorded in §8. Phase 3A is complete.
 
 ## 1. Epoch join coverage — measured
 
@@ -47,7 +47,7 @@ So `gpt-6-astra_max` and `gpt-6-astra_low` sit at *identical x* with different y
 
 This is the exact mirror of the price cherry-pick the selection rule was built to prevent, and it is **not** solved by picking one effort per model: there is no `standard` effort, the available levels differ per model, and choosing the highest-scoring one is score-maximising selection by another name.
 
-### Recommended resolution — requires approval
+### Resolution — **approved 16 September 2026**, see §8
 
 **Plot each `(model, effort configuration)` as its own entity**, effort rendered in the label, and disclose on the surface that per-token price does not vary with effort while token consumption does.
 
@@ -55,7 +55,7 @@ The argument for it is that **nothing is selected**. Every published configurati
 
 The honest cost, which belongs in the methodology rather than a footnote: a reader comparing two points at the same x is not comparing two equal-cost options.
 
-**This is a methodology decision with a public consequence and is not mine to make.** It is the one blocker remaining.
+This was a methodology decision with a public consequence, so it was referred rather than taken. It was approved, with a semantic boundary attached. §8 records what was approved and what the product may therefore never claim.
 
 ## 3. Anthropic base region — resolved to `region = null`
 
@@ -137,20 +137,81 @@ Rules: never classified from a name — `gpt-oss` and `gpt-5.6-luna` share a pre
 
 ## 7. Phase 3A decision
 
-**Epoch remains approved.** Measurement strengthened the licensing case rather than weakening it: the grant ships inside the bundle, and the internal/external split is a filename convention rather than a judgement call. Coverage at 23–25 of 34 SKUs on the recommended benchmarks is a credible frontier — **conditional on §2**.
+**Epoch remains approved.** Measurement strengthened the licensing case rather than weakening it: the grant ships inside the bundle, and the internal/external split is a filename convention rather than a judgement call.
 
 | | |
 | --- | --- |
 | **Source** | Epoch AI, Epoch-administered benchmarks only, CC BY 4.0 |
 | **V1 benchmark set** | GPQA Diamond · FrontierMath Tiers 1-3 v2 |
 | **Anthropic region** | `region = null` — resolved on primary-source evidence |
-| **Plottable, GPQA Diamond** | 24 SKUs / 44 configuration points |
-| **Plottable, FrontierMath T1-3 v2** | 23 SKUs / 25 configuration points |
+| **Plotted unit** | canonical priced SKU + source-declared configuration (§8) |
+| **GPQA Diamond** | **44 points across 24 SKUs** |
+| **FrontierMath Tiers 1-3 v2** | **25 points across 23 SKUs** |
 | **V1 coding frontier** | none — SWE-bench Verified reaches 4 SKUs |
-| **Blocker remaining** | **yes — one** |
+| **Blockers remaining** | **none** |
 
-**The remaining blocker is the reasoning-effort configuration policy (§2).** Strict exact-ID matching yields 8 models and omits every current flagship; plotting effort configurations reaches 24 but needs the recommendation in §2 approved, because per-token price cannot express what effort costs.
+## 8. Approved: configuration-level capability observations
 
-Two of the three original blockers are closed. This one was not visible until the data was measured, which is the point of measuring it.
+Approved 16 September 2026. **The plotted unit is the canonical priced model SKU plus the source-declared reasoning effort or configuration.**
 
-**Phase 3A is not complete.** It completes when §2 is decided.
+Epoch's effort runs are **never collapsed** into one score and no "representative" effort level is selected. For `gpt-6-astra_max`, three facts are preserved separately:
+
+| field | value |
+| --- | --- |
+| canonical priced SKU | `gpt-6-astra` |
+| capability configuration | `max` |
+| raw source identifier | `gpt-6-astra_max` |
+
+The **capability score belongs to that exact configuration**. The **token price belongs to the underlying SKU** under the price selection rule already approved in the [source decision memo](./phase-3a-source-decision.md) — `standard` service tier, named base context tier, named base region, selected by name and never by price.
+
+Several configurations of one SKU therefore share an x-coordinate and differ in y. **Pareto efficiency is computed over configurations, not over canonical model identities.**
+
+### Measured consequence
+
+| | GPQA Diamond | FrontierMath T1-3 v2 |
+| --- | ---: | ---: |
+| plotted points | **44** | **25** |
+| distinct priced SKUs | 24 | 23 |
+| SKUs with more than one configuration | **12** | **1** |
+| duplicate `(SKU, configuration)` pairs | **0** | **0** |
+| configurations observed | `(as published)`, `32K`, `none`, `minimal`, `low`, `high`, `xhigh`, `max` | `(as published)`, `none`, `low`, `high`, `xhigh`, `max` |
+
+Two properties matter. **No `(SKU, configuration)` pair repeats**, so the plotted key is unique, the ordering is total and the frontier is deterministic without a tie-break rule. And the two frontiers have very different exposure to stacking: half of GPQA's SKUs carry multiple configurations, against **one** on FrontierMath — where the caveat below is nearly theoretical.
+
+A row whose configuration Epoch did not declare is recorded as `(as published)` rather than assigned a level. That is a fourth thing Urdais will not guess.
+
+### The semantic boundary — the condition of approval
+
+> Model Frontier compares **benchmark capability** with **provider list price per 1M tokens**. Reasoning effort may change the number of tokens consumed, so **equal unit token prices do not imply equal total cost per request or task.**
+
+The product **must not claim**, in any surface, label, tooltip, heading or export:
+
+- total inference cost
+- cost per task
+- the cheapest model to accomplish an outcome
+- economic efficiency after accounting for reasoning-token consumption
+
+Every one of those requires usage or outcome data Urdais does not hold. The axis answers *what a token costs*; effort changes *how many are spent*; and V1 measures only the first. Two points at the same x are two prices per token, not two equal-cost options — and where one dominates the other, it has bought that capability with tokens this chart does not count.
+
+This boundary is what makes configuration-level plotting honest rather than merely convenient. It is not a caveat bolted on afterwards; it is the reason the approach is admissible at all.
+
+### UI requirements
+
+- The **model is the primary label**. The configuration is **secondary metadata**, subordinate in the visual hierarchy.
+- Effort variants are **never presented as unrelated commercial SKUs**. They are one purchasable model observed under different settings, and the chart must read that way.
+- Every tooltip exposes, at minimum: **source benchmark · score · effort/configuration · capability as-of date · price as-of date · blended unit price**.
+
+### Methodology requirements
+
+The published methodology must state, in its own words and not by implication:
+
+1. **Why Urdais does not choose a preferred effort level.** There is no `standard` effort; the available levels differ per model; and selecting the highest-scoring one would be score-maximising selection — the mirror of the cheapest-row price selection the price rule exists to prevent. Plotting every published configuration selects nothing.
+2. **Why several configurations can share an x-coordinate.** Per-token price is a property of the SKU and is invariant to inference-time settings.
+3. **That domination is configuration-level.** A frontier point is a configuration, not a model, and a model may appear on the frontier under one configuration and not another.
+4. **That total token consumption is outside V1**, together with the four claims the product does not make.
+
+### Decisions carried forward unchanged
+
+Epoch AI as the V1 source · Option C, benchmark-specific frontiers · GPQA Diamond and FrontierMath Tiers 1-3 v2 · Anthropic base region `null` · exact evidenced identity links only, unmatched stays unmatched · named price selection, never cheapest-row selection.
+
+**Phase 3A is complete.**

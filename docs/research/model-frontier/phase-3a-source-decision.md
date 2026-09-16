@@ -141,13 +141,19 @@ Only `evidenced` rows join. The other three states **keep the observation and re
 
 The frontier reports four counts beside the chart, never silently: unmapped identity · ambiguous identity · no eligible price · scored but unpriced. A frontier that quietly dropped models would misstate which model is actually on it.
 
-## 8. Unresolved decisions
+## 8. Open questions — status after the blocker-resolution pass
 
-1. **LiveBench maintainer confirmation** — does the datasheet's Apache 2.0 grant cover commercial display of published numeric scores? Until answered, LiveBench is not a V1 source.
-2. **Epoch join coverage** — how many of the 34 priceable SKUs have an evidenced Epoch link? Measure before building.
-3. **Anthropic base region** — `null` or `us`? A named choice is required by the rule and does not exist yet.
-4. **Open-weight classification** — still no production infrastructure; must come from published model licences with evidence, and is shared with Phase 4.
-5. **Which Epoch benchmarks ship in V1** — all five internal, or a named subset.
-6. **Temporal disclosure wording** — capability is a dated snapshot, price can move; both dates rendered.
+Resolved in the [blocker-resolution memo](./phase-3a-blocker-resolution.md):
 
-Nothing is built until 1–3 are settled.
+- **Epoch join coverage** — measured. GPQA Diamond reaches 24 priced SKUs, FrontierMath Tiers 1-3 v2 reaches 23, each of 34. SWE-bench Verified (4) and MATH Level 5 (1) are too thin and are dropped.
+- **Anthropic base region** — `null`, on Anthropic's own published pricing table, its statement that the first-party API is global by default, the measured 1.1× `inference_geo: "us"` multiplier, Token Price's existing `baseRegion: null` designation, and the fact that Haiku has no `us` row at all.
+- **V1 benchmark set** — GPQA Diamond and FrontierMath Tiers 1-3 v2. Two, not five.
+- **Temporal disclosure wording** — drafted, stating both dates, that the chart does not reconcile them, and that no historical frontier is claimed.
+- **Reasoning-effort configuration** — the blocker measurement uncovered. Resolved by approving configuration-level observations under a strict semantic boundary; see that memo's §8.
+
+Still open, neither of them blocking V1:
+
+- **LiveBench maintainer confirmation** — whether the datasheet's Apache 2.0 grant covers commercial display of published numeric scores. LiveBench is a *future additional frontier* under Option C, not a V1 dependency, so this gates an addition rather than a launch.
+- **Open-weight classification** — planned, not built. Primary evidence remains the publisher's model card or weights licence; Epoch's CC BY `accessibility` field is a cross-check and worklist. Shared with Phase 4 and built once.
+
+**No unresolved methodology blocker remains for Phase 3B.**
