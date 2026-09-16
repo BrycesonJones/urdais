@@ -222,14 +222,45 @@ export type ActiveSnapshot = {
   dateContentHash: string | null;
   settlementState: SettlementState;
   totalTokens: bigint | null;
+  /**
+   * What is actually persisted beneath the snapshot, as distinct from what it claims.
+   *
+   * A snapshot row records aggregates and a content hash computed from the source rows. Its
+   * child observations are a separate write, and before the transaction fix below they could
+   * be absent or incomplete while the parent row still read as complete and correct. So the
+   * count and the sum are read here, and `representationComplete` compares them against the
+   * claim rather than trusting it.
+   */
+  persistedRowCount: number;
+  persistedTokenSum: bigint;
 };
+
+/**
+ * Whether a snapshot's persisted observations actually account for what the snapshot claims.
+ *
+ * The invariant: the rows beneath a snapshot must sum exactly to its total, and there must be
+ * one row per named model plus at most one residual. Exact, not tolerant — these are integers
+ * copied from the same source rows, so any difference at all is a defect rather than rounding.
+ *
+ * This is the check that would have caught the 2025-09-16 defect at the moment the backfill
+ * resumed, instead of eleven months of history later when something finally read the rows.
+ */
+export function representationComplete(snapshot: ActiveSnapshot): boolean {
+  if (snapshot.coverageState !== "covered_observed") return snapshot.persistedRowCount === 0;
+  if (snapshot.totalTokens === null) return false;
+  return snapshot.persistedTokenSum === snapshot.totalTokens && snapshot.persistedRowCount > 0;
+}
 
 export async function activeSnapshot(sql: SqlExecutor, observationDate: string): Promise<ActiveSnapshot | null> {
   const { rows } = await sql.query(
-    `select id, observation_date::text as observation_date, coverage_state, date_content_hash,
-            settlement_state, total_tokens::text as total_tokens
-       from pipeline.utvi_daily_snapshots
-      where observation_date = $1 and superseded_by_id is null`,
+    `select s.id, s.observation_date::text as observation_date, s.coverage_state,
+            s.date_content_hash, s.settlement_state, s.total_tokens::text as total_tokens,
+            (select count(*) from pipeline.utvi_model_observations o
+              where o.daily_snapshot_id = s.id) as persisted_row_count,
+            coalesce((select sum(o.source_total_tokens) from pipeline.utvi_model_observations o
+                       where o.daily_snapshot_id = s.id), 0)::text as persisted_token_sum
+       from pipeline.utvi_daily_snapshots s
+      where s.observation_date = $1 and s.superseded_by_id is null`,
     [observationDate],
   );
   const row = rows[0];
@@ -241,6 +272,8 @@ export async function activeSnapshot(sql: SqlExecutor, observationDate: string):
     dateContentHash: row.date_content_hash === null ? null : String(row.date_content_hash),
     settlementState: String(row.settlement_state) as SettlementState,
     totalTokens: row.total_tokens === null ? null : BigInt(String(row.total_tokens)),
+    persistedRowCount: Number(row.persisted_row_count),
+    persistedTokenSum: BigInt(String(row.persisted_token_sum)),
   };
 }
 
@@ -248,6 +281,12 @@ export async function activeSnapshot(sql: SqlExecutor, observationDate: string):
 export type SnapshotOutcome =
   /** No snapshot existed for the date. */
   | { kind: "created"; snapshotId: string }
+  /**
+   * The content was unchanged but what had been persisted for it was incomplete, and the
+   * complete representation replaced it. Not a revision: the source did not move, the value
+   * does not change, and the supersession records a repair of Urdais's own storage.
+   */
+  | { kind: "repaired"; snapshotId: string; supersededId: string; recoveredRowCount: number }
   /** The same rows came back. The retrieval is recorded; the date did not change. */
   | { kind: "confirmed"; snapshotId: string }
   /** Different rows came back. A new snapshot supersedes the previous one. */
@@ -279,8 +318,20 @@ export async function applySnapshot(
   const existing = await activeSnapshot(sql, snapshot.observationDate);
 
   if (existing !== null && existing.dateContentHash === snapshot.dateContentHash) {
-    // Identical content. If the date has since settled, record that and nothing else; the
-    // arithmetic is untouched and the trigger enforces that it stays untouched.
+    // Identical content -- but identical content is a statement about the *source*, and it says
+    // nothing about whether Urdais actually stored the rows. Measured on 2025-09-16: a backfill
+    // was interrupted partway through writing one date's observations, the snapshot row and its
+    // aggregates survived intact, and the resumed run took this branch and confirmed a date
+    // whose child rows were two thirds missing. The hash matched, because the hash is computed
+    // from the source response and the source had not changed.
+    //
+    // So the representation is verified before it is confirmed, and a defective one is repaired
+    // rather than blessed.
+    if (!representationComplete(existing)) {
+      return await repairRepresentation(sql, lineage, utviRetrievalId, snapshot, sourceAsOf, existing);
+    }
+    // If the date has since settled, record that and nothing else; the arithmetic is untouched
+    // and the trigger enforces that it stays untouched.
     if (existing.settlementState === "provisional" && snapshot.settlementState === "final") {
       await sql.query(
         `update pipeline.utvi_daily_snapshots set settlement_state = 'final' where id = $1`,
@@ -292,7 +343,20 @@ export async function applySnapshot(
   }
 
   if (existing === null) {
-    const insertedId = await insertSnapshot(sql, lineage, utviRetrievalId, snapshot, sourceAsOf, randomUUID());
+    // One transaction, for the same reason the revision path below takes one: the snapshot row
+    // and its observations are two statements, and a crash between them leaves a snapshot
+    // claiming rows that are not there. That is not hypothetical -- it is exactly what happened
+    // to 2025-09-16 during the production backfill, and nothing noticed for eleven months
+    // because nothing read the child rows until Market Share did.
+    let insertedId: string;
+    await sql.query("begin", []);
+    try {
+      insertedId = await insertSnapshot(sql, lineage, utviRetrievalId, snapshot, sourceAsOf, randomUUID());
+      await sql.query("commit", []);
+    } catch (error) {
+      await sql.query("rollback", []);
+      throw error;
+    }
     return { kind: "created", snapshotId: insertedId };
   }
 
@@ -330,6 +394,84 @@ export async function applySnapshot(
     snapshotId: newId,
     supersededId: existing.id,
     previousTotal: existing.totalTokens,
+  };
+}
+
+/**
+ * Replace a defective persisted representation with a complete one.
+ *
+ * Reached only when the source content hash is *identical* to what is stored and the rows
+ * beneath it do not account for the snapshot's own total. That combination means one thing and
+ * cannot mean anything else: the source did not move, and Urdais failed to write what it saw.
+ *
+ * It is a supersession rather than an in-place fill, and the distinction matters for audit. The
+ * defective snapshot is not deleted or edited -- it stays, marked superseded, with its 16 rows
+ * and its reason, so the repair is visible in the history rather than erasing the evidence that
+ * it was needed. The replacement carries the same date, the same aggregates, the same content
+ * hash and the same settlement state, because none of those was wrong; only the child rows
+ * were missing.
+ *
+ * It is deliberately *not* called a revision. A revision means the source changed and the
+ * published value may move. Here the value is arithmetically identical and any republication
+ * restates the same number -- the thing that changed is Urdais's storage of the evidence.
+ *
+ * Nothing is synthesised. Every row written here comes from a live retrieval whose bytes hashed
+ * to the stored hash; a caller that cannot show that never reaches this function.
+ */
+async function repairRepresentation(
+  sql: SqlExecutor,
+  lineage: UtviLineage,
+  utviRetrievalId: string,
+  snapshot: DailySnapshot,
+  sourceAsOf: string,
+  existing: ActiveSnapshot,
+): Promise<SnapshotOutcome> {
+  if (snapshot.dateContentHash === null) {
+    throw new UtviContractError(`${snapshot.observationDate}: cannot repair against a snapshot with no content hash`);
+  }
+  if (existing.dateContentHash !== snapshot.dateContentHash) {
+    // Belt and braces: the caller already checked, and if that ever stops being true this is a
+    // revision and must go down the revision path, not this one.
+    throw new UtviContractError(
+      `${snapshot.observationDate}: repair requires an identical content hash; stored ${existing.dateContentHash}, live ${snapshot.dateContentHash}`,
+    );
+  }
+  if (snapshot.totalTokens !== existing.totalTokens) {
+    throw new UtviContractError(
+      `${snapshot.observationDate}: content hash matches but totals differ (${existing.totalTokens} stored, ${snapshot.totalTokens} live); refusing to repair`,
+    );
+  }
+
+  const newId = randomUUID();
+  const reason =
+    `repaired defective persisted representation of ${snapshot.observationDate}: ` +
+    `${existing.persistedRowCount} observation row(s) persisted summing to ${existing.persistedTokenSum}, ` +
+    `against a snapshot total of ${existing.totalTokens}. Source content hash unchanged ` +
+    `(${snapshot.dateContentHash.slice(0, 12)}); no value is revised.`;
+
+  // The same ordering constraint as a revision, and for the same reason: one live snapshot per
+  // date is a partial unique index, so the old row is superseded first, naming an id that does
+  // not exist yet, which the deferred self-reference permits until commit.
+  await sql.query("begin", []);
+  try {
+    await sql.query(
+      `update pipeline.utvi_daily_snapshots
+          set superseded_by_id = $2, superseded_at = now(), supersession_reason = $3
+        where id = $1`,
+      [existing.id, newId, reason],
+    );
+    await insertSnapshot(sql, lineage, utviRetrievalId, snapshot, sourceAsOf, newId);
+    await sql.query("commit", []);
+  } catch (error) {
+    await sql.query("rollback", []);
+    throw error;
+  }
+
+  return {
+    kind: "repaired",
+    snapshotId: newId,
+    supersededId: existing.id,
+    recoveredRowCount: snapshot.observations.length - existing.persistedRowCount,
   };
 }
 
@@ -522,14 +664,31 @@ export async function publishCalculation(
   }
 
   const { rows } = await sql.query(
-    `select id, value_tokens_per_day::text as value, revision_number
-       from pipeline.utvi_publications
-      where calculation_date = $1 and superseded_by_id is null`,
+    `select p.id, p.value_tokens_per_day::text as value, p.revision_number,
+            (s.superseded_by_id is null) as evidence_is_live
+       from pipeline.utvi_publications p
+       join pipeline.utvi_calculations c on c.id = p.calculation_id
+       join pipeline.utvi_daily_snapshots s on s.id = c.daily_snapshot_id
+      where p.calculation_date = $1 and p.superseded_by_id is null`,
     [calculation.calculationDate],
   );
   const existing = rows[0];
+  const evidenceIsLive = existing === undefined ? true : Boolean(existing.evidence_is_live);
 
-  if (existing !== undefined && BigInt(String(existing.value)) === calculation.totalObservedTokens) {
+  // An unchanged value is normally not republished: the source's rows moved, UTVI did not, and
+  // a second public point would tell a reader something happened when nothing did.
+  //
+  // Unless the standing publication's evidence is no longer live. A publication reaches its
+  // snapshot through its calculation, and once that snapshot is superseded the published point
+  // is anchored to a representation the database no longer serves -- so every consumer that
+  // reads through live snapshots, Market Share included, loses the date entirely. Re-pointing
+  // is therefore not an optional tidy-up: the value stays identical and its evidence follows
+  // the live snapshot, which is what keeps the point readable at all.
+  if (
+    existing !== undefined &&
+    evidenceIsLive &&
+    BigInt(String(existing.value)) === calculation.totalObservedTokens
+  ) {
     return {
       kind: "refused",
       refusal: {
@@ -540,44 +699,69 @@ export async function publishCalculation(
   }
 
   const revisionNumber = existing === undefined ? 1 : Number(existing.revision_number) + 1;
-  const inserted = one(
-    (
-      await sql.query(
-        `insert into pipeline.utvi_publications (
-           calculation_id, calculation_date, published_at, publisher_identity,
-           value_tokens_per_day, published_model_residual, published_lab_residual,
-           settlement_state, methodology_version, universe_descriptor, source_attribution,
-           source_content_hash, revision_number
-         ) values ($1,$2,now(),$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-         returning id`,
-        [
-          calculationId,
-          calculation.calculationDate,
-          publisherIdentity,
-          calculation.totalObservedTokens.toString(),
-          calculation.modelResidualTokens.toString(),
-          calculation.labResidualTokens.toString(),
-          calculation.settlementState,
-          lineage.methodologyVersion,
-          universeDescriptor,
-          renderCitation(sourceAsOf),
-          calculation.sourceContentHash,
-          revisionNumber,
-        ],
-      )
-    ).rows,
-    "the inserted publication",
-  );
-  const publicationId = String(inserted.id);
+  const publicationId = randomUUID();
 
-  if (existing === undefined) return { kind: "published", publicationId, revisionNumber };
+  const insert = async () => {
+    await sql.query(
+      `insert into pipeline.utvi_publications (
+         id, calculation_id, calculation_date, published_at, publisher_identity,
+         value_tokens_per_day, published_model_residual, published_lab_residual,
+         settlement_state, methodology_version, universe_descriptor, source_attribution,
+         source_content_hash, revision_number
+       ) values ($13,$1,$2,now(),$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+      [
+        calculationId,
+        calculation.calculationDate,
+        publisherIdentity,
+        calculation.totalObservedTokens.toString(),
+        calculation.modelResidualTokens.toString(),
+        calculation.labResidualTokens.toString(),
+        calculation.settlementState,
+        lineage.methodologyVersion,
+        universeDescriptor,
+        renderCitation(sourceAsOf),
+        calculation.sourceContentHash,
+        revisionNumber,
+        publicationId,
+      ],
+    );
+  };
 
-  await sql.query(
-    `update pipeline.utvi_publications
-        set superseded_by_id = $2, superseded_at = now(), supersession_reason = $3
-      where id = $1`,
-    [existing.id, publicationId, `revised to ${calculation.totalObservedTokens} tokens/day after a source revision`],
-  );
+  if (existing === undefined) {
+    await insert();
+    return { kind: "published", publicationId, revisionNumber };
+  }
+
+  // Supersede first, then insert -- the same ordering the snapshot supersession uses, and for
+  // the same reason. One live publication per date is a partial unique index, and a unique
+  // index is checked the instant a row is inserted, so inserting the replacement while the old
+  // row is still live puts two live points on the date and is rejected outright. Superseding
+  // first names an id that does not exist yet, which the deferred self-reference permits until
+  // commit, by which time it does.
+  //
+  // This ordering was wrong from the beginning and had never fired: all 621 production points
+  // are first publications, so nothing had ever superseded one until a storage repair needed to
+  // re-point a date's evidence, and the insert failed on the index.
+  await sql.query("begin", []);
+  try {
+    await sql.query(
+      `update pipeline.utvi_publications
+          set superseded_by_id = $2, superseded_at = now(), supersession_reason = $3
+        where id = $1`,
+      [
+        existing.id,
+        publicationId,
+        BigInt(String(existing.value)) === calculation.totalObservedTokens
+          ? `re-pointed to the live snapshot after a storage repair; the value is unchanged at ${calculation.totalObservedTokens} tokens/day`
+          : `revised to ${calculation.totalObservedTokens} tokens/day after a source revision`,
+      ],
+    );
+    await insert();
+    await sql.query("commit", []);
+  } catch (error) {
+    await sql.query("rollback", []);
+    throw error;
+  }
   return { kind: "superseded", publicationId, supersededId: String(existing.id), revisionNumber };
 }
 
@@ -591,11 +775,49 @@ export async function publishCalculation(
  * snapshot and skip straight past the hole. Found in production: one date of 621.
  */
 export async function snapshotHasCalculation(sql: SqlExecutor, snapshotId: string): Promise<boolean> {
+  return (await calculationIdForSnapshot(sql, snapshotId)) !== null;
+}
+
+/**
+ * The most recent calculation recorded against a snapshot, or null.
+ *
+ * Wanted whenever a date already has a value but its *publication* needs attention: recording a
+ * second identical calculation to reach the publication step would grow the ledger with a fact
+ * it already holds.
+ */
+export async function calculationIdForSnapshot(sql: SqlExecutor, snapshotId: string): Promise<string | null> {
   const { rows } = await sql.query(
-    `select 1 from pipeline.utvi_calculations where daily_snapshot_id = $1 limit 1`,
+    `select id from pipeline.utvi_calculations
+      where daily_snapshot_id = $1
+      order by calculated_at desc limit 1`,
     [snapshotId],
   );
-  return rows.length > 0;
+  const row = rows[0];
+  return row === undefined ? null : String(row.id);
+}
+
+/**
+ * Whether the date's live publication is backed by a live snapshot.
+ *
+ * A publication reaches its evidence through its calculation, and a repair or revision can
+ * supersede that snapshot underneath it. The value stays readable, but every consumer that
+ * reads through live snapshots -- Market Share among them -- loses the date, because the
+ * evidence it joins to is no longer served.
+ *
+ * Returns true when there is no publication at all: nothing is orphaned if nothing is published,
+ * and the caller's other checks decide what to do about the absence.
+ */
+export async function publicationEvidenceIsLive(sql: SqlExecutor, calculationDate: string): Promise<boolean> {
+  const { rows } = await sql.query(
+    `select (s.superseded_by_id is null) as live
+       from pipeline.utvi_publications p
+       join pipeline.utvi_calculations c on c.id = p.calculation_id
+       join pipeline.utvi_daily_snapshots s on s.id = c.daily_snapshot_id
+      where p.calculation_date = $1 and p.superseded_by_id is null`,
+    [calculationDate],
+  );
+  const row = rows[0];
+  return row === undefined ? true : Boolean(row.live);
 }
 
 /** Dates that already have a live snapshot, so a backfill can skip what it has. */

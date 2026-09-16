@@ -7,8 +7,7 @@
  *   Models (MODEL_ROSTER: family, access class, blended price, capability)
  *     ↓
  *   Token price observations   → Token Price (canonical public read model)
- *   Token volume observations  → UTVI, Market Share, Open-weight volume share,
- *                                Model Frontier point size
+ *   Token volume observations  → Open-weight volume share, Model Frontier point size
  *   Capability + access class  → Model Frontier, Open-weight capability and price gaps
  *
  * Every number the page shows is computed here from these records; nothing
@@ -20,18 +19,16 @@ import { buildDailySeries } from "@/data/mock/series-generator";
 import { findTokenLab } from "@/data/mock/token-providers";
 import { MOCK_AS_OF } from "@/data/mock/ucpi";
 import type { TimeSeriesPoint } from "@/types/market";
-import type { AccessClass, FrontierPoint, ModelRecord, OpenWeightAnalysis, ShareRow } from "@/types/model-economics";
+import type { AccessClass, FrontierPoint, ModelRecord, OpenWeightAnalysis } from "@/types/model-economics";
 
 export const MODEL_ECONOMICS_AS_OF = MOCK_AS_OF;
 
 /** Volume history length: comfortably more than the longest selectable range. */
 const VOLUME_HISTORY_DAYS = 420;
-/** Market share, frontier sizing, and open-weight analytics use this trailing window. */
+/** Frontier sizing and open-weight analytics use this trailing window. */
 export const SHARE_WINDOW_DAYS = 30;
 /** Price-gap medians only consider models at or above this capability, so like is compared with like. */
 export const PRICE_GAP_CAPABILITY_THRESHOLD = 80;
-/** Model share tables list this many models before folding the rest into "Other". */
-export const MODEL_SHARE_TOP_N = 8;
 
 type ModelSpec = Omit<ModelRecord, "labName" | "modelFamily"> & {
   /** Latest observed tokens per day. */
@@ -116,17 +113,20 @@ function volumeSeries(modelId: string): TimeSeriesPoint[] {
   return series;
 }
 
-/** Sum of every model's observed volume on each date. */
+/* ---------- UTVI and Market Share: removed ---------- */
 
-/* ---------- UTVI: removed ---------- */
+// The synthetic UTVI instrument and the two demo share tables that used to live here are gone.
+// UTVI publishes from production and its series comes from `@/lib/utvi/read/instrument`;
+// Market Share derives from the same production observations through `@/lib/market-share`.
+// The volume *observations* below stay, because the Frontier and the open-weight analytics are
+// still demo and still derive from them.
 
-// The synthetic UTVI instrument that used to live here is gone. UTVI publishes from
-// production under methodology 1.0.0, and its series comes from
-// `@/lib/utvi/read/instrument`. The volume *observations* below stay, because Market Share,
-// the Frontier and the open-weight analytics are still demo and still derive from them; only
-// UTVI is detached.
-
-/* ---------- Market share ---------- */
+/* ---------- Trailing-window volume ---------- */
+//
+// Market Share no longer derives from any of this. It reads production UTVI observations
+// through `@/lib/market-share`, where the shares are of real observed OpenRouter volume. The
+// window means below survive because the Frontier sizes its points by them and the open-weight
+// analytics compares volume by access class -- both still demo, both still their own phases.
 
 /** Mean observed tokens per day for a model over the trailing share window. */
 function windowVolume(modelId: string): number {
@@ -142,35 +142,6 @@ const WINDOW_TOTAL = [...MODEL_WINDOW_VOLUME.values()].reduce((sum, value) => su
 function toShare(volume: number): number {
   return (volume / WINDOW_TOTAL) * 100;
 }
-
-/** Trailing-window volume share by lab, descending; shares sum to 100. */
-export const LAB_SHARES: ShareRow[] = (() => {
-  const byLab = new Map<string, { label: string; volume: number }>();
-  for (const model of MODEL_ROSTER) {
-    const entry = byLab.get(model.labId) ?? { label: model.labName, volume: 0 };
-    entry.volume += MODEL_WINDOW_VOLUME.get(model.id)!;
-    byLab.set(model.labId, entry);
-  }
-  return [...byLab.entries()]
-    .map(([id, entry]) => ({ id, label: entry.label, volume: entry.volume, share: toShare(entry.volume) }))
-    .sort((a, b) => b.volume - a.volume);
-})();
-
-/** Trailing-window volume share by model, descending, with the tail folded into "Other" so shares still sum to 100. */
-export const MODEL_SHARES: ShareRow[] = (() => {
-  const rows = MODEL_ROSTER.map((model) => {
-    const volume = MODEL_WINDOW_VOLUME.get(model.id)!;
-    return { id: model.id, label: model.modelName, detail: model.labName, volume, share: toShare(volume) };
-  }).sort((a, b) => b.volume - a.volume);
-  if (rows.length <= MODEL_SHARE_TOP_N + 1) return rows;
-  const top = rows.slice(0, MODEL_SHARE_TOP_N);
-  const rest = rows.slice(MODEL_SHARE_TOP_N);
-  const restVolume = rest.reduce((sum, row) => sum + row.volume, 0);
-  return [
-    ...top,
-    { id: "other", label: "Other", detail: `${rest.length} models`, volume: restVolume, share: toShare(restVolume) },
-  ];
-})();
 
 /* ---------- Model frontier ---------- */
 

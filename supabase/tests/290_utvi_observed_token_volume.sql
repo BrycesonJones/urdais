@@ -18,6 +18,7 @@ declare
   utvi_instrument uuid;
   spec_id         uuid;
   method_ver_id   uuid;
+  method_ver      text;
   retrieval_a     uuid;
   retrieval_b     uuid;
   utvi_ret_a      uuid;
@@ -34,9 +35,18 @@ begin
   select id into lab_id from reference.providers where slug = 'deepseek';
   select id into grant_id from reference.permission_grants where source_interface_id = iface_id limit 1;
   select id into utvi_instrument from reference.instruments where symbol = 'UTVI';
+  -- The *active* spec version, resolved the way the pipeline resolves it: newest first. An
+  -- unordered `limit 1` was deterministic only while UTVI had one spec version, and it silently
+  -- began selecting the superseded 1.0.0 row the moment 1.1.0 was added -- which is how a test
+  -- that guards the publication gate came to assert that the gate was shut.
   select id into spec_id from reference.instrument_spec_versions
-    where reference.instrument_spec_versions.instrument_id = utvi_instrument limit 1;
+    where reference.instrument_spec_versions.instrument_id = utvi_instrument
+    order by created_at desc limit 1;
   select methodology_version_id into method_ver_id from reference.instrument_spec_versions where id = spec_id;
+  -- The version string the publication must carry. Read rather than written in, so an
+  -- amendment to the methodology does not require editing five literals in this file -- and so
+  -- a publication that disagreed with its own calculation's version would still be caught.
+  select version into method_ver from reference.methodology_versions where id = method_ver_id;
 
   if iface_id is null or platform_id is null or grant_id is null or utvi_instrument is null then
     raise exception 'UTVI reference data is missing; the migration did not seed it';
@@ -52,10 +62,11 @@ begin
   end if;
 
   -- ----------------------------------------------------------- the methodology is approved
-  -- UTVI 1.0.0 is approved and effective from the first date of the series, which is what lets
-  -- a value publish at all. The gate still has to refuse everything else, which is what the
-  -- rest of this file is for: a gate that only ever said no was easy to keep honest, and one
-  -- that says yes to the right thing is the one worth testing.
+  -- The active UTVI methodology version -- 1.1.0 since the derived-breakdown amendment -- is
+  -- approved and effective from the first date of the series, which is what lets a value
+  -- publish at all. The gate still has to refuse everything else, which is what the rest of
+  -- this file is for: a gate that only ever said no was easy to keep honest, and one that says
+  -- yes to the right thing is the one worth testing.
   if (select status from reference.methodology_versions where id = method_ver_id) <> 'approved' then
     raise exception 'the UTVI methodology version is not approved; no value can publish';
   end if;
@@ -432,7 +443,7 @@ begin
       methodology_version, universe_descriptor, source_attribution, source_content_hash
     ) values (
       calc_a, date '2026-09-15', now(), 999, 100, 500, 'provisional',
-      '1.0.0', 'the covered universe',
+      method_ver, 'the covered universe',
       'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-16T00:00:00Z.', hash_a
     );
   exception when check_violation then failed := true;
@@ -468,7 +479,7 @@ begin
       methodology_version, universe_descriptor, source_attribution, source_content_hash
     ) values (
       calc_a, date '2026-09-14', now(), 1000, 100, 500, 'provisional',
-      '1.0.0', 'the covered universe',
+      method_ver, 'the covered universe',
       'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-16T00:00:00Z.', hash_a
     );
   exception when check_violation then failed := true;
@@ -487,7 +498,7 @@ begin
       methodology_version, universe_descriptor, source_attribution, source_content_hash
     ) values (
       calc_a, date '2026-09-15', now(), 1000, 100, 500, 'provisional',
-      '1.0.0', '   ',
+      method_ver, '   ',
       'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-16T00:00:00Z.', hash_a
     );
   exception when check_violation then failed := true;
@@ -503,7 +514,7 @@ begin
     methodology_version, universe_descriptor, source_attribution, source_content_hash
   ) values (
     calc_a, date '2026-09-15', now(), 1000, 100, 500, 'provisional',
-    '1.0.0', 'Token volume exposed by OpenRouter''s rankings-daily dataset for the traffic included by that dataset.',
+    method_ver, 'Token volume exposed by OpenRouter''s rankings-daily dataset for the traffic included by that dataset.',
     'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-16T00:00:00Z.', hash_a
   );
 
@@ -516,7 +527,7 @@ begin
       methodology_version, universe_descriptor, source_attribution, source_content_hash
     ) values (
       calc_a, date '2026-09-15', now(), 1000, 100, 500, 'provisional',
-      '1.0.0', 'the covered universe',
+      method_ver, 'the covered universe',
       'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-16T00:00:00Z.', hash_a
     );
   exception when unique_violation then failed := true;

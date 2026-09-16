@@ -1,8 +1,10 @@
 # Urdais Observed Token Volume Index (UTVI) Methodology
 
-**Version 1.0.0, approved 16 September 2026. Status: approved for production, effective from 1 January 2025.** Prepared 16 September 2026 from the Phase 1 source study and the Phase 1A characterization of the live authenticated source, and approved after the backend was built and verified end to end.
+**Version 1.1.0, approved 16 September 2026. Status: approved for production, effective from 1 January 2025.** Prepared 16 September 2026 from the Phase 1 source study and the Phase 1A characterization of the live authenticated source, approved at 1.0.0 after the backend was built and verified end to end, and amended at 1.1.0 to settle the denominator of the derived breakdowns §14 had deferred.
 
-**This is the first version under which UTVI may publish a value.** A methodology version carries an effective date only when it is approved, and a database trigger refuses any publication whose methodology version is not approved — so the promotion of this document from draft to approved is the activation switch, and nothing else is.
+**Version 1.0.0 is preserved as the historical version and is not restated.** Every UTVI value published before this amendment carries 1.0.0 and continues to do so. 1.1.0 changes no UTVI value: it amends §13–§14, which govern derived breakdowns, and under 1.0.0 no breakdown was published at all. That is why it is effective over the whole series rather than from its approval date — there is no earlier value for it to restate, and every level it governs is identical to the level 1.0.0 governed.
+
+**Version 1.0.0 was the first version under which UTVI could publish a value.** A methodology version carries an effective date only when it is approved, and a database trigger refuses any publication whose methodology version is not approved — so the promotion of that document from draft to approved was the activation switch, and nothing else was.
 
 Prepared under the [Urdais methodology framework](/docs/methodology). This draft rests on the Urdais's internal Phase 1 source study and the Phase 1A source characterization, which measured the live authenticated endpoint, and it is accompanied by an internal data-architecture proposal. Facts below marked *measured* were observed against real responses; facts marked *documented* come from the source's own documents. Its purpose is to state what UTVI would measure, precisely enough that the decision to build it can be taken on evidence — and precisely enough that the decision *not* to build it remains available.
 
@@ -268,22 +270,32 @@ Where a source reports its top *N* models individually plus one aggregate residu
 
 Consequently, for any attributed breakdown (§14):
 
-- **both residuals are published beside the shares**, each as its own figure;
+- **both residuals are published beside the shares**, each as its own row;
 - neither is silently dropped from the denominator nor silently folded into a named lab;
-- a share is stated as a **share of attributed tokens**, and never as a share of the total unless both residuals are zero;
+- a share is stated as a **share of total observed tokens**, with both residuals present as rows, so that the decomposition closes at 100 % with nothing hidden;
 - a lab table whose shares sum to 100 % while an unattributed model sits inside a named lab is wrong, and this rule exists to prevent exactly that.
+
+**Amended in 1.1.0.** Versions 1.0.0 and earlier required a share to be stated as a share of *attributed* tokens, never of the total. That rule was written to stop the residuals being deleted, and it does stop that — but it has a failure of its own, which only became visible when a breakdown was actually built. Under an attributed-only denominator the lab table sums to 100 % while the source's `other` row sits **outside** it, so a reader is shown a complete-looking decomposition of a quantity that is not the published total, with no row anywhere indicating the difference. That is a share of *some* observed traffic presented in the shape of a share of *the* observed traffic.
+
+Under a total-observed denominator both residuals are ordinary rows, the table sums to 100 %, and the quantity being decomposed is the one UTVI publishes. The protection 1.0.0 was reaching for is preserved and strengthened: nothing is dropped from the denominator, and the reader can see exactly how much volume carries no model and how much carries no lab.
 
 ## 14. Derived breakdowns
 
 Lab and model breakdowns are **two aggregations over the same normalised observations**, never a second ingestion path. For a trailing window `W`:
 
 $$
-Share_{lab} = \frac{\sum_{i \in lab} Tokens_{i}}{\sum_{i \in attributed} Tokens_{i}} \quad (i \in W)
+Share_{lab} = \frac{\sum_{i \in lab} Tokens_{i}}{Tokens_{total\ observed}} \quad (i \in W)
 $$
 
-Four requirements: the denominator is **attributed** tokens with the residual published separately (§13); the window is declared with the value; every date in the window must have coverage, or the window is short and says so; and a lab total is the sum over its canonical models after variant folding (§6).
+$$
+Share_{model} = \frac{Tokens_{model}}{Tokens_{total\ observed}} \quad (i \in W)
+$$
 
-**No breakdown is published under this version.** The requirement here is only that the data model can serve them from the same observations, so that a later slice is an aggregation and not an ingestion project.
+Five requirements: the denominator is **total observed** tokens, identical for both breakdowns, with both residuals present as their own rows (§13); the window is declared with the value; every date in the window must have coverage, or the window is short and says so; a lab total is the sum over its canonical models after variant folding (§6); and a model's identity is the source's permaslug, because Urdais holds no canonical registry covering the permaslugs this dataset names and an invented display name would be an assertion about a model Urdais has not researched.
+
+**Breakdowns are published under 1.1.0**, as [Market Share](/docs/methodology/market-share), which is this section applied per UTC observation date rather than over a trailing window. Its document states the residual semantics, the identity rules and the data-quality checks in full; it introduces no source, no ingestion and no version of its own, and it is versioned here.
+
+A third category exists for display only and is never a fact about the data: ranked models below a displayed top *N* may be folded into a **`display_remainder`** row. That word is never `other`. `other` is the source's name for volume it never itemised; the display remainder is volume Urdais holds model by model and has chosen not to draw. The source residual remains separately queryable at all times.
 
 ## 15. Percentage change
 
@@ -360,11 +372,19 @@ Prohibited:
 
 This document is versioned and effective-dated on the family pattern. A value is computed under the version in force on its own calculation date; a later version cannot alter an earlier value.
 
-**A new version is required to change** the observed universe or the eligible source set; eligible token categories; the aggregation formula or deduplication rules; coverage requirements; the settlement lag; or the backfill policy.
+**A new version is required to change** the observed universe or the eligible source set; eligible token categories; the aggregation formula or deduplication rules; the denominator, residual semantics or identity rules of the derived breakdowns (§13–§14); coverage requirements; the settlement lag; or the backfill policy.
 
 **A new version is not required to** add a model that a source begins reporting inside an already-declared universe (§9, case 1), or to correct a value under §17.
 
 ## Version history
+
+**1.1.0, approved 16 September 2026, effective from 1 January 2025**: derived-breakdown amendment, and the version under which [Market Share](/docs/methodology/market-share) publishes.
+
+Changes the denominator of the §14 breakdowns from attributed tokens to **total observed tokens**, with both residuals present as rows rather than as figures beside the table. 1.0.0's rule prevented the residuals being deleted but permitted a lab table that summed to 100 % of a quantity that was not the published total, with nothing on the surface showing the difference — a defect only visible once a breakdown was built. §13 now records both the old rule and why it was reversed.
+
+Also adds: the model-identity rule, fixing a model's identity as the source permaslug verbatim, because Urdais holds no canonical registry over this dataset's permaslugs and an invented display name would be an unresearched assertion; and the `display_remainder` category, explicitly distinct from the source's `other`.
+
+**No UTVI value changes under this version, and 1.0.0 is preserved rather than restated.** The amendment touches only the derived breakdowns, and 1.0.0 published none — §14 said so in terms. Every value published before this amendment carries 1.0.0 and continues to; every value published after carries 1.1.0 and is arithmetically identical to what 1.0.0 would have produced. The effective date is therefore 1 January 2025, the span of the whole series, for the same reason 1.0.0's was: there is no earlier value to restate. The objective, the universe, the unit, the aggregation of the index itself, the coverage states, the settlement lag, the deduplication rule and the attribution requirement are unchanged.
 
 **1.0.0, approved 16 September 2026, effective from 1 January 2025**: approved for production. This is the first version under which a UTVI value may be published, and the first value is published under it.
 
