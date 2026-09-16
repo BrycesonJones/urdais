@@ -5,14 +5,15 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { ModelEconomicsPage } from "@/components/model-economics/model-economics-page";
 import { loadMarketShareView } from "@/lib/market-share/surface";
 import { loadModelFrontierView } from "@/lib/frontier/read/surface";
+import { loadOpenWeightView } from "@/lib/open-weight/surface";
 import { loadVisibleTokenInstruments, tokenResearchPreviewActive } from "@/lib/tokens/read/load";
 import { loadUtviInstrumentView } from "@/lib/utvi/read/surface";
 
 /**
  * Rendered per request, never prerendered.
  *
- * This page reads the frozen Token Price benchmarks, UTVI and Market Share out
- * of the database. Next will happily prerender it at build time, where there is
+ * This page reads the frozen Token Price benchmarks, UTVI, Market Share, the
+ * Model Frontier and the open-weight comparison out of the database. Next will happily prerender it at build time, where there is
  * no production database to read, and then serve that build-time snapshot to
  * every visitor:
  * a permanently blank surface that no amount of correct data can fix, because
@@ -33,6 +34,7 @@ export default async function ModelEconomicsRoute() {
   const utvi = await loadUtviInstrumentView();
   const marketShare = await loadMarketShareView();
   const frontier = await loadModelFrontierView();
+  const openWeight = await loadOpenWeightView();
   return (
     <>
       <SiteHeader />
@@ -41,6 +43,7 @@ export default async function ModelEconomicsRoute() {
         utvi={utvi}
         marketShare={marketShare}
         frontier={frontier}
+        openWeight={openWeight}
         researchPreview={researchPreview}
       />
       <SiteFooter />

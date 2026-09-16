@@ -28,8 +28,13 @@ begin
       and si.terms_review_state = 'under_review'
       and si.data_use_terms_state = 'under_review';
   if n <> 7 then raise exception 'expected 7 research-usable token pricing interfaces, found %', n; end if;
-  select count(*) into n from reference.models;
-  if n <> 38 then raise exception 'expected 38 models across all waves, found %', n; end if;
+  -- Scoped to the models the pricing waves seeded, which carry explicit '99999999-' ids.
+  -- Later phases add canonical models for reasons that have nothing to do with pricing --
+  -- the open-weight phase adds publisher checkpoints that carry no price -- and a bare
+  -- count(*) would turn every one of those into a failure here while no longer checking the
+  -- thing it was written to check: that all thirty-eight priced identities are still present.
+  select count(*) into n from reference.models where id::text like '99999999-%';
+  if n <> 38 then raise exception 'expected 38 wave-seeded models across all waves, found %', n; end if;
   select count(*) into n from pipeline.token_price_observations;
   if n <> 0 then raise exception 'token prices were seeded'; end if;
 

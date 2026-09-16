@@ -41,7 +41,9 @@ declare
     -- to a priced product.
     'pipeline.capability_retrievals', 'pipeline.capability_observations',
     'reference.capability_model_links', 'reference.model_price_selections',
-    'pipeline.capability_check_runs'
+    'pipeline.capability_check_runs',
+    -- Open-weight vs Proprietary: the access classification and the UTVI identity bridge.
+    'reference.model_access_classes', 'reference.utvi_model_links'
   ];
   n integer;
 begin

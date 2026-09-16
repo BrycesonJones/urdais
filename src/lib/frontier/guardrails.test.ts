@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -111,10 +111,12 @@ describe("independence from the demo graph", () => {
     }
   });
 
-  it("leaves FRONTIER_POINTS in place for the open-weight phase", () => {
-    // Phase 4 computes OPEN_WEIGHT_ANALYSIS from it. Removing it here would break that.
-    const mock = read("src/data/mock/model-economics.ts");
-    expect(mock).toContain("export const FRONTIER_POINTS");
-    expect(mock).toContain("OPEN_WEIGHT_ANALYSIS");
+  it("has retired the demo graph entirely, now that the open-weight phase no longer needs it", () => {
+    // This test previously asserted the opposite: FRONTIER_POINTS had to survive because the
+    // open-weight panels were computed from it. They now derive from evidenced access
+    // classifications, so the fixture has no consumer and the file is gone. Asserting its
+    // absence is what stops it being reintroduced as a convenient fallback.
+    expect(existsSync(path.join(process.cwd(), "src/data/mock/model-economics.ts"))).toBe(false);
+    expect(existsSync(path.join(process.cwd(), "src/data/mock/token-providers.ts"))).toBe(false);
   });
 });
