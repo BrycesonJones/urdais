@@ -127,6 +127,59 @@ export async function recordRetrieval(
   return { capabilityRetrievalId: String(capability.id), sourceRetrievalId: String(source.id) };
 }
 
+/**
+ * Record that a check ran, whatever it found.
+ *
+ * The one write an unchanged run makes. Without it, a healthy quiet week and a scheduler that
+ * stopped are the same row count, and the product would go on rendering the last good chart
+ * with nothing anywhere saying it had gone still.
+ */
+export async function recordCheckRun(
+  sql: SqlExecutor,
+  lineage: FrontierLineage,
+  run: {
+    ranAt: string;
+    trigger: "scheduled" | "operator";
+    outcome: "unchanged" | "ingested" | "failed";
+    bundleHash: string | null;
+    sourceChanged: boolean;
+    capabilityRetrievalId: string | null;
+    created: number | null;
+    revised: number | null;
+    detail: string | null;
+  },
+): Promise<void> {
+  await sql.query(
+    `insert into pipeline.capability_check_runs (
+       source_interface_id, ran_at, trigger, outcome, bundle_content_hash, source_changed,
+       capability_retrieval_id, observations_created, observations_revised, detail
+     ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+    [
+      lineage.sourceInterfaceId,
+      run.ranAt,
+      run.trigger,
+      run.outcome,
+      run.bundleHash,
+      run.sourceChanged,
+      run.capabilityRetrievalId,
+      run.created,
+      run.revised,
+      run.detail,
+    ],
+  );
+}
+
+/** When the *schedule* last completed a run that did not fail. Null when it never has. */
+export async function lastScheduledCheckAt(sql: SqlExecutor): Promise<string | null> {
+  const { rows } = await sql.query(
+    `select ran_at from pipeline.capability_check_runs
+      where trigger = 'scheduled' and outcome <> 'failed'
+      order by ran_at desc limit 1`,
+    [],
+  );
+  return rows[0] === undefined ? null : new Date(String(rows[0].ran_at)).toISOString();
+}
+
 export type ObservationOutcome = { created: number; revised: number; unchanged: number };
 
 /**
