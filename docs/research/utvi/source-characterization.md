@@ -371,6 +371,23 @@ Against the disclosure floor already documented in Phase 1 — no new market-siz
 
 Also worth recording: the demo UI shows `17.45T tokens/day`, within 2 % of the real 2026-09-15 figure. Nobody should read the first production print as a change from the mock.
 
+## 13a. Two dates in the source's history are empty
+
+**Found in Phase 1B and verified directly.** A backfill of the full 2025-01-01 → 2026-09-15 range covered 621 of 623 dates. The two it did not are not a retrieval failure:
+
+| Date | Rows returned |
+|---|---|
+| 2025-06-14 | 51 |
+| **2025-06-15** | **0** |
+| 2025-06-16 | 51 |
+| **2025-07-15** | **0** |
+
+Both were re-requested individually against the live endpoint and both returned `200` with an empty `data` array and a correctly resolved `meta` window. The source served the date and had nothing for it.
+
+**These dates get no UTVI point.** Not a zero — a zero would claim the platform processed no tokens that day, which is false and would sit in the middle of a series at a fifth of a per cent of its neighbours. The pipeline records them as `covered_no_rows`, writes no snapshot, and reports them separately from a genuine gap so that a run does not cry failure every day over two permanent holes.
+
+They are worth knowing about for two reasons beyond the arithmetic. They show the source's own dataset has holes, which bears on how much weight a single date's value can carry. And they are the first real vindication of the coverage semantics: an implementation that treated absence as zero would have published two false points and nobody would have noticed until somebody looked at a chart.
+
 ## 14. A revision-measurement protocol
 
 What the brief asks for, since a single run cannot settle it. Read-only; no storage required.

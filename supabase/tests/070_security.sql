@@ -32,7 +32,11 @@ declare
     'pipeline.btc_market_observations', 'pipeline.btc_venue_quotes',
     'pipeline.btc_chainlink_observations', 'pipeline.btc_height_observations',
     'pipeline.ubwi_calculations', 'pipeline.ubwi_sensitivity_scenarios',
-    'pipeline.ubwi_publications'
+    'pipeline.ubwi_publications',
+    -- UTVI, the Observed Token Volume Index.
+    'pipeline.utvi_retrievals', 'pipeline.utvi_daily_snapshots',
+    'pipeline.utvi_model_observations', 'pipeline.utvi_calculations',
+    'pipeline.utvi_publications'
   ];
   n integer;
 begin

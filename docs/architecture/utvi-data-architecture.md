@@ -2,6 +2,8 @@
 
 **Status: internal architecture artifact. Not a methodology page, not routed publicly, not registered in the docs catalog.** Prepared 16 September 2026 alongside [UTVI 0.1.1-draft](../methodology/utvi.md), the [Phase 1 source study](../research/utvi/source-study.md) and the [Phase 1A source characterization](../research/utvi/source-characterization.md).
 
+> **Built in Phase 1B, 16 September 2026.** Migration `20260916000000_utvi_observed_token_volume.sql`, applied to the local harness only. The schema below is the proposal; [what was actually built](#what-phase-1b-actually-built) differs from it in five places, each forced by something the build found. Activation steps are in [the activation checklist](../operations/utvi-activation.md).
+
 > **Revised 16 September 2026 against live measurements.** Six changes to the schema below, each forced by something observed rather than reasoned: the leg columns are **dropped** (the source returns no leg fields), `rank` is **dropped** (not returned), `response_hash` becomes **load-bearing** (the only revision detector), the lab id becomes **nullable by necessity** rather than convenience, a `lab_attribution_state` column is **added**, and the window columns must store **resolved** dates because the source clamps silently.
 
 **No migration is created by this phase, and none should be.** The methodology is a draft, the source is not yet production-approved in the registry, and the development rules prohibit introducing tables before the slice that needs them. The characterization has now removed the *technical* reason to wait — the contract is measured — so the remaining reason is process, which is the right reason. This document says what the tables should be when that slice arrives, and — more usefully — which existing Urdais patterns UTVI reuses and which it must not.
@@ -251,3 +253,35 @@ Recorded because a research phase should be able to conclude *no*, and because t
 - **The rights position changes.**
 
 If any of these holds, the honest product may be narrower: the covered-platform series as an explicitly platform-scoped statistic, or a source-cited disclosure table with no index at all. Either beats a daily number that cannot bear its own headline.
+
+
+## What Phase 1B Actually Built
+
+Five departures from the proposal above, each one forced by something the build or the live source found rather than by a change of mind.
+
+**One table fewer, and a different axis of supersession.** The proposal had a `utvi_coverage` table beside the snapshots. What shipped folds coverage onto `pipeline.utvi_daily_snapshots`, because a snapshot *is* the coverage record for its date and two tables would have had to agree with each other. More consequentially, **supersession is per date rather than per retrieval**. A 366-day request revises only its newest day, so a per-retrieval active flag would have retired 365 settled days to record one changed one.
+
+**A live snapshot is enforced by a partial unique index, and that dictated the write order.** `utvi_daily_snapshots_active_idx` is unique on `(observation_date) where superseded_by_id is null`. A unique index is checked the instant a row is inserted, so inserting the new snapshot before superseding the old one put two live rows on the date and was rejected — by a real database, on a real revision, after the unit tests passed. The writer now generates the new row's id, supersedes the old row so that it points at an id that does not exist yet, then inserts. That works only because the self-reference is `deferrable initially deferred` and only inside a transaction, which is why the write path takes a single client rather than a pool.
+
+**Two database constraints that the proposal had as prose.** `request_parameters` may not carry `category` or `language_type`, and must pin `period=day`. Both are trigger-enforced on `pipeline.utvi_retrievals`. The first matters because those parameters return token totals as genuine fractions — an estimate wearing an observation's field name — and the second because the weekly and monthly grains return an unlabelled incomplete trailing bucket.
+
+**The empty-sum refusal is a check constraint, not a convention.** `utvi_daily_snapshots_observed_has_arithmetic` and its converse make it impossible to write a total on a date that carried no rows. This is the failure the whole design exists to prevent, and leaving it to application care would have meant leaving it to whoever edits the application next.
+
+**`output_currency` became nullable.** A token count is not money, and `instruments` required a currency. Writing `USD` on a token-volume instrument would have been a false statement about the published value rather than a harmless default.
+
+### Verified against the real source and a real database
+
+| | Result |
+|---|---|
+| Backfill | 2 requests, 623 dates planned, **621 covered**, 621 calculations |
+| Second backfill run | **621 confirmed, 0 created, 0 revised** — idempotent |
+| Series | 2025-01-01 at 49.2 B tokens/day through 2026-09-15 at 17.75 T |
+| Source gaps | **2025-06-15 and 2025-07-15 return zero rows**, verified directly against the endpoint. No point is written for either |
+| Revision | A changed content hash superseded the live snapshot; the date ended with exactly one live and one superseded row |
+| Settlement | 2026-09-15 read three times across two hours moved every time; 2026-09-14 was byte-identical throughout |
+| Publication | **621 refusals**, `methodology_not_approved`, from the database trigger |
+| Publication when approved | Verified locally by approving the version in the harness, publishing two points, reading them back through `/api/utvi`, then resetting |
+
+### What was deliberately not done
+
+No production write of any kind, no production backfill, no cron registration, no `OPENROUTER_API_KEY` in Vercel, no UI change, no methodology approval, and no Market Share. The activation checklist covers each of those as a separate decision.
