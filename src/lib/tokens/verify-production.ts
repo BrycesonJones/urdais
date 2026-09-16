@@ -115,7 +115,7 @@ export type ProductionVerificationRun = {
   /** Providers collected in full but deliberately not published, with the reason. */
   withheld: { provider: Wave1Provider; reason: string; detail: string; observations: number }[];
   written: { retrievalsInserted: number; observationsInserted: number };
-  benchmarks: { inserted: number; conflicts: string[] };
+  benchmarks: { inserted: number; withheld: number; conflicts: string[] };
 };
 
 /**
@@ -191,5 +191,10 @@ export async function runProductionVerification(
   const catalog = tokenReadCatalogFromStore(store);
   const written = await persistTokenReadCatalog(sql, catalog);
   const benchmarks = await persistProviderBenchmarks(sql, catalog, "production", onDate, "urdais-token-price/manual-verification");
-  return { verifications, withheld, written, benchmarks: { inserted: benchmarks.inserted, conflicts: benchmarks.conflicts } };
+  return {
+    verifications,
+    withheld,
+    written,
+    benchmarks: { inserted: benchmarks.inserted, withheld: benchmarks.withheld, conflicts: benchmarks.conflicts },
+  };
 }

@@ -450,7 +450,12 @@ describe("frozen benchmark observations", () => {
     expect(first.inserted).toBe(6);
     expect(second.inserted).toBe(0);
     expect(third.inserted).toBe(0);
-    expect(sql.rows.size).toBe(6);
+    // The withholding is written once and only once, on the same terms as the values.
+    expect(first.withheld).toBe(1);
+    expect(second.withheld).toBe(0);
+    expect(third.withheld).toBe(0);
+    // Six frozen values plus DeepSeek's recorded withholding.
+    expect(sql.rows.size).toBe(7);
     // Only inserts and transaction control; nothing updates a frozen row.
     expect(sql.statements.some((row) => /^\s*UPDATE|^\s*DELETE/i.test(row))).toBe(false);
   });

@@ -16,7 +16,12 @@
  */
 
 import type { PublicTokenBenchmarkSeries } from "@/lib/tokens/read/api-contract";
-import { TOKEN_PRICE_BENCHMARK_NAME, TOKEN_PRICE_UNIT } from "@/lib/tokens/read/benchmark";
+import {
+  TOKEN_BENCHMARK_WITHHELD,
+  TOKEN_PRICE_BENCHMARK_NAME,
+  TOKEN_PRICE_UNIT,
+  methodologyInForce,
+} from "@/lib/tokens/read/benchmark";
 import { benchmarkPoints, type BenchmarkPoint } from "@/lib/tokens/read/benchmark-series";
 import { providerDisplayName } from "@/lib/tokens/read/labels";
 import type { TokenVisibilityMode } from "@/lib/tokens/read/publication";
@@ -26,8 +31,9 @@ export type PersistedBenchmarkRow = {
   id: string;
   providerSlug: string;
   methodologyVersion: string;
-  benchmarkModelId: string;
-  benchmarkModelName: string;
+  /** The designated constituent. Null only on a withholding for a provider with no designation. */
+  benchmarkModelId: string | null;
+  benchmarkModelName: string | null;
   calculationStatus: "value" | "withheld";
   withheldReason: string | null;
   priceUsdPer1m: number | null;
@@ -59,6 +65,28 @@ ON CONFLICT DO NOTHING
 RETURNING id
 `;
 
+/**
+ * A withholding, which names no model and carries no price.
+ *
+ * Separate from `INSERT_BENCHMARK_SQL` because that statement joins `reference.models` to
+ * resolve the designated constituent, and a withheld provider may have no designation to
+ * resolve -- DeepSeek has none, which is the reason it is withheld. Joining anyway would
+ * either drop the row silently or require naming a model the methodology never designated.
+ */
+export const INSERT_WITHHOLDING_SQL = `
+INSERT INTO pipeline.token_price_benchmarks (
+  provider_id, methodology_version, benchmark_model_id, calculation_status, withheld_reason,
+  price_usd_per_1m, input_observation_id, output_observation_id,
+  input_price_usd_per_1m, output_price_usd_per_1m, input_observed_at, output_observed_at,
+  calculated_at, calculator_identity
+)
+SELECT p.id, $2, null, 'withheld', $3, null, null, null, null, null, null, null, $4, $5
+  FROM reference.providers p
+ WHERE p.slug = $1
+ON CONFLICT DO NOTHING
+RETURNING id
+`;
+
 export const SELECT_BENCHMARKS_SQL = `
 SELECT b.id, p.slug AS provider_slug, b.methodology_version, m.provider_model_id, m.display_name,
        b.calculation_status, b.withheld_reason, b.price_usd_per_1m,
@@ -67,7 +95,9 @@ SELECT b.id, p.slug AS provider_slug, b.methodology_version, m.provider_model_id
        b.input_observed_at, b.output_observed_at, b.calculated_at
   FROM pipeline.token_price_benchmarks b
   JOIN reference.providers p ON p.id = b.provider_id
-  JOIN reference.models m ON m.id = b.benchmark_model_id
+  -- Left, not inner: a withholding names no model, and an inner join would write the
+  -- decision and then hide it, which is the absence this is meant to end.
+  LEFT JOIN reference.models m ON m.id = b.benchmark_model_id
  WHERE b.superseded_by_id IS NULL
  ORDER BY p.slug, b.calculated_at, b.id
 `;
@@ -93,8 +123,8 @@ export function benchmarkRowFromSql(row: Record<string, unknown>): PersistedBenc
     id: asString(row.id),
     providerSlug: asString(row.provider_slug),
     methodologyVersion: asString(row.methodology_version),
-    benchmarkModelId: asString(row.provider_model_id),
-    benchmarkModelName: asString(row.display_name),
+    benchmarkModelId: row.provider_model_id === null || row.provider_model_id === undefined ? null : asString(row.provider_model_id),
+    benchmarkModelName: row.display_name === null || row.display_name === undefined ? null : asString(row.display_name),
     calculationStatus: row.calculation_status === "withheld" ? "withheld" : "value",
     withheldReason: row.withheld_reason === null || row.withheld_reason === undefined ? null : asString(row.withheld_reason),
     priceUsdPer1m: asNumber(row.price_usd_per_1m),
@@ -113,9 +143,61 @@ export async function loadPersistedBenchmarks(sql: BenchmarkSqlExecutor): Promis
   return result.rows.map(benchmarkRowFromSql);
 }
 
+export type PersistableWithholding = {
+  providerSlug: string;
+  reason: string;
+  methodologyVersion: string;
+  /** The instant the decision is recorded against: the latest observation it was made about. */
+  decidedAt: string;
+};
+
+/**
+ * The withholdings that are decisions rather than gaps.
+ *
+ * The invariant, stated once: **evaluated and withheld is not the same as absent.** A
+ * provider earns a durable withholding row when the register records one *and* Urdais has
+ * actually collected its observations -- the register's `collected_not_publishable` state.
+ * That is DeepSeek: twelve canonical observations, every one a peak or off-peak rate, and no
+ * standard rate among them to publish.
+ *
+ * A provider whose withholding is `designated_publication_blocked` is deliberately excluded.
+ * Mistral is the case: nothing is collected for it at all, so there is no evaluation to
+ * record, and writing a decision would assert a review that never happened. The rule is not
+ * "every withheld provider gets a row"; it is "every provider we looked at and declined to
+ * publish gets a row".
+ *
+ * `decidedAt` is the newest observation the decision was made about, never the wall clock, so
+ * re-running the freeze months later records the same instant rather than a fresh one.
+ */
+export function persistableWithholdings(catalog: TokenReadCatalog, onDate?: string): PersistableWithholding[] {
+  const day = onDate ?? new Date().toISOString().slice(0, 10);
+  const out: PersistableWithholding[] = [];
+  for (const withholding of TOKEN_BENCHMARK_WITHHELD) {
+    if (withholding.state !== "collected_not_publishable") continue;
+    if (withholding.since > day) continue;
+    const observations = catalog.observations.filter((row) => row.providerSlug === withholding.providerSlug);
+    // No observations means nothing was evaluated, whatever the register says.
+    if (observations.length === 0) continue;
+    const decidedAt = observations
+      .map((row) => row.retrievedAt)
+      .sort((a, b) => a.localeCompare(b))[observations.length - 1]!;
+    // No methodology in force is itself a different withholding (and a different reason
+    // code); this one cannot be recorded without a version to record it under.
+    const methodology = methodologyInForce(day);
+    if (methodology === undefined) continue;
+    out.push({
+      providerSlug: withholding.providerSlug,
+      reason: withholding.reason,
+      methodologyVersion: methodology.version,
+      decidedAt,
+    });
+  }
+  return out;
+}
+
 /** The two leg observations a value rests on, as one key. */
-function lineageKey(providerSlug: string, providerModelId: string, inputId: string | null, outputId: string | null): string {
-  return [providerSlug, providerModelId, inputId ?? "", outputId ?? ""].join("|");
+function lineageKey(providerSlug: string, providerModelId: string | null, inputId: string | null, outputId: string | null): string {
+  return [providerSlug, providerModelId ?? "", inputId ?? "", outputId ?? ""].join("|");
 }
 
 /**
@@ -139,7 +221,7 @@ export async function persistProviderBenchmarks(
   mode: TokenVisibilityMode,
   onDate?: string,
   calculatorIdentity = "urdais-token-price",
-): Promise<{ inserted: number; points: BenchmarkPoint[]; conflicts: string[] }> {
+): Promise<{ inserted: number; withheld: number; points: BenchmarkPoint[]; conflicts: string[] }> {
   // Lineage comes from the catalog, so every frozen row names the exact leg observations it consumed.
   const points = benchmarkPoints(listVisibleTokenSeries(catalog, mode), onDate, legObservationIndex(catalog, mode));
   const frozen = await loadPersistedBenchmarks(sql);
@@ -150,6 +232,7 @@ export async function persistProviderBenchmarks(
   }
   const conflicts: string[] = [];
   let inserted = 0;
+  let withheld = 0;
   await sql.query("begin", []);
   try {
     for (const point of points) {
@@ -180,12 +263,36 @@ export async function persistProviderBenchmarks(
       ]);
       if (result.rows.length > 0) inserted += 1;
     }
+
+    // A provider that was collected in full and deliberately not published gets its decision
+    // written down beside the values. Without this the run reported the withholding only in
+    // its own return value, which vanished when the process exited, and production could not
+    // tell "reviewed and withheld" from "never processed" -- the two states the methodology
+    // exists to keep apart.
+    for (const withholding of persistableWithholdings(catalog, onDate)) {
+      const seen = frozen.find(
+        (row) =>
+          row.calculationStatus === "withheld" &&
+          row.providerSlug === withholding.providerSlug &&
+          row.withheldReason === withholding.reason &&
+          row.methodologyVersion === withholding.methodologyVersion,
+      );
+      if (seen) continue;
+      const result = await sql.query(INSERT_WITHHOLDING_SQL, [
+        withholding.providerSlug,
+        withholding.methodologyVersion,
+        withholding.reason,
+        withholding.decidedAt,
+        calculatorIdentity,
+      ]);
+      if (result.rows.length > 0) withheld += 1;
+    }
     await sql.query("commit", []);
   } catch (error) {
     await sql.query("rollback", []);
     throw error;
   }
-  return { inserted, points, conflicts };
+  return { inserted, withheld, points, conflicts };
 }
 
 function percentageChange(previous: number, current: number): number | null {
@@ -217,8 +324,9 @@ export function benchmarkSeriesFromPersisted(
     providerSlug,
     providerName: providerDisplayName(providerSlug),
     benchmarkName: TOKEN_PRICE_BENCHMARK_NAME,
-    benchmarkModelId: latest.benchmarkModelId,
-    benchmarkModelName: latest.benchmarkModelName,
+    // Non-null on a value row by the value_shape constraint.
+    benchmarkModelId: latest.benchmarkModelId!,
+    benchmarkModelName: latest.benchmarkModelName!,
     methodologyVersion: latest.methodologyVersion,
     priceUsdPer1m: latest.priceUsdPer1m!,
     currency: "USD",

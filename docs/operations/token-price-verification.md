@@ -71,6 +71,51 @@ DATABASE_URL=<UrdaisProd> npm run tokens:production:check
 
 Unchanged prices write no new row, and that is a successful run.
 
+## Recorded withholdings
+
+A provider that was collected and deliberately not published carries a **withholding row** in
+`pipeline.token_price_benchmarks`: `calculation_status = 'withheld'`, a structured
+`withheld_reason`, no price, no legs, and no designated model where none was designated. The
+explanation is not copied into the row -- it lives in `docs/methodology/token-price.md` under
+the methodology version the row carries.
+
+DeepSeek's reason is `NO_STANDARD_SERVICE_TIER`: every collected leg is a peak or off-peak
+rate and none is the ordinary standard rate the methodology requires.
+
+The rule is narrow, and it is **evaluated + withheld != absent**. A withholding is recorded
+only where the register says `collected_not_publishable` *and* observations actually exist. A
+provider registered as `designated_publication_blocked` with nothing collected (Mistral) gets
+no row, because writing one would assert a review that never happened.
+
+`verify-production.ts` writes these alongside the values on every run, idempotently. A unique
+index on (provider, reason, methodology version) means a re-run inserts nothing rather than
+stacking duplicate decisions.
+
+### One-time repair for DeepSeek
+
+DeepSeek was collected on 14 September 2026 and its withholding was reported only in the
+run's output, which vanished with the process -- production has 12 observations and no
+decision row. The repair is the ordinary verification, re-run:
+
+```
+DATABASE_URL=<UrdaisProd> npx tsx scripts/tokens/verify-production.ts \
+  --verified-by "Your Name" \
+  --evidence "re-recording the DeepSeek withholding from the retained 14 September artifact"
+```
+
+It writes no numeric DeepSeek price, does not touch the 12 observations, and does not alter
+any other provider's frozen value. Confirm with:
+
+```sql
+select p.slug, b.calculation_status, b.withheld_reason, b.price_usd_per_1m, b.methodology_version
+  from pipeline.token_price_benchmarks b
+  join reference.providers p on p.id = b.provider_id
+ where p.slug = 'deepseek' and b.superseded_by_id is null;
+```
+
+Expected: exactly one row, `withheld` / `NO_STANDARD_SERVICE_TIER` / null price / `1.2`. The
+watchdog then reports DeepSeek as `current` rather than `never_verified`.
+
 ## The watchdog
 
 `/api/cron/token-verification` runs daily at **07:00 UTC** (after news 00:00, UCPI 01:00,
