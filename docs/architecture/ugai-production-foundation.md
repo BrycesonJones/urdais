@@ -114,7 +114,9 @@ UGAI's own run table (not `pipeline.calculation_runs`), constituent calculations
 
 Base date is the **first legitimate live publication**; base value 1,000.00. No backdating.
 
-### 5.8 — API and frontend
+### 5.8 — API and frontend ✅ *this PR*
+
+Built. UGAI is publicly visible and publicly says it has not launched. Detail in §24.
 
 `/api/ugai` on the contract the UTVI route established: validate the response against its own contract and answer 500 rather than serve an unchecked number; return a null snapshot with a reason while nothing is published.
 
@@ -612,7 +614,57 @@ The public series and everything that reaches a reader: the API surface, the fro
 
 ---
 
-## 23. Remaining blockers for 5.8
+## 24. Phase 5.8 — the public surface
+
+The rule this phase exists to enforce:
+
+> A nonexistent index value must never be replaced by a mock value, synthetic history, placeholder series, or stale demo chart.
+
+**UGAI must be able to say "not initialized yet", and it now does** — on its page, in the rail, and in the API.
+
+### What was removed
+
+`UGAI_MARKET`, a seeded random walk with a level of **184.21** on an index whose base is 1,000, a fabricated daily return, and a year of generated history. It rendered in the homepage rail as *"184.21 pts +1.14 %"*, in the same type and colours as UBWI's published percentage, with nothing to separate them — a defect the `IndexRow` documentation already cites by name. It is gone from the mock dataset, from the comparison menus, and from the detail page.
+
+### Lifecycle, not a status
+
+Four states, deliberately not one field: **`not_initialized`** (never published), **`blocked`** (a series exists but gates prevent today's observation), **`live`**, and **`delayed`**. "Never launched" and "launched but blocked" are different facts about the product, and collapsing them is how a page says nothing useful in the state it is actually in.
+
+`delayed` is **unreachable while the stale-input tolerance is unresolved**. There is no threshold to be past, and inventing 24 or 48 hours in read code would be deciding timing policy the methodology has not decided. A test asserts a two-year-old observation still reports `live` rather than `delayed` when no tolerance is approved.
+
+The evaluation consumes the Phase 5.7 publication checks and nothing else. **One implementation of "may UGAI publish"**, in the database; the API and frontend read its answer rather than re-deriving it.
+
+### The API
+
+`GET /api/ugai` and `GET /api/ugai/series`, following the UTVI route convention. Not initialized returns **`level: null`**, not zero — a zero renders as a value, and "0.00 pts (0.00%)" is a statement about the market nobody made. The series returns `[]`; there is no base point at 1,000 today, no synthetic lookback, no flat line.
+
+An index that has not launched answers **200**, not 500. It is a normal domain state, and a 500 would put a real incident and a deliberate one in the same bucket.
+
+Both responses are validated against their own contract and answer 500 rather than serving a response that contradicts it — a non-live state carrying a level, a change percent with no previous level to change from, or any of a named list of licensed input fields. That last is a contract test rather than a convention, because a licence breach at this boundary would be invisible.
+
+### The page and the rail
+
+The detail page follows the UBWI precedent and renders its own surface rather than the generic chart page — for a stronger reason than UBWI's, since UGAI has no observations at all and every quantity the generic page shows would have to be invented. Where nothing is published it shows what UGAI is, its methodology and the parent that defines membership, the source categories, and a plain statement that live publication has not begun. **No level, no change, no chart, no "last updated"** — there is nothing to have updated. A failed database read renders the same state rather than reaching for a cached or mock level.
+
+The rail keeps UGAI. Removing it would answer "is Urdais building this?" with silence. It carries a new **`unpublished`** provenance — narrower than `demo`, which would promise an illustrative series the detail page no longer has — rendering "Not yet live / No published observations", and a test asserts the row contains **no digit at all**.
+
+Public wording is durable and says nothing about mechanism. A reader learns the index is not yet live and that methodology and data-source validation are outstanding; they do not learn which permission grant is missing. Detailed blockers stay in the Phase 5.7 publication checks, which are internal.
+
+### Methodology exposure
+
+Both documents are linked and kept separate — the parent decides membership, UGAI decides weighting and calculation — and **both are shown with a Draft badge**, because both are drafts. The base level of 1,000 is shown as context with its base-date rule, never as a current value.
+
+### Scheduler
+
+**None.** Not created and not configured. A cron that fails every day is an alarm nobody reads within a week, and the conditions are not close to met. The calculation path is callable; wiring a schedule is the last step of the runbook rather than a prerequisite. See `docs/operations/ugai-first-live-publication.md`.
+
+### Current state
+
+`lifecycle: not_initialized` · `level: null` · `series: 0 points` · methodology `0.2.0-draft` · parent `0.4.0-draft` · 5 source categories · both contracts pass.
+
+---
+
+## 25. Remaining blockers for first live publication
 
 1. **The issuer cap `c` is unresolved.** Production snapshot formation is structurally impossible until it is approved with an effective date, which the trigger enforces. Even approved at the 10% research candidate, the current eligible set of two fails `n × c ≥ 1` by a wide margin — so the cap and the breadth problem compound. `τ_B` remains an unresolved draft on the same footing, blocking Tier 3 Route B admission.
 2. ~~**No USD reference rate for the New Taiwan dollar.**~~ **Closed** — see §19. CBC dataset 7232 supplies the official daily close under a licence reaching index calculation, stored with its inversion lineage. What survives of it is item 6: a source is not a fixing rule.

@@ -25,9 +25,16 @@ import type { IndexSnapshot } from "@/types/market";
  *
  * The row still links to the detail page, where the illustrative series lives under its
  * own `Demo data` badge.
+ *
+ * An `unpublished` row is narrower still: no level, no movement, and no illustrative series
+ * behind it either. UGAI is the case -- its seeded walk was removed rather than relabelled, so
+ * "Demo data" would now promise a chart its detail page does not have.
  */
 export function IndexRow({ index }: { index: IndexSnapshot }) {
   const demo = index.provenance === "demo";
+  // An index that has never published and has no illustrative series either. "Not yet live" is
+  // the product state; "Demo data" would promise a synthetic series that no longer exists.
+  const unpublished = index.provenance === "unpublished";
   return (
     <li>
       <Link
@@ -38,7 +45,16 @@ export function IndexRow({ index }: { index: IndexSnapshot }) {
         <p className="text-sm font-semibold text-neutral-50">{index.symbol}</p>
         <p className="truncate text-xs text-neutral-400">{index.name}</p>
       </div>
-      {demo ? (
+      {unpublished ? (
+        <div className="shrink-0 text-right">
+          <p>
+            <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+              Not yet live
+            </span>
+          </p>
+          <p className="mt-1 text-xs text-neutral-500">No published observations</p>
+        </div>
+      ) : demo ? (
         <div className="shrink-0 text-right">
           <p>
             <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">

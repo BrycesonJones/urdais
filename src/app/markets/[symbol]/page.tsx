@@ -8,6 +8,10 @@ import { findMarket } from "@/data/mock/market-detail";
 import { hydrateMarketWithTokenPrices, tokenResearchPreviewActive } from "@/lib/tokens/read/load";
 import { hydrateMarketWithListedCompute } from "@/lib/ucpi/read/load";
 import { UbwiSection } from "@/components/ubwi/ubwi-section";
+import { UgaiSection } from "@/components/ugai/ugai-section";
+import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
+import { loadUgaiReadModel, loadUgaiSeries } from "@/lib/ugai/read/load";
+import { unconfiguredUgaiReadModel, type UgaiSeriesPoint } from "@/lib/ugai/read/read-model";
 import { ubwiSurface } from "@/lib/ubwi/read/surface";
 import { loadFrozenUbwiPublication } from "@/lib/ubwi/read/publication-store";
 import {
@@ -48,6 +52,44 @@ export default async function MarketIndexPage({ params }: PageProps) {
   // day. It gets its own surface instead -- the value where one is published, the reason
   // plus the full observed/modelled disclosure where none is, and its own chart drawn
   // only from frozen production publications.
+  // UGAI does not use the generic market chart page either, and for a stronger reason than
+  // UBWI's: it has never published an observation, so the generic page's snapshot, movement and
+  // chart would all have to come from somewhere, and the only somewhere available is invention.
+  // Its own surface shows the level where one is published and says plainly where none is.
+  if (market.symbol === "UGAI") {
+    const databaseUrl = (process.env.DATABASE_URL ?? process.env.URDAIS_DATABASE_URL ?? "").trim();
+    // No database reachable renders exactly the not-initialized surface, which is also the true
+    // state -- there is no cached level to fall back to and no mock path to reach for.
+    let model = unconfiguredUgaiReadModel();
+    let series: UgaiSeriesPoint[] = [];
+    if (databaseUrl) {
+      const sql = await createTokenSqlExecutor(databaseUrl);
+      try {
+        model = await loadUgaiReadModel(sql);
+        series = [...(await loadUgaiSeries(sql)).points];
+      } catch (error) {
+        // A failed read is not a licence to invent a level. The surface renders its
+        // not-initialized state, which is what a reader should see when Urdais cannot answer.
+        console.error(
+          `ugai page: load failed (${error instanceof Error ? error.message : String(error)})`,
+        );
+      } finally {
+        await sql.end();
+      }
+    }
+    return (
+      <>
+        <SiteHeader />
+        <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-10 text-neutral-50 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-screen-2xl">
+            <UgaiSection model={model} series={series} />
+          </div>
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
+
   if (market.symbol === "UBWI") {
     // The frozen point where one exists; null where none does, or where no database is
     // reachable. The surface decides what to render from that -- it never invents a value.

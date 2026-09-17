@@ -471,8 +471,12 @@ function headlineInstrumentId(symbol: string): string {
 /**
  * Markets that publish no series, and so cannot be charted against another one. Offering
  * a comparison that resolves to no instrument would put a dead option in the menu.
+ *
+ * UGAI is here because it has never published an observation. Comparing a real series against
+ * it would mean comparing against synthetic points, which is the reason its generated market was
+ * removed rather than relabelled. It becomes comparable when it has observations to compare.
  */
-const MARKETS_WITHOUT_SERIES = new Set(["UBWI"]);
+const MARKETS_WITHOUT_SERIES = new Set(["UBWI", "UGAI"]);
 
 function indexComparisons(symbol: string): ComparisonOption[] {
   return MARKET_CATALOG.filter(
@@ -514,13 +518,11 @@ function buildIndexMarket(
   };
 }
 
-// Long upward trend, read forwards.
-const UGAI_MARKET = buildIndexMarket(
-  "UGAI",
-  "pts",
-  { seed: 20140601, latestValue: 184.21, latestDailyReturn: 0.0114, points: LONG_HISTORY_DAYS, volatility: 0.011, drift: 0.0004 },
-  { seed: 4_400_000, days: 7, volatility: 0.006 },
-);
+// UGAI has no mock market and must not acquire one. It has never published an observation, so
+// every quantity a generated market carries -- a level, a daily return, a year of history -- would
+// be an invention, and the one it carried was worse than arbitrary: 184.21 on a base of 1,000.
+// /markets/UGAI renders its own surface from canonical published observations, or says plainly
+// that none exist. See src/components/ugai/ugai-section.tsx.
 
 // Volatility oscillates around a level instead of trending.
 const UAVI_MARKET = buildIndexMarket(
@@ -588,7 +590,6 @@ const UBWI_MARKET: MarketDetail = {
 /** Routed markets in display order; the first is the default for /markets. */
 export const MARKETS: MarketDetail[] = [
   UCPI_MARKET,
-  UGAI_MARKET,
   UAVI_MARKET,
   UMPI_MARKET,
   UPPI_MARKET,
