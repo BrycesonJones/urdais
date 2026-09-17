@@ -9,7 +9,7 @@ import {
 import type { SqlExecutor } from "@/lib/utvi/store";
 
 function executor(rows: Record<string, unknown>[] = []) {
-  const query = vi.fn(async () => ({ rows }));
+  const query = vi.fn(async (_text: string, _params: readonly unknown[]) => ({ rows }));
   return { sql: { query } as SqlExecutor, query };
 }
 
@@ -65,7 +65,7 @@ describe("Model Economics scheduler heartbeats", () => {
       outcome: "failed",
       detail: "source unavailable",
     });
-    expect(String(query.mock.calls[0]![0])).toContain("trigger = 'scheduled'");
+    expect(query.mock.calls[0]![0]).toContain("trigger = 'scheduled'");
   });
 
   it("reads the latest scheduled token watchdog even when human review is due", async () => {
