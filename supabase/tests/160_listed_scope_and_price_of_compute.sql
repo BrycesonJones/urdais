@@ -33,7 +33,8 @@ begin
    where si.source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface',
                                  'regulatory_filing_repository',
                                   'equity_eod_price_interface',
-                                  'issuer_fundamentals_interface');
+                                  'issuer_fundamentals_interface',
+                                  'exchange_rate_series');
   if n <> 1 then raise exception 'expected one compute-market grant, found %', n; end if;
 
   -- The attribution string is recorded verbatim in the evidence.
