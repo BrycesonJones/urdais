@@ -1,6 +1,6 @@
 # Urdais Global AI Index (UGAI)
 
-**Status: proposed methodology, version 0.1.0-draft.** Prepared 12 September 2026. No production base date, index level, constituent list, index shares, divisor, or return series is established by this document. Nothing here describes live infrastructure.
+**Status: proposed methodology, version 0.2.0-draft.** Prepared 12 September 2026; amended 17 September 2026 to consume the tiered parent universe. No production base date, index level, constituent list, index shares, divisor, or return series is established by this document. Nothing here describes live infrastructure.
 
 This proposal follows the principles of the [Urdais methodology framework](/docs/methodology) and consumes the [Urdais AI Equity Universe](/docs/methodology/ai-equity-universe), the shared parent primitive. Rules expressed as requirements describe the proposed design, subject to approval. Parameters marked **unresolved** are launch requirements, not defaults. UGAI production publication is blocked until the parent universe has a production version and the items in [Open Questions / Empirical Validation Required](#docs-open-questions--empirical-validation-required) are closed in a versioned release.
 
@@ -8,15 +8,15 @@ This proposal follows the principles of the [Urdais methodology framework](/docs
 
 The Urdais Global AI Index measures the equity-market performance of the publicly traded companies comprising the Urdais AI Equity Universe. It is calculated from a dated, versioned parent universe snapshot (membership, representative securities, and base weights), the official closing prices of those securities, and a daily reference exchange rate, and it is published as a time series with percentage changes over defined periods.
 
-UGAI answers the product question "How is the global AI economy performing?" through one specific lens: the market-value performance of public equity that the parent methodology has admitted as materially exposed to the AI economy. It is an equity-market representation of the public AI economy, not a measure of the AI economy itself. Explicitly, UGAI does not measure AI industry revenue, AI's contribution to GDP, compute consumption, token usage, model capability, physical infrastructure production, private-company valuations, or the profitability of AI adoption inside non-member businesses. Because admitted companies may carry substantial non-AI business, and because market prices embed expectations, discount rates, and flows unrelated to AI, UGAI's level and changes must not be presented as a valuation of AI activity. This limitation is part of the published definition, not a footnote.
+UGAI answers the product question "How is the global AI economy performing?" through one specific lens: the market-value performance of public equity that the parent methodology has admitted as having a material, economically meaningful role in the AI value chain. It is an equity-market representation of the public AI economy, not a measure of the AI economy itself. Explicitly, UGAI does not measure AI industry revenue, AI's contribution to GDP, compute consumption, token usage, model capability, physical infrastructure production, private-company valuations, or the profitability of AI adoption inside non-member businesses. Because admitted companies may carry substantial non-AI business, and because market prices embed expectations, discount rates, and flows unrelated to AI, UGAI's level and changes must not be presented as a valuation of AI activity. This limitation is part of the published definition, not a footnote.
 
-UGAI does not decide which companies are AI companies, which listing represents a company, what a company's exposure tier is, or what its base weight is. Those decisions belong to the parent methodology. UGAI defines what happens after a valid parent snapshot exists: how the snapshot becomes index holdings, how those holdings are valued daily, how corporate actions and universe changes are absorbed without fictitious returns, how the result is converted to the index currency, and how the series is published, versioned, corrected, and reconstructed.
+UGAI does not decide which companies are AI companies, which listing represents a company, which exposure tier admitted a company, what economic function it performs, or what its base weight is. Those decisions belong to the parent methodology. UGAI defines what happens after a valid parent snapshot exists: how the snapshot becomes index holdings, how those holdings are valued daily, how corporate actions and universe changes are absorbed without fictitious returns, how the result is converted to the index currency, and how the series is published, versioned, corrected, and reconstructed.
 
 ## Primary Question
 
 > How is the global AI economy performing?
 
-UGAI's answer is the percentage change in the index level over a stated period, computed from a defined constituent portfolio. "Performing" therefore means equity-market performance of admitted public companies. The index is not adjusted for the share of each company's business that is AI-related; the parent universe's evidence requirements govern admission, and capitalization governs weight. Two consequences are disclosed with every use of the series: diversified members contribute their whole admitted equity value, and market moves driven by factors other than AI are included.
+UGAI's answer is the percentage change in the index level over a stated period, computed from a defined constituent portfolio. "Performing" therefore means equity-market performance of admitted public companies. The index is not adjusted for the share of each company's business that is AI-related, and it is not adjusted for the tier through which a company was admitted; the parent universe's tier tests govern admission, and capitalization governs weight. A company admitted because its entire business is AI and a company admitted because one product family of a diversified business is AI are weighted identically at equal accessible free-float capitalization. Two consequences are disclosed with every use of the series: diversified members contribute their whole admitted equity value, and market moves driven by factors other than AI are included.
 
 ## Parent Universe Inheritance
 
@@ -26,7 +26,7 @@ UGAI consumes the following from each parent universe version, without modificat
 - **Constituent companies**: the admitted membership of that version.
 - **Representative securities**: one listing per company, with the identifiers and price currency the parent recorded.
 - **Base weights** `w_i`: the parent's issuer-capped, accessible free-float weights, summing to one across members.
-- **Classifications**: activity tags and exposure tiers, carried for attribution and reporting only; they do not affect calculation.
+- **Classifications**: each member's primary eligibility tier (Tier 1 AI-native, Tier 2 AI infrastructure and enabling, Tier 3 AI platform and application), its value-chain layers, and its activity tags. **All are carried for attribution and reporting only; none affects calculation.** The tier records how the parent admitted the member and carries no economic magnitude; the value-chain layer records what economic function it performs. UGAI applies no tier multiplier, no exposure multiplier, no tier budget, and no tier-specific cap, and a member for whom AI is a minority of revenue contributes its whole admitted equity value exactly as any other member does.
 - **Company identity continuity** across corporate actions, as determined by the parent's corporate-action and exceptional-event rules, including event snapshots that remove a member between scheduled reviews. An event snapshot is consumed for membership, identity, and removal timing; its renormalized event-snapshot weights are not a UGAI reset input (see [Universe Versions and Rebalances](#docs-universe-versions-and-rebalances)).
 
 A parent version is consumed only after it is published as valid. UGAI never selects from a draft, backfilled, or corrected parent snapshot for a date on which that snapshot was not yet the published version; a parent correction produces a UGAI correction under [Corrections and Restatements](#docs-corrections-and-restatements), not a silent recomputation. If the parent methodology or its taxonomy changes, historical UGAI observations remain tied to the parent methodology version and universe version that were effective at the time. UGAI carries its own methodology version independently (see [Methodology Versioning](#docs-methodology-versioning)).
@@ -223,7 +223,9 @@ The divisor is stored to full precision with each observation, and the sequence 
 
 **Base value:** 1,000.00 on the base date. Rationale: levels are displayed to two decimal places, so the smallest displayed change is 0.01 index points. At a level of 100 that is 0.01%, one basis point; at a level of 1,000 it is 0.001%, one tenth of a basis point. A base of 1,000 therefore gives finer displayed percentage resolution than a base of 100 at launch levels. The value is otherwise economically arbitrary and carries no information; percentage changes are computed from unrounded levels regardless of the base. The initial divisor is `MV_base / 1,000`.
 
-**Base date:** a launch parameter, **unresolved**, to be fixed only when a validated historical dataset exists. It is not selected for cosmetic reasons. Conditions for selecting it:
+**Base date: the date of UGAI's first live published observation.** The base date is not selected to produce a longer chart, a flattering start level, or a favourable comparison, and it is not set earlier than first publication in order to appear established. Live history begins where live publication begins.
+
+A reconstructed series covering dates before first publication may be added later, as a distinct and distinctly labelled series under [Historical Series Policy](#docs-historical-series-policy), and adding one does not move the base date of the live series. Reconstruction is not prohibited; it is separated. The conditions any reconstruction must satisfy are:
 
 - point-in-time parent universe versions reproducible for every reset from the base date onward, using only information available at each historical publication time;
 - official closing prices, corporate-action terms, dividend records, and reference exchange rates with adequate history, licensing, and audit trail for every historical constituent, including delisted and acquired companies;
@@ -231,7 +233,7 @@ The divisor is stored to full precision with each observation, and the sequence 
 - demonstrated absence of survivorship bias (historical constituents, not current ones) and of look-ahead bias (historical announcement times);
 - a documented gap analysis for any market or period where inputs are missing.
 
-Any series computed for dates before UGAI's first live publication is labelled backtested or reconstructed history, carries its information limitations, and is never presented as live history. Live history begins at the first published observation.
+The first three conditions are not currently satisfiable: no point-in-time parent universe version has ever existed, and reconstructing one requires re-running the parent's tier determinations as of each historical review from the evidence then available, including the issuers then rejected or recorded as insufficient evidence. That work is not purchasable from any data vendor at any price. **UGAI therefore launches with no history, and with no fabricated history.**
 
 ## Publication
 
@@ -254,9 +256,41 @@ UGAI publishes, for the headline and the total-return series:
 - percentage change over defined periods (one day, week to date, month to date, year to date, one year, and since base), computed from unrounded levels of the relevant observations and shown to a stated precision;
 - the historical time series of levels and daily percentage changes;
 - the methodology version, universe version, and last-updated timestamp;
-- as-of constituent weights for the observation date, and the parent base weights and universe version from which the index shares were last set.
+- as-of constituent weights for the observation date, and the parent base weights and universe version from which the index shares were last set, **subject to the redistribution rights in [Public Disclosure Policy](#docs-public-disclosure-policy)**;
+- each constituent's primary eligibility tier and value-chain layers, as attribution.
 
 Percentage change is the primary market signal. Point change (the arithmetic difference between levels) is not a defined product signal: it depends on the arbitrary base value and is not comparable across indices or over time. The level is retained for continuity and for computing changes.
+
+## Public Disclosure Policy
+
+What UGAI publishes is governed by three layers, and licensing may constrain one of them without ever constraining the others.
+
+**Layer 1 — public methodology. Always public, unconditionally.** This document, the parent universe methodology, every tier test, every exclusion, the evidence hierarchy, the issuer cap, the base value and base date convention, and every version and changelog entry. None of this is licensed market data; it is Urdais's own text, and no commercial arrangement may make it unpublishable.
+
+**Layer 2 — public index outputs. Published subject to redistribution rights.** Urdais intends to seek rights to publish: the daily index level and percentage changes; constituent names; as-of constituent weights; membership changes with effective dates; each constituent's primary eligibility tier and value-chain layers; and the divisor with its changes. The divisor is Urdais's own computed quantity, not vendor data. Where rights to publish exact as-of weights cannot be obtained, the fallback is to publish weight bands, or the largest constituents with the concentration diagnostics, rather than to publish nothing — the reader learns the index's shape without a reconstruction vector.
+
+**Layer 3 — internal audit state. Retained regardless of what may be published.** Raw official closing prices as published, index shares, free-float factors, exchange rates, corporate-action terms, dividend records, and every input's source, timestamp and vintage. These are retained for reproducibility whether or not they may be redistributed.
+
+**Licensing may constrain publication. It may never constrain retention.** If Urdais cannot retain the inputs behind an observation, it cannot later prove that observation, and the lineage commitment in [Historical Integrity and Lineage](#docs-historical-integrity-and-lineage) is void. A market-data arrangement that requires deleting historical inputs is therefore incompatible with UGAI at any price, and this is a sourcing requirement rather than a preference. Where retention is permitted but redistribution is not, the affected values are withheld from Layer 2 and retained in Layer 3, and the withholding is disclosed.
+
+Raw prices, index shares, free-float factors, and licensed exchange inputs are **withheld from publication by default**, because publishing them would redistribute the licensed data itself rather than a derived value.
+
+## Historical Series Policy
+
+Two kinds of series exist, they are never spliced, and they carry distinct identifiers.
+
+**Live history** is the sequence of observations calculated under the methodology version actually effective at the time, from the parent universe snapshot then in force, published on schedule, and never retrospectively re-derived. Live history begins at the first published observation. A correction under [Corrections and Restatements](#docs-corrections-and-restatements) does not make an observation reconstructed; it remains live history with a corrected value and a retained original.
+
+**Reconstructed history** is any series computed for dates before first publication, or recomputed later from retained inputs and point-in-time evidence. It may be published only where **all** of the following hold:
+
+- point-in-time parent universe membership can be reconstructed from the evidence available at each historical review, without survivorship bias and without look-ahead bias, including the issuers then rejected or recorded as insufficient evidence;
+- point-in-time shares, free float, prices, exchange rates, corporate actions and dividends are available for every historical constituent, including delisted and acquired ones;
+- licensing permits both the retention and the use of those inputs for that purpose;
+- every value is labelled reconstructed throughout, carries its information limitations, and is served under a distinct series identifier.
+
+**Reconstructed values are never presented as live history, never merged into the live series, and never used to extend the live series backwards.** A chart may show both only where the boundary is visible and labelled.
+
+This is a separation, not a prohibition. Reconstruction is a legitimate future extension and is expected to become possible if the parent universe ever produces point-in-time versions. What is prohibited is a backfilled series presented as though it had been published at the time.
 
 ## Historical Integrity and Lineage
 
@@ -317,7 +351,7 @@ Downstream displays must distinguish these states and must not present a delayed
 Conceptual objects UGAI requires. These describe information, not storage:
 
 - **UGAIObservation:** date, series (headline or total return), level, daily change, status, calculation and publication timestamps, market-data cutoff, UGAI methodology version, parent methodology version, universe version, parameter set, divisor.
-- **UGAIConstituentSnapshot:** for a date, each constituent's company and security identity, index shares, raw official closing price and currency, exchange rate, USD market value, as-of weight, parent base weight, input statuses, and any distribution line held.
+- **UGAIConstituentSnapshot:** for a date, each constituent's company and security identity, index shares, raw official closing price and currency, exchange rate, USD market value, as-of weight, parent base weight, **primary eligibility tier, value-chain layers**, input statuses, and any distribution line held. The tier and layers are recorded per observation so that a historical print can state how each member qualified at the time, without those values ever entering the calculation.
 - **IndexShare:** a security's index shares with effective interval and the reset, event, or corporate action that set them.
 - **IndexDivisor:** the divisor with effective interval and, for each change, the cause, the before and after market values, and the inputs.
 - **SecurityPrice:** raw official closing price per listing per day as published, currency and units, source, timestamp, and session status (traded, holiday, halted); stored unadjusted, with no back-adjustment applied.
@@ -364,11 +398,14 @@ UGAI has its own methodology version, independent of the parent's. Each observat
 - `ugai_methodology_version`
 - `ai_equity_universe_methodology_version`
 - `universe_version`
-- the UGAI parameter set (base date, fixing convention, tolerances, correction window) once resolved.
+- the UGAI parameter set (base date, fixing convention, tolerances, correction window) once resolved;
+- each constituent's primary eligibility tier and value-chain layers as at that observation date, so that a historical print can state how each member qualified at the time.
 
 A change to UGAI's rules, parameters, or calendar is announced with a prospective effective date and a documented rationale and impact assessment; it does not alter observations before that date. A change to the parent methodology reaches UGAI only through a new universe version and does not by itself change UGAI's version. Editing this public page is not a production change.
 
 Version history: **0.1.0-draft, 12 September 2026**, initial research-backed proposal, amended in review on 12 September 2026 before merge (exceptional-deletion mechanics, base-value rationale, return-series divergence wording, raw official close definition, novel-action governance, as-of weight terminology, MSCI special-dividend precedent wording, exceptional historical restatement rule); no production effective date.
+
+**0.2.0-draft, 17 September 2026** — amended to consume the redesigned parent universe, which replaced its universal revenue-threshold admission gate with a tiered material AI exposure framework (parent 0.3.0-draft). **The calculation is unchanged**: the divisor-based base-weighted aggregative form, index shares, weight drift, the reset and event mechanics, corporate actions, additions and deletions, both return series, the currency and calendar conventions, the status model, and the correction rules are all as they were at 0.1.0-draft, and no tier or exposure multiplier is introduced anywhere. What changed: parent-inheritance terminology now names the three eligibility tiers and the separate value-chain layers, and states explicitly that neither affects calculation; tier and layer metadata are carried on each observation and each constituent snapshot; the base date is set to the first live published observation rather than left pending a historical dataset; a Public Disclosure Policy records the three-layer separation of methodology, published outputs and retained audit state, and makes the publication of as-of constituent weights conditional on redistribution rights with a stated fallback; a Historical Series Policy separates live from reconstructed history and permits reconstruction only under stated conditions; and a Limitations section is added. No production effective date.
 
 ## Relationship to UAVI
 
@@ -378,7 +415,7 @@ Version history: **0.1.0-draft, 12 September 2026**, initial research-backed pro
 
 No production observation may be published under this draft. The following require production data, licensing decisions, or historical testing, and are recorded here rather than resolved by assumption:
 
-- **Production base date:** selected only after the conditions in [Base Value and Base Date](#docs-base-value-and-base-date) are met.
+- **Publication granularity:** whether redistribution rights permit publishing as-of constituent weights alongside the level and the constituent list. Two market-data vendors condition derived-data rights on the output not permitting reconstruction of the underlying licensed data, and a weight table published beside a level is a stronger reconstruction vector than a level alone. **If the right cannot be obtained, the fallback in [Public Disclosure Policy](#docs-public-disclosure-policy) applies and this document's transparency commitment narrows accordingly** — which is a methodology consequence, not an implementation detail.
 - **Exchange-rate fixing:** source, fixing time, bid/ask/mid convention, licensing, and fallback rules.
 - **Calendar and timestamps:** the exact calculation cutoff, publication target and deadline, treatment of days without a fixing, half-days, and unscheduled closures.
 - **Stale-price and stale-rate tolerances:** counts, weights, and durations that convert a publication into delayed or unavailable status, and the escalation path for prolonged suspensions.
@@ -391,7 +428,25 @@ No production observation may be published under this draft. The following requi
 - **Data providers:** licensed sources for prices, corporate actions, exchange rates, and calendars, with historical retention rights adequate for reproducibility.
 - **Additional series:** whether and under which reference-investor convention a net total return series, local-currency series, or hedged series should be added as labelled companions.
 
-Parent-universe parameters that remain unresolved (the material exposure threshold, the issuer cap, investability minima, the access register) are not repeated here; UGAI depends on them only through the published parent versions.
+Parent-universe parameters that remain unresolved (the issuer cap, the Tier 1 safe-harbour share, the Tier 3 Route B materiality floor, investability minima, the venue and access register, and the reference investor) are not repeated here; UGAI depends on them only through the published parent versions. The parent's universal revenue-share admission threshold no longer exists and is not a UGAI dependency.
+
+## Limitations
+
+Properties of the design, published with the series rather than discovered by the reader. The parent universe's own limitations apply in addition to these and are not repeated.
+
+**UGAI is an equity index.** It measures the market value of a defined portfolio. It is not a measure of AI economic activity, AI revenue, AI's contribution to GDP, compute prices, compute or token consumption, model capability, or AI capital formation. Its level must never be presented as a valuation of AI activity, and its members' market capitalizations must never be summed into an estimate of the size of the AI economy.
+
+**Admission is role-based, so the index contains issuers for whom AI is a minority of revenue, and excludes issuers who consume or fund AI heavily.** A diversified member contributes its whole admitted equity value, and is weighted identically to an undiversified member of the same accessible free-float capitalization. Conversely, an issuer that spends heavily on AI compute, or that uses AI intensively inside its own products, is not a member on that basis. Both consequences follow from the parent's tier tests and from this index's refusal to weight by exposure.
+
+**Market moves unrelated to AI are included.** Prices embed expectations, discount rates, index flows, currency movements, and factors with no connection to AI. A change in UGAI is not evidence about AI.
+
+**Concentration is expected and is only partly controlled.** The eligible universe includes several of the largest listed companies in the world. The issuer cap binds at scheduled resets only; between resets, weights drift with prices and the cap is not re-applied, so published as-of concentration can exceed the cap value for up to a quarter. The cap limits single-issuer dominance and cannot prevent a group of large issuers from jointly determining most of the index.
+
+**The published index may be narrower than the universe.** Because thematic eligibility is determined without reference to licensing, members the parent admits may be absent from the published index where market-data, index-creation, display, access, custody, or settlement requirements are unmet. The resulting coverage gap is published as a limitation of the index.
+
+**Launch history is absent by design.** UGAI begins at its first published observation. No reconstructed series is published at launch, and none may ever be spliced into the live series.
+
+**Reproducibility depends on retention rights.** Where licensing does not permit retaining an input, the affected observations are marked not independently reproducible rather than presented as reproducible. A source that cannot be retained cannot support this index's lineage commitment.
 
 ## Research Precedents
 

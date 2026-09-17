@@ -1,28 +1,36 @@
 # Urdais AI Equity Universe
 
-**Status: proposed methodology, version 0.1.1-draft.** Prepared 12 September 2026; amended by post-merge audit on 12 September 2026. No production effective date, constituent list, or production base weights are established by this document.
+**Status: proposed methodology, version 0.3.0-draft.** Prepared 12 September 2026; amended by post-merge audit on 12 September 2026; **restructured on 17 September 2026 around a tiered exposure framework, replacing the universal revenue-share admission gate.** No production effective date, constituent list, or production base weights are established by this document.
 
-This proposal follows the principles of the [Urdais methodology framework](/docs/methodology). It is a shared primitive rather than a published output, so the framework's output template applies to the outputs that consume it (UGAI and UAVI), not to this document. Rules expressed as requirements describe the proposed design, subject to approval. Parameters explicitly marked **unresolved** are not defaults or discretionary overrides. Publication of a production universe is blocked until the launch requirements in [Open Questions / Empirical Validation Required](#docs-open-questions--empirical-validation-required) are resolved in a versioned release.
+This proposal follows the principles of the [Urdais methodology framework](/docs/methodology). It is a shared primitive rather than a published output, so the framework's output template applies to the outputs that consume it (UGAI and UAVI), not to this document. Rules expressed as requirements describe the proposed design, subject to approval. Parameters explicitly marked **unresolved** are not defaults or discretionary overrides, and parameters marked **convention** are stated values that empirical work has not calibrated. Publication of a production universe is blocked until the launch requirements in [Open Questions / Empirical Validation Required](#docs-open-questions--empirical-validation-required) are resolved in a versioned release.
 
 ## Purpose and Scope
 
-The Urdais AI Equity Universe is the shared set of publicly traded companies with evidenced, material commercial exposure to the global AI economy, together with their representative securities and base weights. It is a shared methodology primitive, not a market index or a recommendation to invest.
+The Urdais AI Equity Universe is the shared set of publicly traded companies with a **material, economically meaningful role in the AI value chain**, together with their representative securities and base weights. It is a shared methodology primitive, not a market index or a recommendation to invest.
 
 [UGAI](/docs/methodology/ugai), the Urdais Global AI Index, will use this universe and its base weighting methodology for equity-performance measurement. [UAVI](/docs/methodology/uavi), the Urdais AI Volatility Index, will inherit the same constituent base weights, apply its own options-eligibility filter, and renormalize the surviving weights. No options requirement is imposed on the parent universe.
 
-The intended measurement is the investable public equity of companies materially participating in AI supply and commercialization. It is not a measure of AI revenue, economic value added, model capability, private-company valuations, or the productivity gains of every business adopting AI. Supply-chain revenues can overlap across different companies; this is not an additive estimate of the size of the AI economy.
+The intended measurement is the investable public equity of companies that supply, operate, or commercialize artificial intelligence. It is not a measure of AI revenue, economic value added, model capability, compute prices, private-company valuations, AI's contribution to GDP, or the productivity gains of every business adopting AI. Supply-chain revenues can overlap across different companies; this is not an additive estimate of the size of the AI economy.
 
-Technology, semiconductor, cloud, robotics, or infrastructure classifications do not confer automatic membership. Internal use of AI and repeated references to an AI strategy do not establish a qualifying business.
+Technology, semiconductor, cloud, robotics, datacenter, or infrastructure classifications do not confer automatic membership. Internal use of AI, an AI feature inside an existing product, repeated references to an AI strategy, membership of a third party's AI index, and share-price behaviour do not establish a qualifying business. The universe is intended to be broad, and it is not intended to be a technology universe: the governing question throughout is whether the issuer supplies AI, not whether it benefits from AI.
+
+### What changed in 0.3.0-draft, and why
+
+Versions 0.1.x admitted a company only where it disclosed qualifying AI revenue reaching a threshold share of consolidated revenue (`r_i_lower ≥ τ`). Empirical testing against real filings established that almost no diversified issuer discloses an AI-only revenue numerator, that the threshold therefore had no discriminating power, and that the rule produced a universe too small to carry a valid capped weight vector. The universal revenue-share gate is **superseded**. It is replaced by three rules-based exposure tiers, each asking a question the market's existing disclosure can answer. Revenue-share evidence is retained where it exists, in the narrower roles described in [Materiality](#docs-materiality). The supporting research is recorded under `docs/research/ugai/`; the changelog entry is in [Governance and Versioning](#docs-governance-and-versioning).
 
 ## Decision Model
 
-Membership and weights result from three separate decisions:
+Membership and weights result from three separate decisions, applied in this order and never merged:
 
-1. **AI relevance:** qualifying activities and sufficient evidence of company-level material exposure.
+1. **Thematic eligibility:** a qualifying role in the AI value chain under exactly one exposure tier, with sufficient evidence that the role is material to the issuer.
 2. **Security and investability eligibility:** an eligible, accessible equity claim with adequate float, liquidity, history, and reliable data.
-3. **Weighting:** a reproducible allocation across admitted companies.
+3. **Weighting:** a reproducible allocation across admitted companies, from accessible free-float capitalization and an issuer cap.
 
-AI relevance cannot compensate for an ineligible security. Size or liquidity cannot compensate for insufficient AI exposure. Classification identifies the activity; it does not bypass either gate. There is no target constituent count, country quota, or requirement to include a familiar company.
+The full pipeline is therefore: thematic eligibility → security and investability eligibility → representative security → accessible free-float market capitalization → issuer cap → downstream index calculation.
+
+Thematic eligibility cannot compensate for an ineligible security. Size or liquidity cannot compensate for an absent qualifying role. Classification identifies the activity; it does not bypass either gate. There is no target constituent count, country quota, or requirement to include a familiar company.
+
+**The exposure tier affects eligibility only. It never affects weight.** No tier multiplier, tier budget, tier-specific cap, or fixed tier allocation exists, and no measure of an issuer's degree of AI exposure multiplies its capitalization. A tier records *how* an issuer qualified; it carries no economic magnitude and must not be given one. The reasons are stated in [Interface to UGAI Weighting](#docs-interface-to-ugai-weighting).
 
 ## Conceptual Entity Model
 
@@ -43,11 +51,13 @@ These are methodological concepts, not database definitions:
 
 A company may have several activities and securities but has at most one membership per membership state and one base weight per weight snapshot.
 
-## AI Economy Classification
+## AI Value-Chain Scope
 
-Qualifying AI activity supplies systems that learn from data to perform inference, prediction, generation, perception, or adaptive decision-making, or supplies demonstrably attributable infrastructure for those systems. A conventional rules engine, generic automation, or a product label is insufficient evidence.
+Qualifying AI activity supplies systems that learn from data to perform inference, prediction, generation, perception, or adaptive decision-making, or supplies infrastructure embodied in those systems. A conventional rules engine, generic automation, or a product label is insufficient evidence.
 
-The proposed activity taxonomy has five groups. These are Urdais design choices, informed by the value-chain approaches in the [research appendix](#docs-research-precedents), with stricter attribution at the product and segment level.
+The activity taxonomy has five groups. These are Urdais design choices, informed by the value-chain approaches in the [research appendix](#docs-research-precedents), with stricter attribution at the product and segment level. **The taxonomy answers "is this activity AI?" It does not answer "is this issuer eligible?"** — that is the tier tests' work, and an activity tag never admits an issuer on its own.
+
+The scope covers the chain from the supply of AI compute through to the sale of AI capability, and stops deliberately short at three edges: the **tools** used to manufacture qualifying components, the **facilities** that house and power AI compute, and the **internal use** of AI inside an issuer's own operations. Those edges are stated as rules in [Exclusions](#docs-exclusions) and applied in the boundary sections that follow.
 
 ### Models and development systems
 
@@ -71,49 +81,314 @@ Facilities, cooling, electrical systems, and other equipment or services attribu
 
 Assign all supported activity tags. Assign the primary tag to the group with the largest evidenced qualifying revenue; retain a multi-activity designation if the evidence cannot support a ranking. Do not guess a primary tag. Count each revenue item once when determining company-level exposure, even when it supports several activity tags. Category mappings and changes must be versioned.
 
-## Material AI Exposure
+## Eligibility Architecture
 
-### Evidence-based revenue test
+An issuer is thematically eligible where it satisfies **both** prongs of **exactly one** exposure tier:
 
-The proposed primary admission measure is the share of consolidated external revenue attributable to qualifying commercial activity during the latest completed fiscal year available at the review evidence cutoff.
+- **A qualifying role.** The issuer supplies, operates, or commercializes something whose economic purpose is the production, provision, or delivery of artificial intelligence capability.
+- **Materiality to the issuer.** That activity is material to the issuer, on evidence admissible under the [Evidence Hierarchy](#docs-evidence-hierarchy).
 
-For company i, define:
+Neither prong suffices alone. Many issuers benefit from AI demand; comparatively few supply AI. The two-prong requirement is what keeps the universe broad without making it a technology universe.
 
-`r_i = Q_i / R_i`
+The three tiers are alternative **routes to eligibility**, not a ranking and not economic sectors:
 
-`R_i` is positive consolidated external revenue. `Q_i` is qualifying external revenue from the same reporting period and consolidation perimeter, with intragroup transactions eliminated and `0 ≤ Q_i ≤ R_i`. Where disclosures support only an interval, retain lower and upper bounds and use the substantiated lower bound `r_i_lower` for admission.
+- **Tier 1, AI-native.** The issuer qualifies because its core commercial identity is the supply of AI. This is a whole-issuer test.
+- **Tier 2, AI infrastructure and enabling.** The issuer qualifies because it supplies something embodied in AI compute systems, or performs the manufacture of such a component. This is a product test.
+- **Tier 3, AI platform and application.** The issuer qualifies because it commercially provides AI capability to others, or sells a material AI product line. This is a business-line test.
 
-The proposed rule is `r_i_lower ≥ τ`, where `τ` is an **unresolved material-exposure threshold**, constrained to `0 < τ ≤ 50%`. No value is adopted for production in this draft. Select it only after testing disclosure coverage, borderline classifications, diversified-company treatment, and historical stability. A provider's relevance-score cutoff is not a valid substitute for an AI revenue threshold.
+**A qualifying issuer does not need to disclose an AI-only revenue percentage.** If it satisfies the mechanical rules of its tier, it is eligible. Revenue-share evidence remains admissible and useful, in the roles set out in [Materiality](#docs-materiality), but it is no longer a gate. There is exactly one primary eligibility system.
 
-**Canonical period and interim evidence.** The canonical quantitative measure for admission and retention is `r_i_lower` for the latest completed fiscal year available at the review evidence cutoff, with numerator and denominator from that same period and consolidation perimeter. The completed fiscal year is used for every company regardless of how often it reports, so that companies are compared over the same period length and seasonality does not enter the comparison. Filed interim reports and reconciled issuer operating disclosures (tier 3 of the [Source Hierarchy](#docs-source-hierarchy)) do not replace that measure, even where a qualifying numerator and a consolidated denominator are both available for the same interim period: a three-, six-, or nine-month ratio for one issuer is not comparable with another issuer's completed-year ratio, and admitting or removing on it would make membership depend on reporting cadence. Interim evidence may: update the record of business composition; corroborate or challenge the existing attribution; identify a material acquisition, disposal, spin-off, restructuring, or change of consolidation perimeter; trigger a classification review or an exceptional eligibility review; and establish that the prior completed-year measure is no longer structurally comparable or valid. Where the prior completed-year period remains structurally valid, retain its `r_i_lower` unchanged until the next completed fiscal year is available, and record the interim evidence separately against the company. Where a material event has made the prior period structurally invalid and no comparable completed-year measure exists for the changed company, the determination becomes **insufficient evidence** under [Missing and pre-commercial exposure](#docs-missing-and-pre-commercial-exposure) and the review/removal policy applies. In neither case construct annualized quarterly or half-year revenue, pro forma exposure, management-estimate or guidance percentages, or analyst estimates. A reproducible trailing-twelve-month measure built only from filed data is a research question recorded in [Open Questions / Empirical Validation Required](#docs-open-questions--empirical-validation-required); it is not adopted and would require a versioned amendment.
+## Tier 1 — AI-native
+
+An issuer qualifies under Tier 1 where **all material commercial activity** consists of supplying AI products or services, such that its core economic identity is the supply of AI.
+
+The test is **material commercial activity**, not literally every product or service line. An issuer does not fail because it also sells an ancillary tool that exists to deliver its qualifying offering. All four conditions must hold, each recorded with a citation:
+
+1. **Enumeration from the filing.** Every commercial product, platform, or service line named in the issuer's latest statutory annual filing is enumerated and individually mapped to a group in the [AI Value-Chain Scope](#docs-ai-value-chain-scope). **The issuer's name, self-description, branding, and marketing are inadmissible.**
+2. **No material non-qualifying line.** No enumerated non-qualifying line may be a reportable segment, be named in the filing as a principal revenue source, or be separately disclosed at a scale the issuer treats as material.
+3. **Ancillary-support test.** A non-qualifying line that is *not* separately disclosed is presumed ancillary **only where the issuer's own filing presents it as supporting or delivering the issuer's qualifying products**. Where the filing presents it as an independent business, or does not characterize it at all, Tier 1 **fails**; it does not pass by default. The absence of a disclosure is not evidence that the activity is small.
+4. **Services test.** Where services are a material share of revenue, the issuer must evidence that they implement, tune, integrate, or supply data for *its own* qualifying products. **General systems integration, IT modernization, staffing, and managed IT services fail this test.** A gross margin characteristic of labour-based services rather than software is a trigger for the test, not a disqualifier on its own.
+
+**Safe harbour.** Where the issuer discloses qualifying revenue of **at least 75%** of consolidated external revenue for the latest completed fiscal year, on establishing evidence, conditions 1–4 are deemed satisfied and the enumeration exercise is not required. The 75% figure is a **convention**, not an empirically calibrated threshold: research testing found only one sampled issuer whose disclosed ratio fell between a low single-digit percentage and 100%, so the sample could not calibrate it. Its only effect is procedural — the safe harbour is a shortcut, never a gate, and an issuer below it is assessed on conditions 1–4 exactly as if the safe harbour did not exist.
+
+Conditions 3 and 4 exist because each corrected a real failure found in testing: a genuinely AI-native issuer was rejected for an undisclosed deployment tool that its own filing presented as supporting its platforms, and a self-described AI issuer was admitted whose disclosed contracts were government IT services.
+
+## Tier 2 — AI Infrastructure and Enabling
+
+An issuer qualifies under Tier 2 where it supplies a **component, subsystem, or production capability embodied in, or directly performing the manufacture of, AI compute systems**, and that activity is material to the issuer.
+
+An **AI compute system** is the accelerated compute system on which AI training or inference runs: the accelerator, its memory, the interconnect fabric joining accelerators, and the integrated system containing them.
+
+The governing question is one of **embodiment, one step**:
+
+> Is the issuer's qualifying product materially embodied in an AI computing system, or directly used as a component or service to construct one — rather than a tool or general-purpose input used further upstream?
+
+### Prong A — embodiment
+
+The issuer supplies at least one of:
+
+1. an AI accelerator or AI ASIC (GPU, XPU, TPU, NPU, or inference accelerator);
+2. memory designed for accelerator bandwidth, such as high-bandwidth memory and its successors — **not** commodity DRAM or NAND;
+3. interconnect embodied in AI clusters: AI fabric switching silicon or systems, high-speed optical transceivers at AI-cluster rates, silicon photonics for accelerator scale-up or scale-out, retimers, and AI connectivity silicon;
+4. an integrated accelerated-compute system, server, or rack-scale AI system;
+5. **the fabrication or advanced packaging of (1)–(3)** — the issuer physically manufactures the component, as distinct from supplying the tools used to manufacture it.
+
+### Prong B — materiality to the issuer
+
+The qualifying activity is material, evidenced from an establishing source by at least one of:
+
+1. disclosed revenue for the qualifying product family; or
+2. the qualifying family sitting in a reportable segment material to the issuer, **together with** the issuer's own attribution of that segment's demand or growth principally to accelerated-compute or AI end-markets; or
+3. disclosed capacity, wafer, or production allocation to the qualifying activity; or
+4. the issuer identifying the qualifying activity as a principal driver of results **in its statutory filing**.
+
+Realized disclosures only. Guidance, targets, backlog, bookings, pipeline, and total-addressable-market statements never satisfy Prong B, and may corroborate at most.
+
+### What Tier 2 does not admit
+
+- **AI end-market demand is not sufficient.** Demand belongs to the customer. A supply relationship with an AI company says nothing about the supplied activity.
+- **Technological criticality is not sufficient.** An input can be indispensable to AI and remain outside the tier. Criticality is a property of the supply chain; embodiment is a property of the product. Admitting criticality alone would admit the whole manufacturing toolchain, then the materials behind the tools, and the universe would become a semiconductor universe.
+- **A general-purpose product inside an AI system is not sufficient.** A general-purpose processor sold into an accelerated server remains a general-purpose processor.
+
+The detailed inclusions and exclusions are in the [Semiconductor and Compute-Infrastructure Boundary](#docs-semiconductor-and-compute-infrastructure-boundary).
+
+## Tier 3 — AI Platform and Application
+
+A diversified issuer qualifies under Tier 3 through one of two routes. Internal use of AI never qualifies, and an AI feature bundled into an existing product never qualifies.
+
+### Route A — AI platform, compute, and developer services
+
+The issuer makes commercially available to external customers, at scale, access to **AI models, AI training or inference compute, model-serving platforms, AI cloud services, or AI development and deployment services** that those customers use to build or operate their own AI workloads.
+
+All three conditions must hold:
+
+1. **Generally available.** The offering is generally available, not a free or limited preview.
+2. **Separately contracted.** It is separately contracted or metered, such that a customer can buy it as such.
+3. **Disclosed at scale**, on an indicator of **rank 2 or better** in the scale-evidence hierarchy below.
+
+**Scale-evidence hierarchy.** Route A requires an indicator of commercial scale, and indicators are not interchangeable. Ranked strongest first:
+
+- **Rank 1 — admissible.** Recognized AI-specific revenue for the completed fiscal year.
+- **Rank 2 — admissible.** Recognized AI-specific revenue for a disclosed shorter period within the completed fiscal year; or recurring revenue, annual recurring revenue, or an annualized figure or run rate **derived from recognized revenue**.
+- **Rank 3 — corroborating only, never sufficient.** Bookings, or contracted commercial volume, where the measure is clearly defined and reconcilable.
+- **Rank 4 — corroborating only, never sufficient.** Gross billing or gross merchandise measures; consumption metrics; customer, seat, or deployment counts.
+
+Rank 3 and rank 4 indicators may support an admission established at rank 1 or 2. **Neither may establish Route A materiality on its own.** Gross billing is specifically insufficient: it precedes revenue recognition and can include amounts never recognized, so it is not equivalent to a disclosed revenue line. Revenue, recurring revenue, bookings, and billings must be distinguished by name in the evidence record, never collapsed into a single notion of "AI revenue".
+
+An annualized figure or run rate derived from recognized revenue is admissible **here**, as evidence that a business exists at commercial scale. It remains inadmissible as the numerator of a revenue-share ratio, because a run rate is not commensurable with a period denominator. The distinction is between evidencing scale and computing a ratio.
+
+### Route B — AI application business
+
+The issuer sells a separately priced AI product or product line that is **material to the issuer**, evidenced by a disclosed AI-specific revenue or recurring-revenue figure reaching a stated share of consolidated revenue.
+
+The Route B materiality floor is **10%** of consolidated external revenue. This is a **convention**, not an empirically calibrated threshold. Research testing bounded it from below only — an issuer disclosing a substantial AI product line at roughly 2% of revenue is plainly not materially an AI business — and found no sampled issuer between roughly 5% and 30% against which to calibrate the upper end. The floor requires founder approval and should be re-tested against a wider sample.
+
+Route B exists so that an application business of genuine scale to its issuer is not excluded merely because it is not a platform. It is not a route for AI features: an AI capability embedded in an existing product, priced within that product, fails Route B however large the host product is.
+
+### What distinguishes a business line from a feature
+
+A **feature** improves the issuer's existing product and is bundled into that product's price. A **business line** is separately contracted and separately priced, and a customer can buy it as such. Strategic importance, management commentary, customer enthusiasm, and forecast opportunity never establish a business line.
+
+## Materiality
+
+Materiality is required under every tier, and the evidence that best establishes it differs by tier because the categories do not share a reporting structure.
+
+- **Tier 1** — The enumeration itself: all material commercial activity qualifies, so materiality follows from conditions 1–4, or from the safe harbour
+- **Tier 2** — Prong B: disclosed product-family revenue, segment materiality with issuer attribution, disclosed capacity allocation, or identification as a principal driver in the statutory filing
+- **Tier 3** — Route A's rank-2-or-better scale indicator, or Route B's disclosed revenue share
+
+### Where revenue-share evidence is still used
+
+The revenue-share measure `r_i = Q_i / R_i` is retained, in three narrower roles. `R_i` is positive consolidated external revenue; `Q_i` is qualifying external revenue from the same reporting period and consolidation perimeter, with intragroup transactions eliminated and `0 ≤ Q_i ≤ R_i`. Where disclosures support only an interval, retain lower and upper bounds and use the substantiated lower bound `r_i_lower`.
+
+1. **Tier 1 safe harbour** — `r_i_lower ≥ 75%` deems the Tier 1 conditions satisfied.
+2. **Tier 3 Route B materiality** — `r_i_lower ≥ 10%` for the separately priced AI product line.
+3. **Published diagnostic** — where an issuer discloses qualifying revenue, `r_i_lower` is published as constituent attribution. It informs the reader and affects neither membership nor weight.
+
+**`r_i_lower` is not a universal admission gate and no universal threshold `τ` exists.** An issuer that discloses no AI revenue at all may be fully eligible under its tier.
+
+**Canonical period.** Where a revenue measure is used, the canonical period is the latest completed fiscal year available at the review evidence cutoff, with numerator and denominator from that same period and consolidation perimeter. The completed fiscal year is used for every company regardless of how often it reports, so that companies are compared over the same period length and seasonality does not enter the comparison.
+
+**Sum of disclosed quarterly actuals.** Where an issuer discloses a qualifying figure quarterly rather than annually, the sum of the four disclosed quarters of the measured completed fiscal year may be used, provided all four are disclosed on a consistent definition, each from an establishing source, and the sum is reconciled against consolidated revenue for the same year. A single missing or redefined quarter makes the year unmeasurable. This is aggregation of actuals, not annualization, and it remains subject to every prohibition below.
+
+**Interim evidence.** Filed interim reports and reconciled issuer operating disclosures do not replace a completed-year measure, even where a qualifying numerator and a consolidated denominator are both available for the same interim period: a three-, six-, or nine-month ratio for one issuer is not comparable with another issuer's completed-year ratio. Interim evidence may: update the record of business composition; corroborate or challenge the existing attribution; identify a material acquisition, disposal, spin-off, restructuring, or change of consolidation perimeter; trigger a classification review or an exceptional eligibility review; and establish that a prior determination is no longer structurally valid. Where the prior completed-year period remains structurally valid, retain its `r_i_lower` unchanged until the next completed fiscal year is available, and record the interim evidence separately against the company. Where a material event has made the prior period structurally invalid and no comparable measure exists for the changed company, the determination becomes **insufficient evidence** under [Missing and pre-commercial exposure](#docs-missing-and-pre-commercial-exposure) and the review/removal policy applies.
+
+**Prohibited in every role.** Do not construct annualized quarterly or half-year revenue, pro forma exposure, management-estimate or guidance percentages, or analyst estimates. Do not treat annual recurring revenue, capital expenditure, backlog, bookings, pipeline, or an announced investment as revenue. Do not treat a customer's AI demand as the supplier's AI revenue. Do not substitute strategic importance for economic evidence. A reproducible trailing-twelve-month measure built only from filed data is a research question recorded in [Open Questions / Empirical Validation Required](#docs-open-questions--empirical-validation-required); it is not adopted and would require a versioned amendment.
 
 ### Attribution rules
 
+These govern any revenue figure used as evidence, in whichever role. They do not reinstate a revenue gate.
+
 - Prefer separately disclosed qualifying product or segment revenue reconciled to financial statements. Record the specific products, reporting period, numerator, denominator, and source locations.
-- A whole segment may count only where its entire revenue-generating activity satisfies the taxonomy. Broad labels such as cloud, datacenter, digital, or advanced semiconductor manufacturing are insufficient.
+- **A whole segment may count as a revenue figure only where its entire revenue-generating activity satisfies the taxonomy.** Broad labels such as cloud, datacenter, digital, high-performance computing, or advanced semiconductor manufacturing are insufficient, and **a segment's name never establishes qualification** — a segment titled for AI whose contents are not separately broken out is a mixed segment like any other.
+- **A segment that cannot supply a revenue figure can still evidence a qualifying product family.** This is the distinction that makes the tiers workable: a multi-workload segment is refused as a numerator under this rule while the specialized product family inside it satisfies Tier 2 Prong A, with Prong B met by segment materiality plus the issuer's own attribution. The mixed-segment rule constrains *revenue arithmetic*; it does not constrain *product identification*.
 - For mixed segments, count only the substantiated qualifying portion. Unallocated revenue remains unknown; do not classify it as definitively non-AI or assign a guessed percentage.
 - Product documentation establishes technical relevance, not revenue magnitude. Evidence of delivered products and customer demand can corroborate attribution; backlog, bookings, annualized run rates, capex plans, and forecast revenue cannot replace realized annual revenue.
 - A product-dependence argument must establish both qualifying functionality and the associated revenue boundary. An optional AI feature does not justify attributing the entire bundle. If the allocation cannot be evidenced, the disputed portion does not enter the lower bound.
 - Assets, capex, installed capacity, and R&D spending may support the classification narrative but do not independently confer membership. They are not comparable revenue proxies across software, manufacturing, and infrastructure businesses.
 
-This intentionally favors demonstrable exposure over broad thematic association. It can underrepresent companies with substantial but undisclosed AI activity, including diversified companies. That limitation must be measured and disclosed; it must not be repaired through undocumented analyst exceptions. A possible absolute-revenue admission route is a research question, not an active alternative rule.
+This intentionally favors demonstrable exposure over broad thematic association. It can underrepresent companies with substantial but undisclosed AI activity, including diversified companies. That limitation must be measured and disclosed; it must not be repaired through undocumented analyst exceptions.
 
 ### Missing and pre-commercial exposure
 
-Companies with insufficient attribution evidence, missing consolidated revenue, or no positive revenue remain research candidates. A prospective pure play is not admitted on management's stated ambition alone. If disclosure cannot establish the threshold, the decision is **insufficient evidence**, not a conclusion that the company has no AI exposure.
+Companies that satisfy no tier on admissible evidence, that have missing consolidated revenue, or that have no positive consolidated external revenue remain research candidates. A prospective pure play is not admitted on management's stated ambition alone. Where disclosure cannot establish a tier, the decision is **insufficient evidence**, not a conclusion that the company has no AI exposure.
 
 A material acquisition or disposal after the reported period triggers reassessment. Do not combine incompatible pre- and post-transaction revenue perimeters. Where compatible published evidence is unavailable, record the uncertainty and apply the review/removal policy rather than manufacture a pro forma estimate.
 
-## Exposure Tiers
+## Evidence Hierarchy
 
-Use two evidence-based labels for admitted companies:
+Sources fall into three classes. The class determines what a source may do, never whether it is interesting.
 
-- **Majority exposure verified:** `r_i_lower > 50%`.
-- **Material exposure verified:** `τ ≤ r_i_lower ≤ 50%`; a majority has not been established by the evidence used for admission. This does not assert that the true AI share is below 50%.
+**Establishing — may satisfy a tier test.** Audited annual reports; Form 10-K; Form 20-F; equivalent statutory annual filings. Also, subject to the conditions below: furnished Form 8-K earnings exhibits, Form 6-K filings, and official annual or periodic results releases issued by the issuer, including official operating metrics that are clearly defined and reconcilable.
 
-The 50% boundary means a demonstrated majority, not near-total purity. It is a proposed descriptive boundary with a relevant STOXX precedent; it does not establish the unresolved minimum for material membership. The labels are mutually exclusive and do not alter weights.
+**Corroborating — may support, challenge, or trigger a review; never sufficient alone.** Investor presentations; management commentary; prepared remarks and oral statements on earnings calls; product documentation, datasheets, and technical specifications.
 
-Record evidence coverage separately. “Enabler” describes a role in the supply chain, not a weaker exposure tier. A chip supplier or cooling specialist can have either degree of exposure. No subjective tier multiplier, separate tier quota, or “AI leader” exception is proposed.
+**Discovery only — never evidence.** Analyst research; press and news coverage; ETF and index membership; third-party thematic classifications and scores; generative-AI summaries; keyword frequency; management strategy statements.
+
+### Conditions on a furnished or released figure
+
+A figure from a furnished exhibit or an official results release may establish a tier test only where **all** hold: it states a figure for the period being measured; it **reconciles** to consolidated revenue in the same document or in the subsequent statutory filing; it is a **realized** figure, not guidance, a target, a backlog, a booking, or a pro forma; it appears in **the document's own text or tables**, not solely inside a quoted executive remark; and the document is retained with its hash and retrieval timestamp.
+
+The penultimate condition does the decisive work. It separates an issuer's own dated statement of a completed period — prepared under the same disclosure controls as the filing it reconciles to — from an executive's remark that happens to be transcribed into the same release. **An oral management statement alone never establishes a quantitative qualification.**
+
+### Variation by tier
+
+The required class does not vary. What varies is which prong a class may satisfy.
+
+- **Qualifying role** — Tier 1: Establishing source — the enumeration comes from the filing · Tier 2: Establishing source for the product's existence; **corroborating sources admissible for its technical characterization** · Tier 3: Establishing source — the offering must be shown to be sold
+- **Materiality** — Tier 1: Establishing source · Tier 2: Establishing source (Prong B) · Tier 3: Establishing source (Route A rank 2+, or Route B share)
+
+The single relaxation is Tier 2's technical characterization. Whether a product is an accelerator, high-bandwidth memory, or an AI-cluster transceiver is a technical fact that filings state imprecisely and datasheets state exactly. Product documentation may therefore characterize a product, while an establishing source must still show that the product exists and is material. **Product documentation never establishes materiality**, which is where a softer standard would actually bite.
+
+## Exclusions
+
+These are rules, not presumptions, and each one blocks a specific way the universe could dilute into a technology universe. An issuer excluded by any of them is not eligible, whatever its other attributes.
+
+- **E1** — **Customer demand.** AI end-market demand for an issuer's general-purpose product never qualifies it. The qualifying test concerns the product, not the customer. A supply relationship with an AI company is not evidence about the supplied activity.
+- **E2** — **Tools.** Supplying equipment, materials, chemicals, or design software and IP used to *manufacture* qualifying components does not qualify. The tool is not embodied in the AI computing system.
+- **E3** — **Facilities.** Supplying land, buildings, colocation, electricity, or general building services — including heating, ventilation, cooling, switchgear, transformers, and backup power — to sites that host AI compute does not qualify.
+- **E4** — **Internal use.** Using AI within the issuer's own operations, or to improve the issuer's own existing product, never qualifies.
+- **E5** — **Features.** Embedding AI capability in an existing product, priced within that product, without separate commercialization at material scale, does not qualify.
+- **E6** — **Branding and third-party classification.** An issuer's name, self-description, marketing, ETF or index membership, thematic score, analyst classification, and share-price behaviour never qualify.
+- **E7** — **Deterministic automation.** Programmed automation without material dependence on learned perception or learned policy does not qualify.
+- **E8** — **Forward-looking statements.** Guidance, targets, backlog, bookings, pipeline, total-addressable-market statements, and forecasts never establish eligibility. They may corroborate.
+- **E9** — **Pre-commercial.** An issuer with no positive consolidated external revenue is a research candidate, not a member.
+
+E1 and E2 exclude issuers that are genuinely central to AI and will attract challenge. That is the cost of a boundary that does not move, and the reasoning is recorded in [Limitations](#docs-limitations).
+
+## Value-Chain Attribution
+
+**A tier and a value-chain layer are different things, and the methodology records both.**
+
+- The **primary eligibility tier** records *how* the issuer qualified. Exactly one per issuer. It determines membership.
+- The **value-chain layer** records *what economic function the issuer performs*. One or more per issuer. It determines nothing.
+
+The distinction is necessary because Tier 1 is a whole-issuer test while Tier 2 is a product test, so two issuers selling the same kind of product can qualify by different routes: an undiversified accelerator designer satisfies Tier 1 because its entire business qualifies, while a diversified accelerator designer satisfies Tier 2 because only its accelerator family does. Both perform the same economic function. **Publishing the tier as though it were an economic sector would therefore misdescribe the universe**, and the more AI-native hardware issuers the universe admits, the more misleading it becomes.
+
+Value-chain layers:
+
+- **Compute and infrastructure** — Supplying components, systems, or manufacture embodied in AI compute systems
+- **Platform** — Providing AI models, compute, or developer services to others
+- **Application** — Selling AI products to end customers
+- **Autonomy** — Supplying systems whose behaviour depends on learned perception or policy
+
+Tier 1, Tier 2, and Tier 3 are **not** published as economic sectors, categories, or quality rankings. Where the universe publishes a breakdown of what it contains, it publishes value-chain layers. Where it publishes how each member qualified, it publishes tiers. Neither affects weight.
+
+### Primary-tier assignment
+
+Deterministic, applied in order:
+
+1. **Tier 1** if the issuer satisfies the Tier 1 whole-issuer test.
+2. Otherwise **Tier 2** if its largest qualifying activity is infrastructure or enabling activity.
+3. Otherwise **Tier 3** if its largest qualifying activity is platform or application activity.
+
+"Largest qualifying activity" is measured by disclosed revenue where disclosed, and otherwise by the principal business presented in the issuer's own segment structure. Tier 1 takes precedence because it is a whole-issuer test and cannot be satisfied simultaneously with a partial-business test in a way that leaves the outcome ambiguous.
+
+**An issuer has exactly one primary tier and is counted exactly once.** Where an issuer performs qualifying activity across layers — a platform operator that also designs its own captive accelerators, for example — the additional activity is recorded as a secondary value-chain layer and never as a second membership, a second tier, or a second contribution to universe size.
+
+### Universe accounting invariant
+
+Every candidate issuer carries exactly one mutually exclusive status:
+
+- **Eligible** — Satisfies a tier's both prongs on admissible evidence
+- **Pending** — A specific named condition is unresolved and identified
+- **Contested** — Evidence is in tension and a determination has not been reached
+- **Insufficient evidence** — Disclosure cannot establish a tier; not a finding that the issuer lacks AI exposure
+- **Rejected** — An exclusion applies, or a tier test fails on the evidence
+
+**Only issuers with status `Eligible` enter a tier subtotal or a universe count.** A non-eligible issuer may carry a candidate tier for analysis; it never counts. Two identities must be asserted wherever a universe or research count is published:
+
+```
+Tier 1 + Tier 2 + Tier 3 = total Eligible
+Eligible + Pending + Contested + Insufficient evidence + Rejected = total assessed
+```
+
+This applies to production universe reviews and to research records alike. It exists because a research sample was published in which a `Pending` issuer carried a tentative tier label, was correctly excluded from the eligible total, and was incorrectly included in a tier subtotal — an error the first identity would have caught.
+
+## Robotics and Autonomous Systems
+
+A robotic or autonomous system qualifies where its **principal contracted functionality materially depends on learned perception or learned policy** — where the system's behaviour in variable or unstructured conditions derives from data rather than from pre-programmed trajectories, fixed rule sets, or real-time human direction.
+
+Two clarifications make the rule operable:
+
+- **Dependence, not purity.** Real systems mix learned components with deterministic scheduling and control. The test is whether the contracted functionality materially depends on the learned component, not whether the system is wholly learned. A test asking whether AI is the system's "core value" would not be objectively assessable.
+- **Teleoperation is not autonomy.** A system whose actions are directed by a human operator in real time does not depend on learned policy, however sophisticated its mechanics.
+
+"Robotics" is not an admission category. Industrial arms executing programmed trajectories, motion control, and programmable logic automation are excluded under **E7**, and a robotic system marketed for its intelligence is assessed on its disclosed functionality rather than its description. Conversely, a system in a category not usually called robotics qualifies where the dependence test is met.
+
+Where an issuer's autonomous system is its entire business, Tier 1 applies and the value-chain layer is *Autonomy*. Where it is one business among several, Tier 2 or Tier 3 applies according to the primary-tier rule.
+
+## Semiconductor and Compute-Infrastructure Boundary
+
+Qualification attaches to evidenced supply of a qualifying product, never to a position in a supply chain and never to a customer's identity.
+
+**Generally qualifying, where Prong B materiality is met:** AI accelerators; custom AI ASICs and XPUs; high-bandwidth memory; AI-cluster networking and interconnect; integrated accelerated-compute systems, servers, and rack-scale AI systems; **fabrication of qualifying AI chips**; **advanced packaging of qualifying AI chips**.
+
+**Not automatically qualifying, absent product-level attribution that satisfies both prongs:** lithography; generic semiconductor capital equipment; deposition, etch, metrology, and packaging *equipment*; electronic design automation and licensable processor IP not dedicated to qualifying products; generic central processing units, including server processors sold into accelerated systems; commodity DRAM and NAND; power semiconductors; general servers; general networking; generic datacenter equipment; generic electrical infrastructure; and **generic foundry exposure without qualifying evidence**.
+
+Three anti-patterns, stated because each has been argued:
+
+1. **A supply relationship with an accelerator vendor is not evidence.** It describes a customer, not the supplied activity (**E1**).
+2. **Enabling AI is not supplying AI.** An input can be necessary to every AI chip and remain a tool (**E2**). Necessity is not attribution.
+3. **A general-purpose processor in an accelerated server is still a general-purpose processor.**
+
+The boundary sits at the tool line because that is the only division in the chain that is both objective and stable. Every alternative — "critical", "advanced", "AI-exposed" — requires a judgement that expands under pressure and in a predictable direction: admit the lithography and deposition vendors and there is no principled ground to exclude the materials and photoresist suppliers behind them, and the universe becomes a semiconductor universe. The division is also explicable in one sentence: **a foundry that fabricates the accelerator die supplies a part of the AI computer; a vendor that sells the foundry its machines does not.** The distinction is between performing the manufacture and supplying the means of manufacture, and it is applied identically to every issuer.
+
+Memory illustrates the same principle within a single issuer: high-bandwidth memory exists to feed accelerators and is embodied in them, so it qualifies; commodity memory is general-purpose and does not. An issuer qualifies on its high-bandwidth memory business, not on being a memory manufacturer.
+
+## Cloud and Platform Boundary
+
+General cloud revenue is not AI revenue. A diversified cloud or platform issuer qualifies only through **Tier 3 Route A** — a generally available, separately contracted AI offering disclosed at rank 2 or better — or through **Route B**, or by satisfying Tier 1.
+
+No share of a general cloud business may be estimated or apportioned to AI. Where an issuer publishes only a growth rate, a strategic statement, or an annualized figure not derived from recognized revenue, Route A is not satisfied.
+
+**Tier 2 and Tier 3 can both be reachable for the same issuer**, and the resolution is deterministic rather than discretionary: selling *access to* AI compute as a metered service is platform activity and therefore Tier 3; supplying *hardware embodied in* AI compute systems is Tier 2. An issuer doing both takes its primary tier from its largest qualifying activity under the primary-tier rule, with the other recorded as a secondary value-chain layer. Captive component design that serves only the issuer's own platform is not a merchant business and does not displace the platform as the primary role.
+
+## Datacenter and Energy Boundary
+
+Electricity, utility service, power generation, datacenter colocation, datacenter real estate, cooling, transformers, backup power, switchgear, and general electrical equipment **do not qualify merely because AI customers create demand for them** (**E1**, **E3**).
+
+**A customer relationship to AI does not transform the supplier's business into AI exposure.** Large, disclosed, AI-driven commercial arrangements — a long-term power purchase agreement with a hyperscaler, a datacenter lease to an AI operator — evidence a customer, not a qualifying product. A commodity supplier whose product is fungible across all uses cannot satisfy Prong A whatever its contract book shows.
+
+A company in these categories qualifies only where a **specific business or product independently satisfies a tier's both prongs**. The narrow case that can: thermal or power-delivery products **dedicated to accelerated-compute deployments**, such as direct-to-chip or immersion liquid cooling for accelerator racks, where the dedication is evidenced and Prong B materiality is met from an establishing source. A dedicated product whose revenue the issuer does not disclose is **insufficient evidence**, not an admission.
+
+## Photonics and Networking Boundary
+
+Interconnect qualifies under Tier 2 Prong A3 where the product is **deployed inside AI compute clusters**. The distinguishing question is the deployment location, which is objectively determinable: is the product installed within the compute cluster joining accelerators, or does it carry traffic between sites and users?
+
+**Qualifying, where material:**
+- AI fabric switching silicon and systems, scale-up and scale-out
+- High-speed optical transceivers at AI-cluster rates sold into AI datacenters
+- Silicon photonics and co-packaged optics for accelerator interconnect
+- Retimers, AI connectivity silicon, and active cabling for accelerator fabrics
+
+**Not qualifying:**
+- Carrier, transport, and long-haul networking; optical line systems
+- Telecom access and metro optics
+- Enterprise campus switching and wireless
+- Consumer and industrial connectivity
+
+Generic telecom and enterprise networking does not qualify. A diversified optical component manufacturer with both datacenter and telecommunications businesses qualifies only where the AI-datacenter family satisfies Prong B on an establishing source — the same embodiment and materiality logic applied everywhere else, not a separate standard for this industry.
 
 ## Security Eligibility
 
@@ -133,6 +408,16 @@ Apply security type, market access, data, and liquidity screens to each candidat
 
 Do not prefer a U.S. listing because it has options. Receipt availability, conversion constraints, custody, and underlying access must be evidenced. A suspended line cannot win selection on stale historical turnover. Alternative listings can preserve representation only if they independently pass the rules.
 
+**One issuer, one membership, one representative security**, in every case:
+
+- **Multiple eligible ordinary classes** — One membership. Issuer capitalization may aggregate eligible classes; the weight attaches to the single representative security. The multi-class representativeness validation in [Free Float and Capitalization](#docs-free-float-and-capitalization) must be completed before production.
+- **Local ordinary line and a depositary receipt** — The same economic claim, so one membership. Ordinary equity is preferred on tie-break, but the receipt may win on traded value. A receipt never relocates the business and never makes an otherwise inaccessible market accessible.
+- **Dual listing of one issuer on two venues** — One membership. Traded value decides. Both venues must independently pass venue eligibility.
+- **Parent and separately listed subsidiary** — Potentially two distinct companies with minority shareholders. Record parent–child ownership, remove the controlling stake from the subsidiary's free float, and never sum their revenues or portray the link as independent demand.
+- **Tracking securities** — Excluded by [Security Eligibility](#docs-security-eligibility).
+
+**For an issuer whose eligible lines sit in different jurisdictions, the representative-security selection materially determines the trading venue, the price currency and therefore the applicable reference exchange rate, the market-data and index-creation licences required, and the access route the reference investor must use.** It does not create an additional membership, an additional weight, or an additional tier. Because the selection is consequential for the venue register rather than for the issuer's identity, the register and the selection must be maintained consistently: a selection that resolves to a venue the register does not support produces an availability constraint under [Thematic eligibility is independent of launch availability](#docs-thematic-eligibility-is-independent-of-launch-availability), not a change of representative security to a more convenient line. No specific listing is selected by this document.
+
 ## Geographic Scope and Market Access
 
 Developed and emerging markets are both in scope. Country domicile alone neither admits nor excludes a company. Assess the selected listing and its access route for reliable regulation, settlement, custody, pricing, reference data, and ability to acquire and dispose of the equity through a documented institutional access route.
@@ -145,7 +430,20 @@ Applicable investment restrictions, sanctions, binding foreign ownership limits,
 
 Where reliable prices, ownership data, identifiers, or corporate-action records are unavailable, classify the exclusion as a coverage or access limitation. Publish the resulting geographic gaps. “Global” describes the target scope, not a claim of exhaustive representation.
 
+### Thematic eligibility is independent of launch availability
+
+**An issuer's tier qualification is determined without reference to whether Urdais can currently include it in a published index.** The two determinations are recorded separately and must never be merged:
+
+- **Thematic eligibility** asks only whether the issuer satisfies a tier's both prongs on admissible evidence. Jurisdiction, venue, data rights, and licensing are irrelevant to it.
+- **Launch availability** asks whether Urdais holds the market-data rights, index-creation rights, display rights, float data, foreign-access support, and custody and settlement support to carry the issuer in a published index.
+
+An issuer may therefore be **methodology-eligible and not currently includable**, because market-data rights are unavailable, exchange or index-creation rights are unresolved, investment access is insufficient, custody or settlement requirements fail, or foreign-ownership restrictions prevent practical access. Such an issuer is recorded as eligible with its availability constraint stated, and **the resulting coverage gap is published** rather than resolved by declaring the issuer ineligible.
+
+**Licensing constraints are not eligibility criteria.** Admitting or excluding an issuer on the basis of what Urdais can license would make the universe a function of Urdais's commercial position rather than of the issuer's role in the AI value chain, and would make the published methodology unfalsifiable. Testing confirmed the separation holds in practice: the framework identified eligible issuers in markets whose venues are not licensable at launch, and identified ineligible issuers in markets that are.
+
 ## Investability and Liquidity
+
+Every parameter in this section is a **provisional methodology parameter**. The numerical minima have not been empirically optimized, because the float and liquidity inputs required to test them are licensed data Urdais does not yet hold. They are stated so the design is complete and testable, not because they are calibrated, and they are to be re-tested against the eligible universe once those inputs are licensed.
 
 Measure liquidity on the selected listing without adding turnover from separate listings, receipts, or share classes. Use three complete calendar months ending at the market-data cutoff. For each scheduled local exchange session, use reported traded value or consistently defined price-times-volume data, with documented auction and off-book treatment. Convert daily values to USD before aggregation.
 
@@ -212,6 +510,22 @@ The cap size must be selected from evidence, not fund-regulatory conventions alo
 
 Base caps apply when snapshots are reset. They are not a promise about downstream weights after filtering or market movement.
 
+### Cap feasibility as a publication gate
+
+Because every weight is capped at `c` and the weights must sum to one, a valid capped allocation requires at least `1/c` positive-weight companies. Research testing confirmed that both candidate cap values are feasible against the eligible universe the tiered framework produces, with better than twofold headroom; under the superseded revenue-share gate neither was feasible, which is what made the eligibility redesign necessary rather than merely desirable.
+
+**No production snapshot may be published unless `n × c ≥ 1`**, where `n` is the count of issuers with status `Eligible` under the [universe accounting invariant](#docs-universe-accounting-invariant). Where it fails, withhold the snapshot and publish the reason, exactly as [Weight definition](#docs-weight-definition) requires. Constituent count is therefore a feasibility precondition and not a presentational target: the gate exists to prevent a universe too narrow to weight from being published with a relaxed cap instead.
+
+**The cap is not to be loosened in order to make a snapshot feasible.** A cap adjusted to accommodate a universe is not a concentration control. Where feasibility fails, the correct responses are to withhold, or to re-examine eligibility on the evidence — never to widen `c`.
+
+The cap value `c` is an **unresolved** launch parameter. Research recommends holding a value in the 8%–10% range, with 8% preferred as the tighter control, and both are arithmetically feasible; **no value is approved for production by this document**, because selection requires the capped-versus-uncapped concentration test on point-in-time float data that is not yet licensed.
+
+### Secondary concentration constraints
+
+A secondary constraint of the 5/10/40 form — no single weight above 10%, and weights above 5% not exceeding 40% in aggregate — is **published as a diagnostic and is not binding.** It is measured and disclosed alongside the effective constituent count `1 / Σ_i w_i²` and the uncapped and capped top-issuer concentrations.
+
+It is not adopted as a constraint because it originates in a fund-regulatory diversification requirement rather than an index-representativeness one, and because no failure of the single issuer cap has been demonstrated that it would remedy. The AI universe is expected to remain top-heavy, so the measurement is worth publishing; adopting a constraint whose failure mode has not been observed is not. Making it binding requires approval and evidence that the issuer cap alone is insufficient.
+
 ## Reconstitution and Rebalancing
 
 **Proposed cadence: quarterly in March, June, September, and December.** Reconstitution reassesses membership, classifications, and representative securities. Rebalancing recalculates capitalization inputs and base weights. Perform both quarterly, with ongoing monitoring for material business changes and mandatory corporate events.
@@ -255,9 +569,13 @@ Do not insert replacements between reviews. A security substitution for the same
 
 ## Removal and Temporary Failures
 
-Review all members against the same substantive AI and security rules. Remove at the next scheduled review when the evidenced lower bound falls below the threshold, `r_i_lower < τ`; when evidence no longer supports admission, including an **insufficient evidence** determination for a member whose prior measure is no longer structurally valid; or when an investability screen fails. The removal condition is stated on `r_i_lower`, the substantiated lower bound established by the review evidence, not on the company's true AI revenue share, which is unobservable. A fall in `r_i_lower` may reflect a changed business, changed disclosure, or a stricter attribution, and the recorded rationale must say which. If a separate exposure-retention threshold is later approved, that threshold replaces `τ` in this condition for existing members while admission continues to use `τ`.
+Review all members against the same substantive tier and security rules used for admission. **A member is removed at the next scheduled review where it no longer satisfies any tier** — that is, where its qualifying role has ended, or where materiality under its tier's prong is no longer evidenced, or where the determination has become **insufficient evidence** because the evidence that supported admission is no longer structurally valid — or where an investability screen fails.
 
-Entry/retention buffers for investability are unresolved. Whether a distinct exposure-retention threshold is needed is an open empirical question rather than a settled design: a member whose `r_i_lower` fluctuates around `τ` through ordinary reporting noise, seasonality, or disclosure revisions could enter and exit repeatedly. A candidate structure to test is `τ_retention < τ_entry`, but no buffer, numerical value, or hysteresis rule is adopted here; the item is recorded in [Open Questions / Empirical Validation Required](#docs-open-questions--empirical-validation-required). No subjective exception is proposed.
+Requalification is assessed on the evidence available at the review, not on the issuer's unobservable true AI exposure. A member whose tier qualification lapses may do so because its business changed, because its disclosure changed, or because a stricter attribution was applied at review, and **the recorded rationale must state which of the three it was.** That distinction matters: a business that is unchanged but has stopped disclosing is a different fact from a business that has exited AI, and conflating them would make membership a function of reporting practice alone.
+
+Entry and retention buffers for investability are unresolved. Whether tier requalification needs hysteresis is an open empirical question rather than a settled design: a member sitting near a materiality boundary could enter and exit repeatedly through ordinary reporting noise, seasonality, or disclosure revisions. No buffer, numerical value, or hysteresis rule is adopted here; the item is recorded in [Open Questions / Empirical Validation Required](#docs-open-questions--empirical-validation-required). No subjective exception is proposed.
+
+A member whose primary tier changes without ceasing to qualify is **not** removed. The tier is re-recorded with its effective date, membership continues uninterrupted, and no weight consequence arises — the tier never entered the weight.
 
 Permanent loss of the equity claim, a binding access prohibition, or no surviving eligible listing triggers exceptional removal at the applicable event time. Evidence of a completed disposal ending all qualifying activity also triggers an exceptional review rather than waiting for the next annual report.
 
@@ -265,9 +583,29 @@ A short trading halt or provider outage is not a permanent business exit. Record
 
 ## Classification Review
 
+At every quarterly reconstitution, and upon a material disclosure, review each member's **qualifying role, tier prong evidence, primary tier, value-chain layers, and activity tags**. Reassessment answers three questions in order: does a qualifying role still exist; is it still material under the member's tier prong; and is the primary tier still correct under the assignment rule. A change to the third alone is a re-recording, not a removal (see [Removal and Temporary Failures](#docs-removal-and-temporary-failures)).
+
+**Membership is not continuously reactive.** Tier qualification changes at scheduled reviews and at the defined exceptional events, never on management commentary, a product announcement, a rebranding, an analyst reclassification, or a share-price move. A new AI product announced between reviews is evidence to be assessed at the next review, not an admission. This is deliberate: a universe that responded to announcements would be a sentiment index.
+
 Review activity tags, exposure tiers, and evidence at every quarterly reconstitution and upon material disclosures. A general cloud company may qualify after attributable AI commercial activity becomes material; it does not qualify merely after changing its description. A former specialist absorbed into a conglomerate must be assessed within the surviving company's consolidation perimeter.
 
 Differentiate changed facts, newly available evidence about earlier facts, and a change in the taxonomy itself. Give each an announcement time and effective time. Apply newly available evidence prospectively unless a separately labeled correction is warranted. Store the old rationale and classification; do not rewrite past membership using today's interpretation.
+
+## Interface to UGAI Weighting
+
+What a published universe version supplies to [UGAI](/docs/methodology/ugai), and what it does not.
+
+**Supplied for calculation:** the universe version identifier with its effective and publication timestamps; the admitted membership; one representative security per member with identifiers and price currency; and the base weights `w_i`, being the issuer-capped accessible free-float weights summing to one.
+
+**Supplied for attribution and reporting only, never entering calculation:** each member's primary eligibility tier; its value-chain layers; its activity tags; its evidence record; and `r_i_lower` where disclosed.
+
+**The eligibility model is broader than it was. The weighting model is unchanged.** Weight is determined by accessible free-float market capitalization and the issuer cap, and by nothing else. Specifically:
+
+- **No tier multiplier.** A Tier 1 member and a Tier 3 member of equal accessible free-float capitalization carry equal base weight.
+- **No exposure multiplier.** An issuer's degree of AI exposure, however evidenced, never scales its weight. A member for whom AI is a minority of revenue carries its whole admitted equity value, and this is disclosed rather than corrected.
+- **No tier budget, tier quota, or tier-specific cap.**
+
+The reasons are three, and they are methodological rather than aesthetic. A tier records how an issuer qualified and therefore carries no economic magnitude that could be multiplied. Weighting by tier would require a defensible target distribution across layers of the AI value chain, which does not exist. And a multiplier would break the property that makes the index auditable: that a member's as-of weight is reproducible from its index shares, price, and exchange rate alone, with no classification input. A tier boundary would otherwise become a weight discontinuity, giving every contested classification a financial consequence.
 
 ## Downstream Weight Renormalization
 
@@ -297,7 +635,9 @@ In practice this is a linked evidence structure: exposure evidence supports rele
 
 This methodology specifies those requirements; it does not define a database schema, classifier, or data pipeline.
 
-## Source Hierarchy
+## Source Hierarchy for Reference, Ownership and Event Facts
+
+**Thematic eligibility evidence is governed by the [Evidence Hierarchy](#docs-evidence-hierarchy), not by this section.** This section governs every other factual claim the universe depends on: company and security identity, listing status, equity rights, receipt ratios, ownership and free float, corporate-action terms, prices, and liquidity. The two are consistent — establishing, corroborating, and discovery map onto ranks 1–2, 3, and 5 below — and where they overlap for a given claim, the Evidence Hierarchy's conditions on a furnished or released figure prevail.
 
 Use sources appropriate to the claim, with a documented resolution for conflicts:
 
@@ -331,17 +671,23 @@ Version the methodology, taxonomy, parameter set, and market eligibility registe
 
 Preserve as-published snapshots. Corrections identify the original release, corrected release, affected dates, and cause; new information is distinguished from an error in applying information previously available. Any reconstructed pre-launch history must be labeled as research/backtest history with its information limitations. No backtest or live membership is created here.
 
-Version history: **0.1.0-draft, 12 September 2026** — initial research-backed proposal; no production effective date. **0.1.1-draft, 12 September 2026** — post-merge audit against the cited primary sources: Solactive eligible-region description corrected to include Canada; exceptional event-snapshot weights formalized as a capped proportional re-allocation of surviving pre-event base weights, with the UGAI non-rebalance relationship stated; annual admission measure reconciled with interim evidence; exposure-retention buffering moved to empirical validation; multi-share-class return-representativeness validation added; removal condition stated on `r_i_lower`; STOXX cap timing clarified; universe events separated from event weight snapshots so that an infeasible capped allocation leaves parent weights, not the membership state, unavailable; completed fiscal year retained as the canonical exposure period, with interim evidence limited to review, corroboration, and invalidation. No production effective date. Approval of this document and closure of launch requirements must precede a production version.
+Version history: **0.1.0-draft, 12 September 2026** — initial research-backed proposal; no production effective date. **0.1.1-draft, 12 September 2026** — post-merge audit against the cited primary sources: Solactive eligible-region description corrected to include Canada; exceptional event-snapshot weights formalized as a capped proportional re-allocation of surviving pre-event base weights, with the UGAI non-rebalance relationship stated; annual admission measure reconciled with interim evidence; exposure-retention buffering moved to empirical validation; multi-share-class return-representativeness validation added; removal condition stated on `r_i_lower`; STOXX cap timing clarified; universe events separated from event weight snapshots so that an infeasible capped allocation leaves parent weights, not the membership state, unavailable; completed fiscal year retained as the canonical exposure period, with interim evidence limited to review, corroboration, and invalidation. No production effective date.
+
+**0.3.0-draft, 17 September 2026 — breaking conceptual change: the universal revenue-threshold eligibility gate is replaced by a tiered material AI exposure framework.** Admission no longer requires an issuer to disclose qualifying AI revenue reaching a threshold share of consolidated revenue (`r_i_lower ≥ τ`). Empirical testing against real issuer filings established that almost no diversified issuer discloses an AI-only numerator, that the threshold consequently had no discriminating power across candidate values, and that the rule produced an eligible set too small to satisfy the cap feasibility condition — so the gate was not merely strict, it was unpublishable. In its place: three exposure tiers, each with a two-prong role-and-materiality test; Tier 1 on a whole-issuer enumeration with an ancillary-support rule, a services test, and a 75% safe-harbour convention; Tier 2 on embodiment in AI compute systems at one step, excluding the manufacturing toolchain; Tier 3 on a platform route with a ranked scale-evidence hierarchy and an application route with a 10% materiality convention. Also added: nine numbered exclusions; a separated value-chain attribution dimension distinct from the eligibility tier; a deterministic primary-tier assignment rule with exactly one tier per issuer; a universe accounting invariant with mutually exclusive statuses; a robotics and autonomy rule on learned-perception dependence; explicit semiconductor, cloud, datacenter–energy, and photonics–networking boundaries; an explicit separation of thematic eligibility from launch availability; a cap feasibility publication gate; 5/10/40 as a published diagnostic; and a Limitations section. `τ` is removed as a parameter; revenue-share evidence is retained in three named narrower roles. The superseded reasoning is preserved in this changelog and in the research record under `docs/research/ugai/`; the active methodology retains no parallel eligibility system. No production effective date.
+
+Approval of this document and closure of launch requirements must precede a production version.
 
 ## Open Questions / Empirical Validation Required
 
 No production memberships or base weights may be released under this draft. The following decisions must be recorded in an approved parameter/methodology release, with evidence rather than unexplained defaults:
 
-- **Material revenue threshold τ:** build a reviewed sample across the five activity groups, regions, and company sizes using actual filings. Test lower-bound coverage, borderline decisions, and how diversified issuers compare with specialists. Do not choose thresholds to obtain a predetermined constituent list or attractive returns.
-- **Disclosure bias and an absolute-exposure alternative:** measure omission of economically important AI businesses with low revenue shares or poor disclosure. Evaluate whether an absolute qualifying-revenue route can be audited without admitting incidental participation. No such route, asset/capex substitute, or subjective waiver is active now.
+- **Tier 1 safe-harbour share (convention, currently 75%):** test against a wider sample of undiversified issuers whether the safe harbour captures the issuers it is meant to shortcut. Only one sampled issuer's disclosed ratio has fallen between a low single-digit percentage and 100%, so the value is uncalibrated. It is procedural only — an issuer below it is assessed on the four Tier 1 conditions — so the cost of a wrong value is review effort, not a wrong admission.
+- **Tier 3 Route B materiality floor (convention, currently 10%):** test against a wider sample. The floor is bounded from below by evidence that a separately monetized AI line at roughly 2% of revenue is not materially an AI business; no sampled issuer has fallen between roughly 5% and 30%, so the upper end is uncalibrated. Unlike the safe harbour, a wrong value here changes admissions.
+- **Tier requalification hysteresis:** using point-in-time filings, measure how often members near a tier materiality boundary would enter and exit through ordinary reporting noise, seasonality, or disclosure revision rather than real business change. Adopt a retention buffer only if it improves stability without retaining immaterial exposure; otherwise keep single-threshold requalification. Nasdaq's differing entry and retention capitalization levels illustrate buffering for an investability screen, not a precedent for a thematic buffer.
+- **Residual disclosure bias:** the tiered framework substantially reduces the dependence on revenue disclosure that made the superseded gate unworkable, but it does not eliminate it — Prong B and both Route A and Route B still require an establishing disclosure. Measure which economically important AI businesses remain omitted for want of disclosure rather than for want of a qualifying role, with particular attention to jurisdictions where disclosure is constrained by law or by commercial sensitivity. No asset, capital-expenditure, or subjective waiver substitute is active, and none is proposed.
+- **Robotics and autonomy boundary breadth:** the learned-perception dependence test admits warehouse and logistics automation as a category, because such systems use learned vision to handle physical variability. Test whether that breadth is intended. The stricter alternative — requiring the learned component to be the primary source of the system's economic value — was rejected as not objectively assessable, so tightening the rule requires a different formulation rather than a different threshold.
 - **Issuer cap c:** compare capped and uncapped distributions over point-in-time samples. Assess single-company and diversified-group dominance, effective constituent count, activity/country effects, small-issuer capacity, and infeasible cases, including universe events after which `|S| × c < 1` leaves parent weights unavailable until the next scheduled reset. Approve a cap only if its representational benefit is defensible.
 - **Investability minima and buffers:** evaluate accessible float capitalization, typical and average traded value, free-float percentage, foreign headroom, trading frequency, and suspension history across markets. Estimate capacity of the selected representative security, including companies whose other share classes contribute to issuer capitalization. Set entry/retention buffers and test turnover at the boundaries.
-- **Exposure-retention buffer:** using point-in-time filings, measure membership churn for companies whose `r_i_lower` lies near candidate values of `τ`, separating ordinary reporting noise, seasonality, and disclosure revisions from real business change. Test whether a retention threshold below the entry threshold (`τ_retention < τ_entry`) materially improves stability, and what share of companies retained under such a rule would no longer have material evidenced exposure. Adopt a buffer only if it improves stability without retaining immaterial exposure; otherwise keep the single-threshold rule. Nasdaq's differing entry and retention capitalization levels illustrate buffering for an investability screen, not a precedent for an AI-revenue buffer.
 - **Trailing-twelve-month exposure measure:** evaluate whether a rolling completed-period measure can be constructed for every member solely from filed interim and annual disclosures on a consistent consolidation perimeter, reproducibly and comparably across issuers with different reporting cadences. This is distinct from annualizing a quarter or half-year, extrapolating guidance, or estimating missing periods, none of which is permitted. The completed fiscal year remains the canonical period unless a versioned amendment adopts such a measure.
 - **Multi-share-class representativeness:** for every issuer with more than one eligible class contributing to `M_i`, test economic-right equivalence, convertibility, price spreads, return correlation and divergence, liquidity divergence, representative-listing capacity, and the tracking distortion of mapping issuer capitalization to a single-security return, as specified in [Free Float and Capitalization](#docs-free-float-and-capitalization). Choose among the remedies listed there only on that evidence.
 - **Market eligibility and investor assumptions:** approve the dated venue/access register, reference institutional investor assumptions, jurisdictional restrictions, and treatment of partially accessible equity. Test emerging-market data coverage explicitly.
@@ -349,6 +695,28 @@ No production memberships or base weights may be released under this draft. The 
 - **Quarterly workload and newly public coverage:** use historical disclosure and listing dates to test the proposed quarterly full review and three-month record. Quantify admission delay and review effort before considering any fast-entry amendment.
 
 The validation exercise should retain the rejected candidates and missing-data cases, include historical delistings and restructurings, and avoid survivorship and look-ahead bias. It requires real point-in-time company and market data. This draft includes no constituent dataset or empirical validation results.
+
+## Limitations
+
+These are properties of the design, disclosed as part of it. None is a defect to be repaired by weakening an evidence rule.
+
+**This universe does not measure AI economic activity.** It measures the investable public equity of issuers with an evidenced qualifying role. It is not AI revenue, AI value added, AI's contribution to GDP, compute prices, model capability, or the size of the AI economy. Supply-chain revenues overlap across members, so member revenues must never be summed into a market-size estimate.
+
+**Private AI companies are outside the universe entirely.** Some of the most consequential AI companies are not listed. The universe cannot see them, and their absence is structural rather than a coverage gap that better data would close.
+
+**Companies can have economically important AI activity and still not qualify.** Three groups are systematically affected: issuers whose qualifying activity is real but undisclosed at the granularity the tiers require; issuers whose relationship to AI is as a consumer of it or an investor in it rather than a supplier of it, including some of the largest spenders on AI compute; and issuers supplying the tools, materials, facilities, or energy on which AI depends. Each exclusion follows from a stated rule, and each will be argued against. The disclosure of those rules is the answer, not an exception to them.
+
+**Infrastructure exposure is harder to classify than AI-native software.** A Tier 1 determination rests on an enumeration the filing supplies directly. A Tier 2 determination rests on identifying a product family inside a segment the issuer reports for other purposes, and on the issuer's own attribution of that segment's demand. The second is more judgement-bound than the first, within documented rules, and the resulting determinations are correspondingly less uniform.
+
+**Diversified issuer classification requires judgement within the rules.** The tiers are mechanical but not mechanical in the sense of requiring no reading: deciding whether a product family is specialized for accelerated compute, or whether a disclosed offering is generally available and separately contracted, requires a reasoned determination on cited evidence. Every such determination is recorded with its rationale, its evidence, and its reviewer, so that it can be contested on the record.
+
+**AI disclosure practice differs materially across jurisdictions**, and not in the direction commonly assumed. Testing found issuers outside the United States disclosing AI-specific revenue lines that comparable United States issuers do not disclose at all. The framework does not assume a filing convention, and it must not be amended to favour one. But where disclosure is constrained by law, by export control, or by commercial sensitivity, the framework will under-admit, and that under-admission is geographically concentrated rather than randomly distributed.
+
+**Infrastructure exposure may be geographically concentrated.** The activity that satisfies Tier 2 — accelerator design, high-bandwidth memory, advanced fabrication and packaging, AI cluster interconnect — is listed in a small number of markets, and the tool exclusion (**E2**) removes several large issuers that would otherwise have broadened that concentration. Some non-United States infrastructure exposure, including Chinese exposure, may therefore be underrepresented for disclosure reasons. Publish the concentration; do not correct it by relaxing the evidence rules.
+
+**The thematically eligible universe may exceed the launchable universe.** Eligibility is determined without reference to licensing, so the published index may carry fewer members than the universe admits, for the reasons in [Thematic eligibility is independent of launch availability](#docs-thematic-eligibility-is-independent-of-launch-availability). The gap is published as a coverage limitation of the index, not concealed by narrowing the universe.
+
+**No production constituent universe exists.** The research samples recorded under `docs/research/ugai/` are methodology pressure-tests: they were assembled to stress the tier boundaries, they deliberately over-sample difficult cases, and their eligibility determinations were made outside a licensed data environment and partly on retrieved rather than directly read filings. **They must never be used as a constituent list, a starting universe, or a source of weights.** A production universe requires a point-in-time review under the approved methodology, in a licensed data environment, with the evidence record and independent check this document requires.
 
 ## Research Precedents
 
