@@ -74,7 +74,10 @@ declare
     'pipeline.investability_evaluations', 'pipeline.investability_criteria',
     -- UGAI universe snapshots and capped weights.
     'pipeline.universe_snapshots', 'pipeline.snapshot_constituents',
-    'pipeline.snapshot_constituent_inputs'
+    'pipeline.snapshot_constituent_inputs',
+    -- UGAI calculation engine: index shares, divisor, daily level, publication readiness.
+    'pipeline.ugai_index_shares', 'pipeline.ugai_divisors', 'pipeline.ugai_calculations',
+    'pipeline.ugai_constituent_calculations', 'pipeline.ugai_publication_checks'
   ];
   n integer;
 begin
