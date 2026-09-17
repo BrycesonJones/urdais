@@ -548,12 +548,20 @@ begin
   select count(*) into n from pipeline.price_observations where observation_purpose = 'production';
   if n <> 0 then raise exception '% production price observation(s) exist', n; end if;
 
-  -- No accessible-float factor is computed anywhere: the three inputs stay three inputs, which is
+  -- The capitalization input tables derive nothing: the three inputs stay three inputs, which is
   -- what lets a later calculation explain why accessible float sits below free float.
+  --
+  -- Scoped to those tables rather than to the whole schema. Phase 5.6 legitimately carries an
+  -- `accessible_float_factor` on a snapshot valuation input -- that is where the methodology's
+  -- reconciled `f` belongs -- and a global assertion would have forbidden the very thing these
+  -- inputs exist to feed.
   select count(*) into n from information_schema.columns
    where table_schema = 'pipeline'
-     and column_name in ('accessible_float_factor', 'free_float_market_cap', 'index_weight');
-  if n <> 0 then raise exception 'a derived capitalization column exists in phase 5.4'; end if;
+     and table_name in ('share_observations', 'ownership_observations', 'float_observations',
+                        'accessibility_observations', 'corporate_actions')
+     and column_name in ('accessible_float_factor', 'free_float_market_cap', 'index_weight',
+                         'accessible_market_cap', 'constituent_weight');
+  if n <> 0 then raise exception 'a derived capitalization column exists on a phase 5.4 table'; end if;
 
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id
