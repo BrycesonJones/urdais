@@ -439,11 +439,12 @@ begin
                          'accessible_float_market_cap', 'constituent_weight');
   if n <> 0 then raise exception 'a weighting column exists in phase 5.5'; end if;
 
+  -- Phase 5.6 owns universe snapshots, so they are no longer forbidden outright. The divisor and
+  -- the published index level belong to 5.7 and are still absent everywhere.
   select count(*) into n from information_schema.tables
    where table_schema = 'pipeline'
-     and table_name in ('universe_snapshots', 'constituent_weights', 'ugai_calculations',
-                        'ugai_publications');
-  if n <> 0 then raise exception 'a universe or index table exists in phase 5.5'; end if;
+     and table_name in ('ugai_calculations', 'ugai_publications', 'ugai_observations');
+  if n <> 0 then raise exception 'an index calculation or publication table exists before phase 5.7'; end if;
 
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id

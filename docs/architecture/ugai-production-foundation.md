@@ -96,7 +96,9 @@ Representative-security engine: eligible listings → venue and access eligibili
 
 Investability screens as **versioned parameters**, never constants in code.
 
-### 5.6 — Universe snapshots and capped weighting
+### 5.6 — Universe snapshots and capped weighting ✅ *this PR*
+
+Built. The engine's answer on real data is that no production snapshot can be formed. Detail in §20.
 
 Immutable versioned snapshots carrying universe version, methodology version, review/publication/effective dates, members, representative securities, primary tiers, value-chain layers, eligibility evidence ids, investability state, capitalization inputs, base weights, exclusions and unavailable members, and coverage limitations. Published snapshots are superseded, never mutated.
 
@@ -441,7 +443,7 @@ The column that earns its place is `derivation`. No source publishes what UGAI n
 
 A trigger **re-derives every inverted and cross rate from its recorded components** and refuses one that does not reproduce, which is what catches a double inversion, a leg taken from the wrong day, and a cross assembled against the wrong bridge. Carrying a stale fixing forward is permitted — the methodology says so explicitly — but it is a flagged state naming the day it came from, never a silent copy.
 
-**TWD does not resolve.** The ECB publishes no New Taiwan dollar reference rate — which is why UBWI needed a second FX source at all — and Taiwan's central bank did not resolve from the review environment, so no rate was retrieved and none was invented. The consequence is worth stating plainly: **XTAI is the only venue Urdais holds a rights-cleared price source for, and TWD is the only launch currency it cannot convert.**
+**TWD did not resolve at the time of this phase.** The ECB publishes no New Taiwan dollar reference rate — which is why UBWI needed a second FX source at all — and Taiwan's central bank did not resolve from the review environment, so no rate was retrieved and none was invented. The consequence was that XTAI, the only venue Urdais holds a rights-cleared price source for, was the only venue whose currency it could not convert. **Superseded: §19 closes this gap through CBC dataset 7232.**
 
 ### Representative security
 
@@ -467,7 +469,7 @@ Every evaluation returns `unavailable`. Not one criterion anywhere is marked `fa
 
 - **NVIDIA** — representative NVDA/XNGS, sole eligible line. Price unavailable (Nasdaq refuses every axis), float unavailable, turnover and trading frequency unmeasurable in consequence. Listing record **passes**: 235 days against the 90-day convention. Foreign headroom is `parameter_unresolved` — the input is as good as it gets (`no_limit_evidenced`) and the threshold does not exist. FX **passes**: the price currency is USD, so the conversion is the identity rate.
 - **Palantir** — representative PLTR/XNAS. Same, plus no unambiguous share count for a multi-class issuer, so accessible capitalization has no numerator before price or float are even considered. Listing record passes at 260 days.
-- **TSMC** — the instructive one. Price **available**, share count established and reconciled, turnover published under the same licence. And still unassessable: **no USD rate exists for the TWD**, float is unavailable, and one collected session stands against a three-month window. Its trading-frequency criterion is `unavailable` rather than a low ratio, because the shortfall is uncollected data and not sessions the issuer did not trade — recording it as a frequency would assert the opposite. TSMC is also a candidate whose thematic review has not completed.
+- **TSMC** — the instructive one. Price **available**, share count established and reconciled, turnover published under the same licence. And still unassessable: at the time of this phase no USD rate existed for the TWD (**since closed — §19**, leaving the fixing convention rather than the source as the constraint), float is unavailable, and one collected session stands against a three-month window. Its trading-frequency criterion is `unavailable` rather than a low ratio, because the shortfall is uncollected data and not sessions the issuer did not trade — recording it as a frequency would assert the opposite. TSMC is also a candidate whose thematic review has not completed.
 
 ### Deliberately not built
 
@@ -499,15 +501,60 @@ The adapter imposes **no Monday-to-Friday calendar**. Taiwan runs Saturday make-
 
 ---
 
-## 20. Remaining blockers for 5.6
+## 20. Phase 5.6 — universe snapshots and capped weights
 
-1. **No USD reference rate for the New Taiwan dollar.** The one venue with a rights-cleared price source is the one currency with no FX route. The ECB publishes no TWD rate; Taiwan's central bank interface exists in the registry but has no permission grant, was not reachable from the review environment, and its terms have not been read. This is the cheapest of the blockers to clear and it is not cleared.
-2. **No free-float factor exists in any reviewed geography.** This is a methodology decision, not an engineering one, and it now sits alongside the price problem at the top of the critical path. UGAI's weighting is defined on accessible free-float capitalization; no public source publishes a float factor for the US, Taiwan, Hong Kong or Korea. The options are to authorise a derivation from partial holdings data (with its error characterised), to license float factors commercially, or to amend the methodology's weighting basis. **Silently substituting full market capitalization is not among them** — and the schema now makes that substitution unrepresentable rather than merely discouraged.
-3. **No US price source.** Both currently eligible issuers list on Nasdaq, and Nasdaq refuses every axis the price pipeline needs. Until a written exchange data agreement exists, UGAI can price TSMC and cannot price NVIDIA or Palantir.
-4. **Palantir has no usable share count.** Multi-class issuers need per-class share data that the flat XBRL API does not expose; the dimensional XBRL frames or the filing itself would have to be parsed.
-5. **The FX fixing convention is unresolved**, as are every investability minimum. A production investability determination is structurally impossible until they are approved, which the trigger enforces.
-6. **Named verification, per issuer.** The governance path has been exercised twice and does not generalise by itself: every future admission needs a human to confirm its cited passages, and the scoping error in §12 shows the step is easy to get wrong in the direction of admitting too much. Two issuers verified, twenty-seven candidates not yet reviewed.
-2. **`τ_B` and issuer cap `c`** remain unresolved drafts. Route B admission and capped weighting are both blocked until they are approved through the parameter table.
-3. **Structured extraction of filing tables.** Baidu's case generalises: segment and product revenue live in tables that plain text extraction loses. Route A cannot be evidenced at scale without this.
-4. **Non-US evidence has no automated path.** HKEXnews is prohibited; OpenDART needs a registered key; MOPS is unreviewed. Manual capture is supported by the schema and does not scale, which is a coverage constraint 5.3 onward must disclose rather than hide.
-5. **Public end-of-day price sources** — untouched, and the subject of 5.3.
+The methodology's weighting input is exact, and two words in it decided most of this slice:
+
+`M_i(t) = Σ over eligible distinct ordinary classes k [ P_ik × N_ik × f_ik × X_ik ]`
+
+**N is outstanding shares.** Not issued — the difference is treasury stock. Taiwan publishes 已發行, *issued*, so the one share count Urdais holds for its one priceable security is the wrong type. The valuation gate refuses it rather than normalising it away, which is the concrete form of "report and fail closed rather than silently normalize".
+
+**`f` is one factor, not two multiplied.** The methodology defines it as "the accessible free-float factor after overlapping strategic and foreign-access restrictions are reconciled" and requires that an overlapping stake not be deducted twice — then describes that reconciliation conceptually without reducing it to an algorithm. So there is no `accessibility_factor` column and no rule here forms `f` from its components. Phase 5.4 holds float and accessibility as separate inputs precisely because no approved derivation joins them, and that gap propagates: no `f`, no valuation.
+
+### Snapshot lifecycle
+
+Three tables. `universe_snapshots` is immutable and never a live query over current tables — a snapshot whose inputs can move is not a snapshot. `snapshot_constituents` holds **one row per issuer, enforced by a unique constraint**, which is what makes one-issuer-one-membership structural rather than remembered: a dual listing cannot become two weights. `snapshot_constituent_inputs` holds one term of the Σ per class, each factor beside the observation it came from, so the product can be re-checked rather than trusted — and a trigger does re-check it.
+
+States are `development`, `ready_for_review`, `production_eligible`, `blocked`, `superseded`. A development snapshot can be blocked or reviewed like any other; what it can never be is publishable.
+
+**An eligible issuer that cannot be valued stays in the snapshot** as `eligible_unavailable` with its reason. The methodology is explicit that such an issuer "is recorded as eligible with its availability constraint stated, and the resulting coverage gap is published rather than resolved by declaring the issuer ineligible" — so silently dropping it is the one outcome the rule forbids, and a test asserts against it.
+
+### Capping
+
+`w_i = min(c, λ × M_i)` with `Σ w_i = 1`, reached by the procedure the methodology states: cap the overweight and **repeatedly** redistribute in proportion to uncapped capitalization. Repeatedly is the operative word — redistributing one issuer's excess raises everyone else and can push the next-largest over the cap in turn, so a single pass produces weights that satisfy nothing and look plausible. A test covers exactly that case (70/28/1/1 at c = 0.4, where the second issuer binds only after the first does).
+
+Arithmetic is exact integer arithmetic at a fixed 1e-30 scale, not floating point. Weights are a shared-denominator problem and IEEE-754 has no shared denominator; accumulating divisions in doubles leaves a residual someone is then tempted to assign to the largest constituent. The residual here is allocated by largest remainder — deterministic, cannot breach the cap, and not an arbitrary rule the methodology never defined.
+
+**Feasibility.** `n × c ≥ 1` is necessary, and the methodology states it twice with two different `n`: once on "positive-weight companies" and once, as the publication gate, on "the count of issuers with status Eligible". **Those diverge whenever an eligible issuer cannot be valued**, so both counts are stored and both must hold. Where feasibility fails the snapshot is withheld with a reason — never a relaxed cap, added ineligible companies, or equal weights.
+
+### The real-data result
+
+A development run against the real universe is recorded as **blocked**, with five independent blockers, any one sufficient:
+
+1. the issuer cap is a **draft** parameter with no effective date or approver;
+2. cap feasibility fails regardless — two eligible issuers at the 10% research candidate give `n × c = 0.2` against the 1 required;
+3. neither eligible issuer has a rights-cleared price;
+4. no free-float factor is established anywhere, so `f` has no value;
+5. the reconstitution calendar is itself unresolved, so there is no scheduled as-of date to form a snapshot against.
+
+Per-constituent: NVIDIA and Palantir are `eligible_unavailable` with their missing factors named; TSMC is `excluded`, because its thematic review is *pending* rather than eligible — an exclusion on thematic grounds, not availability, and worth distinguishing since it is the one issuer Urdais can price.
+
+**No synthetic observation was written against any real issuer.** The valuation and capping proofs run against fixture issuers prefixed `zz-fixture-` inside a transaction that rolls back, and a test asserts no fabricated float factor exists for NVIDIA, Palantir or TSMC.
+
+### Snapshot weighting versus the 5.7 divisor
+
+This phase produces **base weights at a reset**. It does not produce index shares, a divisor, or a level. Phase 5.7 converts base weights into index shares at reset prices, maintains the divisor across corporate actions and membership changes, and calculates the published level — and a test asserts no `ugai_calculations` or `ugai_publications` table exists yet.
+
+---
+
+## 21. Remaining blockers for 5.7
+
+1. **The issuer cap `c` is unresolved.** Production snapshot formation is structurally impossible until it is approved with an effective date, which the trigger enforces. Even approved at the 10% research candidate, the current eligible set of two fails `n × c ≥ 1` by a wide margin — so the cap and the breadth problem compound. `τ_B` remains an unresolved draft on the same footing, blocking Tier 3 Route B admission.
+2. ~~**No USD reference rate for the New Taiwan dollar.**~~ **Closed** — see §19. CBC dataset 7232 supplies the official daily close under a licence reaching index calculation, stored with its inversion lineage. What survives of it is item 6: a source is not a fixing rule.
+3. **No free-float factor exists in any reviewed geography.** A methodology decision, not an engineering one. UGAI's weighting is defined on accessible free-float capitalization and no public source publishes a factor for the US, Taiwan, Hong Kong or Korea. The options are to authorise a derivation from partial holdings data with its error characterised, to license factors commercially, or to amend the weighting basis. **Silently substituting full market capitalization is not among them** — and the schema now makes that substitution unrepresentable rather than merely discouraged.
+4. **No US price source.** Both currently eligible issuers list on Nasdaq, and Nasdaq refuses every axis the price pipeline needs. Until a written exchange data agreement exists, UGAI can price TSMC and cannot price NVIDIA or Palantir.
+5. **Palantir has no usable share count.** The methodology values `N` as *outstanding* shares per class; the flat XBRL API exposes neither the share-class dimension nor, for this issuer, the cover-page concept. The dimensional XBRL frames or the filing itself would have to be parsed.
+6. **The FX fixing convention is unresolved**, as is every investability minimum. A production investability determination is structurally impossible until they are approved, which the trigger enforces. This is now the binding constraint on TWD rather than the source.
+7. **Named verification, per issuer.** The governance path has been exercised twice and does not generalise: every admission needs a human to confirm its cited passages, and the scoping error in §12 shows the step is easy to get wrong in the direction of admitting too much. Two issuers verified, twenty-seven candidates not yet reviewed.
+8. **Structured extraction of filing tables.** Baidu's case generalises: segment and product revenue live in tables that plain text extraction loses, and Route A cannot be evidenced at scale without it.
+9. **Non-US evidence has no automated path.** HKEXnews prohibits automated retrieval, OpenDART needs a registered key, MOPS is unreviewed. Manual capture is supported by the schema and does not scale, which is a coverage constraint to disclose rather than hide.

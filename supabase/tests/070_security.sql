@@ -71,7 +71,10 @@ declare
     -- UGAI pre-weighting machinery: FX, representative-security selection and investability.
     'pipeline.fx_observations',
     'pipeline.representative_security_selections', 'pipeline.representative_security_candidates',
-    'pipeline.investability_evaluations', 'pipeline.investability_criteria'
+    'pipeline.investability_evaluations', 'pipeline.investability_criteria',
+    -- UGAI universe snapshots and capped weights.
+    'pipeline.universe_snapshots', 'pipeline.snapshot_constituents',
+    'pipeline.snapshot_constituent_inputs'
   ];
   n integer;
 begin
