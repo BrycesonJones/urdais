@@ -43,7 +43,9 @@ declare
     'reference.capability_model_links', 'reference.model_price_selections',
     'pipeline.capability_check_runs',
     -- Open-weight vs Proprietary: the access classification and the UTVI identity bridge.
-    'reference.model_access_classes', 'reference.utvi_model_links'
+    'reference.model_access_classes', 'reference.utvi_model_links',
+    -- Model Economics operations heartbeats. These are scheduler evidence, not market data.
+    'pipeline.utvi_check_runs', 'pipeline.token_verification_check_runs'
   ];
   n integer;
 begin
