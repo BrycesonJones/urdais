@@ -9,7 +9,11 @@ import {
 import type { SqlExecutor } from "@/lib/utvi/store";
 
 function executor(rows: Record<string, unknown>[] = []) {
-  const query = vi.fn(async (_text: string, _params: readonly unknown[]) => ({ rows }));
+  const query = vi.fn(async (text: string, params: readonly unknown[]) => {
+    void text;
+    void params;
+    return { rows };
+  });
   return { sql: { query } as SqlExecutor, query };
 }
 
