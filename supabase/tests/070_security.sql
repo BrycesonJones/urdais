@@ -67,7 +67,11 @@ declare
     -- what they are keyed on, how often they change, and what a missing value means.
     'pipeline.share_observations', 'pipeline.ownership_observations',
     'pipeline.float_observations', 'pipeline.accessibility_observations',
-    'pipeline.corporate_actions'
+    'pipeline.corporate_actions',
+    -- UGAI pre-weighting machinery: FX, representative-security selection and investability.
+    'pipeline.fx_observations',
+    'pipeline.representative_security_selections', 'pipeline.representative_security_candidates',
+    'pipeline.investability_evaluations', 'pipeline.investability_criteria'
   ];
   n integer;
 begin

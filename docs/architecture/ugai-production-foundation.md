@@ -86,7 +86,9 @@ Effective-dated `shares_outstanding_observations` (value, unit, effective date, 
 
 `corporate_actions`: effective-dated ledger with original notices retained — splits, reverse splits, dividends, special distributions, rights issues, spin-offs, mergers, acquisitions, delistings, ticker and share-class changes.
 
-### 5.5 — FX, representative security, investability
+### 5.5 — FX, representative security, investability ✅ *this PR*
+
+Built. Six currencies resolve, one does not, and every issuer is unassessable for a different reason. Detail in §18.
 
 FX reuses the UBWI architecture and its two already rights-cleared interfaces, `ecb-euro-reference-rates` and `cbc-exchange-rates`, extended to the currencies the universe actually contains. **Two known frictions to surface rather than paper over**: UBWI stores local-currency-per-USD while UGAI requires USD per unit, and a central-bank patchwork has heterogeneous fixing times where `ugai.md` proposes a single global instant. If public sourcing cannot satisfy the methodology, **the conflict is surfaced before the methodology is changed**.
 
@@ -417,12 +419,70 @@ No representative-security selection, investability, universe snapshot, weight, 
 
 ---
 
-## 17. Remaining blockers for 5.5
+## 18. Phase 5.5 — FX, representative security, investability
 
-1. **No free-float factor exists in any reviewed geography.** This is a methodology decision, not an engineering one, and it now sits alongside the price problem at the top of the critical path. UGAI's weighting is defined on accessible free-float capitalization; no public source publishes a float factor for the US, Taiwan, Hong Kong or Korea. The options are to authorise a derivation from partial holdings data (with its error characterised), to license float factors commercially, or to amend the methodology's weighting basis. **Silently substituting full market capitalization is not among them** — and the schema now makes that substitution unrepresentable rather than merely discouraged.
-2. **No US price source.** Both currently eligible issuers list on Nasdaq, and Nasdaq refuses every axis the price pipeline needs. Until a written exchange data agreement exists, UGAI can price TSMC and cannot price NVIDIA or Palantir.
-3. **Palantir has no usable share count.** Multi-class issuers need per-class share data that the flat XBRL API does not expose; the dimensional XBRL frames or the filing itself would have to be parsed.
-4. **Named verification, per issuer.** The governance path has been exercised twice and does not generalise by itself: every future admission needs a human to confirm its cited passages, and the scoping error in §12 shows the step is easy to get wrong in the direction of admitting too much. Two issuers verified, twenty-seven candidates not yet reviewed.
+Three failure modes shaped this slice, each of which produces something that looks correct: an FX rate inverted twice is still a plausible exchange rate; a representative security chosen because Urdais had data for it is still a valid security; and a screen that "failed" because nobody measured it is still a boolean. None is caught by reading a row, so all three are caught by refusing to store them.
+
+### Two discrepancies found on inspection
+
+**The FX sources had no grants.** `ecb-euro-reference-rates` and `cbc-exchange-rates` have existed since UBWI, both reviewed `permitted` on both axes — but neither had a single `permission_grants` row, so there was nothing to reuse. The ECB grant here is built from the ECB's own copyright statement, re-read for this phase.
+
+**There was no FX observation table.** UBWI converts inline at the point of use. So the sources and their rights are reused; the canonical model is new.
+
+### FX
+
+The methodology fixes the orientation and leaves the fixing open, and both facts are in the schema. `X_i,t` is USD per one unit of the price currency, "never inverted per currency" — a constraint, not a convention anyone has to remember. The fixing source and time are recorded as an unresolved draft parameter, because the methodology says exactly that.
+
+The column that earns its place is `derivation`. No source publishes what UGAI needs:
+
+- **USD per EUR** — ECB publishes it directly.
+- **USD per JPY, GBP, HKD, KRW, CNY** — cross via EUR: (USD per EUR) ÷ (currency per EUR), with both legs stored as their own rows and referenced.
+- **USD per TWD** — would require inverting Taiwan's central bank rate.
+
+A trigger **re-derives every inverted and cross rate from its recorded components** and refuses one that does not reproduce, which is what catches a double inversion, a leg taken from the wrong day, and a cross assembled against the wrong bridge. Carrying a stale fixing forward is permitted — the methodology says so explicitly — but it is a flagged state naming the day it came from, never a silent copy.
+
+**TWD does not resolve.** The ECB publishes no New Taiwan dollar reference rate — which is why UBWI needed a second FX source at all — and Taiwan's central bank did not resolve from the review environment, so no rate was retrieved and none was invented. The consequence is worth stating plainly: **XTAI is the only venue Urdais holds a rights-cleared price source for, and TWD is the only launch currency it cannot convert.**
+
+### Representative security
+
+The methodology's order, implemented exactly: retain an eligible incumbent before comparing anything; otherwise greatest three-month ADTV in USD; on an exact tie only, ordinary over receipt, then issuer-designated primary, then ascending ISIN, then ascending MIC.
+
+The rule the engine exists to refuse is the one nobody writes down. **A candidate whose turnover was never measured is not a candidate with zero turnover**, so a comparison in which any eligible line is unmeasured returns `undeterminable` rather than crowning whichever line happened to be measured — a larger unmeasured line would have won. A suspended line cannot win on stale turnover either.
+
+**Availability is not an input to selection.** It is not in the candidate shape, and a test asserts it never becomes one. The methodology is explicit that a selection resolving to an unsupported venue "produces an availability constraint … not a change of representative security to a more convenient line", so the selection row carries `selection_state` and `availability_state` in separate columns and **there is no state in this schema meaning "we chose the line we had data for."**
+
+All three seeded selections are `selected` **and** `constrained`, for three different reasons.
+
+### Investability
+
+Evaluated per criterion, never as one boolean, with four outcomes rather than two. `unavailable` means an input is missing; `parameter_unresolved` means the methodology has not set the threshold. Neither is a failure, and collapsing them into one is how a universe quietly admits issuers nobody measured.
+
+Constraints make that structural: a criterion cannot be `passed` or `failed` without **both** an observation and a threshold, so an unresolved minimum can never be treated as satisfied; `parameter_unresolved` must name the parameter it waited for; and `unavailable` carries no observation at all.
+
+The screens come from the methodology, which states that the "numerical minima, suspension tolerances, and entry/retention buffers are unresolved". They are recorded as draft parameters — the same treatment `τ_B` received. `min_listing_record_months = 3` is the one with a number, because the methodology states three months as a *proposed operational convention*, and is explicit that it "is not evidence that a specific liquidity threshold is adequate".
+
+### The diagnostic, and what it shows
+
+Every evaluation returns `unavailable`. Not one criterion anywhere is marked `failed`, because nothing was measured well enough to fail.
+
+- **NVIDIA** — representative NVDA/XNGS, sole eligible line. Price unavailable (Nasdaq refuses every axis), float unavailable, turnover and trading frequency unmeasurable in consequence. Listing record **passes**: 235 days against the 90-day convention. Foreign headroom is `parameter_unresolved` — the input is as good as it gets (`no_limit_evidenced`) and the threshold does not exist. FX **passes**: the price currency is USD, so the conversion is the identity rate.
+- **Palantir** — representative PLTR/XNAS. Same, plus no unambiguous share count for a multi-class issuer, so accessible capitalization has no numerator before price or float are even considered. Listing record passes at 260 days.
+- **TSMC** — the instructive one. Price **available**, share count established and reconciled, turnover published under the same licence. And still unassessable: **no USD rate exists for the TWD**, float is unavailable, and one collected session stands against a three-month window. Its trading-frequency criterion is `unavailable` rather than a low ratio, because the shortfall is uncollected data and not sessions the issuer did not trade — recording it as a frequency would assert the opposite. TSMC is also a candidate whose thematic review has not completed.
+
+### Deliberately not built
+
+No universe snapshot, weight, index share, divisor, cap or index level. Tests assert that no such column or table exists anywhere in `pipeline`.
+
+---
+
+## 19. Remaining blockers for 5.6
+
+1. **No USD reference rate for the New Taiwan dollar.** The one venue with a rights-cleared price source is the one currency with no FX route. The ECB publishes no TWD rate; Taiwan's central bank interface exists in the registry but has no permission grant, was not reachable from the review environment, and its terms have not been read. This is the cheapest of the blockers to clear and it is not cleared.
+2. **No free-float factor exists in any reviewed geography.** This is a methodology decision, not an engineering one, and it now sits alongside the price problem at the top of the critical path. UGAI's weighting is defined on accessible free-float capitalization; no public source publishes a float factor for the US, Taiwan, Hong Kong or Korea. The options are to authorise a derivation from partial holdings data (with its error characterised), to license float factors commercially, or to amend the methodology's weighting basis. **Silently substituting full market capitalization is not among them** — and the schema now makes that substitution unrepresentable rather than merely discouraged.
+3. **No US price source.** Both currently eligible issuers list on Nasdaq, and Nasdaq refuses every axis the price pipeline needs. Until a written exchange data agreement exists, UGAI can price TSMC and cannot price NVIDIA or Palantir.
+4. **Palantir has no usable share count.** Multi-class issuers need per-class share data that the flat XBRL API does not expose; the dimensional XBRL frames or the filing itself would have to be parsed.
+5. **The FX fixing convention is unresolved**, as are every investability minimum. A production investability determination is structurally impossible until they are approved, which the trigger enforces.
+6. **Named verification, per issuer.** The governance path has been exercised twice and does not generalise by itself: every future admission needs a human to confirm its cited passages, and the scoping error in §12 shows the step is easy to get wrong in the direction of admitting too much. Two issuers verified, twenty-seven candidates not yet reviewed.
 2. **`τ_B` and issuer cap `c`** remain unresolved drafts. Route B admission and capped weighting are both blocked until they are approved through the parameter table.
 3. **Structured extraction of filing tables.** Baidu's case generalises: segment and product revenue live in tables that plain text extraction loses. Route A cannot be evidenced at scale without this.
 4. **Non-US evidence has no automated path.** HKEXnews is prohibited; OpenDART needs a registered key; MOPS is unreviewed. Manual capture is supported by the schema and does not scale, which is a coverage constraint 5.3 onward must disclose rather than hide.

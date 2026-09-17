@@ -116,7 +116,8 @@ begin
    where production_access_state = 'production_approved'
      and source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface',
                               'equity_eod_price_interface',
-                                  'issuer_fundamentals_interface');
+                                  'issuer_fundamentals_interface',
+                                  'exchange_rate_series');
   if n <> 1 then raise exception 'expected exactly one production-approved compute source, found %', n; end if;
   -- No *compute-market* provider interface is cleared on both axes. The UBWI denominator
   -- and FX sources are: they were reviewed in Phases 2B and 2C and each is anchored to a
@@ -143,7 +144,8 @@ begin
                               -- in 330. Nasdaq, reviewed in the same pass, is refused on both
                               -- axes and is blocked -- so this class is not a blanket pass.
                               'equity_eod_price_interface',
-                                  'issuer_fundamentals_interface');
+                                  'issuer_fundamentals_interface',
+                                  'exchange_rate_series');
   if n <> 0 then raise exception '% direct source(s) cleared on both terms axes without review', n; end if;
 
   -- Every UBWI source that is cleared shows the artifact its state rests on.
@@ -167,7 +169,8 @@ begin
    where si.source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface',
                                   'regulatory_filing_repository',
                                   'equity_eod_price_interface',
-                                  'issuer_fundamentals_interface')
+                                  'issuer_fundamentals_interface',
+                                  'exchange_rate_series')
      and (si.slug <> 'price-of-compute-prices' or g.grant_kind <> 'provider_terms');
   if n <> 0 then raise exception 'a permission grant exists for a direct provider interface'; end if;
   -- No operator attribution and no tenancy evidence were seeded.
