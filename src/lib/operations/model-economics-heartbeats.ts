@@ -75,12 +75,12 @@ export type ScheduledHeartbeat = {
   detail: string | null;
 };
 
-/** Latest successful scheduled UTVI heartbeat; operator runs never satisfy scheduler liveness. */
+/** Latest scheduled UTVI invocation, including a failed one; operator runs never count. */
 export async function latestScheduledUtviHeartbeat(sql: SqlExecutor): Promise<ScheduledHeartbeat | null> {
   const { rows } = await sql.query(
     `select ran_at::text as ran_at, outcome, detail
        from pipeline.utvi_check_runs
-      where trigger = 'scheduled' and outcome = 'succeeded'
+      where trigger = 'scheduled'
       order by ran_at desc
       limit 1`,
     [],
@@ -96,7 +96,7 @@ export type TokenScheduledHeartbeat = ScheduledHeartbeat & {
   latestVerifiedAt: string | null;
 };
 
-/** Latest nonfailed scheduled Token Price watchdog heartbeat. */
+/** Latest scheduled Token Price watchdog invocation, including a failed one. */
 export async function latestScheduledTokenVerificationHeartbeat(
   sql: SqlExecutor,
 ): Promise<TokenScheduledHeartbeat | null> {
@@ -104,7 +104,7 @@ export async function latestScheduledTokenVerificationHeartbeat(
     `select ran_at::text as ran_at, outcome, detail, checked_at::text as checked_at,
             review_interval_days, latest_verified_at::text as latest_verified_at
        from pipeline.token_verification_check_runs
-      where trigger = 'scheduled' and outcome <> 'failed'
+      where trigger = 'scheduled'
       order by ran_at desc
       limit 1`,
     [],
