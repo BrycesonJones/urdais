@@ -50,7 +50,16 @@ declare
     -- list, what identifies them, and how they relate.
     'reference.venues', 'reference.issuers', 'reference.securities', 'reference.listings',
     'reference.security_identifiers', 'reference.security_relationships',
-    'reference.issuer_relationships'
+    'reference.issuer_relationships',
+    -- AI Equity Universe candidate discovery and point-in-time thematic eligibility.
+    'reference.methodology_parameters', 'reference.ai_universe_review_cycles',
+    'pipeline.issuer_candidates', 'pipeline.candidate_discoveries',
+    'pipeline.evidence_documents', 'pipeline.evidence_claims',
+    'pipeline.eligibility_reviews', 'pipeline.tier1_product_lines',
+    'pipeline.tier2_assessments', 'pipeline.tier3_assessments',
+    'pipeline.review_exclusions',
+    -- Tier 1 Route P, the AI-integrated platform test added by methodology 0.4.0-draft.
+    'pipeline.tier1_platform_assessments'
   ];
   n integer;
 begin

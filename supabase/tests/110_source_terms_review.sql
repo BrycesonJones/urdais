@@ -25,14 +25,16 @@ begin
                                  'oracle_network', 'inference_marketplace', 'research_organization')
      and exists (select 1 from reference.source_interfaces si
                   where si.provider_id = p.id
-                    and si.source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface'));
+                    and si.source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface',
+                                                'regulatory_filing_repository'));
   if n <> 6 then raise exception 'expected 6 reviewed compute providers, found %', n; end if;
   select count(*) into n from reference.source_interfaces si
     join reference.providers p on p.id = si.provider_id
     where si.slug <> 'price-of-compute-prices'
       and p.provider_kind not in ('model_api_provider', 'statistical_compiler', 'spot_venue', 'chain_data',
                                   'oracle_network', 'inference_marketplace')
-      and si.source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface');
+      and si.source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface',
+                                  'regulatory_filing_repository');
   if n <> 6 then raise exception 'expected 6 reviewed compute interfaces, found %', n; end if;
 
   -- No *compute* interface reviewed in this file is production-approved. Phase 4 collection is
@@ -215,7 +217,7 @@ begin
   end;
   if not ok then raise exception 'invented data-use state was accepted'; end if;
 
-  -- Fifteen settled prohibitions are blocked: the marketplace and Runpod on both axes,
+  -- Sixteen settled prohibitions are blocked: the marketplace and Runpod on both axes,
   -- Lambda on data use, Coinbase on both axes and Kraken on data use since UBWI
   -- Phase 2D retrieved the numerator venues' own terms, and -- since the Memory news
   -- qualification pass read them -- the SK hynix Newsroom on both axes. An unresolved
@@ -228,8 +230,11 @@ begin
   -- qualified: CoinDesk, Decrypt, Blockworks, Cointelegraph, CryptoSlate,
   -- Bitcoin Magazine, Solana and the Ethereum Foundation, the last of these
   -- licensing its content openly while prohibiting the retrieval of it.
+  -- The AI equity filing pass added HKEXnews, whose terms prohibit text and data mining and
+  -- web scraping in terms. Taiwan's MOPS is not here for the reason stated above: its terms
+  -- were not located, and an unreviewed source is review-pending rather than blocked.
   select count(*) into n from reference.source_interfaces where production_access_state = 'production_blocked';
-  if n <> 15 then raise exception 'expected 15 blocked interfaces (settled prohibitions only), found %', n; end if;
+  if n <> 16 then raise exception 'expected 16 blocked interfaces (settled prohibitions only), found %', n; end if;
   select count(*) into n from reference.source_interfaces
    where terms_review_state = 'under_review' or data_use_terms_state = 'under_review';
   if n < 3 then raise exception 'expected at least 3 interfaces with an unresolved axis, found %', n; end if;
