@@ -77,7 +77,17 @@ declare
     'pipeline.snapshot_constituent_inputs',
     -- UGAI calculation engine: index shares, divisor, daily level, publication readiness.
     'pipeline.ugai_index_shares', 'pipeline.ugai_divisors', 'pipeline.ugai_calculations',
-    'pipeline.ugai_constituent_calculations', 'pipeline.ugai_publication_checks'
+    'pipeline.ugai_constituent_calculations', 'pipeline.ugai_publication_checks',
+    -- UAVI options foundation: the US venue register, the volatility-instrument mapping, contract
+    -- identity, the official-snapshot quote, and the resolved risk-free rate.
+    'reference.options_venues', 'reference.option_contracts',
+    'pipeline.uavi_volatility_instruments', 'pipeline.option_quote_observations',
+    'pipeline.risk_free_rate_observations',
+    -- UAVI calculation engine: constituent volatility, the two strips behind it, the surviving
+    -- strikes, the headline, its constituents and its publication readiness.
+    'pipeline.uavi_constituent_variances', 'pipeline.uavi_option_strips',
+    'pipeline.uavi_strip_components', 'pipeline.uavi_calculations',
+    'pipeline.uavi_constituent_calculations', 'pipeline.uavi_publication_checks'
   ];
   n integer;
 begin

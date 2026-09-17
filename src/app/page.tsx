@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { INDEX_SNAPSHOTS } from "@/data/mock/indices";
 import { assembleIndexRail } from "@/lib/market/index-rail";
+import { UAVI_WATCHLIST_ROW } from "@/lib/uavi/read/watchlist";
 import { UGAI_WATCHLIST_ROW } from "@/lib/ugai/read/watchlist";
 import { loadFrozenUbwiPublication } from "@/lib/ubwi/read/publication-store";
 import { ubwiIndexSnapshot } from "@/lib/ubwi/read/surface";
@@ -25,9 +26,11 @@ export default async function HomePage() {
   // published there is simply no UBWI row, which is why this is a concat and not a
   // placeholder. The other indices remain mock data for now.
   const ubwiRow = ubwiIndexSnapshot(await loadFrozenUbwiPublication());
-  // UGAI keeps its place in the family and carries no number: it has never published, and its
-  // synthetic walk was removed rather than relabelled. The row states "Not yet live".
-  const base = [...INDEX_SNAPSHOTS, UGAI_WATCHLIST_ROW];
+  // UGAI and UAVI keep their place in the family and carry no number: neither has ever published,
+  // and both had synthetic walks that were removed rather than relabelled. The rows state
+  // "Not yet live". Catalog order puts them back where the product expects them, so a reader
+  // cannot tell which rows came from which source by where they sit.
+  const base = [...INDEX_SNAPSHOTS, UGAI_WATCHLIST_ROW, UAVI_WATCHLIST_ROW];
   const indices = assembleIndexRail(ubwiRow === null ? base : [...base, ubwiRow]);
 
   // The UCPI panel now reads the same released listed-GPU children the UCPI market page

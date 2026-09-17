@@ -110,7 +110,7 @@ describe("the fixtures remain available where they are intentionally supported",
 describe("the indices rail never quotes a demo index", () => {
   // UGAI is no longer among them: its seeded walk was removed rather than relabelled, so it has
   // no mock row at all. Its unpublished row is covered separately below.
-  const MOCK_SYMBOLS = ["UAVI", "UMPI", "UPPI", "UEPI", "UACI"];
+  const MOCK_SYMBOLS = ["UMPI", "UPPI", "UEPI", "UACI"];
 
   it("labels every mock row demo and gives it no level and no movement", () => {
     render(<InformationMarketsSection />);
