@@ -45,7 +45,12 @@ declare
     -- Open-weight vs Proprietary: the access classification and the UTVI identity bridge.
     'reference.model_access_classes', 'reference.utvi_model_links',
     -- Model Economics operations heartbeats. These are scheduler evidence, not market data.
-    'pipeline.utvi_check_runs', 'pipeline.token_verification_check_runs'
+    'pipeline.utvi_check_runs', 'pipeline.token_verification_check_runs',
+    -- UGAI equity reference foundation: issuers, their securities, where those securities
+    -- list, what identifies them, and how they relate.
+    'reference.venues', 'reference.issuers', 'reference.securities', 'reference.listings',
+    'reference.security_identifiers', 'reference.security_relationships',
+    'reference.issuer_relationships'
   ];
   n integer;
 begin
