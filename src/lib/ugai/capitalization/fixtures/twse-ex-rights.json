@@ -1,0 +1,44 @@
+[
+  {
+    "Date": "1150916",
+    "Code": "2330",
+    "Name": "台積電",
+    "Exdividend": "息",
+    "StockDividendRatio": "",
+    "SubscriptionRatio": "",
+    "SubscriptionPricePerShare": "",
+    "CashDividend": "7.000001",
+    "SharesOffered": "",
+    "SharesEmpOwner": "",
+    "SharesholderOwner": "",
+    "StockHoldingRatio": ""
+  },
+  {
+    "Date": "1150924",
+    "Code": "1235",
+    "Name": "興泰",
+    "Exdividend": "權息",
+    "StockDividendRatio": "0.04999999",
+    "SubscriptionRatio": "",
+    "SubscriptionPricePerShare": "",
+    "CashDividend": "0.500000",
+    "SharesOffered": "",
+    "SharesEmpOwner": "",
+    "SharesholderOwner": "",
+    "StockHoldingRatio": ""
+  },
+  {
+    "Date": "1151006",
+    "Code": "2614",
+    "Name": "東森",
+    "Exdividend": "權息",
+    "StockDividendRatio": "0.08000000",
+    "SubscriptionRatio": "0.38195352",
+    "SubscriptionPricePerShare": "尚未公告",
+    "CashDividend": "0.400000",
+    "SharesOffered": "12500000.00",
+    "SharesEmpOwner": "12500000.00",
+    "SharesholderOwner": "100000000.00",
+    "StockHoldingRatio": "305.56282065"
+  }
+]

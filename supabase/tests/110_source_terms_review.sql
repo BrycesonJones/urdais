@@ -27,7 +27,8 @@ begin
                   where si.provider_id = p.id
                     and si.source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface',
                                                 'regulatory_filing_repository',
-                                  'equity_eod_price_interface'));
+                                  'equity_eod_price_interface',
+                                  'issuer_fundamentals_interface'));
   if n <> 6 then raise exception 'expected 6 reviewed compute providers, found %', n; end if;
   select count(*) into n from reference.source_interfaces si
     join reference.providers p on p.id = si.provider_id
@@ -36,7 +37,8 @@ begin
                                   'oracle_network', 'inference_marketplace')
       and si.source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface',
                                   'regulatory_filing_repository',
-                                  'equity_eod_price_interface');
+                                  'equity_eod_price_interface',
+                                  'issuer_fundamentals_interface');
   if n <> 6 then raise exception 'expected 6 reviewed compute interfaces, found %', n; end if;
 
   -- No *compute* interface reviewed in this file is production-approved. Phase 4 collection is
@@ -45,7 +47,8 @@ begin
   select count(*) into n from reference.source_interfaces
    where production_access_state = 'production_approved' and slug <> 'price-of-compute-prices'
      and source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface',
-                              'equity_eod_price_interface');
+                              'equity_eod_price_interface',
+                                  'issuer_fundamentals_interface');
   if n <> 0 then raise exception '% reviewed interface(s) marked production_approved', n; end if;
 
   -- Every reviewed compute interface carries verbatim evidence with a review date.

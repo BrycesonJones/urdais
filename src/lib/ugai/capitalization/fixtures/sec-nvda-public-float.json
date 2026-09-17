@@ -1,0 +1,32 @@
+{
+  "cik": 1045810,
+  "taxonomy": "dei",
+  "tag": "EntityPublicFloat",
+  "label": "Entity Public Float",
+  "description": "The aggregate market value of the voting and non-voting common equity held by non-affiliates computed by reference to the price at which the common equity was l",
+  "entityName": "NVIDIA CORP",
+  "units": {
+    "USD": [
+      {
+        "end": "2024-07-26",
+        "val": 2700000000000,
+        "accn": "0001045810-25-000023",
+        "fy": 2025,
+        "fp": "FY",
+        "form": "10-K",
+        "filed": "2025-02-26",
+        "frame": "CY2024Q2I"
+      },
+      {
+        "end": "2025-07-25",
+        "val": 4000000000000,
+        "accn": "0001045810-26-000021",
+        "fy": 2026,
+        "fp": "FY",
+        "form": "10-K",
+        "filed": "2026-02-25",
+        "frame": "CY2025Q2I"
+      }
+    ]
+  }
+}
