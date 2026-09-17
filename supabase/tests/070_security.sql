@@ -61,7 +61,13 @@ declare
     -- Tier 1 Route P, the AI-integrated platform test added by methodology 0.4.0-draft.
     'pipeline.tier1_platform_assessments',
     -- UGAI end-of-day equity closes.
-    'pipeline.price_observations'
+    'pipeline.price_observations',
+    -- UGAI capitalization inputs: shares, holder-level ownership, free float, accessibility
+    -- and the corporate-action ledger. Five tables rather than one because they disagree about
+    -- what they are keyed on, how often they change, and what a missing value means.
+    'pipeline.share_observations', 'pipeline.ownership_observations',
+    'pipeline.float_observations', 'pipeline.accessibility_observations',
+    'pipeline.corporate_actions'
   ];
   n integer;
 begin

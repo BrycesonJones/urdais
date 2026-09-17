@@ -76,7 +76,9 @@ Built. One venue implemented, one venue found to have no permitted source. Detai
 
 Source discovery per venue, in the order the plan requires: official exchange source, then official regulator or government source, then exchange-hosted historical files, then a reputable public source whose terms permit the use. A venue with no credible public source is left `price_source_state = 'unavailable'` with the reason recorded — not filled from a consumer finance page.
 
-### 5.4 — Shares, float, corporate actions
+### 5.4 — Shares, float, corporate actions ✅ *this PR*
+
+Built. Shares and corporate actions have real sources; free float has none. Detail in §16.
 
 Effective-dated `shares_outstanding_observations` (value, unit, effective date, observation date, source, evidence hash, revision lineage). Sources: issuer filings, SEC XBRL, exchange filings, corporate-action notices. **Today's share count is never used for a historical date.**
 
@@ -362,10 +364,65 @@ The remaining 26 candidate issuers have no seeded listings and therefore no venu
 
 ---
 
-## 15. Remaining blockers for 5.4
+## 16. Phase 5.4 — capitalization inputs
 
-1. **No US price source.** Both currently eligible issuers list on Nasdaq, and Nasdaq refuses every axis this pipeline needs. Until a written exchange data agreement exists, UGAI can price TSMC and cannot price NVIDIA or Palantir — which means it cannot be calculated at all, whatever 5.4 through 5.8 build. This is now the top of the critical path, ahead of the reviewer backlog.
-2. **Named verification, per issuer.** The governance path has been exercised twice and does not generalise by itself: every future admission needs a human to confirm its cited passages, and the scoping error in §12 shows the step is easy to get wrong in the direction of admitting too much. Two issuers verified, twenty-seven candidates not yet reviewed.
+Five tables, because shares, holder-level ownership, free float, accessibility and corporate actions disagree about what they are keyed on, how often they change, what a revision means and what it means for one to be missing. A single `equity_fundamentals` row would have to pick one answer and would be wrong four times.
+
+The invariant the slice exists to enforce: **unknown free float stays unknown, and never becomes 1.0.** Treating absence as full float inflates precisely the issuers Urdais knows least about, while producing an index that looks complete. So `float_observations.float_state` is mandatory and `free_float_factor` is null unless that state is `established` — a biconditional constraint, no column default, and no code path anywhere in `src/lib/ugai/capitalization` that produces a factor from silence.
+
+### Shares outstanding: three securities, three different answers
+
+- **NVIDIA — established.** `dei:EntityCommonStockSharesOutstanding` = 24,100,000,000 effective 2026-08-21, reported 2026-08-26. Single share class, so the cover-page concept is an unambiguous scalar. The two dates differ and are stored separately, which is what makes a historical calculation possible: a count published on the 26th was not knowable on the 22nd.
+- **TSMC — established, as `issued`.** TWSE publishes 已發行普通股數 = 25,932,370,067, which reconciles exactly against paid-in capital 259,323,700,670 divided by the NT$10 par value. The adapter performs that division as a check and rejects a mismatch, which catches a misread column for free. Recorded as `issued`, **not** relabelled `outstanding` — the difference is treasury stock.
+- **Palantir — deliberately not recorded.** A multi-class issuer. `dei:EntityCommonStockSharesOutstanding` does not exist for it, and the `us-gaap` concept the flat XBRL API does serve has had its share-class dimension stripped, so whether 2,402,897,000 is Class A alone or every class summed is not established. The master holds only the listed Class A line. Attaching an all-class figure to it would be a wrong number that looks right, so the adapter has **no fallback** and the table has no row.
+
+`share_count_type` is mandatory with no default and no `unspecified`. The adapter refuses `WeightedAverageNumberOfSharesOutstandingBasic` and `CommonStockSharesAuthorized` by name: an EPS denominator is a weighted average over a period and authorized shares are a ceiling nobody has issued.
+
+### Free float: no source exists, in any reviewed geography
+
+This is the substantive finding, recorded as rows with a stated basis rather than as absence.
+
+- **United States.** `dei:EntityPublicFloat` is a genuine, official, primary float measure — NVIDIA USD 4.0tn at 2025-07-25, Palantir USD 299.3bn at 2025-06-30. It is a **currency amount at one fiscal date, not a factor.** Deriving a factor needs a market capitalization at that same date, which the parent methodology does not authorise; and "held by non-affiliates" is not the free-float population — it excludes officers, directors and ten-percent holders while *including* strategic corporate holders an index would normally remove. Recorded as evidence on the float row, with `float_state = 'unavailable'`.
+- **Taiwan.** TWSE publishes director and supervisor shareholding balances (share counts) and a list of holders above ten percent that carries **names without percentages**. TSMC appears in the latter not at all. Those are float *inputs*; they are not a float population, because strategic corporate holders, cross-holdings and government stakes appear in neither list. Summing them would produce a confident number wrong in an unknown direction.
+- **Hong Kong.** Blocked earlier and for a different reason: HKEXnews prohibits text and data mining in terms (Phase 5.2). Substantial-shareholder disclosures and CCASS data exist, but collection rights are refused, so content feasibility was not assessed — the rights answer already settles it.
+- **South Korea.** OpenDART carries major-shareholder disclosures, but its terms are silent on commercial use and remain `under_review`, and no key has been registered. Also unassessed for content, for the same reason.
+
+**No geography yields a free-float factor.** The model therefore does what it should: a future calculation meets an explicit `unavailable` state rather than a missing join, and cannot proceed by accident.
+
+A `derived_from_holdings` determination method exists and is deliberately hard to use — a constraint requires a `methodology_reference` before a derived factor can be stored at all, so summing insider holdings into a float needs the methodology to have authorised it first.
+
+### Accessibility: three inputs, never one number
+
+`foreign_ownership_limit_percent`, `foreign_ownership_current_percent` and `foreign_headroom_percent` are separate columns and no accessible-float factor is computed. Collapsing them now would destroy the ability to say **why** accessible float sits below free float for a given security, which is the only reason to keep them at all. A test asserts no `accessible_float_factor`, `free_float_market_cap` or `index_weight` column exists anywhere in the schema.
+
+`unknown` carries no figures by constraint, so an unknown accessibility can never read as unrestricted. The US rows are `no_limit_evidenced` — a search found nothing, which is a weaker claim than a positive grant of open access and a stronger one than silence. Taiwan is `unknown`: TWSE publishes foreign holding ratios by sector and a top-twenty aggregate, neither of which is a per-security limit or usage figure.
+
+### Corporate actions: recorded, never applied
+
+Sixteen action types. Ratios are stored as a numerator/denominator pair, never a decimal — a 3-for-2 split stored as 1.5 has already lost the issuer's own terms. Cash amounts require a currency. Date coherence is enforced across announcement, ex, record and payment dates.
+
+**The Phase 5.3 boundary holds and is tested directly:** recording a split does not change a raw `price_observations` row, and the test additionally proves the price row cannot be edited at all, so no amount of calculation convenience can adjust it. The ledger supplies transformation inputs a later read-time calculation applies.
+
+TSMC's TWD 7.000001 cash dividend is seeded from TWSE's own ex-rights notice table. The adapter emits several actions from one notice where the source describes several — a company can go ex on a cash dividend, a stock dividend and a rights subscription on the same date, and the fixture covers all three shapes.
+
+### Rights
+
+One shared gate, `pipeline.check_capitalization_rights()`, with an explicitly pinned `search_path` rather than a mutable one. It requires the grant to belong to the named interface, to cover collection and storage, and to supply any attribution its licence makes a condition. A row with **no** grant is permitted only where the family allows a sourceless determination — which is how "nobody publishes this" gets recorded for float and accessibility.
+
+New interfaces: `sec-xbrl-company-concepts` (same EDGAR access policy, collection permitted, data use unaddressed, production-review-pending), and three TWSE OpenAPI endpoints under the Open Government Data License already settled in 5.3 — company basic data, ex-rights notices, insider holdings.
+
+### Deliberately not built
+
+No representative-security selection, investability, universe snapshot, weight, issuer cap, divisor, FX, total return or index level. No cron, no production ingestion, no production rows.
+
+---
+
+## 17. Remaining blockers for 5.5
+
+1. **No free-float factor exists in any reviewed geography.** This is a methodology decision, not an engineering one, and it now sits alongside the price problem at the top of the critical path. UGAI's weighting is defined on accessible free-float capitalization; no public source publishes a float factor for the US, Taiwan, Hong Kong or Korea. The options are to authorise a derivation from partial holdings data (with its error characterised), to license float factors commercially, or to amend the methodology's weighting basis. **Silently substituting full market capitalization is not among them** — and the schema now makes that substitution unrepresentable rather than merely discouraged.
+2. **No US price source.** Both currently eligible issuers list on Nasdaq, and Nasdaq refuses every axis the price pipeline needs. Until a written exchange data agreement exists, UGAI can price TSMC and cannot price NVIDIA or Palantir.
+3. **Palantir has no usable share count.** Multi-class issuers need per-class share data that the flat XBRL API does not expose; the dimensional XBRL frames or the filing itself would have to be parsed.
+4. **Named verification, per issuer.** The governance path has been exercised twice and does not generalise by itself: every future admission needs a human to confirm its cited passages, and the scoping error in §12 shows the step is easy to get wrong in the direction of admitting too much. Two issuers verified, twenty-seven candidates not yet reviewed.
 2. **`τ_B` and issuer cap `c`** remain unresolved drafts. Route B admission and capped weighting are both blocked until they are approved through the parameter table.
 3. **Structured extraction of filing tables.** Baidu's case generalises: segment and product revenue live in tables that plain text extraction loses. Route A cannot be evidenced at scale without this.
 4. **Non-US evidence has no automated path.** HKEXnews is prohibited; OpenDART needs a registered key; MOPS is unreviewed. Manual capture is supported by the schema and does not scale, which is a coverage constraint 5.3 onward must disclose rather than hide.
