@@ -76,7 +76,7 @@ select con.id, l.security_id, l.id, date '2026-09-17', 'incomplete', v.missing,
   from (values
     ('nvidia', array['P: no rights-cleared price source for XNGS', 'f: no free-float factor established']::text[], 'outstanding'),
     ('palantir-technologies', array['P: no rights-cleared price source for XNAS', 'N: no unambiguous outstanding count for a multi-class issuer', 'f: no free-float factor established']::text[], null),
-    ('tsmc', array['f: no free-float factor established', 'X: no USD reference rate exists for TWD', 'N: TWSE publishes issued shares, and the methodology values N as outstanding']::text[], 'issued')
+    ('tsmc', array['f: no free-float factor established', 'X: a USD/TWD rate now resolves from CBC dataset 7232, but UGAI''s fixing convention is unresolved, so no rule designates which daily close the index takes', 'N: TWSE publishes issued shares, and the methodology values N as outstanding']::text[], 'issued')
   ) as v(issuer_key, missing, share_type)
   join reference.issuers i on i.issuer_key = v.issuer_key
   join pipeline.snapshot_constituents con
