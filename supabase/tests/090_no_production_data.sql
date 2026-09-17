@@ -153,7 +153,8 @@ begin
   select count(*) into n from pipeline.source_retrievals where retrieval_purpose <> 'research';
   if n <> 0 then raise exception 'a non-research retrieval exists'; end if;
   select count(*) into n from reference.permission_grants g join reference.source_interfaces si on si.id = g.source_interface_id
-   where si.source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface')
+   where si.source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface',
+                                  'regulatory_filing_repository')
      and (si.slug <> 'price-of-compute-prices' or g.grant_kind <> 'provider_terms');
   if n <> 0 then raise exception 'a permission grant exists for a direct provider interface'; end if;
   -- No operator attribution and no tenancy evidence were seeded.

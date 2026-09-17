@@ -1,4 +1,4 @@
-# UGAI production foundation — implementation plan and Phase 5.1 record
+# UGAI production foundation — implementation plan and Phase 5.1–5.2 record
 
 **Status: internal architecture document. Not a methodology page, not routed publicly, not registered in the docs catalog.** It implements no methodology and changes none. The governing documents are `docs/methodology/ai-equity-universe.md` (0.3.0-draft) and `docs/methodology/ugai.md` (0.2.0-draft), both merged.
 
@@ -54,7 +54,9 @@ Each slice is a separate PR. A slice lands only when its own tests and the full 
 
 Rights model extended to express storage, post-termination retention, reconstruction, and publication per output. Security master: venues, issuers, securities, listings, identifiers, and the relationships between them. No eligibility, no market data. Detail in §4–§5.
 
-### 5.2 — Eligibility evidence and candidate universe
+### 5.2 — Eligibility evidence and candidate universe ✅ *this PR*
+
+Built as planned, with two departures recorded in §8. Detail in §8–§9.
 
 `pipeline.eligibility_reviews` (issuer, review date, methodology version, status, primary tier, value-chain layers, qualifying role, materiality basis, reviewer, effective date, supersession) and `pipeline.eligibility_citations` (the primary evidence each determination rests on: document, URL, hash, retrieval, the quoted sentence).
 
@@ -162,6 +164,10 @@ Migration `20260917120100_equity_reference_foundation.sql`. Seven tables in `ref
 
 **`reference.check_security_relationship()`** validates edge shape: a receipt edge runs receipt → underlying within one issuer; a sibling edge joins two non-receipt lines of one issuer; succession is the only type permitted to cross issuers.
 
+### 5.2 deliberately excludes
+
+Prices, shares, float, corporate actions, FX, snapshots, weights, calculation, publication, API and frontend — and, deliberately, any admission. 5.2 builds the apparatus that decides eligibility and runs it once; it does not produce a universe.
+
 ### 5.1 deliberately excludes
 
 Eligibility, prices, shares, float, corporate actions, FX, snapshots, weights, calculation, publication, API and frontend. Each has its own slice. Building them against a foundation that could not represent a dual-listed issuer would mean rebuilding them later.
@@ -179,11 +185,66 @@ Eligibility, prices, shares, float, corporate actions, FX, snapshots, weights, c
 
 ---
 
-## 7. Remaining blockers for 5.2
+## 7. Blockers carried into 5.2, and what happened to them
 
-1. **`τ_B` unresolved** — Tier 3 Route B admission must be gated, not defaulted to 10%.
-2. **Issuer cap `c` unresolved** — no default; publication blocked until a parameter set approves one.
-3. **Investability minima provisional** — versioned parameters, labelled unvalidated.
-4. **Candidate discovery method undefined** — 5.2 must define and record a reproducible method, not inherit the research sample's results.
-5. **Evidence retrieval terms** — SEC EDGAR and each non-US filing source need a terms review and a permission grant before any production retrieval, since `pipeline.source_retrievals` refuses a production retrieval without one.
-6. **Reviewer identity** — eligibility determinations name a reviewer; who that is, and what independent check applies, is a governance decision the methodology requires and the schema will record.
+1. **`τ_B` unresolved** — **addressed, still unresolved.** Recorded as a `draft` row in `reference.methodology_parameters` with the 10% research candidate and no effective date. `pipeline.check_eligibility_review()` refuses every Tier 3 Route B admission unless an `approved` `tau_b` is in force at the review date. Approving it is a dated, attributed act the parameter table enforces; it is not an edit to a constant.
+2. **Issuer cap `c` unresolved** — recorded the same way, as a draft with no effective date. Nothing in 5.2 consumes it; it has an identity before it has a number.
+3. **Investability minima provisional** — untouched. Belongs to 5.5.
+4. **Candidate discovery method undefined** — **resolved.** `pipeline.candidate_discoveries` records the channel and the dated reason each candidate entered. The first cycle's candidates all entered through `research_seed`, which is the channel that confers no eligibility significance, and `310` asserts that every candidate has a discovery row and that no seeded discovery claims a stronger channel.
+5. **Evidence retrieval terms** — **resolved for the launch geography.** Four filing systems reviewed on both axes and recorded in `reference.source_interfaces` with dated clause evidence. SEC EDGAR permits collection under a declared User-Agent and a 10/second ceiling and is silent on data use; HKEXnews prohibits text and data mining in terms; OpenDART is a keyed official API silent on commercial use; Taiwan's MOPS terms were not located. None is production-approved.
+6. **Reviewer identity** — **partially resolved, and it is now the binding constraint.** The schema records a reviewer and an independent check, and refuses a check whose reviewer is the same person. Who signs is still a governance decision, and §8 explains why nothing in the first cycle could be admitted without one.
+
+---
+
+## 8. Phase 5.2 — what was built, and the two departures
+
+Eleven tables: two in `reference` (`methodology_parameters`, `ai_universe_review_cycles`) and nine in `pipeline` (`issuer_candidates`, `candidate_discoveries`, `evidence_documents`, `evidence_claims`, `eligibility_reviews`, `tier1_product_lines`, `tier2_assessments`, `tier3_assessments`, `review_exclusions`).
+
+The chain is: a **cycle** fixes an evidence cutoff and a methodology version → **candidates** enter through a recorded **discovery** channel → **documents** are cited by URL and SHA-256, never stored → **claims** quote one passage from one document about one issuer, carrying an evidence class → a **review** reaches a status under those claims, with tier-specific structured assessments and the exclusions it evaluated beside it.
+
+Four gates are enforced in the database rather than in application code:
+
+- A development cycle cannot publish, and cannot be approved into one that can.
+- A review's evidence cutoff must equal its cycle's, so a determination cannot quietly use later evidence than its cycle admits.
+- Tier 3 Route B admission requires an approved `tau_b` in force **at the review date** — point-in-time, not present-tense.
+- A machine-extracted claim is not establishing evidence until a named human has verified it.
+
+Determinations are append-only and supersede rather than update, and one issuer holds at most one live determination per cycle.
+
+### Departure 1 — no collector telemetry was written
+
+The plan assumed evidence would arrive through `pipeline.source_retrievals`. No EDGAR collector exists; the four documents in the first cycle were fetched by hand during a research phase. Writing retrieval rows for a collector that does not exist would put a fiction in the table whose only job is to record what ran, and it would have tripped the `090` and `110` policy assertions that say no collector has run. Provenance therefore lives entirely on the document row — URL, hash, byte length, retrieval time, and the permission grant it was made under. A real collector in a later slice will write retrievals and link them; the column is there and nullable.
+
+### Departure 2 — the first cycle admits nobody
+
+This was not the expected outcome and it is the correct one. Four issuers were reviewed against real filings retrieved for the cycle:
+
+- **NVIDIA — `pending`.** Both Tier 2 prongs are evidenced by verbatim passages from the FY2026 10-K and nothing adverse was found. It is not admitted because the extraction behind those passages is model-assisted and unverified, and the methodology does not let machine output establish anything until a human signs for it.
+- **Palantir — `contested`.** The research ledger proposed Tier 1; the filing does not support it. The 10-K enumerates four platforms, describes two of them (Gotham, Foundry) as data integration and data-operations software without evidencing learned perception or learned policy, and states that AIP is *"seamlessly bundled with existing Palantir offerings"* — which is E5. No platform-level revenue is disclosed, and E6 bars the name and the self-description from closing the gap. Apollo passes the ancillary-support test on the filing's own words.
+- **Salesforce — `insufficient_evidence`.** The only AI-specific quantity disclosed is Agentforce ARR, a run-rate that E8 bars from establishing anything. Independently, Route B is gated on an unresolved `tau_b`. Two reasons, either sufficient.
+- **Baidu — `pending`.** The offering is evidenced in the 20-F; the Route A scale indicator sits in a revenue table that text extraction did not preserve. An extraction gap, not an evidence gap.
+
+The remaining twenty-five candidates are `queued` with no review row, which is the honest record of "discovered, not yet opened". Inventing `insufficient_evidence` rows for issuers nobody has read would be a worse record than an empty one.
+
+**What this demonstrates:** the apparatus refused to admit the most AI-branded name in the sample on its own disclosure, and refused to inherit a tier from research. That is the behaviour the phase was built to produce. The single change that would move NVIDIA to `eligible` is a named human verifying four already-quoted passages — which is a governance step, not an engineering one.
+
+---
+
+## 9. Phase 5.2 — security review
+
+- All eleven new tables have RLS enabled with no policies, and all eleven are named in `070_security.sql`, whose exact-count assertion would otherwise fail.
+- `anon` and `authenticated` receive nothing; neither schema is exposed through PostgREST.
+- `evidence_documents` and `evidence_claims` are append-only via `pipeline.forbid_mutation()`; `eligibility_reviews` permits only supersession.
+- No filing bytes are stored. A document row holds a URL, a hash and a length; a claim holds one quoted passage. Anyone can re-fetch the document, check the hash and check every word of a determination, and Urdais republishes nothing.
+- `reference.source_interfaces.terms_evidence` carries the decisive clauses for all four filing systems with the date they were read, on the convention the source registry already uses.
+- `310_ai_equity_eligibility_evidence.sql` asserts the seeded state directly: no admission, nothing published, no approved `tau_b`, every document hashed, every candidate discovered through a recorded channel, and every automatically retrieved document sourced from an interface whose terms permit it.
+
+---
+
+## 10. Remaining blockers for 5.3
+
+1. **A named reviewer.** Nothing can be admitted until a human verifies extractions and signs a determination. This is now the top of the critical path, ahead of any data work.
+2. **`τ_B` and issuer cap `c`** remain unresolved drafts. Route B admission and capped weighting are both blocked until they are approved through the parameter table.
+3. **Structured extraction of filing tables.** Baidu's case generalises: segment and product revenue live in tables that plain text extraction loses. Route A cannot be evidenced at scale without this.
+4. **Non-US evidence has no automated path.** HKEXnews is prohibited; OpenDART needs a registered key; MOPS is unreviewed. Manual capture is supported by the schema and does not scale, which is a coverage constraint 5.3 onward must disclose rather than hide.
+5. **Public end-of-day price sources** — untouched, and the subject of 5.3.
