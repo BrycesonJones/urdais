@@ -68,7 +68,9 @@ Candidate discovery is recorded as a reproducible method, not a list: the query 
 
 Retrieval path for filings: SEC EDGAR for US issuers, issuer annual reports and 20-F/6-K elsewhere, official exchange and regulator filings, official results releases only where the evidence hierarchy permits. Raw evidence and hashes preserved. **No LLM-only classifier**: extraction may be assisted, but a determination cites primary evidence and names a reviewer.
 
-### 5.3 — Public end-of-day price sources
+### 5.3 — Public end-of-day price sources ✅ *this PR*
+
+Built. One venue implemented, one venue found to have no permitted source. Detail in §14.
 
 `pipeline.price_observations`: security, listing, venue, trading date, close, currency, unit, source, source timestamp, retrieval timestamp, session status, supersession, rights state. Raw official close, **unadjusted**; corporate actions never rewrite a stored price.
 
@@ -303,9 +305,67 @@ The universe holds **two** eligible issuers: NVIDIA at Tier 2 and Palantir at Ti
 
 ---
 
-## 13. Remaining blockers for 5.3
+## 14. Phase 5.3 — end-of-day equity prices
 
-1. **Named verification, per issuer.** The governance path has now been exercised twice and does not generalise by itself: every future admission needs a human to confirm its cited passages, and the scoping error in §12 shows the step is easy to get wrong in the direction of admitting too much. Two issuers verified, twenty-seven candidates not yet reviewed. This remains the top of the critical path.
+Prices are the first UGAI slice to touch market data, and the failure modes change character. An eligibility error is visible in prose; a price error is silent. A hundredfold unit slip, a close attached to the wrong line of a dual listing, an adjusted series standing in for an official one, and a fabricated holiday close all look exactly like correct rows. So most of this slice is refusal.
+
+### A dependency that was not there
+
+Phase 5.2 seeded 29 issuers and nothing below them, correctly: eligibility is a question about a company. Prices are not — a close attaches to a line, on a venue, in a currency, in a unit — so the security master was empty and there was nothing for a price to reference. It is populated here from primary evidence only: the Section 12(b) registration tables on NVIDIA's and Palantir's own Form 10-K cover pages, and TWSE's own daily publication for TSMC. Three listings, on three venues.
+
+No ISIN, CUSIP, SEDOL or FIGI was seeded. Those come from identifier authorities Urdais has not licensed, and a plausible-looking identifier nobody verified is worse than an absent one, because it will be trusted.
+
+### The source review, and the result that matters
+
+Applied in the stated order — official exchange, then official regulator, then exchange historical files, then a public provider whose terms expressly permit the use. Two venues reviewed, opposite outcomes:
+
+- **XTAI, Taiwan Stock Exchange — permitted, implemented.** The official TWSE OpenAPI publishes the daily close for every listed line, and separately publishes the venue's own trading calendar. Its service metadata states *"本平臺提供臺灣證券交易所服務API，歡迎各位介接使用"* — everyone is welcome to connect and use it — and declares its licence as the Taiwan Open Government Data License, whose clause 2.1 grants a *"perpetual, worldwide, non-exclusive, irrevocable, royalty-free"* licence to compile and adapt the data *"for any purpose, including but not limited to making all kinds of Derivative Works either as products or services."* An index is a derivative work offered as a product, so this reaches calculation and publication, not merely internal use. It even reaches post-termination retention and historical reconstruction — the axis Phase 4 found no commercial vendor would grant.
+- **XNAS and XNGS, Nasdaq — refused, unavailable.** Nasdaq's website terms grant a licence *"solely for your personal, non-commercial use"*, and state that the content may not be *"store\[d\] for subsequent use"*, may not have *"derivative works"* created from it, and may not form the basis of *"products or services"*. Scraping and data mining are named and prohibited, and unlike HKEXnews the prohibition covers *"any automated or manual process"*, so manual transcription is not an alternative route either. The official close is a licensed exchange product under the UTP and CTA plans; the SEC publishes filings, not prices. The remedy is a written data agreement, which is procurement, not engineering.
+
+**Nasdaq is the venue both currently eligible issuers list on.** The pipeline therefore runs against the venue where the rights exist and is blocked at the venue UGAI most needs — which is the honest state, and is recorded as a venue `price_source_state` of `unavailable` with the clause behind it rather than as an empty table that looks like work not yet done.
+
+### Attribution as a condition, not a courtesy
+
+OGDL clause 3.2 requires attribution and states that *"If User fails to comply with the attribution requirement, the rights granted under this License shall be deemed to have been void ab initio."* An unattributed observation was therefore never lawfully collected. `permission_grants` gained `attribution_required` and `attribution_text` to express that, and the price gate refuses a row that omits the credit where the grant makes it a condition. The wording is stored verbatim and never paraphrased, on the same rule the UTV index already follows for OpenRouter's CC BY terms.
+
+### The canonical observation
+
+`pipeline.price_observations` stores the raw official close and nothing derived. There is no adjusted-close column anywhere in the schema or in the TypeScript types, because a field that exists is eventually written to and a split-adjusted number in a raw-close column cannot be recovered. Corporate actions will adjust at read time in 5.4.
+
+The row carries `listing_id` and nothing redundant. A listing already determines its security, venue, currency and unit, and copying those onto the observation would create four ways for one row to contradict itself; they are validated against the listing on insert instead, at the only moment a contradiction could enter.
+
+`pipeline.check_price_observation()` refuses: a date outside the listing's effective interval, an official close on a non-active listing, a currency or unit that disagrees with the listing, a grant belonging to a different interface, a grant not covering collection or storage, a grant whose `covered_venues` excludes this listing's venue, a missing attribution where the licence makes it a condition, and a production-purpose observation on an interface that is not production-approved.
+
+Session status is explicit: `traded`, `exchange_holiday`, `no_official_close`, `source_unavailable`. A price exists **if and only if** the session traded, so a fabricated holiday close is unrepresentable rather than merely discouraged. Nothing carries a prior close forward — that is a calculation policy, and a calculation cannot apply a policy to a gap it cannot see.
+
+### Corrections
+
+Append-only. A corrected official close is a new row that supersedes its predecessor, and the original value stays readable, because "what did we believe on the day" is a question an index has to be able to answer afterwards. One live observation per listing, date and purpose, so the original must leave the partial index before the correction enters it — the same deferred forward-reference ordering the Palantir supersession needed.
+
+Idempotency is keyed on what the observation describes — source, venue, code, date, purpose — never on when the collector ran. A re-read that returns the same close writes nothing; one that returns a different close is a correction.
+
+### Two Postgres gotchas worth carrying forward
+
+`numeric` NaN compares **greater than** every other value and is **equal to itself**. So `close_price > 0` admits NaN, and a `close_price <> close_price` self-inequality guard never fires. The working check is an explicit `close_price <> 'NaN'::numeric`. This is the third time three-valued or non-IEEE numeric semantics have quietly opened a gate in this schema, after the empty-MIC array in 5.1 and the nullable tier comparison in 5.2.
+
+### Deliberately not built
+
+No cron and no schedule. `npm run ugai:prices` is a manual, bounded invocation, and it refuses `--mode production` outright regardless of what the registry says — production verification is the next phase, and letting this script be the first thing to exercise the production gate would answer that phase's question by default. No index level, divisor, weight, snapshot, FX, shares, float, corporate action, publication, API or frontend.
+
+### Venue and source coverage
+
+- **XTAI** · Taiwan Stock Exchange · TW · TSMC (2330, TWD, major) · TWSE OpenAPI · official exchange · **permitted, both axes** · **implemented** · no blocker
+- **XNAS** · Nasdaq Stock Market · US · Palantir (PLTR, USD, major) · nasdaq.com · exchange website · **refused, both axes** · **not implemented** · no public source; needs a written exchange data agreement
+- **XNGS** · Nasdaq Global Select Market · US · NVIDIA (NVDA, USD, major) · nasdaq.com · exchange website · **refused, both axes** · **not implemented** · same as its operating market
+
+The remaining 26 candidate issuers have no seeded listings and therefore no venue coverage requirement yet. On the Phase 2F geography the future universe will need XNAS, XNYS, XTAI, XKRX, XHKG and the Chinese venues; of those, only XTAI has a cleared source today, and HKEXnews is already recorded as prohibiting automated retrieval.
+
+---
+
+## 15. Remaining blockers for 5.4
+
+1. **No US price source.** Both currently eligible issuers list on Nasdaq, and Nasdaq refuses every axis this pipeline needs. Until a written exchange data agreement exists, UGAI can price TSMC and cannot price NVIDIA or Palantir — which means it cannot be calculated at all, whatever 5.4 through 5.8 build. This is now the top of the critical path, ahead of the reviewer backlog.
+2. **Named verification, per issuer.** The governance path has been exercised twice and does not generalise by itself: every future admission needs a human to confirm its cited passages, and the scoping error in §12 shows the step is easy to get wrong in the direction of admitting too much. Two issuers verified, twenty-seven candidates not yet reviewed.
 2. **`τ_B` and issuer cap `c`** remain unresolved drafts. Route B admission and capped weighting are both blocked until they are approved through the parameter table.
 3. **Structured extraction of filing tables.** Baidu's case generalises: segment and product revenue live in tables that plain text extraction loses. Route A cannot be evidenced at scale without this.
 4. **Non-US evidence has no automated path.** HKEXnews is prohibited; OpenDART needs a registered key; MOPS is unreviewed. Manual capture is supported by the schema and does not scale, which is a coverage constraint 5.3 onward must disclose rather than hide.

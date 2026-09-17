@@ -1,0 +1,41 @@
+[
+  {
+    "Date": "1150916",
+    "Code": "2317",
+    "Name": "鴻海",
+    "TradeVolume": "19737377",
+    "TradeValue": "4880814131",
+    "OpeningPrice": "247.50",
+    "HighestPrice": "248.50",
+    "LowestPrice": "246.00",
+    "ClosingPrice": "248.00",
+    "Change": "1.5000",
+    "Transaction": "18480"
+  },
+  {
+    "Date": "1150916",
+    "Code": "2330",
+    "Name": "台積電",
+    "TradeVolume": "20919285",
+    "TradeValue": "49812874845",
+    "OpeningPrice": "2375.00",
+    "HighestPrice": "2395.00",
+    "LowestPrice": "2375.00",
+    "ClosingPrice": "2380.00",
+    "Change": "0.0000",
+    "Transaction": "142588"
+  },
+  {
+    "Date": "1150916",
+    "Code": "2454",
+    "Name": "聯發科",
+    "TradeVolume": "6640865",
+    "TradeValue": "30218038043",
+    "OpeningPrice": "4435.00",
+    "HighestPrice": "4625.00",
+    "LowestPrice": "4435.00",
+    "ClosingPrice": "4530.00",
+    "Change": "100.0000",
+    "Transaction": "33925"
+  }
+]

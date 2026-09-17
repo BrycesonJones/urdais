@@ -63,7 +63,8 @@ begin
   end if;
   if (select count(*) from reference.source_interfaces
        where production_access_state = 'production_approved'
-         and source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface')) <> 1 then
+         and source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface',
+                                  'equity_eod_price_interface')) <> 1 then
     raise exception 'the set of production-approved compute interfaces changed';
   end if;
 
