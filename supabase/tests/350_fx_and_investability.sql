@@ -55,9 +55,16 @@ begin
      and abs(d.rate - 1 / src.rate) <= (1 / src.rate) * 1e-9;
   if n <> 1 then raise exception 'the USD/TWD rate is not a checked inversion of a published TWD/USD leg'; end if;
 
-  -- Not one investability parameter is approved.
-  select count(*) into n from reference.methodology_parameters
-   where parameter_key like 'min_%' and status = 'approved';
+  -- Not one investability parameter is approved. Scoped to the parent methodology rather than
+  -- matched on a 'min_%' prefix: the prefix was a safe proxy only while the AI Equity Universe was
+  -- the one methodology carrying parameters, and UAVI 0.2.0-draft now carries approved minimums of
+  -- its own (covered parent weight, covered issuer count, OTM contracts per side) that have
+  -- nothing to do with investability. The assertion means what it always meant.
+  select count(*) into n
+    from reference.methodology_parameters p
+    join reference.methodology_versions mv on mv.id = p.methodology_version_id
+    join reference.methodologies m on m.id = mv.methodology_id
+   where m.slug = 'ai-equity-universe' and p.parameter_key like 'min_%' and p.status = 'approved';
   if n <> 0 then raise exception '% investability minimum(s) were approved', n; end if;
   select count(*) into n from reference.methodology_parameters where parameter_key = 'fx_fixing_convention';
   if n <> 1 then raise exception 'the FX fixing convention is not recorded as a parameter'; end if;

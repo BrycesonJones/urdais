@@ -8,10 +8,13 @@ import { findMarket } from "@/data/mock/market-detail";
 import { hydrateMarketWithTokenPrices, tokenResearchPreviewActive } from "@/lib/tokens/read/load";
 import { hydrateMarketWithListedCompute } from "@/lib/ucpi/read/load";
 import { UbwiSection } from "@/components/ubwi/ubwi-section";
+import { UaviSection } from "@/components/uavi/uavi-section";
 import { UgaiSection } from "@/components/ugai/ugai-section";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
 import { loadUgaiReadModel, loadUgaiSeries } from "@/lib/ugai/read/load";
 import { unconfiguredUgaiReadModel, type UgaiSeriesPoint } from "@/lib/ugai/read/read-model";
+import { loadUaviReadModel, loadUaviSeries } from "@/lib/uavi/read/load";
+import { unconfiguredUaviReadModel, type UaviSeriesPoint } from "@/lib/uavi/read/read-model";
 import { ubwiSurface } from "@/lib/ubwi/read/surface";
 import { loadFrozenUbwiPublication } from "@/lib/ubwi/read/publication-store";
 import {
@@ -83,6 +86,44 @@ export default async function MarketIndexPage({ params }: PageProps) {
         <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-10 text-neutral-50 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-screen-2xl">
             <UgaiSection model={model} series={series} />
+          </div>
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
+
+  // UAVI does not use the generic market chart page, for the same reason UGAI does not and one
+  // more of its own. It has never published an observation, so the generic page's snapshot,
+  // movement and chart would all have to be invented -- and the invention it previously carried
+  // was a seeded mean-reverting walk around 30 points presented as "27.84 pts". On a volatility
+  // index that is worse than an arbitrary level on a price index: a reader has no external anchor
+  // for what AI-equity implied volatility should be, so a plausible figure is indistinguishable
+  // from a real one and a year of plausible history invites the comparison it cannot support.
+  if (market.symbol === "UAVI") {
+    const databaseUrl = (process.env.DATABASE_URL ?? process.env.URDAIS_DATABASE_URL ?? "").trim();
+    let model = unconfiguredUaviReadModel();
+    let series: UaviSeriesPoint[] = [];
+    if (databaseUrl) {
+      const sql = await createTokenSqlExecutor(databaseUrl);
+      try {
+        model = await loadUaviReadModel(sql);
+        series = [...(await loadUaviSeries(sql)).points];
+      } catch (error) {
+        // A failed read is not a licence to invent a level.
+        console.error(
+          `uavi page: load failed (${error instanceof Error ? error.message : String(error)})`,
+        );
+      } finally {
+        await sql.end();
+      }
+    }
+    return (
+      <>
+        <SiteHeader />
+        <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-10 text-neutral-50 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-screen-2xl">
+            <UaviSection model={model} series={series} />
           </div>
         </main>
         <SiteFooter />

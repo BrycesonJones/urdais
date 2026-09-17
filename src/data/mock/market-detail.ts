@@ -475,8 +475,11 @@ function headlineInstrumentId(symbol: string): string {
  * UGAI is here because it has never published an observation. Comparing a real series against
  * it would mean comparing against synthetic points, which is the reason its generated market was
  * removed rather than relabelled. It becomes comparable when it has observations to compare.
+ *
+ * UAVI joins them for the same reason, and would be the worst of the three to offer: a comparison
+ * against a fabricated volatility series is a comparison a reader has no way to sanity-check.
  */
-const MARKETS_WITHOUT_SERIES = new Set(["UBWI", "UGAI"]);
+const MARKETS_WITHOUT_SERIES = new Set(["UBWI", "UGAI", "UAVI"]);
 
 function indexComparisons(symbol: string): ComparisonOption[] {
   return MARKET_CATALOG.filter(
@@ -524,21 +527,30 @@ function buildIndexMarket(
 // /markets/UGAI renders its own surface from canonical published observations, or says plainly
 // that none exist. See src/components/ugai/ugai-section.tsx.
 
-// Volatility oscillates around a level instead of trending.
-const UAVI_MARKET = buildIndexMarket(
-  "UAVI",
-  "pts",
-  {
-    seed: 20150915,
-    latestValue: 27.84,
-    latestDailyReturn: -0.0312,
-    points: LONG_HISTORY_DAYS,
-    volatility: 0.03,
-    drift: 0,
-    meanReversion: { level: 30, strength: 0.03 },
-  },
-  { seed: 5_500_000, days: 7, volatility: 0.015 },
-);
+/**
+ * UAVI carries **no demo series and no demo level**.
+ *
+ * It previously carried a seeded mean-reverting walk around 30 points, presented as "27.84 pts"
+ * with a year of history, honest about being a demo in a comment and dishonest about it on the
+ * page. On a volatility index that placeholder is more misleading than most: a reader has no
+ * external anchor for what AI-equity implied volatility should be, so a plausible figure is
+ * indistinguishable from a real one, and a year of plausible history invites precisely the
+ * question it cannot answer — is today's reading high?
+ *
+ * Nothing replaces it, because nothing real exists yet. Per /docs/methodology/uavi the index
+ * requires a production parent weight vector and licensed US option quotes, and neither is in
+ * place: the parent snapshot is blocked with zero weightable issuers, and Urdais holds no options
+ * data agreement. UAVI's history begins at its first live observation, so the market carries an
+ * empty family and /markets/UAVI renders its own surface — the level where one is published, and
+ * plainly why there is none otherwise. See src/components/uavi/uavi-section.tsx.
+ */
+const UAVI_MARKET: MarketDetail = {
+  symbol: "UAVI",
+  name: catalogEntry("UAVI").name,
+  unit: "pts",
+  defaultInstrumentId: "uavi",
+  families: [{ id: "index", label: "Index", instruments: [], defaultInstrumentId: "uavi" }],
+};
 
 /**
  * UACI, the Urdais Chip & Accelerator Index, is the single canonical index

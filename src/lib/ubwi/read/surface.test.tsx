@@ -11,6 +11,7 @@ import { UrdaisIndices } from "@/components/market/urdais-indices";
 import { MARKET_CATALOG } from "@/data/market-catalog";
 import { UBWI_EXPLANATION, UBWI_VALUE_FRACTION_DIGITS, ubwiIndexSnapshot, ubwiSurface } from "./surface";
 import { assembleIndexRail } from "@/lib/market/index-rail";
+import { UAVI_WATCHLIST_ROW } from "@/lib/uavi/read/watchlist";
 import { UGAI_WATCHLIST_ROW } from "@/lib/ugai/read/watchlist";
 
 const NOW = "2026-09-15T03:10:39Z";
@@ -193,10 +194,10 @@ const PUBLICATION = {
   changePercent: null,
 };
 
-/** The homepage joins the mock rows, UGAI's unpublished row and UBWI's, exactly as the page does. */
+/** The homepage joins the mock rows, the two unpublished rows and UBWI's, exactly as the page does. */
 function homepageRows() {
   const row = ubwiIndexSnapshot(PUBLICATION);
-  const base = [...INDEX_SNAPSHOTS, UGAI_WATCHLIST_ROW];
+  const base = [...INDEX_SNAPSHOTS, UGAI_WATCHLIST_ROW, UAVI_WATCHLIST_ROW];
   return assembleIndexRail(row === null ? base : [...base, row]);
 }
 
@@ -248,14 +249,14 @@ describe("the UBWI homepage watchlist row", () => {
   it("appears in market-catalog order, after the other indices, and changes none of them", () => {
     const expected = MARKET_CATALOG.map((market) => market.symbol).filter((symbol) => symbol !== "UCPI");
     expect(homepageRows().map((row) => row.symbol)).toEqual(expected);
-    // The mock rows keep their existing values untouched by this wiring, and UGAI is not among
-    // them: it joins the rail from its own module, carrying no number.
-    expect(INDEX_SNAPSHOTS.map((row) => row.symbol)).toEqual(["UAVI", "UMPI", "UPPI", "UEPI", "UACI"]);
+    // The mock rows keep their existing values untouched by this wiring, and neither UGAI nor
+    // UAVI is among them: each joins the rail from its own module, carrying no number.
+    expect(INDEX_SNAPSHOTS.map((row) => row.symbol)).toEqual(["UMPI", "UPPI", "UEPI", "UACI"]);
   });
 });
 
 function homepageRowsWithout() {
   const row = ubwiIndexSnapshot(null);
-  const base = [...INDEX_SNAPSHOTS, UGAI_WATCHLIST_ROW];
+  const base = [...INDEX_SNAPSHOTS, UGAI_WATCHLIST_ROW, UAVI_WATCHLIST_ROW];
   return assembleIndexRail(row === null ? base : [...base, row]);
 }
