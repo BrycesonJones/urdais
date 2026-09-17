@@ -26,6 +26,8 @@ declare
     'pipeline.regional_observations', 'pipeline.regional_observation_participants',
     'pipeline.regional_publications',
     'pipeline.token_price_observations',
+    -- Scheduler heartbeats are runtime operational evidence and migrations seed none.
+    'pipeline.utvi_check_runs', 'pipeline.token_verification_check_runs',
     -- News articles come from ingestion. A bootstrapped database has none.
     'pipeline.news_articles'
   ];

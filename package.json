@@ -36,6 +36,7 @@
     "frontier:production:check": "tsx scripts/frontier/production-check.ts",
     "market-share:production:check": "tsx scripts/market-share/production-check.ts",
     "open-weight:production:check": "tsx scripts/open-weight/production-check.ts",
+    "model-economics:heartbeats:check": "tsx scripts/model-economics/heartbeat-check.ts",
     "ubwi:calculate": "tsx scripts/ubwi/calculate.ts",
     "ubwi:load": "tsx scripts/ubwi/load-and-publish.ts",
     "ubwi:production:check": "tsx scripts/ubwi/production-check.ts",

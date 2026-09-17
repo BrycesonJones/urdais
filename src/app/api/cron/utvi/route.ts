@@ -6,35 +6,25 @@
  * invocation, so there is no shape of request that could ask for a different day, a second
  * point, or a value the pipeline did not calculate.
  *
- * Like the UCPI and UBWI routes it is not a public endpoint and no page request reaches it.
- *
  * Cadence. One invocation, two reads: the day that just closed, and the day before it for
- * settlement confirmation. Two of the source's five hundred daily requests. Running at
- * 02:00 UTC puts the collection two hours after the day closed, which matters because the
- * source clamps `end_date` to the last completed day and will not serve a partial one — and
- * because the just-closed day is still accruing at that point, which is why its value is
- * published provisionally and confirmed the next day rather than trusted once.
+ * settlement confirmation. Running at 02:00 UTC puts collection two hours after the day closed.
  *
- * Outcomes are readable from the response without opening a log. Per date, `snapshot` is
- * `created`, `confirmed`, `revised`, `settled` or `no_rows`; `calculation` is `recorded`,
- * `skipped_no_coverage`, `skipped_unchanged` or `failed`; and `publication` is `published`,
- * `superseded`, `not_attempted` or a named refusal. While the methodology is a draft, every
- * publication reads `refused_methodology_not_approved`, and that is the intended state rather
- * than an outage.
+ * Every authenticated scheduled invocation now records a narrow operational heartbeat after
+ * it reaches the database. The heartbeat is not UTVI data: it only proves that the schedule
+ * ran and records the summarized outcome. Operator and scheduled runs are distinct so a manual
+ * recovery can never be mistaken for proof that Vercel Cron is alive.
  */
 
 import { timingSafeEqual } from "node:crypto";
 
+import { recordUtviHeartbeat } from "@/lib/operations/model-economics-heartbeats";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
 import { runDailyUtvi, utviRunSummary } from "@/lib/utvi/run";
 import { readApiKey, UTVI_API_KEY_ENV } from "@/lib/utvi/source/client";
 
-// Reads and writes the production store on every invocation.
 export const dynamic = "force-dynamic";
-// Two authenticated GETs of a few dozen rows each, plus two calculations.
 export const maxDuration = 60;
 
-/** Length-independent comparison; `timingSafeEqual` throws on a length mismatch. */
 function secretMatches(presented: string, expected: string): boolean {
   const a = Buffer.from(presented, "utf8");
   const b = Buffer.from(expected, "utf8");
@@ -42,10 +32,6 @@ function secretMatches(presented: string, expected: string): boolean {
   return timingSafeEqual(a, b);
 }
 
-/**
- * The same shared secret the news, UBWI and UCPI routes use. An absent secret fails closed:
- * an unconfigured deployment refuses to run rather than exposing an open trigger.
- */
 export function cronRequestAuthorized(authorization: string | null, secret: string | undefined): boolean {
   const expected = secret?.trim();
   if (!expected) return false;
@@ -60,25 +46,58 @@ export async function GET(request: Request): Promise<Response> {
 
   const databaseUrl = (process.env.DATABASE_URL ?? process.env.URDAIS_DATABASE_URL ?? "").trim();
   if (!databaseUrl) {
-    // Named without being quoted: the variable is missing, and its value is never something
-    // a log should carry.
     console.error("utvi cron: no DATABASE_URL is configured; nothing was collected or published");
     return Response.json({ ok: false, reason: "no_database_configured" }, { status: 503 });
   }
 
-  if (readApiKey() === null) {
-    console.error(`utvi cron: ${UTVI_API_KEY_ENV} is not configured; the source cannot be read`);
-    return Response.json({ ok: false, reason: "no_source_credential" }, { status: 503 });
-  }
-
   const sql = await createTokenSqlExecutor(databaseUrl);
+  const ranAt = new Date().toISOString();
   try {
+    if (readApiKey() === null) {
+      const detail = `${UTVI_API_KEY_ENV} is not configured; the source cannot be read`;
+      await recordUtviHeartbeat(sql, {
+        ranAt,
+        trigger: "scheduled",
+        outcome: "failed",
+        collectionDate: null,
+        settlementDate: null,
+        summary: { reason: "no_source_credential" },
+        detail,
+      });
+      console.error(`utvi cron: ${detail}`);
+      return Response.json({ ok: false, reason: "no_source_credential" }, { status: 503 });
+    }
+
     const result = await runDailyUtvi(sql);
     const summary = utviRunSummary(result);
+    await recordUtviHeartbeat(sql, {
+      ranAt,
+      trigger: "scheduled",
+      outcome: result.ok ? "succeeded" : "failed",
+      collectionDate: result.collectionDate,
+      settlementDate: result.settlementDate,
+      summary,
+      detail: result.ok ? null : "UTVI daily run completed with one or more failed retrieval/date outcomes",
+    });
+
     console.log(`utvi cron: ${JSON.stringify(summary)}`);
-    return Response.json({ ok: result.ok, ...summary }, { status: 200 });
+    return Response.json({ ok: result.ok, ...summary }, { status: result.ok ? 200 : 502 });
   } catch (error) {
     const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    try {
+      await recordUtviHeartbeat(sql, {
+        ranAt,
+        trigger: "scheduled",
+        outcome: "failed",
+        collectionDate: null,
+        settlementDate: null,
+        summary: { reason: "run_failed" },
+        detail,
+      });
+    } catch {
+      // The original failure is the one the route must report; heartbeat persistence may itself
+      // be what failed, and must not replace that evidence with a second exception.
+    }
     console.error(`utvi cron: run failed (${detail})`);
     return Response.json({ ok: false, reason: "run_failed" }, { status: 500 });
   } finally {

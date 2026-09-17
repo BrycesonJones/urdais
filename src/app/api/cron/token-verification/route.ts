@@ -2,42 +2,25 @@
  * The scheduled Token Price verification watchdog.
  *
  * Read the name carefully: this route verifies *that someone verified*, and collects nothing.
- * It issues no request to any provider, parses no pricing page, and writes no row. It reads
- * the frozen benchmarks Urdais already holds and reports how long it has been since a person
- * last checked each provider.
+ * It issues no request to any provider, parses no pricing page, and writes no price observation.
+ * Production acquisition remains a person running the verified operator workflow with evidence.
  *
- * It is deliberately not `/api/cron/tokens`, because there is no such job and a future reader
- * should not be able to mistake this for one. Every Wave-1 token source is `research_usable`
- * and `under_review` in the registry and none is machine-readable, and
- * docs/methodology/token-price.md is explicit that whether Urdais may retrieve those pages on
- * a schedule "is still open" for every one of them. Production acquisition is therefore a
- * person running `scripts/tokens/verify-production.ts` with `--verified-by` and `--evidence`,
- * which is how the 14 September 2026 benchmarks were created and the only way the next ones
- * may be. Automating the reading would require a collection right Urdais does not have.
- *
- * What this fixes is the failure mode that hid that: Token Price records an observation only
- * when a source price changes, so "unchanged, correctly" and "nobody has looked in weeks"
- * produce identical data. Production sat on a single 14 September row for two days and
- * nothing said so. Now the run says so, every day, in one line.
- *
- * A non-ok report is not an outage. It is a request for a person, and the route answers 200
- * either way so the cron history shows a working job with something to report rather than a
- * broken one. Only a genuine systemic failure -- no database, an unreadable store -- is a
- * non-2xx.
+ * The one write this route now makes is an operations heartbeat. It records that the watchdog
+ * ran, the verification age it observed, and whether human review is due. That heartbeat grants
+ * no collection right and contains no provider price data. Scheduled and operator triggers are
+ * kept distinct so a manual check can never prove scheduler liveness.
  */
 
 import { timingSafeEqual } from "node:crypto";
 
+import { recordTokenVerificationHeartbeat } from "@/lib/operations/model-economics-heartbeats";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
 import { loadPersistedBenchmarks } from "@/lib/tokens/read/benchmark-store";
 import { freshnessSummary, verificationFreshness } from "@/lib/tokens/verification-freshness";
 
-// Reads the production store on every invocation.
 export const dynamic = "force-dynamic";
-// One read of a handful of rows.
 export const maxDuration = 30;
 
-/** Length-independent comparison; `timingSafeEqual` throws on a length mismatch. */
 function secretMatches(presented: string, expected: string): boolean {
   const a = Buffer.from(presented, "utf8");
   const b = Buffer.from(expected, "utf8");
@@ -45,10 +28,6 @@ function secretMatches(presented: string, expected: string): boolean {
   return timingSafeEqual(a, b);
 }
 
-/**
- * The same shared secret the news, UBWI, UCPI and UTVI routes use. An absent secret fails
- * closed: an unconfigured deployment refuses to run rather than exposing an open trigger.
- */
 export function cronRequestAuthorized(authorization: string | null, secret: string | undefined): boolean {
   const expected = secret?.trim();
   if (!expected) return false;
@@ -63,22 +42,63 @@ export async function GET(request: Request): Promise<Response> {
 
   const databaseUrl = (process.env.DATABASE_URL ?? process.env.URDAIS_DATABASE_URL ?? "").trim();
   if (!databaseUrl) {
-    // Named without being quoted: the variable is missing, and its value is never something
-    // a log should carry.
     console.error("token verification cron: no DATABASE_URL is configured; nothing was checked");
     return Response.json({ ok: false, reason: "no_database_configured" }, { status: 503 });
   }
 
   const sql = await createTokenSqlExecutor(databaseUrl);
+  const ranAt = new Date().toISOString();
   try {
-    const report = verificationFreshness(await loadPersistedBenchmarks(sql), new Date());
-    // A due review is a finding, not a failure, so it is logged as a warning and answered 200.
+    const report = verificationFreshness(await loadPersistedBenchmarks(sql), new Date(ranAt));
+    const latestVerifiedAt = report.providers
+      .map((provider) => provider.lastVerifiedAt)
+      .filter((value): value is string => value !== null)
+      .sort()
+      .at(-1) ?? null;
+
+    await recordTokenVerificationHeartbeat(sql, {
+      ranAt,
+      trigger: "scheduled",
+      outcome: report.ok ? "current" : "review_due",
+      checkedAt: report.checkedAt,
+      reviewIntervalDays: report.reviewIntervalDays,
+      latestVerifiedAt,
+      reviewDue: report.reviewDue,
+      neverVerified: report.neverVerified,
+      summary: {
+        providers: report.providers.map((provider) => ({
+          provider: provider.provider,
+          state: provider.state,
+          lastVerifiedAt: provider.lastVerifiedAt,
+          ageDays: provider.ageDays,
+          latestStatus: provider.latestStatus,
+        })),
+      },
+      detail: null,
+    });
+
     const line = `token verification cron: ${freshnessSummary(report)}`;
     if (report.ok) console.log(line);
     else console.warn(line);
     return Response.json(report, { status: 200 });
   } catch (error) {
     const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    try {
+      await recordTokenVerificationHeartbeat(sql, {
+        ranAt,
+        trigger: "scheduled",
+        outcome: "failed",
+        checkedAt: null,
+        reviewIntervalDays: null,
+        latestVerifiedAt: null,
+        reviewDue: [],
+        neverVerified: [],
+        summary: { reason: "check_failed" },
+        detail,
+      });
+    } catch {
+      // Preserve the original failure if the database cannot persist its own heartbeat.
+    }
     console.error(`token verification cron: check failed (${detail})`);
     return Response.json({ ok: false, reason: "check_failed" }, { status: 500 });
   } finally {
