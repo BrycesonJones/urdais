@@ -433,25 +433,30 @@ end $$;
 do $$
 declare n integer;
 begin
+  -- Scoped to Phase 5.5's own tables. Phase 5.6 owns snapshot weights and 5.7 owns index shares
+  -- and the divisor; a global assertion would have forbidden the phases these inputs exist for.
   select count(*) into n from information_schema.columns
    where table_schema = 'pipeline'
+     and table_name in ('fx_observations', 'representative_security_selections',
+                        'representative_security_candidates', 'investability_evaluations',
+                        'investability_criteria')
      and column_name in ('index_weight', 'base_weight', 'index_shares', 'divisor',
                          'accessible_float_market_cap', 'constituent_weight');
-  if n <> 0 then raise exception 'a weighting column exists in phase 5.5'; end if;
+  if n <> 0 then raise exception 'a weighting column exists on a phase 5.5 table'; end if;
 
-  -- Phase 5.6 owns universe snapshots, so they are no longer forbidden outright. The divisor and
-  -- the published index level belong to 5.7 and are still absent everywhere.
+  -- Phase 5.6 owns universe snapshots and 5.7 owns the calculation engine, so neither is
+  -- forbidden outright any more. What remains absent is the published output itself: Phase 5.8
+  -- owns the public series, and until it exists no UGAI observation has been published.
   select count(*) into n from information_schema.tables
-   where table_schema = 'pipeline'
-     and table_name in ('ugai_calculations', 'ugai_publications', 'ugai_observations');
-  if n <> 0 then raise exception 'an index calculation or publication table exists before phase 5.7'; end if;
+   where table_schema = 'pipeline' and table_name in ('ugai_publications', 'ugai_observations');
+  if n <> 0 then raise exception 'a UGAI publication table exists before phase 5.8'; end if;
 
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id
    where m.slug in ('ugai', 'ai-equity-universe') and mv.status <> 'draft';
   if n <> 0 then raise exception 'a UGAI methodology version left draft'; end if;
 
-  raise notice 'no weights, no snapshot, no divisor, no index level: ok';
+  raise notice 'phase 5.5 tables carry no weighting state, and nothing is published: ok';
 end $$;
 
 

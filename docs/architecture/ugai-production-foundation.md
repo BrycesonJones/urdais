@@ -104,7 +104,9 @@ Immutable versioned snapshots carrying universe version, methodology version, re
 
 Weighting exactly as documented: accessible free-float market cap → uncapped weights → issuer cap `c` → normalized base weights. **`c` is a versioned parameter with no default.** Publication is blocked until a parameter set explicitly approves a value; the research preference for 8% is not a silent default.
 
-### 5.7 — Calculation, divisor, publication
+### 5.7 — Calculation, divisor, publication ✅ *this PR*
+
+Built. The engine's answer on real data is that no level can be calculated. Detail in §22.
 
 UGAI's own run table (not `pipeline.calculation_runs`), constituent calculations, index shares, divisor history with every change's cause and before/after market values, daily observations, publications, revisions. Append-only with supersession; a published print is never overwritten.
 
@@ -547,14 +549,77 @@ This phase produces **base weights at a reset**. It does not produce index share
 
 ---
 
-## 21. Remaining blockers for 5.7
+## 22. Phase 5.7 — the calculation engine
+
+The methodology specifies this phase almost completely, so the schema is shaped by it rather than by convenience:
+
+`MV_t = Σ_i q_i,t × P_i,t × X_i,t` · `UGAI_t = MV_t / D_t`
+
+One sentence governs the design: **UGAI must change because constituent market values changed, not because bookkeeping events altered shares, listings, or capital structure.** The divisor is how that is enforced, and it has exactly one rule —
+
+`D_after = D_before × MV_after / MV_before`
+
+— which every maintenance event reduces to. There are no per-event formulas anywhere in the engine, only per-event decisions about what `MV_after` is, and a trigger re-derives every change and refuses one that does not reproduce.
+
+### Base initialization
+
+`D_base = MV_base / 1000`. The base level is fixed at 1,000.00 and `baseDivisor()` takes only a market value — no date, no level parameter — because the methodology fixes both and a parameter for either would be an invitation. **The base date is "the date of UGAI's first live published observation"**, so a calculation can only be marked as the base observation if it is publication-eligible; marking a blocked or merely-calculated row would date the series from a day nothing went live.
+
+### Index shares, not share counts
+
+`q_i = w_i × MV_s / (P_i,s × X_i,s)` at a reset, then held fixed so weights drift with prices. The methodology is explicit that index shares "are not shares outstanding, not free-float shares, and not a claim about any company's share count", and that a company issuing stock between resets does not change `q`. So `ugai_index_shares.set_by` has **no share-observation option**: the only routes are a scheduled reset, an event-snapshot removal, a corporate-action share adjustment, and a representative-security substitution. Zero is a legitimate value — a departing line ends at `q = 0`.
+
+Weights are never reset daily. Re-weighting between resets would embed a trading rule the methodology rejects, so `as_of_weight` is recorded and never fed back.
+
+### Corporate-action treatments
+
+All implemented as recorded in the methodology, and all reducing to the one divisor rule:
+
+- **no divisor change** — splits, reverse splits, bonus issues, stock dividends in the same security (share and price adjustments are value-neutral); ordinary cash dividends; ticker and name changes; representative-security substitution where value is preserved
+- **divisor decreases** — special dividends and capital repayments; merger or acquisition of a member; delisting, cancellation, liquidation; distribution-line removal
+- **divisor increases** — rights issues in the money, by the subscription value
+- **no adjustment** — out-of-the-money or unpriced rights; trading halts, where the last close is carried and flagged
+
+`change_reason` is a closed list drawn from that enumeration: an event type absent from it has no approved treatment and blocks rather than picking the nearest neighbour. The one unresolved case the methodology itself names is the **maximum holding period for an unpriced distribution line**.
+
+UGAI is a **price index** here. Ordinary dividends cause the price to fall and the index with it; there is no reinvestment and no total-return variant in this phase.
+
+### The missing-data rule
+
+The methodology enumerates seven input conditions and they are not interchangeable, so the schema carries all of them. A market holiday is a **valid prior close** and explicitly not an error; a session that held but produced no close by the cutoff is **stale**, carried and flagged; a suspension is carried and flagged; and a genuinely **missing** observation "may not be imputed". Constraints make that last case unrepresentable rather than merely forbidden — a missing row cannot carry a price or a contribution.
+
+The engine **blocks rather than renormalising** when a constituent cannot be valued. Dropping the name and rescaling the rest would be an imputation by another route, and it would silently change every other constituent's weight.
+
+### Precision
+
+Exact integer arithmetic at a fixed 1e-24 scale, not floating point. A price index compounds daily for years and a level carried in doubles accumulates error nobody can attribute afterwards; the methodology requires that a rounded value never become an input to a subsequent calculation, and never rounding before publication is the cheapest way to guarantee it.
+
+### Calculated is not publishable
+
+A level can be arithmetically correct and unpublishable at the same time, so publication readiness is nine structured checks rather than a boolean — production snapshot, divisor, constituent inputs, unresolved actions, parameters, source rights, attribution, lineage, and the stale-input tolerance. A development divisor cannot carry a publishable level, and neither can a blocked snapshot.
+
+### The real-data result
+
+**Blocked, and nothing is initialized:** no divisor, no index shares, no base date, exactly one calculation row — today's blocked attempt. No synthetic history was generated, and a test asserts the row count.
+
+The basket does not exist, so the arithmetic never begins. The five snapshot blockers are inherited unchanged, and this phase adds two of its own: the **FX fixing convention** is unresolved, so no rule designates which daily rate a calculation takes, and the **stale-input tolerance** that decides whether an observation publishes as delayed is unresolved too.
+
+Of the nine publication checks, two pass — `no_unresolved_corporate_action` (the one recorded action is an ordinary cash dividend with a stated treatment) and `attribution_available` (the TWSE, CBC and ECB credits are recorded and renderable). The rest fail, are unassessable, or wait on a parameter.
+
+### What Phase 5.8 owns
+
+The public series and everything that reaches a reader: the API surface, the frontend, the published observation objects, and the scheduling that would produce a level each day. This phase created **no cron and no production automation** — only deterministic functions a scheduler could later call. A test asserts no `ugai_publications` table exists.
+
+---
+
+## 23. Remaining blockers for 5.8
 
 1. **The issuer cap `c` is unresolved.** Production snapshot formation is structurally impossible until it is approved with an effective date, which the trigger enforces. Even approved at the 10% research candidate, the current eligible set of two fails `n × c ≥ 1` by a wide margin — so the cap and the breadth problem compound. `τ_B` remains an unresolved draft on the same footing, blocking Tier 3 Route B admission.
 2. ~~**No USD reference rate for the New Taiwan dollar.**~~ **Closed** — see §19. CBC dataset 7232 supplies the official daily close under a licence reaching index calculation, stored with its inversion lineage. What survives of it is item 6: a source is not a fixing rule.
 3. **No free-float factor exists in any reviewed geography.** A methodology decision, not an engineering one. UGAI's weighting is defined on accessible free-float capitalization and no public source publishes a factor for the US, Taiwan, Hong Kong or Korea. The options are to authorise a derivation from partial holdings data with its error characterised, to license factors commercially, or to amend the weighting basis. **Silently substituting full market capitalization is not among them** — and the schema now makes that substitution unrepresentable rather than merely discouraged.
 4. **No US price source.** Both currently eligible issuers list on Nasdaq, and Nasdaq refuses every axis the price pipeline needs. Until a written exchange data agreement exists, UGAI can price TSMC and cannot price NVIDIA or Palantir.
 5. **Palantir has no usable share count.** The methodology values `N` as *outstanding* shares per class; the flat XBRL API exposes neither the share-class dimension nor, for this issuer, the cover-page concept. The dimensional XBRL frames or the filing itself would have to be parsed.
-6. **The FX fixing convention is unresolved**, as is every investability minimum. A production investability determination is structurally impossible until they are approved, which the trigger enforces. This is now the binding constraint on TWD rather than the source.
+6. **The FX fixing convention is unresolved**, as is every investability minimum, the reconstitution calendar, and the stale-input tolerance that decides whether a published observation is delayed. A production investability determination is structurally impossible until they are approved, which the trigger enforces. This is now the binding constraint on TWD rather than the source.
 7. **Named verification, per issuer.** The governance path has been exercised twice and does not generalise: every admission needs a human to confirm its cited passages, and the scoping error in §12 shows the step is easy to get wrong in the direction of admitting too much. Two issuers verified, twenty-seven candidates not yet reviewed.
 8. **Structured extraction of filing tables.** Baidu's case generalises: segment and product revenue live in tables that plain text extraction loses, and Route A cannot be evidenced at scale without it.
 9. **Non-US evidence has no automated path.** HKEXnews prohibits automated retrieval, OpenDART needs a registered key, MOPS is unreviewed. Manual capture is supported by the schema and does not scale, which is a coverage constraint to disclose rather than hide.
