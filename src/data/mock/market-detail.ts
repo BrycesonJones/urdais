@@ -62,6 +62,11 @@ function buildInstrument(spec: InstrumentSpec, comparisons: ComparisonOption[]):
     symbol: spec.symbol,
     name: spec.name,
     unit: spec.unit,
+    // Every instrument built here is a seeded walk. Stating it keeps the surfaces off the
+    // old inference -- "no token identity, therefore demo" -- which was true only by
+    // accident and had already mislabelled the live listed-GPU children once. Production
+    // instruments arrive by hydration and overwrite this with "production".
+    provenance: "demo",
     snapshot,
     series,
     availableRanges: availableRanges(series, snapshot.asOf),

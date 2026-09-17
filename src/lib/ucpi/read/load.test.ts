@@ -192,9 +192,14 @@ describe("production instruments declare their provenance", () => {
     expect(listedInstrumentsFrom([child()])[0]!.provenance).toBe("production");
   });
 
-  it("leaves the mock markets without a declaration, so they keep the demo label", () => {
+  it("marks the mock markets demo outright, rather than leaving the label to inference", () => {
+    // This used to assert `undefined` and rely on the surface inferring demo from the
+    // absence of a token identity. The declaration is now explicit, which is what the
+    // field is for, and it is what the watchlist rows read to decide whether to quote a
+    // level at all.
     const compute = findMarket(DEFAULT_MARKET_SYMBOL)!.families.find((f) => f.id === "compute")!;
-    for (const instrument of compute.instruments) expect(instrument.provenance).toBeUndefined();
+    expect(compute.instruments.length).toBeGreaterThan(0);
+    for (const instrument of compute.instruments) expect(instrument.provenance).toBe("demo");
   });
 });
 
