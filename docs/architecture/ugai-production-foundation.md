@@ -271,19 +271,41 @@ Writing the new constraint surfaced a **latent defect in the Tier 3 constraint w
 
 **NVIDIA — `eligible`, Tier 2.** Both cited FY2026 10-K passages were re-fetched from EDGAR at 2026-09-17T14:50:49Z; the document hashed identically to the recorded value and both passages appear verbatim. Bryceson Jones verified that correspondence and is recorded as the independent named reviewer. **The eligibility basis is the filing evidence, which did not change** — `320` asserts the tier, the route and both cited claim IDs are identical across the supersession. The verification satisfied the methodology's requirement that machine-extracted evidence be confirmed by a named human before it may establish anything; had the passages not matched, the record would show a rejection.
 
-**Palantir — `pending`, Tier 1 Route P satisfied on all five conditions.** The methodology objection is gone: E5 no longer applies (recorded `applied = false`, against `applied = true` in the prior cycle), and the filing's statement that AIP lets customers derive value *"via the combination of our existing software platforms with generative AI models"* is now evidence of structural integration rather than of a bundled feature. Condition 4 rests on disclosed adoption — 954 customers at 31 December 2025 against 711 a year earlier — and $4.5 billion of recognized platform revenue, neither of them forward-looking. It is still not eligible **for one reason only**: the three Route P passages are model-assisted extractions that no named human has verified. That is the same governance gate NVIDIA cleared, not a second methodology objection, and one verification closes it.
+**Palantir — `eligible`, Tier 1 via Route P.** The methodology objection went first: E5 no longer applies (recorded `applied = false`, against `applied = true` in the prior cycle), and the filing's statement that AIP lets customers derive value *"via the combination of our existing software platforms with generative AI models"* is evidence of structural integration rather than of a bundled feature. Condition 4 rests on disclosed adoption — 954 customers at 31 December 2025 against 711 a year earlier — and $4.5 billion of recognized platform revenue, neither forward-looking. The governance gate went second, and is recorded in §12.
 
 **Salesforce — `insufficient_evidence`, unchanged.** Route P was considered and fails condition 5: Agentforce is an AI capability inside a large CRM business, and AI does not define Salesforce's platform identity, so the methodology directs it to Tier 3. There, E8 still bars the ARR run-rate and `τ_B` is still unresolved. **This is the amendment not being a general loosening**, and it is asserted as such.
 
 **Baidu — `pending`, unchanged.** The blocker was never a rule.
 
-The universe now holds exactly one eligible issuer. Both gates — methodology and governance — are independently enforced, and this amendment moved each of them exactly once.
+Both gates — methodology and governance — are independently enforced, and this amendment moved the first of them.
 
 ---
 
-## 11. Remaining blockers for 5.3
+## 12. Phase 5.2 amendment — the Palantir verification, and a scoping error worth keeping
 
-1. **Named verification, per issuer.** The governance path now exists and has been exercised once, for NVIDIA. It does not generalise by itself: Palantir sits at `pending` with Route P fully satisfied, waiting on verification of three quoted passages, and every future admission needs the same step. This remains the top of the critical path.
+Founder approval of 17 September 2026 closed the governance gate on Palantir. The determination moved from `pending` to `eligible` at Tier 1 Route P, superseding rather than replacing the gated row.
+
+Two things happened and the record keeps them apart. **Mechanically**, the FY2025 10-K was re-fetched from EDGAR at `2026-09-17T16:08:15Z`; it hashed to `a4fef954…`, identical to the value recorded when the document was first cited, and all six passages appear verbatim. That establishes the quotations are real and unaltered — it is not a human verification and does not substitute for one. **For governance**, Bryceson Jones reviewed and approved the six quoted passages, which is what the methodology requires before machine-extracted evidence may establish an admission.
+
+### The scoping error
+
+The pull request described *"three unverified passages"* as the remaining gate. **That was wrong**, and it nearly produced a false record. The Route P assessment cites five claims, one per condition, and the three originally named covered only conditions 2 and 4. Conditions 1, 3 and 5 cited three other passages — the platform enumeration, the Apollo description, the AIP description — which were not in the original approval.
+
+Promoting only the first three and admitting the issuer would have meant three of five Route P conditions resting on unverified machine extraction, with a named human's signature implying otherwise. The remaining three were put to the founder explicitly and approved before the migration was written.
+
+Two lessons are worth keeping. First, **a claim about what is blocking a determination must be derived from the determination's own citations**, not written from memory — the prose said three because three claims were added that day, not because three claims carried the conditions. Second, `320` now asserts the general form of this directly: every condition of a Tier 1 Route P admission must cite establishing, human-verified evidence, and no admitted issuer anywhere may rest on unverified establishing evidence. A future scoping mistake fails the suite instead of reaching the record.
+
+Claims `…0014` and `…0015` — the Foundry description and the "seamlessly bundled" sentence — were deliberately **not** promoted. They supported the superseded cycle-A finding, no live condition cites them, and they were not put to the founder. `320` asserts they remain unverified, which is what stops a verification from quietly sweeping up everything attached to an issuer.
+
+### Outcome
+
+The universe holds **two** eligible issuers: NVIDIA at Tier 2 and Palantir at Tier 1 Route P, each on human-verified establishing evidence from a statutory filing. Cycle A still records Palantir as `contested` under 0.3.0-draft with E5 applied, and the cycle-B `pending` row is preserved with its gating reason intact. Nothing was rewritten to look like it always agreed.
+
+---
+
+## 13. Remaining blockers for 5.3
+
+1. **Named verification, per issuer.** The governance path has now been exercised twice and does not generalise by itself: every future admission needs a human to confirm its cited passages, and the scoping error in §12 shows the step is easy to get wrong in the direction of admitting too much. Two issuers verified, twenty-seven candidates not yet reviewed. This remains the top of the critical path.
 2. **`τ_B` and issuer cap `c`** remain unresolved drafts. Route B admission and capped weighting are both blocked until they are approved through the parameter table.
 3. **Structured extraction of filing tables.** Baidu's case generalises: segment and product revenue live in tables that plain text extraction loses. Route A cannot be evidenced at scale without this.
 4. **Non-US evidence has no automated path.** HKEXnews is prohibited; OpenDART needs a registered key; MOPS is unreviewed. Manual capture is supported by the schema and does not scale, which is a coverage constraint 5.3 onward must disclose rather than hide.

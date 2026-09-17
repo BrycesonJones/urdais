@@ -75,22 +75,88 @@ begin
 
   -- ---------------------------------------------------------------- Palantir
 
+  select id into rev_old from pipeline.eligibility_reviews
+   where review_cycle_id = cyc_b
+     and issuer_id = (select id from reference.issuers where issuer_key = 'palantir-technologies')
+     and superseded_by_id is not null;
   select id into rev_new from pipeline.eligibility_reviews
    where review_cycle_id = cyc_b
-     and issuer_id = (select id from reference.issuers where issuer_key = 'palantir-technologies');
+     and issuer_id = (select id from reference.issuers where issuer_key = 'palantir-technologies')
+     and superseded_by_id is null;
 
-  -- Route P is satisfied on all five conditions.
+  -- Admitted at Tier 1 through Route P, on a named human's verification.
+  select count(*) into n from pipeline.eligibility_reviews
+   where id = rev_new and status = 'eligible' and final_primary_tier = 1
+     and candidate_primary_tier = 1 and tier1_route = 'ai_integrated_platform'
+     and cardinality(value_chain_layers) >= 1
+     and independent_check_state = 'passed' and independent_reviewer = 'Bryceson Jones'
+     and independent_reviewer <> reviewer;
+  if n <> 1 then raise exception 'Palantir is not eligible at Tier 1 Route P with an independent named check'; end if;
+
+  -- The gating reason is gone, because the thing it named has happened. A live eligible
+  -- determination that still explains why it cannot be admitted is a contradiction.
+  select count(*) into n from pipeline.eligibility_reviews
+   where id = rev_new and gating_reason is not null;
+  if n <> 0 then raise exception 'the admitted Palantir determination still carries a gating reason'; end if;
+
+  -- The pending determination it replaced is preserved, not rewritten.
+  select count(*) into n from pipeline.eligibility_reviews
+   where id = rev_old and status = 'pending' and final_primary_tier is null
+     and gating_reason is not null and superseded_by_id = rev_new
+     and superseded_at is not null and supersession_reason is not null;
+  if n <> 1 then raise exception 'the gated Palantir determination was not preserved and superseded'; end if;
+
+  -- Every passage the admission rests on is establishing evidence verified by a named human.
+  -- This is the assertion that would have failed before the founder approved them.
+  select count(*) into n from pipeline.evidence_claims
+   where id in ('a1400000-0000-4000-8000-000000000011', 'a1400000-0000-4000-8000-000000000012',
+                'a1400000-0000-4000-8000-000000000013', 'a1400000-0000-4000-8000-000000000016',
+                'a1400000-0000-4000-8000-000000000017', 'a1400000-0000-4000-8000-000000000018')
+     and evidence_class = 'establishing' and human_verification = 'verified'
+     and verified_by = 'Bryceson Jones' and verified_at is not null;
+  if n <> 6 then raise exception 'expected 6 human-verified Palantir claims, found %', n; end if;
+
+  -- Route P is satisfied on all five conditions, and each condition cites the same claim it cited
+  -- before promotion. Verification confirmed the evidence; it did not change which evidence the
+  -- determination rests on, and swapping a citation under cover of a verification would be the
+  -- quietest possible way to launder a weaker basis.
   select count(*) into n from pipeline.tier1_platform_assessments
    where review_id = rev_new and satisfied
      and customer_facing_ai and platform_centrality and commercial_scale
-     and unrelated_business_guard_passed and cardinality(operational_roles) >= 1;
-  if n <> 1 then raise exception 'the Palantir Route P assessment is not satisfied on all five conditions'; end if;
+     and unrelated_business_guard_passed and cardinality(operational_roles) >= 1
+     and customer_facing_claim_id = 'a1400000-0000-4000-8000-000000000013'
+     and centrality_claim_id     = 'a1400000-0000-4000-8000-000000000016'
+     and operational_claim_id    = 'a1400000-0000-4000-8000-000000000012'
+     and scale_claim_id          = 'a1400000-0000-4000-8000-000000000017'
+     and guard_claim_id          = 'a1400000-0000-4000-8000-000000000011';
+  if n <> 1 then raise exception 'the Palantir Route P assessment is not satisfied on the same five cited claims'; end if;
 
-  -- E5 no longer applies to it. This is the methodology change visible in the data rather than
-  -- in a comment: the same issuer, the same filing, E5 applied in cycle A and not in cycle B.
+  -- Every condition of a Tier 1 Route P admission cites establishing evidence. A single
+  -- corroborating citation among the five would mean the admission rests on unverified output.
+  select count(*) into n
+    from pipeline.tier1_platform_assessments a
+    join lateral (values (a.customer_facing_claim_id), (a.centrality_claim_id),
+                         (a.operational_claim_id), (a.scale_claim_id), (a.guard_claim_id))
+                 as cited(claim_id) on true
+    left join pipeline.evidence_claims c on c.id = cited.claim_id
+   where a.review_id = rev_new
+     and (c.id is null or c.evidence_class <> 'establishing'
+          or c.human_verification <> 'verified');
+  if n <> 0 then raise exception '% Route P condition(s) cite evidence that is not human-verified establishing', n; end if;
+
+  -- E5 does not apply to it under 0.4.0-draft. The methodology change, visible in the data.
   select count(*) into n from pipeline.review_exclusions
    where review_id = rev_new and exclusion_code = 'E5' and applied;
   if n <> 0 then raise exception 'E5 still excludes the integrated AI platform under 0.4.0-draft'; end if;
+
+  -- And cycle A still records the contested finding it actually made, under 0.3.0-draft, with
+  -- E5 applied. History is superseded, never rewritten to look like it always agreed.
+  select count(*) into n from pipeline.eligibility_reviews r
+    join reference.methodology_versions mv on mv.id = r.methodology_version_id
+   where r.review_cycle_id = cyc_a
+     and r.issuer_id = (select id from reference.issuers where issuer_key = 'palantir-technologies')
+     and r.status = 'contested' and mv.version = '0.3.0-draft' and r.superseded_by_id is not null;
+  if n <> 1 then raise exception 'the prior cycle no longer records Palantir as contested under 0.3.0-draft'; end if;
 
   select count(*) into n from pipeline.review_exclusions x
     join pipeline.eligibility_reviews r on r.id = x.review_id
@@ -99,23 +165,12 @@ begin
      and x.exclusion_code = 'E5' and x.applied;
   if n <> 1 then raise exception 'the prior cycle no longer records the E5 finding it actually made'; end if;
 
-  -- And it is still not eligible, because the governance gate is independent of the methodology
-  -- gate and only one of the two moved. If this assertion ever fails because Palantir became
-  -- eligible, the claims below must have been verified by a named human first.
-  select count(*) into n from pipeline.eligibility_reviews
-   where id = rev_new and status = 'eligible';
-  if n <> 0 then
-    select count(*) into n from pipeline.evidence_claims c
-      join reference.issuers i on i.id = c.issuer_id
-     where i.issuer_key = 'palantir-technologies' and c.evidence_class = 'establishing'
-       and c.human_verification = 'verified';
-    if n = 0 then raise exception 'Palantir was admitted on unverified machine extraction'; end if;
-  else
-    select count(*) into n from pipeline.eligibility_reviews
-     where id = rev_new and status = 'pending' and tier1_route = 'ai_integrated_platform'
-       and candidate_primary_tier = 1 and gating_reason is not null;
-    if n <> 1 then raise exception 'the Palantir determination is neither eligible nor a gated Tier 1 Route P pending'; end if;
-  end if;
+  -- The two passages that supported only the superseded finding were not swept up in the
+  -- verification. They were not put to the founder, and no live condition cites them.
+  select count(*) into n from pipeline.evidence_claims
+   where id in ('a1400000-0000-4000-8000-000000000014', 'a1400000-0000-4000-8000-000000000015')
+     and (human_verification <> 'unverified' or evidence_class <> 'corroborating');
+  if n <> 0 then raise exception 'a passage outside the founder''s approval was marked verified'; end if;
 
   -- ---------------------------------------------------------------- Salesforce
 
@@ -133,18 +188,45 @@ begin
      and tier1_route is null and tier3_route = 'B';
   if n <> 1 then raise exception 'the Tier 1 amendment changed the Salesforce outcome'; end if;
 
+  -- ---------------------------------------------------------------- Baidu
+
+  -- Untouched by either amendment. The blocker was never a rule and is not a signature.
+  select count(*) into n from pipeline.eligibility_reviews
+   where review_cycle_id = cyc_b
+     and issuer_id = (select id from reference.issuers where issuer_key = 'baidu')
+     and status = 'pending' and final_primary_tier is null and tier3_route = 'A'
+     and tier1_route is null and superseded_by_id is null;
+  if n <> 1 then raise exception 'the Baidu determination changed'; end if;
+
   -- ------------------------------------------------- the universe the amendment produced
 
   select count(*) into n from pipeline.eligibility_reviews
    where review_cycle_id = cyc_b and status = 'eligible' and superseded_by_id is null;
-  if n <> 1 then raise exception 'expected exactly one eligible issuer after the amendment, found %', n; end if;
+  if n <> 2 then raise exception 'expected exactly two eligible issuers after the amendment, found %', n; end if;
+
+  -- Both routes are represented, and each admission names the route that reached it.
+  select count(*) into n from pipeline.eligibility_reviews
+   where review_cycle_id = cyc_b and status = 'eligible' and superseded_by_id is null
+     and final_primary_tier = 1 and tier1_route = 'ai_integrated_platform';
+  if n <> 1 then raise exception 'expected one Tier 1 Route P admission, found %', n; end if;
+
+  -- No admission anywhere rests on unverified machine extraction. This is the invariant the
+  -- whole governance model exists to hold, stated once over the entire universe.
+  select count(*) into n
+    from pipeline.eligibility_reviews r
+    join pipeline.evidence_claims c on c.issuer_id = r.issuer_id
+   where r.status = 'eligible' and r.superseded_by_id is null
+     and c.evidence_class = 'establishing'
+     and c.extraction_method <> 'human'
+     and (c.human_verification <> 'verified' or c.verified_by is null);
+  if n <> 0 then raise exception '% admitted issuer(s) rest on unverified establishing evidence', n; end if;
 
   -- Every eligible determination names how it qualified, and no non-Tier-1 row claims a Tier 1 route.
   select count(*) into n from pipeline.eligibility_reviews
    where final_primary_tier = 1 and tier1_route is null;
   if n <> 0 then raise exception '% Tier 1 determination(s) do not say which route', n; end if;
 
-  raise notice 'AI-integrated platform amendment: NVIDIA admitted, Palantir gated on verification';
+  raise notice 'AI-integrated platform amendment: NVIDIA at Tier 2, Palantir at Tier 1 Route P, both human-verified';
 end $$;
 
 -- ------------------------------------------------------ the route's own conditions
