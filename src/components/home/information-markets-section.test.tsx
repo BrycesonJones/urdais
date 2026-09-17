@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { InformationMarketsSection } from "@/components/home/information-markets-section";
 import { MOCK_AS_OF } from "@/data/mock/ucpi";
 import { LISTED_GPU_UNIT_CAPTION, type UcpiHeadline } from "@/lib/ucpi/read/load";
+import { UGAI_WATCHLIST_ROW } from "@/lib/ugai/read/watchlist";
 
 /**
  * The regression these cover: the panel used to import the UCPI fixtures at module
@@ -107,7 +108,9 @@ describe("the fixtures remain available where they are intentionally supported",
  * separate a seeded walk from a published index.
  */
 describe("the indices rail never quotes a demo index", () => {
-  const MOCK_SYMBOLS = ["UGAI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI"];
+  // UGAI is no longer among them: its seeded walk was removed rather than relabelled, so it has
+  // no mock row at all. Its unpublished row is covered separately below.
+  const MOCK_SYMBOLS = ["UAVI", "UMPI", "UPPI", "UEPI", "UACI"];
 
   it("labels every mock row demo and gives it no level and no movement", () => {
     render(<InformationMarketsSection />);
@@ -127,5 +130,31 @@ describe("the indices rail never quotes a demo index", () => {
     const rail = screen.getByRole("complementary", { name: "Urdais Indices" });
     expect(within(rail).getAllByRole("link")).toHaveLength(MOCK_SYMBOLS.length);
     expect(within(rail).getAllByText("Demo data")).toHaveLength(MOCK_SYMBOLS.length);
+  });
+});
+
+/*
+ * UGAI's row after its synthetic market was removed. "Demo data" would now promise an
+ * illustrative series its detail page no longer has, so the row says what is actually true: the
+ * index is not yet live and has published nothing.
+ */
+describe("the UGAI rail row", () => {
+  it("states that it is not yet live and carries no digit at all", () => {
+    render(<InformationMarketsSection indices={[UGAI_WATCHLIST_ROW]} />);
+    const rail = screen.getByRole("complementary", { name: "Urdais Indices" });
+    const row = within(rail).getByRole("link", { name: /^UGAI\b/ });
+    expect(row).toHaveTextContent("Not yet live");
+    expect(row).toHaveTextContent("No published observations");
+    // The strongest form of the rule. The row's structurally required value and asOf are inert,
+    // and this is what guarantees a future change cannot start rendering them.
+    expect(row.textContent).not.toMatch(/\d/);
+    expect(row).not.toHaveTextContent("Demo data");
+  });
+
+  it("keeps UGAI in the family rather than dropping it for being unpublished", () => {
+    render(<InformationMarketsSection indices={[UGAI_WATCHLIST_ROW]} />);
+    const rail = screen.getByRole("complementary", { name: "Urdais Indices" });
+    // Silence would answer "is Urdais building this?" with nothing. The row is the answer.
+    expect(within(rail).getByRole("link", { name: /^UGAI\b/ })).toBeInTheDocument();
   });
 });

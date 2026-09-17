@@ -89,8 +89,14 @@ export type TokenInstrumentIdentity = {
  * Where a displayed value came from. One vocabulary for the whole product: the news
  * rails, the UCPI panel, the detail header and the watchlist rows all say "production"
  * or "demo" and nothing else.
+ *
+ * "unpublished" is the third and narrowest case: an index Urdais intends to publish that has
+ * never published an observation, and for which no illustrative series exists either. UGAI is
+ * the current example. It is deliberately distinct from "demo" -- a demo row promises a
+ * synthetic series on the detail page, and UGAI's detail page shows an empty state instead --
+ * and from "production", which promises a real value.
  */
-export type DataProvenance = "production" | "demo";
+export type DataProvenance = "production" | "demo" | "unpublished";
 
 /**
  * A watchlist row.

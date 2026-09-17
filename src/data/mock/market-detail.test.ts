@@ -6,7 +6,12 @@ import { MARKETS, defaultInstrument, findMarket } from "@/data/mock/market-detai
 
 describe("market detail dataset: chip and accelerator consolidation", () => {
   it("routes exactly one chip / accelerator market, at /markets/uaci, and none at /markets/uaxi", () => {
-    expect(MARKETS.map((market) => market.symbol)).toEqual(["UCPI", "UGAI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI", "UBWI"]);
+    // UGAI is deliberately absent from the mock dataset. It has never published an observation,
+    // so a generated market would have to invent a level, a daily return and a year of history;
+    // the one it carried was 184.21 on a base of 1,000. Its detail page renders canonical
+    // published observations or an empty state.
+    expect(MARKETS.map((market) => market.symbol)).toEqual(["UCPI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI", "UBWI"]);
+    expect(MARKETS.map((market) => market.symbol)).not.toContain("UGAI");
     expect(MARKETS.filter((market) => /chip|accelerator/i.test(market.name))).toHaveLength(1);
     expect(findMarket("uaxi")).toBeUndefined();
     expect(findMarket("uaci")?.name).toBe(CHIP_ACCELERATOR_INDEX.name);
@@ -30,7 +35,14 @@ describe("market detail dataset: chip and accelerator consolidation", () => {
       if (standalone && market.symbol !== "UACI") expect(labels.filter((label) => label === "UACI")).toHaveLength(1);
       expect(labels).not.toContain("UAXI");
     }
-    expect(defaultInstrument(findMarket("ugai")!).comparisons.map((option) => option.label)).toEqual(["UCPI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI"]);
+    // UGAI is offered nowhere for comparison, and is not routable from the mock dataset at all.
+    // An index with no observations has nothing to plot against another series, and offering it
+    // would mean comparing a real series against synthetic points.
+    expect(findMarket("ugai")).toBeUndefined();
+    for (const market of MARKETS) {
+      if (market.families.every((family) => family.instruments.length === 0)) continue;
+      expect(defaultInstrument(market).comparisons.map((option) => option.label)).not.toContain("UGAI");
+    }
   });
 
   it("shows one chip / accelerator row on the homepage rail with the canonical name", () => {
@@ -39,8 +51,11 @@ describe("market detail dataset: chip and accelerator consolidation", () => {
     expect(rows[0]).toMatchObject({ symbol: "UACI", name: "Urdais Chip & Accelerator Index", unit: "pts" });
     // UBWI is deliberately absent: it publishes no value, so it gets no watchlist row
     // rather than a fabricated one. Its detail page carries the withheld state instead.
-    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).toEqual(["UGAI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI"]);
+    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).toEqual(["UAVI", "UMPI", "UPPI", "UEPI", "UACI"]);
     expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).not.toContain("UBWI");
+    // And UGAI, for the mirror-image reason: it is joined to the rail by the homepage from
+    // @/lib/ugai/read/watchlist as an unpublished row carrying no number.
+    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).not.toContain("UGAI");
   });
 });
 

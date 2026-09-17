@@ -6,8 +6,8 @@
  * primary Information Markets panel. Replace with API data when the backend
  * publishes index values.
  *
- * A market with no instruments produces no row, and UBWI is deliberately not here at
- * all. It is the one index with a real published value, so its row is built from the
+ * A market with no instruments produces no row, and UBWI and UGAI are deliberately not here
+ * at all. It is the one index with a real published value, so its row is built from the
  * frozen production publication in `@/lib/ubwi/read/surface` and joined to this list by
  * the homepage. Adding UBWI here would mean giving a production index a mock value.
  *
