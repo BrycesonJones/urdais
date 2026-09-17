@@ -232,8 +232,8 @@ describe("the UBWI homepage watchlist row", () => {
     render(<UrdaisIndices indices={homepageRows()} />);
     const link = screen.getByRole("link", { name: /UBWI/ });
     expect(link).toHaveAttribute("href", "/markets/ubwi");
-    // Scoped to the UBWI row: the mock indices legitimately use "pts" and carry movement,
-    // and this test is about UBWI's row alone.
+    // Scoped to the UBWI row: this test is about UBWI's row alone. The mock rows beside
+    // it now quote neither a level nor a movement, and say "Demo data" instead.
     const row = link.textContent ?? "";
     expect(row).toContain("0.2672");
     expect(row).toContain("%");

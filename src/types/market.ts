@@ -86,14 +86,31 @@ export type TokenInstrumentIdentity = {
 };
 
 /**
+ * Where a displayed value came from. One vocabulary for the whole product: the news
+ * rails, the UCPI panel, the detail header and the watchlist rows all say "production"
+ * or "demo" and nothing else.
+ */
+export type DataProvenance = "production" | "demo";
+
+/**
  * A watchlist row.
  *
  * `valueFractionDigits` overrides the row's display precision for an index whose
  * meaningful range sits far below one unit. UBWI moves between roughly 0.22 % and
  * 0.29 %, so the default two decimals would collapse every plausible value to the
  * same 0.27 % and the row would look static while the index moved.
+ *
+ * `provenance` is **required**, unlike the optional field on `MarketInstrumentDetail`.
+ * A watchlist row sits in a rail beside rows built from other sources, and an omitted
+ * provenance is exactly how six synthetic index levels came to render indistinguishably
+ * from UBWI's published value. Requiring it means a new row cannot reach the rail
+ * without its author deciding what it is.
  */
-export type IndexSnapshot = MarketIndex & MarketSnapshot & { valueFractionDigits?: number };
+export type IndexSnapshot = MarketIndex &
+  MarketSnapshot & {
+    valueFractionDigits?: number;
+    provenance: DataProvenance;
+  };
 
 /*
  * Market detail page.
@@ -169,7 +186,7 @@ export type MarketInstrumentDetail = MarketIndex & {
    * began publishing. An instrument loaded from a production read declares
    * "production"; anything omitting this is mock data and is labelled as such.
    */
-  provenance?: "production" | "demo";
+  provenance?: DataProvenance;
   snapshot: MarketSnapshot;
   series: DetailedSeries;
   /** Ranges the history is long enough to support; others are shown disabled. */

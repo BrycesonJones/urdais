@@ -148,6 +148,9 @@ export function ubwiIndexSnapshot(
     symbol: "UBWI",
     name: MARKET_CATALOG.find((market) => market.symbol === "UBWI")?.name ?? "Urdais Bitcoin Wealth Index",
     unit: UBWI_UNIT,
+    // A frozen production publication is the only thing that reaches this line, so the row
+    // carries the level and the movement while the demo rails beside it do not.
+    provenance: "production",
     value: publication.valuePercent,
     valueFractionDigits: UBWI_VALUE_FRACTION_DIGITS,
     changePercent: publication.changePercent,
