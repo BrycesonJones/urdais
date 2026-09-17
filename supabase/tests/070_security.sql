@@ -57,7 +57,9 @@ declare
     'pipeline.evidence_documents', 'pipeline.evidence_claims',
     'pipeline.eligibility_reviews', 'pipeline.tier1_product_lines',
     'pipeline.tier2_assessments', 'pipeline.tier3_assessments',
-    'pipeline.review_exclusions'
+    'pipeline.review_exclusions',
+    -- Tier 1 Route P, the AI-integrated platform test added by methodology 0.4.0-draft.
+    'pipeline.tier1_platform_assessments'
   ];
   n integer;
 begin

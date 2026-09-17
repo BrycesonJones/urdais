@@ -241,9 +241,49 @@ The remaining twenty-five candidates are `queued` with no review row, which is t
 
 ---
 
-## 10. Remaining blockers for 5.3
+## 10. Phase 5.2 amendment — methodology 0.4.0-draft and the first admission
 
-1. **A named reviewer.** Nothing can be admitted until a human verifies extractions and signs a determination. This is now the top of the critical path, ahead of any data work.
+The first production review was not only a test of the apparatus; it was a test of the rules, and the rules failed it. Palantir was marked `contested` because two provisions combined badly: Tier 1 required substantially every enumerated line to qualify on its own, and E5 excluded an AI capability that the filing described as integrated across the issuer's other platforms rather than sold separately. **The result was that an issuer could be penalised precisely because its AI was structurally integrated** — which inverts the question the universe exists to ask. That is a rule defect, not an edge case, and it was only visible because the first review was run against a real filing rather than against the research ledger.
+
+Founder decision of 17 September 2026: broaden the methodology to recognize AI-integrated platform companies, and approve the governance path for the NVIDIA verification.
+
+### What changed in the methodology (0.3.0-draft → 0.4.0-draft)
+
+- **Tier 1 gains a second route.** Route N is the existing AI-native whole-issuer enumeration, unchanged in all four conditions and in the 75% safe harbour. **Route P** admits an issuer whose commercial platform is materially organized around deploying, operating, or enabling AI or ML systems for customers, on five conjunctive conditions: customer-facing AI capability, platform centrality, operational role, commercial scale, and an unrelated-business guard. Route P requires no separately reported AI revenue where the capability is structurally integrated and separate accounting does not exist.
+- **E5 is narrowed**, not deleted. It previously excluded bundled AI capability generally; it now excludes AI that is *incidental* to its host product, and **bundling is expressly removed as a ground for exclusion on its own**. The governing sentence is: integration is not disqualifying, incidental AI is.
+- **The Tier 1 Route P / Tier 3 boundary is stated explicitly**, turning on whether AI defines the platform identity — with Route P expressly unavailable as a way around the unresolved `τ_B`.
+
+No fourth tier. Tier 2 embodiment and E2, the Route A scale hierarchy, `τ_B`, the issuer cap, value-chain layers, one primary tier per issuer, and the eligibility/availability separation are all untouched.
+
+### What changed in the schema
+
+One column and one table, both mirroring shapes that already existed. `eligibility_reviews.tier1_route` (`ai_native` | `ai_integrated_platform`) parallels `tier3_route`, and `pipeline.tier1_platform_assessments` parallels `tier2_assessments` and `tier3_assessments` — Route P is a judgement about one platform against five conditions, which is not what `tier1_product_lines` encodes, and reinterpreting the enumeration columns to mean something else would have been worse than adding a table.
+
+Writing the new constraint surfaced a **latent defect in the Tier 3 constraint written in 5.2**: `check (tier3_route is null or final_primary_tier = 3 or candidate_primary_tier = 3)` evaluates to null — and therefore passes — when a review carries a non-matching final tier and a null candidate tier, so a Tier 2 determination could have claimed a Tier 3 route. No seeded row exercised it, so nothing recorded is wrong. Both constraints now use `is not distinct from`. This is the second time three-valued logic has quietly opened a gate in this schema; the first was the empty-MIC-array check in 5.1.
+
+### Two cycles, because the first cycle was not wrong
+
+`dev-2026-09b` re-reviews the same filings at the same evidence cutoff under 0.4.0-draft. The first cycle's determinations are **superseded, not edited**: they were correct under 0.3.0-draft, and rewriting them would falsify the record of what the rules used to say. The lineage is walkable in both directions, and `320` asserts that the prior cycle still records the E5 finding it actually made.
+
+`0.3.0-draft` also stays a **draft**. It was never approved and publishes nothing, so there is nothing to retire; marking it `superseded` would both overstate what it was and trip the standing assertion that no methodology outside the live products is non-draft. Which version governed a determination is read from that determination's own `methodology_version_id`.
+
+### Outcomes
+
+**NVIDIA — `eligible`, Tier 2.** Both cited FY2026 10-K passages were re-fetched from EDGAR at 2026-09-17T14:50:49Z; the document hashed identically to the recorded value and both passages appear verbatim. Bryceson Jones verified that correspondence and is recorded as the independent named reviewer. **The eligibility basis is the filing evidence, which did not change** — `320` asserts the tier, the route and both cited claim IDs are identical across the supersession. The verification satisfied the methodology's requirement that machine-extracted evidence be confirmed by a named human before it may establish anything; had the passages not matched, the record would show a rejection.
+
+**Palantir — `pending`, Tier 1 Route P satisfied on all five conditions.** The methodology objection is gone: E5 no longer applies (recorded `applied = false`, against `applied = true` in the prior cycle), and the filing's statement that AIP lets customers derive value *"via the combination of our existing software platforms with generative AI models"* is now evidence of structural integration rather than of a bundled feature. Condition 4 rests on disclosed adoption — 954 customers at 31 December 2025 against 711 a year earlier — and $4.5 billion of recognized platform revenue, neither of them forward-looking. It is still not eligible **for one reason only**: the three Route P passages are model-assisted extractions that no named human has verified. That is the same governance gate NVIDIA cleared, not a second methodology objection, and one verification closes it.
+
+**Salesforce — `insufficient_evidence`, unchanged.** Route P was considered and fails condition 5: Agentforce is an AI capability inside a large CRM business, and AI does not define Salesforce's platform identity, so the methodology directs it to Tier 3. There, E8 still bars the ARR run-rate and `τ_B` is still unresolved. **This is the amendment not being a general loosening**, and it is asserted as such.
+
+**Baidu — `pending`, unchanged.** The blocker was never a rule.
+
+The universe now holds exactly one eligible issuer. Both gates — methodology and governance — are independently enforced, and this amendment moved each of them exactly once.
+
+---
+
+## 11. Remaining blockers for 5.3
+
+1. **Named verification, per issuer.** The governance path now exists and has been exercised once, for NVIDIA. It does not generalise by itself: Palantir sits at `pending` with Route P fully satisfied, waiting on verification of three quoted passages, and every future admission needs the same step. This remains the top of the critical path.
 2. **`τ_B` and issuer cap `c`** remain unresolved drafts. Route B admission and capped weighting are both blocked until they are approved through the parameter table.
 3. **Structured extraction of filing tables.** Baidu's case generalises: segment and product revenue live in tables that plain text extraction loses. Route A cannot be evidenced at scale without this.
 4. **Non-US evidence has no automated path.** HKEXnews is prohibited; OpenDART needs a registered key; MOPS is unreviewed. Manual capture is supported by the schema and does not scale, which is a coverage constraint 5.3 onward must disclose rather than hide.
