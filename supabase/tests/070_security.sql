@@ -59,7 +59,9 @@ declare
     'pipeline.tier2_assessments', 'pipeline.tier3_assessments',
     'pipeline.review_exclusions',
     -- Tier 1 Route P, the AI-integrated platform test added by methodology 0.4.0-draft.
-    'pipeline.tier1_platform_assessments'
+    'pipeline.tier1_platform_assessments',
+    -- UGAI end-of-day equity closes.
+    'pipeline.price_observations'
   ];
   n integer;
 begin

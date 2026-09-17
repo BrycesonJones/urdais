@@ -18,10 +18,10 @@ begin
   -- ------------------------------------------------------------------ fixtures
 
   insert into reference.venues (mic, name, country_code, default_currency, timezone, support_state)
-    values ('XNAS', 'Nasdaq Stock Market', 'US', 'USD', 'America/New_York', 'supported')
+    values ('XTS1', 'Test Venue One', 'US', 'USD', 'America/New_York', 'supported')
     returning id into v_xnas;
   insert into reference.venues (mic, name, country_code, default_currency, timezone, support_state)
-    values ('XHKG', 'Hong Kong Stock Exchange', 'HK', 'HKD', 'Asia/Hong_Kong', 'research')
+    values ('XTS2', 'Test Venue Two', 'HK', 'HKD', 'Asia/Hong_Kong', 'research')
     returning id into v_xhkg;
 
   insert into reference.issuers (issuer_key, canonical_name, domicile_country)
@@ -313,7 +313,7 @@ begin
        covered_venues, effective_from, evidence, terms_document_hash)
     values (g_iface, 'agreement', 'coherent', true, true,
             true, true, true, true, true, true, true, true, true,
-            'vendor', 'cease_use', array['XNAS', 'XHKG'], now(), 'test',
+            'vendor', 'cease_use', array['XTS1', 'XTS2'], now(), 'test',
             repeat('a', 64))
     returning id into g_id;
 

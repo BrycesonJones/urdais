@@ -43,7 +43,8 @@ begin
   -- source, so it is excluded by class here exactly as news feeds are.
   select count(*) into n from reference.source_interfaces
    where production_access_state = 'production_approved'
-     and source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface');
+     and source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface',
+                              'equity_eod_price_interface');
   if n <> 1 then raise exception 'approved compute sources: %', n; end if;
 
   raise notice 'listed gpu family: ok';
