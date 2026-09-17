@@ -475,7 +475,31 @@ No universe snapshot, weight, index share, divisor, cap or index level. Tests as
 
 ---
 
-## 19. Remaining blockers for 5.6
+## 19. Follow-up — the New Taiwan dollar, sourced
+
+Phase 5.5 left TWD as the one launch currency with no route to USD, which meant XTAI — the only venue with a rights-cleared price source — was the only venue whose prices could not be converted. This closes the **source and rights** half of that gap and nothing else.
+
+**The source.** Central Bank of the Republic of China (Taiwan), open dataset **7232**, identifier `A59000000N-000045`: *"The closing exchange rate of the New Taiwan Dollar against the US dollar in the interbank market"*, served as JSON from `https://cpx.cbc.gov.tw/api/OpenData/FTDOpenData_Day`, daily from 2 January 2008.
+
+**The orientation.** CBC publishes **TWD per one USD** — 31.881, not 0.031 — the inverse of UGAI's canonical `X`. The published rate is stored **as published**, and the UGAI rate is a separate `inverted` row pointing at it. Relabelling at parse time would destroy the only evidence that an inversion happens at all, and an inversion applied twice restores the original number while looking entirely ordinary. The Phase 5.5 trigger re-derives it: `USD per TWD = 1 / 31.881 ≈ 0.0313666`.
+
+**The rights.** The interface has been marked permitted on both axes since UBWI and **had no permission grant**, so nothing could consume it. One now exists, against the same Open Government Data License read in full for the TWSE OpenAPI in Phase 5.3 — perpetual, irrevocable, reaching derivative works as products or services and therefore index calculation and publication of derived outputs, conditional on attribution. The attribution names the agency, dataset 7232, its title and the licence, and states that the Bank does not endorse Urdais or any derived index.
+
+**What was not done, and why.** Live retrieval could not be performed: `cpx.cbc.gov.tw` and `www.cbc.gov.tw` both fail DNS resolution from the build environment, while `openapi.twse.com.tw` and `data.gov.tw` resolve normally. The observation is a **researched value recorded as such** on the row itself, with no response hash or byte length claimed for bytes nobody received. The interface's three rights states were also left untouched: `reference.guard_terms_recheck()` refuses a rights-state change unaccompanied by a newly retrieved terms artifact, this session retrieved none, and the guard is correct.
+
+### The distinction this follow-up preserves
+
+> **TWD source availability is solved. UGAI's fixing-time methodology is still unresolved.**
+
+Knowing where to get a daily TWD close is a different question from deciding *which* daily close UGAI uses — same-day CBC fixing, latest available before the calculation cutoff, or previous business day. That parameter stays draft, and a test asserts a source change did not approve it.
+
+Accordingly TSMC's FX criterion moves from `unavailable` to **`parameter_unresolved`**, naming `fx_fixing_convention` — and no further. Its overall result stays `unavailable`: free float is still unpublished, one collected session still stands against a three-month window, and its thematic review is still pending. The superseded evaluation survives with its original finding.
+
+The adapter imposes **no Monday-to-Friday calendar**. Taiwan runs Saturday make-up workdays that carry legitimate observations, and a weekday filter would silently discard them; what happens on a date with no fixing belongs to the unresolved convention, not to a parser.
+
+---
+
+## 20. Remaining blockers for 5.6
 
 1. **No USD reference rate for the New Taiwan dollar.** The one venue with a rights-cleared price source is the one currency with no FX route. The ECB publishes no TWD rate; Taiwan's central bank interface exists in the registry but has no permission grant, was not reachable from the review environment, and its terms have not been read. This is the cheapest of the blockers to clear and it is not cleared.
 2. **No free-float factor exists in any reviewed geography.** This is a methodology decision, not an engineering one, and it now sits alongside the price problem at the top of the critical path. UGAI's weighting is defined on accessible free-float capitalization; no public source publishes a float factor for the US, Taiwan, Hong Kong or Korea. The options are to authorise a derivation from partial holdings data (with its error characterised), to license float factors commercially, or to amend the methodology's weighting basis. **Silently substituting full market capitalization is not among them** — and the schema now makes that substitution unrepresentable rather than merely discouraged.

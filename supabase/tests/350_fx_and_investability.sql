@@ -27,10 +27,16 @@ begin
   -- Orientation is USD per unit of the quoted currency, for every row without exception.
   select count(*) into n from pipeline.fx_observations where orientation <> 'base_per_quote';
   if n <> 0 then raise exception '% FX row(s) carry a non-canonical orientation', n; end if;
-  select count(*) into n from pipeline.fx_observations where base_currency <> 'USD';
-  -- The ECB legs are currency-per-EUR and are not themselves UGAI rates; they exist to be
-  -- divided. Anything else with a non-USD base would be a rate nothing can consume.
-  if n <> 5 then raise exception 'expected 5 non-USD source legs, found %', n; end if;
+  -- A non-USD base means a published source leg, never a UGAI rate: the ECB legs are
+  -- currency-per-EUR and exist to be divided, and CBC's is TWD-per-USD and exists to be
+  -- inverted. Asserted as a property rather than a count, so adding a source does not require
+  -- editing a number that says nothing about correctness.
+  select count(*) into n from pipeline.fx_observations
+   where base_currency <> 'USD' and derivation <> 'direct';
+  if n <> 0 then raise exception '% non-USD row(s) are derived rather than published legs', n; end if;
+  select count(*) into n from pipeline.fx_observations
+   where base_currency <> 'USD' and (source_interface_id is null or permission_grant_id is null);
+  if n <> 0 then raise exception '% source leg(s) name no source', n; end if;
 
   -- USD per HKD, spot-checked against the published legs: 1.1481 / 9.0071.
   select rate into r from pipeline.fx_observations
@@ -39,10 +45,15 @@ begin
     raise exception 'the USD/HKD cross does not match its ECB legs';
   end if;
 
-  -- TWD is absent, and that absence is the point: it is the only launch currency with no rate,
-  -- and XTAI is the only venue with a rights-cleared price source.
-  select count(*) into n from pipeline.fx_observations where quote_currency = 'TWD';
-  if n <> 0 then raise exception 'a TWD rate exists that no reviewed source publishes'; end if;
+  -- TWD resolves, through CBC dataset 7232 inverted into UGAI's orientation. The Phase 5.5 gap
+  -- was the absence of any reviewed source; it is closed, and what is asserted now is that the
+  -- rate that exists is properly sourced and properly derived rather than merely present.
+  select count(*) into n from pipeline.fx_observations d
+    join pipeline.fx_observations src on src.id = d.component_quote_id
+   where d.base_currency = 'USD' and d.quote_currency = 'TWD' and d.derivation = 'inverted'
+     and src.base_currency = 'TWD' and src.quote_currency = 'USD'
+     and abs(d.rate - 1 / src.rate) <= (1 / src.rate) * 1e-9;
+  if n <> 1 then raise exception 'the USD/TWD rate is not a checked inversion of a published TWD/USD leg'; end if;
 
   -- Not one investability parameter is approved.
   select count(*) into n from reference.methodology_parameters
@@ -165,7 +176,7 @@ begin
   insert into pipeline.fx_observations
     (id, base_currency, quote_currency, rate, fixing_date, retrieved_at, derivation,
      source_interface_id, permission_grant_id, attribution, idempotency_key)
-    values (gen_random_uuid(), 'TWD', 'USD', 30.5, date '2026-09-17', now(), 'direct',
+    values (gen_random_uuid(), 'TWD', 'USD', 30.5, date '2026-09-10', now(), 'direct',
             iface, grt, attribution, 'x:twd-direct')
     returning id into inv;
   ok := false;
@@ -173,7 +184,7 @@ begin
     insert into pipeline.fx_observations
       (base_currency, quote_currency, rate, fixing_date, retrieved_at, derivation,
        component_quote_id, source_interface_id, permission_grant_id, attribution, idempotency_key)
-      values ('USD', 'TWD', 30.5, date '2026-09-17', now(), 'inverted', inv, iface, grt,
+      values ('USD', 'TWD', 30.5, date '2026-09-10', now(), 'inverted', inv, iface, grt,
               attribution, 'x:notinverted');
   exception when check_violation then ok := true;
   end;
@@ -183,7 +194,7 @@ begin
   insert into pipeline.fx_observations
     (base_currency, quote_currency, rate, fixing_date, retrieved_at, derivation,
      component_quote_id, source_interface_id, permission_grant_id, attribution, idempotency_key)
-    values ('USD', 'TWD', 1 / 30.5, date '2026-09-17', now(), 'inverted', inv, iface, grt,
+    values ('USD', 'TWD', 1 / 30.5, date '2026-09-10', now(), 'inverted', inv, iface, grt,
             attribution, 'x:inverted-ok');
 
   -- A carried rate names the day it came from, and that day precedes it. Methodology permits the
@@ -440,6 +451,94 @@ begin
   if n <> 0 then raise exception 'a UGAI methodology version left draft'; end if;
 
   raise notice 'no weights, no snapshot, no divisor, no index level: ok';
+end $$;
+
+
+-- ---------------------------------------------------------- the CBC TWD source and grant
+--
+-- Added by the follow-up that closed the Phase 5.5 TWD gap. Asserted here rather than in a new
+-- file because these are facts about the FX model this suite already owns.
+
+do $$
+declare n integer; iface uuid; g record;
+begin
+  select id into iface from reference.source_interfaces where slug = 'cbc-exchange-rates';
+  if iface is null then raise exception 'the CBC interface is missing'; end if;
+
+  -- The dataset is identified, not merely described in prose.
+  select count(*) into n from reference.source_interfaces
+   where id = iface
+     and terms_evidence ->> 'dataset' = '7232'
+     and terms_evidence ->> 'dataset_identifier' = 'A59000000N-000045'
+     and terms_evidence ->> 'published_orientation' = 'TWD per 1 USD'
+     and terms_evidence ->> 'agency' = 'Central Bank of the Republic of China (Taiwan)';
+  if n <> 1 then raise exception 'the CBC dataset provenance is not recorded structurally'; end if;
+
+  -- The grant that was missing since UBWI now exists, belongs to this interface, and carries the
+  -- rights the Open Government Data License actually gives.
+  select g2.* into g from reference.permission_grants g2 where g2.source_interface_id = iface;
+  if g is null then raise exception 'the CBC interface still has no permission grant'; end if;
+  if not (g.covers_collection and g.covers_storage and g.covers_index_calculation
+          and g.covers_historical_retention and g.covers_post_termination_retention
+          and g.covers_historical_reconstruction and g.covers_index_level_publication) then
+    raise exception 'the CBC grant does not carry the rights the licence gives';
+  end if;
+  if not g.attribution_required or btrim(coalesce(g.attribution_text, '')) = '' then
+    raise exception 'the CBC grant does not require attribution';
+  end if;
+  if g.attribution_text not like '%7232%' or g.attribution_text not like '%Open Government Data License%' then
+    raise exception 'the CBC attribution does not identify the dataset and licence';
+  end if;
+  if g.decisive_clause is null or g.reviewed_on is null then
+    raise exception 'the CBC grant cites no clause';
+  end if;
+
+  -- The source rate is stored in the orientation CBC publishes, and the UGAI rate is derived
+  -- from it rather than relabelled.
+  select count(*) into n from pipeline.fx_observations
+   where base_currency = 'TWD' and quote_currency = 'USD' and derivation = 'direct'
+     and rate = 31.881 and fixing_date = date '2026-09-17'
+     and source_interface_id = iface;
+  if n <> 1 then raise exception 'the published TWD/USD leg is not stored as published'; end if;
+
+  -- The source rate carries its provenance, including that live retrieval was not re-verified.
+  select count(*) into n from pipeline.fx_observations
+   where idempotency_key = 'cbc:TWD:USD:2026-09-17:research'
+     and source_payload ->> 'provenance' is not null;
+  if n <> 1 then raise exception 'the CBC observation does not record how it was obtained'; end if;
+
+  -- Nothing production-purpose came from a research_usable interface.
+  select count(*) into n from pipeline.fx_observations
+   where source_interface_id = iface and observation_purpose = 'production';
+  if n <> 0 then raise exception '% production FX observation(s) rest on the CBC source', n; end if;
+
+  -- And the fixing convention is still unresolved. Closing a source gap must not have approved a
+  -- timing rule, which is the specific confusion this whole follow-up was scoped to avoid.
+  select count(*) into n from reference.methodology_parameters
+   where parameter_key = 'fx_fixing_convention' and status = 'approved';
+  if n <> 0 then raise exception 'the FX fixing convention was approved by a source change'; end if;
+
+  -- TSMC's FX criterion moved from unavailable to parameter_unresolved, and no further.
+  select count(*) into n from pipeline.investability_criteria c
+    join pipeline.investability_evaluations e on e.id = c.evaluation_id
+    join reference.issuers i on i.id = e.issuer_id
+   where i.issuer_key = 'tsmc' and e.superseded_by_id is null
+     and c.criterion = 'fx_availability' and c.result = 'parameter_unresolved'
+     and c.parameter_key = 'fx_fixing_convention';
+  if n <> 1 then raise exception 'the TSMC FX criterion did not move to parameter_unresolved'; end if;
+
+  select count(*) into n from pipeline.investability_evaluations e
+    join reference.issuers i on i.id = e.issuer_id
+   where i.issuer_key = 'tsmc' and e.superseded_by_id is null and e.overall_result <> 'unavailable';
+  if n <> 0 then raise exception 'TSMC was moved out of unavailable by a source change'; end if;
+
+  -- The superseded evaluation survives with its original finding.
+  select count(*) into n from pipeline.investability_criteria c
+   where c.evaluation_id = '1b000000-0000-4000-8000-000000000003'
+     and c.criterion = 'fx_availability' and c.result = 'unavailable';
+  if n <> 1 then raise exception 'the prior TSMC FX finding was rewritten rather than superseded'; end if;
+
+  raise notice 'CBC TWD source: granted, inverted, timing still unresolved';
 end $$;
 
 rollback;
