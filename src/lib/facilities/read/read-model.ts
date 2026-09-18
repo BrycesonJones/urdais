@@ -4,7 +4,8 @@
  * It is a narrow projection on purpose. The database holds the reviewer's
  * working state — unresolved questions, confidence grades, records with no
  * position, records awaiting a decision — and none of that is here. What is
- * here is a placed, published facility and the documents behind it.
+ * here is a placed public facility — verified or explicitly labelled research —
+ * and the documents behind it.
  *
  * The validator below runs on the way out, on every response. Its job is the
  * class of mistake that renders perfectly: a dot with no source, a city
@@ -44,12 +45,14 @@ export type PublicFacility = {
   ownerName: string | null;
   operatorName: string | null;
   lifecycleStatus: FacilityLifecycleStatus | null;
+  /** Public-facing review level, derived from the internal publication state. */
+  verificationStatus: "verified" | "research";
   lastVerifiedDate: string;
   sources: readonly PublicFacilitySource[];
 };
 
 export type FacilityCoverage = {
-  /** Facilities in the published state. */
+  /** Verified or research records that are candidates for the public map. */
   published: number;
   /** Of those, the ones this response carries after the staleness filter. */
   served: number;
@@ -61,8 +64,8 @@ export type FacilityCoverage = {
 export type FacilityUnavailableReason =
   /** The deployment has no database configured. */
   | "not_configured"
-  /** The database is reachable and holds no published, current facility. */
-  | "no_published_facilities"
+  /** The database is reachable and holds no map-safe, current public facility. */
+  | "no_public_facilities"
   /** The database could not be read. An outage, not an empty world. */
   | "read_failed";
 
@@ -144,6 +147,9 @@ export function validatePublicFacilities(model: unknown, now: Date = new Date())
     }
     if (!(MAP_ELIGIBLE_PRECISIONS as readonly string[]).includes(String(facility.coordinatePrecision))) {
       reasons.push(`${label} is placed at ${String(facility.coordinatePrecision)} precision, which is not a position`);
+    }
+    if (facility.verificationStatus !== "verified" && facility.verificationStatus !== "research") {
+      reasons.push(`${label} has no valid public verification status`);
     }
 
     if (!Array.isArray(facility.sources) || facility.sources.length === 0) {

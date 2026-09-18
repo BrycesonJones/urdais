@@ -18,6 +18,7 @@ export function facilityToMapPoint(facility: PublicFacility): UrdaisMapPoint {
     latitude: facility.latitude,
     longitude: facility.longitude,
   };
+  point.verificationStatus = facility.verificationStatus;
   if (facility.address !== null) point.address = facility.address;
   if (facility.ownerName !== null) point.ownerName = facility.ownerName;
   if (facility.operatorName !== null) point.operatorName = facility.operatorName;

@@ -1,0 +1,2539 @@
+{
+  "resultVersion": "urdais.map.geocode-results/1",
+  "generatedAt": "2026-09-18",
+  "provider": "Nominatim",
+  "counts": {
+    "geocode_no_match": 26,
+    "geocoded_review": 8,
+    "geocoded_ready": 25,
+    "geocode_conflict": 1
+  },
+  "results": [
+    {
+      "researchKey": "fermi-project-matador-campus",
+      "provider": "nominatim",
+      "query": "US Highway 60 and FM 2373, Carson County, Texas, United States",
+      "originalLocation": "North side of US Highway 60 near US 60 & FM 2373, ~15–17 miles NE of Amarillo, Carson County, TX (Texas Tech lease; bounded by US 60, FM 683, FM 2373, Pantex)",
+      "originalSources": [
+        {
+          "label": "TCEQ NSR project 407047",
+          "url": "https://www2.tceq.texas.gov/airperm/index.cfm?fuseaction=airpermits.project_report&proj_id=407047"
+        },
+        {
+          "label": "NRC COLA ML25169A396",
+          "url": "https://www.nrc.gov/docs/ML2516/ML25169A396.pdf"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:43:29.006Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "fermi-matador-gas-generation",
+      "provider": "nominatim",
+      "query": "US Highway 60 and FM 2373, Carson County, Texas, United States",
+      "originalLocation": "Same TCEQ East Campus site: N side of US 60 near US 60 & FM 2373, Carson County, TX",
+      "originalSources": [
+        {
+          "label": "TCEQ permit narrative",
+          "url": "https://records.tceq.texas.gov/cs/idcplg?IdcService=GET_FILE&allowInterrupt=1&dDocName=8281238&dID=9562398"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:43:29.006Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "naver-gak-sejong",
+      "provider": "nominatim",
+      "query": "824 Haengbok-daero, Sejong 30138, South Korea",
+      "originalLocation": "세종특별자치시 행복대로 824 (824 Haengbok-daero, Jipyeon-dong, Sejong 30138)",
+      "originalSources": [
+        {
+          "label": "NAVER Data Center GAK Sejong",
+          "url": "https://datacenter.navercorp.com/gaksejong/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:43:30.695Z",
+      "returnedFormattedAddress": "행복대로, 집현동, 반곡동, 세종특별자치시, 30142, 대한민국",
+      "latitude": 36.4991606,
+      "longitude": 127.3353861,
+      "providerCategory": "highway",
+      "providerType": "road",
+      "providerImportance": 0.0533998908979934,
+      "rawResult": {
+        "place_id": 223468778,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 1237757089,
+        "lat": "36.4991606",
+        "lon": "127.3353861",
+        "category": "highway",
+        "type": "trunk",
+        "place_rank": 26,
+        "importance": 0.0533998908979934,
+        "addresstype": "road",
+        "name": "행복대로",
+        "display_name": "행복대로, 집현동, 반곡동, 세종특별자치시, 30142, 대한민국",
+        "address": {
+          "road": "행복대로",
+          "quarter": "집현동",
+          "city_district": "반곡동",
+          "city": "세종특별자치시",
+          "ISO3166-2-lvl4": "KR-50",
+          "postcode": "30142",
+          "country": "대한민국",
+          "country_code": "kr"
+        },
+        "boundingbox": [
+          "36.4982904",
+          "36.5000664",
+          "127.3347387",
+          "127.3359818"
+        ]
+      },
+      "outcome": "geocoded_review",
+      "outcomeReason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "microsoft-sweden-staffanstorp",
+      "provider": "nominatim",
+      "query": "Västanvägen 86, 245 42 Staffanstorp, Sweden",
+      "originalLocation": "Västanvägen 86, 245 42 Staffanstorp (property STAFFANSTORP KRONOSLÄTT 1:9)",
+      "originalSources": [
+        {
+          "label": "DataCenters.com",
+          "url": "https://www.datacenters.com/microsoft-azure-staffanstorp-sweden"
+        },
+        {
+          "label": "Microsoft Datacenters",
+          "url": "https://datacenters.microsoft.com/home/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:43:32.338Z",
+      "returnedFormattedAddress": "Västanvägen, Önsvala, Staffanstorp, Staffanstorps kommun, Skåne län, 245 42, Sverige",
+      "latitude": 55.6284065,
+      "longitude": 13.1856246,
+      "providerCategory": "highway",
+      "providerType": "road",
+      "providerImportance": 0.053388374914167966,
+      "rawResult": {
+        "place_id": 147220625,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 28288654,
+        "lat": "55.6284065",
+        "lon": "13.1856246",
+        "category": "highway",
+        "type": "secondary",
+        "place_rank": 26,
+        "importance": 0.053388374914167966,
+        "addresstype": "road",
+        "name": "Västanvägen",
+        "display_name": "Västanvägen, Önsvala, Staffanstorp, Staffanstorps kommun, Skåne län, 245 42, Sverige",
+        "address": {
+          "road": "Västanvägen",
+          "neighbourhood": "Önsvala",
+          "hamlet": "Önsvala",
+          "town": "Staffanstorp",
+          "municipality": "Staffanstorps kommun",
+          "county": "Skåne län",
+          "ISO3166-2-lvl4": "SE-M",
+          "postcode": "245 42",
+          "country": "Sverige",
+          "country_code": "se"
+        },
+        "boundingbox": [
+          "55.6280385",
+          "55.6289107",
+          "13.1853387",
+          "13.1856329"
+        ]
+      },
+      "outcome": "geocoded_review",
+      "outcomeReason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "coreweave-lancaster-pa",
+      "provider": "nominatim",
+      "query": "216 Greenfield Road, Lancaster, Pennsylvania, United States",
+      "originalLocation": "216 Greenfield Road, Lancaster, PA (former R.R. Donnelley / LSC plant)",
+      "originalSources": [
+        {
+          "label": "City of Lancaster data-center page",
+          "url": "https://www.cityoflancasterpa.gov/data-center/"
+        },
+        {
+          "label": "LNP / LancasterOnline",
+          "url": "https://lancasteronline.com/news/local/plans-submitted-for-lancaster-city-data-centers-second-phase/article_d97cd11b-cb7f-49c8-9f57-7bb2a5a0facf.html"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:43:33.961Z",
+      "returnedFormattedAddress": "216, Greenfield Road, East Lampeter Township, Lancaster County, Pennsylvania, 17601, United States",
+      "latitude": 40.0472199,
+      "longitude": -76.2555314,
+      "providerCategory": "place",
+      "providerType": "place",
+      "providerImportance": 0.00000999999999995449,
+      "rawResult": {
+        "place_id": 415995868,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 97870680,
+        "lat": "40.0472199",
+        "lon": "-76.2555314",
+        "category": "place",
+        "type": "house",
+        "place_rank": 30,
+        "importance": 0.00000999999999995449,
+        "addresstype": "place",
+        "name": "",
+        "display_name": "216, Greenfield Road, East Lampeter Township, Lancaster County, Pennsylvania, 17601, United States",
+        "address": {
+          "house_number": "216",
+          "road": "Greenfield Road",
+          "city": "East Lampeter Township",
+          "county": "Lancaster County",
+          "state": "Pennsylvania",
+          "ISO3166-2-lvl4": "US-PA",
+          "postcode": "17601",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "40.0471699",
+          "40.0472699",
+          "-76.2555814",
+          "-76.2554814"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "cyrusone-dfw10-bosque",
+      "provider": "nominatim",
+      "query": "557 County Road 3610, Whitney, Texas 76692, United States",
+      "originalLocation": "557 CR 3610, Whitney, TX 76692, Bosque County",
+      "originalSources": [
+        {
+          "label": "TDLR TABS 2025005284",
+          "url": "https://www.tdlr.texas.gov/TABS/Projects/TABS2025005284"
+        },
+        {
+          "label": "CyrusOne Data Centers",
+          "url": "https://www.cyrusone.com/data-centers/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:43:35.759Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "dataone-vineland",
+      "provider": "nominatim",
+      "query": "Lincoln Avenue and Sheridan Avenue, Vineland, New Jersey, United States",
+      "originalLocation": "Lincoln Avenue and Sheridan Avenue, Vineland, NJ (Block 7503 Lots 1.01 & 35.01)",
+      "originalSources": [],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:43:37.378Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "google-cedar-rapids",
+      "provider": "nominatim",
+      "query": "Edgewood Road SW and 76th Avenue SW, Cedar Rapids, Iowa 52404, United States",
+      "originalLocation": "Big Cedar Industrial Center, along Edgewood Road SW and 76th Avenue SW, Cedar Rapids, IA 52404",
+      "originalSources": [
+        {
+          "label": "City of Cedar Rapids Google Data Center Project FAQ",
+          "url": "https://cms8.revize.com/revize/cedarrapids/Economic%20Development/Google%20Data%20Center%20Project%20_%20FAQ.pdf"
+        },
+        {
+          "label": "Cedar Rapids Economic Development",
+          "url": "https://www.economicdevelopmentcr.com/data-centers/"
+        },
+        {
+          "label": "Google Data Centers locations",
+          "url": "https://www.google.com/about/datacenters/locations/"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:43:39.186Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "google-pryor-mayes-county",
+      "provider": "nominatim",
+      "query": "4581 Webb Street, Pryor, Oklahoma 74361, United States",
+      "originalLocation": "4581 Webb Street, Pryor, OK 74361 (MidAmerica Industrial Park)",
+      "originalSources": [
+        {
+          "label": "Tulsa Regional Chamber listing",
+          "url": "https://tulsachamber.com/membership/active-member/google-inc./"
+        },
+        {
+          "label": "Google Data Centers locations",
+          "url": "https://www.google.com/about/datacenters/locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:43:40.758Z",
+      "returnedFormattedAddress": "4581, Webb Street, Mid-America Industrial Park, Lusta, Pryor Creek, Mayes County, Oklahoma, 74361, United States",
+      "latitude": 36.2411721,
+      "longitude": -95.3300473,
+      "providerCategory": "building",
+      "providerType": "building",
+      "providerImportance": 0.00003500190737769158,
+      "rawResult": {
+        "place_id": 336653302,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 309666504,
+        "lat": "36.2411721",
+        "lon": "-95.3300473",
+        "category": "building",
+        "type": "yes",
+        "place_rank": 30,
+        "importance": 0.00003500190737769158,
+        "addresstype": "building",
+        "name": "",
+        "display_name": "4581, Webb Street, Mid-America Industrial Park, Lusta, Pryor Creek, Mayes County, Oklahoma, 74361, United States",
+        "address": {
+          "house_number": "4581",
+          "road": "Webb Street",
+          "industrial": "Mid-America Industrial Park",
+          "hamlet": "Lusta",
+          "town": "Pryor Creek",
+          "county": "Mayes County",
+          "state": "Oklahoma",
+          "ISO3166-2-lvl4": "US-OK",
+          "postcode": "74361",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "36.2403107",
+          "36.2420334",
+          "-95.3303887",
+          "-95.3297059"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "google-stillwater",
+      "provider": "nominatim",
+      "query": "1500 East Richmond Road, Stillwater, Oklahoma, United States",
+      "originalLocation": "1500 E. Richmond Road; SW corner Richmond Road & Jardot Road / Perkins Road (US-177) & Richmond Road, Stillwater, OK",
+      "originalSources": [
+        {
+          "label": "Oklahoma Dept. of Commerce",
+          "url": "https://www.okcommerce.gov/google-has-acquired-land-in-stillwater/"
+        },
+        {
+          "label": "Stillwater Planning Commission coverage",
+          "url": "https://www.thestillwegian.news/planning-commission-advances-google-data-center-final-plat/"
+        },
+        {
+          "label": "Google Data Centers locations",
+          "url": "https://www.google.com/about/datacenters/locations/"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:43:42.472Z",
+      "returnedFormattedAddress": "1500, East Richmond Road, Stillwater, Payne County, Oklahoma, 74075, United States",
+      "latitude": 36.17408,
+      "longitude": -97.0408584,
+      "providerCategory": "place",
+      "providerType": "place",
+      "providerImportance": 0.00000999999999995449,
+      "rawResult": {
+        "place_id": 393446257,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 52584309,
+        "lat": "36.1740800",
+        "lon": "-97.0408584",
+        "category": "place",
+        "type": "house",
+        "place_rank": 30,
+        "importance": 0.00000999999999995449,
+        "addresstype": "place",
+        "name": "",
+        "display_name": "1500, East Richmond Road, Stillwater, Payne County, Oklahoma, 74075, United States",
+        "address": {
+          "house_number": "1500",
+          "road": "East Richmond Road",
+          "city": "Stillwater",
+          "county": "Payne County",
+          "state": "Oklahoma",
+          "ISO3166-2-lvl4": "US-OK",
+          "postcode": "74075",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "36.1740300",
+          "36.1741300",
+          "-97.0409084",
+          "-97.0408084"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "meta-eagle-mountain",
+      "provider": "nominatim",
+      "query": "1275 North Community Circle, Eagle Mountain, Utah 84005, United States",
+      "originalLocation": "1275 N Community Circle, Eagle Mountain, UT 84005",
+      "originalSources": [
+        {
+          "label": "DataCenters.com",
+          "url": "https://www.datacenters.com/facebook-eagle-mountain-utah"
+        },
+        {
+          "label": "Baxtel",
+          "url": "https://baxtel.com/data-center/meta-eagle-mountain-utah-campus"
+        },
+        {
+          "label": "Meta US data center fleet",
+          "url": "https://datacenters.atmeta.com/us-locations/"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:43:44.392Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "meta-richland-parish",
+      "provider": "nominatim",
+      "query": "Louisiana Highway 183 and Jaggers Lane, Holly Ridge, Louisiana, United States",
+      "originalLocation": "Holly Ridge, LA, along LA-183; construction access at Highway 80 and Jaggers Lane",
+      "originalSources": [
+        {
+          "label": "Gulf States Newsroom / News From The States",
+          "url": "https://www.newsfromthestates.com/article/construction-metas-largest-data-center-brings-600-crash-spike-chaos-rural-louisiana"
+        },
+        {
+          "label": "Meta US data center fleet",
+          "url": "https://datacenters.atmeta.com/us-locations/"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:43:46.144Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "project-jupiter-dona-ana",
+      "provider": "nominatim",
+      "query": "New Mexico Highway 136 and New Mexico Highway 9, Santa Teresa, New Mexico, United States",
+      "originalLocation": "SE of NM Highway 136 and NM Highway 9, ~1,400 acres, listed parcel IDs in the executed MOU; near Santa Teresa Port of Entry",
+      "originalSources": [
+        {
+          "label": "Executed MOU",
+          "url": "https://haussamen.com/wp-content/uploads/2025/12/Executed-Memorandum-of-Understanding-MOU.pdf"
+        },
+        {
+          "label": "Haussamen / county application reporting",
+          "url": "https://haussamen.com/2025/09/03/developer-must-guarantee-project-jupiters-rosy-promises/"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:43:48.295Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "switch-citadel-tahoe-reno",
+      "provider": "nominatim",
+      "query": "1 Superloop Circle, McCarran, Nevada 89434, United States",
+      "originalLocation": "1 Superloop Circle, McCarran, NV 89434 (postal Sparks 89437 also appears); Tahoe Reno Industrial Center",
+      "originalSources": [
+        {
+          "label": "Data Center Map",
+          "url": "https://www.datacentermap.com/usa/nevada/reno/switch-tahoe-reno/"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:43:49.945Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "related-the-barn-saline",
+      "provider": "nominatim",
+      "query": "11600 West Michigan Avenue, Saline, Michigan 48176, United States",
+      "originalLocation": "11600 W Michigan Avenue, Saline Township, MI 48176 (plus adjoining parcels on N side of US-12 / Michigan Ave, east of Rustic Glen Golf Club, ~575 acres)",
+      "originalSources": [
+        {
+          "label": "Saline Township Act 198 hearing notice",
+          "url": "https://thesuntimesnews.com/saline-twp-board-of-trustees-notice-of-public-hearing-9-10-25/"
+        },
+        {
+          "label": "consent judgment",
+          "url": "https://salinetownship.org/uploads/notices/SalineDataCenterConsentJudgmentFinalExecutionCopy492124804975v1.pdf"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:43:51.746Z",
+      "returnedFormattedAddress": "11600, West Michigan Avenue, Benton, Saline Township, Washtenaw County, Michigan, 48176, United States",
+      "latitude": 42.115196,
+      "longitude": -83.8812746,
+      "providerCategory": "place",
+      "providerType": "place",
+      "providerImportance": 0.00000999999999995449,
+      "rawResult": {
+        "place_id": 416011829,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 121875467,
+        "lat": "42.1151960",
+        "lon": "-83.8812746",
+        "category": "place",
+        "type": "house",
+        "place_rank": 30,
+        "importance": 0.00000999999999995449,
+        "addresstype": "place",
+        "name": "",
+        "display_name": "11600, West Michigan Avenue, Benton, Saline Township, Washtenaw County, Michigan, 48176, United States",
+        "address": {
+          "house_number": "11600",
+          "road": "West Michigan Avenue",
+          "hamlet": "Benton",
+          "town": "Saline Township",
+          "county": "Washtenaw County",
+          "state": "Michigan",
+          "ISO3166-2-lvl4": "US-MI",
+          "postcode": "48176",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "42.1151460",
+          "42.1152460",
+          "-83.8813246",
+          "-83.8812246"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "The returned 11600 West Michigan Avenue parcel matches the township-supported campus address; campus precision is retained."
+    },
+    {
+      "researchKey": "vantage-lighthouse-port-washington",
+      "provider": "nominatim",
+      "query": "531 East Lake Drive, Port Washington, Wisconsin, United States",
+      "originalLocation": "531, 533, 701, and 723 E. Lake Drive, Port Washington, WI (four certified buildings)",
+      "originalSources": [
+        {
+          "label": "Wisconsin DOR Qualified Data Center Exemption list",
+          "url": "https://www.revenue.wi.gov/pages/faqs/exemptionforqualifieddatacenter.aspx"
+        },
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:43:54.019Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "nscc-aspire-2a",
+      "provider": "nominatim",
+      "query": "3 Research Link, Singapore 117602",
+      "originalLocation": "NUS Innovation 4.0 (i4.0) building, 3 Research Link, Singapore 117602 (Level 2 data halls)",
+      "originalSources": [
+        {
+          "label": "NSCC maintenance notice",
+          "url": "https://help.nscc.sg/aspire2a/urgent_maintenance_2a_30_apr_2026-3-2-2-3/"
+        },
+        {
+          "label": "SBR tropical DC at NUS i4",
+          "url": "https://sbr.com.sg/co-written-partner/event-news/bringing-sustainable-supercomputing-tropics"
+        }
+      ],
+      "coordinatePrecision": "building",
+      "geocodedAt": "2026-09-18T03:43:55.678Z",
+      "returnedFormattedAddress": "i4.0, 3, Research Link, National University of Singapore, one-north, Queenstown, Central Region, Singapore, 117602, Singapore",
+      "latitude": 1.2945764,
+      "longitude": 103.7756446,
+      "providerCategory": "building",
+      "providerType": "building",
+      "providerImportance": 0.00008432822156095243,
+      "rawResult": {
+        "place_id": 258134457,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 54619703,
+        "lat": "1.2945764",
+        "lon": "103.7756446",
+        "category": "building",
+        "type": "yes",
+        "place_rank": 30,
+        "importance": 0.00008432822156095243,
+        "addresstype": "building",
+        "name": "i4.0",
+        "display_name": "i4.0, 3, Research Link, National University of Singapore, one-north, Queenstown, Central Region, Singapore, 117602, Singapore",
+        "address": {
+          "building": "i4.0",
+          "house_number": "3",
+          "road": "Research Link",
+          "neighbourhood": "National University of Singapore",
+          "suburb": "one-north",
+          "borough": "Central Region",
+          "city": "Singapore",
+          "postcode": "117602",
+          "country": "Singapore",
+          "country_code": "sg"
+        },
+        "boundingbox": [
+          "1.2941572",
+          "1.2950038",
+          "103.7752972",
+          "103.7760796"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "The result is the named i4.0 building at 3 Research Link and matches the supported building address."
+    },
+    {
+      "researchKey": "meta-hyperion",
+      "provider": "nominatim",
+      "query": "Louisiana Highway 183 and Jaggers Lane, Holly Ridge, Louisiana, United States",
+      "originalLocation": "Same as `meta-richland-parish`: Holly Ridge, LA, LA-183 / Hwy 80 & Jaggers Lane",
+      "originalSources": [],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:43:46.144Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "nebius-vineland-cluster",
+      "provider": "nominatim",
+      "query": "Lincoln Avenue and Sheridan Avenue, Vineland, New Jersey, United States",
+      "originalLocation": "Lincoln Avenue and Sheridan Avenue, Vineland, NJ",
+      "originalSources": [],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:43:37.378Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "micron-singapore-hbm-packaging",
+      "provider": "nominatim",
+      "query": "1 Woodlands Industrial Park D Street 1, Singapore 738799",
+      "originalLocation": "Adjacent to Micron Woodlands campus at 1 Woodlands Industrial Park D Street 1, Singapore 738799",
+      "originalSources": [
+        {
+          "label": "Micron 2025-01-08 PR",
+          "url": "https://investors.micron.com/news/press-release/2025/Micron-Breaks-Ground-on-New-HBM-Advanced-Packaging-Facility-in-Singapore-01-08-2025/default.aspx"
+        },
+        {
+          "label": "Business Times Woodlands",
+          "url": "https://www.businesstimes.com.sg/companies-markets/micron-invests-us7-billion-woodlands-advanced-packaging-site-1400-jobs-be-created"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:43:57.212Z",
+      "returnedFormattedAddress": "Micron, 1, Woodlands Industrial Park D Street 1, Kranji, Sungei Kadut, North Region, Singapore, 738799, Singapore",
+      "latitude": 1.431993,
+      "longitude": 103.7673775,
+      "providerCategory": "building",
+      "providerType": "building",
+      "providerImportance": 0.00008432822156095243,
+      "rawResult": {
+        "place_id": 255690309,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 449818145,
+        "lat": "1.4319930",
+        "lon": "103.7673775",
+        "category": "building",
+        "type": "industrial",
+        "place_rank": 30,
+        "importance": 0.00008432822156095243,
+        "addresstype": "building",
+        "name": "Micron",
+        "display_name": "Micron, 1, Woodlands Industrial Park D Street 1, Kranji, Sungei Kadut, North Region, Singapore, 738799, Singapore",
+        "address": {
+          "building": "Micron",
+          "house_number": "1",
+          "road": "Woodlands Industrial Park D Street 1",
+          "neighbourhood": "Kranji",
+          "suburb": "Sungei Kadut",
+          "borough": "North Region",
+          "city": "Singapore",
+          "postcode": "738799",
+          "country": "Singapore",
+          "country_code": "sg"
+        },
+        "boundingbox": [
+          "1.4294849",
+          "1.4338880",
+          "103.7658421",
+          "103.7682965"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "sk-hynix-cheongju",
+      "provider": "nominatim",
+      "query": "215 Daesin-ro, Cheongju, South Korea",
+      "originalLocation": "Cheongju Campus, Heungdeok-gu: 215 Daesin-ro (28429); 959 2sunhwan-ro (28433); 337 Jikji-daero (28436); 120 SK-ro (28356, M15)",
+      "originalSources": [
+        {
+          "label": "SK hynix company locations",
+          "url": "https://www.skhynix.com/company/UI-FR-CP06/"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:43:59.036Z",
+      "returnedFormattedAddress": "대신로, 복대동, 흥덕구, 청주시, 충청북도, 28584, 대한민국",
+      "latitude": 36.6400637,
+      "longitude": 127.4354745,
+      "providerCategory": "highway",
+      "providerType": "road",
+      "providerImportance": 0.05339457312886241,
+      "rawResult": {
+        "place_id": 223767020,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 453491463,
+        "lat": "36.6400637",
+        "lon": "127.4354745",
+        "category": "highway",
+        "type": "tertiary",
+        "place_rank": 26,
+        "importance": 0.05339457312886241,
+        "addresstype": "road",
+        "name": "대신로",
+        "display_name": "대신로, 복대동, 흥덕구, 청주시, 충청북도, 28584, 대한민국",
+        "address": {
+          "road": "대신로",
+          "quarter": "복대동",
+          "borough": "흥덕구",
+          "city": "청주시",
+          "province": "충청북도",
+          "ISO3166-2-lvl4": "KR-43",
+          "postcode": "28584",
+          "country": "대한민국",
+          "country_code": "kr"
+        },
+        "boundingbox": [
+          "36.6378811",
+          "36.6422560",
+          "127.4353198",
+          "127.4357243"
+        ]
+      },
+      "outcome": "geocoded_review",
+      "outcomeReason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "sk-hynix-yongin",
+      "provider": "nominatim",
+      "query": "Yongin Semiconductor Cluster, Wonsam-myeon, Yongin, South Korea",
+      "originalLocation": "Yongin Semiconductor Cluster General Industrial Complex, Wonsam-myeon (Godang-ri, Dokseong-ri, Jukneung-ri), Cheoin-gu, Yongin, Gyeonggi",
+      "originalSources": [
+        {
+          "label": "Yongin City industrial-complex page",
+          "url": "https://www.yongin.go.kr/home/www/www19/www19_02_01/www19_02_01_02.jsp"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:44:00.697Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "samsung-hwaseong",
+      "provider": "nominatim",
+      "query": "1 Samsungjeonja-ro, Hwaseong-si, Gyeonggi-do 18448, South Korea",
+      "originalLocation": "1 Samsungjeonja-ro, Hwaseong-si, Gyeonggi-do 18448",
+      "originalSources": [
+        {
+          "label": "Samsung Foundry IATF certificate",
+          "url": "https://download.semiconductor.samsung.com/resources/others/samsung_electronics_co_ltd_device_solutions_foundry_business_iatf_52883_002.pdf"
+        },
+        {
+          "label": "ISO 22301 certificate",
+          "url": "https://download.semiconductor.samsung.com/resources/others/Certificate_of_Registration_ISO22301_DS_2024.pdf"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:44:02.504Z",
+      "returnedFormattedAddress": "삼성전자로, 석우동, 동탄신도시, 화성시, 경기도, 18450, 대한민국",
+      "latitude": 37.2191905,
+      "longitude": 127.079025,
+      "providerCategory": "highway",
+      "providerType": "road",
+      "providerImportance": 0.0533933478294041,
+      "rawResult": {
+        "place_id": 222347730,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 1461814750,
+        "lat": "37.2191905",
+        "lon": "127.0790250",
+        "category": "highway",
+        "type": "tertiary",
+        "place_rank": 26,
+        "importance": 0.0533933478294041,
+        "addresstype": "road",
+        "name": "삼성전자로",
+        "display_name": "삼성전자로, 석우동, 동탄신도시, 화성시, 경기도, 18450, 대한민국",
+        "address": {
+          "road": "삼성전자로",
+          "quarter": "석우동",
+          "suburb": "동탄신도시",
+          "city": "화성시",
+          "province": "경기도",
+          "ISO3166-2-lvl4": "KR-41",
+          "postcode": "18450",
+          "country": "대한민국",
+          "country_code": "kr"
+        },
+        "boundingbox": [
+          "37.2184840",
+          "37.2206414",
+          "127.0773121",
+          "127.0800557"
+        ]
+      },
+      "outcome": "geocoded_review",
+      "outcomeReason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "samsung-pyeongtaek",
+      "provider": "nominatim",
+      "query": "114 Samsung-ro, Godeok-myeon, Pyeongtaek-si, Gyeonggi-do 17786, South Korea",
+      "originalLocation": "114 Samsung-ro, Godeok-myeon, Pyeongtaek-si, Gyeonggi-do 17786",
+      "originalSources": [],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:44:04.405Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "tsmc-ap6-zhunan",
+      "provider": "nominatim",
+      "query": "1 Kezhuan 1st Road, Zhunan Township, Miaoli, Taiwan",
+      "originalLocation": "350-012 苗栗縣竹南鎮科專一路1號 (1 Kezhuan 1st Rd, Zhunan Township, Miaoli; Hsinchu Science Park Zhunan)",
+      "originalSources": [
+        {
+          "label": "TSMC Fabs directory",
+          "url": "https://www.tsmc.com/english/aboutTSMC/TSMC_Fabs"
+        },
+        {
+          "label": "SIPA Zhunan park vendor list",
+          "url": "https://www.sipa.gov.tw/home.jsp?contlink=ap%2Fintroduction_3_5.jsp&menudata=ChineseMenu&mserno=201001210037&serno=201001210040&serno3=201002010019"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:06.220Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "intel-ohio-one",
+      "provider": "nominatim",
+      "query": "11511 Green Chapel Road NW, New Albany, Ohio 43031, United States",
+      "originalLocation": "11511 Green Chapel Road NW, New Albany, OH 43031 (FTZ physical address); site bordered by Clover Valley, Green Chapel, Mink, and south of Jug/Miller",
+      "originalSources": [
+        {
+          "label": "US FTZ Zone 138 Subzone 00I Site 001",
+          "url": "https://ofis.trade.gov/Site/Details/4951"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:44:08.129Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "micron-boise",
+      "provider": "nominatim",
+      "query": "8000 South Federal Way, Boise, Idaho 83716, United States",
+      "originalLocation": "8000 S Federal Way, Boise, ID 83716 (existing campus; new HVM fabs co-located)",
+      "originalSources": [
+        {
+          "label": "Micron locations",
+          "url": "https://www.micron.com/about/locations"
+        },
+        {
+          "label": "NIST CHIPS Micron Idaho",
+          "url": "https://www.nist.gov/chips/micron-idaho-boise"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:44:09.765Z",
+      "returnedFormattedAddress": "8000, South Federal Way, Boise, Ada County, Idaho, 83716, United States",
+      "latitude": 43.5301411,
+      "longitude": -116.150825,
+      "providerCategory": "place",
+      "providerType": "place",
+      "providerImportance": 0.00000999999999995449,
+      "rawResult": {
+        "place_id": 389023040,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 1487075523,
+        "lat": "43.5301411",
+        "lon": "-116.1508250",
+        "category": "place",
+        "type": "house",
+        "place_rank": 30,
+        "importance": 0.00000999999999995449,
+        "addresstype": "place",
+        "name": "",
+        "display_name": "8000, South Federal Way, Boise, Ada County, Idaho, 83716, United States",
+        "address": {
+          "house_number": "8000",
+          "road": "South Federal Way",
+          "city": "Boise",
+          "county": "Ada County",
+          "state": "Idaho",
+          "ISO3166-2-lvl4": "US-ID",
+          "postcode": "83716",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "43.5300911",
+          "43.5301911",
+          "-116.1508750",
+          "-116.1507750"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "samsung-taylor-tx",
+      "provider": "nominatim",
+      "query": "1530 FM 973, Taylor, Texas 76574, United States",
+      "originalLocation": "1530 FM 973, Taylor, TX 76574-4540; campus between Highway 79 and FM 973 (CR 404 runs through the site)",
+      "originalSources": [
+        {
+          "label": "TCEQ correspondence to Samsung Austin Semiconductor Taylor Site",
+          "url": "https://records.tceq.texas.gov/cs/idcplg?IdcService=TCEQ_EXTERNAL_SEARCH_GET_FILE&Rendition=Web&dID=9611376&searchType=External"
+        },
+        {
+          "label": "City of Taylor",
+          "url": "https://www.taylortx.gov/1276/Samsung-Austin-Semiconductor"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:44:11.402Z",
+      "returnedFormattedAddress": "1530, Farm-to-Market Road 973, Taylor, Williamson County, Texas, 76574, United States",
+      "latitude": 30.5320474,
+      "longitude": -97.4474569,
+      "providerCategory": "building",
+      "providerType": "building",
+      "providerImportance": 0.000026000610360830357,
+      "rawResult": {
+        "place_id": 315562446,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 1207319787,
+        "lat": "30.5320474",
+        "lon": "-97.4474569",
+        "category": "building",
+        "type": "yes",
+        "place_rank": 30,
+        "importance": 0.000026000610360830357,
+        "addresstype": "building",
+        "name": "",
+        "display_name": "1530, Farm-to-Market Road 973, Taylor, Williamson County, Texas, 76574, United States",
+        "address": {
+          "house_number": "1530",
+          "road": "Farm-to-Market Road 973",
+          "town": "Taylor",
+          "county": "Williamson County",
+          "state": "Texas",
+          "ISO3166-2-lvl4": "US-TX",
+          "postcode": "76574",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "30.5319241",
+          "30.5321707",
+          "-97.4478057",
+          "-97.4471082"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "digital-realty-phoenix-van-buren",
+      "provider": "nominatim",
+      "query": "120 East Van Buren, Phoenix, AZ, Phoenix, AZ, United States",
+      "originalLocation": "120 East Van Buren, Phoenix, AZ",
+      "originalSources": [
+        {
+          "label": "Digital Realty Americas",
+          "url": "https://www.digitalrealty.com/data-centers/americas"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:12.974Z",
+      "returnedFormattedAddress": "Downtown Technology Exchange, 120, East Van Buren Street, Downtown, Central City, Phoenix, Maricopa County, Arizona, 85004, United States",
+      "latitude": 33.4519107,
+      "longitude": -112.0719077,
+      "providerCategory": "building",
+      "providerType": "building",
+      "providerImportance": 0.00007330205233839959,
+      "rawResult": {
+        "place_id": 320550552,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 37057893,
+        "lat": "33.4519107",
+        "lon": "-112.0719077",
+        "category": "building",
+        "type": "yes",
+        "place_rank": 30,
+        "importance": 0.00007330205233839959,
+        "addresstype": "building",
+        "name": "Downtown Technology Exchange",
+        "display_name": "Downtown Technology Exchange, 120, East Van Buren Street, Downtown, Central City, Phoenix, Maricopa County, Arizona, 85004, United States",
+        "address": {
+          "building": "Downtown Technology Exchange",
+          "house_number": "120",
+          "road": "East Van Buren Street",
+          "quarter": "Downtown",
+          "suburb": "Central City",
+          "city": "Phoenix",
+          "county": "Maricopa County",
+          "state": "Arizona",
+          "ISO3166-2-lvl4": "US-AZ",
+          "postcode": "85004",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "33.4515104",
+          "33.4523072",
+          "-112.0723944",
+          "-112.0714186"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "equinix-dc21",
+      "provider": "nominatim",
+      "query": "22175 Beaumeade Circle, Ashburn, VA, Ashburn, VA, United States",
+      "originalLocation": "22175 Beaumeade Circle, Ashburn, VA",
+      "originalSources": [
+        {
+          "label": "Equinix Washington DC IBXs",
+          "url": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/washington-dc-data-centers"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:14.612Z",
+      "returnedFormattedAddress": "Equinix Ashburn DC21, 22175, Beaumeade Circle, Ashburn, Loudoun County, Virginia, 20147, United States",
+      "latitude": 39.0115448,
+      "longitude": -77.454718,
+      "providerCategory": "building",
+      "providerType": "building",
+      "providerImportance": 0.00005413977264052823,
+      "rawResult": {
+        "place_id": 349090238,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 796933516,
+        "lat": "39.0115448",
+        "lon": "-77.4547180",
+        "category": "building",
+        "type": "data_center",
+        "place_rank": 30,
+        "importance": 0.00005413977264052823,
+        "addresstype": "building",
+        "name": "Equinix Ashburn DC21",
+        "display_name": "Equinix Ashburn DC21, 22175, Beaumeade Circle, Ashburn, Loudoun County, Virginia, 20147, United States",
+        "address": {
+          "building": "Equinix Ashburn DC21",
+          "house_number": "22175",
+          "road": "Beaumeade Circle",
+          "town": "Ashburn",
+          "county": "Loudoun County",
+          "state": "Virginia",
+          "ISO3166-2-lvl4": "US-VA",
+          "postcode": "20147",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "39.0109722",
+          "39.0126388",
+          "-77.4552052",
+          "-77.4538148"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "The result names Equinix DC21 and exactly matches the operator-published street address."
+    },
+    {
+      "researchKey": "equinix-ny4",
+      "provider": "nominatim",
+      "query": "755 Secaucus Road, Secaucus, NJ 07094, Secaucus, NJ, United States",
+      "originalLocation": "755 Secaucus Road, Secaucus, NJ 07094",
+      "originalSources": [
+        {
+          "label": "Equinix NY4",
+          "url": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers/ny4"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:15.925Z",
+      "returnedFormattedAddress": "Equinix New York Secaucus NY4, 755, Secaucus Road, Harmon Cove, Secaucus, Hudson County, New Jersey, 07094, United States",
+      "latitude": 40.7764281,
+      "longitude": -74.0697759,
+      "providerCategory": "building",
+      "providerType": "building",
+      "providerImportance": 0.00005413977264052823,
+      "rawResult": {
+        "place_id": 356702662,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 193611211,
+        "lat": "40.7764281",
+        "lon": "-74.0697759",
+        "category": "building",
+        "type": "yes",
+        "place_rank": 30,
+        "importance": 0.00005413977264052823,
+        "addresstype": "building",
+        "name": "Equinix New York Secaucus NY4",
+        "display_name": "Equinix New York Secaucus NY4, 755, Secaucus Road, Harmon Cove, Secaucus, Hudson County, New Jersey, 07094, United States",
+        "address": {
+          "building": "Equinix New York Secaucus NY4",
+          "house_number": "755",
+          "road": "Secaucus Road",
+          "hamlet": "Harmon Cove",
+          "town": "Secaucus",
+          "county": "Hudson County",
+          "state": "New Jersey",
+          "ISO3166-2-lvl4": "US-NJ",
+          "postcode": "07094",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "40.7750190",
+          "40.7778372",
+          "-74.0709786",
+          "-74.0685732"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "The result names Equinix NY4 and exactly matches the operator-published street address."
+    },
+    {
+      "researchKey": "equinix-ny9",
+      "provider": "nominatim",
+      "query": "111 8th Avenue, New York, NY 10011, New York, NY, United States",
+      "originalLocation": "111 8th Avenue, New York, NY 10011",
+      "originalSources": [
+        {
+          "label": "Equinix NY9",
+          "url": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers/ny9"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:17.722Z",
+      "returnedFormattedAddress": "Google, 111, 8th Avenue, Chelsea District, Manhattan Community Board 4, Manhattan, New York County, New York, 10011, United States",
+      "latitude": 40.7417176,
+      "longitude": -74.0041592,
+      "providerCategory": "office",
+      "providerType": "office",
+      "providerImportance": 0.00009175936522464359,
+      "rawResult": {
+        "place_id": 356832549,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "node",
+        "osm_id": 2601893113,
+        "lat": "40.7417176",
+        "lon": "-74.0041592",
+        "category": "office",
+        "type": "company",
+        "place_rank": 30,
+        "importance": 0.00009175936522464359,
+        "addresstype": "office",
+        "name": "Google",
+        "display_name": "Google, 111, 8th Avenue, Chelsea District, Manhattan Community Board 4, Manhattan, New York County, New York, 10011, United States",
+        "address": {
+          "office": "Google",
+          "house_number": "111",
+          "road": "8th Avenue",
+          "neighbourhood": "Chelsea District",
+          "suburb": "Manhattan",
+          "city_district": "New York County",
+          "city": "New York",
+          "state": "New York",
+          "ISO3166-2-lvl4": "US-NY",
+          "postcode": "10011",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "40.7416676",
+          "40.7417676",
+          "-74.0042092",
+          "-74.0041092"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "The result resolves the supported 111 8th Avenue carrier-hotel address. Street precision is retained; the geocoder's Google label is not treated as facility identity evidence."
+    },
+    {
+      "researchKey": "microsoft-cheyenne-bison-business-park",
+      "provider": "nominatim",
+      "query": "Bison Business Park, Cheyenne, WY, Cheyenne, WY, United States",
+      "originalLocation": "Bison Business Park, Cheyenne, WY",
+      "originalSources": [
+        {
+          "label": "Microsoft Datacenters",
+          "url": "https://datacenters.microsoft.com/home/"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:44:19.223Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "microsoft-cheyenne-business-parkway",
+      "provider": "nominatim",
+      "query": "Cheyenne Business Parkway, Cheyenne, WY, Cheyenne, WY, United States",
+      "originalLocation": "Cheyenne Business Parkway, Cheyenne, WY",
+      "originalSources": [
+        {
+          "label": "Microsoft Datacenters",
+          "url": "https://datacenters.microsoft.com/home/"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:44:20.862Z",
+      "returnedFormattedAddress": "Microsoft Cheyenne Business Parkway Data Center, Cheyenne, Laramie County, Wyoming, United States",
+      "latitude": 41.1421309,
+      "longitude": -104.7164285,
+      "providerCategory": "landuse",
+      "providerType": "industrial",
+      "providerImportance": 0.08006262073701073,
+      "rawResult": {
+        "place_id": 421779983,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 1197757146,
+        "lat": "41.1421309",
+        "lon": "-104.7164285",
+        "category": "landuse",
+        "type": "industrial",
+        "place_rank": 24,
+        "importance": 0.08006262073701073,
+        "addresstype": "industrial",
+        "name": "Microsoft Cheyenne Business Parkway Data Center",
+        "display_name": "Microsoft Cheyenne Business Parkway Data Center, Cheyenne, Laramie County, Wyoming, United States",
+        "address": {
+          "industrial": "Microsoft Cheyenne Business Parkway Data Center",
+          "city": "Cheyenne",
+          "county": "Laramie County",
+          "state": "Wyoming",
+          "ISO3166-2-lvl4": "US-WY",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "41.1391468",
+          "41.1452297",
+          "-104.7205247",
+          "-104.7118673"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "vantage-ashburn-i",
+      "provider": "nominatim",
+      "query": "45200 Vantage Data Plaza, Sterling, VA 20166, Sterling, VA, United States",
+      "originalLocation": "45200 Vantage Data Plaza, Sterling, VA 20166",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:22.495Z",
+      "returnedFormattedAddress": "Vantage VA11, 45200, Vantage Data Plaza, Ashburn I Data Center Campus, Sterling, Loudoun County, Virginia, 20166, United States",
+      "latitude": 39.0023686,
+      "longitude": -77.4376872,
+      "providerCategory": "building",
+      "providerType": "building",
+      "providerImportance": 0.00005413977264052823,
+      "rawResult": {
+        "place_id": 348356559,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 701924665,
+        "lat": "39.0023686",
+        "lon": "-77.4376872",
+        "category": "building",
+        "type": "data_center",
+        "place_rank": 30,
+        "importance": 0.00005413977264052823,
+        "addresstype": "building",
+        "name": "Vantage VA11",
+        "display_name": "Vantage VA11, 45200, Vantage Data Plaza, Ashburn I Data Center Campus, Sterling, Loudoun County, Virginia, 20166, United States",
+        "address": {
+          "building": "Vantage VA11",
+          "house_number": "45200",
+          "road": "Vantage Data Plaza",
+          "industrial": "Ashburn I Data Center Campus",
+          "town": "Sterling",
+          "county": "Loudoun County",
+          "state": "Virginia",
+          "ISO3166-2-lvl4": "US-VA",
+          "postcode": "20166",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "39.0017661",
+          "39.0029928",
+          "-77.4386319",
+          "-77.4367437"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "vantage-ashburn-ii",
+      "provider": "nominatim",
+      "query": "22435 Glenn Drive, Sterling, VA 20164, Sterling, VA, United States",
+      "originalLocation": "22435 Glenn Drive, Sterling, VA 20164",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:24.097Z",
+      "returnedFormattedAddress": "Vantage VA2, 22435, Glenn Drive, Sterling, Loudoun County, Virginia, 20164, United States",
+      "latitude": 38.9978663,
+      "longitude": -77.4301823,
+      "providerCategory": "building",
+      "providerType": "building",
+      "providerImportance": 0.00005413977264052823,
+      "rawResult": {
+        "place_id": 347839311,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 1344901575,
+        "lat": "38.9978663",
+        "lon": "-77.4301823",
+        "category": "building",
+        "type": "data_center",
+        "place_rank": 30,
+        "importance": 0.00005413977264052823,
+        "addresstype": "building",
+        "name": "Vantage VA2",
+        "display_name": "Vantage VA2, 22435, Glenn Drive, Sterling, Loudoun County, Virginia, 20164, United States",
+        "address": {
+          "building": "Vantage VA2",
+          "house_number": "22435",
+          "road": "Glenn Drive",
+          "town": "Sterling",
+          "county": "Loudoun County",
+          "state": "Virginia",
+          "ISO3166-2-lvl4": "US-VA",
+          "postcode": "20164",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "38.9972297",
+          "38.9986683",
+          "-77.4312145",
+          "-77.4292468"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "vantage-ashburn-iii",
+      "provider": "nominatim",
+      "query": "19509 Belmont Ridge Road, Ashburn, VA 20147, Ashburn, VA, United States",
+      "originalLocation": "19509 Belmont Ridge Road, Ashburn, VA 20147",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:26.079Z",
+      "returnedFormattedAddress": "Belmont Ridge Road, Belmont Greene, Ashburn, Loudoun County, Virginia, 20147, United States",
+      "latitude": 39.0599793,
+      "longitude": -77.5127854,
+      "providerCategory": "highway",
+      "providerType": "road",
+      "providerImportance": 0.05338554589150832,
+      "rawResult": {
+        "place_id": 348156994,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 1181281121,
+        "lat": "39.0599793",
+        "lon": "-77.5127854",
+        "category": "highway",
+        "type": "primary",
+        "place_rank": 26,
+        "importance": 0.05338554589150832,
+        "addresstype": "road",
+        "name": "Belmont Ridge Road",
+        "display_name": "Belmont Ridge Road, Belmont Greene, Ashburn, Loudoun County, Virginia, 20147, United States",
+        "address": {
+          "road": "Belmont Ridge Road",
+          "neighbourhood": "Belmont Greene",
+          "town": "Ashburn",
+          "county": "Loudoun County",
+          "state": "Virginia",
+          "ISO3166-2-lvl4": "US-VA",
+          "postcode": "20147",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "39.0576415",
+          "39.0632624",
+          "-77.5155451",
+          "-77.5111040"
+        ]
+      },
+      "outcome": "geocoded_review",
+      "outcomeReason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "vantage-fredericksburg",
+      "provider": "nominatim",
+      "query": "225 Centreport Parkway, Fredericksburg, VA 22406, Fredericksburg, VA, United States",
+      "originalLocation": "225 Centreport Parkway, Fredericksburg, VA 22406",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:27.951Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "vantage-new-albany",
+      "provider": "nominatim",
+      "query": "3325 Horizon Court, New Albany, OH 43031, New Albany, OH, United States",
+      "originalLocation": "3325 Horizon Court, New Albany, OH 43031",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:29.756Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "vantage-phoenix-goodyear",
+      "provider": "nominatim",
+      "query": "45 S. Bullard Avenue, Goodyear, AZ 85338, Goodyear, AZ, United States",
+      "originalLocation": "45 S. Bullard Avenue, Goodyear, AZ 85338",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:31.415Z",
+      "returnedFormattedAddress": "Vantage Data Centers, 45, South Bullard Avenue, Goodyear, Maricopa County, Arizona, 85338, United States",
+      "latitude": 33.4464557,
+      "longitude": -112.3738845,
+      "providerCategory": "building",
+      "providerType": "building",
+      "providerImportance": 0.00004961852445253708,
+      "rawResult": {
+        "place_id": 318945054,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 1283734104,
+        "lat": "33.4464557",
+        "lon": "-112.3738845",
+        "category": "building",
+        "type": "yes",
+        "place_rank": 30,
+        "importance": 0.00004961852445253708,
+        "addresstype": "building",
+        "name": "Vantage Data Centers",
+        "display_name": "Vantage Data Centers, 45, South Bullard Avenue, Goodyear, Maricopa County, Arizona, 85338, United States",
+        "address": {
+          "building": "Vantage Data Centers",
+          "house_number": "45",
+          "road": "South Bullard Avenue",
+          "city": "Goodyear",
+          "county": "Maricopa County",
+          "state": "Arizona",
+          "ISO3166-2-lvl4": "US-AZ",
+          "postcode": "85338",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "33.4456192",
+          "33.4469862",
+          "-112.3747442",
+          "-112.3730293"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "The result names Vantage Data Centers and exactly matches 45 South Bullard Avenue."
+    },
+    {
+      "researchKey": "vantage-quincy",
+      "provider": "nominatim",
+      "query": "2101 M Street NE, Quincy, WA 98848, Quincy, WA, United States",
+      "originalLocation": "2101 M Street NE, Quincy, WA 98848",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:33.619Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "vantage-reno",
+      "provider": "nominatim",
+      "query": "1121 USA Parkway, Sparks, NV 89437, Sparks, NV, United States",
+      "originalLocation": "1121 USA Parkway, Sparks, NV 89437",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:35.313Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "vantage-santa-clara-i",
+      "provider": "nominatim",
+      "query": "2820 Northwestern Pkwy, Santa Clara, CA 95051, Santa Clara, CA, United States",
+      "originalLocation": "2820 Northwestern Pkwy, Santa Clara, CA 95051",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:36.862Z",
+      "returnedFormattedAddress": "Digital Realty Silicon Valley SJC34, 2820, Northwestern Parkway, Santa Clara, Santa Clara County, California, 95054, United States",
+      "latitude": 37.3725693,
+      "longitude": -121.9736589,
+      "providerCategory": "building",
+      "providerType": "building",
+      "providerImportance": 0.00006557488364991253,
+      "rawResult": {
+        "place_id": 322230705,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 38305431,
+        "lat": "37.3725693",
+        "lon": "-121.9736589",
+        "category": "building",
+        "type": "data_center",
+        "place_rank": 30,
+        "importance": 0.00006557488364991253,
+        "addresstype": "building",
+        "name": "Digital Realty Silicon Valley SJC34",
+        "display_name": "Digital Realty Silicon Valley SJC34, 2820, Northwestern Parkway, Santa Clara, Santa Clara County, California, 95054, United States",
+        "address": {
+          "building": "Digital Realty Silicon Valley SJC34",
+          "house_number": "2820",
+          "road": "Northwestern Parkway",
+          "city": "Santa Clara",
+          "county": "Santa Clara County",
+          "state": "California",
+          "ISO3166-2-lvl4": "US-CA",
+          "postcode": "95054",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "37.3717801",
+          "37.3730353",
+          "-121.9742006",
+          "-121.9730933"
+        ]
+      },
+      "outcome": "geocode_conflict",
+      "outcomeReason": "The returned building is labelled Digital Realty SJC34 and has a different postal code; this is not safe to publish as Vantage without entity review."
+    },
+    {
+      "researchKey": "vantage-santa-clara-ii",
+      "provider": "nominatim",
+      "query": "737 Mathew Street, Santa Clara, CA 95051, Santa Clara, CA, United States",
+      "originalLocation": "737 Mathew Street, Santa Clara, CA 95051",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:38.436Z",
+      "returnedFormattedAddress": "Vantage Santa Clara CA2, 737, Mathew Street, Santa Clara, Santa Clara County, California, 95051, United States",
+      "latitude": 37.3640694,
+      "longitude": -121.9469073,
+      "providerCategory": "building",
+      "providerType": "building",
+      "providerImportance": 0.00006557488364991253,
+      "rawResult": {
+        "place_id": 322477789,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 1314010354,
+        "lat": "37.3640694",
+        "lon": "-121.9469073",
+        "category": "building",
+        "type": "yes",
+        "place_rank": 30,
+        "importance": 0.00006557488364991253,
+        "addresstype": "building",
+        "name": "Vantage Santa Clara CA2",
+        "display_name": "Vantage Santa Clara CA2, 737, Mathew Street, Santa Clara, Santa Clara County, California, 95051, United States",
+        "address": {
+          "building": "Vantage Santa Clara CA2",
+          "house_number": "737",
+          "road": "Mathew Street",
+          "city": "Santa Clara",
+          "county": "Santa Clara County",
+          "state": "California",
+          "ISO3166-2-lvl4": "US-CA",
+          "postcode": "95051",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "37.3635973",
+          "37.3644050",
+          "-121.9480372",
+          "-121.9457428"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "vantage-santa-clara-iii",
+      "provider": "nominatim",
+      "query": "2590 Walsh Avenue, Santa Clara, CA 95051, Santa Clara, CA, United States",
+      "originalLocation": "2590 Walsh Avenue, Santa Clara, CA 95051",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:40.040Z",
+      "returnedFormattedAddress": "2590, Walsh Avenue, Santa Clara, Santa Clara County, California, 95051, United States",
+      "latitude": 37.3712362,
+      "longitude": -121.9740103,
+      "providerCategory": "place",
+      "providerType": "place",
+      "providerImportance": 0.00000999999999995449,
+      "rawResult": {
+        "place_id": 386416411,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 417013156,
+        "lat": "37.3712362",
+        "lon": "-121.9740103",
+        "category": "place",
+        "type": "house",
+        "place_rank": 30,
+        "importance": 0.00000999999999995449,
+        "addresstype": "place",
+        "name": "",
+        "display_name": "2590, Walsh Avenue, Santa Clara, Santa Clara County, California, 95051, United States",
+        "address": {
+          "house_number": "2590",
+          "road": "Walsh Avenue",
+          "city": "Santa Clara",
+          "county": "Santa Clara County",
+          "state": "California",
+          "ISO3166-2-lvl4": "US-CA",
+          "postcode": "95051",
+          "country": "United States",
+          "country_code": "us"
+        },
+        "boundingbox": [
+          "37.3711862",
+          "37.3712862",
+          "-121.9740603",
+          "-121.9739603"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "The result exactly matches the supported 2590 Walsh Avenue address; street precision is retained."
+    },
+    {
+      "researchKey": "vantage-berlin-i",
+      "provider": "nominatim",
+      "query": "Brandenburg Park, Uferring 5, Ludwigsfelde 14974, Ludwigsfelde, Germany",
+      "originalLocation": "Brandenburg Park, Uferring 5, Ludwigsfelde 14974",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:41.582Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "vantage-berlin-ii",
+      "provider": "nominatim",
+      "query": "Dahmestrasse 1 and 2, Mittenwalde 15749, Mittenwalde, Germany",
+      "originalLocation": "Dahmestrasse 1 and 2, Mittenwalde 15749",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:43.208Z",
+      "returnedFormattedAddress": "Dahmestraße, Logistikzentrum Hechtstücke, Mittenwalde, Schenkendorf-Krummensee, Dahme-Spreewald, Brandenburg, 15749, Deutschland",
+      "latitude": 52.2612871,
+      "longitude": 13.5712861,
+      "providerCategory": "highway",
+      "providerType": "road",
+      "providerImportance": 0.05338617303730828,
+      "rawResult": {
+        "place_id": 153085724,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 1056893295,
+        "lat": "52.2612871",
+        "lon": "13.5712861",
+        "category": "highway",
+        "type": "residential",
+        "place_rank": 26,
+        "importance": 0.05338617303730828,
+        "addresstype": "road",
+        "name": "Dahmestraße",
+        "display_name": "Dahmestraße, Logistikzentrum Hechtstücke, Mittenwalde, Schenkendorf-Krummensee, Dahme-Spreewald, Brandenburg, 15749, Deutschland",
+        "address": {
+          "road": "Dahmestraße",
+          "commercial": "Logistikzentrum Hechtstücke",
+          "city_district": "Mittenwalde",
+          "town": "Mittenwalde",
+          "municipality": "Schenkendorf-Krummensee",
+          "county": "Dahme-Spreewald",
+          "state": "Brandenburg",
+          "ISO3166-2-lvl4": "DE-BB",
+          "postcode": "15749",
+          "country": "Deutschland",
+          "country_code": "de"
+        },
+        "boundingbox": [
+          "52.2604758",
+          "52.2620982",
+          "13.5690930",
+          "13.5734793"
+        ]
+      },
+      "outcome": "geocoded_review",
+      "outcomeReason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "vantage-frankfurt-i",
+      "provider": "nominatim",
+      "query": "Goethering 27, Offenbach am Main 63067, Offenbach am Main, Germany",
+      "originalLocation": "Goethering 27, Offenbach am Main 63067",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:44.822Z",
+      "returnedFormattedAddress": "Vantage Data Center (FRA1), 27, Goethering, Nordend, Offenbach am Main, Hessen, 63067, Deutschland",
+      "latitude": 50.1091096,
+      "longitude": 8.7438831,
+      "providerCategory": "building",
+      "providerType": "building",
+      "providerImportance": 0.00007941481651021618,
+      "rawResult": {
+        "place_id": 138180923,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 172856848,
+        "lat": "50.1091096",
+        "lon": "8.7438831",
+        "category": "building",
+        "type": "data_center",
+        "place_rank": 30,
+        "importance": 0.00007941481651021618,
+        "addresstype": "building",
+        "name": "Vantage Data Center (FRA1)",
+        "display_name": "Vantage Data Center (FRA1), 27, Goethering, Nordend, Offenbach am Main, Hessen, 63067, Deutschland",
+        "address": {
+          "building": "Vantage Data Center (FRA1)",
+          "house_number": "27",
+          "road": "Goethering",
+          "suburb": "Nordend",
+          "city": "Offenbach am Main",
+          "state": "Hessen",
+          "ISO3166-2-lvl4": "DE-HE",
+          "postcode": "63067",
+          "country": "Deutschland",
+          "country_code": "de"
+        },
+        "boundingbox": [
+          "50.1088012",
+          "50.1094365",
+          "8.7429940",
+          "8.7446727"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "vantage-frankfurt-ii",
+      "provider": "nominatim",
+      "query": "Alexander-von-Humboldt-Straße 4, Raunheim 65479, Raunheim, Germany",
+      "originalLocation": "Alexander-von-Humboldt-Straße 4, Raunheim 65479",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:46.373Z",
+      "returnedFormattedAddress": "4, Alexander-von-Humboldt-Straße, Gewerbegebiet Airportgarden, Raunheim, Kreis Groß-Gerau, Hessen, 65479, Deutschland",
+      "latitude": 50.0131911,
+      "longitude": 8.4624392,
+      "providerCategory": "place",
+      "providerType": "place",
+      "providerImportance": 0.000051367208361898486,
+      "rawResult": {
+        "place_id": 138294031,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "node",
+        "osm_id": 8730473795,
+        "lat": "50.0131911",
+        "lon": "8.4624392",
+        "category": "place",
+        "type": "house",
+        "place_rank": 30,
+        "importance": 0.000051367208361898486,
+        "addresstype": "place",
+        "name": "",
+        "display_name": "4, Alexander-von-Humboldt-Straße, Gewerbegebiet Airportgarden, Raunheim, Kreis Groß-Gerau, Hessen, 65479, Deutschland",
+        "address": {
+          "house_number": "4",
+          "road": "Alexander-von-Humboldt-Straße",
+          "industrial": "Gewerbegebiet Airportgarden",
+          "town": "Raunheim",
+          "county": "Kreis Groß-Gerau",
+          "state": "Hessen",
+          "ISO3166-2-lvl4": "DE-HE",
+          "postcode": "65479",
+          "country": "Deutschland",
+          "country_code": "de"
+        },
+        "boundingbox": [
+          "50.0131411",
+          "50.0132411",
+          "8.4623892",
+          "8.4624892"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "vantage-milan-i",
+      "provider": "nominatim",
+      "query": "32 Via per Carpiano, Melegnano, Milan 20077, Melegnano, Italy",
+      "originalLocation": "32 Via per Carpiano, Melegnano, Milan 20077",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:47.987Z",
+      "returnedFormattedAddress": "Via per Carpiano, Melegnano, Rodano, Milano, Lombardia, 20077, Italia",
+      "latitude": 45.3498811,
+      "longitude": 9.3058147,
+      "providerCategory": "highway",
+      "providerType": "road",
+      "providerImportance": 0.053393842221713554,
+      "rawResult": {
+        "place_id": 75859500,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 60651114,
+        "lat": "45.3498811",
+        "lon": "9.3058147",
+        "category": "highway",
+        "type": "unclassified",
+        "place_rank": 26,
+        "importance": 0.053393842221713554,
+        "addresstype": "road",
+        "name": "Via per Carpiano",
+        "display_name": "Via per Carpiano, Melegnano, Rodano, Milano, Lombardia, 20077, Italia",
+        "address": {
+          "road": "Via per Carpiano",
+          "town": "Melegnano",
+          "municipality": "Rodano",
+          "county": "Milano",
+          "ISO3166-2-lvl6": "IT-MI",
+          "state": "Lombardia",
+          "ISO3166-2-lvl4": "IT-25",
+          "postcode": "20077",
+          "country": "Italia",
+          "country_code": "it"
+        },
+        "boundingbox": [
+          "45.3494939",
+          "45.3503092",
+          "9.3050535",
+          "9.3065385"
+        ]
+      },
+      "outcome": "geocoded_review",
+      "outcomeReason": "The result is only the Via per Carpiano road and does not resolve the documented street number."
+    },
+    {
+      "researchKey": "vantage-milan-ii",
+      "provider": "nominatim",
+      "query": "Via Aganippo Brocchi, Castelletto, Milan 20019, Castelletto, Italy",
+      "originalLocation": "Via Aganippo Brocchi, Castelletto, Milan 20019",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:49.554Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "vantage-warsaw",
+      "provider": "nominatim",
+      "query": "Zgrupowania AK Kampinos 42D, Warsaw 01-949, Warsaw, Poland",
+      "originalLocation": "Zgrupowania AK Kampinos 42D, Warsaw 01-949",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:51.126Z",
+      "returnedFormattedAddress": "42D, Zgrupowania AK „Kampinos”, Huta, Bielany, Warszawa, województwo mazowieckie, 01-943, Polska",
+      "latitude": 52.2931661,
+      "longitude": 20.9217258,
+      "providerCategory": "building",
+      "providerType": "building",
+      "providerImportance": 0.00008366292820625647,
+      "rawResult": {
+        "place_id": 420129513,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 1115586271,
+        "lat": "52.2931661",
+        "lon": "20.9217258",
+        "category": "building",
+        "type": "data_center",
+        "place_rank": 30,
+        "importance": 0.00008366292820625647,
+        "addresstype": "building",
+        "name": "",
+        "display_name": "42D, Zgrupowania AK „Kampinos”, Huta, Bielany, Warszawa, województwo mazowieckie, 01-943, Polska",
+        "address": {
+          "house_number": "42D",
+          "road": "Zgrupowania AK „Kampinos”",
+          "quarter": "Huta",
+          "suburb": "Bielany",
+          "city": "Warszawa",
+          "state": "województwo mazowieckie",
+          "ISO3166-2-lvl4": "PL-14",
+          "postcode": "01-943",
+          "country": "Polska",
+          "country_code": "pl"
+        },
+        "boundingbox": [
+          "52.2927939",
+          "52.2935382",
+          "20.9210436",
+          "20.9224081"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "The result exactly matches 42D Zgrupowania AK Kampinos in Warszawa; the automated locality check missed the Polish locality spelling."
+    },
+    {
+      "researchKey": "vantage-zurich-i",
+      "provider": "nominatim",
+      "query": "12 Fabrikstrasse, Winterthur 8404, Winterthur, Switzerland",
+      "originalLocation": "12 Fabrikstrasse, Winterthur 8404",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:52.704Z",
+      "returnedFormattedAddress": "ZRH1, 12, Fabrikstrasse, Talwiesen, Grüze, Oberwinterthur, Winterthur, Bezirk Winterthur, Zürich, 8404, Schweiz/Suisse/Svizzera/Svizra",
+      "latitude": 47.5004571,
+      "longitude": 8.7614463,
+      "providerCategory": "building",
+      "providerType": "building",
+      "providerImportance": 0.00006545433737692863,
+      "rawResult": {
+        "place_id": 71978996,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 904767972,
+        "lat": "47.5004571",
+        "lon": "8.7614463",
+        "category": "building",
+        "type": "yes",
+        "place_rank": 30,
+        "importance": 0.00006545433737692863,
+        "addresstype": "building",
+        "name": "ZRH1",
+        "display_name": "ZRH1, 12, Fabrikstrasse, Talwiesen, Grüze, Oberwinterthur, Winterthur, Bezirk Winterthur, Zürich, 8404, Schweiz/Suisse/Svizzera/Svizra",
+        "address": {
+          "building": "ZRH1",
+          "house_number": "12",
+          "road": "Fabrikstrasse",
+          "neighbourhood": "Talwiesen",
+          "quarter": "Grüze",
+          "suburb": "Oberwinterthur",
+          "city": "Winterthur",
+          "county": "Bezirk Winterthur",
+          "state": "Zürich",
+          "ISO3166-2-lvl4": "CH-ZH",
+          "postcode": "8404",
+          "country": "Schweiz/Suisse/Svizzera/Svizra",
+          "country_code": "ch"
+        },
+        "boundingbox": [
+          "47.5001284",
+          "47.5007812",
+          "8.7610450",
+          "8.7618601"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "The result names ZRH1 and exactly matches 12 Fabrikstrasse in Winterthur."
+    },
+    {
+      "researchKey": "vantage-zurich-ii",
+      "provider": "nominatim",
+      "query": "Spinnerei Lettenstrasse, Glattfelden 8192, Glattfelden, Switzerland",
+      "originalLocation": "Spinnerei Lettenstrasse, Glattfelden 8192",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:54.257Z",
+      "returnedFormattedAddress": "Spinnerei-Lettenstrasse, Letten, Zweidlen, Glattfelden, Bezirk Bülach, Zürich, 8192, Schweiz/Suisse/Svizzera/Svizra",
+      "latitude": 47.5685848,
+      "longitude": 8.4771982,
+      "providerCategory": "highway",
+      "providerType": "road",
+      "providerImportance": 0.053383334859235486,
+      "rawResult": {
+        "place_id": 71584665,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "way",
+        "osm_id": 165539619,
+        "lat": "47.5685848",
+        "lon": "8.4771982",
+        "category": "highway",
+        "type": "unclassified",
+        "place_rank": 26,
+        "importance": 0.053383334859235486,
+        "addresstype": "road",
+        "name": "Spinnerei-Lettenstrasse",
+        "display_name": "Spinnerei-Lettenstrasse, Letten, Zweidlen, Glattfelden, Bezirk Bülach, Zürich, 8192, Schweiz/Suisse/Svizzera/Svizra",
+        "address": {
+          "road": "Spinnerei-Lettenstrasse",
+          "hamlet": "Letten",
+          "village": "Zweidlen",
+          "county": "Bezirk Bülach",
+          "state": "Zürich",
+          "ISO3166-2-lvl4": "CH-ZH",
+          "postcode": "8192",
+          "country": "Schweiz/Suisse/Svizzera/Svizra",
+          "country_code": "ch"
+        },
+        "boundingbox": [
+          "47.5673514",
+          "47.5689702",
+          "8.4771660",
+          "8.4785475"
+        ]
+      },
+      "outcome": "geocoded_review",
+      "outcomeReason": "The result is only Spinnerei-Lettenstrasse and does not resolve a specific supported property."
+    },
+    {
+      "researchKey": "equinix-ld4",
+      "provider": "nominatim",
+      "query": "Slough Trading Estate, Slough, England, United Kingdom",
+      "originalLocation": "Slough Trading Estate",
+      "originalSources": [
+        {
+          "label": "Equinix London IBXs",
+          "url": "https://www.equinix.com/data-centers/europe-colocation/united-kingdom-colocation/london-data-centers"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:44:55.778Z",
+      "returnedFormattedAddress": "Slough Trading Estate, Cippenham, Chalvey, Slough, England, United Kingdom",
+      "latitude": 51.5226239,
+      "longitude": -0.6274534,
+      "providerCategory": "landuse",
+      "providerType": "commercial",
+      "providerImportance": 0.08006136949721519,
+      "rawResult": {
+        "place_id": 277242998,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "relation",
+        "osm_id": 17881262,
+        "lat": "51.5226239",
+        "lon": "-0.6274534",
+        "category": "landuse",
+        "type": "commercial",
+        "place_rank": 24,
+        "importance": 0.08006136949721519,
+        "addresstype": "commercial",
+        "name": "Slough Trading Estate",
+        "display_name": "Slough Trading Estate, Cippenham, Chalvey, Slough, England, United Kingdom",
+        "address": {
+          "commercial": "Slough Trading Estate",
+          "suburb": "Cippenham",
+          "village": "Chalvey",
+          "town": "Slough",
+          "ISO3166-2-lvl6": "GB-SLG",
+          "state": "England",
+          "ISO3166-2-lvl4": "GB-ENG",
+          "country": "United Kingdom",
+          "country_code": "gb"
+        },
+        "boundingbox": [
+          "51.5121101",
+          "51.5279120",
+          "-0.6428472",
+          "-0.6125787"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "equinix-ld5",
+      "provider": "nominatim",
+      "query": "Slough Trading Estate, Slough, England, United Kingdom",
+      "originalLocation": "Slough Trading Estate",
+      "originalSources": [
+        {
+          "label": "Equinix London IBXs",
+          "url": "https://www.equinix.com/data-centers/europe-colocation/united-kingdom-colocation/london-data-centers"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:44:55.778Z",
+      "returnedFormattedAddress": "Slough Trading Estate, Cippenham, Chalvey, Slough, England, United Kingdom",
+      "latitude": 51.5226239,
+      "longitude": -0.6274534,
+      "providerCategory": "landuse",
+      "providerType": "commercial",
+      "providerImportance": 0.08006136949721519,
+      "rawResult": {
+        "place_id": 277242998,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "relation",
+        "osm_id": 17881262,
+        "lat": "51.5226239",
+        "lon": "-0.6274534",
+        "category": "landuse",
+        "type": "commercial",
+        "place_rank": 24,
+        "importance": 0.08006136949721519,
+        "addresstype": "commercial",
+        "name": "Slough Trading Estate",
+        "display_name": "Slough Trading Estate, Cippenham, Chalvey, Slough, England, United Kingdom",
+        "address": {
+          "commercial": "Slough Trading Estate",
+          "suburb": "Cippenham",
+          "village": "Chalvey",
+          "town": "Slough",
+          "ISO3166-2-lvl6": "GB-SLG",
+          "state": "England",
+          "ISO3166-2-lvl4": "GB-ENG",
+          "country": "United Kingdom",
+          "country_code": "gb"
+        },
+        "boundingbox": [
+          "51.5121101",
+          "51.5279120",
+          "-0.6428472",
+          "-0.6125787"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "equinix-ld6",
+      "provider": "nominatim",
+      "query": "Slough Trading Estate, Slough, England, United Kingdom",
+      "originalLocation": "Slough Trading Estate",
+      "originalSources": [
+        {
+          "label": "Equinix London IBXs",
+          "url": "https://www.equinix.com/data-centers/europe-colocation/united-kingdom-colocation/london-data-centers"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:44:55.778Z",
+      "returnedFormattedAddress": "Slough Trading Estate, Cippenham, Chalvey, Slough, England, United Kingdom",
+      "latitude": 51.5226239,
+      "longitude": -0.6274534,
+      "providerCategory": "landuse",
+      "providerType": "commercial",
+      "providerImportance": 0.08006136949721519,
+      "rawResult": {
+        "place_id": 277242998,
+        "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+        "osm_type": "relation",
+        "osm_id": 17881262,
+        "lat": "51.5226239",
+        "lon": "-0.6274534",
+        "category": "landuse",
+        "type": "commercial",
+        "place_rank": 24,
+        "importance": 0.08006136949721519,
+        "addresstype": "commercial",
+        "name": "Slough Trading Estate",
+        "display_name": "Slough Trading Estate, Cippenham, Chalvey, Slough, England, United Kingdom",
+        "address": {
+          "commercial": "Slough Trading Estate",
+          "suburb": "Cippenham",
+          "village": "Chalvey",
+          "town": "Slough",
+          "ISO3166-2-lvl6": "GB-SLG",
+          "state": "England",
+          "ISO3166-2-lvl4": "GB-ENG",
+          "country": "United Kingdom",
+          "country_code": "gb"
+        },
+        "boundingbox": [
+          "51.5121101",
+          "51.5279120",
+          "-0.6428472",
+          "-0.6125787"
+        ]
+      },
+      "outcome": "geocoded_ready",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality."
+    },
+    {
+      "researchKey": "vantage-cardiff",
+      "provider": "nominatim",
+      "query": "Celtic Way, Coedkernew, Duffryn, Newport NP10 8BE, Newport, Wales, United Kingdom",
+      "originalLocation": "Celtic Way, Coedkernew, Duffryn, Newport NP10 8BE",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:44:57.375Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "google-canelones",
+      "provider": "nominatim",
+      "query": "Parque de las Ciencias, Municipality of Nicolich, Canelones, Canelones, Uruguay",
+      "originalLocation": "Parque de las Ciencias, Municipality of Nicolich, Canelones",
+      "originalSources": [
+        {
+          "label": "Google Data Centers locations",
+          "url": "https://www.google.com/about/datacenters/locations/"
+        }
+      ],
+      "coordinatePrecision": "campus",
+      "geocodedAt": "2026-09-18T03:44:59.776Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    },
+    {
+      "researchKey": "vantage-johannesburg-i",
+      "provider": "nominatim",
+      "query": "1 Howick Lane, Waterfall Logistics Precinct, Midrand, Johannesburg, Midrand, South Africa",
+      "originalLocation": "1 Howick Lane, Waterfall Logistics Precinct, Midrand, Johannesburg",
+      "originalSources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "coordinatePrecision": "street",
+      "geocodedAt": "2026-09-18T03:45:01.322Z",
+      "returnedFormattedAddress": null,
+      "latitude": null,
+      "longitude": null,
+      "providerCategory": null,
+      "providerType": null,
+      "providerImportance": null,
+      "outcome": "geocode_no_match",
+      "outcomeReason": "Provider returned no result.",
+      "rawResult": null
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 /**
  * The public facility surface: the physical infrastructure Urdais has placed.
  *
- * It serves published, positioned, sourced facilities and nothing else. A
+ * It serves verified or explicitly labelled research facilities only when
+ * they are positioned, current, sourced and map-safe. A
  * record with no coordinates, a record positioned only to a city, a record
  * still under review, a power station with no evidenced link to compute — each
  * is a legitimate row in the database and none of them is here.

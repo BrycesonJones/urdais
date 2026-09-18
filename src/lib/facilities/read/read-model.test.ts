@@ -31,6 +31,7 @@ const facility = (overrides: Partial<PublicFacility> = {}): PublicFacility => ({
   ownerName: "CSC – IT Center for Science",
   operatorName: "CSC",
   lifecycleStatus: "operational",
+  verificationStatus: "verified",
   lastVerifiedDate: "2026-09-17",
   sources: [{ publisher: "CSC", title: "LUMI Supercomputer", url: "https://example.com/csc" }],
   ...overrides,
@@ -55,13 +56,13 @@ describe("validatePublicFacilities", () => {
   });
 
   it("passes an empty response that says why it is empty", () => {
-    expect(validatePublicFacilities(emptyFacilityReadModel("no_published_facilities"), NOW)).toEqual([]);
+    expect(validatePublicFacilities(emptyFacilityReadModel("no_public_facilities"), NOW)).toEqual([]);
     expect(validatePublicFacilities(emptyFacilityReadModel("not_configured"), NOW)).toEqual([]);
   });
 
   it("refuses an empty response with no reason, and a populated one carrying one", () => {
     expect(validatePublicFacilities({ ...model([]), unavailableReason: null }, NOW)).toContain("no facilities and no reason given for their absence");
-    expect(validatePublicFacilities({ ...model([facility()]), unavailableReason: "no_published_facilities" }, NOW)).toContain(
+    expect(validatePublicFacilities({ ...model([facility()]), unavailableReason: "no_public_facilities" }, NOW)).toContain(
       "facilities were served alongside a reason they are unavailable",
     );
   });

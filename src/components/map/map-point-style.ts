@@ -45,7 +45,7 @@ export function isMapPointCategory(value: unknown): value is MapPointCategory {
   return isFacilityCategory(value);
 }
 
-/** Data-driven circle colour: every point on the map is a published facility, coloured by its category. */
+/** Data-driven circle colour: every point is a map-safe public facility, coloured by category. */
 export const POINT_COLOR_EXPRESSION: DataDrivenPropertyValueSpecification<string> = [
   "match",
   ["get", "category"],

@@ -43,7 +43,7 @@ begin
 end;
 $$;
 
--- ------------------------------------------- the methodology moved, and 1.0.0 stayed
+-- ------------------------------------------- the methodology moved, and history stayed
 
 do $$
 declare v record; n integer;
@@ -52,8 +52,9 @@ begin
     join reference.methodologies m on m.id = mv.methodology_id
    where m.slug = 'map-facilities' and mv.version = '2.0.0';
   if v is null then raise exception 'map-facilities 2.0.0 does not exist'; end if;
-  if v.status <> 'approved' then raise exception '2.0.0 is % rather than approved', v.status; end if;
+  if v.status <> 'superseded' then raise exception '2.0.0 is % rather than superseded', v.status; end if;
   if v.effective_from is null then raise exception '2.0.0 carries no effective date'; end if;
+  if v.effective_to is null then raise exception '2.0.0 has no end to its interval'; end if;
 
   -- 1.0.0 is superseded, not retired, and keeps its own hash and interval: it is
   -- the version the first published facilities were approved under, and a

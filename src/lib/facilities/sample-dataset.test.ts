@@ -170,6 +170,7 @@ describe("the sample dataset on the map", () => {
       ownerName: facility.ownerName ?? null,
       operatorName: facility.operatorName ?? null,
       lifecycleStatus: facility.lifecycle?.status ?? null,
+      verificationStatus: facility.requestedPublicationState === "published" ? "verified" : "research",
       lastVerifiedDate: facility.quality.lastVerifiedDate!,
       sources: facility.evidence.map((evidence) => ({ publisher: evidence.publisher, title: evidence.title, url: evidence.url })),
     }));

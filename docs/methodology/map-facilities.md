@@ -1,8 +1,8 @@
 # Urdais Map Facilities
 
-**Methodology version 2.0.0 — approved, effective 17 September 2026.**
-Supersedes 1.0.0, which remains identifiable as the version the first published
-facilities were approved under.
+**Methodology version 2.1.0 — approved, effective 18 September 2026.**
+Supersedes 2.0.0. Versions 1.0.0 and 2.0.0 remain identifiable with their own
+content hashes and effective intervals.
 
 This methodology governs the map, which is a sourced geographic record of the
 physical infrastructure underlying the compute economy. It is not an index
@@ -11,7 +11,21 @@ calculation calendar. What it versions is the set of rules deciding which
 physical facilities Urdais records, what it records about them, and which of
 them appear as public dots.
 
-## What changed in 2.0.0, and why it is a major version
+## What changed in 2.1.0
+
+The map now distinguishes a fully approved `published` facility from a
+map-safe public `research` facility. Research is a verification state, never a
+fifth infrastructure category. A research record can appear only when the read
+path can independently establish its resolved identity, valid category,
+non-city position, current check date, live lifecycle and admissible positioning
+evidence. `review_required` and `withdrawn` remain internal-only.
+
+This is a minor version because it does not change which physical facilities
+are in scope, the four categories, coordinate semantics, evidence tiers or the
+full publication approval gate. It lets a safe, explicitly labelled research
+record be visible before enrichment and final approval are complete.
+
+## What changed in 2.0.0, and why it was a major version
 
 Under 1.0.0 a data centre belonged on this map if it mattered to AI. That was
 the right first cut and it is the wrong long-run rule, because it made the map a
@@ -356,14 +370,14 @@ The 2.0.0 expansion applies to `data_center` and to nothing else.
 - **Power infrastructure** keeps the strict rule of section 6 exactly. Urdais
   does not map power plants; it maps the ones a document ties to compute.
 
-## 10. Publication eligibility
+## 10. Public-map eligibility and publication approval
 
 A facility record exists independently of whether it is shown. A researched
 facility with no coordinates is a legitimate row; it is simply never a dot.
 "Unmapped" is a publication state, not an infrastructure category, and it is not
 on the public legend.
 
-A record is published only when all of the following hold:
+A `published` record is fully approved only when all of the following hold:
 
 1. it is map-eligible under section 5;
 2. its verification date is present, and within the staleness horizon of section 11
@@ -379,18 +393,30 @@ A record is published only when all of the following hold:
 Conditions 1, 2 (presence), 3, 4 and 7 are check constraints; 5 and 6 are
 commit-time triggers; the horizon in 2 is applied by the read path.
 
+A `research` record may also appear on the public map, labelled **Research**,
+when the read path establishes conditions 1, 2, 4, 5 and 6. It must have at
+least one evidence document, and no unresolved identity or entity-grain issue
+may be present; such a record belongs in `review_required`. Research visibility
+does not imply final approval, does not require complete capacity, AI relevance,
+owner or operator enrichment, and does not assign a methodology version to the
+row. The current read methodology supplies the safety gate each time it is
+served.
+
 **What is never required of a data centre:** AI relevance, capacity, cooling
 detail, tenant identity, or a complete owner and operator. A facility whose
 identity and position are resolved publishes without any of them.
 
-Records that fail a condition they could plausibly meet are held as
-`review_required` and wait for a person. Records that cannot be placed at all
-are held as `research`.
+Records with a contradiction, ambiguous position, or unresolved identity are
+held as `review_required` and wait for a person. A record without a position
+may remain `research` in the canonical database, but it does not appear on the
+map. Rejected candidates remain outside the facility table in the rejection
+register.
 
 ## 11. Verification and staleness
 
-Every record carries a last-verified date. A published record whose verification
-is older than **365 days** leaves the public map and stays in the database.
+Every public-map record carries a last-checked date. A verified or research
+record whose date is older than **365 days** leaves the public map and stays in
+the database.
 
 Facilities change slowly — a campus does not move — so this is a guard against
 an abandoned dataset rather than a freshness requirement. It is deliberately
