@@ -1,0 +1,1591 @@
+{
+  "queueVersion": "urdais.map.geocode-queue/1",
+  "generatedAt": "2026-09-18",
+  "counts": {
+    "unique": 60,
+    "classB": 28,
+    "global": 47,
+    "globalIncremental": 32
+  },
+  "items": [
+    {
+      "researchKey": "fermi-project-matador-campus",
+      "canonicalName": "Fermi America Project Matador Compute Campus",
+      "category": "data_center",
+      "documentedLocation": "North side of US Highway 60 near US 60 & FM 2373, ~15–17 miles NE of Amarillo, Carson County, TX (Texas Tech lease; bounded by US 60, FM 683, FM 2373, Pantex)",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "US Highway 60 and FM 2373, Carson County, Texas, United States",
+      "sources": [
+        {
+          "label": "TCEQ NSR project 407047",
+          "url": "https://www2.tceq.texas.gov/airperm/index.cfm?fuseaction=airpermits.project_report&proj_id=407047"
+        },
+        {
+          "label": "NRC COLA ML25169A396",
+          "url": "https://www.nrc.gov/docs/ML2516/ML25169A396.pdf"
+        }
+      ],
+      "queueSources": [
+        "class_b_28",
+        "global_expansion"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "fermi-matador-gas-generation",
+      "canonicalName": "Fermi America Project Matador Gas Power Plant",
+      "category": "power_infrastructure",
+      "documentedLocation": "Same TCEQ East Campus site: N side of US 60 near US 60 & FM 2373, Carson County, TX",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "US Highway 60 and FM 2373, Carson County, Texas, United States",
+      "sources": [
+        {
+          "label": "TCEQ permit narrative",
+          "url": "https://records.tceq.texas.gov/cs/idcplg?IdcService=GET_FILE&allowInterrupt=1&dDocName=8281238&dID=9562398"
+        }
+      ],
+      "queueSources": [
+        "class_b_28"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "naver-gak-sejong",
+      "canonicalName": "NAVER GAK Sejong",
+      "category": "data_center",
+      "documentedLocation": "세종특별자치시 행복대로 824 (824 Haengbok-daero, Jipyeon-dong, Sejong 30138)",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "South Korea",
+      "countryCode": "KR",
+      "coordinatePrecision": "street",
+      "query": "824 Haengbok-daero, Sejong 30138, South Korea",
+      "sources": [
+        {
+          "label": "NAVER Data Center GAK Sejong",
+          "url": "https://datacenter.navercorp.com/gaksejong/"
+        }
+      ],
+      "queueSources": [
+        "class_b_28",
+        "global_expansion"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "microsoft-sweden-staffanstorp",
+      "canonicalName": "Microsoft Staffanstorp Datacenter",
+      "category": "data_center",
+      "documentedLocation": "Västanvägen 86, 245 42 Staffanstorp (property STAFFANSTORP KRONOSLÄTT 1:9)",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "Sweden",
+      "countryCode": "SE",
+      "coordinatePrecision": "street",
+      "query": "Västanvägen 86, 245 42 Staffanstorp, Sweden",
+      "sources": [
+        {
+          "label": "DataCenters.com",
+          "url": "https://www.datacenters.com/microsoft-azure-staffanstorp-sweden"
+        },
+        {
+          "label": "Microsoft Datacenters",
+          "url": "https://datacenters.microsoft.com/home/"
+        }
+      ],
+      "queueSources": [
+        "class_b_28",
+        "global_expansion"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "coreweave-lancaster-pa",
+      "canonicalName": "CoreWeave Lancaster Pennsylvania Data Center",
+      "category": "data_center",
+      "documentedLocation": "216 Greenfield Road, Lancaster, PA (former R.R. Donnelley / LSC plant)",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "216 Greenfield Road, Lancaster, Pennsylvania, United States",
+      "sources": [
+        {
+          "label": "City of Lancaster data-center page",
+          "url": "https://www.cityoflancasterpa.gov/data-center/"
+        },
+        {
+          "label": "LNP / LancasterOnline",
+          "url": "https://lancasteronline.com/news/local/plans-submitted-for-lancaster-city-data-centers-second-phase/article_d97cd11b-cb7f-49c8-9f57-7bb2a5a0facf.html"
+        }
+      ],
+      "queueSources": [
+        "class_b_28",
+        "global_expansion"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "cyrusone-dfw10-bosque",
+      "canonicalName": "CyrusOne DFW10 (Bosque County)",
+      "category": "data_center",
+      "documentedLocation": "557 CR 3610, Whitney, TX 76692, Bosque County",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "557 County Road 3610, Whitney, Texas 76692, United States",
+      "sources": [
+        {
+          "label": "TDLR TABS 2025005284",
+          "url": "https://www.tdlr.texas.gov/TABS/Projects/TABS2025005284"
+        },
+        {
+          "label": "CyrusOne Data Centers",
+          "url": "https://www.cyrusone.com/data-centers/"
+        }
+      ],
+      "queueSources": [
+        "class_b_28",
+        "global_expansion"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "dataone-vineland",
+      "canonicalName": "DataOne Vineland AI Data Center",
+      "category": "data_center",
+      "documentedLocation": "Lincoln Avenue and Sheridan Avenue, Vineland, NJ (Block 7503 Lots 1.01 & 35.01)",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "Lincoln Avenue and Sheridan Avenue, Vineland, New Jersey, United States",
+      "sources": [],
+      "queueSources": [
+        "class_b_28",
+        "global_expansion"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "google-cedar-rapids",
+      "canonicalName": "Google Cedar Rapids Data Center",
+      "category": "data_center",
+      "documentedLocation": "Big Cedar Industrial Center, along Edgewood Road SW and 76th Avenue SW, Cedar Rapids, IA 52404",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "Edgewood Road SW and 76th Avenue SW, Cedar Rapids, Iowa 52404, United States",
+      "sources": [
+        {
+          "label": "City of Cedar Rapids Google Data Center Project FAQ",
+          "url": "https://cms8.revize.com/revize/cedarrapids/Economic%20Development/Google%20Data%20Center%20Project%20_%20FAQ.pdf"
+        },
+        {
+          "label": "Cedar Rapids Economic Development",
+          "url": "https://www.economicdevelopmentcr.com/data-centers/"
+        },
+        {
+          "label": "Google Data Centers locations",
+          "url": "https://www.google.com/about/datacenters/locations/"
+        }
+      ],
+      "queueSources": [
+        "class_b_28",
+        "global_expansion"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "google-pryor-mayes-county",
+      "canonicalName": "Google Pryor / Mayes County Data Center",
+      "category": "data_center",
+      "documentedLocation": "4581 Webb Street, Pryor, OK 74361 (MidAmerica Industrial Park)",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "4581 Webb Street, Pryor, Oklahoma 74361, United States",
+      "sources": [
+        {
+          "label": "Tulsa Regional Chamber listing",
+          "url": "https://tulsachamber.com/membership/active-member/google-inc./"
+        },
+        {
+          "label": "Google Data Centers locations",
+          "url": "https://www.google.com/about/datacenters/locations/"
+        }
+      ],
+      "queueSources": [
+        "class_b_28",
+        "global_expansion"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "google-stillwater",
+      "canonicalName": "Google Stillwater Data Center Campus",
+      "category": "data_center",
+      "documentedLocation": "1500 E. Richmond Road; SW corner Richmond Road & Jardot Road / Perkins Road (US-177) & Richmond Road, Stillwater, OK",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "1500 East Richmond Road, Stillwater, Oklahoma, United States",
+      "sources": [
+        {
+          "label": "Oklahoma Dept. of Commerce",
+          "url": "https://www.okcommerce.gov/google-has-acquired-land-in-stillwater/"
+        },
+        {
+          "label": "Stillwater Planning Commission coverage",
+          "url": "https://www.thestillwegian.news/planning-commission-advances-google-data-center-final-plat/"
+        },
+        {
+          "label": "Google Data Centers locations",
+          "url": "https://www.google.com/about/datacenters/locations/"
+        }
+      ],
+      "queueSources": [
+        "class_b_28",
+        "global_expansion"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "meta-eagle-mountain",
+      "canonicalName": "Meta Eagle Mountain Data Center",
+      "category": "data_center",
+      "documentedLocation": "1275 N Community Circle, Eagle Mountain, UT 84005",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "1275 North Community Circle, Eagle Mountain, Utah 84005, United States",
+      "sources": [
+        {
+          "label": "DataCenters.com",
+          "url": "https://www.datacenters.com/facebook-eagle-mountain-utah"
+        },
+        {
+          "label": "Baxtel",
+          "url": "https://baxtel.com/data-center/meta-eagle-mountain-utah-campus"
+        },
+        {
+          "label": "Meta US data center fleet",
+          "url": "https://datacenters.atmeta.com/us-locations/"
+        }
+      ],
+      "queueSources": [
+        "class_b_28",
+        "global_expansion"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "meta-richland-parish",
+      "canonicalName": "Meta Richland Parish Data Center",
+      "category": "data_center",
+      "documentedLocation": "Holly Ridge, LA, along LA-183; construction access at Highway 80 and Jaggers Lane",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "Louisiana Highway 183 and Jaggers Lane, Holly Ridge, Louisiana, United States",
+      "sources": [
+        {
+          "label": "Gulf States Newsroom / News From The States",
+          "url": "https://www.newsfromthestates.com/article/construction-metas-largest-data-center-brings-600-crash-spike-chaos-rural-louisiana"
+        },
+        {
+          "label": "Meta US data center fleet",
+          "url": "https://datacenters.atmeta.com/us-locations/"
+        }
+      ],
+      "queueSources": [
+        "class_b_28",
+        "global_expansion"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "project-jupiter-dona-ana",
+      "canonicalName": "Project Jupiter (Doña Ana County)",
+      "category": "data_center",
+      "documentedLocation": "SE of NM Highway 136 and NM Highway 9, ~1,400 acres, listed parcel IDs in the executed MOU; near Santa Teresa Port of Entry",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "New Mexico Highway 136 and New Mexico Highway 9, Santa Teresa, New Mexico, United States",
+      "sources": [
+        {
+          "label": "Executed MOU",
+          "url": "https://haussamen.com/wp-content/uploads/2025/12/Executed-Memorandum-of-Understanding-MOU.pdf"
+        },
+        {
+          "label": "Haussamen / county application reporting",
+          "url": "https://haussamen.com/2025/09/03/developer-must-guarantee-project-jupiters-rosy-promises/"
+        }
+      ],
+      "queueSources": [
+        "class_b_28",
+        "global_expansion"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "switch-citadel-tahoe-reno",
+      "canonicalName": "Switch Citadel Campus (Tahoe Reno)",
+      "category": "data_center",
+      "documentedLocation": "1 Superloop Circle, McCarran, NV 89434 (postal Sparks 89437 also appears); Tahoe Reno Industrial Center",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "1 Superloop Circle, McCarran, Nevada 89434, United States",
+      "sources": [
+        {
+          "label": "Data Center Map",
+          "url": "https://www.datacentermap.com/usa/nevada/reno/switch-tahoe-reno/"
+        }
+      ],
+      "queueSources": [
+        "class_b_28",
+        "global_expansion"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "related-the-barn-saline",
+      "canonicalName": "The Barn (Saline Township Stargate Campus)",
+      "category": "data_center",
+      "documentedLocation": "11600 W Michigan Avenue, Saline Township, MI 48176 (plus adjoining parcels on N side of US-12 / Michigan Ave, east of Rustic Glen Golf Club, ~575 acres)",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "11600 West Michigan Avenue, Saline, Michigan 48176, United States",
+      "sources": [
+        {
+          "label": "Saline Township Act 198 hearing notice",
+          "url": "https://thesuntimesnews.com/saline-twp-board-of-trustees-notice-of-public-hearing-9-10-25/"
+        },
+        {
+          "label": "consent judgment",
+          "url": "https://salinetownship.org/uploads/notices/SalineDataCenterConsentJudgmentFinalExecutionCopy492124804975v1.pdf"
+        }
+      ],
+      "queueSources": [
+        "class_b_28",
+        "global_expansion"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "vantage-lighthouse-port-washington",
+      "canonicalName": "Vantage Lighthouse Campus (Port Washington)",
+      "category": "data_center",
+      "documentedLocation": "531, 533, 701, and 723 E. Lake Drive, Port Washington, WI (four certified buildings)",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "531 East Lake Drive, Port Washington, Wisconsin, United States",
+      "sources": [
+        {
+          "label": "Wisconsin DOR Qualified Data Center Exemption list",
+          "url": "https://www.revenue.wi.gov/pages/faqs/exemptionforqualifieddatacenter.aspx"
+        },
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "class_b_28",
+        "global_expansion"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "nscc-aspire-2a",
+      "canonicalName": "NSCC ASPIRE 2A / ASPIRE 2A+",
+      "category": "gpu_compute_cluster",
+      "documentedLocation": "NUS Innovation 4.0 (i4.0) building, 3 Research Link, Singapore 117602 (Level 2 data halls)",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "Singapore",
+      "countryCode": "SG",
+      "coordinatePrecision": "building",
+      "query": "3 Research Link, Singapore 117602",
+      "sources": [
+        {
+          "label": "NSCC maintenance notice",
+          "url": "https://help.nscc.sg/aspire2a/urgent_maintenance_2a_30_apr_2026-3-2-2-3/"
+        },
+        {
+          "label": "SBR tropical DC at NUS i4",
+          "url": "https://sbr.com.sg/co-written-partner/event-news/bringing-sustainable-supercomputing-tropics"
+        }
+      ],
+      "queueSources": [
+        "class_b_28"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "meta-hyperion",
+      "canonicalName": "Meta Hyperion",
+      "category": "gpu_compute_cluster",
+      "documentedLocation": "Same as `meta-richland-parish`: Holly Ridge, LA, LA-183 / Hwy 80 & Jaggers Lane",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "Louisiana Highway 183 and Jaggers Lane, Holly Ridge, Louisiana, United States",
+      "sources": [],
+      "queueSources": [
+        "class_b_28"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "nebius-vineland-cluster",
+      "canonicalName": "Nebius Vineland GPU Factory",
+      "category": "gpu_compute_cluster",
+      "documentedLocation": "Lincoln Avenue and Sheridan Avenue, Vineland, NJ",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "Lincoln Avenue and Sheridan Avenue, Vineland, New Jersey, United States",
+      "sources": [],
+      "queueSources": [
+        "class_b_28"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "micron-singapore-hbm-packaging",
+      "canonicalName": "Micron Singapore HBM Advanced Packaging Facility",
+      "category": "semiconductor_fab",
+      "documentedLocation": "Adjacent to Micron Woodlands campus at 1 Woodlands Industrial Park D Street 1, Singapore 738799",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "Singapore",
+      "countryCode": "SG",
+      "coordinatePrecision": "campus",
+      "query": "1 Woodlands Industrial Park D Street 1, Singapore 738799",
+      "sources": [
+        {
+          "label": "Micron 2025-01-08 PR",
+          "url": "https://investors.micron.com/news/press-release/2025/Micron-Breaks-Ground-on-New-HBM-Advanced-Packaging-Facility-in-Singapore-01-08-2025/default.aspx"
+        },
+        {
+          "label": "Business Times Woodlands",
+          "url": "https://www.businesstimes.com.sg/companies-markets/micron-invests-us7-billion-woodlands-advanced-packaging-site-1400-jobs-be-created"
+        }
+      ],
+      "queueSources": [
+        "class_b_28"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "sk-hynix-cheongju",
+      "canonicalName": "SK hynix Cheongju Campus",
+      "category": "semiconductor_fab",
+      "documentedLocation": "Cheongju Campus, Heungdeok-gu: 215 Daesin-ro (28429); 959 2sunhwan-ro (28433); 337 Jikji-daero (28436); 120 SK-ro (28356, M15)",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "South Korea",
+      "countryCode": "KR",
+      "coordinatePrecision": "campus",
+      "query": "215 Daesin-ro, Cheongju, South Korea",
+      "sources": [
+        {
+          "label": "SK hynix company locations",
+          "url": "https://www.skhynix.com/company/UI-FR-CP06/"
+        }
+      ],
+      "queueSources": [
+        "class_b_28"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "sk-hynix-yongin",
+      "canonicalName": "SK hynix Yongin Semiconductor Cluster",
+      "category": "semiconductor_fab",
+      "documentedLocation": "Yongin Semiconductor Cluster General Industrial Complex, Wonsam-myeon (Godang-ri, Dokseong-ri, Jukneung-ri), Cheoin-gu, Yongin, Gyeonggi",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "South Korea",
+      "countryCode": "KR",
+      "coordinatePrecision": "campus",
+      "query": "Yongin Semiconductor Cluster, Wonsam-myeon, Yongin, South Korea",
+      "sources": [
+        {
+          "label": "Yongin City industrial-complex page",
+          "url": "https://www.yongin.go.kr/home/www/www19/www19_02_01/www19_02_01_02.jsp"
+        }
+      ],
+      "queueSources": [
+        "class_b_28"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "samsung-hwaseong",
+      "canonicalName": "Samsung Foundry Hwaseong",
+      "category": "semiconductor_fab",
+      "documentedLocation": "1 Samsungjeonja-ro, Hwaseong-si, Gyeonggi-do 18448",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "South Korea",
+      "countryCode": "KR",
+      "coordinatePrecision": "campus",
+      "query": "1 Samsungjeonja-ro, Hwaseong-si, Gyeonggi-do 18448, South Korea",
+      "sources": [
+        {
+          "label": "Samsung Foundry IATF certificate",
+          "url": "https://download.semiconductor.samsung.com/resources/others/samsung_electronics_co_ltd_device_solutions_foundry_business_iatf_52883_002.pdf"
+        },
+        {
+          "label": "ISO 22301 certificate",
+          "url": "https://download.semiconductor.samsung.com/resources/others/Certificate_of_Registration_ISO22301_DS_2024.pdf"
+        }
+      ],
+      "queueSources": [
+        "class_b_28"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "samsung-pyeongtaek",
+      "canonicalName": "Samsung Foundry Pyeongtaek",
+      "category": "semiconductor_fab",
+      "documentedLocation": "114 Samsung-ro, Godeok-myeon, Pyeongtaek-si, Gyeonggi-do 17786",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "South Korea",
+      "countryCode": "KR",
+      "coordinatePrecision": "campus",
+      "query": "114 Samsung-ro, Godeok-myeon, Pyeongtaek-si, Gyeonggi-do 17786, South Korea",
+      "sources": [],
+      "queueSources": [
+        "class_b_28"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "tsmc-ap6-zhunan",
+      "canonicalName": "TSMC Advanced Backend Fab 6 (Zhunan)",
+      "category": "semiconductor_fab",
+      "documentedLocation": "350-012 苗栗縣竹南鎮科專一路1號 (1 Kezhuan 1st Rd, Zhunan Township, Miaoli; Hsinchu Science Park Zhunan)",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "Taiwan",
+      "countryCode": "TW",
+      "coordinatePrecision": "street",
+      "query": "1 Kezhuan 1st Road, Zhunan Township, Miaoli, Taiwan",
+      "sources": [
+        {
+          "label": "TSMC Fabs directory",
+          "url": "https://www.tsmc.com/english/aboutTSMC/TSMC_Fabs"
+        },
+        {
+          "label": "SIPA Zhunan park vendor list",
+          "url": "https://www.sipa.gov.tw/home.jsp?contlink=ap%2Fintroduction_3_5.jsp&menudata=ChineseMenu&mserno=201001210037&serno=201001210040&serno3=201002010019"
+        }
+      ],
+      "queueSources": [
+        "class_b_28"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "intel-ohio-one",
+      "canonicalName": "Intel Ohio One",
+      "category": "semiconductor_fab",
+      "documentedLocation": "11511 Green Chapel Road NW, New Albany, OH 43031 (FTZ physical address); site bordered by Clover Valley, Green Chapel, Mink, and south of Jug/Miller",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "11511 Green Chapel Road NW, New Albany, Ohio 43031, United States",
+      "sources": [
+        {
+          "label": "US FTZ Zone 138 Subzone 00I Site 001",
+          "url": "https://ofis.trade.gov/Site/Details/4951"
+        }
+      ],
+      "queueSources": [
+        "class_b_28"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "micron-boise",
+      "canonicalName": "Micron Boise Leading-Edge DRAM Campus",
+      "category": "semiconductor_fab",
+      "documentedLocation": "8000 S Federal Way, Boise, ID 83716 (existing campus; new HVM fabs co-located)",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "8000 South Federal Way, Boise, Idaho 83716, United States",
+      "sources": [
+        {
+          "label": "Micron locations",
+          "url": "https://www.micron.com/about/locations"
+        },
+        {
+          "label": "NIST CHIPS Micron Idaho",
+          "url": "https://www.nist.gov/chips/micron-idaho-boise"
+        }
+      ],
+      "queueSources": [
+        "class_b_28"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "samsung-taylor-tx",
+      "canonicalName": "Samsung Austin Semiconductor Taylor",
+      "category": "semiconductor_fab",
+      "documentedLocation": "1530 FM 973, Taylor, TX 76574-4540; campus between Highway 79 and FM 973 (CR 404 runs through the site)",
+      "locality": null,
+      "adminArea": null,
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "1530 FM 973, Taylor, Texas 76574, United States",
+      "sources": [
+        {
+          "label": "TCEQ correspondence to Samsung Austin Semiconductor Taylor Site",
+          "url": "https://records.tceq.texas.gov/cs/idcplg?IdcService=TCEQ_EXTERNAL_SEARCH_GET_FILE&Rendition=Web&dID=9611376&searchType=External"
+        },
+        {
+          "label": "City of Taylor",
+          "url": "https://www.taylortx.gov/1276/Samsung-Austin-Semiconductor"
+        }
+      ],
+      "queueSources": [
+        "class_b_28"
+      ],
+      "existingFacility": true,
+      "operatorName": null,
+      "lifecycleStatus": null,
+      "aiRelevance": null
+    },
+    {
+      "researchKey": "digital-realty-phoenix-van-buren",
+      "canonicalName": "Digital Realty Phoenix (120 East Van Buren)",
+      "category": "data_center",
+      "documentedLocation": "120 East Van Buren, Phoenix, AZ",
+      "locality": "Phoenix",
+      "adminArea": "AZ",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "120 East Van Buren, Phoenix, AZ, Phoenix, AZ, United States",
+      "sources": [
+        {
+          "label": "Digital Realty Americas",
+          "url": "https://www.digitalrealty.com/data-centers/americas"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Digital Realty",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "equinix-dc21",
+      "canonicalName": "Equinix DC21",
+      "category": "data_center",
+      "documentedLocation": "22175 Beaumeade Circle, Ashburn, VA",
+      "locality": "Ashburn",
+      "adminArea": "VA",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "22175 Beaumeade Circle, Ashburn, VA, Ashburn, VA, United States",
+      "sources": [
+        {
+          "label": "Equinix Washington DC IBXs",
+          "url": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/washington-dc-data-centers"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Equinix",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "no_documented_ai"
+    },
+    {
+      "researchKey": "equinix-ny4",
+      "canonicalName": "Equinix NY4",
+      "category": "data_center",
+      "documentedLocation": "755 Secaucus Road, Secaucus, NJ 07094",
+      "locality": "Secaucus",
+      "adminArea": "NJ",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "755 Secaucus Road, Secaucus, NJ 07094, Secaucus, NJ, United States",
+      "sources": [
+        {
+          "label": "Equinix NY4",
+          "url": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers/ny4"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Equinix",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "no_documented_ai"
+    },
+    {
+      "researchKey": "equinix-ny9",
+      "canonicalName": "Equinix NY9",
+      "category": "data_center",
+      "documentedLocation": "111 8th Avenue, New York, NY 10011",
+      "locality": "New York",
+      "adminArea": "NY",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "111 8th Avenue, New York, NY 10011, New York, NY, United States",
+      "sources": [
+        {
+          "label": "Equinix NY9",
+          "url": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers/ny9"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Equinix",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "no_documented_ai"
+    },
+    {
+      "researchKey": "microsoft-cheyenne-bison-business-park",
+      "canonicalName": "Microsoft Cheyenne Bison Business Park Datacenter",
+      "category": "data_center",
+      "documentedLocation": "Bison Business Park, Cheyenne, WY",
+      "locality": "Cheyenne",
+      "adminArea": "WY",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "Bison Business Park, Cheyenne, WY, Cheyenne, WY, United States",
+      "sources": [
+        {
+          "label": "Microsoft Datacenters",
+          "url": "https://datacenters.microsoft.com/home/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Microsoft",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "microsoft-cheyenne-business-parkway",
+      "canonicalName": "Microsoft Cheyenne Business Parkway Datacenter",
+      "category": "data_center",
+      "documentedLocation": "Cheyenne Business Parkway, Cheyenne, WY",
+      "locality": "Cheyenne",
+      "adminArea": "WY",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "campus",
+      "query": "Cheyenne Business Parkway, Cheyenne, WY, Cheyenne, WY, United States",
+      "sources": [
+        {
+          "label": "Microsoft Datacenters",
+          "url": "https://datacenters.microsoft.com/home/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Microsoft",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-ashburn-i",
+      "canonicalName": "Vantage Ashburn I",
+      "category": "data_center",
+      "documentedLocation": "45200 Vantage Data Plaza, Sterling, VA 20166",
+      "locality": "Sterling",
+      "adminArea": "VA",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "45200 Vantage Data Plaza, Sterling, VA 20166, Sterling, VA, United States",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-ashburn-ii",
+      "canonicalName": "Vantage Ashburn II",
+      "category": "data_center",
+      "documentedLocation": "22435 Glenn Drive, Sterling, VA 20164",
+      "locality": "Sterling",
+      "adminArea": "VA",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "22435 Glenn Drive, Sterling, VA 20164, Sterling, VA, United States",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-ashburn-iii",
+      "canonicalName": "Vantage Ashburn III",
+      "category": "data_center",
+      "documentedLocation": "19509 Belmont Ridge Road, Ashburn, VA 20147",
+      "locality": "Ashburn",
+      "adminArea": "VA",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "19509 Belmont Ridge Road, Ashburn, VA 20147, Ashburn, VA, United States",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-fredericksburg",
+      "canonicalName": "Vantage Fredericksburg",
+      "category": "data_center",
+      "documentedLocation": "225 Centreport Parkway, Fredericksburg, VA 22406",
+      "locality": "Fredericksburg",
+      "adminArea": "VA",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "225 Centreport Parkway, Fredericksburg, VA 22406, Fredericksburg, VA, United States",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-new-albany",
+      "canonicalName": "Vantage New Albany",
+      "category": "data_center",
+      "documentedLocation": "3325 Horizon Court, New Albany, OH 43031",
+      "locality": "New Albany",
+      "adminArea": "OH",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "3325 Horizon Court, New Albany, OH 43031, New Albany, OH, United States",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-phoenix-goodyear",
+      "canonicalName": "Vantage Phoenix (Goodyear)",
+      "category": "data_center",
+      "documentedLocation": "45 S. Bullard Avenue, Goodyear, AZ 85338",
+      "locality": "Goodyear",
+      "adminArea": "AZ",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "45 S. Bullard Avenue, Goodyear, AZ 85338, Goodyear, AZ, United States",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-quincy",
+      "canonicalName": "Vantage Quincy",
+      "category": "data_center",
+      "documentedLocation": "2101 M Street NE, Quincy, WA 98848",
+      "locality": "Quincy",
+      "adminArea": "WA",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "2101 M Street NE, Quincy, WA 98848, Quincy, WA, United States",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-reno",
+      "canonicalName": "Vantage Reno",
+      "category": "data_center",
+      "documentedLocation": "1121 USA Parkway, Sparks, NV 89437",
+      "locality": "Sparks",
+      "adminArea": "NV",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "1121 USA Parkway, Sparks, NV 89437, Sparks, NV, United States",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-santa-clara-i",
+      "canonicalName": "Vantage Santa Clara I",
+      "category": "data_center",
+      "documentedLocation": "2820 Northwestern Pkwy, Santa Clara, CA 95051",
+      "locality": "Santa Clara",
+      "adminArea": "CA",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "2820 Northwestern Pkwy, Santa Clara, CA 95051, Santa Clara, CA, United States",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-santa-clara-ii",
+      "canonicalName": "Vantage Santa Clara II",
+      "category": "data_center",
+      "documentedLocation": "737 Mathew Street, Santa Clara, CA 95051",
+      "locality": "Santa Clara",
+      "adminArea": "CA",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "737 Mathew Street, Santa Clara, CA 95051, Santa Clara, CA, United States",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-santa-clara-iii",
+      "canonicalName": "Vantage Santa Clara III",
+      "category": "data_center",
+      "documentedLocation": "2590 Walsh Avenue, Santa Clara, CA 95051",
+      "locality": "Santa Clara",
+      "adminArea": "CA",
+      "countryName": "United States",
+      "countryCode": "US",
+      "coordinatePrecision": "street",
+      "query": "2590 Walsh Avenue, Santa Clara, CA 95051, Santa Clara, CA, United States",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-berlin-i",
+      "canonicalName": "Vantage Berlin I",
+      "category": "data_center",
+      "documentedLocation": "Brandenburg Park, Uferring 5, Ludwigsfelde 14974",
+      "locality": "Ludwigsfelde",
+      "adminArea": null,
+      "countryName": "Germany",
+      "countryCode": "DE",
+      "coordinatePrecision": "street",
+      "query": "Brandenburg Park, Uferring 5, Ludwigsfelde 14974, Ludwigsfelde, Germany",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-berlin-ii",
+      "canonicalName": "Vantage Berlin II",
+      "category": "data_center",
+      "documentedLocation": "Dahmestrasse 1 and 2, Mittenwalde 15749",
+      "locality": "Mittenwalde",
+      "adminArea": null,
+      "countryName": "Germany",
+      "countryCode": "DE",
+      "coordinatePrecision": "street",
+      "query": "Dahmestrasse 1 and 2, Mittenwalde 15749, Mittenwalde, Germany",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-frankfurt-i",
+      "canonicalName": "Vantage Frankfurt I",
+      "category": "data_center",
+      "documentedLocation": "Goethering 27, Offenbach am Main 63067",
+      "locality": "Offenbach am Main",
+      "adminArea": null,
+      "countryName": "Germany",
+      "countryCode": "DE",
+      "coordinatePrecision": "street",
+      "query": "Goethering 27, Offenbach am Main 63067, Offenbach am Main, Germany",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-frankfurt-ii",
+      "canonicalName": "Vantage Frankfurt II",
+      "category": "data_center",
+      "documentedLocation": "Alexander-von-Humboldt-Straße 4, Raunheim 65479",
+      "locality": "Raunheim",
+      "adminArea": null,
+      "countryName": "Germany",
+      "countryCode": "DE",
+      "coordinatePrecision": "street",
+      "query": "Alexander-von-Humboldt-Straße 4, Raunheim 65479, Raunheim, Germany",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-milan-i",
+      "canonicalName": "Vantage Milan I",
+      "category": "data_center",
+      "documentedLocation": "32 Via per Carpiano, Melegnano, Milan 20077",
+      "locality": "Melegnano",
+      "adminArea": null,
+      "countryName": "Italy",
+      "countryCode": "IT",
+      "coordinatePrecision": "street",
+      "query": "32 Via per Carpiano, Melegnano, Milan 20077, Melegnano, Italy",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-milan-ii",
+      "canonicalName": "Vantage Milan II",
+      "category": "data_center",
+      "documentedLocation": "Via Aganippo Brocchi, Castelletto, Milan 20019",
+      "locality": "Castelletto",
+      "adminArea": null,
+      "countryName": "Italy",
+      "countryCode": "IT",
+      "coordinatePrecision": "street",
+      "query": "Via Aganippo Brocchi, Castelletto, Milan 20019, Castelletto, Italy",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-warsaw",
+      "canonicalName": "Vantage Warsaw",
+      "category": "data_center",
+      "documentedLocation": "Zgrupowania AK Kampinos 42D, Warsaw 01-949",
+      "locality": "Warsaw",
+      "adminArea": null,
+      "countryName": "Poland",
+      "countryCode": "PL",
+      "coordinatePrecision": "street",
+      "query": "Zgrupowania AK Kampinos 42D, Warsaw 01-949, Warsaw, Poland",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-zurich-i",
+      "canonicalName": "Vantage Zurich I",
+      "category": "data_center",
+      "documentedLocation": "12 Fabrikstrasse, Winterthur 8404",
+      "locality": "Winterthur",
+      "adminArea": null,
+      "countryName": "Switzerland",
+      "countryCode": "CH",
+      "coordinatePrecision": "street",
+      "query": "12 Fabrikstrasse, Winterthur 8404, Winterthur, Switzerland",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-zurich-ii",
+      "canonicalName": "Vantage Zurich II",
+      "category": "data_center",
+      "documentedLocation": "Spinnerei Lettenstrasse, Glattfelden 8192",
+      "locality": "Glattfelden",
+      "adminArea": null,
+      "countryName": "Switzerland",
+      "countryCode": "CH",
+      "coordinatePrecision": "street",
+      "query": "Spinnerei Lettenstrasse, Glattfelden 8192, Glattfelden, Switzerland",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "equinix-ld4",
+      "canonicalName": "Equinix LD4",
+      "category": "data_center",
+      "documentedLocation": "Slough Trading Estate",
+      "locality": "Slough",
+      "adminArea": "England",
+      "countryName": "United Kingdom",
+      "countryCode": "GB",
+      "coordinatePrecision": "campus",
+      "query": "Slough Trading Estate, Slough, England, United Kingdom",
+      "sources": [
+        {
+          "label": "Equinix London IBXs",
+          "url": "https://www.equinix.com/data-centers/europe-colocation/united-kingdom-colocation/london-data-centers"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Equinix",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "no_documented_ai"
+    },
+    {
+      "researchKey": "equinix-ld5",
+      "canonicalName": "Equinix LD5",
+      "category": "data_center",
+      "documentedLocation": "Slough Trading Estate",
+      "locality": "Slough",
+      "adminArea": "England",
+      "countryName": "United Kingdom",
+      "countryCode": "GB",
+      "coordinatePrecision": "campus",
+      "query": "Slough Trading Estate, Slough, England, United Kingdom",
+      "sources": [
+        {
+          "label": "Equinix London IBXs",
+          "url": "https://www.equinix.com/data-centers/europe-colocation/united-kingdom-colocation/london-data-centers"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Equinix",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "no_documented_ai"
+    },
+    {
+      "researchKey": "equinix-ld6",
+      "canonicalName": "Equinix LD6",
+      "category": "data_center",
+      "documentedLocation": "Slough Trading Estate",
+      "locality": "Slough",
+      "adminArea": "England",
+      "countryName": "United Kingdom",
+      "countryCode": "GB",
+      "coordinatePrecision": "campus",
+      "query": "Slough Trading Estate, Slough, England, United Kingdom",
+      "sources": [
+        {
+          "label": "Equinix London IBXs",
+          "url": "https://www.equinix.com/data-centers/europe-colocation/united-kingdom-colocation/london-data-centers"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Equinix",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "no_documented_ai"
+    },
+    {
+      "researchKey": "vantage-cardiff",
+      "canonicalName": "Vantage Cardiff",
+      "category": "data_center",
+      "documentedLocation": "Celtic Way, Coedkernew, Duffryn, Newport NP10 8BE",
+      "locality": "Newport",
+      "adminArea": "Wales",
+      "countryName": "United Kingdom",
+      "countryCode": "GB",
+      "coordinatePrecision": "street",
+      "query": "Celtic Way, Coedkernew, Duffryn, Newport NP10 8BE, Newport, Wales, United Kingdom",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "google-canelones",
+      "canonicalName": "Google Canelones Data Center",
+      "category": "data_center",
+      "documentedLocation": "Parque de las Ciencias, Municipality of Nicolich, Canelones",
+      "locality": "Canelones",
+      "adminArea": null,
+      "countryName": "Uruguay",
+      "countryCode": "UY",
+      "coordinatePrecision": "campus",
+      "query": "Parque de las Ciencias, Municipality of Nicolich, Canelones, Canelones, Uruguay",
+      "sources": [
+        {
+          "label": "Google Data Centers locations",
+          "url": "https://www.google.com/about/datacenters/locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Google",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    },
+    {
+      "researchKey": "vantage-johannesburg-i",
+      "canonicalName": "Vantage Johannesburg I",
+      "category": "data_center",
+      "documentedLocation": "1 Howick Lane, Waterfall Logistics Precinct, Midrand, Johannesburg",
+      "locality": "Midrand",
+      "adminArea": null,
+      "countryName": "South Africa",
+      "countryCode": "ZA",
+      "coordinatePrecision": "street",
+      "query": "1 Howick Lane, Waterfall Logistics Precinct, Midrand, Johannesburg, Midrand, South Africa",
+      "sources": [
+        {
+          "label": "Vantage Data Center Locations",
+          "url": "https://vantage-dc.com/data-center-locations/"
+        }
+      ],
+      "queueSources": [
+        "global_expansion"
+      ],
+      "existingFacility": false,
+      "operatorName": "Vantage Data Centers",
+      "lifecycleStatus": "operational",
+      "aiRelevance": "unknown"
+    }
+  ]
+}

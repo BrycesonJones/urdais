@@ -31,6 +31,8 @@ export type SqlExecutor = {
 export type ImportWriteResult = {
   /** The methodology version every published row in this batch was stamped with. */
   methodologyVersionId: string | null;
+  /** Records that were approved under one methodology version and re-approved under another. */
+  restamped: readonly { researchKey: string; from: string; to: string | null }[];
   inserted: readonly string[];
   updated: readonly string[];
   unchanged: readonly string[];
@@ -45,6 +47,7 @@ export type ImportWriteResult = {
 type FacilityRow = {
   id: string;
   fingerprint: string;
+  methodology_version_id: string | null;
 };
 
 function facilityValues(facility: ContractFacility, publicationState: string, methodologyVersionId: string | null): readonly unknown[] {
@@ -74,6 +77,9 @@ function facilityValues(facility: ContractFacility, publicationState: string, me
     facility.quality.confidence,
     facility.quality.reviewNotes ?? [],
     facility.quality.lastVerifiedDate ?? null,
+    // Absent means nobody has looked, which is a different thing from having
+    // looked and found nothing.
+    facility.aiRelevance ?? "unknown",
     // Only a published record names a rulebook: nothing has been applied to a
     // research record yet, so stamping one would claim a decision nobody made.
     publicationState === "published" ? methodologyVersionId : null,
@@ -112,7 +118,7 @@ const FACILITY_FINGERPRINT = `
     latitude::text, longitude::text, coordinate_precision, coordinate_method, coordinate_notes,
     announced_date::text, construction_start_date::text, operational_date::text,
     publication_state, confidence, array_to_string(review_notes, chr(30)), last_verified_date::text,
-    methodology_version_id::text
+    ai_relevance, methodology_version_id::text
   ))`;
 
 /**
@@ -127,6 +133,7 @@ export async function applyImportPlan(sql: SqlExecutor, plan: ImportPlan): Promi
   const inserted: string[] = [];
   const updated: string[] = [];
   const unchanged: string[] = [];
+  const restamped: Array<{ researchKey: string; from: string; to: string | null }> = [];
   let evidenceCount = 0;
   let claimCount = 0;
   let factCount = 0;
@@ -151,7 +158,8 @@ export async function applyImportPlan(sql: SqlExecutor, plan: ImportPlan): Promi
     for (const entry of plan.facilities) {
       const facility = entry.facility;
       const before = await sql.query(
-        `select id::text as id, ${FACILITY_FINGERPRINT} as fingerprint
+        `select id::text as id, ${FACILITY_FINGERPRINT} as fingerprint,
+                methodology_version_id::text as methodology_version_id
            from reference.facilities where research_key = $1`,
         [facility.researchKey],
       );
@@ -164,8 +172,8 @@ export async function applyImportPlan(sql: SqlExecutor, plan: ImportPlan): Promi
            latitude, longitude, coordinate_precision, coordinate_method, coordinate_notes,
            announced_date, construction_start_date, operational_date,
            publication_state, confidence, review_notes, last_verified_date,
-           methodology_version_id
-         ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
+           ai_relevance, methodology_version_id
+         ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
          on conflict (research_key) do update set
            canonical_name = excluded.canonical_name,
            category = excluded.category,
@@ -189,8 +197,10 @@ export async function applyImportPlan(sql: SqlExecutor, plan: ImportPlan): Promi
            confidence = excluded.confidence,
            review_notes = excluded.review_notes,
            last_verified_date = excluded.last_verified_date,
+           ai_relevance = excluded.ai_relevance,
            methodology_version_id = excluded.methodology_version_id
-         returning id::text as id, ${FACILITY_FINGERPRINT} as fingerprint`,
+         returning id::text as id, ${FACILITY_FINGERPRINT} as fingerprint,
+                   methodology_version_id::text as methodology_version_id`,
         facilityValues(facility, entry.publicationState, methodologyVersionId),
       );
       const row = rows[0] as FacilityRow;
@@ -198,6 +208,18 @@ export async function applyImportPlan(sql: SqlExecutor, plan: ImportPlan): Promi
       if (!existing) inserted.push(facility.researchKey);
       else if (existing.fingerprint !== row.fingerprint) updated.push(facility.researchKey);
       else unchanged.push(facility.researchKey);
+      // A record approved under one methodology version and re-approved under
+      // another is reported rather than left to be noticed. Re-approving is a
+      // legitimate thing for an import to do — it is happening now, under
+      // today's rules — but it should never be something that only shows up as
+      // a changed fingerprint.
+      if (existing && existing.methodology_version_id !== null && existing.methodology_version_id !== row.methodology_version_id) {
+        restamped.push({
+          researchKey: facility.researchKey,
+          from: existing.methodology_version_id,
+          to: row.methodology_version_id,
+        });
+      }
 
       // Dependants are replaced rather than merged: the dataset file is the
       // whole truth about a facility's aliases, evidence and facts, so a source
@@ -297,6 +319,7 @@ export async function applyImportPlan(sql: SqlExecutor, plan: ImportPlan): Promi
     await sql.query("commit", []);
     return {
       methodologyVersionId,
+      restamped,
       inserted,
       updated,
       unchanged,

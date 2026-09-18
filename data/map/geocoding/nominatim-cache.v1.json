@@ -1,0 +1,2252 @@
+{
+  "cacheVersion": "urdais.map.geocode-cache/1",
+  "entries": {
+    "5520cf4b4f8fe7a2251709465a28c56a08e302e898d3774beaf39025bfa4a735": {
+      "provider": "nominatim",
+      "query": "US Highway 60 and FM 2373, Carson County, Texas, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:43:29.006Z",
+      "results": []
+    },
+    "02ea2e0c3cf4378c823969969b28bbfc4dac23b30710242f3e3c027bccfca643": {
+      "provider": "nominatim",
+      "query": "824 Haengbok-daero, Sejong 30138, South Korea",
+      "countryCode": "KR",
+      "fetchedAt": "2026-09-18T03:43:30.695Z",
+      "results": [
+        {
+          "place_id": 223468778,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1237757089,
+          "lat": "36.4991606",
+          "lon": "127.3353861",
+          "category": "highway",
+          "type": "trunk",
+          "place_rank": 26,
+          "importance": 0.0533998908979934,
+          "addresstype": "road",
+          "name": "행복대로",
+          "display_name": "행복대로, 집현동, 반곡동, 세종특별자치시, 30142, 대한민국",
+          "address": {
+            "road": "행복대로",
+            "quarter": "집현동",
+            "city_district": "반곡동",
+            "city": "세종특별자치시",
+            "ISO3166-2-lvl4": "KR-50",
+            "postcode": "30142",
+            "country": "대한민국",
+            "country_code": "kr"
+          },
+          "boundingbox": [
+            "36.4982904",
+            "36.5000664",
+            "127.3347387",
+            "127.3359818"
+          ]
+        },
+        {
+          "place_id": 223323863,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 693549459,
+          "lat": "36.5052251",
+          "lon": "127.3376896",
+          "category": "highway",
+          "type": "trunk",
+          "place_rank": 26,
+          "importance": 0.0533998908979934,
+          "addresstype": "road",
+          "name": "행복대로",
+          "display_name": "행복대로, 집현동, 반곡동, 세종특별자치시, 30138, 대한민국",
+          "address": {
+            "road": "행복대로",
+            "quarter": "집현동",
+            "city_district": "반곡동",
+            "city": "세종특별자치시",
+            "ISO3166-2-lvl4": "KR-50",
+            "postcode": "30138",
+            "country": "대한민국",
+            "country_code": "kr"
+          },
+          "boundingbox": [
+            "36.5000664",
+            "36.5106958",
+            "127.3359818",
+            "127.3380916"
+          ]
+        },
+        {
+          "place_id": 223529755,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1282089376,
+          "lat": "36.5208309",
+          "lon": "127.3378132",
+          "category": "highway",
+          "type": "trunk",
+          "place_rank": 26,
+          "importance": 0.05339434882124052,
+          "addresstype": "road",
+          "name": "행복대로",
+          "display_name": "행복대로, 합강동, 반곡동, 세종특별자치시, 30138, 대한민국",
+          "address": {
+            "road": "행복대로",
+            "quarter": "합강동",
+            "city_district": "반곡동",
+            "city": "세종특별자치시",
+            "ISO3166-2-lvl4": "KR-50",
+            "postcode": "30138",
+            "country": "대한민국",
+            "country_code": "kr"
+          },
+          "boundingbox": [
+            "36.5189674",
+            "36.5225902",
+            "127.3370378",
+            "127.3382750"
+          ]
+        }
+      ]
+    },
+    "c91ee3650ae9a90fc8e1ded1a257bcedd678ea9860113787440459e37628a2a0": {
+      "provider": "nominatim",
+      "query": "Västanvägen 86, 245 42 Staffanstorp, Sweden",
+      "countryCode": "SE",
+      "fetchedAt": "2026-09-18T03:43:32.338Z",
+      "results": [
+        {
+          "place_id": 147220625,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 28288654,
+          "lat": "55.6284065",
+          "lon": "13.1856246",
+          "category": "highway",
+          "type": "secondary",
+          "place_rank": 26,
+          "importance": 0.053388374914167966,
+          "addresstype": "road",
+          "name": "Västanvägen",
+          "display_name": "Västanvägen, Önsvala, Staffanstorp, Staffanstorps kommun, Skåne län, 245 42, Sverige",
+          "address": {
+            "road": "Västanvägen",
+            "neighbourhood": "Önsvala",
+            "hamlet": "Önsvala",
+            "town": "Staffanstorp",
+            "municipality": "Staffanstorps kommun",
+            "county": "Skåne län",
+            "ISO3166-2-lvl4": "SE-M",
+            "postcode": "245 42",
+            "country": "Sverige",
+            "country_code": "se"
+          },
+          "boundingbox": [
+            "55.6280385",
+            "55.6289107",
+            "13.1853387",
+            "13.1856329"
+          ]
+        },
+        {
+          "place_id": 146262837,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 203135277,
+          "lat": "55.6374903",
+          "lon": "13.1864838",
+          "category": "highway",
+          "type": "secondary",
+          "place_rank": 26,
+          "importance": 0.053388374914167966,
+          "addresstype": "road",
+          "name": "Västanvägen",
+          "display_name": "Västanvägen, Staffanstorp, Staffanstorps kommun, Skåne län, 245 41, Sverige",
+          "address": {
+            "road": "Västanvägen",
+            "town": "Staffanstorp",
+            "municipality": "Staffanstorps kommun",
+            "county": "Skåne län",
+            "ISO3166-2-lvl4": "SE-M",
+            "postcode": "245 41",
+            "country": "Sverige",
+            "country_code": "se"
+          },
+          "boundingbox": [
+            "55.6362789",
+            "55.6387021",
+            "13.1863614",
+            "13.1866025"
+          ]
+        },
+        {
+          "place_id": 148269577,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 203135276,
+          "lat": "55.6343351",
+          "lon": "13.1861711",
+          "category": "highway",
+          "type": "secondary",
+          "place_rank": 26,
+          "importance": 0.053388374914167966,
+          "addresstype": "road",
+          "name": "Västanvägen",
+          "display_name": "Västanvägen, Önsvala, Staffanstorp, Staffanstorps kommun, Skåne län, 245 41, Sverige",
+          "address": {
+            "road": "Västanvägen",
+            "neighbourhood": "Önsvala",
+            "town": "Staffanstorp",
+            "municipality": "Staffanstorps kommun",
+            "county": "Skåne län",
+            "ISO3166-2-lvl4": "SE-M",
+            "postcode": "245 41",
+            "country": "Sverige",
+            "country_code": "se"
+          },
+          "boundingbox": [
+            "55.6341458",
+            "55.6345244",
+            "13.1861545",
+            "13.1861877"
+          ]
+        }
+      ]
+    },
+    "f35e79dcba6a2dde10e0421851953311bdcfd789bac063aa0f948e57e1ae6ef2": {
+      "provider": "nominatim",
+      "query": "216 Greenfield Road, Lancaster, Pennsylvania, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:43:33.961Z",
+      "results": [
+        {
+          "place_id": 415995868,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 97870680,
+          "lat": "40.0472199",
+          "lon": "-76.2555314",
+          "category": "place",
+          "type": "house",
+          "place_rank": 30,
+          "importance": 0.00000999999999995449,
+          "addresstype": "place",
+          "name": "",
+          "display_name": "216, Greenfield Road, East Lampeter Township, Lancaster County, Pennsylvania, 17601, United States",
+          "address": {
+            "house_number": "216",
+            "road": "Greenfield Road",
+            "city": "East Lampeter Township",
+            "county": "Lancaster County",
+            "state": "Pennsylvania",
+            "ISO3166-2-lvl4": "US-PA",
+            "postcode": "17601",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "40.0471699",
+            "40.0472699",
+            "-76.2555814",
+            "-76.2554814"
+          ]
+        }
+      ]
+    },
+    "a218613a94d4d3d45bbac7ca793830eb655a00699a48cb1a41caf2655350b736": {
+      "provider": "nominatim",
+      "query": "557 County Road 3610, Whitney, Texas 76692, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:43:35.759Z",
+      "results": []
+    },
+    "e927d4eceacf38531fa8ec3037e9ff62a686ab482ae118ca09767c403af68c38": {
+      "provider": "nominatim",
+      "query": "Lincoln Avenue and Sheridan Avenue, Vineland, New Jersey, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:43:37.378Z",
+      "results": []
+    },
+    "30b70e6d6999386ea75d8c84914e491c72c5603d4efe7d43de9991e7c948976d": {
+      "provider": "nominatim",
+      "query": "Edgewood Road SW and 76th Avenue SW, Cedar Rapids, Iowa 52404, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:43:39.186Z",
+      "results": []
+    },
+    "4397efb57b57e5c0502c14177554d6681f47e5cfe13184b0ec9c2728388b3ec1": {
+      "provider": "nominatim",
+      "query": "4581 Webb Street, Pryor, Oklahoma 74361, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:43:40.758Z",
+      "results": [
+        {
+          "place_id": 336653302,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 309666504,
+          "lat": "36.2411721",
+          "lon": "-95.3300473",
+          "category": "building",
+          "type": "yes",
+          "place_rank": 30,
+          "importance": 0.00003500190737769158,
+          "addresstype": "building",
+          "name": "",
+          "display_name": "4581, Webb Street, Mid-America Industrial Park, Lusta, Pryor Creek, Mayes County, Oklahoma, 74361, United States",
+          "address": {
+            "house_number": "4581",
+            "road": "Webb Street",
+            "industrial": "Mid-America Industrial Park",
+            "hamlet": "Lusta",
+            "town": "Pryor Creek",
+            "county": "Mayes County",
+            "state": "Oklahoma",
+            "ISO3166-2-lvl4": "US-OK",
+            "postcode": "74361",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "36.2403107",
+            "36.2420334",
+            "-95.3303887",
+            "-95.3297059"
+          ]
+        }
+      ]
+    },
+    "14164c66b3a82266539bc8a432924bdf59291512c77458f96450045796923007": {
+      "provider": "nominatim",
+      "query": "1500 East Richmond Road, Stillwater, Oklahoma, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:43:42.472Z",
+      "results": [
+        {
+          "place_id": 393446257,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 52584309,
+          "lat": "36.1740800",
+          "lon": "-97.0408584",
+          "category": "place",
+          "type": "house",
+          "place_rank": 30,
+          "importance": 0.00000999999999995449,
+          "addresstype": "place",
+          "name": "",
+          "display_name": "1500, East Richmond Road, Stillwater, Payne County, Oklahoma, 74075, United States",
+          "address": {
+            "house_number": "1500",
+            "road": "East Richmond Road",
+            "city": "Stillwater",
+            "county": "Payne County",
+            "state": "Oklahoma",
+            "ISO3166-2-lvl4": "US-OK",
+            "postcode": "74075",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "36.1740300",
+            "36.1741300",
+            "-97.0409084",
+            "-97.0408084"
+          ]
+        }
+      ]
+    },
+    "95019956d13d6a7d0ddea91a683225e898080b046757da493e1ca4901dc46d79": {
+      "provider": "nominatim",
+      "query": "1275 North Community Circle, Eagle Mountain, Utah 84005, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:43:44.392Z",
+      "results": []
+    },
+    "9722dc4483c44b3337f0b00de2d0c77aff0eed5c86cab3ff55c5582399e73016": {
+      "provider": "nominatim",
+      "query": "Louisiana Highway 183 and Jaggers Lane, Holly Ridge, Louisiana, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:43:46.144Z",
+      "results": []
+    },
+    "0d9e7e22fa6636409a8b9dad1bcb1244e68e5c9fcd7c730ae322eed8710105d5": {
+      "provider": "nominatim",
+      "query": "New Mexico Highway 136 and New Mexico Highway 9, Santa Teresa, New Mexico, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:43:48.295Z",
+      "results": []
+    },
+    "e94ed4374cbdb123df5b3b09a8db09e7bb66337675236dc2064536f2f058b195": {
+      "provider": "nominatim",
+      "query": "1 Superloop Circle, McCarran, Nevada 89434, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:43:49.945Z",
+      "results": []
+    },
+    "c1d1e32000dc4fa99b0b355be89e8346ffe2a3bfa36e6c6da707e7340022bdda": {
+      "provider": "nominatim",
+      "query": "11600 West Michigan Avenue, Saline, Michigan 48176, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:43:51.746Z",
+      "results": [
+        {
+          "place_id": 416011829,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 121875467,
+          "lat": "42.1151960",
+          "lon": "-83.8812746",
+          "category": "place",
+          "type": "house",
+          "place_rank": 30,
+          "importance": 0.00000999999999995449,
+          "addresstype": "place",
+          "name": "",
+          "display_name": "11600, West Michigan Avenue, Benton, Saline Township, Washtenaw County, Michigan, 48176, United States",
+          "address": {
+            "house_number": "11600",
+            "road": "West Michigan Avenue",
+            "hamlet": "Benton",
+            "town": "Saline Township",
+            "county": "Washtenaw County",
+            "state": "Michigan",
+            "ISO3166-2-lvl4": "US-MI",
+            "postcode": "48176",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "42.1151460",
+            "42.1152460",
+            "-83.8813246",
+            "-83.8812246"
+          ]
+        },
+        {
+          "place_id": 368907267,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 644383723,
+          "lat": "42.1597620",
+          "lon": "-83.7986144",
+          "category": "highway",
+          "type": "trunk",
+          "place_rank": 26,
+          "importance": 0.053383040360112884,
+          "addresstype": "road",
+          "name": "West Michigan Avenue",
+          "display_name": "West Michigan Avenue, Saline Township, Washtenaw County, Michigan, 48176, United States",
+          "address": {
+            "road": "West Michigan Avenue",
+            "town": "Saline Township",
+            "county": "Washtenaw County",
+            "state": "Michigan",
+            "ISO3166-2-lvl4": "US-MI",
+            "postcode": "48176",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "42.1594263",
+            "42.1601011",
+            "-83.7994011",
+            "-83.7978291"
+          ]
+        },
+        {
+          "place_id": 369943325,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 644383724,
+          "lat": "42.1610248",
+          "lon": "-83.7956751",
+          "category": "highway",
+          "type": "trunk",
+          "place_rank": 26,
+          "importance": 0.053383040360112884,
+          "addresstype": "road",
+          "name": "West Michigan Avenue",
+          "display_name": "West Michigan Avenue, Saline, Washtenaw County, Michigan, 48176, United States",
+          "address": {
+            "road": "West Michigan Avenue",
+            "village": "Saline",
+            "county": "Washtenaw County",
+            "state": "Michigan",
+            "ISO3166-2-lvl4": "US-MI",
+            "postcode": "48176",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "42.1607227",
+            "42.1613280",
+            "-83.7963813",
+            "-83.7949694"
+          ]
+        }
+      ]
+    },
+    "98e282204995a0709c642c56ab70c54be6b8e9519b0f67a561873f354769d4df": {
+      "provider": "nominatim",
+      "query": "531 East Lake Drive, Port Washington, Wisconsin, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:43:54.019Z",
+      "results": []
+    },
+    "91d0374ca45577b09c551697b4f41aecd35bb565290dd571c804d9a0981b5d9a": {
+      "provider": "nominatim",
+      "query": "3 Research Link, Singapore 117602",
+      "countryCode": "SG",
+      "fetchedAt": "2026-09-18T03:43:55.678Z",
+      "results": [
+        {
+          "place_id": 258134457,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 54619703,
+          "lat": "1.2945764",
+          "lon": "103.7756446",
+          "category": "building",
+          "type": "yes",
+          "place_rank": 30,
+          "importance": 0.00008432822156095243,
+          "addresstype": "building",
+          "name": "i4.0",
+          "display_name": "i4.0, 3, Research Link, National University of Singapore, one-north, Queenstown, Central Region, Singapore, 117602, Singapore",
+          "address": {
+            "building": "i4.0",
+            "house_number": "3",
+            "road": "Research Link",
+            "neighbourhood": "National University of Singapore",
+            "suburb": "one-north",
+            "borough": "Central Region",
+            "city": "Singapore",
+            "postcode": "117602",
+            "country": "Singapore",
+            "country_code": "sg"
+          },
+          "boundingbox": [
+            "1.2941572",
+            "1.2950038",
+            "103.7752972",
+            "103.7760796"
+          ]
+        },
+        {
+          "place_id": 256041226,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "node",
+          "osm_id": 9781243796,
+          "lat": "1.2943392",
+          "lon": "103.7757180",
+          "category": "amenity",
+          "type": "cafe",
+          "place_rank": 30,
+          "importance": 0.00008432822156095243,
+          "addresstype": "amenity",
+          "name": "Nami Café",
+          "display_name": "Nami Café, 3, Research Link, National University of Singapore, one-north, Queenstown, Central Region, Singapore, 117602, Singapore",
+          "address": {
+            "amenity": "Nami Café",
+            "house_number": "3",
+            "road": "Research Link",
+            "neighbourhood": "National University of Singapore",
+            "suburb": "one-north",
+            "borough": "Central Region",
+            "city": "Singapore",
+            "postcode": "117602",
+            "country": "Singapore",
+            "country_code": "sg"
+          },
+          "boundingbox": [
+            "1.2942892",
+            "1.2943892",
+            "103.7756680",
+            "103.7757680"
+          ]
+        }
+      ]
+    },
+    "8ea411bac22fa52af5761c4d1b825789cc5c3cb968d5950ce52e517d2490c631": {
+      "provider": "nominatim",
+      "query": "1 Woodlands Industrial Park D Street 1, Singapore 738799",
+      "countryCode": "SG",
+      "fetchedAt": "2026-09-18T03:43:57.212Z",
+      "results": [
+        {
+          "place_id": 255690309,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 449818145,
+          "lat": "1.4319930",
+          "lon": "103.7673775",
+          "category": "building",
+          "type": "industrial",
+          "place_rank": 30,
+          "importance": 0.00008432822156095243,
+          "addresstype": "building",
+          "name": "Micron",
+          "display_name": "Micron, 1, Woodlands Industrial Park D Street 1, Kranji, Sungei Kadut, North Region, Singapore, 738799, Singapore",
+          "address": {
+            "building": "Micron",
+            "house_number": "1",
+            "road": "Woodlands Industrial Park D Street 1",
+            "neighbourhood": "Kranji",
+            "suburb": "Sungei Kadut",
+            "borough": "North Region",
+            "city": "Singapore",
+            "postcode": "738799",
+            "country": "Singapore",
+            "country_code": "sg"
+          },
+          "boundingbox": [
+            "1.4294849",
+            "1.4338880",
+            "103.7658421",
+            "103.7682965"
+          ]
+        }
+      ]
+    },
+    "b4f96c1d7a1666c7cb3c45525b8a803478c4fe61881c76c6fe47f4f23b0aca72": {
+      "provider": "nominatim",
+      "query": "215 Daesin-ro, Cheongju, South Korea",
+      "countryCode": "KR",
+      "fetchedAt": "2026-09-18T03:43:59.036Z",
+      "results": [
+        {
+          "place_id": 223767020,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 453491463,
+          "lat": "36.6400637",
+          "lon": "127.4354745",
+          "category": "highway",
+          "type": "tertiary",
+          "place_rank": 26,
+          "importance": 0.05339457312886241,
+          "addresstype": "road",
+          "name": "대신로",
+          "display_name": "대신로, 복대동, 흥덕구, 청주시, 충청북도, 28584, 대한민국",
+          "address": {
+            "road": "대신로",
+            "quarter": "복대동",
+            "borough": "흥덕구",
+            "city": "청주시",
+            "province": "충청북도",
+            "ISO3166-2-lvl4": "KR-43",
+            "postcode": "28584",
+            "country": "대한민국",
+            "country_code": "kr"
+          },
+          "boundingbox": [
+            "36.6378811",
+            "36.6422560",
+            "127.4353198",
+            "127.4357243"
+          ]
+        },
+        {
+          "place_id": 223852537,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 375840594,
+          "lat": "36.6340810",
+          "lon": "127.4360603",
+          "category": "highway",
+          "type": "tertiary",
+          "place_rank": 26,
+          "importance": 0.05339457312886241,
+          "addresstype": "road",
+          "name": "대신로",
+          "display_name": "대신로, 복대동, 흥덕구, 청주시, 충청북도, 28391, 대한민국",
+          "address": {
+            "road": "대신로",
+            "quarter": "복대동",
+            "borough": "흥덕구",
+            "city": "청주시",
+            "province": "충청북도",
+            "ISO3166-2-lvl4": "KR-43",
+            "postcode": "28391",
+            "country": "대한민국",
+            "country_code": "kr"
+          },
+          "boundingbox": [
+            "36.6329348",
+            "36.6352272",
+            "127.4359478",
+            "127.4361727"
+          ]
+        },
+        {
+          "place_id": 223834420,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 792832022,
+          "lat": "36.6429124",
+          "lon": "127.4352580",
+          "category": "highway",
+          "type": "tertiary",
+          "place_rank": 26,
+          "importance": 0.05339457312886241,
+          "addresstype": "road",
+          "name": "대신로",
+          "display_name": "대신로, 송정동, 봉명2·송정동, 흥덕구, 청주시, 충청북도, 25853, 대한민국",
+          "address": {
+            "road": "대신로",
+            "quarter": "송정동",
+            "suburb": "봉명2·송정동",
+            "borough": "흥덕구",
+            "city": "청주시",
+            "province": "충청북도",
+            "ISO3166-2-lvl4": "KR-43",
+            "postcode": "25853",
+            "country": "대한민국",
+            "country_code": "kr"
+          },
+          "boundingbox": [
+            "36.6422560",
+            "36.6435704",
+            "127.4352547",
+            "127.4353198"
+          ]
+        },
+        {
+          "place_id": 223777618,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 297688404,
+          "lat": "36.6372245",
+          "lon": "127.4345373",
+          "category": "highway",
+          "type": "residential",
+          "place_rank": 26,
+          "importance": 0.05339457312886241,
+          "addresstype": "road",
+          "name": "대신로",
+          "display_name": "대신로, 복대동, 흥덕구, 청주시, 충청북도, 28420, 대한민국",
+          "address": {
+            "road": "대신로",
+            "quarter": "복대동",
+            "borough": "흥덕구",
+            "city": "청주시",
+            "province": "충청북도",
+            "ISO3166-2-lvl4": "KR-43",
+            "postcode": "28420",
+            "country": "대한민국",
+            "country_code": "kr"
+          },
+          "boundingbox": [
+            "36.6368366",
+            "36.6378313",
+            "127.4335125",
+            "127.4358130"
+          ]
+        },
+        {
+          "place_id": 223787152,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 658676001,
+          "lat": "36.6559307",
+          "lon": "127.4355327",
+          "category": "highway",
+          "type": "secondary",
+          "place_rank": 26,
+          "importance": 0.05339457312886241,
+          "addresstype": "road",
+          "name": "대신로",
+          "display_name": "대신로, 외북동, 흥덕구, 청주시, 충청북도, 28424, 대한민국",
+          "address": {
+            "road": "대신로",
+            "quarter": "외북동",
+            "borough": "흥덕구",
+            "city": "청주시",
+            "province": "충청북도",
+            "ISO3166-2-lvl4": "KR-43",
+            "postcode": "28424",
+            "country": "대한민국",
+            "country_code": "kr"
+          },
+          "boundingbox": [
+            "36.6537345",
+            "36.6581298",
+            "127.4353810",
+            "127.4356570"
+          ]
+        }
+      ]
+    },
+    "89d2a1ec43c9a4d1eacdf9f885c51dbaf74bf3082fb33d836d224e8ad86d6c06": {
+      "provider": "nominatim",
+      "query": "Yongin Semiconductor Cluster, Wonsam-myeon, Yongin, South Korea",
+      "countryCode": "KR",
+      "fetchedAt": "2026-09-18T03:44:00.697Z",
+      "results": []
+    },
+    "79c6c439d5f73428c95799f51a22e868811a271002a189cd0031990b4deeff94": {
+      "provider": "nominatim",
+      "query": "1 Samsungjeonja-ro, Hwaseong-si, Gyeonggi-do 18448, South Korea",
+      "countryCode": "KR",
+      "fetchedAt": "2026-09-18T03:44:02.504Z",
+      "results": [
+        {
+          "place_id": 222347730,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1461814750,
+          "lat": "37.2191905",
+          "lon": "127.0790250",
+          "category": "highway",
+          "type": "tertiary",
+          "place_rank": 26,
+          "importance": 0.0533933478294041,
+          "addresstype": "road",
+          "name": "삼성전자로",
+          "display_name": "삼성전자로, 석우동, 동탄신도시, 화성시, 경기도, 18450, 대한민국",
+          "address": {
+            "road": "삼성전자로",
+            "quarter": "석우동",
+            "suburb": "동탄신도시",
+            "city": "화성시",
+            "province": "경기도",
+            "ISO3166-2-lvl4": "KR-41",
+            "postcode": "18450",
+            "country": "대한민국",
+            "country_code": "kr"
+          },
+          "boundingbox": [
+            "37.2184840",
+            "37.2206414",
+            "127.0773121",
+            "127.0800557"
+          ]
+        },
+        {
+          "place_id": 222294134,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 705874523,
+          "lat": "37.2210405",
+          "lon": "127.0801746",
+          "category": "highway",
+          "type": "tertiary",
+          "place_rank": 26,
+          "importance": 0.0533933478294041,
+          "addresstype": "road",
+          "name": "삼성전자로",
+          "display_name": "삼성전자로, 동탄신도시, 기흥구, 화성시, 경기도, 18450, 대한민국",
+          "address": {
+            "road": "삼성전자로",
+            "suburb": "동탄신도시",
+            "borough": "기흥구",
+            "city": "화성시",
+            "province": "경기도",
+            "ISO3166-2-lvl4": "KR-41",
+            "postcode": "18450",
+            "country": "대한민국",
+            "country_code": "kr"
+          },
+          "boundingbox": [
+            "37.2206414",
+            "37.2214089",
+            "127.0800557",
+            "127.0803650"
+          ]
+        }
+      ]
+    },
+    "543e19b17e8359f3453f03f76eede2df2d2db4e4fe865177cdbd595da7ed7c17": {
+      "provider": "nominatim",
+      "query": "114 Samsung-ro, Godeok-myeon, Pyeongtaek-si, Gyeonggi-do 17786, South Korea",
+      "countryCode": "KR",
+      "fetchedAt": "2026-09-18T03:44:04.405Z",
+      "results": []
+    },
+    "5aee0b685db2a51130e199c94c27f02fdf5f436c49d15b4db7a8a71a53abca64": {
+      "provider": "nominatim",
+      "query": "1 Kezhuan 1st Road, Zhunan Township, Miaoli, Taiwan",
+      "countryCode": "TW",
+      "fetchedAt": "2026-09-18T03:44:06.220Z",
+      "results": []
+    },
+    "44dc74a0688c38d1635d03a656cbbc7ffa7fdb2dde97d722edf3ec1bb77bd32e": {
+      "provider": "nominatim",
+      "query": "11511 Green Chapel Road NW, New Albany, Ohio 43031, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:08.129Z",
+      "results": []
+    },
+    "e15cd3c78cdb56bf555f510613679d3e539c9a92696eaf4755693c2f84d2c9d9": {
+      "provider": "nominatim",
+      "query": "8000 South Federal Way, Boise, Idaho 83716, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:09.765Z",
+      "results": [
+        {
+          "place_id": 389023040,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1487075523,
+          "lat": "43.5301411",
+          "lon": "-116.1508250",
+          "category": "place",
+          "type": "house",
+          "place_rank": 30,
+          "importance": 0.00000999999999995449,
+          "addresstype": "place",
+          "name": "",
+          "display_name": "8000, South Federal Way, Boise, Ada County, Idaho, 83716, United States",
+          "address": {
+            "house_number": "8000",
+            "road": "South Federal Way",
+            "city": "Boise",
+            "county": "Ada County",
+            "state": "Idaho",
+            "ISO3166-2-lvl4": "US-ID",
+            "postcode": "83716",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "43.5300911",
+            "43.5301911",
+            "-116.1508750",
+            "-116.1507750"
+          ]
+        }
+      ]
+    },
+    "ab0ec4e085d3ebeb63f73ed08b41b49f7156661e0397f769cf97e0af17661c01": {
+      "provider": "nominatim",
+      "query": "1530 FM 973, Taylor, Texas 76574, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:11.402Z",
+      "results": [
+        {
+          "place_id": 315562446,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1207319787,
+          "lat": "30.5320474",
+          "lon": "-97.4474569",
+          "category": "building",
+          "type": "yes",
+          "place_rank": 30,
+          "importance": 0.000026000610360830357,
+          "addresstype": "building",
+          "name": "",
+          "display_name": "1530, Farm-to-Market Road 973, Taylor, Williamson County, Texas, 76574, United States",
+          "address": {
+            "house_number": "1530",
+            "road": "Farm-to-Market Road 973",
+            "town": "Taylor",
+            "county": "Williamson County",
+            "state": "Texas",
+            "ISO3166-2-lvl4": "US-TX",
+            "postcode": "76574",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "30.5319241",
+            "30.5321707",
+            "-97.4478057",
+            "-97.4471082"
+          ]
+        }
+      ]
+    },
+    "18d2e674bfb3c3d54aed853f6b48407b4cacd149844682fd5853c9cf137c1851": {
+      "provider": "nominatim",
+      "query": "120 East Van Buren, Phoenix, AZ, Phoenix, AZ, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:12.974Z",
+      "results": [
+        {
+          "place_id": 320550552,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 37057893,
+          "lat": "33.4519107",
+          "lon": "-112.0719077",
+          "category": "building",
+          "type": "yes",
+          "place_rank": 30,
+          "importance": 0.00007330205233839959,
+          "addresstype": "building",
+          "name": "Downtown Technology Exchange",
+          "display_name": "Downtown Technology Exchange, 120, East Van Buren Street, Downtown, Central City, Phoenix, Maricopa County, Arizona, 85004, United States",
+          "address": {
+            "building": "Downtown Technology Exchange",
+            "house_number": "120",
+            "road": "East Van Buren Street",
+            "quarter": "Downtown",
+            "suburb": "Central City",
+            "city": "Phoenix",
+            "county": "Maricopa County",
+            "state": "Arizona",
+            "ISO3166-2-lvl4": "US-AZ",
+            "postcode": "85004",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "33.4515104",
+            "33.4523072",
+            "-112.0723944",
+            "-112.0714186"
+          ]
+        }
+      ]
+    },
+    "0805371f5bad5a80fae65d1c464800e6b3811350fcb5aad9640c0ddfb3053f88": {
+      "provider": "nominatim",
+      "query": "22175 Beaumeade Circle, Ashburn, VA, Ashburn, VA, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:14.612Z",
+      "results": [
+        {
+          "place_id": 349090238,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 796933516,
+          "lat": "39.0115448",
+          "lon": "-77.4547180",
+          "category": "building",
+          "type": "data_center",
+          "place_rank": 30,
+          "importance": 0.00005413977264052823,
+          "addresstype": "building",
+          "name": "Equinix Ashburn DC21",
+          "display_name": "Equinix Ashburn DC21, 22175, Beaumeade Circle, Ashburn, Loudoun County, Virginia, 20147, United States",
+          "address": {
+            "building": "Equinix Ashburn DC21",
+            "house_number": "22175",
+            "road": "Beaumeade Circle",
+            "town": "Ashburn",
+            "county": "Loudoun County",
+            "state": "Virginia",
+            "ISO3166-2-lvl4": "US-VA",
+            "postcode": "20147",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "39.0109722",
+            "39.0126388",
+            "-77.4552052",
+            "-77.4538148"
+          ]
+        },
+        {
+          "place_id": 349606462,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "node",
+          "osm_id": 13128787570,
+          "lat": "39.0125863",
+          "lon": "-77.4544867",
+          "category": "amenity",
+          "type": "loading_dock",
+          "place_rank": 30,
+          "importance": 0.00005413977264052823,
+          "addresstype": "amenity",
+          "name": "",
+          "display_name": "22175, Beaumeade Circle, Ashburn, Loudoun County, Virginia, 20147, United States",
+          "address": {
+            "house_number": "22175",
+            "road": "Beaumeade Circle",
+            "town": "Ashburn",
+            "county": "Loudoun County",
+            "state": "Virginia",
+            "ISO3166-2-lvl4": "US-VA",
+            "postcode": "20147",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "39.0125363",
+            "39.0126363",
+            "-77.4545367",
+            "-77.4544367"
+          ]
+        }
+      ]
+    },
+    "9b5fb7b8734bc0a2eaf707853357ce7fa0e10e940a9f51bfb8b4f1eea6b119fc": {
+      "provider": "nominatim",
+      "query": "755 Secaucus Road, Secaucus, NJ 07094, Secaucus, NJ, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:15.925Z",
+      "results": [
+        {
+          "place_id": 356702662,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 193611211,
+          "lat": "40.7764281",
+          "lon": "-74.0697759",
+          "category": "building",
+          "type": "yes",
+          "place_rank": 30,
+          "importance": 0.00005413977264052823,
+          "addresstype": "building",
+          "name": "Equinix New York Secaucus NY4",
+          "display_name": "Equinix New York Secaucus NY4, 755, Secaucus Road, Harmon Cove, Secaucus, Hudson County, New Jersey, 07094, United States",
+          "address": {
+            "building": "Equinix New York Secaucus NY4",
+            "house_number": "755",
+            "road": "Secaucus Road",
+            "hamlet": "Harmon Cove",
+            "town": "Secaucus",
+            "county": "Hudson County",
+            "state": "New Jersey",
+            "ISO3166-2-lvl4": "US-NJ",
+            "postcode": "07094",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "40.7750190",
+            "40.7778372",
+            "-74.0709786",
+            "-74.0685732"
+          ]
+        },
+        {
+          "place_id": 401148145,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1418874942,
+          "lat": "40.7779843",
+          "lon": "-74.0669128",
+          "category": "place",
+          "type": "house",
+          "place_rank": 30,
+          "importance": 0.00000999999999995449,
+          "addresstype": "place",
+          "name": "",
+          "display_name": "755, Secaucus Road, Harmon Cove, Secaucus, Hudson County, New Jersey, 07094, United States",
+          "address": {
+            "house_number": "755",
+            "road": "Secaucus Road",
+            "hamlet": "Harmon Cove",
+            "town": "Secaucus",
+            "county": "Hudson County",
+            "state": "New Jersey",
+            "ISO3166-2-lvl4": "US-NJ",
+            "postcode": "07094",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "40.7779343",
+            "40.7780343",
+            "-74.0669628",
+            "-74.0668628"
+          ]
+        }
+      ]
+    },
+    "9bee727b2a3448bf473cc3ce33f49a7befe856670b710ff7e2064743162e4dd6": {
+      "provider": "nominatim",
+      "query": "111 8th Avenue, New York, NY 10011, New York, NY, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:17.722Z",
+      "results": [
+        {
+          "place_id": 356832549,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "node",
+          "osm_id": 2601893113,
+          "lat": "40.7417176",
+          "lon": "-74.0041592",
+          "category": "office",
+          "type": "company",
+          "place_rank": 30,
+          "importance": 0.00009175936522464359,
+          "addresstype": "office",
+          "name": "Google",
+          "display_name": "Google, 111, 8th Avenue, Chelsea District, Manhattan Community Board 4, Manhattan, New York County, New York, 10011, United States",
+          "address": {
+            "office": "Google",
+            "house_number": "111",
+            "road": "8th Avenue",
+            "neighbourhood": "Chelsea District",
+            "suburb": "Manhattan",
+            "city_district": "New York County",
+            "city": "New York",
+            "state": "New York",
+            "ISO3166-2-lvl4": "US-NY",
+            "postcode": "10011",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "40.7416676",
+            "40.7417676",
+            "-74.0042092",
+            "-74.0041092"
+          ]
+        },
+        {
+          "place_id": 357016753,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "node",
+          "osm_id": 1825739833,
+          "lat": "40.7408812",
+          "lon": "-74.0020865",
+          "category": "place",
+          "type": "house",
+          "place_rank": 30,
+          "importance": 0.00009175936522464359,
+          "addresstype": "place",
+          "name": "",
+          "display_name": "111, 8th Avenue, Chelsea District, Manhattan Community Board 4, Manhattan, New York County, New York, 10011, United States",
+          "address": {
+            "house_number": "111",
+            "road": "8th Avenue",
+            "neighbourhood": "Chelsea District",
+            "suburb": "Manhattan",
+            "city_district": "New York County",
+            "city": "New York",
+            "state": "New York",
+            "ISO3166-2-lvl4": "US-NY",
+            "postcode": "10011",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "40.7408312",
+            "40.7409312",
+            "-74.0021365",
+            "-74.0020365"
+          ]
+        },
+        {
+          "place_id": 359037093,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 248166969,
+          "lat": "40.6723493",
+          "lon": "-73.9734167",
+          "category": "building",
+          "type": "yes",
+          "place_rank": 30,
+          "importance": 0.00009175936522464359,
+          "addresstype": "building",
+          "name": "",
+          "display_name": "111, 8th Avenue, Park Slope, Brooklyn, Kings County, New York, 11215, United States",
+          "address": {
+            "house_number": "111",
+            "road": "8th Avenue",
+            "neighbourhood": "Park Slope",
+            "suburb": "Brooklyn",
+            "city_district": "Kings County",
+            "city": "New York",
+            "state": "New York",
+            "ISO3166-2-lvl4": "US-NY",
+            "postcode": "11215",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "40.6722708",
+            "40.6724195",
+            "-73.9735343",
+            "-73.9732624"
+          ]
+        },
+        {
+          "place_id": 359153796,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 420598366,
+          "lat": "40.7456349",
+          "lon": "-73.9982303",
+          "category": "highway",
+          "type": "secondary",
+          "place_rank": 26,
+          "importance": 0.5176107426736866,
+          "addresstype": "road",
+          "name": "8th Avenue",
+          "display_name": "8th Avenue, Chelsea District, Manhattan Community Board 4, Manhattan, New York County, New York, 10011, United States",
+          "address": {
+            "road": "8th Avenue",
+            "neighbourhood": "Chelsea District",
+            "suburb": "Manhattan",
+            "city_district": "New York County",
+            "city": "New York",
+            "state": "New York",
+            "ISO3166-2-lvl4": "US-NY",
+            "postcode": "10011",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "40.7453054",
+            "40.7459651",
+            "-73.9984720",
+            "-73.9979896"
+          ]
+        },
+        {
+          "place_id": 356967846,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 439933934,
+          "lat": "40.7389294",
+          "lon": "-74.0032155",
+          "category": "highway",
+          "type": "secondary",
+          "place_rank": 26,
+          "importance": 0.5176107426736866,
+          "addresstype": "road",
+          "name": "8th Avenue",
+          "display_name": "8th Avenue, Meatpacking District, Manhattan, New York County, New York, 10011, United States",
+          "address": {
+            "road": "8th Avenue",
+            "neighbourhood": "Meatpacking District",
+            "suburb": "Manhattan",
+            "city_district": "New York County",
+            "city": "New York",
+            "state": "New York",
+            "ISO3166-2-lvl4": "US-NY",
+            "postcode": "10011",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "40.7387661",
+            "40.7390953",
+            "-74.0034031",
+            "-74.0030301"
+          ]
+        }
+      ]
+    },
+    "be5d502e91f123076134dd1066efde81aa457de37e3eecb7ad1a6ec38b8eec6e": {
+      "provider": "nominatim",
+      "query": "Bison Business Park, Cheyenne, WY, Cheyenne, WY, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:19.223Z",
+      "results": []
+    },
+    "2617430b5217a3f16a3aebba6ea5dc260e70d87fa632e097191135c398e01778": {
+      "provider": "nominatim",
+      "query": "Cheyenne Business Parkway, Cheyenne, WY, Cheyenne, WY, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:20.862Z",
+      "results": [
+        {
+          "place_id": 421779983,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1197757146,
+          "lat": "41.1421309",
+          "lon": "-104.7164285",
+          "category": "landuse",
+          "type": "industrial",
+          "place_rank": 24,
+          "importance": 0.08006262073701073,
+          "addresstype": "industrial",
+          "name": "Microsoft Cheyenne Business Parkway Data Center",
+          "display_name": "Microsoft Cheyenne Business Parkway Data Center, Cheyenne, Laramie County, Wyoming, United States",
+          "address": {
+            "industrial": "Microsoft Cheyenne Business Parkway Data Center",
+            "city": "Cheyenne",
+            "county": "Laramie County",
+            "state": "Wyoming",
+            "ISO3166-2-lvl4": "US-WY",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "41.1391468",
+            "41.1452297",
+            "-104.7205247",
+            "-104.7118673"
+          ]
+        }
+      ]
+    },
+    "0a3e4099b4f9f6bd5f33f2c358dd538ffafa138cda672df41bb12c60e319c62a": {
+      "provider": "nominatim",
+      "query": "45200 Vantage Data Plaza, Sterling, VA 20166, Sterling, VA, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:22.495Z",
+      "results": [
+        {
+          "place_id": 348356559,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 701924665,
+          "lat": "39.0023686",
+          "lon": "-77.4376872",
+          "category": "building",
+          "type": "data_center",
+          "place_rank": 30,
+          "importance": 0.00005413977264052823,
+          "addresstype": "building",
+          "name": "Vantage VA11",
+          "display_name": "Vantage VA11, 45200, Vantage Data Plaza, Ashburn I Data Center Campus, Sterling, Loudoun County, Virginia, 20166, United States",
+          "address": {
+            "building": "Vantage VA11",
+            "house_number": "45200",
+            "road": "Vantage Data Plaza",
+            "industrial": "Ashburn I Data Center Campus",
+            "town": "Sterling",
+            "county": "Loudoun County",
+            "state": "Virginia",
+            "ISO3166-2-lvl4": "US-VA",
+            "postcode": "20166",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "39.0017661",
+            "39.0029928",
+            "-77.4386319",
+            "-77.4367437"
+          ]
+        }
+      ]
+    },
+    "d4a3beaa2a5c7e8446888ce773ea96164a76ab55d414c83e535f830e7707f7ce": {
+      "provider": "nominatim",
+      "query": "22435 Glenn Drive, Sterling, VA 20164, Sterling, VA, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:24.097Z",
+      "results": [
+        {
+          "place_id": 347839311,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1344901575,
+          "lat": "38.9978663",
+          "lon": "-77.4301823",
+          "category": "building",
+          "type": "data_center",
+          "place_rank": 30,
+          "importance": 0.00005413977264052823,
+          "addresstype": "building",
+          "name": "Vantage VA2",
+          "display_name": "Vantage VA2, 22435, Glenn Drive, Sterling, Loudoun County, Virginia, 20164, United States",
+          "address": {
+            "building": "Vantage VA2",
+            "house_number": "22435",
+            "road": "Glenn Drive",
+            "town": "Sterling",
+            "county": "Loudoun County",
+            "state": "Virginia",
+            "ISO3166-2-lvl4": "US-VA",
+            "postcode": "20164",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "38.9972297",
+            "38.9986683",
+            "-77.4312145",
+            "-77.4292468"
+          ]
+        }
+      ]
+    },
+    "eb0bc8e86ba33bcbba40d28c12a459a65c4ec554b27f065c28769c6170a55fb0": {
+      "provider": "nominatim",
+      "query": "19509 Belmont Ridge Road, Ashburn, VA 20147, Ashburn, VA, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:26.079Z",
+      "results": [
+        {
+          "place_id": 348156994,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1181281121,
+          "lat": "39.0599793",
+          "lon": "-77.5127854",
+          "category": "highway",
+          "type": "primary",
+          "place_rank": 26,
+          "importance": 0.05338554589150832,
+          "addresstype": "road",
+          "name": "Belmont Ridge Road",
+          "display_name": "Belmont Ridge Road, Belmont Greene, Ashburn, Loudoun County, Virginia, 20147, United States",
+          "address": {
+            "road": "Belmont Ridge Road",
+            "neighbourhood": "Belmont Greene",
+            "town": "Ashburn",
+            "county": "Loudoun County",
+            "state": "Virginia",
+            "ISO3166-2-lvl4": "US-VA",
+            "postcode": "20147",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "39.0576415",
+            "39.0632624",
+            "-77.5155451",
+            "-77.5111040"
+          ]
+        },
+        {
+          "place_id": 348157345,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 604030830,
+          "lat": "39.0576128",
+          "lon": "-77.5156031",
+          "category": "highway",
+          "type": "primary",
+          "place_rank": 26,
+          "importance": 0.05338554589150832,
+          "addresstype": "road",
+          "name": "Belmont Ridge Road",
+          "display_name": "Belmont Ridge Road, Ashburn, Loudoun County, Virginia, 20147, United States",
+          "address": {
+            "road": "Belmont Ridge Road",
+            "town": "Ashburn",
+            "county": "Loudoun County",
+            "state": "Virginia",
+            "ISO3166-2-lvl4": "US-VA",
+            "postcode": "20147",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "39.0575840",
+            "39.0576415",
+            "-77.5156611",
+            "-77.5155451"
+          ]
+        }
+      ]
+    },
+    "ba0acb2efc948063d2c48be844217cf048bd2a54bc795be6413fea55c40982ee": {
+      "provider": "nominatim",
+      "query": "225 Centreport Parkway, Fredericksburg, VA 22406, Fredericksburg, VA, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:27.951Z",
+      "results": []
+    },
+    "4b684329d6751ef869d31274af240e4cc6585f2d4a01ee8fe9264fab0dfb7a36": {
+      "provider": "nominatim",
+      "query": "3325 Horizon Court, New Albany, OH 43031, New Albany, OH, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:29.756Z",
+      "results": []
+    },
+    "f9209c9fdc6e2558f223e33d2570501ed329528e845b155e62e60cf76dd9fda5": {
+      "provider": "nominatim",
+      "query": "45 S. Bullard Avenue, Goodyear, AZ 85338, Goodyear, AZ, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:31.415Z",
+      "results": [
+        {
+          "place_id": 318945054,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1283734104,
+          "lat": "33.4464557",
+          "lon": "-112.3738845",
+          "category": "building",
+          "type": "yes",
+          "place_rank": 30,
+          "importance": 0.00004961852445253708,
+          "addresstype": "building",
+          "name": "Vantage Data Centers",
+          "display_name": "Vantage Data Centers, 45, South Bullard Avenue, Goodyear, Maricopa County, Arizona, 85338, United States",
+          "address": {
+            "building": "Vantage Data Centers",
+            "house_number": "45",
+            "road": "South Bullard Avenue",
+            "city": "Goodyear",
+            "county": "Maricopa County",
+            "state": "Arizona",
+            "ISO3166-2-lvl4": "US-AZ",
+            "postcode": "85338",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "33.4456192",
+            "33.4469862",
+            "-112.3747442",
+            "-112.3730293"
+          ]
+        },
+        {
+          "place_id": 318961246,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1088050685,
+          "lat": "33.4462731",
+          "lon": "-112.3720246",
+          "category": "place",
+          "type": "house",
+          "place_rank": 30,
+          "importance": 0.00004961852445253708,
+          "addresstype": "place",
+          "name": "",
+          "display_name": "45, South Bullard Avenue, Goodyear, Maricopa County, Arizona, 85338, United States",
+          "address": {
+            "house_number": "45",
+            "road": "South Bullard Avenue",
+            "city": "Goodyear",
+            "county": "Maricopa County",
+            "state": "Arizona",
+            "ISO3166-2-lvl4": "US-AZ",
+            "postcode": "85338",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "33.4453960",
+            "33.4471501",
+            "-112.3726746",
+            "-112.3713746"
+          ]
+        }
+      ]
+    },
+    "88cb707379189df061a50a702a46a1266cce2427d45a0c5d21d857087c7265d4": {
+      "provider": "nominatim",
+      "query": "2101 M Street NE, Quincy, WA 98848, Quincy, WA, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:33.619Z",
+      "results": []
+    },
+    "b62a233874dd8488a8451958c8afa38970072e4a51b87658f25d72ef7a1e04c4": {
+      "provider": "nominatim",
+      "query": "1121 USA Parkway, Sparks, NV 89437, Sparks, NV, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:35.313Z",
+      "results": []
+    },
+    "a22bf0ce12a73844ff602dde1b2ba480f782ba557e75820e7dd3bd0b4d395360": {
+      "provider": "nominatim",
+      "query": "2820 Northwestern Pkwy, Santa Clara, CA 95051, Santa Clara, CA, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:36.862Z",
+      "results": [
+        {
+          "place_id": 322230705,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 38305431,
+          "lat": "37.3725693",
+          "lon": "-121.9736589",
+          "category": "building",
+          "type": "data_center",
+          "place_rank": 30,
+          "importance": 0.00006557488364991253,
+          "addresstype": "building",
+          "name": "Digital Realty Silicon Valley SJC34",
+          "display_name": "Digital Realty Silicon Valley SJC34, 2820, Northwestern Parkway, Santa Clara, Santa Clara County, California, 95054, United States",
+          "address": {
+            "building": "Digital Realty Silicon Valley SJC34",
+            "house_number": "2820",
+            "road": "Northwestern Parkway",
+            "city": "Santa Clara",
+            "county": "Santa Clara County",
+            "state": "California",
+            "ISO3166-2-lvl4": "US-CA",
+            "postcode": "95054",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "37.3717801",
+            "37.3730353",
+            "-121.9742006",
+            "-121.9730933"
+          ]
+        }
+      ]
+    },
+    "e331884629ea5362fd808ce62e8ea5ea9836405f0fbfc64a5056cbc98fb723e3": {
+      "provider": "nominatim",
+      "query": "737 Mathew Street, Santa Clara, CA 95051, Santa Clara, CA, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:38.436Z",
+      "results": [
+        {
+          "place_id": 322477789,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1314010354,
+          "lat": "37.3640694",
+          "lon": "-121.9469073",
+          "category": "building",
+          "type": "yes",
+          "place_rank": 30,
+          "importance": 0.00006557488364991253,
+          "addresstype": "building",
+          "name": "Vantage Santa Clara CA2",
+          "display_name": "Vantage Santa Clara CA2, 737, Mathew Street, Santa Clara, Santa Clara County, California, 95051, United States",
+          "address": {
+            "building": "Vantage Santa Clara CA2",
+            "house_number": "737",
+            "road": "Mathew Street",
+            "city": "Santa Clara",
+            "county": "Santa Clara County",
+            "state": "California",
+            "ISO3166-2-lvl4": "US-CA",
+            "postcode": "95051",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "37.3635973",
+            "37.3644050",
+            "-121.9480372",
+            "-121.9457428"
+          ]
+        }
+      ]
+    },
+    "37684ba9eb3820910638a177417b1818f28e96ab103fd3f462c246557c6756d4": {
+      "provider": "nominatim",
+      "query": "2590 Walsh Avenue, Santa Clara, CA 95051, Santa Clara, CA, United States",
+      "countryCode": "US",
+      "fetchedAt": "2026-09-18T03:44:40.040Z",
+      "results": [
+        {
+          "place_id": 386416411,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 417013156,
+          "lat": "37.3712362",
+          "lon": "-121.9740103",
+          "category": "place",
+          "type": "house",
+          "place_rank": 30,
+          "importance": 0.00000999999999995449,
+          "addresstype": "place",
+          "name": "",
+          "display_name": "2590, Walsh Avenue, Santa Clara, Santa Clara County, California, 95051, United States",
+          "address": {
+            "house_number": "2590",
+            "road": "Walsh Avenue",
+            "city": "Santa Clara",
+            "county": "Santa Clara County",
+            "state": "California",
+            "ISO3166-2-lvl4": "US-CA",
+            "postcode": "95051",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "37.3711862",
+            "37.3712862",
+            "-121.9740603",
+            "-121.9739603"
+          ]
+        },
+        {
+          "place_id": 321897796,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1313995085,
+          "lat": "37.3706288",
+          "lon": "-121.9744801",
+          "category": "building",
+          "type": "yes",
+          "place_rank": 30,
+          "importance": 0.00006557488364991253,
+          "addresstype": "building",
+          "name": "",
+          "display_name": "2590, Walsh Avenue, Santa Clara, Santa Clara County, California, 95051, United States",
+          "address": {
+            "house_number": "2590",
+            "road": "Walsh Avenue",
+            "city": "Santa Clara",
+            "county": "Santa Clara County",
+            "state": "California",
+            "ISO3166-2-lvl4": "US-CA",
+            "postcode": "95051",
+            "country": "United States",
+            "country_code": "us"
+          },
+          "boundingbox": [
+            "37.3700869",
+            "37.3711994",
+            "-121.9754125",
+            "-121.9735525"
+          ]
+        }
+      ]
+    },
+    "80f19913ac6933553e00caa1d508aa829f155565a9badfb9882fe26e37718735": {
+      "provider": "nominatim",
+      "query": "Brandenburg Park, Uferring 5, Ludwigsfelde 14974, Ludwigsfelde, Germany",
+      "countryCode": "DE",
+      "fetchedAt": "2026-09-18T03:44:41.582Z",
+      "results": []
+    },
+    "fa852ec682cf49ce4b6cc37e8610fa104d26fdd7c452673cc880debdf360ae0f": {
+      "provider": "nominatim",
+      "query": "Dahmestrasse 1 and 2, Mittenwalde 15749, Mittenwalde, Germany",
+      "countryCode": "DE",
+      "fetchedAt": "2026-09-18T03:44:43.208Z",
+      "results": [
+        {
+          "place_id": 153085724,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1056893295,
+          "lat": "52.2612871",
+          "lon": "13.5712861",
+          "category": "highway",
+          "type": "residential",
+          "place_rank": 26,
+          "importance": 0.05338617303730828,
+          "addresstype": "road",
+          "name": "Dahmestraße",
+          "display_name": "Dahmestraße, Logistikzentrum Hechtstücke, Mittenwalde, Schenkendorf-Krummensee, Dahme-Spreewald, Brandenburg, 15749, Deutschland",
+          "address": {
+            "road": "Dahmestraße",
+            "commercial": "Logistikzentrum Hechtstücke",
+            "city_district": "Mittenwalde",
+            "town": "Mittenwalde",
+            "municipality": "Schenkendorf-Krummensee",
+            "county": "Dahme-Spreewald",
+            "state": "Brandenburg",
+            "ISO3166-2-lvl4": "DE-BB",
+            "postcode": "15749",
+            "country": "Deutschland",
+            "country_code": "de"
+          },
+          "boundingbox": [
+            "52.2604758",
+            "52.2620982",
+            "13.5690930",
+            "13.5734793"
+          ]
+        },
+        {
+          "place_id": 146719820,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1056893288,
+          "lat": "52.2590344",
+          "lon": "13.5661181",
+          "category": "highway",
+          "type": "residential",
+          "place_rank": 26,
+          "importance": 0.05338617303730828,
+          "addresstype": "road",
+          "name": "Dahmestraße",
+          "display_name": "Dahmestraße, Logistikzentrum Hechtstücke, Galluner Müllerhaus, Mittenwalde, Schenkendorf-Krummensee, Dahme-Spreewald, Brandenburg, 15749, Deutschland",
+          "address": {
+            "road": "Dahmestraße",
+            "commercial": "Logistikzentrum Hechtstücke",
+            "hamlet": "Galluner Müllerhaus",
+            "city_district": "Mittenwalde",
+            "town": "Mittenwalde",
+            "municipality": "Schenkendorf-Krummensee",
+            "county": "Dahme-Spreewald",
+            "state": "Brandenburg",
+            "ISO3166-2-lvl4": "DE-BB",
+            "postcode": "15749",
+            "country": "Deutschland",
+            "country_code": "de"
+          },
+          "boundingbox": [
+            "52.2584045",
+            "52.2596666",
+            "13.5644319",
+            "13.5678033"
+          ]
+        },
+        {
+          "place_id": 145148453,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1056893296,
+          "lat": "52.2629083",
+          "lon": "13.5726794",
+          "category": "highway",
+          "type": "residential",
+          "place_rank": 26,
+          "importance": 0.05338617303730828,
+          "addresstype": "road",
+          "name": "Dahmestraße",
+          "display_name": "Dahmestraße, Mittenwalde, Schenkendorf-Krummensee, Dahme-Spreewald, Brandenburg, 15749, Deutschland",
+          "address": {
+            "road": "Dahmestraße",
+            "city_district": "Mittenwalde",
+            "town": "Mittenwalde",
+            "municipality": "Schenkendorf-Krummensee",
+            "county": "Dahme-Spreewald",
+            "state": "Brandenburg",
+            "ISO3166-2-lvl4": "DE-BB",
+            "postcode": "15749",
+            "country": "Deutschland",
+            "country_code": "de"
+          },
+          "boundingbox": [
+            "52.2620982",
+            "52.2637115",
+            "13.5718727",
+            "13.5734793"
+          ]
+        }
+      ]
+    },
+    "dd6b39903a8ea69dc348658b8cba1fb04aad9f5e78cb628dac323765a71a653a": {
+      "provider": "nominatim",
+      "query": "Goethering 27, Offenbach am Main 63067, Offenbach am Main, Germany",
+      "countryCode": "DE",
+      "fetchedAt": "2026-09-18T03:44:44.822Z",
+      "results": [
+        {
+          "place_id": 138180923,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 172856848,
+          "lat": "50.1091096",
+          "lon": "8.7438831",
+          "category": "building",
+          "type": "data_center",
+          "place_rank": 30,
+          "importance": 0.00007941481651021618,
+          "addresstype": "building",
+          "name": "Vantage Data Center (FRA1)",
+          "display_name": "Vantage Data Center (FRA1), 27, Goethering, Nordend, Offenbach am Main, Hessen, 63067, Deutschland",
+          "address": {
+            "building": "Vantage Data Center (FRA1)",
+            "house_number": "27",
+            "road": "Goethering",
+            "suburb": "Nordend",
+            "city": "Offenbach am Main",
+            "state": "Hessen",
+            "ISO3166-2-lvl4": "DE-HE",
+            "postcode": "63067",
+            "country": "Deutschland",
+            "country_code": "de"
+          },
+          "boundingbox": [
+            "50.1088012",
+            "50.1094365",
+            "8.7429940",
+            "8.7446727"
+          ]
+        }
+      ]
+    },
+    "91b29f5e8a6013dbb66311dafba9fd8bc6d6df1e837ea99c5df601e1a7201351": {
+      "provider": "nominatim",
+      "query": "Alexander-von-Humboldt-Straße 4, Raunheim 65479, Raunheim, Germany",
+      "countryCode": "DE",
+      "fetchedAt": "2026-09-18T03:44:46.373Z",
+      "results": [
+        {
+          "place_id": 138294031,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "node",
+          "osm_id": 8730473795,
+          "lat": "50.0131911",
+          "lon": "8.4624392",
+          "category": "place",
+          "type": "house",
+          "place_rank": 30,
+          "importance": 0.000051367208361898486,
+          "addresstype": "place",
+          "name": "",
+          "display_name": "4, Alexander-von-Humboldt-Straße, Gewerbegebiet Airportgarden, Raunheim, Kreis Groß-Gerau, Hessen, 65479, Deutschland",
+          "address": {
+            "house_number": "4",
+            "road": "Alexander-von-Humboldt-Straße",
+            "industrial": "Gewerbegebiet Airportgarden",
+            "town": "Raunheim",
+            "county": "Kreis Groß-Gerau",
+            "state": "Hessen",
+            "ISO3166-2-lvl4": "DE-HE",
+            "postcode": "65479",
+            "country": "Deutschland",
+            "country_code": "de"
+          },
+          "boundingbox": [
+            "50.0131411",
+            "50.0132411",
+            "8.4623892",
+            "8.4624892"
+          ]
+        }
+      ]
+    },
+    "38499ed1d4461077620c22a3347a200a5bc25e95375b7728f6fc4919eef0f989": {
+      "provider": "nominatim",
+      "query": "32 Via per Carpiano, Melegnano, Milan 20077, Melegnano, Italy",
+      "countryCode": "IT",
+      "fetchedAt": "2026-09-18T03:44:47.987Z",
+      "results": [
+        {
+          "place_id": 75859500,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 60651114,
+          "lat": "45.3498811",
+          "lon": "9.3058147",
+          "category": "highway",
+          "type": "unclassified",
+          "place_rank": 26,
+          "importance": 0.053393842221713554,
+          "addresstype": "road",
+          "name": "Via per Carpiano",
+          "display_name": "Via per Carpiano, Melegnano, Rodano, Milano, Lombardia, 20077, Italia",
+          "address": {
+            "road": "Via per Carpiano",
+            "town": "Melegnano",
+            "municipality": "Rodano",
+            "county": "Milano",
+            "ISO3166-2-lvl6": "IT-MI",
+            "state": "Lombardia",
+            "ISO3166-2-lvl4": "IT-25",
+            "postcode": "20077",
+            "country": "Italia",
+            "country_code": "it"
+          },
+          "boundingbox": [
+            "45.3494939",
+            "45.3503092",
+            "9.3050535",
+            "9.3065385"
+          ]
+        }
+      ]
+    },
+    "d6aa2c64f3009b3a90751bd03bf2f7a2d5ad46fdcc7954815942061c54d0c8e1": {
+      "provider": "nominatim",
+      "query": "Via Aganippo Brocchi, Castelletto, Milan 20019, Castelletto, Italy",
+      "countryCode": "IT",
+      "fetchedAt": "2026-09-18T03:44:49.554Z",
+      "results": []
+    },
+    "136cbe66c9cd5ef6bf2c7f28ff5bd8e0f231f7c231746ead8abce1c3ef963581": {
+      "provider": "nominatim",
+      "query": "Zgrupowania AK Kampinos 42D, Warsaw 01-949, Warsaw, Poland",
+      "countryCode": "PL",
+      "fetchedAt": "2026-09-18T03:44:51.126Z",
+      "results": [
+        {
+          "place_id": 420129513,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 1115586271,
+          "lat": "52.2931661",
+          "lon": "20.9217258",
+          "category": "building",
+          "type": "data_center",
+          "place_rank": 30,
+          "importance": 0.00008366292820625647,
+          "addresstype": "building",
+          "name": "",
+          "display_name": "42D, Zgrupowania AK „Kampinos”, Huta, Bielany, Warszawa, województwo mazowieckie, 01-943, Polska",
+          "address": {
+            "house_number": "42D",
+            "road": "Zgrupowania AK „Kampinos”",
+            "quarter": "Huta",
+            "suburb": "Bielany",
+            "city": "Warszawa",
+            "state": "województwo mazowieckie",
+            "ISO3166-2-lvl4": "PL-14",
+            "postcode": "01-943",
+            "country": "Polska",
+            "country_code": "pl"
+          },
+          "boundingbox": [
+            "52.2927939",
+            "52.2935382",
+            "20.9210436",
+            "20.9224081"
+          ]
+        }
+      ]
+    },
+    "8ab81dc24e31b4ddb0587b328907ab7d99654e9bf54ae9429d6135ec5c0ae469": {
+      "provider": "nominatim",
+      "query": "12 Fabrikstrasse, Winterthur 8404, Winterthur, Switzerland",
+      "countryCode": "CH",
+      "fetchedAt": "2026-09-18T03:44:52.704Z",
+      "results": [
+        {
+          "place_id": 71978996,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 904767972,
+          "lat": "47.5004571",
+          "lon": "8.7614463",
+          "category": "building",
+          "type": "yes",
+          "place_rank": 30,
+          "importance": 0.00006545433737692863,
+          "addresstype": "building",
+          "name": "ZRH1",
+          "display_name": "ZRH1, 12, Fabrikstrasse, Talwiesen, Grüze, Oberwinterthur, Winterthur, Bezirk Winterthur, Zürich, 8404, Schweiz/Suisse/Svizzera/Svizra",
+          "address": {
+            "building": "ZRH1",
+            "house_number": "12",
+            "road": "Fabrikstrasse",
+            "neighbourhood": "Talwiesen",
+            "quarter": "Grüze",
+            "suburb": "Oberwinterthur",
+            "city": "Winterthur",
+            "county": "Bezirk Winterthur",
+            "state": "Zürich",
+            "ISO3166-2-lvl4": "CH-ZH",
+            "postcode": "8404",
+            "country": "Schweiz/Suisse/Svizzera/Svizra",
+            "country_code": "ch"
+          },
+          "boundingbox": [
+            "47.5001284",
+            "47.5007812",
+            "8.7610450",
+            "8.7618601"
+          ]
+        },
+        {
+          "place_id": 71528480,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "node",
+          "osm_id": 11843357169,
+          "lat": "47.5005904",
+          "lon": "8.7612319",
+          "category": "emergency",
+          "type": "defibrillator",
+          "place_rank": 30,
+          "importance": 0.00006545433737692863,
+          "addresstype": "emergency",
+          "name": "",
+          "display_name": "12, Fabrikstrasse, Talwiesen, Grüze, Oberwinterthur, Winterthur, Bezirk Winterthur, Zürich, 8404, Schweiz/Suisse/Svizzera/Svizra",
+          "address": {
+            "house_number": "12",
+            "road": "Fabrikstrasse",
+            "neighbourhood": "Talwiesen",
+            "quarter": "Grüze",
+            "suburb": "Oberwinterthur",
+            "city": "Winterthur",
+            "county": "Bezirk Winterthur",
+            "state": "Zürich",
+            "ISO3166-2-lvl4": "CH-ZH",
+            "postcode": "8404",
+            "country": "Schweiz/Suisse/Svizzera/Svizra",
+            "country_code": "ch"
+          },
+          "boundingbox": [
+            "47.5005404",
+            "47.5006404",
+            "8.7611819",
+            "8.7612819"
+          ]
+        }
+      ]
+    },
+    "3e4a8b20d8468f7ebffdd117174016a7319484e361545b9426a5c6505a1459c5": {
+      "provider": "nominatim",
+      "query": "Spinnerei Lettenstrasse, Glattfelden 8192, Glattfelden, Switzerland",
+      "countryCode": "CH",
+      "fetchedAt": "2026-09-18T03:44:54.257Z",
+      "results": [
+        {
+          "place_id": 71584665,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "way",
+          "osm_id": 165539619,
+          "lat": "47.5685848",
+          "lon": "8.4771982",
+          "category": "highway",
+          "type": "unclassified",
+          "place_rank": 26,
+          "importance": 0.053383334859235486,
+          "addresstype": "road",
+          "name": "Spinnerei-Lettenstrasse",
+          "display_name": "Spinnerei-Lettenstrasse, Letten, Zweidlen, Glattfelden, Bezirk Bülach, Zürich, 8192, Schweiz/Suisse/Svizzera/Svizra",
+          "address": {
+            "road": "Spinnerei-Lettenstrasse",
+            "hamlet": "Letten",
+            "village": "Zweidlen",
+            "county": "Bezirk Bülach",
+            "state": "Zürich",
+            "ISO3166-2-lvl4": "CH-ZH",
+            "postcode": "8192",
+            "country": "Schweiz/Suisse/Svizzera/Svizra",
+            "country_code": "ch"
+          },
+          "boundingbox": [
+            "47.5673514",
+            "47.5689702",
+            "8.4771660",
+            "8.4785475"
+          ]
+        }
+      ]
+    },
+    "b3aecec266c73b8116d414b4c5968f4a7fa1b688419655b0b4925d408795720a": {
+      "provider": "nominatim",
+      "query": "Slough Trading Estate, Slough, England, United Kingdom",
+      "countryCode": "GB",
+      "fetchedAt": "2026-09-18T03:44:55.778Z",
+      "results": [
+        {
+          "place_id": 277242998,
+          "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+          "osm_type": "relation",
+          "osm_id": 17881262,
+          "lat": "51.5226239",
+          "lon": "-0.6274534",
+          "category": "landuse",
+          "type": "commercial",
+          "place_rank": 24,
+          "importance": 0.08006136949721519,
+          "addresstype": "commercial",
+          "name": "Slough Trading Estate",
+          "display_name": "Slough Trading Estate, Cippenham, Chalvey, Slough, England, United Kingdom",
+          "address": {
+            "commercial": "Slough Trading Estate",
+            "suburb": "Cippenham",
+            "village": "Chalvey",
+            "town": "Slough",
+            "ISO3166-2-lvl6": "GB-SLG",
+            "state": "England",
+            "ISO3166-2-lvl4": "GB-ENG",
+            "country": "United Kingdom",
+            "country_code": "gb"
+          },
+          "boundingbox": [
+            "51.5121101",
+            "51.5279120",
+            "-0.6428472",
+            "-0.6125787"
+          ]
+        }
+      ]
+    },
+    "3f5abf424d48e34e0e5dfd252ad28e69965a3814a81d94960890fd5b9e5c7de9": {
+      "provider": "nominatim",
+      "query": "Celtic Way, Coedkernew, Duffryn, Newport NP10 8BE, Newport, Wales, United Kingdom",
+      "countryCode": "GB",
+      "fetchedAt": "2026-09-18T03:44:57.375Z",
+      "results": []
+    },
+    "d5c521076a5a8fef2840af12307bfb3689ec0455c33e0c30766fd3dc714e9452": {
+      "provider": "nominatim",
+      "query": "Parque de las Ciencias, Municipality of Nicolich, Canelones, Canelones, Uruguay",
+      "countryCode": "UY",
+      "fetchedAt": "2026-09-18T03:44:59.776Z",
+      "results": []
+    },
+    "e780a10a9b4137e434e1953dc09bcd57d6362812da16d6cb86df62f13f9581e9": {
+      "provider": "nominatim",
+      "query": "1 Howick Lane, Waterfall Logistics Precinct, Midrand, Johannesburg, Midrand, South Africa",
+      "countryCode": "ZA",
+      "fetchedAt": "2026-09-18T03:45:01.322Z",
+      "results": []
+    }
+  }
+}

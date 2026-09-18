@@ -25,14 +25,18 @@ import { createHash } from "node:crypto";
 
 import type { ContractFacility, ContractRelationship, FacilityImportDocument } from "@/lib/facilities/contract";
 import {
+  AI_RELEVANCE_CLAIM_FIELDS,
   CITATION_CLASSES,
   COMPUTE_CATEGORIES,
+  EVIDENCED_AI_RELEVANCE_STATES,
   FACILITY_VERIFICATION_HORIZON_DAYS,
   NON_PUBLISHABLE_LIFECYCLE_STATUSES,
   POSITIONING_CLAIM_FIELDS,
   SYMMETRIC_RELATIONSHIP_TYPES,
   citationClassOf,
+  hasAdmissiblePositioning,
   isMapEligible,
+  sourceTierOf,
   type CitationClass,
   type FacilityCategory,
   type FacilityPublicationState,
@@ -94,6 +98,10 @@ export type ImportPlan = {
     sourceUrls: number;
     /** Evidence records by citation class, so the rights picture is visible without a query. */
     byCitationClass: Record<CitationClass, number>;
+    /** Evidence records by source tier, so the directory share of a batch is visible. */
+    bySourceTier: Record<string, number>;
+    /** Facilities by AI relevance, which is enrichment and never gates anything. */
+    byAiRelevance: Record<string, number>;
     /** Evidence records whose source is on the rights register. */
     rightsReviewFlagged: number;
   };
@@ -258,19 +266,54 @@ export function buildImportPlan(document: FacilityImportDocument, options: PlanO
           message: `asks to be published while ${status}`,
         });
       }
-      const hasPositioningEvidence = facility.evidence.some((item) =>
+      const positioningSources = facility.evidence.filter((item) =>
         item.claims.some((claim) => (POSITIONING_CLAIM_FIELDS as readonly string[]).includes(claim.field)),
       );
-      if (!hasPositioningEvidence) {
+      if (positioningSources.length === 0) {
         errors.push({
           researchKey: facility.researchKey,
           code: "publication_needs_positioning_evidence",
           message: "asks to be published with no source that supports its location or coordinates",
         });
+      } else if (!hasAdmissiblePositioning(positioningSources)) {
+        // Methodology 2.0.0 section 4: directories find facilities, they do not
+        // place dots. One directory entry is a lead; two directories built from
+        // each other are one lead wearing two names, which is why the rule
+        // counts publishers rather than rows.
+        errors.push({
+          researchKey: facility.researchKey,
+          code: "publication_needs_admissible_positioning",
+          message:
+            "asks to be published on directory evidence alone; a public dot needs a primary or corroborating source, or two independent directories",
+        });
       }
     }
 
     // ---- review candidates ----
+    // A positive AI classification is a claim about the world, so it needs a
+    // document. The negative and unknown states assert nothing and need none —
+    // which is the whole point of keeping them apart.
+    const aiRelevance = facility.aiRelevance ?? "unknown";
+    if ((EVIDENCED_AI_RELEVANCE_STATES as readonly string[]).includes(aiRelevance)) {
+      const stated = facility.evidence.some((item) =>
+        item.claims.some((claim) => (AI_RELEVANCE_CLAIM_FIELDS as readonly string[]).includes(claim.field)),
+      );
+      if (!stated) {
+        errors.push({
+          researchKey: facility.researchKey,
+          code: "ai_relevance_needs_evidence",
+          message: `claims AI relevance "${aiRelevance}" with no cited source that states it`,
+        });
+      }
+    }
+    if (facility.category === "data_center" && aiRelevance === "unknown") {
+      reviewCandidates.push({
+        researchKey: facility.researchKey,
+        code: "ai_relevance_unassessed",
+        message: "is a data center whose AI relevance nobody has assessed; this never blocks publication",
+      });
+    }
+
     for (const note of facility.quality.reviewNotes ?? []) {
       reviewCandidates.push({ researchKey: facility.researchKey, code: "unresolved_research_note", message: note });
     }
@@ -484,15 +527,21 @@ export function buildImportPlan(document: FacilityImportDocument, options: PlanO
   let aliases = 0;
   const sourceUrls = new Set<string>();
   const byCitationClass = Object.fromEntries(CITATION_CLASSES.map((cls) => [cls, 0])) as Record<CitationClass, number>;
+  const bySourceTier: Record<string, number> = { tier1: 0, tier2: 0, tier3: 0 };
+  const byAiRelevance: Record<string, number> = { documented_ai: 0, ai_capable_or_high_density: 0, no_documented_ai: 0, unknown: 0 };
   for (const entry of planned) {
     byCategory[entry.facility.category] += 1;
     evidence += entry.facility.evidence.length;
     claims += entry.facility.evidence.reduce((total, item) => total + item.claims.length, 0);
     facts += (entry.facility.facts ?? []).length;
     aliases += (entry.facility.aliases ?? []).length;
+    const relevance = entry.facility.aiRelevance ?? "unknown";
+    byAiRelevance[relevance] = (byAiRelevance[relevance] ?? 0) + 1;
     for (const item of entry.facility.evidence) {
       sourceUrls.add(item.url);
       byCitationClass[citationClassOf(item.documentType)] += 1;
+      const tier = `tier${sourceTierOf(item.documentType)}`;
+      bySourceTier[tier] = (bySourceTier[tier] ?? 0) + 1;
     }
   }
 
@@ -528,6 +577,8 @@ export function buildImportPlan(document: FacilityImportDocument, options: PlanO
       relationships: plannedRelationships.length,
       sourceUrls: sourceUrls.size,
       byCitationClass,
+      bySourceTier,
+      byAiRelevance,
       rightsReviewFlagged: reviewCandidates.filter((entry) => entry.code === "source_rights_review").length,
     },
   };

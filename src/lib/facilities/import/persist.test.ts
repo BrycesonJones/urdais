@@ -22,7 +22,15 @@ type Call = { text: string; values: readonly unknown[] };
  * fingerprint the caller controls, so "inserted" and "unchanged" can be
  * distinguished without a real database.
  */
-function recorder(options: { existingKeys?: readonly string[]; fingerprint?: (key: string) => string; failOn?: RegExp; methodologyVersionId?: string | null } = {}) {
+function recorder(
+  options: {
+    existingKeys?: readonly string[];
+    fingerprint?: (key: string) => string;
+    failOn?: RegExp;
+    methodologyVersionId?: string | null;
+    priorMethodologyVersionId?: string | null;
+  } = {},
+) {
   const calls: Call[] = [];
   const existing = new Set(options.existingKeys ?? []);
   let evidenceCounter = 0;
@@ -39,11 +47,14 @@ function recorder(options: { existingKeys?: readonly string[]; fingerprint?: (ke
       }
       if (/^\s*select id::text as id,[\s\S]*from reference\.facilities where research_key/.test(text)) {
         const key = String(values[0]);
-        return existing.has(key) ? { rows: [{ id: `id-${key}`, fingerprint: options.fingerprint?.(key) ?? "before" }] } : { rows: [] };
+        return existing.has(key)
+          ? { rows: [{ id: `id-${key}`, fingerprint: options.fingerprint?.(key) ?? "before", methodology_version_id: options.priorMethodologyVersionId ?? null }] }
+          : { rows: [] };
       }
       if (/insert into reference\.facilities/.test(text)) {
         const key = String(values[0]);
-        return { rows: [{ id: `id-${key}`, fingerprint: options.fingerprint?.(key) ?? "after" }] };
+        const id = options.methodologyVersionId === undefined ? "methodology-1" : options.methodologyVersionId;
+        return { rows: [{ id: `id-${key}`, fingerprint: options.fingerprint?.(key) ?? "after", methodology_version_id: id }] };
       }
       if (/insert into reference\.facility_evidence \(/.test(text)) {
         evidenceCounter += 1;
@@ -90,7 +101,7 @@ function facility(overrides: Record<string, unknown> = {}) {
 
 function plan(facilities: Array<Record<string, unknown>> = [facility()], relationships: Array<Record<string, unknown>> = [], existing: string[] = []) {
   const { document, issues } = parseFacilityImportDocument({
-    contractVersion: "urdais.map.facility-import/1",
+    contractVersion: "urdais.map.facility-import/2",
     datasetName: "Fixture dataset",
     researchDocument: "FIXTURE.md",
     generatedAt: "2026-09-17",
@@ -127,6 +138,34 @@ describe("applyImportPlan", () => {
     const unapproved = recorder({ methodologyVersionId: null });
     await expect(applyImportPlan(unapproved, plan())).rejects.toThrow("nothing publishes under rules nobody approved");
     expect(unapproved.statements()).not.toContain("begin");
+  });
+
+  it("reports a record re-approved under a different methodology version rather than letting it pass as an edit", async () => {
+    // Re-approving under today's rules is a legitimate thing for an import to
+    // do. Doing it without saying so is not: a reader would have no way to tell
+    // a restamped record from one whose address changed.
+    const sql = recorder({ existingKeys: ["fixture-campus"], priorMethodologyVersionId: "methodology-0", fingerprint: () => "before" });
+    const result = await applyImportPlan(sql, plan());
+    expect(result.restamped).toEqual([{ researchKey: "fixture-campus", from: "methodology-0", to: "methodology-1" }]);
+  });
+
+  it("reports nothing restamped when the version has not moved", async () => {
+    const sql = recorder({ existingKeys: ["fixture-campus"], priorMethodologyVersionId: "methodology-1", fingerprint: () => "same" });
+    const result = await applyImportPlan(sql, plan());
+    expect(result.restamped).toEqual([]);
+    expect(result.unchanged).toEqual(["fixture-campus"]);
+  });
+
+  it("writes a facility's AI relevance, defaulting an absent one to unknown", async () => {
+    const sql = recorder();
+    await applyImportPlan(sql, plan());
+    const insert = sql.calls.find((call) => /insert into reference\.facilities/.test(call.text))!;
+    expect(insert.values).toContain("unknown");
+
+    const assessed = recorder();
+    await applyImportPlan(assessed, plan([facility({ aiRelevance: "no_documented_ai" })]));
+    const stated = assessed.calls.find((call) => /insert into reference\.facilities/.test(call.text))!;
+    expect(stated.values).toContain("no_documented_ai");
   });
 
   it("leaves a research record unstamped, because no rule has been applied to it", async () => {

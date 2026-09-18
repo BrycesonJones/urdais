@@ -20,15 +20,16 @@ begin;
 do $$
 declare c record; n integer;
 begin
+  -- The version in force, whichever it is. Which version that is belongs to the
+  -- migration that approved it and to 410; what this file asserts is the shape
+  -- every approved facility methodology must have.
   select v.* into c
     from reference.methodology_versions v
     join reference.methodologies m on m.id = v.methodology_id
-   where m.slug = 'map-facilities';
-  if c is null then raise exception 'the map facilities methodology has no version'; end if;
-  if c.version <> '1.0.0' then raise exception 'the map facilities methodology is at % rather than 1.0.0', c.version; end if;
+   where m.slug = 'map-facilities' and v.status = 'approved';
+  if c is null then raise exception 'the map facilities methodology has no approved version'; end if;
   -- Approved, not draft. The map already publishes facilities, and publishing
   -- under a draft is prohibited across Urdais.
-  if c.status <> 'approved' then raise exception 'the map facilities methodology is % rather than approved', c.status; end if;
   if c.effective_from is null then raise exception 'an approved methodology version carries no effective date'; end if;
   if c.document_path <> 'docs/methodology/map-facilities.md' then
     raise exception 'the methodology version points at %', c.document_path;
@@ -41,6 +42,14 @@ begin
     join reference.methodologies m on m.id = v.methodology_id
    where m.slug = 'map-facilities' and v.status = 'approved';
   if n <> 1 then raise exception '% approved versions of the facility methodology', n; end if;
+
+  -- Every earlier version stays on file with its own hash, so the rules a
+  -- record was approved under remain readable after the rules change.
+  select count(*) into n
+    from reference.methodology_versions v
+    join reference.methodologies m on m.id = v.methodology_id
+   where m.slug = 'map-facilities' and v.status = 'superseded' and v.content_hash is null;
+  if n <> 0 then raise exception '% superseded version(s) lost their content hash', n; end if;
 end $$;
 
 -- --------------------------------------------------- a published dot names it
@@ -51,7 +60,8 @@ begin
   select v.id into v_method
     from reference.methodology_versions v
     join reference.methodologies m on m.id = v.methodology_id
-   where m.slug = 'map-facilities' and v.status = 'approved';
+   where m.slug = 'map-facilities' and v.status = 'approved'
+   limit 1;
 
   ok := false;
   begin

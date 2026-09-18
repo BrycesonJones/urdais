@@ -18,14 +18,17 @@
  *
  * ## Versioning
  *
- * `contractVersion` is checked exactly, not by range. A document written to a
- * later shape is refused rather than partially read, because the failure mode
- * of a tolerant reader here is a silently dropped field — a source, a
- * relationship, a coordinate precision — and a dropped field is what turns a
- * sourced dataset back into an assertion.
+ * `contractVersion` is checked against a closed set, never a range. A document
+ * written to a later shape is refused rather than partially read, because the
+ * failure mode of a tolerant reader here is a silently dropped field — a
+ * source, a relationship, a coordinate precision — and a dropped field is what
+ * turns a sourced dataset back into an assertion. An earlier shape is read,
+ * because every /1 document is a valid /2 document; a /1 document that uses a
+ * /2 field is refused, because that is the dropped-field case again.
  */
 
 import {
+  isAiRelevance,
   isAliasKind,
   isCoordinateMethod,
   isCoordinatePrecision,
@@ -36,6 +39,7 @@ import {
   isFacilityConfidence,
   isLifecycleStatus,
   isRelationshipType,
+  type AiRelevance,
   type CoordinateMethod,
   type CoordinatePrecision,
   type EvidenceClaimField,
@@ -48,8 +52,36 @@ import {
   type FacilityRelationshipType,
 } from "@/lib/facilities/domain";
 
-/** The only contract version this build reads. */
-export const FACILITY_IMPORT_CONTRACT_VERSION = "urdais.map.facility-import/1" as const;
+/** The current contract version. Documents using any field added in it must declare it. */
+export const FACILITY_IMPORT_CONTRACT_VERSION = "urdais.map.facility-import/2" as const;
+
+/** The contract version this build also still reads. */
+export const FACILITY_IMPORT_CONTRACT_VERSION_1 = "urdais.map.facility-import/1" as const;
+
+/**
+ * Every version this build accepts.
+ *
+ * Two, not one, and the asymmetry is the point. The exact-version check exists
+ * so that a document written to a *later* shape is refused rather than
+ * partially read — a silently dropped source or relationship is what turns a
+ * sourced dataset into an asserted one. A strictly *earlier* shape carries that
+ * risk in no direction: every /1 document is a valid /2 document, because
+ * everything /2 added is optional. So /1 is read, and /3 is refused.
+ *
+ * What is not allowed is a /1 document that uses a /2 field. That would mean a
+ * /1 reader had dropped it, which is exactly the failure the check defends
+ * against, so it is an error naming the field and the version it needs.
+ */
+export const SUPPORTED_FACILITY_IMPORT_CONTRACT_VERSIONS = [
+  FACILITY_IMPORT_CONTRACT_VERSION_1,
+  FACILITY_IMPORT_CONTRACT_VERSION,
+] as const;
+export type FacilityImportContractVersion = (typeof SUPPORTED_FACILITY_IMPORT_CONTRACT_VERSIONS)[number];
+
+/** Fields and vocabulary added in /2; a /1 document may not use them. */
+const VERSION_2_FIELDS = ["aiRelevance"] as const;
+const VERSION_2_DOCUMENT_TYPES: readonly string[] = ["property_record", "facility_directory"];
+const VERSION_2_CLAIM_FIELDS: readonly string[] = ["ai_relevance", "cooling"];
 
 /**
  * The publication state an import may ask for. `withdrawn` is not here: taking
@@ -134,6 +166,12 @@ export type ContractFacility = {
   facts?: readonly ContractFact[] | null;
   evidence: readonly ContractEvidence[];
   quality: ContractQuality;
+  /**
+   * What is known about this facility's relationship to AI (contract /2).
+   * Enrichment, never an inclusion gate: absent means `unknown`, and a data
+   * centre with no AI evidence at all is an ordinary, publishable record.
+   */
+  aiRelevance?: AiRelevance | null;
   /** What the dataset asks for. The importer still refuses it if the record does not qualify. */
   requestedPublicationState: RequestedPublicationState;
 };
@@ -148,7 +186,7 @@ export type ContractRelationship = {
 };
 
 export type FacilityImportDocument = {
-  contractVersion: typeof FACILITY_IMPORT_CONTRACT_VERSION;
+  contractVersion: FacilityImportContractVersion;
   datasetName: string;
   /** Where the reviewed research this was projected from lives. */
   researchDocument: string;
@@ -503,6 +541,13 @@ function parseFacility(raw: unknown, path: string, issues: ContractIssue[]): Con
   const lifecycle = parseLifecycle(raw.lifecycle, `${path}.lifecycle`, issues);
   const quality = parseQuality(raw.quality, `${path}.quality`, issues);
 
+  // Enrichment, and optional by design: a data centre exists whether or not
+  // anybody has looked at what it runs. Absent means `unknown`.
+  const aiRelevanceRaw = raw.aiRelevance ?? null;
+  if (aiRelevanceRaw !== null && !isAiRelevance(aiRelevanceRaw)) {
+    issues.push({ path: `${path}.aiRelevance`, message: `"${String(aiRelevanceRaw)}" is not an AI relevance state` });
+  }
+
   if (researchKey === "" || canonicalName === "" || !isFacilityCategory(raw.category)) return null;
   if (typeof requested !== "string" || !(REQUESTABLE_PUBLICATION_STATES as readonly string[]).includes(requested)) return null;
 
@@ -518,8 +563,50 @@ function parseFacility(raw: unknown, path: string, issues: ContractIssue[]): Con
     facts,
     evidence,
     quality,
+    aiRelevance: isAiRelevance(aiRelevanceRaw) ? aiRelevanceRaw : null,
     requestedPublicationState: requested as RequestedPublicationState,
   };
+}
+
+/**
+ * Fields and vocabulary a /1 document may not use. Reading them out of a /1
+ * document would be the silent-drop failure in reverse: the file would say one
+ * thing and the database hold another, with the version claiming they agreed.
+ */
+function checkVersionedFields(raw: Record<string, unknown>, declared: string, issues: ContractIssue[]): void {
+  if (declared !== FACILITY_IMPORT_CONTRACT_VERSION_1) return;
+  const facilities = Array.isArray(raw.facilities) ? raw.facilities : [];
+  facilities.forEach((facility, index) => {
+    if (!isRecord(facility)) return;
+    for (const field of VERSION_2_FIELDS) {
+      if (facility[field] !== undefined) {
+        issues.push({
+          path: `$.facilities[${index}].${field}`,
+          message: `is a ${FACILITY_IMPORT_CONTRACT_VERSION} field; a document using it must declare that version`,
+        });
+      }
+    }
+    const evidence = Array.isArray(facility.evidence) ? facility.evidence : [];
+    evidence.forEach((item, evidenceIndex) => {
+      if (!isRecord(item)) return;
+      if (typeof item.documentType === "string" && VERSION_2_DOCUMENT_TYPES.includes(item.documentType)) {
+        issues.push({
+          path: `$.facilities[${index}].evidence[${evidenceIndex}].documentType`,
+          message: `"${item.documentType}" was added in ${FACILITY_IMPORT_CONTRACT_VERSION}; a document using it must declare that version`,
+        });
+      }
+      const claims = Array.isArray(item.claims) ? item.claims : [];
+      claims.forEach((claim, claimIndex) => {
+        if (!isRecord(claim)) return;
+        if (typeof claim.field === "string" && VERSION_2_CLAIM_FIELDS.includes(claim.field)) {
+          issues.push({
+            path: `$.facilities[${index}].evidence[${evidenceIndex}].claims[${claimIndex}].field`,
+            message: `"${claim.field}" was added in ${FACILITY_IMPORT_CONTRACT_VERSION}; a document using it must declare that version`,
+          });
+        }
+      });
+    });
+  });
 }
 
 function parseRelationship(raw: unknown, path: string, issues: ContractIssue[]): ContractRelationship | null {
@@ -559,17 +646,19 @@ export function parseFacilityImportDocument(raw: unknown): { document: FacilityI
   const issues: ContractIssue[] = [];
   if (!isRecord(raw)) return { document: null, issues: [{ path: "$", message: "the import document is not an object" }] };
 
-  if (raw.contractVersion !== FACILITY_IMPORT_CONTRACT_VERSION) {
+  if (typeof raw.contractVersion !== "string" || !(SUPPORTED_FACILITY_IMPORT_CONTRACT_VERSIONS as readonly string[]).includes(raw.contractVersion)) {
     return {
       document: null,
       issues: [
         {
           path: "$.contractVersion",
-          message: `expected "${FACILITY_IMPORT_CONTRACT_VERSION}", received ${JSON.stringify(raw.contractVersion)}; this build reads one version exactly and will not partially read another`,
+          message: `expected one of ${SUPPORTED_FACILITY_IMPORT_CONTRACT_VERSIONS.map((version) => `"${version}"`).join(", ")}, received ${JSON.stringify(raw.contractVersion)}; this build reads a closed set of versions and will not partially read a later one`,
         },
       ],
     };
   }
+  const declaredVersion = raw.contractVersion as FacilityImportContractVersion;
+  checkVersionedFields(raw, declaredVersion, issues);
 
   const datasetName = requiredText(raw.datasetName, "$.datasetName", issues);
   const researchDocument = requiredText(raw.researchDocument, "$.researchDocument", issues);
@@ -602,7 +691,7 @@ export function parseFacilityImportDocument(raw: unknown): { document: FacilityI
 
   return {
     document: {
-      contractVersion: FACILITY_IMPORT_CONTRACT_VERSION,
+      contractVersion: declaredVersion,
       datasetName,
       researchDocument,
       generatedAt: generatedAt as string,

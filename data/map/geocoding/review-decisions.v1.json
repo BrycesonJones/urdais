@@ -1,0 +1,54 @@
+{
+  "decisionVersion": "urdais.map.geocode-decisions/1",
+  "reviewedAt": "2026-09-18T00:00:00.000Z",
+  "decisions": {
+    "related-the-barn-saline": {
+      "outcome": "geocoded_ready",
+      "reason": "The returned 11600 West Michigan Avenue parcel matches the township-supported campus address; campus precision is retained."
+    },
+    "nscc-aspire-2a": {
+      "outcome": "geocoded_ready",
+      "reason": "The result is the named i4.0 building at 3 Research Link and matches the supported building address."
+    },
+    "equinix-dc21": {
+      "outcome": "geocoded_ready",
+      "reason": "The result names Equinix DC21 and exactly matches the operator-published street address."
+    },
+    "equinix-ny4": {
+      "outcome": "geocoded_ready",
+      "reason": "The result names Equinix NY4 and exactly matches the operator-published street address."
+    },
+    "equinix-ny9": {
+      "outcome": "geocoded_ready",
+      "reason": "The result resolves the supported 111 8th Avenue carrier-hotel address. Street precision is retained; the geocoder's Google label is not treated as facility identity evidence."
+    },
+    "vantage-phoenix-goodyear": {
+      "outcome": "geocoded_ready",
+      "reason": "The result names Vantage Data Centers and exactly matches 45 South Bullard Avenue."
+    },
+    "vantage-santa-clara-iii": {
+      "outcome": "geocoded_ready",
+      "reason": "The result exactly matches the supported 2590 Walsh Avenue address; street precision is retained."
+    },
+    "vantage-warsaw": {
+      "outcome": "geocoded_ready",
+      "reason": "The result exactly matches 42D Zgrupowania AK Kampinos in Warszawa; the automated locality check missed the Polish locality spelling."
+    },
+    "vantage-zurich-i": {
+      "outcome": "geocoded_ready",
+      "reason": "The result names ZRH1 and exactly matches 12 Fabrikstrasse in Winterthur."
+    },
+    "vantage-santa-clara-i": {
+      "outcome": "geocode_conflict",
+      "reason": "The returned building is labelled Digital Realty SJC34 and has a different postal code; this is not safe to publish as Vantage without entity review."
+    },
+    "vantage-milan-i": {
+      "outcome": "geocoded_review",
+      "reason": "The result is only the Via per Carpiano road and does not resolve the documented street number."
+    },
+    "vantage-zurich-ii": {
+      "outcome": "geocoded_review",
+      "reason": "The result is only Spinnerei-Lettenstrasse and does not resolve a specific supported property."
+    }
+  }
+}
