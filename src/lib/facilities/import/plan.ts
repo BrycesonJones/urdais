@@ -25,12 +25,15 @@ import { createHash } from "node:crypto";
 
 import type { ContractFacility, ContractRelationship, FacilityImportDocument } from "@/lib/facilities/contract";
 import {
+  CITATION_CLASSES,
   COMPUTE_CATEGORIES,
   FACILITY_VERIFICATION_HORIZON_DAYS,
   NON_PUBLISHABLE_LIFECYCLE_STATUSES,
   POSITIONING_CLAIM_FIELDS,
   SYMMETRIC_RELATIONSHIP_TYPES,
+  citationClassOf,
   isMapEligible,
+  type CitationClass,
   type FacilityCategory,
   type FacilityPublicationState,
 } from "@/lib/facilities/domain";
@@ -79,12 +82,20 @@ export type ImportPlan = {
     facilities: number;
     byCategory: Record<FacilityCategory, number>;
     published: number;
+    reviewRequired: number;
+    research: number;
     mapEligible: number;
     evidence: number;
     claims: number;
     facts: number;
     aliases: number;
     relationships: number;
+    /** Distinct source URLs cited across the batch. */
+    sourceUrls: number;
+    /** Evidence records by citation class, so the rights picture is visible without a query. */
+    byCitationClass: Record<CitationClass, number>;
+    /** Evidence records whose source is on the rights register. */
+    rightsReviewFlagged: number;
   };
 };
 
@@ -93,6 +104,19 @@ export type PlanOptions = {
   existingResearchKeys?: readonly string[];
   /** Today, for the staleness remark. Defaults to the current date. */
   today?: Date;
+  /**
+   * Candidates an earlier research pass examined and rejected. A batch that
+   * re-adds one is not refused — new evidence is exactly how a rejection should
+   * be overturned — but it is always remarked on, so the overturning is a
+   * decision somebody made rather than a name quietly reappearing.
+   */
+  rejectedCandidates?: readonly { candidate: string; reason: string }[];
+  /**
+   * Sources whose intended use raises a rights or terms question. Ordinary
+   * factual citation of a public primary or government document is not on this
+   * list and is not meant to be; see docs/methodology/map-facilities.md §4.
+   */
+  rightsRegister?: readonly { domain: string; state: string; note: string }[];
 };
 
 /** Generic words that carry no identity, removed before two names are compared. */
@@ -131,6 +155,28 @@ export function nameSimilarity(left: string, right: string): number {
 
 /** Above this, two records are worth a human's attention. Never enough to merge them. */
 export const NAME_SIMILARITY_REVIEW_THRESHOLD = 0.7;
+
+/**
+ * Two positions this close are worth a look. Not because proximity implies
+ * identity — a campus and the station feeding it are neighbours by design — but
+ * because a campus geocoded twice from two addresses lands a few hundred metres
+ * apart, and that is the shape of an accidental duplicate. Two kilometres is
+ * wide enough to catch a re-geocode and narrow enough that two genuine
+ * facilities in one metro do not fill the queue.
+ */
+export const NEAR_COORDINATE_REVIEW_METRES = 2000;
+
+/** Great-circle distance in metres. */
+export function distanceMetres(a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }): number {
+  const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
+  const earthRadius = 6_371_000;
+  const dLat = toRadians(b.latitude - a.latitude);
+  const dLon = toRadians(b.longitude - a.longitude);
+  const lat1 = toRadians(a.latitude);
+  const lat2 = toRadians(b.latitude);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  return 2 * earthRadius * Math.asin(Math.min(1, Math.sqrt(h)));
+}
 
 function canonicalJson(value: unknown): string {
   if (value === null || typeof value !== "object") return JSON.stringify(value ?? null);
@@ -270,6 +316,27 @@ export function buildImportPlan(document: FacilityImportDocument, options: PlanO
       }
     }
 
+    for (const rejected of options.rejectedCandidates ?? []) {
+      if (nameSimilarity(facility.canonicalName, rejected.candidate) >= NAME_SIMILARITY_REVIEW_THRESHOLD) {
+        reviewCandidates.push({
+          researchKey: facility.researchKey,
+          code: "previously_rejected",
+          message: `resembles the rejected candidate "${rejected.candidate}" (${rejected.reason}); it may only be added on evidence that answers the rejection`,
+        });
+      }
+    }
+
+    for (const evidence of facility.evidence) {
+      const flagged = (options.rightsRegister ?? []).find((entry) => evidence.url.toLowerCase().includes(entry.domain.toLowerCase()));
+      if (flagged && flagged.state !== "clear") {
+        reviewCandidates.push({
+          researchKey: facility.researchKey,
+          code: "source_rights_review",
+          message: `cites ${flagged.domain} (${flagged.state}): ${flagged.note}`,
+        });
+      }
+    }
+
     planned.push({ facility, publicationState: facility.requestedPublicationState, mapEligible });
   }
 
@@ -280,17 +347,30 @@ export function buildImportPlan(document: FacilityImportDocument, options: PlanO
       const left = records[i]!;
       const right = records[j]!;
 
-      if (
-        left.location.latitude !== null &&
-        left.location.latitude !== undefined &&
-        left.location.latitude === right.location.latitude &&
-        left.location.longitude === right.location.longitude
-      ) {
+      const leftAt =
+        left.location.latitude !== null && left.location.latitude !== undefined && left.location.longitude !== null && left.location.longitude !== undefined
+          ? { latitude: left.location.latitude, longitude: left.location.longitude }
+          : null;
+      const rightAt =
+        right.location.latitude !== null && right.location.latitude !== undefined && right.location.longitude !== null && right.location.longitude !== undefined
+          ? { latitude: right.location.latitude, longitude: right.location.longitude }
+          : null;
+
+      if (leftAt && rightAt && leftAt.latitude === rightAt.latitude && leftAt.longitude === rightAt.longitude) {
         reviewCandidates.push({
           researchKey: left.researchKey,
           code: "shared_coordinates",
           message: `shares its position with ${right.researchKey}; distinct entities at one site are expected and are not merged`,
         });
+      } else if (leftAt && rightAt) {
+        const metres = distanceMetres(leftAt, rightAt);
+        if (metres <= NEAR_COORDINATE_REVIEW_METRES) {
+          reviewCandidates.push({
+            researchKey: left.researchKey,
+            code: "near_coordinates",
+            message: `sits ${Math.round(metres)} m from ${right.researchKey}; close enough to be one campus geocoded twice, and not merged on that`,
+          });
+        }
       }
 
       const similarity = nameSimilarity(left.canonicalName, right.canonicalName);
@@ -402,12 +482,18 @@ export function buildImportPlan(document: FacilityImportDocument, options: PlanO
   let claims = 0;
   let facts = 0;
   let aliases = 0;
+  const sourceUrls = new Set<string>();
+  const byCitationClass = Object.fromEntries(CITATION_CLASSES.map((cls) => [cls, 0])) as Record<CitationClass, number>;
   for (const entry of planned) {
     byCategory[entry.facility.category] += 1;
     evidence += entry.facility.evidence.length;
     claims += entry.facility.evidence.reduce((total, item) => total + item.claims.length, 0);
     facts += (entry.facility.facts ?? []).length;
     aliases += (entry.facility.aliases ?? []).length;
+    for (const item of entry.facility.evidence) {
+      sourceUrls.add(item.url);
+      byCitationClass[citationClassOf(item.documentType)] += 1;
+    }
   }
 
   const digest = createHash("sha256")
@@ -432,12 +518,17 @@ export function buildImportPlan(document: FacilityImportDocument, options: PlanO
       facilities: planned.length,
       byCategory,
       published: planned.filter((entry) => entry.publicationState === "published").length,
+      reviewRequired: planned.filter((entry) => entry.publicationState === "review_required").length,
+      research: planned.filter((entry) => entry.publicationState === "research").length,
       mapEligible: planned.filter((entry) => entry.mapEligible).length,
       evidence,
       claims,
       facts,
       aliases,
       relationships: plannedRelationships.length,
+      sourceUrls: sourceUrls.size,
+      byCitationClass,
+      rightsReviewFlagged: reviewCandidates.filter((entry) => entry.code === "source_rights_review").length,
     },
   };
 }

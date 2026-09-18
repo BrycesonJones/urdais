@@ -1,5 +1,7 @@
 # The map's facility foundation
 
+**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 17 September 2026 when the map stopped drawing demo points (Phase 2); §"The complete dataset" added the same day when the whole research package was projected and dry-run (Phase 3). The public methodology is `docs/methodology/map-facilities.md`; this document describes the implementation that enforces it.
+
 How a researched facility becomes a dot, and what stops one that should not.
 
 Before this phase the map drew a hard-coded list from the client bundle. It now
@@ -266,6 +268,63 @@ npm run db:test                                               # the schema's own
 
 The write is idempotent: a second `--write` over an unchanged file reports every
 facility as `unchanged` and leaves the database identical.
+
+## The complete dataset
+
+Phase 3 projected the whole research package. The pieces:
+
+| File | What it is |
+| --- | --- |
+| `data/map/facilities.v1.json` | All 78 researched facilities in the contract. Generated; do not hand-edit. |
+| `data/map/facilities-sample.v1.json` | The eighteen Phase 2 records, curated by hand. The projector treats them as authoritative and copies them through verbatim. |
+| `data/map/rejected-candidates.v1.json` | The 38 candidates an earlier pass examined and rejected, with reasons. |
+| `data/map/source-rights-register.v1.json` | The source domains whose use raises a question. Everything not listed is clear by class. |
+| `scripts/map/research-parser.ts` | Reads the Markdown. Returns the research's own strings and decides nothing. |
+| `scripts/map/project-research.ts` | Turns those strings into the contract under the rules documented in its header. |
+
+```bash
+npm run map:project            # regenerate the dataset and the rejection register
+npm run map:project -- --check # project and report, writing nothing
+npm run map:import             # dry-run the complete dataset
+```
+
+The projector is deterministic and idempotent: running it on an unchanged
+research package produces a byte-identical dataset. That is what makes the
+projection auditable — a reviewer can regenerate it and diff rather than trusting
+that sixty records were transcribed correctly.
+
+Three rules in the projector do the real work, and its header explains each:
+claim fields are derived from the claim text against the record's own location
+strings; a fact is emitted only when a cited source's claims state its value;
+and the publication state is decided from the rules rather than copied from the
+research's `map_ingest_ready` flag.
+
+The current review queue and the open decisions are in
+`docs/operations/map-phase-3-dataset-review.md`.
+
+### The methodology link
+
+`supabase/migrations/20260917270000_map_facility_methodology.sql` registers the
+`map-facilities` methodology and approves version 1.0.0
+(`docs/methodology/map-facilities.md`), and adds
+`reference.facilities.methodology_version_id`, which a published record must
+carry. The importer resolves the approved version from the database at write
+time rather than taking it from the dataset file: which rules govern a
+publication is an operational fact about a deployment, not something a dataset
+asserts about itself. A batch that would publish with no approved version fails
+before the transaction opens.
+
+The same migration adds the `economic_development` and `financial_press`
+evidence types the research package uses, and
+`reference.facility_evidence_citation_class`, which separates ordinary factual
+citation from the content redistribution that source-terms review governs.
+
+It also drops the foundation migration's
+`facilities_precision_needs_coordinates_or_is_absent` constraint. That constraint
+allowed a precision without coordinates only for `city`, which was true of the
+sample and false of the package: two records know their street and were never
+geocoded. Recording that is more useful than discarding it, and the invariant
+that matters — coordinates always carry a precision — is unaffected.
 
 ## Turning the research Markdown into production JSON
 

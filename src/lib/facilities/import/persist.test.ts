@@ -22,7 +22,7 @@ type Call = { text: string; values: readonly unknown[] };
  * fingerprint the caller controls, so "inserted" and "unchanged" can be
  * distinguished without a real database.
  */
-function recorder(options: { existingKeys?: readonly string[]; fingerprint?: (key: string) => string; failOn?: RegExp } = {}) {
+function recorder(options: { existingKeys?: readonly string[]; fingerprint?: (key: string) => string; failOn?: RegExp; methodologyVersionId?: string | null } = {}) {
   const calls: Call[] = [];
   const existing = new Set(options.existingKeys ?? []);
   let evidenceCounter = 0;
@@ -33,6 +33,10 @@ function recorder(options: { existingKeys?: readonly string[]; fingerprint?: (ke
       calls.push({ text, values });
       if (options.failOn?.test(text)) throw new Error("fixture failure");
 
+      if (/from reference\.methodology_versions/.test(text)) {
+        const id = options.methodologyVersionId === undefined ? "methodology-1" : options.methodologyVersionId;
+        return { rows: id === null ? [] : [{ id }] };
+      }
       if (/^\s*select id::text as id,[\s\S]*from reference\.facilities where research_key/.test(text)) {
         const key = String(values[0]);
         return existing.has(key) ? { rows: [{ id: `id-${key}`, fingerprint: options.fingerprint?.(key) ?? "before" }] } : { rows: [] };
@@ -102,10 +106,35 @@ describe("applyImportPlan", () => {
     const sql = recorder();
     await applyImportPlan(sql, plan());
     const statements = sql.statements();
-    expect(statements[0]).toBe("begin");
-    expect(statements.at(-1)).toBe("commit");
+    // The methodology lookup happens before the transaction opens, on purpose:
+    // a batch that cannot name its rules should fail before anything is begun.
     expect(statements.filter((statement) => statement === "begin")).toHaveLength(1);
+    expect(statements.at(-1)).toBe("commit");
     expect(statements.filter((statement) => statement === "rollback")).toHaveLength(0);
+    const begin = statements.indexOf("begin");
+    expect(statements.slice(0, begin).every((statement) => statement.startsWith("select"))).toBe(true);
+    expect(statements.slice(begin).some((statement) => statement.startsWith("insert into reference.facilities"))).toBe(true);
+  });
+
+  it("stamps every published row with the approved methodology version, and refuses to publish without one", async () => {
+    const sql = recorder();
+    const result = await applyImportPlan(sql, plan());
+    expect(result.methodologyVersionId).toBe("methodology-1");
+    const insert = sql.calls.find((call) => /insert into reference\.facilities/.test(call.text))!;
+    expect(insert.values).toContain("methodology-1");
+
+    // Nothing publishes under rules nobody approved.
+    const unapproved = recorder({ methodologyVersionId: null });
+    await expect(applyImportPlan(unapproved, plan())).rejects.toThrow("nothing publishes under rules nobody approved");
+    expect(unapproved.statements()).not.toContain("begin");
+  });
+
+  it("leaves a research record unstamped, because no rule has been applied to it", async () => {
+    const sql = recorder();
+    const research = facility({ requestedPublicationState: "research" });
+    await applyImportPlan(sql, plan([research]));
+    const insert = sql.calls.find((call) => /insert into reference\.facilities/.test(call.text))!;
+    expect(insert.values).not.toContain("methodology-1");
   });
 
   it("refuses a plan carrying errors without opening a transaction at all", async () => {

@@ -16,6 +16,7 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
+    "map:project": "tsx scripts/map/project-research.ts",
     "map:import": "tsx scripts/map/import-facilities.ts",
     "news:ingest": "tsx scripts/news/ingest.ts",
     "tokens:ingest": "tsx scripts/tokens/ingest.ts",

@@ -21,6 +21,7 @@
  */
 
 import type { ContractFacility } from "@/lib/facilities/contract";
+import { FACILITY_METHODOLOGY_SLUG } from "@/lib/facilities/domain";
 import type { ImportPlan } from "@/lib/facilities/import/plan";
 
 export type SqlExecutor = {
@@ -28,6 +29,8 @@ export type SqlExecutor = {
 };
 
 export type ImportWriteResult = {
+  /** The methodology version every published row in this batch was stamped with. */
+  methodologyVersionId: string | null;
   inserted: readonly string[];
   updated: readonly string[];
   unchanged: readonly string[];
@@ -44,7 +47,7 @@ type FacilityRow = {
   fingerprint: string;
 };
 
-function facilityValues(facility: ContractFacility, publicationState: string): readonly unknown[] {
+function facilityValues(facility: ContractFacility, publicationState: string, methodologyVersionId: string | null): readonly unknown[] {
   const location = facility.location;
   const lifecycle = facility.lifecycle ?? {};
   return [
@@ -71,7 +74,30 @@ function facilityValues(facility: ContractFacility, publicationState: string): r
     facility.quality.confidence,
     facility.quality.reviewNotes ?? [],
     facility.quality.lastVerifiedDate ?? null,
+    // Only a published record names a rulebook: nothing has been applied to a
+    // research record yet, so stamping one would claim a decision nobody made.
+    publicationState === "published" ? methodologyVersionId : null,
   ];
+}
+
+/**
+ * The approved facility methodology version, resolved once per run.
+ *
+ * Resolved from the database rather than carried in the dataset file, because
+ * which rules govern a publication is an operational fact about this
+ * deployment, not something a dataset asserts about itself.
+ */
+export async function approvedFacilityMethodologyVersionId(sql: SqlExecutor): Promise<string | null> {
+  const { rows } = await sql.query(
+    `select v.id::text as id
+       from reference.methodology_versions v
+       join reference.methodologies m on m.id = v.methodology_id
+      where m.slug = $1 and v.status = 'approved' and v.effective_from is not null
+      order by v.effective_from desc, v.version desc
+      limit 1`,
+    [FACILITY_METHODOLOGY_SLUG],
+  );
+  return rows.length > 0 ? String((rows[0] as { id: string }).id) : null;
 }
 
 /**
@@ -85,7 +111,8 @@ const FACILITY_FINGERPRINT = `
     street_address, locality, admin_area, country_name, country_code,
     latitude::text, longitude::text, coordinate_precision, coordinate_method, coordinate_notes,
     announced_date::text, construction_start_date::text, operational_date::text,
-    publication_state, confidence, array_to_string(review_notes, chr(30)), last_verified_date::text
+    publication_state, confidence, array_to_string(review_notes, chr(30)), last_verified_date::text,
+    methodology_version_id::text
   ))`;
 
 /**
@@ -104,6 +131,14 @@ export async function applyImportPlan(sql: SqlExecutor, plan: ImportPlan): Promi
   let claimCount = 0;
   let factCount = 0;
   let aliasCount = 0;
+
+  const publishes = plan.facilities.some((entry) => entry.publicationState === "published");
+  const methodologyVersionId = await approvedFacilityMethodologyVersionId(sql);
+  if (publishes && methodologyVersionId === null) {
+    throw new Error(
+      `no approved "${FACILITY_METHODOLOGY_SLUG}" methodology version with an effective date; nothing publishes under rules nobody approved`,
+    );
+  }
 
   await sql.query("begin", []);
   try {
@@ -128,8 +163,9 @@ export async function applyImportPlan(sql: SqlExecutor, plan: ImportPlan): Promi
            street_address, locality, admin_area, country_name, country_code,
            latitude, longitude, coordinate_precision, coordinate_method, coordinate_notes,
            announced_date, construction_start_date, operational_date,
-           publication_state, confidence, review_notes, last_verified_date
-         ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
+           publication_state, confidence, review_notes, last_verified_date,
+           methodology_version_id
+         ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
          on conflict (research_key) do update set
            canonical_name = excluded.canonical_name,
            category = excluded.category,
@@ -152,9 +188,10 @@ export async function applyImportPlan(sql: SqlExecutor, plan: ImportPlan): Promi
            publication_state = excluded.publication_state,
            confidence = excluded.confidence,
            review_notes = excluded.review_notes,
-           last_verified_date = excluded.last_verified_date
+           last_verified_date = excluded.last_verified_date,
+           methodology_version_id = excluded.methodology_version_id
          returning id::text as id, ${FACILITY_FINGERPRINT} as fingerprint`,
-        facilityValues(facility, entry.publicationState),
+        facilityValues(facility, entry.publicationState, methodologyVersionId),
       );
       const row = rows[0] as FacilityRow;
       idByKey.set(facility.researchKey, row.id);
@@ -259,6 +296,7 @@ export async function applyImportPlan(sql: SqlExecutor, plan: ImportPlan): Promi
 
     await sql.query("commit", []);
     return {
+      methodologyVersionId,
       inserted,
       updated,
       unchanged,

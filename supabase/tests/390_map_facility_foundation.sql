@@ -17,6 +17,19 @@
 -- Synthetic throughout, and rolled back; no researched facility is written.
 begin;
 
+-- Methodology 1.0.0 made a published facility name the rules it was approved
+-- under, so every fixture below that publishes names them. The rule itself is
+-- exercised in 400_map_facility_methodology.sql; here it is scaffolding, and
+-- naming it keeps each fixture failing for the reason it claims to test.
+create or replace function pg_temp.map_methodology() returns uuid language sql stable as $$
+  select v.id
+    from reference.methodology_versions v
+    join reference.methodologies m on m.id = v.methodology_id
+   where m.slug = 'map-facilities' and v.status = 'approved'
+   order by v.effective_from desc
+   limit 1;
+$$;
+
 -- --------------------------------------------------- nothing is seeded
 
 do $$
@@ -103,8 +116,8 @@ begin
   -- No position: published is refused by the row-level constraint.
   ok := false;
   begin
-    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state, last_verified_date)
-      values ('fixture-publish-no-coords', 'No Coordinates', 'data_center', 'high', 'published', current_date);
+    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state, methodology_version_id, last_verified_date)
+      values ('fixture-publish-no-coords', 'No Coordinates', 'data_center', 'high', 'published', pg_temp.map_methodology(), current_date);
   exception when check_violation then ok := true;
   end;
   if not ok then raise exception 'a facility with no coordinates was published'; end if;
@@ -112,9 +125,9 @@ begin
   -- A city centroid is a location, not a position.
   ok := false;
   begin
-    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state,
+    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state, methodology_version_id,
                                       latitude, longitude, coordinate_precision, last_verified_date)
-      values ('fixture-publish-city', 'City Centroid', 'data_center', 'high', 'published', 40, -80, 'city', current_date);
+      values ('fixture-publish-city', 'City Centroid', 'data_center', 'high', 'published', pg_temp.map_methodology(), 40, -80, 'city', current_date);
   exception when check_violation then ok := true;
   end;
   if not ok then raise exception 'a city-precision facility was published'; end if;
@@ -122,9 +135,9 @@ begin
   -- Low confidence is a research state by definition.
   ok := false;
   begin
-    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state,
+    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state, methodology_version_id,
                                       latitude, longitude, coordinate_precision, last_verified_date)
-      values ('fixture-publish-low', 'Low Confidence', 'data_center', 'low', 'published', 40, -80, 'campus', current_date);
+      values ('fixture-publish-low', 'Low Confidence', 'data_center', 'low', 'published', pg_temp.map_methodology(), 40, -80, 'campus', current_date);
   exception when check_violation then ok := true;
   end;
   if not ok then raise exception 'a low-confidence facility was published'; end if;
@@ -132,9 +145,9 @@ begin
   -- A cancelled project is not current infrastructure.
   ok := false;
   begin
-    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state,
+    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state, methodology_version_id,
                                       latitude, longitude, coordinate_precision, lifecycle_status, last_verified_date)
-      values ('fixture-publish-cancelled', 'Cancelled', 'data_center', 'high', 'published', 40, -80, 'campus', 'cancelled', current_date);
+      values ('fixture-publish-cancelled', 'Cancelled', 'data_center', 'high', 'published', pg_temp.map_methodology(), 40, -80, 'campus', 'cancelled', current_date);
   exception when check_violation then ok := true;
   end;
   if not ok then raise exception 'a cancelled facility was published'; end if;
@@ -142,9 +155,9 @@ begin
   -- And a published record says when it was last checked.
   ok := false;
   begin
-    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state,
+    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state, methodology_version_id,
                                       latitude, longitude, coordinate_precision)
-      values ('fixture-publish-unverified', 'No Verification Date', 'data_center', 'high', 'published', 40, -80, 'campus');
+      values ('fixture-publish-unverified', 'No Verification Date', 'data_center', 'high', 'published', pg_temp.map_methodology(), 40, -80, 'campus');
   exception when check_violation then ok := true;
   end;
   if not ok then raise exception 'a facility with no verification date was published'; end if;
@@ -160,9 +173,9 @@ declare ok boolean; v_id uuid; v_ev uuid;
 begin
   ok := false;
   begin
-    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state,
+    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state, methodology_version_id,
                                       latitude, longitude, coordinate_precision, last_verified_date)
-      values ('fixture-publish-no-evidence', 'No Evidence', 'data_center', 'high', 'published', 40, -80, 'campus', current_date);
+      values ('fixture-publish-no-evidence', 'No Evidence', 'data_center', 'high', 'published', pg_temp.map_methodology(), 40, -80, 'campus', current_date);
     -- Force the deferred constraint to be judged inside this block.
     set constraints all immediate;
   exception when restrict_violation then ok := true;
@@ -177,9 +190,9 @@ begin
   -- Evidence that supports something other than the location does not place a dot.
   ok := false;
   begin
-    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state,
+    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state, methodology_version_id,
                                       latitude, longitude, coordinate_precision, last_verified_date)
-      values ('fixture-publish-wrong-claim', 'Wrong Claim', 'data_center', 'high', 'published', 40, -80, 'campus', current_date)
+      values ('fixture-publish-wrong-claim', 'Wrong Claim', 'data_center', 'high', 'published', pg_temp.map_methodology(), 40, -80, 'campus', current_date)
       returning id into v_id;
     insert into reference.facility_evidence (facility_id, publisher, title, document_url, document_type)
       values (v_id, 'Fixture Publisher', 'A capacity note', 'https://example.invalid/capacity', 'company_press_release')
@@ -198,9 +211,9 @@ end $$;
 do $$
 declare v_host uuid; v_cluster uuid; v_ev_host uuid; v_ev_cluster uuid; n integer;
 begin
-  insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state,
+  insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state, methodology_version_id,
                                     latitude, longitude, coordinate_precision, last_verified_date)
-    values ('fixture-host-campus', 'Fixture Host Campus', 'data_center', 'high', 'published',
+    values ('fixture-host-campus', 'Fixture Host Campus', 'data_center', 'high', 'published', pg_temp.map_methodology(),
             64.2319866, 27.691477, 'building', current_date)
     returning id into v_host;
   insert into reference.facility_evidence (facility_id, publisher, title, document_url, document_type)
@@ -211,9 +224,9 @@ begin
 
   -- The same coordinates, deliberately. A GPU cluster inside a data center is a
   -- distinct entity, and nothing in this schema merges the two.
-  insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state,
+  insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state, methodology_version_id,
                                     latitude, longitude, coordinate_precision, last_verified_date)
-    values ('fixture-hosted-cluster', 'Fixture Hosted Cluster', 'gpu_compute_cluster', 'high', 'published',
+    values ('fixture-hosted-cluster', 'Fixture Hosted Cluster', 'gpu_compute_cluster', 'high', 'published', pg_temp.map_methodology(),
             64.2319866, 27.691477, 'building', current_date)
     returning id into v_cluster;
   insert into reference.facility_evidence (facility_id, publisher, title, document_url, document_type)
@@ -308,9 +321,9 @@ begin
   -- well sourced its own existence is.
   ok := false;
   begin
-    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state,
+    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state, methodology_version_id,
                                       latitude, longitude, coordinate_precision, last_verified_date)
-      values ('fixture-lonely-plant', 'Fixture Lonely Plant', 'power_infrastructure', 'high', 'published',
+      values ('fixture-lonely-plant', 'Fixture Lonely Plant', 'power_infrastructure', 'high', 'published', pg_temp.map_methodology(),
               41.0922705, -76.1479523, 'campus', current_date)
       returning id into v_power;
     insert into reference.facility_evidence (facility_id, publisher, title, document_url, document_type)
@@ -331,9 +344,9 @@ begin
   -- An edge into another power asset is a grid fact, not an AI-economy fact.
   ok := false;
   begin
-    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state,
+    insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state, methodology_version_id,
                                       latitude, longitude, coordinate_precision, last_verified_date)
-      values ('fixture-plant-a', 'Fixture Plant A', 'power_infrastructure', 'high', 'published',
+      values ('fixture-plant-a', 'Fixture Plant A', 'power_infrastructure', 'high', 'published', pg_temp.map_methodology(),
               41.09, -76.14, 'campus', current_date)
       returning id into v_power;
     insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state)
@@ -362,9 +375,9 @@ begin
   insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state)
     values ('fixture-powered-campus', 'Fixture Powered Campus', 'data_center', 'high', 'research')
     returning id into v_load;
-  insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state,
+  insert into reference.facilities (research_key, canonical_name, category, confidence, publication_state, methodology_version_id,
                                     latitude, longitude, coordinate_precision, last_verified_date)
-    values ('fixture-linked-plant', 'Fixture Linked Plant', 'power_infrastructure', 'high', 'published',
+    values ('fixture-linked-plant', 'Fixture Linked Plant', 'power_infrastructure', 'high', 'published', pg_temp.map_methodology(),
             41.0922705, -76.1479523, 'campus', current_date)
     returning id into v_power;
   insert into reference.facility_evidence (facility_id, publisher, title, document_url, document_type)

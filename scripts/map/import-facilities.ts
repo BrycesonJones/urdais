@@ -1,7 +1,7 @@
 /**
  * The facility importer.
  *
- *   npm run map:import                                        (dry run, sample dataset)
+ *   npm run map:import                                        (dry run, the projected dataset)
  *   npm run map:import -- --file data/map/other.json          (dry run, another file)
  *   DATABASE_URL=... npm run map:import -- --write            (persist, one transaction)
  *
@@ -29,7 +29,18 @@ import { buildImportPlan } from "@/lib/facilities/import/plan";
 import { applyImportPlan, loadExistingResearchKeys } from "@/lib/facilities/import/persist";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
 
-const DEFAULT_DATASET = "data/map/facilities-sample.v1.json";
+const DEFAULT_DATASET = "data/map/facilities.v1.json";
+const REJECTED_REGISTER = "data/map/rejected-candidates.v1.json";
+const RIGHTS_REGISTER = "data/map/source-rights-register.v1.json";
+
+/** A register is advisory: a missing file weakens the review, it does not stop the import. */
+function readRegister<T>(path: string, pick: (raw: Record<string, unknown>) => T[]): T[] {
+  try {
+    return pick(JSON.parse(readFileSync(resolve(process.cwd(), path), "utf8")) as Record<string, unknown>);
+  } catch {
+    return [];
+  }
+}
 
 function flag(name: string): boolean {
   return process.argv.includes(`--${name}`);
@@ -84,7 +95,9 @@ async function main(): Promise<void> {
   const sql = databaseUrl === "" ? null : await createTokenSqlExecutor(databaseUrl);
   try {
     const existingResearchKeys = sql ? await loadExistingResearchKeys(sql) : [];
-    const plan = buildImportPlan(document, { existingResearchKeys });
+    const rejectedCandidates = readRegister(REJECTED_REGISTER, (raw) => (raw.candidates ?? []) as { candidate: string; reason: string }[]);
+    const rightsRegister = readRegister(RIGHTS_REGISTER, (raw) => (raw.sources ?? []) as { domain: string; state: string; note: string }[]);
+    const plan = buildImportPlan(document, { existingResearchKeys, rejectedCandidates, rightsRegister });
 
     const report = {
       file,
@@ -95,6 +108,7 @@ async function main(): Promise<void> {
       mode: write ? "write" : "dry-run",
       databaseConfigured: sql !== null,
       digest: plan.digest,
+      registers: { rejectedCandidates: rejectedCandidates.length, rightsSources: rightsRegister.length },
       counts: plan.counts,
       errors: plan.errors,
       reviewCandidates: plan.reviewCandidates,

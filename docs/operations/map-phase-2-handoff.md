@@ -1,5 +1,11 @@
 # Map Phase 2 — handoff
 
+> **Superseded in part by Phase 3** (`feat/map-facility-dataset`, PR #121),
+> which projected the whole research package, registered the facility
+> methodology and produced the complete review queue. Read
+> `docs/operations/map-phase-3-dataset-review.md` for the current dataset state;
+> what follows is the Phase 2 record.
+
 State of the branch, so another agent can continue without re-deriving anything.
 Written 2026-09-17.
 
@@ -43,17 +49,21 @@ Written 2026-09-17.
 ## What is not done, deliberately
 
 - The other 60 research facilities. Phase 2 proves the architecture on a sample;
-  see the transformation procedure in the architecture doc.
+  see the transformation procedure in the architecture doc. *(Done in Phase 3.)*
 - No production database has this migration. Nothing was applied to UrdaisProd
   or UrdaisDev — everything below ran against a local throwaway cluster.
 - No methodology version is registered for the facility dataset. The map
   publishes sourced facts rather than a calculated figure, so whether it needs a
-  methodology lineage row is a Phase 3 decision.
+  methodology lineage row is a Phase 3 decision. *(Decided in Phase 3: Map
+  Facilities 1.0.0 is registered and approved, and a published record names it.)*
 - `reference.facility_evidence` links to `source_interfaces` and
   `source_retrievals` are nullable and unused by the sample. No terms review was
   run on the research sources: these are citations with links, not feeds Urdais
   ingests. If citing them should go through the terms machinery, that is a
-  Phase 3 question and it is open.
+  Phase 3 question and it is open. *(Settled in Phase 3: ordinary factual
+  citation of public primary and government documents does not pass through the
+  commercial-feed terms gate; the exceptions are named in
+  `data/map/source-rights-register.v1.json`.)*
 - Owner and operator are free text; they are not resolved to
   `reference.market_entities`.
 - No coordinate in the sample is at `city` precision, because only one record in

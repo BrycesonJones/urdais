@@ -66,9 +66,46 @@ export const EVIDENCE_DOCUMENT_TYPES = [
   "permit",
   "planning",
   "utility_filing",
+  "economic_development",
   "industry_press",
+  "financial_press",
 ] as const;
 export type EvidenceDocumentType = (typeof EVIDENCE_DOCUMENT_TYPES)[number];
+
+/**
+ * What kind of evidence a document is, for the purpose of deciding whether
+ * citing it raises a rights question.
+ *
+ * The distinction is between *citing a fact* and *republishing content*. A
+ * company page stating its own campus address, a permit, a filing: Urdais
+ * records the fact and links to the document, which is ordinary citation and
+ * is not the thing source-terms review exists for. A commercial data feed whose
+ * values Urdais would redistribute is, and stays under the existing terms
+ * controls in reference.source_interfaces.
+ *
+ * Secondary press sits between the two: citing it is ordinary, but it is the
+ * class where a paywall or a licence can make Urdais's intended use a real
+ * question, so it is named separately rather than folded into either side.
+ */
+export const CITATION_CLASSES = ["public_primary_evidence", "government_evidence", "secondary_corroboration"] as const;
+export type CitationClass = (typeof CITATION_CLASSES)[number];
+
+const CITATION_CLASS_BY_DOCUMENT_TYPE: Record<EvidenceDocumentType, CitationClass> = {
+  company_facility_page: "public_primary_evidence",
+  company_press_release: "public_primary_evidence",
+  sec_filing: "government_evidence",
+  government_record: "government_evidence",
+  permit: "government_evidence",
+  planning: "government_evidence",
+  utility_filing: "government_evidence",
+  economic_development: "government_evidence",
+  industry_press: "secondary_corroboration",
+  financial_press: "secondary_corroboration",
+};
+
+export function citationClassOf(documentType: EvidenceDocumentType): CitationClass {
+  return CITATION_CLASS_BY_DOCUMENT_TYPE[documentType];
+}
 
 /**
  * Which part of a facility record a document supports. The whole reason the
@@ -129,6 +166,14 @@ export const SYMMETRIC_RELATIONSHIP_TYPES: readonly FacilityRelationshipType[] =
  * database only insists that a published record carries a date at all.
  */
 export const FACILITY_VERIFICATION_HORIZON_DAYS = 365;
+
+/**
+ * The methodology whose version a published facility names. Facilities are not
+ * an index — nothing is calculated — so what the version governs is the rules:
+ * the categories, the precision meanings, the publication gates, the power
+ * requirement. See docs/methodology/map-facilities.md.
+ */
+export const FACILITY_METHODOLOGY_SLUG = "map-facilities";
 
 function isMember<T extends string>(values: readonly T[], value: unknown): value is T {
   return typeof value === "string" && (values as readonly string[]).includes(value);
