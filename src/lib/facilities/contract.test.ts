@@ -74,12 +74,57 @@ describe("parseFacilityImportDocument", () => {
     expect(parsed?.facilities[0]?.category).toBe("data_center");
   });
 
-  it("refuses a document of another contract version rather than partially reading it", () => {
-    const { document: parsed, issues } = parseFacilityImportDocument(document({ contractVersion: "urdais.map.facility-import/2" }));
+  it("refuses a document of a later contract version rather than partially reading it", () => {
+    const { document: parsed, issues } = parseFacilityImportDocument(document({ contractVersion: "urdais.map.facility-import/3" }));
     expect(parsed).toBeNull();
     expect(issues).toHaveLength(1);
     expect(issues[0]?.path).toBe("$.contractVersion");
-    expect(issues[0]?.message).toContain("will not partially read another");
+    expect(issues[0]?.message).toContain("will not partially read a later one");
+  });
+
+  it("still reads a /1 document, because every /1 document is a valid /2 document", () => {
+    // The risk the version check defends against runs one way: a newer document
+    // read by an older build drops fields. An older document read by a newer
+    // build drops nothing, and refusing it would mean rewriting every dataset
+    // on file to say a number that changes none of its content.
+    const { document: parsed, issues } = parseFacilityImportDocument(document({ contractVersion: "urdais.map.facility-import/1" }));
+    expect(issues).toEqual([]);
+    expect(parsed?.contractVersion).toBe("urdais.map.facility-import/1");
+    expect(parsed?.facilities[0]?.aiRelevance).toBeNull();
+  });
+
+  it("refuses a /1 document that uses a /2 field, naming the field and the version it needs", () => {
+    const withAi = parseFacilityImportDocument(
+      document({ contractVersion: "urdais.map.facility-import/1", facilities: [facility({ aiRelevance: "documented_ai" })] }),
+    );
+    expect(withAi.document).toBeNull();
+    expect(paths(withAi.issues)).toContain("$.facilities[0].aiRelevance");
+    expect(withAi.issues[0]?.message).toContain("must declare that version");
+
+    const withDirectory = parseFacilityImportDocument(
+      document({
+        contractVersion: "urdais.map.facility-import/1",
+        facilities: [facility({ evidence: [evidence({ documentType: "facility_directory" })] })],
+      }),
+    );
+    expect(withDirectory.document).toBeNull();
+    expect(paths(withDirectory.issues)).toContain("$.facilities[0].evidence[0].documentType");
+
+    const withClaim = parseFacilityImportDocument(
+      document({
+        contractVersion: "urdais.map.facility-import/1",
+        facilities: [facility({ evidence: [evidence({ claims: [{ field: "ai_relevance", statement: "GB200 deployment" }] })] })],
+      }),
+    );
+    expect(withClaim.document).toBeNull();
+    expect(paths(withClaim.issues)).toContain("$.facilities[0].evidence[0].claims[0].field");
+  });
+
+  it("reads aiRelevance in a /2 document and rejects a state outside the four", () => {
+    const { document: parsed } = parseFacilityImportDocument(document({ facilities: [facility({ aiRelevance: "no_documented_ai" })] }));
+    expect(parsed?.facilities[0]?.aiRelevance).toBe("no_documented_ai");
+    const { issues } = parseFacilityImportDocument(document({ facilities: [facility({ aiRelevance: "probably" })] }));
+    expect(paths(issues)).toContain("$.facilities[0].aiRelevance");
   });
 
   it("refuses a document with no version at all, and anything that is not an object", () => {

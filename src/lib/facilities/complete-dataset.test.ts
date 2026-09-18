@@ -258,11 +258,20 @@ describe("the complete projected dataset", () => {
     // hash is the thing that catches an edit that should have been a new
     // version. A drifting hash means the rules changed under a version that
     // says they did not.
-    const migration = readFileSync(resolve(process.cwd(), "supabase/migrations/20260917270000_map_facility_methodology.sql"), "utf8");
+    const migration = readFileSync(resolve(process.cwd(), "supabase/migrations/20260917280000_map_data_center_scope_v2.sql"), "utf8");
     const declared = /'([0-9a-f]{64})'/.exec(migration)?.[1];
     const actual = createHash("sha256").update(readFileSync(resolve(process.cwd(), "docs/methodology/map-facilities.md"))).digest("hex");
-    expect(declared, "the migration declares no content hash").toBeDefined();
+    expect(declared, "the 2.0.0 migration declares no content hash").toBeDefined();
     expect(actual).toBe(declared);
+  });
+
+  it("leaves 1.0.0's own hash alone, so the rules the first dots were approved under stay identifiable", () => {
+    const original = readFileSync(resolve(process.cwd(), "supabase/migrations/20260917270000_map_facility_methodology.sql"), "utf8");
+    const declared = /'([0-9a-f]{64})'/.exec(original)?.[1];
+    expect(declared).toBe("a3d2bacaf54a7089941828f959c3fa8866257483cf598ad9fde3a06f1ff6f4b4");
+    // And 2.0.0 hashes something else, which is what makes it a different version.
+    const current = createHash("sha256").update(readFileSync(resolve(process.cwd(), "docs/methodology/map-facilities.md"))).digest("hex");
+    expect(current).not.toBe(declared);
   });
 
   it("holds every category to the four public ones", () => {

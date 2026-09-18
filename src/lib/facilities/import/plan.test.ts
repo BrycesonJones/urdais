@@ -54,7 +54,7 @@ function facility(overrides: Record<string, unknown> = {}) {
 /** Parses through the real contract, so no test can plan a document the contract would refuse. */
 function parsed(facilities: Array<Record<string, unknown>>, relationships: Array<Record<string, unknown>> = []): FacilityImportDocument {
   const { document, issues } = parseFacilityImportDocument({
-    contractVersion: "urdais.map.facility-import/1",
+    contractVersion: "urdais.map.facility-import/2",
     datasetName: "Fixture dataset",
     researchDocument: "FIXTURE.md",
     generatedAt: "2026-09-17",
@@ -227,6 +227,122 @@ describe("buildImportPlan", () => {
       );
       expect(result.errors).toEqual([]);
       expect(result.counts.relationships).toBe(2);
+    });
+  });
+
+  describe("data centres under methodology 2.0.0", () => {
+    it("publishes a data centre with no AI evidence, no capacity and no operator", () => {
+      // The headline rule of 2.0.0: existence is the inclusion criterion. An
+      // ordinary colocation hall qualifies.
+      const colo = facility({
+        researchKey: "fixture-colo",
+        canonicalName: "Fixture Colocation Hall",
+        ownerName: null,
+        facts: [],
+        aiRelevance: "no_documented_ai",
+      });
+      const result = plan([colo]);
+      expect(result.errors).toEqual([]);
+      expect(result.facilities[0]?.publicationState).toBe("published");
+      expect(result.counts.byAiRelevance.no_documented_ai).toBe(1);
+    });
+
+    it("treats an absent AI classification as unknown, and never as a reason to hold a record", () => {
+      const result = plan([facility()]);
+      expect(result.errors).toEqual([]);
+      expect(result.counts.byAiRelevance.unknown).toBe(1);
+      expect(codes(result.reviewCandidates)).toContain("ai_relevance_unassessed");
+      expect(result.facilities[0]?.publicationState).toBe("published");
+    });
+
+    it("refuses a positive AI classification that no source states", () => {
+      for (const state of ["documented_ai", "ai_capable_or_high_density"]) {
+        const result = plan([facility({ aiRelevance: state })]);
+        expect(codes(result.errors), state).toEqual(["ai_relevance_needs_evidence"]);
+      }
+    });
+
+    it("accepts a positive classification behind an ai_relevance claim", () => {
+      const withClaim = facility({
+        aiRelevance: "documented_ai",
+        evidence: [evidence("https://example.invalid/campus", [["location", "Fixture Street 1"], ["ai_relevance", "GB200 deployment named by the operator"]])],
+      });
+      const result = plan([withClaim]);
+      expect(result.errors).toEqual([]);
+      expect(result.counts.byAiRelevance.documented_ai).toBe(1);
+    });
+  });
+
+  describe("directory sources", () => {
+    const directory = (publisher: string, url: string) => ({
+      publisher,
+      title: "Listing",
+      url,
+      documentType: "facility_directory",
+      publishedOn: null,
+      claims: [{ field: "location", statement: "Fixture Street 9" }],
+    });
+
+    it("refuses to publish on a single directory entry", () => {
+      const result = plan([facility({ evidence: [directory("A Directory", "https://example.invalid/d1")] })]);
+      expect(codes(result.errors)).toEqual(["publication_needs_admissible_positioning"]);
+      expect(result.errors[0]?.message).toContain("two independent directories");
+    });
+
+    it("refuses two listings from one publisher, because directories copy each other", () => {
+      const result = plan([
+        facility({ evidence: [directory("A Directory", "https://example.invalid/d1"), directory("a directory", "https://example.invalid/d2")] }),
+      ]);
+      expect(codes(result.errors)).toEqual(["publication_needs_admissible_positioning"]);
+    });
+
+    it("publishes on two independent directories agreeing", () => {
+      const result = plan([
+        facility({ evidence: [directory("Directory One", "https://example.invalid/d1"), directory("Directory Two", "https://example.invalid/d2")] }),
+      ]);
+      expect(result.errors).toEqual([]);
+      expect(result.counts.bySourceTier.tier3).toBe(2);
+    });
+
+    it("publishes on one primary source, whatever else is cited", () => {
+      const result = plan([facility({ evidence: [evidence(), directory("A Directory", "https://example.invalid/d1")] })]);
+      expect(result.errors).toEqual([]);
+      expect(result.counts.bySourceTier).toEqual({ tier1: 1, tier2: 0, tier3: 1 });
+    });
+
+    it("still stores a directory-only facility as a research record", () => {
+      // Discovery is exactly what directories are for; what they may not do is
+      // place a dot.
+      const result = plan([
+        facility({ requestedPublicationState: "research", evidence: [directory("A Directory", "https://example.invalid/d1")] }),
+      ]);
+      expect(result.errors).toEqual([]);
+      expect(result.facilities[0]?.publicationState).toBe("research");
+    });
+  });
+
+  describe("the other categories are untouched by 2.0.0", () => {
+    it("still refuses a power record with no evidenced compute link", () => {
+      const plant = facility({
+        researchKey: "fixture-plant-v2",
+        category: "power_infrastructure",
+        aiRelevance: "no_documented_ai",
+      });
+      expect(codes(plan([plant]).errors)).toEqual(["power_publication_needs_compute_link"]);
+    });
+
+    it("applies the same positioning and evidence rules to clusters and fabs", () => {
+      for (const category of ["gpu_compute_cluster", "semiconductor_fab"]) {
+        const noPosition = facility({ category, evidence: [evidence("https://example.invalid/x", [["capacity", "400 MW"]])] });
+        expect(codes(plan([noPosition]).errors), category).toEqual(["publication_needs_positioning_evidence"]);
+        const directoryOnly = facility({
+          category,
+          evidence: [
+            { publisher: "A Directory", title: "Listing", url: "https://example.invalid/d1", documentType: "facility_directory", publishedOn: null, claims: [{ field: "location", statement: "Fixture Street 9" }] },
+          ],
+        });
+        expect(codes(plan([directoryOnly]).errors), category).toEqual(["publication_needs_admissible_positioning"]);
+      }
     });
   });
 

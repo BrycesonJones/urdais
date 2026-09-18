@@ -150,7 +150,7 @@ export const docPages: readonly DocPage[] = [
     slug: "methodology/map-facilities",
     title: "Map Facilities",
     description:
-      "Production methodology for the Urdais map: the four public infrastructure categories, what is recorded and what is rejected, the source hierarchy and citation classes, coordinate precision and map eligibility, entity granularity and duplicate resolution, the evidenced compute relationship a power asset needs to appear at all, and the staleness horizon.",
+      "Production methodology for the Urdais map: all verifiable physical data centres are in scope and AI relevance is enrichment rather than an inclusion criterion, with the four public categories, the tiered source hierarchy and what a directory may and may not place, coordinate precision and map eligibility, entity granularity and duplicate resolution, the evidenced compute relationship a power asset still needs to appear at all, and the staleness horizon.",
     section: "Methodology",
     file: "methodology/map-facilities.md",
   },

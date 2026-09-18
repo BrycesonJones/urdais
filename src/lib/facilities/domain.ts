@@ -69,8 +69,46 @@ export const EVIDENCE_DOCUMENT_TYPES = [
   "economic_development",
   "industry_press",
   "financial_press",
+  "property_record",
+  "facility_directory",
 ] as const;
 export type EvidenceDocumentType = (typeof EVIDENCE_DOCUMENT_TYPES)[number];
+
+/**
+ * How much weight a document can carry on its own.
+ *
+ * Tier 1 is the operator, the owner or the state saying so. Tier 2 is a
+ * publication or a property record reporting it. Tier 3 is a structured
+ * aggregator — a data-centre directory, a peering database, a mapping database.
+ *
+ * The tiers exist because methodology 2.0.0 opens the map to the whole physical
+ * data-centre landscape, and finding that landscape means using directories.
+ * Directories are excellent at discovery and unreliable at detail: they carry
+ * stale addresses, merged entries and facilities that closed years ago. So a
+ * directory may propose a facility and may never, by itself, place a public dot
+ * — see `hasAdmissiblePositioning`.
+ */
+export const SOURCE_TIERS = [1, 2, 3] as const;
+export type SourceTier = (typeof SOURCE_TIERS)[number];
+
+const SOURCE_TIER_BY_DOCUMENT_TYPE: Record<EvidenceDocumentType, SourceTier> = {
+  company_facility_page: 1,
+  company_press_release: 1,
+  sec_filing: 1,
+  government_record: 1,
+  permit: 1,
+  planning: 1,
+  utility_filing: 1,
+  economic_development: 1,
+  industry_press: 2,
+  financial_press: 2,
+  property_record: 2,
+  facility_directory: 3,
+};
+
+export function sourceTierOf(documentType: EvidenceDocumentType): SourceTier {
+  return SOURCE_TIER_BY_DOCUMENT_TYPE[documentType];
+}
 
 /**
  * What kind of evidence a document is, for the purpose of deciding whether
@@ -87,7 +125,13 @@ export type EvidenceDocumentType = (typeof EVIDENCE_DOCUMENT_TYPES)[number];
  * class where a paywall or a licence can make Urdais's intended use a real
  * question, so it is named separately rather than folded into either side.
  */
-export const CITATION_CLASSES = ["public_primary_evidence", "government_evidence", "secondary_corroboration"] as const;
+export const CITATION_CLASSES = [
+  "public_primary_evidence",
+  "government_evidence",
+  "secondary_corroboration",
+  /** A structured aggregator: a data-centre directory, a peering database, a mapping database. */
+  "structured_directory",
+] as const;
 export type CitationClass = (typeof CITATION_CLASSES)[number];
 
 const CITATION_CLASS_BY_DOCUMENT_TYPE: Record<EvidenceDocumentType, CitationClass> = {
@@ -101,6 +145,8 @@ const CITATION_CLASS_BY_DOCUMENT_TYPE: Record<EvidenceDocumentType, CitationClas
   economic_development: "government_evidence",
   industry_press: "secondary_corroboration",
   financial_press: "secondary_corroboration",
+  property_record: "secondary_corroboration",
+  facility_directory: "structured_directory",
 };
 
 export function citationClassOf(documentType: EvidenceDocumentType): CitationClass {
@@ -125,11 +171,23 @@ export const EVIDENCE_CLAIM_FIELDS = [
   "power",
   "compute_relationship",
   "contact",
+  /**
+   * What a source says about the facility's relationship to AI: a named GPU
+   * deployment, an AI tenant, an AI-cloud contract, or marketed high-density,
+   * liquid-cooled or GPU-ready capability. Required behind any positive AI
+   * classification; see AI_RELEVANCE_STATES.
+   */
+  "ai_relevance",
+  /** Cooling, density and power-per-rack capability, where a source states it. */
+  "cooling",
 ] as const;
 export type EvidenceClaimField = (typeof EVIDENCE_CLAIM_FIELDS)[number];
 
 /** A published facility needs a document that placed it. */
 export const POSITIONING_CLAIM_FIELDS: readonly EvidenceClaimField[] = ["location", "coordinates"];
+
+/** The claim fields that can stand behind a positive AI classification. */
+export const AI_RELEVANCE_CLAIM_FIELDS: readonly EvidenceClaimField[] = ["ai_relevance"];
 
 export const EVIDENCE_VERIFICATION_STATES = ["unverified", "human_verified", "disputed"] as const;
 export type EvidenceVerificationState = (typeof EVIDENCE_VERIFICATION_STATES)[number];
@@ -166,6 +224,58 @@ export const SYMMETRIC_RELATIONSHIP_TYPES: readonly FacilityRelationshipType[] =
  * database only insists that a published record carries a date at all.
  */
 export const FACILITY_VERIFICATION_HORIZON_DAYS = 365;
+
+/**
+ * What Urdais knows about a facility's relationship to AI.
+ *
+ * Methodology 2.0.0 made this enrichment rather than an inclusion gate: a data
+ * centre is on the map because it exists, and what it runs is a separate
+ * question with its own evidence. The four states exist because the two ways of
+ * knowing nothing are different things, and collapsing them would be the whole
+ * mistake.
+ *
+ *   documented_ai              a source connects this facility to AI training or
+ *                              inference, a GPU deployment, an AI cloud, an AI
+ *                              tenant, or a named cluster.
+ *   ai_capable_or_high_density a source documents high density, liquid cooling,
+ *                              HPC or GPU-ready capability, with no specific
+ *                              deployment evidenced.
+ *   no_documented_ai           a real facility, researched, and the reviewed
+ *                              sources say nothing about AI. It does NOT mean
+ *                              the facility cannot run AI.
+ *   unknown                    nobody has looked yet.
+ *
+ * Both positive states require a cited `ai_relevance` claim; a trigger enforces
+ * it. Size is never evidence of capability.
+ */
+export const AI_RELEVANCE_STATES = ["documented_ai", "ai_capable_or_high_density", "no_documented_ai", "unknown"] as const;
+export type AiRelevance = (typeof AI_RELEVANCE_STATES)[number];
+
+/** The states a cited claim must stand behind. */
+export const EVIDENCED_AI_RELEVANCE_STATES: readonly AiRelevance[] = ["documented_ai", "ai_capable_or_high_density"];
+
+export const isAiRelevance = (value: unknown): value is AiRelevance =>
+  typeof value === "string" && (AI_RELEVANCE_STATES as readonly string[]).includes(value);
+
+/**
+ * Whether a facility's positioning evidence is strong enough to place a public
+ * dot, given the tiers of the documents that made location or coordinate claims.
+ *
+ * One Tier 1 or Tier 2 document is enough. Directories alone are enough only
+ * when two independent publishers agree, which is the rule methodology 2.0.0
+ * §5 states: a single directory entry is a lead, and two directories that were
+ * built from each other are one lead wearing two names — hence *independent
+ * publishers*, not merely two rows.
+ */
+export function hasAdmissiblePositioning(
+  positioningSources: readonly { documentType: EvidenceDocumentType; publisher: string }[],
+): boolean {
+  if (positioningSources.some((source) => sourceTierOf(source.documentType) <= 2)) return true;
+  const directoryPublishers = new Set(
+    positioningSources.filter((source) => sourceTierOf(source.documentType) === 3).map((source) => source.publisher.trim().toLowerCase()),
+  );
+  return directoryPublishers.size >= 2;
+}
 
 /**
  * The methodology whose version a published facility names. Facilities are not
