@@ -4,14 +4,55 @@ import { MAP_POINT_CATEGORY_LABELS, isMapPointCategory, visibilityGroupOf } from
 import type { MapVisibilityState } from "@/components/map/map-point-style";
 import { CLUSTERS_LAYER_ID, POINTS_LAYER_ID, POINTS_SOURCE_ID } from "@/components/map/point-layer";
 
-/** What the profile card shows. Only mapped points with a name qualify. */
+/** What the profile card shows. A point with no name does not qualify. */
 export type MapPointProfile = {
   name: string;
   /** Human-readable category label, never the raw enum value. */
   category?: string;
   address?: string;
-  contactEmail?: string;
+  owner?: string;
+  operator?: string;
+  /** Human-readable lifecycle wording, never the raw enum value. */
+  status?: string;
+  lastVerified?: string;
+  /** The documents behind the record. Every published facility has at least one. */
+  sources?: readonly { publisher: string; url: string }[];
 };
+
+/** Lifecycle statuses in the words a reader uses, not the words the schema uses. */
+const STATUS_LABELS: Record<string, string> = {
+  announced: "Announced",
+  planned: "Planned",
+  under_construction: "Under construction",
+  operational: "Operational",
+  expansion: "Operational, expanding",
+  suspended: "Suspended",
+  cancelled: "Cancelled",
+  retired: "Retired",
+};
+
+/** Parses the citation list back out of the encoded property. Malformed input yields none, never a throw. */
+export function readSources(value: unknown): readonly { publisher: string; url: string }[] {
+  if (typeof value !== "string" || value === "") return [];
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((entry) => {
+        if (typeof entry !== "object" || entry === null) return null;
+        const record = entry as Record<string, unknown>;
+        const publisher = typeof record.publisher === "string" ? record.publisher.trim() : "";
+        const url = typeof record.url === "string" ? record.url.trim() : "";
+        // Only http(s) becomes a link: a javascript: or data: URL arriving in a
+        // property must never become an anchor href.
+        if (publisher === "" || !/^https?:\/\//.test(url)) return null;
+        return { publisher, url };
+      })
+      .filter((entry): entry is { publisher: string; url: string } => entry !== null);
+  } catch {
+    return [];
+  }
+}
 
 /** MapLibre's Popup class, handed in because the renderer is loaded lazily. */
 export type PopupConstructor = new (options?: PopupOptions) => MapLibrePopup;
@@ -27,31 +68,41 @@ export type PointInteractions = {
 /**
  * Reads a clicked feature's properties defensively. GeoJSON properties are
  * untyped at runtime and may arrive partial or malformed, so nothing here
- * assumes a shape: an unmapped point, a missing or blank name, or absent
+ * assumes a shape: a missing or blank name, a malformed source list, or absent
  * optional fields all resolve without throwing. Returns null when there is
  * nothing to show.
  */
-export function readMappedPointProfile(feature: Pick<MapGeoJSONFeature, "properties"> | undefined): MapPointProfile | null {
+export function readPointProfile(feature: Pick<MapGeoJSONFeature, "properties"> | undefined): MapPointProfile | null {
   const properties: unknown = feature?.properties;
   if (!properties || typeof properties !== "object") return null;
   const record = properties as Record<string, unknown>;
-  if (record.mappingStatus !== "mapped") return null;
   const text = (value: unknown): string | undefined => (typeof value === "string" && value.trim() !== "" ? value : undefined);
   const name = text(record.name);
   if (!name) return null;
   const profile: MapPointProfile = { name };
   if (isMapPointCategory(record.category)) profile.category = MAP_POINT_CATEGORY_LABELS[record.category];
   const address = text(record.address);
-  const contactEmail = text(record.contactEmail);
   if (address) profile.address = address;
-  if (contactEmail && !/\s/.test(contactEmail) && contactEmail.includes("@")) profile.contactEmail = contactEmail;
+  const owner = text(record.ownerName);
+  if (owner) profile.owner = owner;
+  const operator = text(record.operatorName);
+  // Named only when it differs: "Meta / Meta" tells a reader nothing, while
+  // "Applied Digital / CoreWeave" is the whole point of keeping both.
+  if (operator && operator !== owner) profile.operator = operator;
+  const status = text(record.lifecycleStatus);
+  if (status && STATUS_LABELS[status]) profile.status = STATUS_LABELS[status];
+  const lastVerified = text(record.lastVerifiedDate);
+  if (lastVerified) profile.lastVerified = lastVerified;
+  const sources = readSources(record.sourcesJson);
+  if (sources.length > 0) profile.sources = sources;
   return profile;
 }
 
 /**
  * The card's DOM, built with createElement and textContent only so point
- * data can never inject markup. The email is a real mailto link (same tab,
- * keyboard reachable); the href is set as a property, never interpolated.
+ * data can never inject markup. Source links are real anchors whose href is
+ * set as a property and never interpolated, and only after readSources has
+ * established the URL is http(s).
  */
 export function buildProfileCard(profile: MapPointProfile): HTMLElement {
   const card = document.createElement("div");
@@ -60,37 +111,57 @@ export function buildProfileCard(profile: MapPointProfile): HTMLElement {
   title.className = "text-sm font-semibold leading-snug text-neutral-900";
   title.textContent = profile.name;
   card.append(title);
-  const rows: Array<[string, string | undefined, "text" | "email"]> = [
-    ["Category", profile.category, "text"],
-    ["Address", profile.address, "text"],
-    ["Email", profile.contactEmail, "email"],
+  const rows: Array<[string, string | undefined]> = [
+    ["Category", profile.category],
+    ["Address", profile.address],
+    ["Owner", profile.owner],
+    ["Operator", profile.operator],
+    ["Status", profile.status],
+    ["Verified", profile.lastVerified],
   ];
-  const present = rows.filter((row): row is [string, string, "text" | "email"] => Boolean(row[1]));
-  if (present.length > 0) {
-    const list = document.createElement("dl");
-    list.className = "flex flex-col gap-0.5 text-xs text-neutral-600";
-    for (const [label, value, kind] of present) {
-      const row = document.createElement("div");
-      row.className = "flex gap-1.5";
-      const term = document.createElement("dt");
-      term.className = "shrink-0 text-neutral-500";
-      term.textContent = `${label}:`;
-      const detail = document.createElement("dd");
-      detail.className = "min-w-0 text-neutral-800";
-      if (kind === "email") {
-        const link = document.createElement("a");
-        link.href = `mailto:${value}`;
-        link.textContent = value;
-        link.className = "break-all text-[#3b55c4] underline decoration-[#3b55c4]/40 underline-offset-2 hover:decoration-[#3b55c4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#526fe0]";
-        detail.append(link);
-      } else {
-        detail.textContent = value;
-      }
-      row.append(term, detail);
-      list.append(row);
-    }
-    card.append(list);
+  const present = rows.filter((row): row is [string, string] => Boolean(row[1]));
+  const list = document.createElement("dl");
+  list.className = "flex flex-col gap-0.5 text-xs text-neutral-600";
+  for (const [label, value] of present) {
+    const row = document.createElement("div");
+    row.className = "flex gap-1.5";
+    const term = document.createElement("dt");
+    term.className = "shrink-0 text-neutral-500";
+    term.textContent = `${label}:`;
+    const detail = document.createElement("dd");
+    detail.className = "min-w-0 text-neutral-800";
+    detail.textContent = value;
+    row.append(term, detail);
+    list.append(row);
   }
+
+  // The sources row is the one the card exists for: every dot is a claim, and
+  // this is where the claim's evidence is. Publishers are named rather than
+  // counted, so a reader sees whether a site is placed by its operator or by a
+  // county permit without opening anything.
+  const sources = profile.sources ?? [];
+  if (sources.length > 0) {
+    const row = document.createElement("div");
+    row.className = "flex gap-1.5";
+    const term = document.createElement("dt");
+    term.className = "shrink-0 text-neutral-500";
+    term.textContent = sources.length === 1 ? "Source:" : "Sources:";
+    const detail = document.createElement("dd");
+    detail.className = "flex min-w-0 flex-wrap gap-x-1.5 gap-y-0.5 text-neutral-800";
+    sources.forEach((source, index) => {
+      const link = document.createElement("a");
+      link.href = source.url;
+      link.target = "_blank";
+      link.rel = "noreferrer noopener";
+      link.textContent = index === sources.length - 1 ? source.publisher : `${source.publisher},`;
+      link.className = "text-[#3b55c4] underline decoration-[#3b55c4]/40 underline-offset-2 hover:decoration-[#3b55c4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#526fe0]";
+      detail.append(link);
+    });
+    row.append(term, detail);
+    list.append(row);
+  }
+
+  if (list.childElementCount > 0) card.append(list);
   return card;
 }
 
@@ -106,10 +177,9 @@ const POPUP_OPTIONS: PopupOptions = {
 
 /**
  * Wires the mapped-point interactions onto the existing circle layer: a
- * click on a mapped point opens its profile card anchored to the point (a
- * second click elsewhere replaces it, so at most one popup exists), a
- * click on an unmapped point does nothing, and the cursor turns into a
- * pointer only while over a mapped point. A click on a cluster asks the
+ * click on a point opens its profile card anchored to the point (a second
+ * click elsewhere replaces it, so at most one popup exists), and the cursor
+ * turns into a pointer only while over a point. A click on a cluster asks the
  * source for the zoom at which that cluster splits and eases the camera
  * there, never opening a popup; hovering a cluster also shows a pointer.
  * Hidden points never reach these handlers because they are not in the
@@ -134,7 +204,7 @@ export function attachPointInteractions(map: MapLibreMap, Popup: PopupConstructo
 
   const handleClick = (event: MapMouseEvent & { features?: MapGeoJSONFeature[] }) => {
     const feature = event.features?.[0];
-    const profile = readMappedPointProfile(feature);
+    const profile = readPointProfile(feature);
     if (!profile || feature?.geometry.type !== "Point") return;
     closePopup();
     const anchor = feature.geometry.coordinates as LngLatLike;
@@ -174,7 +244,7 @@ export function attachPointInteractions(map: MapLibreMap, Popup: PopupConstructo
   };
 
   const handleMove = (event: MapMouseEvent & { features?: MapGeoJSONFeature[] }) => {
-    canvas.style.cursor = readMappedPointProfile(event.features?.[0]) ? "pointer" : "";
+    canvas.style.cursor = readPointProfile(event.features?.[0]) ? "pointer" : "";
   };
 
   const handleLeave = () => {

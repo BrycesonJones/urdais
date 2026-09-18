@@ -1,0 +1,235 @@
+{
+  "registerVersion": "urdais.map.rejected-candidates/1",
+  "researchDocument": "URDAIS_MAP_RESEARCH_PHASE_1.md",
+  "researchedOn": "2026-09-17",
+  "candidates": [
+    {
+      "candidate": "Meta Promontory",
+      "slice": "From the US slice",
+      "reason": "No Meta campus by that name. Documented Utah campus is Eagle Mountain. NSA Camp Williams / Promontory Point is not Meta.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "CoreWeave Livingston HQ (290 W Mt Pleasant Ave)",
+      "slice": "From the US slice",
+      "reason": "Corporate office, not a GPU/data-center campus.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Lambda San Jose / Santa Clara / Mountain View directory sites",
+      "slice": "From the US slice",
+      "reason": "HQ/offices or directory-only; no primary-source physical AI campus except Aligned DFW-04.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Equinix Distributed AI / Equinix US portfolio",
+      "slice": "From the US slice",
+      "reason": "Product/platform announcement, not a named flagship physical AI campus. Would dump a colocation portfolio.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Digital Realty IAD44 / Digital Dulles / Ashburn alley buildings",
+      "slice": "From the US slice",
+      "reason": "Named NOVA campus exists, but primary pages reviewed do not document it as an AI training campus. User forbade dumping NOVA buildings.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "AWS Northern Virginia buildings",
+      "slice": "From the US slice",
+      "reason": "Cloud region without a single named AI campus address in primary sources reviewed.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Microsoft El Mirage / Goodyear (West US 3)",
+      "slice": "From the US slice",
+      "reason": "Documented cloud datacenters; Microsoft primary sources reviewed do not label them Fairwater/AI campuses.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Google The Dalles",
+      "slice": "From the US slice",
+      "reason": "Historic Google DC with a documented address, but 2025–26 Google AI-infrastructure announcements reviewed do not name this campus.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "QTS Fayetteville as a second facility",
+      "slice": "From the US slice",
+      "reason": "Same campus as microsoft-fairwater-atlanta (QTS owner, Microsoft Fairwater tenant).",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Core Scientific Denton (8171 Jim Christal Rd)",
+      "slice": "From the US slice",
+      "reason": "TDLR permit confirms a Core Scientific conversion; no primary source in this pass tying it to a named CoreWeave/AI cluster.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Hut 8 Beacon Point / Lambda–Anthropic Nueces County",
+      "slice": "From the US slice",
+      "reason": "BetaNews anonymous sourcing; companies did not confirm in sources reviewed.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "CyrusOne DFW7 Fort Worth",
+      "slice": "From the US slice",
+      "reason": "Company PR exists (AI-driven compute, 200 MW) but not treated as the CyrusOne flagship for this slice; DFW10 already included.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Switch Las Vegas CORE AI factories",
+      "slice": "From the US slice",
+      "reason": "Review-Journal/county records describe Jones Blvd–215 buildings; Citadel taken as the single Switch flagship to avoid portfolio dump.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "IREN Sweetwater (2,000 MW / 2,200 acres)",
+      "slice": "From the US slice",
+      "reason": "Official IREN location page lists it, but this slice targeted Childress; Sweetwater not researched to address/status standard.",
+      "reconsiderationCondition": "Official IREN location page lists it, but this slice targeted Childress; Sweetwater not researched to address/status standard."
+    },
+    {
+      "candidate": "xAI Southaven MS / 2400 Stateline Road",
+      "slice": "From the US slice",
+      "reason": "Later expansion in local press, not Colossus 1 or 2.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "xAI Colossus Water Recycling Plant (Plant Road / Paul R. Lowry)",
+      "slice": "From the US slice",
+      "reason": "Water infrastructure, not compute.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Nebius Kansas City colocation",
+      "slice": "From the US slice",
+      "reason": "Named in Nebius capacity PR without a documented physical campus identity/address in this pass.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "OpenAI Stargate Abilene 600 MW expansion",
+      "slice": "From the US slice",
+      "reason": "OpenAI listed it as potential; Bloomberg later reported the expansion scrapped. Not a separate live campus.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Wikipedia / datacenters.com / baxtel facility pages",
+      "slice": "From the US slice",
+      "reason": "Used only as discovery leads, never as evidence.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "AWS Canada (Central) / Canada West",
+      "slice": "From the fab / power / international pass",
+      "reason": "AWS publishes regions (greater Montréal, Calgary) without a named campus street. Region ≠ mappable facility.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "China Alibaba / Tencent / ByteDance / Huawei data centers",
+      "slice": "From the fab / power / international pass",
+      "reason": "No company or PRC government primary page with a specific campus address was successfully verified in this pass. Not guessed.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Helion–Microsoft fusion plant",
+      "slice": "From the fab / power / international pass",
+      "reason": "No operating or construction-complete generating plant supplying compute was identified. Too early.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Oklo / Equinix SMR",
+      "slice": "From the fab / power / international pass",
+      "reason": "No mappable physical plant identified in this pass.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Amazon / X-energy / Energy Northwest SMR (central Washington)",
+      "slice": "From the fab / power / international pass",
+      "reason": "Reported development; Amazon/Energy Northwest primary project page with a specific plant site was not fetched. PPA/development news is not enough.",
+      "reconsiderationCondition": "Reported development; Amazon/Energy Northwest primary project page with a specific plant site was not fetched. PPA/development news is not enough."
+    },
+    {
+      "candidate": "Intel Magdeburg",
+      "slice": "From the fab / power / international pass",
+      "reason": "Widely reported cancelled (2025) in secondary press; Intel primary cancellation URL was not fetched. Not ingested.",
+      "reconsiderationCondition": "Widely reported cancelled (2025) in secondary press; Intel primary cancellation URL was not fetched. Not ingested."
+    },
+    {
+      "candidate": "Intel Kiryat Gat Fab 38 expansion",
+      "slice": "From the fab / power / international pass",
+      "reason": "Reported paused; no restart primary in this pass.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Samsung Austin S2",
+      "slice": "From the fab / power / international pass",
+      "reason": "Samsung foundry page: 65nm–14nm. Out of leading-edge AI accelerator / HBM scope.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Samsung Giheung",
+      "slice": "From the fab / power / international pass",
+      "reason": "Foundry page: matured 350nm–8nm. Excluded.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Micron Manassas",
+      "slice": "From the fab / power / international pass",
+      "reason": "SEC exhibit: 1-alpha DRAM modernization for industrial/auto/defense — not documented as HBM/HPC memory in that filing.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "TSMC Fab 10 Shanghai / Fab 16 Nanjing / Fab 11 Camas",
+      "slice": "From the fab / power / international pass",
+      "reason": "Directory-listed but not leading-edge AI logic/HBM packaging in the sources used.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Hamina heat-recovery plant as Power Infrastructure",
+      "slice": "From the fab / power / international pass",
+      "reason": "District-heat reuse, not generation built to supply compute.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Generic PJM plants near Microsoft data centers",
+      "slice": "From the fab / power / international pass",
+      "reason": "Crane is the plant Microsoft contracted to restart. Nearby generators without that documented link are excluded.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Equinix / Digital Realty / AirTrunk full portfolios",
+      "slice": "From the fab / power / international pass",
+      "reason": "No single flagship AI campus primary was pulled beyond NEXTDC S3 in this international pass.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Saudi HUMAIN / SDAIA campuses",
+      "slice": "From the fab / power / international pass",
+      "reason": "No physical site primary fetched in this pass.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "CoreWeave Europe campuses",
+      "slice": "From the fab / power / international pass",
+      "reason": "No European physical campus primary fetched in this pass.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Northern Data / Fluidstack named campuses",
+      "slice": "From the fab / power / international pass",
+      "reason": "Not verified to a street/campus primary in this pass.",
+      "reconsiderationCondition": "Not verified to a street/campus primary in this pass."
+    },
+    {
+      "candidate": "NAVER GAK Chuncheon",
+      "slice": "From the fab / power / international pass",
+      "reason": "Documented but deprioritized vs Sejong AI-positioned campus; can be added in a later pass.",
+      "reconsiderationCondition": null
+    },
+    {
+      "candidate": "Microsoft Sandviken datacenter",
+      "slice": "From the fab / power / international pass",
+      "reason": "Named in the 2021 Sweden region PR; omitted to avoid three city-only pins for one region. Gävle and Staffanstorp retained as named cities with extra documentation.",
+      "reconsiderationCondition": null
+    }
+  ]
+}

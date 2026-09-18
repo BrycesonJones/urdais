@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { buildMapFeatureCollection, isValidLatitude, isValidLongitude } from "@/lib/map-geojson";
 import type { UrdaisMapPoint } from "@/types/map";
 
-const atlanta: UrdaisMapPoint = { id: "example-1", name: "Example Point", longitude: -84.388, latitude: 33.749, mappingStatus: "mapped", category: "data_center" };
-const london: UrdaisMapPoint = { id: "example-2", name: "Second Point", longitude: -0.128, latitude: 51.507, mappingStatus: "unmapped" };
+const atlanta: UrdaisMapPoint = { id: "example-1", name: "Example Point", longitude: -84.388, latitude: 33.749, category: "data_center" };
+const london: UrdaisMapPoint = { id: "example-2", name: "Second Point", longitude: -0.128, latitude: 51.507, category: "gpu_compute_cluster" };
 
 describe("buildMapFeatureCollection", () => {
   it("converts a valid point into a Point feature with [longitude, latitude] and its name", () => {
@@ -15,7 +15,7 @@ describe("buildMapFeatureCollection", () => {
           type: "Feature",
           id: "example-1",
           geometry: { type: "Point", coordinates: [-84.388, 33.749] },
-          properties: { name: "Example Point", mappingStatus: "mapped", category: "data_center" },
+          properties: { name: "Example Point", category: "data_center" },
         },
       ],
     });
@@ -40,11 +40,22 @@ describe("buildMapFeatureCollection", () => {
 
   it("accepts the edges of the valid ranges", () => {
     const corners: UrdaisMapPoint[] = [
-      { id: "a", name: "A", longitude: -180, latitude: -90, mappingStatus: "mapped", category: "compute_cluster" },
-      { id: "b", name: "B", longitude: 180, latitude: 90, mappingStatus: "unmapped" },
-      { id: "c", name: "C", longitude: 0, latitude: 0, mappingStatus: "mapped", category: "semiconductor_fab" },
+      { id: "a", name: "A", longitude: -180, latitude: -90, category: "gpu_compute_cluster" },
+      { id: "b", name: "B", longitude: 180, latitude: 90, category: "power_infrastructure" },
+      { id: "c", name: "C", longitude: 0, latitude: 0, category: "semiconductor_fab" },
     ];
     expect(buildMapFeatureCollection(corners).features).toHaveLength(3);
+  });
+
+  it("keeps two distinct facilities that share one position", () => {
+    // The single most damaging thing this converter could do is treat a GPU
+    // cluster and the campus hosting it as one dot, because they genuinely
+    // report the same coordinates.
+    const host: UrdaisMapPoint = { id: "csc-kajaani-lumi-host", name: "CSC Kajaani", longitude: 27.691477, latitude: 64.2319866, category: "data_center" };
+    const cluster: UrdaisMapPoint = { id: "lumi-supercomputer", name: "LUMI", longitude: 27.691477, latitude: 64.2319866, category: "gpu_compute_cluster" };
+    const { features } = buildMapFeatureCollection([host, cluster]);
+    expect(features).toHaveLength(2);
+    expect(features.map((feature) => feature.id)).toEqual(["csc-kajaani-lumi-host", "lumi-supercomputer"]);
   });
 
   it("rejects an invalid longitude and names the point", () => {
@@ -64,66 +75,77 @@ describe("buildMapFeatureCollection", () => {
     expect(() => buildMapFeatureCollection([atlanta, { ...london, id: "example-1" }])).toThrow('Map point id "example-1" is used more than once');
   });
 
-  it("preserves each point's mapping status in its properties", () => {
-    const { features } = buildMapFeatureCollection([atlanta, london]);
-    expect(features.map((feature) => feature.properties.mappingStatus)).toEqual(["mapped", "unmapped"]);
-  });
-
-  it("carries address and contactEmail into properties only when the point has them, trimmed", () => {
-    const withProfile = buildMapFeatureCollection([{ ...atlanta, address: "  8209 Valley Pike, Middletown, Virginia, USA ", contactEmail: " contact@example.com " }]);
-    expect(withProfile.features[0]?.properties).toEqual({ name: "Example Point", mappingStatus: "mapped", category: "data_center", address: "8209 Valley Pike, Middletown, Virginia, USA", contactEmail: "contact@example.com" });
-    const addressOnly = buildMapFeatureCollection([{ ...london, address: "London, United Kingdom" }]);
-    expect(addressOnly.features[0]?.properties).toEqual({ name: "Second Point", mappingStatus: "unmapped", address: "London, United Kingdom" });
-    const emailOnly = buildMapFeatureCollection([{ ...atlanta, contactEmail: "demo@example.com" }]);
-    expect(emailOnly.features[0]?.properties).toEqual({ name: "Example Point", mappingStatus: "mapped", category: "data_center", contactEmail: "demo@example.com" });
-    expect(buildMapFeatureCollection([atlanta]).features[0]?.properties).not.toHaveProperty("address");
-    expect(buildMapFeatureCollection([atlanta]).features[0]?.properties).not.toHaveProperty("contactEmail");
-  });
-
-  it("never emits an operator property", () => {
-    const legacy = { ...atlanta, operator: "Demo Operator", location: "Atlanta" } as UrdaisMapPoint;
-    const { features } = buildMapFeatureCollection([legacy]);
-    expect(JSON.stringify(features[0]?.properties)).not.toMatch(/operator|location/);
-  });
-
-  it("preserves a mapped point's category and requires one", () => {
-    const { features } = buildMapFeatureCollection([{ ...atlanta, category: "power_infrastructure" }]);
-    expect(features[0]?.properties.category).toBe("power_infrastructure");
-    const missing = { ...atlanta, category: undefined } as UrdaisMapPoint;
-    expect(() => buildMapFeatureCollection([missing])).toThrow('Map point "example-1" is mapped but has no category');
-  });
-
-  it("rejects an unknown category on any point, even if the types were bypassed", () => {
+  it("requires a category on every point and rejects the retired compute_cluster value", () => {
+    const missing = { ...atlanta, category: undefined } as unknown as UrdaisMapPoint;
+    expect(() => buildMapFeatureCollection([missing])).toThrow('Map point "example-1" has an unknown category: undefined');
+    const retired = { ...atlanta, category: "compute_cluster" } as unknown as UrdaisMapPoint;
+    expect(() => buildMapFeatureCollection([retired])).toThrow('Map point "example-1" has an unknown category: compute_cluster');
     const gpu = { ...atlanta, category: "gpu" } as unknown as UrdaisMapPoint;
     expect(() => buildMapFeatureCollection([gpu])).toThrow('Map point "example-1" has an unknown category: gpu');
-    const unmappedBad = { ...london, category: "transformer" } as unknown as UrdaisMapPoint;
-    expect(() => buildMapFeatureCollection([unmappedBad])).toThrow('Map point "example-2" has an unknown category: transformer');
   });
 
-  it("lets an unmapped point omit its category, and keeps a valid one when given", () => {
-    expect(buildMapFeatureCollection([london]).features[0]?.properties).toEqual({ name: "Second Point", mappingStatus: "unmapped" });
-    const withCategory = buildMapFeatureCollection([{ ...london, category: "data_center" }]);
-    expect(withCategory.features[0]?.properties).toEqual({ name: "Second Point", mappingStatus: "unmapped", category: "data_center" });
+  it("carries the popup fields into properties only when the point has them, trimmed", () => {
+    const withProfile = buildMapFeatureCollection([
+      {
+        ...atlanta,
+        address: "  1500 Beech Road, New Albany, OH, United States ",
+        ownerName: " Meta ",
+        operatorName: "Meta",
+        lifecycleStatus: "expansion",
+        lastVerifiedDate: "2026-09-17",
+      },
+    ]);
+    expect(withProfile.features[0]?.properties).toEqual({
+      name: "Example Point",
+      category: "data_center",
+      address: "1500 Beech Road, New Albany, OH, United States",
+      ownerName: "Meta",
+      operatorName: "Meta",
+      lifecycleStatus: "expansion",
+      lastVerifiedDate: "2026-09-17",
+    });
+    const bare = buildMapFeatureCollection([atlanta]).features[0]?.properties;
+    expect(bare).not.toHaveProperty("address");
+    expect(bare).not.toHaveProperty("ownerName");
+    expect(bare).not.toHaveProperty("lifecycleStatus");
+    expect(bare).not.toHaveProperty("sourcesJson");
+  });
+
+  it("encodes the citation list as JSON and refuses a source that is not a link", () => {
+    const { features } = buildMapFeatureCollection([
+      { ...atlanta, sources: [{ publisher: " Talen Energy ", url: " https://example.com/a " }] },
+    ]);
+    expect(JSON.parse(features[0]?.properties.sourcesJson ?? "[]")).toEqual([{ publisher: "Talen Energy", url: "https://example.com/a" }]);
+
+    for (const bad of [
+      { publisher: "", url: "https://example.com/a" },
+      { publisher: "Talen Energy", url: "javascript:alert(1)" },
+      { publisher: "Talen Energy", url: "" },
+    ]) {
+      expect(() => buildMapFeatureCollection([{ ...atlanta, sources: [bad] }]), JSON.stringify(bad)).toThrow(
+        'Map point "example-1" has an invalid source',
+      );
+    }
+  });
+
+  it("never emits an operator, location or mapping-status property under an old name", () => {
+    const legacy = { ...atlanta, operator: "Demo Operator", location: "Atlanta", mappingStatus: "mapped" } as UrdaisMapPoint;
+    const { features } = buildMapFeatureCollection([legacy]);
+    expect(JSON.stringify(features[0]?.properties)).not.toMatch(/"operator"|"location"|mappingStatus/);
   });
 
   it("rejects blank or non-string profile metadata", () => {
     expect(() => buildMapFeatureCollection([{ ...atlanta, address: "  " }])).toThrow('Map point "example-1" has an invalid address');
     expect(() => buildMapFeatureCollection([{ ...atlanta, address: 42 as unknown as string }])).toThrow('Map point "example-1" has an invalid address: 42');
+    expect(() => buildMapFeatureCollection([{ ...atlanta, ownerName: " " }])).toThrow('Map point "example-1" has an invalid ownerName');
   });
 
-  it("accepts a plausible contact email and rejects blank or malformed ones", () => {
-    expect(buildMapFeatureCollection([{ ...atlanta, contactEmail: "first.last+tag@sub.example.co" }]).features[0]?.properties.contactEmail).toBe("first.last+tag@sub.example.co");
-    for (const bad of ["", "   ", "no-at-sign", "@example.com", "user@", "user@nodot", "two@@example.com", "spaced user@example.com", "user@.example.com"]) {
-      expect(() => buildMapFeatureCollection([{ ...atlanta, contactEmail: bad }]), bad).toThrow('Map point "example-1" has an invalid contactEmail');
-    }
-    expect(() => buildMapFeatureCollection([{ ...atlanta, contactEmail: 7 as unknown as string }])).toThrow("invalid contactEmail: 7");
-  });
-
-  it("rejects a mapping status outside the known set at runtime, even if the types were bypassed", () => {
-    const partial = { ...atlanta, mappingStatus: "partial" } as unknown as UrdaisMapPoint;
-    expect(() => buildMapFeatureCollection([partial])).toThrow('Map point "example-1" has an unknown mapping status: partial');
-    const missing = { ...atlanta, mappingStatus: undefined } as unknown as UrdaisMapPoint;
-    expect(() => buildMapFeatureCollection([missing])).toThrow("unknown mapping status");
+  it("rejects an unknown lifecycle status or a malformed verification date", () => {
+    const status = { ...atlanta, lifecycleStatus: "mothballed" } as unknown as UrdaisMapPoint;
+    expect(() => buildMapFeatureCollection([status])).toThrow('Map point "example-1" has an unknown lifecycle status: mothballed');
+    expect(() => buildMapFeatureCollection([{ ...atlanta, lastVerifiedDate: "17/09/2026" }])).toThrow(
+      'Map point "example-1" has an invalid lastVerifiedDate: 17/09/2026',
+    );
   });
 
   it("does not build a partial collection when a later point is invalid", () => {

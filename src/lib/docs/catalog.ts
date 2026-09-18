@@ -146,6 +146,14 @@ export const docPages: readonly DocPage[] = [
     section: "Methodology",
     file: "methodology/open-weight-proprietary.md",
   },
+  {
+    slug: "methodology/map-facilities",
+    title: "Map Facilities",
+    description:
+      "Production methodology for the Urdais map: the four public infrastructure categories, what is recorded and what is rejected, the source hierarchy and citation classes, coordinate precision and map eligibility, entity granularity and duplicate resolution, the evidenced compute relationship a power asset needs to appear at all, and the staleness horizon.",
+    section: "Methodology",
+    file: "methodology/map-facilities.md",
+  },
 ];
 
 export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];

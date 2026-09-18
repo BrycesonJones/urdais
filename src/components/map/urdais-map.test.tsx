@@ -2,6 +2,8 @@ import { render, waitFor } from "@testing-library/react";
 import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { UrdaisMapPoint } from "@/types/map";
+
 const maplibre = vi.hoisted(() => {
   type Instance = {
     options: Record<string, unknown>;
@@ -88,6 +90,19 @@ vi.mock("maplibre-gl", () => ({
 
 const STYLE = { version: 8, sources: {}, layers: [{ id: "label_city", type: "symbol", source: "openmaptiles", layout: { "text-anchor": "bottom", "text-size": 13 } }] };
 
+/**
+ * A stand-in for what the server read from the database: published facilities,
+ * one per category, including the host/cluster pair that shares one position.
+ * The component no longer owns any data, so this is supplied as a prop the way
+ * the page supplies it.
+ */
+const SAMPLE_POINTS: readonly UrdaisMapPoint[] = [
+  { id: "csc-kajaani-lumi-host", name: "CSC Kajaani Data Center", longitude: 27.691477, latitude: 64.2319866, category: "data_center", address: "Kajaani, Finland", sources: [{ publisher: "CSC", url: "https://example.com/csc" }] },
+  { id: "lumi-supercomputer", name: "LUMI Supercomputer", longitude: 27.691477, latitude: 64.2319866, category: "gpu_compute_cluster", sources: [{ publisher: "EuroHPC", url: "https://example.com/eurohpc" }] },
+  { id: "susquehanna-steam-electric-station", name: "Susquehanna Steam Electric Station", longitude: -76.1479523, latitude: 41.0922705, category: "power_infrastructure" },
+  { id: "tsmc-arizona-phoenix", name: "TSMC Arizona Phoenix Campus", longitude: -112.1621572, latitude: 33.7778581, category: "semiconductor_fab" },
+];
+
 async function loadComponent() {
   const { UrdaisMap } = await import("@/components/map/urdais-map");
   return UrdaisMap;
@@ -111,7 +126,7 @@ describe("UrdaisMap", () => {
 
   it("creates one map in its container with the world-scale view and the worker served from our origin", async () => {
     const UrdaisMap = await loadComponent();
-    const { container } = render(<UrdaisMap />);
+    const { container } = render(<UrdaisMap points={SAMPLE_POINTS} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
 
     const [instance] = maplibre.instances;
@@ -125,7 +140,7 @@ describe("UrdaisMap", () => {
 
   it("hands MapLibre the Positron style with the label overrides already applied", async () => {
     const UrdaisMap = await loadComponent();
-    render(<UrdaisMap />);
+    render(<UrdaisMap points={SAMPLE_POINTS} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
 
     expect(fetch).toHaveBeenCalledWith("https://tiles.openfreemap.org/styles/positron");
@@ -137,14 +152,14 @@ describe("UrdaisMap", () => {
   it("falls back to the style URL when the style cannot be fetched, so MapLibre reports the failure", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 503, json: async () => ({}) })));
     const UrdaisMap = await loadComponent();
-    render(<UrdaisMap />);
+    render(<UrdaisMap points={SAMPLE_POINTS} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
     expect(maplibre.instances[0]?.options.style).toBe("https://tiles.openfreemap.org/styles/positron");
   });
 
   it("adds zoom controls without a compass top-right and a metric scale bottom-right", async () => {
     const UrdaisMap = await loadComponent();
-    render(<UrdaisMap />);
+    render(<UrdaisMap points={SAMPLE_POINTS} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
 
     const controls = maplibre.instances[0]!.addControl.mock.calls.map(([control, position]) => [(control as { kind: string }).kind, position]);
@@ -156,34 +171,61 @@ describe("UrdaisMap", () => {
     expect(maplibre.ScaleControl).toHaveBeenCalledWith({ unit: "metric", maxWidth: 120 });
   });
 
-  it("adds the demo points as one GeoJSON source and one circle layer once the style has loaded", async () => {
+  it("adds the supplied facilities as one GeoJSON source and one circle layer once the style has loaded", async () => {
     const { POINTS_LAYER_ID, POINTS_SOURCE_ID } = await import("@/components/map/point-layer");
-    const { DEMO_MAP_POINTS } = await import("@/data/mock/map-points");
     const { buildMapFeatureCollection } = await import("@/lib/map-geojson");
     const UrdaisMap = await loadComponent();
-    render(<UrdaisMap />);
+    render(<UrdaisMap points={SAMPLE_POINTS} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
     const instance = maplibre.instances[0]!;
 
     expect(instance.addSource).not.toHaveBeenCalled();
     instance.emit("load");
     expect(instance.addSource).toHaveBeenCalledTimes(1);
-    expect(instance.addSource).toHaveBeenCalledWith(POINTS_SOURCE_ID, { type: "geojson", data: buildMapFeatureCollection(DEMO_MAP_POINTS), cluster: true, clusterRadius: 48, clusterMaxZoom: 12 });
+    expect(instance.addSource).toHaveBeenCalledWith(POINTS_SOURCE_ID, { type: "geojson", data: buildMapFeatureCollection(SAMPLE_POINTS), cluster: true, clusterRadius: 48, clusterMaxZoom: 12 });
     expect(instance.addLayer).toHaveBeenCalledTimes(3);
     expect(instance.addLayer.mock.calls.map(([layer]) => (layer as { id: string }).id)).toEqual(["urdais-point-clusters", "urdais-point-cluster-count", POINTS_LAYER_ID]);
     expect(instance.addLayer.mock.calls[2]?.[0]).toMatchObject({ id: POINTS_LAYER_ID, type: "circle", source: POINTS_SOURCE_ID, filter: ["!", ["has", "point_count"]] });
     expect(instance.addLayer.mock.calls.every(([, beforeId]) => beforeId === "label_city")).toBe(true);
 
-    const supplied = (instance.addSource.mock.calls[0]?.[1] as { data: { features: Array<{ properties: { mappingStatus: string; category?: string } }> } }).data;
-    const statuses = new Set(supplied.features.map((feature) => feature.properties.mappingStatus));
-    expect(statuses).toEqual(new Set(["mapped", "unmapped"]));
-    const categories = new Set(supplied.features.filter((feature) => feature.properties.mappingStatus === "mapped").map((feature) => feature.properties.category));
-    expect(categories).toEqual(new Set(["data_center", "compute_cluster", "power_infrastructure", "semiconductor_fab"]));
+    const supplied = (instance.addSource.mock.calls[0]?.[1] as { data: { features: Array<{ id: string; properties: { category?: string } }> } }).data;
+    expect(new Set(supplied.features.map((feature) => feature.properties.category))).toEqual(
+      new Set(["data_center", "gpu_compute_cluster", "power_infrastructure", "semiconductor_fab"]),
+    );
+    // Two entities at one position stay two dots.
+    expect(supplied.features.filter((feature) => feature.id === "csc-kajaani-lumi-host" || feature.id === "lumi-supercomputer")).toHaveLength(2);
+  });
+
+  it("draws nothing when the server had nothing published, rather than falling back to sample points", async () => {
+    const { POINTS_SOURCE_ID } = await import("@/components/map/point-layer");
+    const UrdaisMap = await loadComponent();
+    render(<UrdaisMap points={[]} />);
+    await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
+    const instance = maplibre.instances[0]!;
+    instance.emit("load");
+    expect(instance.addSource).toHaveBeenCalledWith(POINTS_SOURCE_ID, expect.objectContaining({ data: { type: "FeatureCollection", features: [] } }));
+  });
+
+  it("replaces the source data when a new facility set arrives, without recreating the map", async () => {
+    const { buildMapFeatureCollection } = await import("@/lib/map-geojson");
+    const UrdaisMap = await loadComponent();
+    const { rerender } = render(<UrdaisMap points={SAMPLE_POINTS} />);
+    await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
+    const instance = maplibre.instances[0]!;
+    instance.emit("load");
+    const source = instance.source()!;
+
+    const fewer = SAMPLE_POINTS.slice(0, 2);
+    rerender(<UrdaisMap points={fewer} />);
+    expect(source.setData).toHaveBeenLastCalledWith(buildMapFeatureCollection(fewer));
+    expect(maplibre.Map).toHaveBeenCalledTimes(1);
+    expect(instance.addSource).toHaveBeenCalledTimes(1);
+    expect(instance.remove).not.toHaveBeenCalled();
   });
 
   it("does not duplicate the source or layer if load fires again", async () => {
     const UrdaisMap = await loadComponent();
-    render(<UrdaisMap />);
+    render(<UrdaisMap points={SAMPLE_POINTS} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
     const instance = maplibre.instances[0]!;
     instance.emit("load");
@@ -194,7 +236,7 @@ describe("UrdaisMap", () => {
 
   it("skips adding points when the map was unmounted before its style loaded", async () => {
     const UrdaisMap = await loadComponent();
-    const { unmount } = render(<UrdaisMap />);
+    const { unmount } = render(<UrdaisMap points={SAMPLE_POINTS} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
     const instance = maplibre.instances[0]!;
     unmount();
@@ -206,7 +248,7 @@ describe("UrdaisMap", () => {
   it("wires the point interactions once after load and removes them, and any open popup, on unmount", async () => {
     const { POINTS_LAYER_ID } = await import("@/components/map/point-layer");
     const UrdaisMap = await loadComponent();
-    const { unmount } = render(<UrdaisMap />);
+    const { unmount } = render(<UrdaisMap points={SAMPLE_POINTS} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
     const instance = maplibre.instances[0]!;
     instance.emit("load");
@@ -218,12 +260,12 @@ describe("UrdaisMap", () => {
     expect(instance.handlerCount("mouseleave", "urdais-point-clusters")).toBe(1);
     expect(instance.handlerCount("moveend")).toBe(1);
 
-    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "Demo Point 1", mappingStatus: "mapped", category: "compute_cluster", address: "Atlanta, Georgia, USA", contactEmail: "demo@example.com" }, geometry: { type: "Point", coordinates: [-84.388, 33.749] } }] });
+    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "LUMI Supercomputer", category: "gpu_compute_cluster", address: "Kajaani, Finland" }, geometry: { type: "Point", coordinates: [27.691477, 64.2319866] } }] });
     expect(maplibre.popups).toHaveLength(1);
-    expect(maplibre.popups[0]?.content?.textContent).toContain("Demo Point 1");
-    expect(maplibre.popups[0]?.content?.textContent).toContain("Compute Cluster");
+    expect(maplibre.popups[0]?.content?.textContent).toContain("LUMI Supercomputer");
+    expect(maplibre.popups[0]?.content?.textContent).toContain("GPU Compute Cluster");
 
-    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "Demo Point 2", mappingStatus: "unmapped" }, geometry: { type: "Point", coordinates: [0, 0] } }] });
+    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { category: "data_center" }, geometry: { type: "Point", coordinates: [0, 0] } }] });
     expect(maplibre.popups).toHaveLength(1);
 
     unmount();
@@ -239,23 +281,22 @@ describe("UrdaisMap", () => {
 
   it("feeds the clustered source the visible subset on change, without recreating the map, source, layers, or viewport", async () => {
     const { DEFAULT_MAP_VISIBILITY, filterPointCollection } = await import("@/components/map/map-point-style");
-    const { DEMO_MAP_POINTS } = await import("@/data/mock/map-points");
     const { buildMapFeatureCollection } = await import("@/lib/map-geojson");
     const UrdaisMap = await loadComponent();
-    const { rerender } = render(<UrdaisMap visibility={DEFAULT_MAP_VISIBILITY} />);
+    const { rerender } = render(<UrdaisMap points={SAMPLE_POINTS} visibility={DEFAULT_MAP_VISIBILITY} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
     const instance = maplibre.instances[0]!;
     instance.emit("load");
     const source = instance.source()!;
     expect(source.setData).not.toHaveBeenCalled();
 
-    const hidden = { ...DEFAULT_MAP_VISIBILITY, power_infrastructure: false, unmapped: false };
-    rerender(<UrdaisMap visibility={hidden} />);
+    const hidden = { ...DEFAULT_MAP_VISIBILITY, power_infrastructure: false };
+    rerender(<UrdaisMap points={SAMPLE_POINTS} visibility={hidden} />);
     expect(source.setData).toHaveBeenCalledTimes(1);
-    const expected = filterPointCollection(buildMapFeatureCollection(DEMO_MAP_POINTS), hidden);
+    const expected = filterPointCollection(buildMapFeatureCollection(SAMPLE_POINTS), hidden);
     expect(source.setData).toHaveBeenLastCalledWith(expected);
-    const supplied = source.setData.mock.calls[0]?.[0] as { features: Array<{ properties: { mappingStatus: string; category?: string } }> };
-    expect(supplied.features.some((feature) => feature.properties.mappingStatus === "unmapped" || feature.properties.category === "power_infrastructure")).toBe(false);
+    const supplied = source.setData.mock.calls[0]?.[0] as { features: Array<{ properties: { category?: string } }> };
+    expect(supplied.features.some((feature) => feature.properties.category === "power_infrastructure")).toBe(false);
     expect(supplied.features.length).toBeGreaterThan(0);
     expect(maplibre.Map).toHaveBeenCalledTimes(1);
     expect(instance.addSource).toHaveBeenCalledTimes(1);
@@ -264,32 +305,31 @@ describe("UrdaisMap", () => {
     expect(instance.easeTo).not.toHaveBeenCalled();
     expect(fetch).toHaveBeenCalledTimes(1);
 
-    const allOff = { data_center: false, compute_cluster: false, power_infrastructure: false, semiconductor_fab: false, unmapped: false };
-    rerender(<UrdaisMap visibility={allOff} />);
+    const allOff = { data_center: false, gpu_compute_cluster: false, power_infrastructure: false, semiconductor_fab: false };
+    rerender(<UrdaisMap points={SAMPLE_POINTS} visibility={allOff} />);
     expect(source.setData).toHaveBeenLastCalledWith({ type: "FeatureCollection", features: [] });
-    rerender(<UrdaisMap visibility={DEFAULT_MAP_VISIBILITY} />);
-    expect(source.setData).toHaveBeenLastCalledWith(buildMapFeatureCollection(DEMO_MAP_POINTS));
+    rerender(<UrdaisMap points={SAMPLE_POINTS} visibility={DEFAULT_MAP_VISIBILITY} />);
+    expect(source.setData).toHaveBeenLastCalledWith(buildMapFeatureCollection(SAMPLE_POINTS));
   });
 
   it("seeds the source with the latest visibility if it changed before the style loaded", async () => {
     const { DEFAULT_MAP_VISIBILITY, filterPointCollection } = await import("@/components/map/map-point-style");
-    const { DEMO_MAP_POINTS } = await import("@/data/mock/map-points");
     const { buildMapFeatureCollection } = await import("@/lib/map-geojson");
     const UrdaisMap = await loadComponent();
-    const { rerender } = render(<UrdaisMap visibility={DEFAULT_MAP_VISIBILITY} />);
+    const { rerender } = render(<UrdaisMap points={SAMPLE_POINTS} visibility={DEFAULT_MAP_VISIBILITY} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
     const instance = maplibre.instances[0]!;
     const hidden = { ...DEFAULT_MAP_VISIBILITY, data_center: false };
-    rerender(<UrdaisMap visibility={hidden} />);
+    rerender(<UrdaisMap points={SAMPLE_POINTS} visibility={hidden} />);
     expect(instance.addSource).not.toHaveBeenCalled();
     instance.emit("load");
-    expect(instance.addSource.mock.calls[0]?.[1]).toMatchObject({ data: filterPointCollection(buildMapFeatureCollection(DEMO_MAP_POINTS), hidden) });
+    expect(instance.addSource.mock.calls[0]?.[1]).toMatchObject({ data: filterPointCollection(buildMapFeatureCollection(SAMPLE_POINTS), hidden) });
     expect(instance.source()!.setData).not.toHaveBeenCalled();
   });
 
   it("zooms into a clicked cluster through the source's expansion zoom and never opens a popup", async () => {
     const UrdaisMap = await loadComponent();
-    render(<UrdaisMap />);
+    render(<UrdaisMap points={SAMPLE_POINTS} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
     const instance = maplibre.instances[0]!;
     instance.emit("load");
@@ -303,11 +343,11 @@ describe("UrdaisMap", () => {
   it("closes an open popup once its point is no longer individually rendered after the camera moves", async () => {
     const { POINTS_LAYER_ID } = await import("@/components/map/point-layer");
     const UrdaisMap = await loadComponent();
-    render(<UrdaisMap />);
+    render(<UrdaisMap points={SAMPLE_POINTS} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
     const instance = maplibre.instances[0]!;
     instance.emit("load");
-    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "Demo Point 3", mappingStatus: "mapped", category: "data_center" }, geometry: { type: "Point", coordinates: [-0.128, 51.507] } }] });
+    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "CSC Kajaani Data Center", category: "data_center" }, geometry: { type: "Point", coordinates: [27.691477, 64.2319866] } }] });
     expect(maplibre.popups).toHaveLength(1);
     instance.emit("moveend");
     expect(maplibre.popups[0]?.removed).toBe(false);
@@ -320,21 +360,21 @@ describe("UrdaisMap", () => {
     const { DEFAULT_MAP_VISIBILITY } = await import("@/components/map/map-point-style");
     const { POINTS_LAYER_ID } = await import("@/components/map/point-layer");
     const UrdaisMap = await loadComponent();
-    const { rerender } = render(<UrdaisMap visibility={DEFAULT_MAP_VISIBILITY} />);
+    const { rerender } = render(<UrdaisMap points={SAMPLE_POINTS} visibility={DEFAULT_MAP_VISIBILITY} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
     const instance = maplibre.instances[0]!;
     instance.emit("load");
-    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "Demo Point 3", mappingStatus: "mapped", category: "data_center" }, geometry: { type: "Point", coordinates: [-0.128, 51.507] } }] });
+    instance.emit("click", POINTS_LAYER_ID, { features: [{ properties: { name: "CSC Kajaani Data Center", category: "data_center" }, geometry: { type: "Point", coordinates: [27.691477, 64.2319866] } }] });
     expect(maplibre.popups).toHaveLength(1);
-    rerender(<UrdaisMap visibility={{ ...DEFAULT_MAP_VISIBILITY, compute_cluster: false }} />);
+    rerender(<UrdaisMap points={SAMPLE_POINTS} visibility={{ ...DEFAULT_MAP_VISIBILITY, gpu_compute_cluster: false }} />);
     expect(maplibre.popups[0]?.removed).toBe(false);
-    rerender(<UrdaisMap visibility={{ ...DEFAULT_MAP_VISIBILITY, compute_cluster: false, data_center: false }} />);
+    rerender(<UrdaisMap points={SAMPLE_POINTS} visibility={{ ...DEFAULT_MAP_VISIBILITY, gpu_compute_cluster: false, data_center: false }} />);
     expect(maplibre.popups[0]?.removed).toBe(true);
   });
 
   it("removes the map on unmount", async () => {
     const UrdaisMap = await loadComponent();
-    const { unmount } = render(<UrdaisMap />);
+    const { unmount } = render(<UrdaisMap points={SAMPLE_POINTS} />);
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalledTimes(1));
     unmount();
     expect(maplibre.instances[0]?.remove).toHaveBeenCalledTimes(1);
@@ -344,7 +384,7 @@ describe("UrdaisMap", () => {
     const UrdaisMap = await loadComponent();
     render(
       <StrictMode>
-        <UrdaisMap />
+        <UrdaisMap points={SAMPLE_POINTS} />
       </StrictMode>,
     );
     await waitFor(() => expect(maplibre.Map).toHaveBeenCalled());
@@ -362,7 +402,7 @@ describe("UrdaisMap", () => {
 
   it("exposes the map as a labelled region that fills its parent", async () => {
     const UrdaisMap = await loadComponent();
-    const { getByRole } = render(<UrdaisMap />);
+    const { getByRole } = render(<UrdaisMap points={SAMPLE_POINTS} />);
     const region = getByRole("region", { name: "World map" });
     expect(region).toHaveClass("h-full", "w-full");
   });

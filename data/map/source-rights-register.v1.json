@@ -1,0 +1,56 @@
+{
+  "registerVersion": "urdais.map.source-rights/1",
+  "researchDocument": "URDAIS_MAP_RESEARCH_PHASE_1.md",
+  "reviewedOn": "2026-09-17",
+  "policy": "Citing a fact from a public primary or government document and linking to it is ordinary attribution, and does not pass through the source-terms gate that governs commercial price and data feeds: that gate exists because those feeds' values are redistributed, and a facility citation redistributes nothing. Every source domain in the research package is therefore clear by class unless it appears below. See docs/methodology/map-facilities.md section 4.",
+  "states": {
+    "clear": "Ordinary factual citation. No action.",
+    "verify_access": "The claim originates behind a paywall, so a reader following the link may not be able to check it. A person should confirm the same fact against a primary source, or accept the record as corroborated-only.",
+    "prefer_primary": "A third-party republication of a document that has a primary home. Re-cite the primary.",
+    "review_required": "Urdais's intended use of this source raises a question a person must answer before the claim is relied on."
+  },
+  "sources": [
+    {
+      "domain": "bloomberg.com",
+      "state": "review_required",
+      "citationClass": "secondary_corroboration",
+      "note": "Paywalled financial press. The research package itself records the claim sourced here (a scrapped Stargate expansion near Abilene) as reported and not verified on the companies' own pages, so it should not support a stored fact until a person decides whether corroboration alone is enough.",
+      "affects": ["crusoe-abilene-stargate-campus"]
+    },
+    {
+      "domain": "dallasnews.com",
+      "state": "verify_access",
+      "citationClass": "secondary_corroboration",
+      "note": "The street address for Aligned DFW-04 originates in paywalled regional press rather than in the operator's own announcement. The fact is ordinary to cite; the question is whether a reader can check it.",
+      "affects": ["aligned-dfw-04-plano"]
+    },
+    {
+      "domain": "dispatch.com",
+      "state": "verify_access",
+      "citationClass": "secondary_corroboration",
+      "note": "The Meta New Albany street address (1500 Beech Road) and the Prometheus confirmation originate here, citing Meta, rather than on Meta's own facility page. Paywalled.",
+      "affects": ["meta-new-albany", "meta-prometheus"]
+    },
+    {
+      "domain": "usatoday.com",
+      "state": "verify_access",
+      "citationClass": "secondary_corroboration",
+      "note": "Paywalled national press used as corroboration for US campus details.",
+      "affects": []
+    },
+    {
+      "domain": "commercialappeal.com",
+      "state": "verify_access",
+      "citationClass": "secondary_corroboration",
+      "note": "Paywalled regional press. The research notes the underlying permit for the xAI Colossus on-site turbines was not fetched, so this source is currently the only route to that claim.",
+      "affects": ["xai-colossus-onsite-gas-turbines"]
+    },
+    {
+      "domain": "thefederalregister.org",
+      "state": "prefer_primary",
+      "citationClass": "government_evidence",
+      "note": "A third-party republication of a Federal Register document (91 FR 34658). The primary is federalregister.gov; re-cite it there.",
+      "affects": ["crane-clean-energy-center"]
+    }
+  ]
+}

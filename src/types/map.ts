@@ -1,26 +1,28 @@
-/**
- * Whether Urdais has placed a point at a verified location. Kept as an
- * explicit union rather than a boolean so later states (partial, unknown,
- * verified) can join without changing every consumer. Only these two exist
- * for now.
- */
-export type MapPointStatus = "mapped" | "unmapped";
+import type { FacilityCategory, FacilityLifecycleStatus } from "@/lib/facilities/domain";
 
 /**
- * Top-level infrastructure category of a point. Deliberately coarse:
- * a data-centre facility, a GPU / AI compute cluster or concentrated compute
- * capacity, important electrical infrastructure (substations, transformers,
- * and the like), or a semiconductor fabrication / foundry / advanced
- * manufacturing facility. Finer detail (GPU generation, transformer class,
- * process node) belongs to subtypes that do not exist yet.
+ * Top-level infrastructure category of a point: a data-centre facility, a GPU
+ * compute cluster, a semiconductor fabrication facility, or electrical
+ * infrastructure. It is the facility vocabulary, re-exported rather than
+ * restated, so the map and the database cannot come to disagree about what the
+ * four categories are.
+ *
+ * The canonical value for the second is `gpu_compute_cluster`. It was
+ * `compute_cluster`, which was too broad for a category whose members are all
+ * accelerator fleets; the public label is "GPU Compute Cluster".
  */
-export type MapPointCategory = "data_center" | "compute_cluster" | "power_infrastructure" | "semiconductor_fab";
+export type MapPointCategory = FacilityCategory;
 
 /**
- * A point Urdais can place on the map. Deliberately minimal: identity,
- * position, a human-readable name, and its mapping status are all the map
- * needs to render and colour a dot. Category, provider, capacity, and
- * provenance arrive with the data phases that need them.
+ * A point Urdais places on the map.
+ *
+ * There is no mapping-status field here any more, and that absence is the
+ * point. The map used to carry an "Unmapped" point alongside the four
+ * categories — a black dot for a facility Urdais had not placed, which required
+ * placing it somewhere in order to say it had not been placed. Whether a record
+ * is ready to be shown is a publication decision that now lives in the
+ * database, and a facility that fails it is simply not in this list. Every
+ * point here is a published, placed, sourced facility.
  */
 export type UrdaisMapPoint = {
   /** Stable, unique across the whole point set; becomes the GeoJSON feature id. */
@@ -30,20 +32,19 @@ export type UrdaisMapPoint = {
   /** Degrees, −90 to 90. */
   latitude: number;
   name: string;
-  mappingStatus: MapPointStatus;
-  /** Required for mapped points, which are coloured by it; optional for unmapped points. */
-  category?: MapPointCategory;
+  category: MapPointCategory;
   /**
    * Best known address or location string, shown on the profile popup:
-   * a full street address ("8209 Valley Pike, Middletown, Virginia, USA")
-   * or just the place ("Memphis, Tennessee, USA"). Not parsed into parts.
+   * a full street address ("1500 Beech Road, New Albany, OH, United States")
+   * or just the place ("Kajaani, Kainuu, Finland"). Not parsed into parts.
    */
   address?: string;
-  /**
-   * Best publicly available contact email for the item, shown on the
-   * profile popup as a mailto link. Named for the role so that sales,
-   * support, press, or facility contacts can be added later without
-   * ambiguity.
-   */
-  contactEmail?: string;
+  /** Owner and operator are different roles and often different companies. */
+  ownerName?: string;
+  operatorName?: string;
+  lifecycleStatus?: FacilityLifecycleStatus;
+  /** ISO date. Shown so a reader can judge how current the record is. */
+  lastVerifiedDate?: string;
+  /** The documents behind the record. A dot without one never reaches the map. */
+  sources?: readonly { publisher: string; url: string }[];
 };

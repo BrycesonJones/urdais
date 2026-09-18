@@ -1,26 +1,31 @@
 import type { Feature, FeatureCollection, Point } from "geojson";
 
-import { isMapPointCategory, isMapPointStatus } from "@/components/map/map-point-style";
-import type { MapPointCategory, MapPointStatus, UrdaisMapPoint } from "@/types/map";
+import { isMapPointCategory } from "@/components/map/map-point-style";
+import { isLifecycleStatus } from "@/lib/facilities/domain";
+import type { MapPointCategory, UrdaisMapPoint } from "@/types/map";
 
 /**
- * Properties carried on each rendered point feature. `mappingStatus` and
- * `category` drive the circle colour (category is always present on mapped
- * features); `address` and `contactEmail` feed the profile popup and are
- * present only when the point has them.
+ * Properties carried on each rendered point feature. `category` drives the
+ * circle colour; the rest feed the profile popup and are present only when the
+ * point has them.
+ *
+ * `sourcesJson` is the one encoded field. Feature properties survive
+ * clustering, style updates and `queryRenderedFeatures` reliably as scalars and
+ * less reliably as nested structures, so the citation list crosses as a JSON
+ * string and the popup parses it defensively. A dot whose sources could not be
+ * carried would be a dot with no provenance, which is the thing this dataset
+ * exists not to produce.
  */
-export type MapPointProperties = { name: string; mappingStatus: MapPointStatus; category?: MapPointCategory; address?: string; contactEmail?: string };
-
-/**
- * A practical email-shape check, not RFC validation: exactly one "@", a
- * non-empty local part, a domain with at least one dot, and no whitespace.
- */
-export function isPlausibleEmail(value: string): boolean {
-  const at = value.indexOf("@");
-  if (at <= 0 || at !== value.lastIndexOf("@")) return false;
-  const domain = value.slice(at + 1);
-  return !/\s/.test(value) && domain.includes(".") && !domain.startsWith(".") && !domain.endsWith(".");
-}
+export type MapPointProperties = {
+  name: string;
+  category: MapPointCategory;
+  address?: string;
+  ownerName?: string;
+  operatorName?: string;
+  lifecycleStatus?: string;
+  lastVerifiedDate?: string;
+  sourcesJson?: string;
+};
 
 export type MapPointFeature = Feature<Point, MapPointProperties>;
 export type MapPointCollection = FeatureCollection<Point, MapPointProperties>;
@@ -33,25 +38,21 @@ export function isValidLatitude(value: number): boolean {
   return Number.isFinite(value) && value >= -90 && value <= 90;
 }
 
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
 /**
  * Converts Urdais map points into the GeoJSON FeatureCollection MapLibre's
- * source consumes. Pure and deterministic: features keep the input order,
+ * source consumes. Pure and deterministic: features keep the input order and
  * carry the point id as the feature id (so later `setData` updates and
- * feature-state changes address the same dot), and keep `name` and
- * `mappingStatus` in properties, plus `address` and `contactEmail` when
- * the point carries them (never as empty or undefined keys). Both are
- * trimmed; a blank or non-string value, or an email that fails the
- * plausibility check, is rejected with the point named.
+ * feature-state changes address the same dot).
  *
  * Invalid input is rejected, not coerced: a point with a longitude outside
  * −180…180, a latitude outside −90…90, a non-finite coordinate, an empty
- * id, an id already used, a mapping status outside the known set, a
- * mapped point without a category, or a category outside the known set
- * throws with the offending point named. These are runtime checks on
- * purpose: points will eventually arrive from outside the type system, and
- * a dot must never carry a status or category the map cannot colour. The
- * seam that supplies points is responsible for handing over clean data;
- * malformed GeoJSON never reaches the map.
+ * id, an id already used, a missing or unknown category, or a malformed
+ * verification date throws with the offending point named. These are runtime
+ * checks on purpose: points arrive from the database through an HTTP response,
+ * outside the type system, and a dot must never carry a category the map
+ * cannot colour. Malformed GeoJSON never reaches the map.
  */
 export function buildMapFeatureCollection(points: readonly UrdaisMapPoint[]): MapPointCollection {
   const seen = new Set<string>();
@@ -61,21 +62,44 @@ export function buildMapFeatureCollection(points: readonly UrdaisMapPoint[]): Ma
     seen.add(point.id);
     if (!isValidLongitude(point.longitude)) throw new Error(`Map point "${point.id}" has an invalid longitude: ${point.longitude}`);
     if (!isValidLatitude(point.latitude)) throw new Error(`Map point "${point.id}" has an invalid latitude: ${point.latitude}`);
-    if (!isMapPointStatus(point.mappingStatus)) throw new Error(`Map point "${point.id}" has an unknown mapping status: ${String(point.mappingStatus)}`);
-    if (point.category !== undefined && !isMapPointCategory(point.category)) throw new Error(`Map point "${point.id}" has an unknown category: ${String(point.category)}`);
-    if (point.mappingStatus === "mapped" && point.category === undefined) throw new Error(`Map point "${point.id}" is mapped but has no category`);
-    const properties: MapPointProperties = { name: point.name, mappingStatus: point.mappingStatus };
-    if (point.category !== undefined) properties.category = point.category;
-    if (point.address !== undefined) {
-      const address = typeof point.address === "string" ? point.address.trim() : "";
-      if (address === "") throw new Error(`Map point "${point.id}" has an invalid address: ${String(point.address)}`);
-      properties.address = address;
+    if (!isMapPointCategory(point.category)) throw new Error(`Map point "${point.id}" has an unknown category: ${String(point.category)}`);
+
+    const properties: MapPointProperties = { name: point.name, category: point.category };
+
+    const carry = (key: "address" | "ownerName" | "operatorName", value: unknown) => {
+      if (value === undefined) return;
+      const text = typeof value === "string" ? value.trim() : "";
+      if (text === "") throw new Error(`Map point "${point.id}" has an invalid ${key}: ${String(value)}`);
+      properties[key] = text;
+    };
+    carry("address", point.address);
+    carry("ownerName", point.ownerName);
+    carry("operatorName", point.operatorName);
+
+    if (point.lifecycleStatus !== undefined) {
+      if (!isLifecycleStatus(point.lifecycleStatus)) {
+        throw new Error(`Map point "${point.id}" has an unknown lifecycle status: ${String(point.lifecycleStatus)}`);
+      }
+      properties.lifecycleStatus = point.lifecycleStatus;
     }
-    if (point.contactEmail !== undefined) {
-      const email = typeof point.contactEmail === "string" ? point.contactEmail.trim() : "";
-      if (email === "" || !isPlausibleEmail(email)) throw new Error(`Map point "${point.id}" has an invalid contactEmail: ${String(point.contactEmail)}`);
-      properties.contactEmail = email;
+    if (point.lastVerifiedDate !== undefined) {
+      if (typeof point.lastVerifiedDate !== "string" || !ISO_DATE.test(point.lastVerifiedDate)) {
+        throw new Error(`Map point "${point.id}" has an invalid lastVerifiedDate: ${String(point.lastVerifiedDate)}`);
+      }
+      properties.lastVerifiedDate = point.lastVerifiedDate;
     }
+    if (point.sources !== undefined && point.sources.length > 0) {
+      const sources = point.sources.map((source) => {
+        const publisher = typeof source?.publisher === "string" ? source.publisher.trim() : "";
+        const url = typeof source?.url === "string" ? source.url.trim() : "";
+        if (publisher === "" || !/^https?:\/\//.test(url)) {
+          throw new Error(`Map point "${point.id}" has an invalid source: ${JSON.stringify(source)}`);
+        }
+        return { publisher, url };
+      });
+      properties.sourcesJson = JSON.stringify(sources);
+    }
+
     return {
       type: "Feature",
       id: point.id,

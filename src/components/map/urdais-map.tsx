@@ -11,9 +11,9 @@ import { addPointLayer, applyPointVisibility } from "@/components/map/point-laye
 import { attachPointInteractions } from "@/components/map/point-popup";
 import type { PointInteractions } from "@/components/map/point-popup";
 import { loadMapRenderer } from "@/components/map/prefetch-map";
-import { getMapPoints } from "@/data/mock/map-points";
 import { buildMapFeatureCollection } from "@/lib/map-geojson";
 import type { MapPointCollection } from "@/lib/map-geojson";
+import type { UrdaisMapPoint } from "@/types/map";
 import type { StyleSpecification } from "maplibre-gl";
 
 /**
@@ -43,8 +43,8 @@ const MIN_ZOOM = 1;
 /**
  * The Urdais map workspace: one MapLibre GL JS instance filling its
  * container. It renders the basemap plus one GeoJSON point source and one
- * circle layer (see point-layer.ts), fed through the getMapPoints seam,
- * which currently returns static demo points, and the mapped-point profile
+ * circle layer (see point-layer.ts), fed with the published facilities the
+ * server read from the database and handed down as `points`, and the profile
  * popup (point-popup.ts). The source clusters natively, so the `visibility`
  * prop, owned by the workspace that renders the legend, is applied by
  * feeding the source the visible subset of the canonical collection
@@ -61,11 +61,16 @@ const MIN_ZOOM = 1;
  * orphan instance survives.
  */
 type UrdaisMapProps = {
+  /**
+   * The published facilities to draw. Supplied by the server; an empty list is
+   * an empty map, never a fallback to sample points.
+   */
+  points: readonly UrdaisMapPoint[];
   /** Which point groups to show; defaults to everything. */
   visibility?: MapVisibilityState;
 };
 
-export function UrdaisMap({ visibility = DEFAULT_MAP_VISIBILITY }: UrdaisMapProps) {
+export function UrdaisMap({ points, visibility = DEFAULT_MAP_VISIBILITY }: UrdaisMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("maplibre-gl").Map | null>(null);
   const interactionsRef = useRef<PointInteractions | null>(null);
@@ -75,6 +80,9 @@ export function UrdaisMap({ visibility = DEFAULT_MAP_VISIBILITY }: UrdaisMapProp
   const visibilityRef = useRef(visibility);
   // The canonical, unfiltered collection; visibility derives subsets of it.
   const collectionRef = useRef<MapPointCollection | null>(null);
+  // The latest points, readable from the one-time load handler without
+  // re-running the map effect. Kept in sync by the effect below.
+  const pointsRef = useRef(points);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -117,12 +125,12 @@ export function UrdaisMap({ visibility = DEFAULT_MAP_VISIBILITY }: UrdaisMapProp
       // Data layers wait for the style so they can be slotted beneath its
       // labels. `load` fires once per map; the guard covers an unmount that
       // races it, and addPointLayer itself never adds twice.
-      const points = buildMapFeatureCollection(getMapPoints());
-      collectionRef.current = points;
+      const collection = buildMapFeatureCollection(pointsRef.current);
+      collectionRef.current = collection;
       mapRef.current = map;
       map.on("load", () => {
         if (cancelled || !map) return;
-        addPointLayer(map, points, visibilityRef.current);
+        addPointLayer(map, collection, visibilityRef.current);
         interactionsRef.current = attachPointInteractions(map, Popup);
       });
     });
@@ -137,6 +145,19 @@ export function UrdaisMap({ visibility = DEFAULT_MAP_VISIBILITY }: UrdaisMapProp
       map = null;
     };
   }, []);
+
+  // A new point set replaces the source's data without touching the map, its
+  // layers or the viewport: the same seam visibility changes use. The map
+  // effect never re-runs, so a page that re-renders with fresh facilities does
+  // not rebuild MapLibre underneath the user.
+  useEffect(() => {
+    pointsRef.current = points;
+    const map = mapRef.current;
+    if (!map) return;
+    const collection = buildMapFeatureCollection(points);
+    collectionRef.current = collection;
+    applyPointVisibility(map, collection, visibilityRef.current);
+  }, [points]);
 
   // Visibility changes never touch the map instance: the source is handed
   // the visible subset (so clusters recount honestly) and the popup closes

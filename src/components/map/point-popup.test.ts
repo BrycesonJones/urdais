@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { CLUSTERS_LAYER_ID, POINTS_LAYER_ID } from "@/components/map/point-layer";
 import { DEFAULT_MAP_VISIBILITY } from "@/components/map/map-point-style";
-import { attachPointInteractions, buildProfileCard, readMappedPointProfile } from "@/components/map/point-popup";
+import { attachPointInteractions, buildProfileCard, readPointProfile, readSources } from "@/components/map/point-popup";
 
 function stubPopup() {
   const instances: Array<{ options: unknown; lngLat: unknown; content: HTMLElement | null; added: boolean; removed: boolean; handlers: Record<string, () => void> }> = [];
@@ -45,61 +45,113 @@ function stubMap() {
 }
 
 const feature = (properties: Record<string, unknown>, coordinates = [-0.128, 51.507]) => ({ properties, geometry: { type: "Point", coordinates } });
-const mapped = feature({ name: "Demo Point 3", mappingStatus: "mapped", category: "data_center", address: "London, United Kingdom", contactEmail: "demo@example.com" });
-const unmapped = feature({ name: "Demo Point 4", mappingStatus: "unmapped" }, [8.682, 50.111]);
+const SOURCES_JSON = JSON.stringify([{ publisher: "CSC", url: "https://example.com/csc" }]);
+const point = feature({
+  name: "CSC Kajaani Data Center",
+  category: "data_center",
+  address: "Tehdaskatu 15, Kajaani, Kainuu, Finland",
+  ownerName: "CSC – IT Center for Science",
+  operatorName: "CSC",
+  lifecycleStatus: "operational",
+  lastVerifiedDate: "2026-09-17",
+  sourcesJson: SOURCES_JSON,
+});
+const nameless = feature({ category: "data_center" }, [8.682, 50.111]);
 
-describe("readMappedPointProfile", () => {
-  it("returns the profile for a mapped feature with a readable category, and drops blank optional fields", () => {
-    expect(readMappedPointProfile(mapped)).toEqual({ name: "Demo Point 3", category: "Data Center", address: "London, United Kingdom", contactEmail: "demo@example.com" });
-    expect(readMappedPointProfile(feature({ name: "Only name", mappingStatus: "mapped", address: "  ", contactEmail: 7 }))).toEqual({ name: "Only name" });
-    expect(readMappedPointProfile(feature({ name: "Bad mail", mappingStatus: "mapped", contactEmail: "not an email" }))).toEqual({ name: "Bad mail" });
-    expect(readMappedPointProfile(feature({ name: "Legacy", mappingStatus: "mapped", operator: "Demo Operator", location: "Somewhere" }))).toEqual({ name: "Legacy" });
+describe("readSources", () => {
+  it("parses the encoded citation list", () => {
+    expect(readSources(SOURCES_JSON)).toEqual([{ publisher: "CSC", url: "https://example.com/csc" }]);
   });
 
-  it("never shows a raw category value, and tolerates a missing or unknown one", () => {
-    expect(readMappedPointProfile(feature({ name: "Fab", mappingStatus: "mapped", category: "semiconductor_fab" }))).toEqual({ name: "Fab", category: "Semiconductor Fab" });
-    expect(readMappedPointProfile(feature({ name: "Odd", mappingStatus: "mapped", category: "gpu" }))).toEqual({ name: "Odd" });
-    expect(readMappedPointProfile(feature({ name: "None", mappingStatus: "mapped", category: 9 }))).toEqual({ name: "None" });
+  it("returns none rather than throwing on anything malformed", () => {
+    for (const bad of ["", "{", "null", '"a string"', "[1,2]", undefined, 7, JSON.stringify([{ publisher: "X" }])]) {
+      expect(readSources(bad), String(bad)).toEqual([]);
+    }
   });
 
-  it("returns null for unmapped, unnamed, or malformed features without throwing", () => {
-    expect(readMappedPointProfile(unmapped)).toBeNull();
-    expect(readMappedPointProfile(feature({ mappingStatus: "mapped" }))).toBeNull();
-    expect(readMappedPointProfile(feature({ name: "", mappingStatus: "mapped" }))).toBeNull();
-    expect(readMappedPointProfile({ properties: null as never })).toBeNull();
-    expect(readMappedPointProfile(undefined)).toBeNull();
+  it("drops a source whose URL is not http(s), so no property can become a javascript: link", () => {
+    expect(readSources(JSON.stringify([{ publisher: "X", url: "javascript:alert(1)" }, { publisher: "Y", url: "https://ok.example" }]))).toEqual([
+      { publisher: "Y", url: "https://ok.example" },
+    ]);
+  });
+});
+
+describe("readPointProfile", () => {
+  it("returns the profile with readable wording for the category and the status", () => {
+    expect(readPointProfile(point)).toEqual({
+      name: "CSC Kajaani Data Center",
+      category: "Data Center",
+      address: "Tehdaskatu 15, Kajaani, Kainuu, Finland",
+      owner: "CSC – IT Center for Science",
+      operator: "CSC",
+      status: "Operational",
+      lastVerified: "2026-09-17",
+      sources: [{ publisher: "CSC", url: "https://example.com/csc" }],
+    });
+  });
+
+  it("omits the operator when it is the owner, because repeating a company name says nothing", () => {
+    const profile = readPointProfile(feature({ name: "Meta New Albany", category: "data_center", ownerName: "Meta", operatorName: "Meta" }));
+    expect(profile).toEqual({ name: "Meta New Albany", category: "Data Center", owner: "Meta" });
+  });
+
+  it("never shows a raw category or status value, and tolerates a missing or unknown one", () => {
+    expect(readPointProfile(feature({ name: "Fab", category: "semiconductor_fab" }))).toEqual({ name: "Fab", category: "Semiconductor Fab" });
+    expect(readPointProfile(feature({ name: "Odd", category: "gpu" }))).toEqual({ name: "Odd" });
+    expect(readPointProfile(feature({ name: "None", category: 9 }))).toEqual({ name: "None" });
+    expect(readPointProfile(feature({ name: "Status", category: "data_center", lifecycleStatus: "mothballed" }))).toEqual({ name: "Status", category: "Data Center" });
+    expect(readPointProfile(feature({ name: "Cluster", category: "gpu_compute_cluster" }))).toEqual({ name: "Cluster", category: "GPU Compute Cluster" });
+  });
+
+  it("returns null for unnamed or malformed features without throwing", () => {
+    expect(readPointProfile(nameless)).toBeNull();
+    expect(readPointProfile(feature({ name: "" }))).toBeNull();
+    expect(readPointProfile({ properties: null as never })).toBeNull();
+    expect(readPointProfile(undefined)).toBeNull();
   });
 });
 
 describe("buildProfileCard", () => {
-  it("renders the name, category, address, and email as text, never as markup, and never an Operator row", () => {
-    const card = buildProfileCard({ name: "<b>Demo</b> Point", category: "Compute Cluster", address: "8209 Valley Pike, Middletown, Virginia, USA", contactEmail: "contact@example.com" });
+  it("renders every row as text, never as markup, and never a raw enum value", () => {
+    const card = buildProfileCard({
+      name: "<b>Demo</b> Point",
+      category: "GPU Compute Cluster",
+      address: "9663 87th Ave SE, Ellendale, ND, United States",
+      owner: "Applied Digital",
+      operator: "CoreWeave",
+      status: "Operational, expanding",
+      lastVerified: "2026-09-17",
+    });
     expect(card.querySelector("p")?.textContent).toBe("<b>Demo</b> Point");
     expect(card.querySelector("b")).toBeNull();
-    expect([...card.querySelectorAll("dt")].map((term) => term.textContent)).toEqual(["Category:", "Address:", "Email:"]);
-    expect([...card.querySelectorAll("dd")].map((detail) => detail.textContent)).toEqual(["Compute Cluster", "8209 Valley Pike, Middletown, Virginia, USA", "contact@example.com"]);
-    expect(card.textContent).not.toContain("compute_cluster");
-    expect(card.textContent).not.toMatch(/Operator/);
+    expect([...card.querySelectorAll("dt")].map((term) => term.textContent)).toEqual(["Category:", "Address:", "Owner:", "Operator:", "Status:", "Verified:"]);
+    expect(card.textContent).not.toContain("gpu_compute_cluster");
   });
 
-  it("renders the email as a same-tab mailto link with a safe href", () => {
-    const card = buildProfileCard({ name: "Demo", contactEmail: "contact@example.com" });
-    const link = card.querySelector("a");
-    expect(link?.getAttribute("href")).toBe("mailto:contact@example.com");
-    expect(link?.textContent).toBe("contact@example.com");
-    expect(link?.getAttribute("target")).toBeNull();
-    expect(card.querySelectorAll("a")).toHaveLength(1);
-    const tricky = buildProfileCard({ name: "Demo", contactEmail: 'a"@example.com' });
-    expect(tricky.querySelector("a")?.getAttribute("href")).toBe('mailto:a"@example.com');
-    expect(tricky.innerHTML).not.toContain("<script");
+  it("renders each source as a new-tab link whose href is the source URL", () => {
+    const card = buildProfileCard({
+      name: "Susquehanna Steam Electric Station",
+      sources: [
+        { publisher: "Talen Energy", url: "https://example.com/powering-data" },
+        { publisher: "Talen Energy IR", url: "https://example.com/sale" },
+      ],
+    });
+    const links = [...card.querySelectorAll("a")];
+    expect(links.map((link) => link.getAttribute("href"))).toEqual(["https://example.com/powering-data", "https://example.com/sale"]);
+    expect(links.map((link) => link.getAttribute("rel"))).toEqual(["noreferrer noopener", "noreferrer noopener"]);
+    expect(card.querySelector("dt")?.textContent).toBe("Sources:");
+    expect(card.innerHTML).not.toContain("<script");
   });
 
-  it("omits the Address row when there is no address and the Email row when there is no email", () => {
+  it("uses the singular label for one source", () => {
+    const card = buildProfileCard({ name: "Demo", sources: [{ publisher: "NIST", url: "https://example.com/nist" }] });
+    expect([...card.querySelectorAll("dt")].map((term) => term.textContent)).toEqual(["Source:"]);
+  });
+
+  it("omits rows it has no value for", () => {
     const addressOnly = buildProfileCard({ name: "Demo", category: "Data Center", address: "Singapore" });
     expect([...addressOnly.querySelectorAll("dt")].map((term) => term.textContent)).toEqual(["Category:", "Address:"]);
     expect(addressOnly.querySelector("a")).toBeNull();
-    const emailOnly = buildProfileCard({ name: "Demo", category: "Power Infrastructure", contactEmail: "demo@example.com" });
-    expect([...emailOnly.querySelectorAll("dt")].map((term) => term.textContent)).toEqual(["Category:", "Email:"]);
   });
 
   it("omits the detail list entirely when there is nothing beyond the name", () => {
@@ -121,26 +173,26 @@ describe("attachPointInteractions", () => {
     expect(map.registered("moveend")).toBe(0);
   });
 
-  it("opens a popup anchored to a clicked mapped point with its profile", () => {
+  it("opens a popup anchored to a clicked point with its profile and its sources", () => {
     const { map } = stubMap();
     const { Popup, instances } = stubPopup();
     attachPointInteractions(map, Popup);
-    map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
+    map.fire("click", POINTS_LAYER_ID, { features: [point] });
     expect(instances).toHaveLength(1);
     expect(instances[0]?.lngLat).toEqual([-0.128, 51.507]);
     expect(instances[0]?.added).toBe(true);
-    expect(instances[0]?.content?.textContent).toContain("Demo Point 3");
-    expect(instances[0]?.content?.textContent).toContain("London, United Kingdom");
-    expect(instances[0]?.content?.querySelector("a")?.getAttribute("href")).toBe("mailto:demo@example.com");
+    expect(instances[0]?.content?.textContent).toContain("CSC Kajaani Data Center");
+    expect(instances[0]?.content?.textContent).toContain("Tehdaskatu 15, Kajaani, Kainuu, Finland");
+    expect(instances[0]?.content?.querySelector("a")?.getAttribute("href")).toBe("https://example.com/csc");
     expect(instances[0]?.content?.textContent).toContain("Data Center");
     expect(instances[0]?.options).toMatchObject({ closeButton: true, className: "urdais-point-popup" });
   });
 
-  it("does nothing for an unmapped point or an empty click", () => {
+  it("does nothing for an unnamed point or an empty click", () => {
     const { map } = stubMap();
     const { Popup, instances } = stubPopup();
     attachPointInteractions(map, Popup);
-    map.fire("click", POINTS_LAYER_ID, { features: [unmapped] });
+    map.fire("click", POINTS_LAYER_ID, { features: [nameless] });
     map.fire("click", POINTS_LAYER_ID, { features: [] });
     map.fire("click", POINTS_LAYER_ID, {});
     expect(instances).toHaveLength(0);
@@ -150,8 +202,8 @@ describe("attachPointInteractions", () => {
     const { map } = stubMap();
     const { Popup, instances } = stubPopup();
     attachPointInteractions(map, Popup);
-    map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
-    map.fire("click", POINTS_LAYER_ID, { features: [feature({ name: "Demo Point 1", mappingStatus: "mapped" }, [-84.388, 33.749])] });
+    map.fire("click", POINTS_LAYER_ID, { features: [point] });
+    map.fire("click", POINTS_LAYER_ID, { features: [feature({ name: "Second Point", category: "data_center" }, [-84.388, 33.749])] });
     expect(instances).toHaveLength(2);
     expect(instances[0]?.removed).toBe(true);
     expect(instances[1]?.removed).toBe(false);
@@ -161,7 +213,7 @@ describe("attachPointInteractions", () => {
     const { map } = stubMap();
     const { Popup, instances } = stubPopup();
     const { dispose } = attachPointInteractions(map, Popup);
-    map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
+    map.fire("click", POINTS_LAYER_ID, { features: [point] });
     dispose();
     expect(instances[0]?.removed).toBe(true);
   });
@@ -170,7 +222,7 @@ describe("attachPointInteractions", () => {
     const { map } = stubMap();
     const { Popup, instances } = stubPopup();
     const { dispose } = attachPointInteractions(map, Popup);
-    map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
+    map.fire("click", POINTS_LAYER_ID, { features: [point] });
     instances[0]?.handlers.close?.();
     const removeSpy = vi.fn();
     instances[0]!.removed = false;
@@ -179,14 +231,14 @@ describe("attachPointInteractions", () => {
     expect(removeSpy).not.toHaveBeenCalled();
   });
 
-  it("shows a pointer only over mapped points and restores the cursor on leave", () => {
+  it("shows a pointer over a point with a profile and restores the cursor on leave", () => {
     const { map, canvas } = stubMap();
     attachPointInteractions(map, stubPopup().Popup);
-    map.fire("mousemove", POINTS_LAYER_ID, { features: [mapped] });
+    map.fire("mousemove", POINTS_LAYER_ID, { features: [point] });
     expect(canvas.style.cursor).toBe("pointer");
-    map.fire("mousemove", POINTS_LAYER_ID, { features: [unmapped] });
+    map.fire("mousemove", POINTS_LAYER_ID, { features: [nameless] });
     expect(canvas.style.cursor).toBe("");
-    map.fire("mousemove", POINTS_LAYER_ID, { features: [mapped] });
+    map.fire("mousemove", POINTS_LAYER_ID, { features: [point] });
     map.fire("mouseleave", POINTS_LAYER_ID, {});
     expect(canvas.style.cursor).toBe("");
   });
@@ -195,8 +247,8 @@ describe("attachPointInteractions", () => {
     const { map, canvas } = stubMap();
     const { Popup, instances } = stubPopup();
     const { applyVisibility } = attachPointInteractions(map, Popup);
-    map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
-    applyVisibility({ ...DEFAULT_MAP_VISIBILITY, semiconductor_fab: false, unmapped: false });
+    map.fire("click", POINTS_LAYER_ID, { features: [point] });
+    applyVisibility({ ...DEFAULT_MAP_VISIBILITY, semiconductor_fab: false, gpu_compute_cluster: false });
     expect(instances[0]?.removed).toBe(false);
     applyVisibility({ ...DEFAULT_MAP_VISIBILITY, data_center: false });
     expect(instances[0]?.removed).toBe(true);
@@ -209,10 +261,10 @@ describe("attachPointInteractions", () => {
     const { map } = stubMap();
     const { Popup, instances } = stubPopup();
     const { applyVisibility } = attachPointInteractions(map, Popup);
-    map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
+    map.fire("click", POINTS_LAYER_ID, { features: [point] });
     applyVisibility({ ...DEFAULT_MAP_VISIBILITY, data_center: false });
     applyVisibility(DEFAULT_MAP_VISIBILITY);
-    map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
+    map.fire("click", POINTS_LAYER_ID, { features: [point] });
     expect(instances).toHaveLength(2);
     expect(instances[1]?.removed).toBe(false);
   });
@@ -243,7 +295,7 @@ describe("attachPointInteractions", () => {
   it("does not expand a cluster from an individual point click", () => {
     const { map } = stubMap();
     attachPointInteractions(map, stubPopup().Popup);
-    map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
+    map.fire("click", POINTS_LAYER_ID, { features: [point] });
     expect(map.source.getClusterExpansionZoom).not.toHaveBeenCalled();
     expect(map.easeTo).not.toHaveBeenCalled();
   });
@@ -262,7 +314,7 @@ describe("attachPointInteractions", () => {
     const { Popup, instances } = stubPopup();
     attachPointInteractions(map, Popup);
     map.fire("moveend", undefined, {});
-    map.fire("click", POINTS_LAYER_ID, { features: [mapped] });
+    map.fire("click", POINTS_LAYER_ID, { features: [point] });
     map.fire("moveend", undefined, {});
     expect(instances[0]?.removed).toBe(false);
     expect(map.queryRenderedFeatures).toHaveBeenCalledWith({ x: 5, y: 5 }, { layers: [POINTS_LAYER_ID] });
