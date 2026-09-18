@@ -504,6 +504,79 @@ A rail that renders `Live` with an empty state after step 8 has one of two
 causes, and they are distinguishable: the deployment has no `DATABASE_URL`, or
 the migration did not reach production. The read path logs which.
 
+## Importing the facility map into production
+
+The map's rows are not a deployment artefact. Merging a dataset PR puts a file
+in the repository; the public map keeps drawing whatever the database already
+held. Nothing on a schedule closes that gap, and nothing should: an import
+changes what a public map claims exists at a named place, which is a decision
+rather than a refresh.
+
+The vehicle is `.github/workflows/map-production-import.yml` — manual dispatch
+only, `write` defaulting to **false**. It uses the ordinary importer
+(`npm run map:import`), so the workflow adds no second write path that could
+drift from the one the tests cover.
+
+### Dispatching it
+
+From the Actions tab, run **Map production import**:
+
+| Input | Meaning |
+| --- | --- |
+| `write` | `false` (default) dry-runs and stops. `true` writes, re-runs to prove idempotence, then verifies. |
+| `dataset` | Defaults to `data/map/facilities.v1.json`. |
+| `expected_public` | Assert this many **map-visible** facilities afterwards. Blank skips the assertion. |
+| `expected_digest` | Pin the dataset digest the dispatch intends. Blank skips. |
+
+Dispatch with `write=false` first and read `dry-run.json` from the run's
+artifacts. Then dispatch again with `write=true` and, ideally, the digest the
+dry run printed — the workflow runs against a ref, and a ref can move between
+the review and the run, while a digest cannot.
+
+### What the run does
+
+1. **Dry run against production.** Connected but read-only. This resolves
+   relationships against the keys already stored, which a database-less dry run
+   cannot do. Any plan error fails the run and nothing is written.
+2. **Baseline readiness.** A snapshot, not a gate: before the first import the
+   table is empty and every comparison legitimately disagrees. Only a dataset
+   that will not plan, or one whose digest is not the pinned one, stops here.
+3. **Write**, in one transaction, only when `write=true`.
+4. **Re-run the same write** and assert it changed nothing — no inserts, no
+   updates, no methodology re-stamps.
+5. **Verify**: database counts against the dataset, the deployed API's count
+   against the database, and a `200` from `https://urdais.com/map`.
+
+Every report is uploaded as an artifact. The importer and the check print
+counts, digests and review candidates and never a connection string.
+
+### Counting rule
+
+**A public dot is not a `published` row.** Since methodology 2.0.0 the map
+serves both `published` and `research` records, provided each is map-eligible,
+evidenced by an admissible source, not cancelled or retired, and inside the
+staleness horizon. For the dataset at digest
+`938c7d2c15b6d04eff50560902800f8bc6b52286b435889976b6d943c6eb4c1e` that is
+**187 canonical facilities, 167 publication candidates, and 136 map-visible**
+across 21 countries. Asserting `published` (29) as though it were the public
+count is the mistake to avoid; `expected_public` means map-visible.
+
+### Checking without dispatching
+
+`npm run map:production:check` is read-only and runs anywhere a database URL is
+configured:
+
+```bash
+DATABASE_URL=<UrdaisProd> npm run map:production:check -- --expected-public 136
+DATABASE_URL=<UrdaisProd> npm run map:production:check -- --skip-site   # database only
+```
+
+### What it does not do
+
+It does not apply migrations — `migrations:check --production` covers that — and
+it does not decide what publishes. Publication states live in the dataset and
+are reviewed in the PR that changes them, never adjusted during an import.
+
 ## What this document does not authorize
 
 Nothing here grants a source right. The Wave-1 token pricing interfaces remain `research_usable` with terms and data-use both `under_review`, and the only `production_approved` interface in either database is the licensed compute source. A production `GET` scraper does not become permitted because a deployment exists.
