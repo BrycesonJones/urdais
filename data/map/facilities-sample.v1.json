@@ -1,0 +1,2024 @@
+{
+  "contractVersion": "urdais.map.facility-import/1",
+  "datasetName": "Urdais Map Phase 2 foundation sample",
+  "researchDocument": "URDAIS_MAP_RESEARCH_PHASE_1.md",
+  "generatedAt": "2026-09-17",
+  "facilities": [
+    {
+      "researchKey": "csc-kajaani-lumi-host",
+      "canonicalName": "CSC Kajaani Data Center (LUMI host)",
+      "category": "data_center",
+      "ownerName": "CSC – IT Center for Science",
+      "operatorName": "CSC",
+      "aliases": [
+        {
+          "alias": "CSC Datacenter Kajaani",
+          "kind": "alias",
+          "authority": null
+        },
+        {
+          "alias": "Renforsin Ranta",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": "Tehdaskatu 15",
+        "locality": "Kajaani",
+        "adminArea": "Kainuu",
+        "countryName": "Finland",
+        "countryCode": "FI",
+        "latitude": 64.2319866,
+        "longitude": 27.691477,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Nominatim returned the named CSC industrial feature at Tehdaskatu 15."
+      },
+      "lifecycle": {
+        "status": "operational",
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": null
+      },
+      "facts": [],
+      "evidence": [
+        {
+          "publisher": "CSC",
+          "title": "LUMI Supercomputer contact / datacenter listing",
+          "url": "https://research.csc.fi/topic/lumi-supercomputer/",
+          "documentType": "company_facility_page",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "Datacenter Kajaani"
+            },
+            {
+              "field": "location",
+              "statement": "Renforsin Ranta business area"
+            },
+            {
+              "field": "location",
+              "statement": "Tehdaskatu 15, 87100 Kajaani"
+            }
+          ]
+        },
+        {
+          "publisher": "LUMI / EuroHPC consortium",
+          "title": "How did LUMI end up in Finland?",
+          "url": "https://lumi-supercomputer.eu/how-did-lumi-end-up-in-finland/",
+          "documentType": "company_facility_page",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "compute_relationship",
+              "statement": "LUMI at CSC data center in Kajaani"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": []
+      },
+      "requestedPublicationState": "published"
+    },
+    {
+      "researchKey": "fzj-jupiter-host",
+      "canonicalName": "Forschungszentrum Jülich (JUPITER host campus)",
+      "category": "data_center",
+      "ownerName": "Forschungszentrum Jülich GmbH",
+      "operatorName": "Jülich Supercomputing Centre",
+      "aliases": [
+        {
+          "alias": "FZJ",
+          "kind": "alias",
+          "authority": null
+        },
+        {
+          "alias": "Jülich Supercomputing Centre campus",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": "Wilhelm-Johnen-Straße",
+        "locality": "Jülich",
+        "adminArea": "North Rhine-Westphalia",
+        "countryName": "Germany",
+        "countryCode": "DE",
+        "latitude": 50.9000601,
+        "longitude": 6.3931009,
+        "coordinatePrecision": "street",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Official FZJ address on the JUPITER page. Nominatim geocoded the street in Jülich, not the Modular Data Centre building."
+      },
+      "lifecycle": {
+        "status": "operational",
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": null
+      },
+      "facts": [],
+      "evidence": [
+        {
+          "publisher": "Forschungszentrum Jülich",
+          "title": "JUPITER — Exascale for Europe",
+          "url": "https://www.fz-juelich.de/en/jsc/jupiter",
+          "documentType": "government_record",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "JUPITER at Forschungszentrum Jülich"
+            },
+            {
+              "field": "location",
+              "statement": "Wilhelm-Johnen-Straße 52428 Jülich"
+            },
+            {
+              "field": "contact",
+              "statement": "contact jupiter@fz-juelich.de"
+            },
+            {
+              "field": "capacity",
+              "statement": "Modular Data Centre mentioned"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "Street vs MDC building."
+        ]
+      },
+      "requestedPublicationState": "published"
+    },
+    {
+      "researchKey": "applied-digital-polaris-forge-1",
+      "canonicalName": "Applied Digital Polaris Forge 1",
+      "category": "data_center",
+      "ownerName": "Applied Digital",
+      "operatorName": "Applied Digital",
+      "aliases": [
+        {
+          "alias": "Ellendale AI Factory",
+          "kind": "alias",
+          "authority": null
+        },
+        {
+          "alias": "Polaris Forge 1",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": "9663 87th Ave SE",
+        "locality": "Ellendale",
+        "adminArea": "ND",
+        "countryName": "United States",
+        "countryCode": "US",
+        "latitude": 46.0214191,
+        "longitude": -98.5685326,
+        "coordinatePrecision": "campus",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "North Dakota DEQ air permit names ELN Generation at 9663 87th Ave. SE, Ellendale, ND 58436. Nominatim house match is stronger at 9685 87th Ave SE (adjacent; local TV also used 9685). Coords taken from the 9685 house geocode as campus-level on the same road; do not treat as a surveyed building footprint."
+      },
+      "lifecycle": {
+        "status": "expansion",
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": "2025-10-27"
+      },
+      "facts": [
+        {
+          "key": "critical_it_capacity_mw",
+          "numericValue": 400,
+          "unit": "MW",
+          "evidenceUrl": "https://ir.applieddigital.com/news-events/press-releases/detail/157/applied-digital-delivers-second-building-at-polaris-forge-1",
+          "notes": null
+        },
+        {
+          "key": "live_capacity_mw",
+          "numericValue": 175,
+          "unit": "MW",
+          "evidenceUrl": "https://ir.applieddigital.com/news-events/press-releases/detail/157/applied-digital-delivers-second-building-at-polaris-forge-1",
+          "notes": "Live as of the 2026-07-01 press release; not a current reading."
+        },
+        {
+          "key": "building_count",
+          "numericValue": 3,
+          "unit": null,
+          "evidenceUrl": "https://ir.applieddigital.com/news-events/press-releases/detail/157/applied-digital-delivers-second-building-at-polaris-forge-1",
+          "notes": "Three contracted buildings at full build-out."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Applied Digital",
+          "title": "Applied Digital Delivers Second Building at Polaris Forge 1",
+          "url": "https://ir.applieddigital.com/news-events/press-releases/detail/157/applied-digital-delivers-second-building-at-polaris-forge-1",
+          "documentType": "company_press_release",
+          "publishedOn": "2026-07-01",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "Ellendale"
+            },
+            {
+              "field": "capacity",
+              "statement": "175 MW live"
+            },
+            {
+              "field": "capacity",
+              "statement": "400 MW critical IT"
+            },
+            {
+              "field": "capacity",
+              "statement": "Building 2 Phase 1 75 MW"
+            }
+          ]
+        },
+        {
+          "publisher": "Applied Digital",
+          "title": "Ready for Service Phase 1 Building 1 for CoreWeave",
+          "url": "https://ir.applieddigital.com/news-events/press-releases/detail/133/applied-digital-achieves-ready-for-service-for-phase-1-at",
+          "documentType": "company_press_release",
+          "publishedOn": "2025-10-27",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "compute_relationship",
+              "statement": "CoreWeave tenant"
+            },
+            {
+              "field": "capacity",
+              "statement": "50 MW phase 1"
+            },
+            {
+              "field": "capacity",
+              "statement": "400 MW / ~15-year leases"
+            },
+            {
+              "field": "lifecycle_status",
+              "statement": "ready for service 2025-10-27"
+            }
+          ]
+        },
+        {
+          "publisher": "Applied Digital",
+          "title": "Completes Phase II RFS, first 100 MW building",
+          "url": "https://ir.applieddigital.com/news-events/press-releases/detail/137/applied-digital-completes-phase-ii-ready-for-service-at",
+          "documentType": "company_press_release",
+          "publishedOn": "2025-11-24",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "capacity",
+              "statement": "Building 1 100 MW"
+            },
+            {
+              "field": "compute_relationship",
+              "statement": "CoreWeave 400 MW"
+            }
+          ]
+        },
+        {
+          "publisher": "North Dakota DEQ",
+          "title": "Air Pollution Control Permit to Construct — ELN Generation Plant",
+          "url": "https://deq.nd.gov/aq/Notices/AppliedDigital/DRAFT_ACP18338v1_0.pdf",
+          "documentType": "permit",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "location",
+              "statement": "9663 87th Ave SE Ellendale"
+            },
+            {
+              "field": "coordinates",
+              "statement": "9663 87th Ave SE Ellendale, ND 58436"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "9663 vs 9685 87th Ave SE (adjacent campus addressing).",
+          "Square footage not in Applied Digital IR PRs reviewed."
+        ]
+      },
+      "requestedPublicationState": "published"
+    },
+    {
+      "researchKey": "iren-childress",
+      "canonicalName": "IREN Childress Campus",
+      "category": "data_center",
+      "ownerName": "IREN",
+      "operatorName": "IREN",
+      "aliases": [
+        {
+          "alias": "Iris Energy Childress",
+          "kind": "alias",
+          "authority": null
+        },
+        {
+          "alias": "TABS2024024946",
+          "kind": "source_identifier",
+          "authority": "Texas Department of Licensing and Regulation"
+        },
+        {
+          "alias": "IE US Development Holdings 3 — Childress",
+          "kind": "former_name",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": "620 FM 1033",
+        "locality": "Childress",
+        "adminArea": "TX",
+        "countryName": "United States",
+        "countryCode": "US",
+        "latitude": 34.3807907,
+        "longitude": -100.0588831,
+        "coordinatePrecision": "street",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "TDLR TABS project Iris-Childress Data Center, owner IE US Development Holdings 3 Inc., location 620 FM 1033, Childress TX 79201. Nominatim snapped to the US 287/FM 1033 highway, not a building footprint. 576-acre campus per IREN."
+      },
+      "lifecycle": {
+        "status": "expansion",
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": null
+      },
+      "facts": [
+        {
+          "key": "campus_capacity_mw",
+          "numericValue": 750,
+          "unit": "MW",
+          "evidenceUrl": "https://www.iren.com/data-centers/childress",
+          "notes": null
+        },
+        {
+          "key": "site_area_acres",
+          "numericValue": 576,
+          "unit": "acres",
+          "evidenceUrl": "https://www.iren.com/data-centers/childress",
+          "notes": null
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "IREN",
+          "title": "Childress Data Center",
+          "url": "https://www.iren.com/data-centers/childress",
+          "documentType": "company_facility_page",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "capacity",
+              "statement": "750 MW"
+            },
+            {
+              "field": "capacity",
+              "statement": "576 acres"
+            },
+            {
+              "field": "location",
+              "statement": "Childress TX"
+            },
+            {
+              "field": "power",
+              "statement": "ERCOT"
+            },
+            {
+              "field": "power",
+              "statement": "IREN-owned substations"
+            }
+          ]
+        },
+        {
+          "publisher": "Texas Department of Licensing and Regulation",
+          "title": "TABS2024024946 Iris - Childress Data Center",
+          "url": "https://www.tdlr.texas.gov/TABS/Search/Print/TABS2024024946",
+          "documentType": "permit",
+          "publishedOn": "2024-08-07",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "location",
+              "statement": "620 FM 1033"
+            },
+            {
+              "field": "coordinates",
+              "statement": "620 FM 1033, Childress TX 79201"
+            },
+            {
+              "field": "owner",
+              "statement": "IE US Development Holdings 3 Inc."
+            }
+          ]
+        },
+        {
+          "publisher": "IREN",
+          "title": "IREN Signs $9.7 Billion Agreement with Microsoft",
+          "url": "https://iren.com/resources/blog/iren-signs97-billion-agreement-with-microsoft-to-deploy-ai-cloud-infrastructure",
+          "documentType": "company_press_release",
+          "publishedOn": "2025-11-03",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "capacity",
+              "statement": "750 MW campus"
+            },
+            {
+              "field": "compute_hardware",
+              "statement": "Horizon 1-4"
+            },
+            {
+              "field": "capacity",
+              "statement": "200 MW IT"
+            },
+            {
+              "field": "compute_hardware",
+              "statement": "GB300"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "Highway geocode is coarse for a 576-acre site.",
+          "How much of 750 MW is AI vs other loads is not fully broken out on the location page."
+        ]
+      },
+      "requestedPublicationState": "published"
+    },
+    {
+      "researchKey": "meta-new-albany",
+      "canonicalName": "Meta New Albany Data Center",
+      "category": "data_center",
+      "ownerName": "Meta",
+      "operatorName": "Meta",
+      "aliases": [
+        {
+          "alias": "New Albany Data Center",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": "1500 Beech Road",
+        "locality": "New Albany",
+        "adminArea": "OH",
+        "countryName": "United States",
+        "countryCode": "US",
+        "latitude": 40.065362,
+        "longitude": -82.754612,
+        "coordinatePrecision": "campus",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The Columbus Dispatch (2025-09-26) states Meta's campus is at 1500 Beech Road in the Licking County portion of New Albany, citing Meta's 2017/2022 announcements and a Meta spokesperson. Meta's official New Albany page does not print the street."
+      },
+      "lifecycle": {
+        "status": "expansion",
+        "announcedDate": "2017-01-01",
+        "constructionStartDate": null,
+        "operationalDate": null
+      },
+      "facts": [],
+      "evidence": [
+        {
+          "publisher": "Meta",
+          "title": "Here is how the New Albany Data Center is supporting the long-term vitality of Ohio",
+          "url": "https://datacenters.atmeta.com/ohio-new-albany/",
+          "documentType": "company_facility_page",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "New Albany campus"
+            },
+            {
+              "field": "dates",
+              "statement": "broke ground 2017"
+            }
+          ]
+        },
+        {
+          "publisher": "Meta",
+          "title": "United States locations",
+          "url": "https://datacenters.atmeta.com/us-locations/",
+          "documentType": "company_facility_page",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "capacity",
+              "statement": "$1.5B+ investment"
+            },
+            {
+              "field": "dates",
+              "statement": "2017 groundbreak"
+            }
+          ]
+        },
+        {
+          "publisher": "The Columbus Dispatch",
+          "title": "Meta grows Ohio data center site, aiming for record-breaking capacity",
+          "url": "https://www.dispatch.com/story/business/information-technology/2025/09/26/meta-facebook-data-center-new-albany-ohio/86314973007/",
+          "documentType": "industry_press",
+          "publishedOn": "2025-09-26",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "location",
+              "statement": "1500 Beech Road"
+            },
+            {
+              "field": "coordinates",
+              "statement": "1500 Beech Road, New Albany, Licking County"
+            },
+            {
+              "field": "compute_relationship",
+              "statement": "Prometheus confirmed in New Albany by Meta spokesperson"
+            },
+            {
+              "field": "capacity",
+              "statement": "≥900,000 sq ft addition"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "Street is from reputable local press citing Meta, not Meta's HTML facility page.",
+          "Campus MW not on Meta official pages reviewed.",
+          "announcedDate is recorded as 2017-01-01 because the sources give the year only."
+        ]
+      },
+      "requestedPublicationState": "published"
+    },
+    {
+      "researchKey": "microsoft-fairwater-mount-pleasant",
+      "canonicalName": "Microsoft Fairwater Mount Pleasant",
+      "category": "data_center",
+      "ownerName": "Microsoft",
+      "operatorName": "Microsoft",
+      "aliases": [
+        {
+          "alias": "Fairwater Wisconsin",
+          "kind": "alias",
+          "authority": null
+        },
+        {
+          "alias": "Microsoft Mount Pleasant datacenter campus",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": "4800 90th Street",
+        "locality": "Mount Pleasant",
+        "adminArea": "WI",
+        "countryName": "United States",
+        "countryCode": "US",
+        "latitude": 42.6748702,
+        "longitude": -87.894888,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Wisconsin DNR facility record lists 4800 90th ST, Mount Pleasant WI 53403. Village of Mount Pleasant also approved a related campus site plan at 12023 Durand Avenue (expansion parcel). First operational Fairwater building vs later expansion parcels are not fully disambiguated in Microsoft's own pages."
+      },
+      "lifecycle": {
+        "status": "expansion",
+        "announcedDate": "2024-05-08",
+        "constructionStartDate": null,
+        "operationalDate": "2026-06-23"
+      },
+      "facts": [
+        {
+          "key": "site_area_acres",
+          "numericValue": 315,
+          "unit": "acres",
+          "evidenceUrl": "https://blogs.microsoft.com/blog/2025/09/18/inside-the-worlds-most-powerful-ai-datacenter/",
+          "notes": null
+        },
+        {
+          "key": "floor_area_sqft",
+          "numericValue": 1200000,
+          "unit": "sqft",
+          "evidenceUrl": "https://blogs.microsoft.com/blog/2025/09/18/inside-the-worlds-most-powerful-ai-datacenter/",
+          "notes": null
+        },
+        {
+          "key": "building_count",
+          "numericValue": 3,
+          "unit": null,
+          "evidenceUrl": "https://blogs.microsoft.com/blog/2025/09/18/inside-the-worlds-most-powerful-ai-datacenter/",
+          "notes": null
+        },
+        {
+          "key": "accelerator_platform",
+          "textValue": "NVIDIA GB200 NVL72",
+          "evidenceUrl": "https://blogs.microsoft.com/blog/2025/09/18/inside-the-worlds-most-powerful-ai-datacenter/",
+          "notes": "Microsoft states GB200 NVL72 racks and 'hundreds of thousands' of GPUs; no count is published, so none is recorded."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Microsoft",
+          "title": "Microsoft completes construction on first datacenter facility in Mount Pleasant, Wisconsin",
+          "url": "https://news.microsoft.com/source/2026/06/23/microsoft-completes-construction-on-first-datacenter-facility-in-mount-pleasant-wisconsin/",
+          "documentType": "company_press_release",
+          "publishedOn": "2026-06-23",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "lifecycle_status",
+              "statement": "first facility complete and operational"
+            },
+            {
+              "field": "dates",
+              "statement": "operational 2026-06-23"
+            },
+            {
+              "field": "dates",
+              "statement": "second facility 2028"
+            },
+            {
+              "field": "dates",
+              "statement": "announced May 2024"
+            },
+            {
+              "field": "compute_hardware",
+              "statement": "Fairwater supercomputer claim"
+            }
+          ]
+        },
+        {
+          "publisher": "Microsoft",
+          "title": "Inside the world's most powerful AI datacenter",
+          "url": "https://blogs.microsoft.com/blog/2025/09/18/inside-the-worlds-most-powerful-ai-datacenter/",
+          "documentType": "company_facility_page",
+          "publishedOn": "2025-09-18",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "capacity",
+              "statement": "315 acres"
+            },
+            {
+              "field": "capacity",
+              "statement": "1.2 million sq ft"
+            },
+            {
+              "field": "capacity",
+              "statement": "three buildings"
+            },
+            {
+              "field": "compute_hardware",
+              "statement": "NVIDIA GB200"
+            },
+            {
+              "field": "compute_hardware",
+              "statement": "hundreds of thousands of GPUs"
+            }
+          ]
+        },
+        {
+          "publisher": "Microsoft",
+          "title": "Microsoft announces $3.3 billion investment in Wisconsin",
+          "url": "https://www.prnewswire.com/news-releases/microsoft-announces-3-3-billion-investment-in-wisconsin-to-spur-artificial-intelligence-innovation-and-economic-growth-302139892.html",
+          "documentType": "company_press_release",
+          "publishedOn": "2024-05-08",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "dates",
+              "statement": "announced 2024-05-08"
+            },
+            {
+              "field": "identity",
+              "statement": "Mount Pleasant campus"
+            }
+          ]
+        },
+        {
+          "publisher": "Wisconsin DNR",
+          "title": "Microsoft Mount Pleasant Data Centers facility record",
+          "url": "https://apps.dnr.wi.gov/warp_ext/am_permittracking2.aspx?id=35961",
+          "documentType": "government_record",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "location",
+              "statement": "street address 4800 90th ST"
+            },
+            {
+              "field": "coordinates",
+              "statement": "4800 90th ST, Mount Pleasant WI 53403"
+            }
+          ]
+        },
+        {
+          "publisher": "Village of Mount Pleasant",
+          "title": "Plan Commission minutes — 12023 Durand Avenue site plan SP-24-23",
+          "url": "https://www.mtpleasantwi.gov/Archive/ViewFile/Item/4381",
+          "documentType": "planning",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "location",
+              "statement": "Durand Avenue campus expansion parcel"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "Which parcel is the first operational Fairwater building (4800 90th vs Durand/International Drive expansion sites).",
+          "Exact GPU count not disclosed (only 'hundreds of thousands')."
+        ]
+      },
+      "requestedPublicationState": "published"
+    },
+    {
+      "researchKey": "aws-cumulus-susquehanna",
+      "canonicalName": "AWS Cumulus Data Center Campus (Susquehanna)",
+      "category": "data_center",
+      "ownerName": "Amazon Data Services / AWS",
+      "operatorName": "AWS",
+      "aliases": [
+        {
+          "alias": "Cumulus Data campus",
+          "kind": "alias",
+          "authority": null
+        },
+        {
+          "alias": "AWS campus adjacent to Susquehanna",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": null,
+        "locality": "Salem Township",
+        "adminArea": "PA",
+        "countryName": "United States",
+        "countryCode": "US",
+        "latitude": null,
+        "longitude": null,
+        "coordinatePrecision": null,
+        "coordinateMethod": null,
+        "coordinateNotes": "Talen states the AWS campus is adjacent to Susquehanna. Plant coordinates are recorded on the distinct power record and are not reused as the data-center pin."
+      },
+      "lifecycle": {
+        "status": "expansion",
+        "announcedDate": "2024-03-04",
+        "constructionStartDate": null,
+        "operationalDate": null
+      },
+      "facts": [
+        {
+          "key": "campus_capacity_mw",
+          "numericValue": 960,
+          "unit": "MW",
+          "evidenceUrl": "https://ir.talenenergy.com/news-releases/news-release-details/talen-energy-announces-sale-zero-carbon-data-center-campus/",
+          "notes": "The 2024 development envelope Talen disclosed at sale, not an operating load."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Talen Energy",
+          "title": "Talen Energy Announces Sale of Zero-Carbon Data Center Campus",
+          "url": "https://ir.talenenergy.com/news-releases/news-release-details/talen-energy-announces-sale-zero-carbon-data-center-campus/",
+          "documentType": "company_press_release",
+          "publishedOn": "2024-03-04",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "sale of 960 MW Cumulus data center campus in northeast Pennsylvania"
+            },
+            {
+              "field": "capacity",
+              "statement": "960 MW campus"
+            },
+            {
+              "field": "power",
+              "statement": "value through sale of power from Susquehanna nuclear plant"
+            }
+          ]
+        },
+        {
+          "publisher": "Talen Energy",
+          "title": "Powering Data",
+          "url": "https://www.talenenergy.com/powering-data/",
+          "documentType": "company_facility_page",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "location",
+              "statement": "AWS data center campus adjacent to Susquehanna"
+            },
+            {
+              "field": "power",
+              "statement": "behind-the-meter and front-of-the-meter arrangements"
+            },
+            {
+              "field": "dates",
+              "statement": "March 2024 transaction; June 2025 expansion to grid supply in Pennsylvania"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "No public street address for the AWS campus footprint.",
+          "Operational occupancy vs shell/powered-land status as of 2026-09-17 is not stated on the Talen pages fetched."
+        ]
+      },
+      "requestedPublicationState": "research"
+    },
+    {
+      "researchKey": "fermi-project-matador-campus",
+      "canonicalName": "Fermi America Project Matador Compute Campus",
+      "category": "data_center",
+      "ownerName": "Fermi America / Fermi Inc.",
+      "operatorName": null,
+      "aliases": [
+        {
+          "alias": "Project Matador",
+          "kind": "alias",
+          "authority": null
+        },
+        {
+          "alias": "President Donald J. Trump Advanced Energy and Intelligence Campus",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": null,
+        "locality": null,
+        "adminArea": "TX",
+        "countryName": "United States",
+        "countryCode": "US",
+        "latitude": null,
+        "longitude": null,
+        "coordinatePrecision": null,
+        "coordinateMethod": null,
+        "coordinateNotes": "TCEQ places the project in Carson County, Texas. No street address was in the TCEQ extract fetched."
+      },
+      "lifecycle": {
+        "status": "under_construction",
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": null
+      },
+      "facts": [],
+      "evidence": [
+        {
+          "publisher": "Texas Commission on Environmental Quality",
+          "title": "Fermi America Project Matador air-permit narrative",
+          "url": "https://records.tceq.texas.gov/cs/idcplg?IdcService=GET_FILE&allowInterrupt=1&dDocName=8281238&dID=9562398",
+          "documentType": "permit",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "location",
+              "statement": "greenfield Carson County TX site"
+            },
+            {
+              "field": "identity",
+              "statement": "power plant named Fermi America Project Matador"
+            },
+            {
+              "field": "compute_relationship",
+              "statement": "electricity solely for on-site hyperscale data center / AI infrastructure"
+            },
+            {
+              "field": "power",
+              "statement": "not sold to the local utility grid"
+            }
+          ]
+        },
+        {
+          "publisher": "KVII / ABC7 Amarillo",
+          "title": "Fermi signs $6.5 billion lease for data center",
+          "url": "https://abc7amarillo.com/news/local/fermi-america-signs-six-point-five-billion-dollar-lease-for-worlds-largest-data-center-after-months-of-turmoil-tensorwave-amarillo-texas-carson-county-water-city-council-greg-abbott-audir",
+          "documentType": "industry_press",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "location",
+              "statement": "Carson County northeast of Amarillo"
+            },
+            {
+              "field": "compute_relationship",
+              "statement": "TensorWave 15-year lease; 222 MW supplied data center"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "medium",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "Street address unknown.",
+          "TensorWave/AMD claims are local-TV only.",
+          "Campus vs power-plant polygons not separated in public maps used here."
+        ]
+      },
+      "requestedPublicationState": "research"
+    },
+    {
+      "researchKey": "google-hamina",
+      "canonicalName": "Google Hamina Data Center",
+      "category": "data_center",
+      "ownerName": "Google",
+      "operatorName": "Google",
+      "aliases": [
+        {
+          "alias": "Hamina data centre",
+          "kind": "alias",
+          "authority": null
+        },
+        {
+          "alias": "Summa mill campus",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": null,
+        "locality": "Hamina",
+        "adminArea": null,
+        "countryName": "Finland",
+        "countryCode": "FI",
+        "latitude": null,
+        "longitude": null,
+        "coordinatePrecision": null,
+        "coordinateMethod": null,
+        "coordinateNotes": "Google page: purchased Summa paper mill in 2009. A 'Summa paper mill' Nominatim query did not return a usable industrial pin (snapped to an unrelated business)."
+      },
+      "lifecycle": {
+        "status": "expansion",
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": null
+      },
+      "facts": [],
+      "evidence": [
+        {
+          "publisher": "Google",
+          "title": "Hamina, Finland data center location",
+          "url": "https://datacenters.google/locations/hamina-finland",
+          "documentType": "company_facility_page",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "Hamina Finland data centre"
+            },
+            {
+              "field": "location",
+              "statement": "Summa paper mill purchased 2009"
+            },
+            {
+              "field": "dates",
+              "statement": "first data centre opened 2011; seventh data centre construction announced 2024"
+            },
+            {
+              "field": "capacity",
+              "statement": "€3.5B invested to date"
+            },
+            {
+              "field": "contact",
+              "statement": "contact googlehaminadc@google.com"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "No geocodable street on the Google page.",
+          "AI-goal investment is not a documented GPU SKU at this campus."
+        ]
+      },
+      "requestedPublicationState": "research"
+    },
+    {
+      "researchKey": "lumi-supercomputer",
+      "canonicalName": "LUMI Supercomputer",
+      "category": "gpu_compute_cluster",
+      "ownerName": "EuroHPC Joint Undertaking",
+      "operatorName": "CSC – IT Center for Science / LUMI consortium",
+      "aliases": [
+        {
+          "alias": "LUMI",
+          "kind": "alias",
+          "authority": null
+        },
+        {
+          "alias": "EuroHPC LUMI",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": "Tehdaskatu 15",
+        "locality": "Kajaani",
+        "adminArea": "Kainuu",
+        "countryName": "Finland",
+        "countryCode": "FI",
+        "latitude": 64.2319866,
+        "longitude": 27.691477,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Same host building as CSC Kajaani. Shared coordinates do not make this a duplicate of the data-center record."
+      },
+      "lifecycle": {
+        "status": "operational",
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": null
+      },
+      "facts": [
+        {
+          "key": "system_vendor",
+          "textValue": "HPE Cray EX",
+          "evidenceUrl": "https://www.eurohpc-ju.europa.eu/supercomputers/our-supercomputers_en",
+          "notes": "EuroHPC names the system family. No GPU model is recorded: the research package declined to copy one from TOP500."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "EuroHPC Joint Undertaking",
+          "title": "Our Supercomputers — LUMI",
+          "url": "https://www.eurohpc-ju.europa.eu/supercomputers/our-supercomputers_en",
+          "documentType": "government_record",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "LUMI located in Kajaani Finland"
+            },
+            {
+              "field": "compute_relationship",
+              "statement": "hosted by CSC"
+            },
+            {
+              "field": "compute_hardware",
+              "statement": "HPE Cray EX"
+            },
+            {
+              "field": "compute_hardware",
+              "statement": "pre-exascale"
+            }
+          ]
+        },
+        {
+          "publisher": "CSC",
+          "title": "Datacenter Kajaani address",
+          "url": "https://research.csc.fi/topic/lumi-supercomputer/",
+          "documentType": "company_facility_page",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "location",
+              "statement": "Tehdaskatu 15, 87100 Kajaani"
+            },
+            {
+              "field": "coordinates",
+              "statement": "Tehdaskatu 15, 87100 Kajaani"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "GPU model not taken from TOP500."
+        ]
+      },
+      "requestedPublicationState": "published"
+    },
+    {
+      "researchKey": "jupiter-supercomputer",
+      "canonicalName": "JUPITER Supercomputer",
+      "category": "gpu_compute_cluster",
+      "ownerName": "EuroHPC Joint Undertaking",
+      "operatorName": "Jülich Supercomputing Centre",
+      "aliases": [
+        {
+          "alias": "JUPITER Booster",
+          "kind": "alias",
+          "authority": null
+        },
+        {
+          "alias": "EuroHPC JUPITER",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": "Wilhelm-Johnen-Straße",
+        "locality": "Jülich",
+        "adminArea": "North Rhine-Westphalia",
+        "countryName": "Germany",
+        "countryCode": "DE",
+        "latitude": 50.9000601,
+        "longitude": 6.3931009,
+        "coordinatePrecision": "street",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Same FZJ campus pin as the host record."
+      },
+      "lifecycle": {
+        "status": "operational",
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": null
+      },
+      "facts": [
+        {
+          "key": "accelerator_platform",
+          "textValue": "NVIDIA GH200 Grace Hopper Superchip",
+          "evidenceUrl": "https://www.eurohpc-ju.europa.eu/two-new-eurohpc-systems-join-top500-jupiter-remains-among-worlds-fastest-supercomputers-2026-06-23_en",
+          "notes": null
+        },
+        {
+          "key": "accelerator_count",
+          "numericValue": 24000,
+          "unit": null,
+          "evidenceUrl": "https://www.eurohpc-ju.europa.eu/two-new-eurohpc-systems-join-top500-jupiter-remains-among-worlds-fastest-supercomputers-2026-06-23_en",
+          "notes": "EuroHPC states 'approximately 24,000'. The number is the source's approximation, not a count Urdais has verified."
+        },
+        {
+          "key": "system_vendor",
+          "textValue": "BullSequana XH3000",
+          "evidenceUrl": "https://www.eurohpc-ju.europa.eu/two-new-eurohpc-systems-join-top500-jupiter-remains-among-worlds-fastest-supercomputers-2026-06-23_en",
+          "notes": null
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "EuroHPC Joint Undertaking",
+          "title": "Two New EuroHPC Systems Join the TOP500 as JUPITER Remains Among the World's Fastest Supercomputers",
+          "url": "https://www.eurohpc-ju.europa.eu/two-new-eurohpc-systems-join-top500-jupiter-remains-among-worlds-fastest-supercomputers-2026-06-23_en",
+          "documentType": "government_record",
+          "publishedOn": "2026-06-23",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "compute_relationship",
+              "statement": "hosted by Jülich Supercomputing Centre"
+            },
+            {
+              "field": "identity",
+              "statement": "Europe's first exascale supercomputer"
+            },
+            {
+              "field": "compute_hardware",
+              "statement": "BullSequana XH3000"
+            },
+            {
+              "field": "compute_hardware",
+              "statement": "approximately 24,000 NVIDIA GH200"
+            }
+          ]
+        },
+        {
+          "publisher": "Forschungszentrum Jülich",
+          "title": "JUPITER — Exascale for Europe",
+          "url": "https://www.fz-juelich.de/en/jsc/jupiter",
+          "documentType": "government_record",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "location",
+              "statement": "located at Forschungszentrum Jülich"
+            },
+            {
+              "field": "coordinates",
+              "statement": "Wilhelm-Johnen-Straße address"
+            },
+            {
+              "field": "compute_hardware",
+              "statement": "exascale threshold"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "Accelerator count is 'approximately 24,000'."
+        ]
+      },
+      "requestedPublicationState": "published"
+    },
+    {
+      "researchKey": "coreweave-polaris-forge-1",
+      "canonicalName": "CoreWeave Polaris Forge 1 GPU Deployment",
+      "category": "gpu_compute_cluster",
+      "ownerName": "CoreWeave",
+      "operatorName": "CoreWeave",
+      "aliases": [
+        {
+          "alias": "CoreWeave Ellendale",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": "9663 87th Ave SE",
+        "locality": "Ellendale",
+        "adminArea": "ND",
+        "countryName": "United States",
+        "countryCode": "US",
+        "latitude": 46.0214191,
+        "longitude": -98.5685326,
+        "coordinatePrecision": "campus",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Same campus as applied-digital-polaris-forge-1."
+      },
+      "lifecycle": {
+        "status": "expansion",
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": "2025-10-27"
+      },
+      "facts": [
+        {
+          "key": "contracted_it_capacity_mw",
+          "numericValue": 400,
+          "unit": "MW",
+          "evidenceUrl": "https://ir.applieddigital.com/news-events/press-releases/detail/133/applied-digital-achieves-ready-for-service-for-phase-1-at",
+          "notes": "Stated by the landlord, not by CoreWeave. No GPU model or count is recorded because neither party published one for this site."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Applied Digital",
+          "title": "Ready for Service Phase 1 Building 1 for CoreWeave",
+          "url": "https://ir.applieddigital.com/news-events/press-releases/detail/133/applied-digital-achieves-ready-for-service-for-phase-1-at",
+          "documentType": "company_press_release",
+          "publishedOn": "2025-10-27",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "CoreWeave tenant"
+            },
+            {
+              "field": "location",
+              "statement": "Polaris Forge 1, Ellendale ND"
+            },
+            {
+              "field": "coordinates",
+              "statement": "Polaris Forge 1 campus, Ellendale ND"
+            },
+            {
+              "field": "capacity",
+              "statement": "400 MW"
+            },
+            {
+              "field": "compute_relationship",
+              "statement": "CoreWeave is the hyperscale tenant of the 400 MW deployment"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "No CoreWeave-issued GPU SKU/count for Ellendale in sources reviewed."
+        ]
+      },
+      "requestedPublicationState": "published"
+    },
+    {
+      "researchKey": "iren-horizon-1",
+      "canonicalName": "IREN Horizon 1",
+      "category": "gpu_compute_cluster",
+      "ownerName": "IREN",
+      "operatorName": "IREN",
+      "aliases": [
+        {
+          "alias": "Horizon 1 Childress",
+          "kind": "alias",
+          "authority": null
+        },
+        {
+          "alias": "Microsoft Childress GB300 deployment",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": "620 FM 1033",
+        "locality": "Childress",
+        "adminArea": "TX",
+        "countryName": "United States",
+        "countryCode": "US",
+        "latitude": 34.3807907,
+        "longitude": -100.0588831,
+        "coordinatePrecision": "street",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "On IREN Childress campus; Horizon 1 is not given a separate street."
+      },
+      "lifecycle": {
+        "status": "operational",
+        "announcedDate": "2025-11-03",
+        "constructionStartDate": null,
+        "operationalDate": "2026-08-13"
+      },
+      "facts": [
+        {
+          "key": "critical_it_capacity_mw",
+          "numericValue": 50,
+          "unit": "MW",
+          "evidenceUrl": "https://www.sec.gov/Archives/edgar/data/1878848/000114036126032638/ef20080141_ex99-1.htm",
+          "notes": null
+        },
+        {
+          "key": "accelerator_platform",
+          "textValue": "NVIDIA GB300 NVL72",
+          "evidenceUrl": "https://www.sec.gov/Archives/edgar/data/1878848/000114036126032638/ef20080141_ex99-1.htm",
+          "notes": "The platform is filed; the accelerator count is not disclosed and is therefore not recorded."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "IREN",
+          "title": "IREN Delivers Horizon 1 to Microsoft (Exhibit 99.1 / 8-K)",
+          "url": "https://www.sec.gov/Archives/edgar/data/1878848/000114036126032638/ef20080141_ex99-1.htm",
+          "documentType": "sec_filing",
+          "publishedOn": "2026-08-13",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "lifecycle_status",
+              "statement": "Horizon 1 delivered and accepted"
+            },
+            {
+              "field": "compute_hardware",
+              "statement": "GB300 NVL72"
+            },
+            {
+              "field": "capacity",
+              "statement": "50 MW IT"
+            },
+            {
+              "field": "location",
+              "statement": "Childress"
+            },
+            {
+              "field": "coordinates",
+              "statement": "Childress, Texas campus"
+            }
+          ]
+        },
+        {
+          "publisher": "IREN",
+          "title": "8-K announcing Microsoft Partner SOW",
+          "url": "https://www.sec.gov/Archives/edgar/data/1878848/000114036125040072/ef20058139_ex99-1.htm",
+          "documentType": "sec_filing",
+          "publishedOn": "2025-11-03",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "compute_relationship",
+              "statement": "$9.7B Microsoft agreement"
+            },
+            {
+              "field": "compute_hardware",
+              "statement": "GB300"
+            },
+            {
+              "field": "identity",
+              "statement": "Horizon 1-4"
+            },
+            {
+              "field": "capacity",
+              "statement": "200 MW IT"
+            },
+            {
+              "field": "location",
+              "statement": "Childress"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "GPU count not disclosed.",
+          "Horizons 2–4 not yet accepted as of the 2026-08-13 8-K."
+        ]
+      },
+      "requestedPublicationState": "published"
+    },
+    {
+      "researchKey": "meta-prometheus",
+      "canonicalName": "Meta Prometheus",
+      "category": "gpu_compute_cluster",
+      "ownerName": "Meta",
+      "operatorName": "Meta",
+      "aliases": [
+        {
+          "alias": "Prometheus supercluster",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": "1500 Beech Road",
+        "locality": "New Albany",
+        "adminArea": "OH",
+        "countryName": "United States",
+        "countryCode": "US",
+        "latitude": 40.065362,
+        "longitude": -82.754612,
+        "coordinatePrecision": "campus",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Same New Albany campus as meta-new-albany. Prometheus spans multiple buildings plus weatherproof tents and adjacent colocation per Meta Engineering; not a separately addressed building."
+      },
+      "lifecycle": {
+        "status": "under_construction",
+        "announcedDate": "2025-07-01",
+        "constructionStartDate": null,
+        "operationalDate": null
+      },
+      "facts": [
+        {
+          "key": "cluster_capacity_mw",
+          "numericValue": 1000,
+          "unit": "MW",
+          "evidenceUrl": "https://engineering.fb.com/2025/09/29/data-infrastructure/metas-infrastructure-evolution-and-the-advent-of-ai/",
+          "notes": "Meta Engineering describes a 1-gigawatt cluster. No GPU vendor or model is stated for Prometheus and none is recorded."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Meta Engineering",
+          "title": "Meta's Infrastructure Evolution and the Advent of AI",
+          "url": "https://engineering.fb.com/2025/09/29/data-infrastructure/metas-infrastructure-evolution-and-the-advent-of-ai/",
+          "documentType": "company_facility_page",
+          "publishedOn": "2025-09-29",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "1 GW Prometheus"
+            },
+            {
+              "field": "capacity",
+              "statement": "multi-building plus tents"
+            },
+            {
+              "field": "compute_hardware",
+              "statement": "tens of thousands of GPUs"
+            }
+          ]
+        },
+        {
+          "publisher": "The Columbus Dispatch",
+          "title": "Meta grows Ohio data center site, aiming for record-breaking capacity",
+          "url": "https://www.dispatch.com/story/business/information-technology/2025/09/26/meta-facebook-data-center-new-albany-ohio/86314973007/",
+          "documentType": "industry_press",
+          "publishedOn": "2025-09-26",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "location",
+              "statement": "Prometheus in New Albany"
+            },
+            {
+              "field": "coordinates",
+              "statement": "1500 Beech Road, New Albany"
+            },
+            {
+              "field": "dates",
+              "statement": "expected 2026"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "Whether Prometheus was fully online by 2026-09-17 is not confirmed on Meta's own pages.",
+          "GPU vendor/model for Prometheus not stated in the Engineering post.",
+          "announcedDate is recorded as 2025-07-01 because the source gives the month only.",
+          "Zuckerberg July 2025 social post not independently archived; the Dispatch attributes the 2026 online target to him."
+        ]
+      },
+      "requestedPublicationState": "published"
+    },
+    {
+      "researchKey": "tsmc-fab-18-tainan",
+      "canonicalName": "TSMC Fab 18 (Tainan / Southern Taiwan Science Park)",
+      "category": "semiconductor_fab",
+      "ownerName": "TSMC",
+      "operatorName": "TSMC",
+      "aliases": [
+        {
+          "alias": "Fab 18A",
+          "kind": "alias",
+          "authority": null
+        },
+        {
+          "alias": "Fab 18B",
+          "kind": "alias",
+          "authority": null
+        },
+        {
+          "alias": "TSMC Model Fab",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": "8, Beiyuan Rd. 2, Southern Taiwan Science Park",
+        "locality": "Tainan",
+        "adminArea": "Tainan",
+        "countryName": "Taiwan",
+        "countryCode": "TW",
+        "latitude": 23.116067,
+        "longitude": 120.2614511,
+        "coordinatePrecision": "campus",
+        "coordinateMethod": "campus_centroid",
+        "coordinateNotes": "18A and 18B share the same published street. Pin is OSM named feature 台積電南科18廠, not a surveyed building footprint."
+      },
+      "lifecycle": {
+        "status": "operational",
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": null
+      },
+      "facts": [],
+      "evidence": [
+        {
+          "publisher": "TSMC",
+          "title": "TSMC Fabs directory",
+          "url": "https://www.tsmc.com/english/aboutTSMC/TSMC_Fabs",
+          "documentType": "company_facility_page",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "Fab 18A and Fab 18B"
+            },
+            {
+              "field": "location",
+              "statement": "8, Beiyuan Rd. 2, Southern Taiwan Science Park, Tainan 745-093"
+            },
+            {
+              "field": "coordinates",
+              "statement": "8, Beiyuan Rd. 2, Southern Taiwan Science Park, Tainan 745-093"
+            }
+          ]
+        },
+        {
+          "publisher": "NIST / CHIPS Program Office",
+          "title": "Draft Environmental Assessment for TSMC Arizona",
+          "url": "https://www.nist.gov/system/files/documents/2024/06/04/TSMC%20Draft%20EA%20June%203%202024%20.pdf",
+          "documentType": "government_record",
+          "publishedOn": "2024-06-03",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "Fab 18 in Tainan is the Model Fab copied for TSMC Arizona"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "Nodes/capacity not on the directory page.",
+          "18A vs 18B building footprints not separated."
+        ]
+      },
+      "requestedPublicationState": "published"
+    },
+    {
+      "researchKey": "tsmc-arizona-phoenix",
+      "canonicalName": "TSMC Arizona Phoenix Campus",
+      "category": "semiconductor_fab",
+      "ownerName": "TSMC Arizona Corporation",
+      "operatorName": "TSMC",
+      "aliases": [
+        {
+          "alias": "TSMC Arizona Corporation",
+          "kind": "alias",
+          "authority": null
+        },
+        {
+          "alias": "TSMC Fab 21",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": "5088 W. Innovation Circle",
+        "locality": "Phoenix",
+        "adminArea": "AZ",
+        "countryName": "United States",
+        "countryCode": "US",
+        "latitude": 33.7778581,
+        "longitude": -112.1621572,
+        "coordinatePrecision": "campus",
+        "coordinateMethod": "campus_centroid",
+        "coordinateNotes": "Official street did not geocode in Nominatim. Pin is the OSM named feature 'TSMC Arizona Fab 21' in Phoenix. TSMC's own fabs directory does not use the Fab 21 number."
+      },
+      "lifecycle": {
+        "status": "expansion",
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": null
+      },
+      "facts": [
+        {
+          "key": "process_nodes",
+          "textValue": "N4, N5, N3, N2, A16",
+          "evidenceUrl": "https://www.nist.gov/chips/tsmc-arizona-phoenix",
+          "notes": "As stated per fab in the NIST CHIPS award write-up. TSMC's own directory page does not list nodes for this campus."
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "TSMC",
+          "title": "TSMC Fabs directory",
+          "url": "https://www.tsmc.com/english/aboutTSMC/TSMC_Fabs",
+          "documentType": "company_facility_page",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "TSMC Arizona Corporation"
+            },
+            {
+              "field": "location",
+              "statement": "5088 W. Innovation Circle, Phoenix, AZ 85083"
+            },
+            {
+              "field": "coordinates",
+              "statement": "5088 W. Innovation Circle, Phoenix, AZ 85083"
+            }
+          ]
+        },
+        {
+          "publisher": "NIST CHIPS Program Office",
+          "title": "TSMC Arizona (Phoenix)",
+          "url": "https://www.nist.gov/chips/tsmc-arizona-phoenix",
+          "documentType": "government_record",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "location",
+              "statement": "Phoenix AZ 85083"
+            },
+            {
+              "field": "capacity",
+              "statement": "up to $6.6B CHIPS direct funding; more than $65B capex in the award write-up"
+            },
+            {
+              "field": "compute_hardware",
+              "statement": "Fab 1 4nm/5nm; Fab 2 3nm; Fab 3 A16/2nm"
+            },
+            {
+              "field": "identity",
+              "statement": "chips for HPC and AI GPUs/CPUs"
+            }
+          ]
+        },
+        {
+          "publisher": "TSMC",
+          "title": "TSMC Arizona site (search-indexed extract; full fetch timed out 2026-09-17)",
+          "url": "https://www.tsmc.com/static/abouttsmcaz/index.htm",
+          "documentType": "company_facility_page",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "lifecycle_status",
+              "statement": "N4 high-volume production started Q4 2024"
+            },
+            {
+              "field": "contact",
+              "statement": "contact tsmc_azinfo@tsmc.com"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "NIST three-fab CHIPS description vs later TSMC Arizona multi-fab/packaging description.",
+          "OSM 'Fab 21' name vs TSMC directory name.",
+          "Full TSMC Arizona HTML fetch timed out."
+        ]
+      },
+      "requestedPublicationState": "published"
+    },
+    {
+      "researchKey": "susquehanna-steam-electric-station",
+      "canonicalName": "Susquehanna Steam Electric Station",
+      "category": "power_infrastructure",
+      "ownerName": "Talen Energy",
+      "operatorName": "Talen Energy",
+      "aliases": [
+        {
+          "alias": "Susquehanna nuclear plant",
+          "kind": "alias",
+          "authority": null
+        },
+        {
+          "alias": "SSES",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": null,
+        "locality": "Salem Township",
+        "adminArea": "PA",
+        "countryName": "United States",
+        "countryCode": "US",
+        "latitude": 41.0922705,
+        "longitude": -76.1479523,
+        "coordinatePrecision": "campus",
+        "coordinateMethod": "campus_centroid",
+        "coordinateNotes": "Nominatim named industrial feature 'Susquehanna Steam Electric Station', Salem Township, Luzerne County. Matches Talen CNO bio location text."
+      },
+      "lifecycle": {
+        "status": "operational",
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": null
+      },
+      "facts": [
+        {
+          "key": "generation_capacity_mw",
+          "numericValue": 2500,
+          "unit": "MW",
+          "evidenceUrl": "https://www.talenenergy.com/powering-data/",
+          "notes": "Two-unit gross capacity as Talen states it."
+        },
+        {
+          "key": "generation_source",
+          "textValue": "nuclear",
+          "evidenceUrl": "https://www.talenenergy.com/powering-data/",
+          "notes": null
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Talen Energy",
+          "title": "Powering Data",
+          "url": "https://www.talenenergy.com/powering-data/",
+          "documentType": "company_facility_page",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "compute_relationship",
+              "statement": "co-located data center campus powered by Susquehanna"
+            },
+            {
+              "field": "compute_relationship",
+              "statement": "June 2025 grid expansion in Pennsylvania for AI/cloud"
+            },
+            {
+              "field": "location",
+              "statement": "two-unit station in Salem Township, Luzerne County"
+            },
+            {
+              "field": "coordinates",
+              "statement": "Salem Township, Luzerne County, PA"
+            },
+            {
+              "field": "power",
+              "statement": "2.5 GW gross / 2.2 net GW at 90% interest"
+            },
+            {
+              "field": "owner",
+              "statement": "Talen holds a 90% interest"
+            }
+          ]
+        },
+        {
+          "publisher": "Talen Energy",
+          "title": "Talen Energy Announces Sale of Zero-Carbon Data Center Campus",
+          "url": "https://ir.talenenergy.com/news-releases/news-release-details/talen-energy-announces-sale-zero-carbon-data-center-campus/",
+          "documentType": "company_press_release",
+          "publishedOn": "2024-03-04",
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "compute_relationship",
+              "statement": "sale of Cumulus campus; power from Susquehanna nuclear plant"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "Behind-the-meter MW currently delivered to AWS vs the 960 MW envelope is not broken out on the pages fetched."
+        ]
+      },
+      "requestedPublicationState": "published"
+    },
+    {
+      "researchKey": "fermi-matador-gas-generation",
+      "canonicalName": "Fermi America Project Matador Gas Power Plant",
+      "category": "power_infrastructure",
+      "ownerName": "Fermi Equipment Holdco, LLC (Fermi America)",
+      "operatorName": null,
+      "aliases": [
+        {
+          "alias": "Project Matador power plant",
+          "kind": "alias",
+          "authority": null
+        }
+      ],
+      "location": {
+        "streetAddress": null,
+        "locality": null,
+        "adminArea": "TX",
+        "countryName": "United States",
+        "countryCode": "US",
+        "latitude": null,
+        "longitude": null,
+        "coordinatePrecision": null,
+        "coordinateMethod": null,
+        "coordinateNotes": "Carson County greenfield; no lat/lon in the TCEQ extract."
+      },
+      "lifecycle": {
+        "status": "planned",
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": null
+      },
+      "facts": [
+        {
+          "key": "generation_capacity_mw",
+          "numericValue": 6000,
+          "unit": "MW",
+          "evidenceUrl": "https://records.tceq.texas.gov/cs/idcplg?IdcService=GET_FILE&allowInterrupt=1&dDocName=8281238&dID=9562398",
+          "notes": "Nominal, per the TCEQ permit narrative."
+        },
+        {
+          "key": "generation_source",
+          "textValue": "natural gas combined cycle",
+          "evidenceUrl": "https://records.tceq.texas.gov/cs/idcplg?IdcService=GET_FILE&allowInterrupt=1&dDocName=8281238&dID=9562398",
+          "notes": null
+        }
+      ],
+      "evidence": [
+        {
+          "publisher": "Texas Commission on Environmental Quality",
+          "title": "Fermi America Project Matador air-permit narrative",
+          "url": "https://records.tceq.texas.gov/cs/idcplg?IdcService=GET_FILE&allowInterrupt=1&dDocName=8281238&dID=9562398",
+          "documentType": "permit",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "claims": [
+            {
+              "field": "location",
+              "statement": "Carson County Texas greenfield"
+            },
+            {
+              "field": "power",
+              "statement": "90 Siemens SGT-800 plus 3 GE 6B turbines; nominal ~6,000 MW"
+            },
+            {
+              "field": "power",
+              "statement": "pipeline-quality natural gas"
+            },
+            {
+              "field": "compute_relationship",
+              "statement": "power solely onsite for hyperscale AI data center; not sold to local utility"
+            },
+            {
+              "field": "owner",
+              "statement": "Fermi Equipment Holdco, LLC"
+            }
+          ]
+        }
+      ],
+      "quality": {
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-17",
+        "reviewNotes": [
+          "No coordinates.",
+          "Whether any turbines are already on site is not in the extract."
+        ]
+      },
+      "requestedPublicationState": "research"
+    }
+  ],
+  "relationships": [
+    {
+      "fromResearchKey": "lumi-supercomputer",
+      "toResearchKey": "csc-kajaani-lumi-host",
+      "type": "hosted_by",
+      "evidenceUrl": "https://www.eurohpc-ju.europa.eu/supercomputers/our-supercomputers_en",
+      "notes": "EuroHPC states LUMI is hosted by CSC in Kajaani. Shared coordinates with the host are expected and are not a duplicate."
+    },
+    {
+      "fromResearchKey": "jupiter-supercomputer",
+      "toResearchKey": "fzj-jupiter-host",
+      "type": "hosted_by",
+      "evidenceUrl": "https://www.eurohpc-ju.europa.eu/two-new-eurohpc-systems-join-top500-jupiter-remains-among-worlds-fastest-supercomputers-2026-06-23_en",
+      "notes": "EuroHPC states JUPITER is hosted by the Jülich Supercomputing Centre."
+    },
+    {
+      "fromResearchKey": "coreweave-polaris-forge-1",
+      "toResearchKey": "applied-digital-polaris-forge-1",
+      "type": "hosted_by",
+      "evidenceUrl": "https://ir.applieddigital.com/news-events/press-releases/detail/133/applied-digital-achieves-ready-for-service-for-phase-1-at",
+      "notes": "Landlord and tenant, not one entity: Applied Digital owns the campus, CoreWeave contracts the 400 MW deployment."
+    },
+    {
+      "fromResearchKey": "iren-horizon-1",
+      "toResearchKey": "iren-childress",
+      "type": "hosted_by",
+      "evidenceUrl": "https://www.sec.gov/Archives/edgar/data/1878848/000114036126032638/ef20080141_ex99-1.htm",
+      "notes": "Horizon 1 is a hall on the Childress campus, not a second site."
+    },
+    {
+      "fromResearchKey": "meta-prometheus",
+      "toResearchKey": "meta-new-albany",
+      "type": "hosted_by",
+      "evidenceUrl": "https://www.dispatch.com/story/business/information-technology/2025/09/26/meta-facebook-data-center-new-albany-ohio/86314973007/",
+      "notes": "Prometheus is the named supercluster on the New Albany campus, not a second street address."
+    },
+    {
+      "fromResearchKey": "susquehanna-steam-electric-station",
+      "toResearchKey": "aws-cumulus-susquehanna",
+      "type": "supplies_power_to",
+      "evidenceUrl": "https://www.talenenergy.com/powering-data/",
+      "notes": "Talen: the AWS campus is adjacent to and powered by Susquehanna, behind the meter and later from the grid. This edge is what makes the station publishable."
+    },
+    {
+      "fromResearchKey": "fermi-matador-gas-generation",
+      "toResearchKey": "fermi-project-matador-campus",
+      "type": "supplies_power_to",
+      "evidenceUrl": "https://records.tceq.texas.gov/cs/idcplg?IdcService=GET_FILE&allowInterrupt=1&dDocName=8281238&dID=9562398",
+      "notes": "TCEQ: the plant's electricity goes solely to the on-site AI data-center campus."
+    },
+    {
+      "fromResearchKey": "tsmc-fab-18-tainan",
+      "toResearchKey": "tsmc-arizona-phoenix",
+      "type": "same_program",
+      "evidenceUrl": "https://www.nist.gov/system/files/documents/2024/06/04/TSMC%20Draft%20EA%20June%203%202024%20.pdf",
+      "notes": "NIST EA identifies Fab 18 as the Model Fab copied for TSMC Arizona. Same company, different countries; not duplicates."
+    }
+  ]
+}

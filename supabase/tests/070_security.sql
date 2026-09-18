@@ -87,7 +87,13 @@ declare
     -- strikes, the headline, its constituents and its publication readiness.
     'pipeline.uavi_constituent_variances', 'pipeline.uavi_option_strips',
     'pipeline.uavi_strip_components', 'pipeline.uavi_calculations',
-    'pipeline.uavi_constituent_calculations', 'pipeline.uavi_publication_checks'
+    'pipeline.uavi_constituent_calculations', 'pipeline.uavi_publication_checks',
+    -- The map's facility foundation: the canonical facility, its other names, its
+    -- source documents and what each one supports, its sourced facts, and the
+    -- evidenced edges between facilities.
+    'reference.facilities', 'reference.facility_aliases',
+    'reference.facility_evidence', 'reference.facility_evidence_claims',
+    'reference.facility_facts', 'reference.facility_relationships'
   ];
   n integer;
 begin

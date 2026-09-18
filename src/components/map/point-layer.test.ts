@@ -6,8 +6,8 @@ import { CLUSTERS_LAYER_ID, CLUSTER_COUNT_LAYER_ID, CLUSTER_MAX_ZOOM, CLUSTER_RA
 import { buildMapFeatureCollection } from "@/lib/map-geojson";
 
 const collection = buildMapFeatureCollection([
-  { id: "p1", name: "P1", longitude: 1, latitude: 2, mappingStatus: "mapped", category: "data_center" },
-  { id: "p2", name: "P2", longitude: 3, latitude: 4, mappingStatus: "unmapped" },
+  { id: "p1", name: "P1", longitude: 1, latitude: 2, category: "data_center" },
+  { id: "p2", name: "P2", longitude: 3, latitude: 4, category: "power_infrastructure" },
 ]);
 
 /** A map stub that remembers what was added, with a Positron-like layer order. */
@@ -50,7 +50,7 @@ describe("addPointLayer", () => {
 
   it("seeds the source with the visible subset when a visibility state is given", () => {
     const map = stubMap();
-    const hidden = { ...DEFAULT_MAP_VISIBILITY, unmapped: false };
+    const hidden = { ...DEFAULT_MAP_VISIBILITY, power_infrastructure: false };
     addPointLayer(map, collection, hidden);
     expect(map.addSource.mock.calls[0]?.[1]).toMatchObject({ data: filterPointCollection(collection, hidden) });
   });
@@ -103,7 +103,7 @@ describe("applyPointVisibility", () => {
   it("replaces the source data with the visible subset without touching the source or layers", () => {
     const map = stubMap();
     addPointLayer(map, collection);
-    const hidden = { ...DEFAULT_MAP_VISIBILITY, unmapped: false };
+    const hidden = { ...DEFAULT_MAP_VISIBILITY, power_infrastructure: false };
     applyPointVisibility(map, collection, hidden);
     const source = map.getSource(POINTS_SOURCE_ID) as unknown as { setData: ReturnType<typeof vi.fn> };
     expect(source.setData).toHaveBeenCalledTimes(1);
@@ -116,7 +116,7 @@ describe("applyPointVisibility", () => {
   it("feeds the source an empty collection when every group is off", () => {
     const map = stubMap();
     addPointLayer(map, collection);
-    applyPointVisibility(map, collection, { data_center: false, compute_cluster: false, power_infrastructure: false, semiconductor_fab: false, unmapped: false });
+    applyPointVisibility(map, collection, { data_center: false, gpu_compute_cluster: false, power_infrastructure: false, semiconductor_fab: false });
     const source = map.getSource(POINTS_SOURCE_ID) as unknown as { setData: ReturnType<typeof vi.fn> };
     expect(source.setData.mock.calls[0]?.[0]).toEqual({ type: "FeatureCollection", features: [] });
   });
