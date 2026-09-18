@@ -13,7 +13,7 @@ import { describe, expect, it } from "vitest";
 
 import { parseFacilityImportDocument } from "@/lib/facilities/contract";
 import { buildImportPlan } from "@/lib/facilities/import/plan";
-import { applyImportPlan, loadExistingResearchKeys } from "@/lib/facilities/import/persist";
+import { applyImportPlan, loadExistingResearchKeys, previewImportPlan } from "@/lib/facilities/import/persist";
 
 type Call = { text: string; values: readonly unknown[] };
 
@@ -44,6 +44,21 @@ function recorder(
       if (/from reference\.methodology_versions/.test(text)) {
         const id = options.methodologyVersionId === undefined ? "methodology-1" : options.methodologyVersionId;
         return { rows: id === null ? [] : [{ id }] };
+      }
+      if (/desired_fingerprint/.test(text)) {
+        const key = String(values[0]);
+        const present = existing.has(key);
+        const fingerprint = options.fingerprint?.(key) ?? "same";
+        return {
+          rows: [
+            {
+              id: present ? `id-${key}` : null,
+              fingerprint: present ? fingerprint : null,
+              methodology_version_id: present ? (options.priorMethodologyVersionId ?? null) : null,
+              desired_fingerprint: "same",
+            },
+          ],
+        };
       }
       if (/^\s*select id::text as id,[\s\S]*from reference\.facilities where research_key/.test(text)) {
         const key = String(values[0]);
@@ -270,6 +285,40 @@ describe("applyImportPlan", () => {
       plan([facility()], [{ fromResearchKey: "fixture-campus", toResearchKey: "earlier-batch", type: "hosted_by" }], ["earlier-batch"]),
     );
     expect(result.relationships).toBe(1);
+  });
+});
+
+describe("previewImportPlan", () => {
+  it("classifies inserts, updates and unchanged rows without opening a transaction", async () => {
+    const insertedSql = recorder();
+    const inserted = await previewImportPlan(insertedSql, plan());
+    expect(inserted.inserted).toEqual(["fixture-campus"]);
+    expect(inserted.updated).toEqual([]);
+    expect(inserted.unchanged).toEqual([]);
+    expect(inserted.deleted).toEqual([]);
+    expect(insertedSql.statements()).not.toContain("begin");
+    expect(insertedSql.calls.every((call) => call.text.trim().startsWith("select"))).toBe(true);
+
+    const unchangedSql = recorder({ existingKeys: ["fixture-campus"], fingerprint: () => "same" });
+    const unchanged = await previewImportPlan(unchangedSql, plan());
+    expect(unchanged.unchanged).toEqual(["fixture-campus"]);
+
+    const updatedSql = recorder({ existingKeys: ["fixture-campus"], fingerprint: () => "before" });
+    const updated = await previewImportPlan(updatedSql, plan());
+    expect(updated.updated).toEqual(["fixture-campus"]);
+  });
+
+  it("reports methodology restamps and refuses a publishing batch without approved rules", async () => {
+    const restampedSql = recorder({
+      existingKeys: ["fixture-campus"],
+      fingerprint: () => "before",
+      priorMethodologyVersionId: "methodology-0",
+    });
+    const preview = await previewImportPlan(restampedSql, plan());
+    expect(preview.restamped).toEqual([{ researchKey: "fixture-campus", from: "methodology-0", to: "methodology-1" }]);
+
+    const unapproved = recorder({ methodologyVersionId: null });
+    await expect(previewImportPlan(unapproved, plan())).rejects.toThrow("nothing publishes under rules nobody approved");
   });
 });
 

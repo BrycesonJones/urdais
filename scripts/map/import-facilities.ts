@@ -30,7 +30,7 @@ import {
   parseFacilityImportDocument,
 } from "@/lib/facilities/contract";
 import { buildImportPlan } from "@/lib/facilities/import/plan";
-import { applyImportPlan, loadExistingResearchKeys } from "@/lib/facilities/import/persist";
+import { applyImportPlan, loadExistingResearchKeys, previewImportPlan } from "@/lib/facilities/import/persist";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
 
 const DEFAULT_DATASET = "data/map/facilities.v1.json";
@@ -102,6 +102,7 @@ async function main(): Promise<void> {
     const rejectedCandidates = readRegister(REJECTED_REGISTER, (raw) => (raw.candidates ?? []) as { candidate: string; reason: string }[]);
     const rightsRegister = readRegister(RIGHTS_REGISTER, (raw) => (raw.sources ?? []) as { domain: string; state: string; note: string }[]);
     const plan = buildImportPlan(document, { existingResearchKeys, rejectedCandidates, rightsRegister });
+    const preview = !write && sql !== null && plan.errors.length === 0 ? await previewImportPlan(sql, plan) : null;
 
     const report = {
       file,
@@ -118,6 +119,7 @@ async function main(): Promise<void> {
       counts: plan.counts,
       errors: plan.errors,
       reviewCandidates: plan.reviewCandidates,
+      writeSet: preview,
     };
 
     if (plan.errors.length > 0) {
