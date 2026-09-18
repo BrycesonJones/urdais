@@ -36,6 +36,8 @@ export type ImportWriteResult = {
   inserted: readonly string[];
   updated: readonly string[];
   unchanged: readonly string[];
+  /** This importer is additive by identity; absence from a batch never deletes a facility. */
+  deleted: readonly string[];
   relationships: number;
   evidence: number;
   claims: number;
@@ -120,6 +122,93 @@ const FACILITY_FINGERPRINT = `
     publication_state, confidence, array_to_string(review_notes, chr(30)), last_verified_date::text,
     ai_relevance, methodology_version_id::text
   ))`;
+
+/**
+ * The same fingerprint applied to the typed values the importer would write.
+ * Keeping this in PostgreSQL avoids JavaScript/PostgreSQL differences in date,
+ * numeric, array and UUID stringification while leaving the preview read-only.
+ */
+const DESIRED_FACILITY_FINGERPRINT = `
+  md5(concat_ws(chr(31),
+    $2::text, $3::text, $4::text, $5::text, $6::text,
+    $7::text, $8::text, $9::text, $10::text, $11::text,
+    $12::numeric::text, $13::numeric::text, $14::text, $15::text, $16::text,
+    $17::date::text, $18::date::text, $19::date::text,
+    $20::text, $21::text, array_to_string($22::text[], chr(30)), $23::date::text,
+    $24::text, $25::uuid::text
+  ))`;
+
+/**
+ * Classifies the exact facility-row write set without opening a transaction or
+ * changing production. Dependants are intentionally not compared: the writer
+ * replaces them wholesale inside its transaction, while facility identity and
+ * insert/update/unchanged reporting are defined by the canonical row.
+ */
+export async function previewImportPlan(sql: SqlExecutor, plan: ImportPlan): Promise<ImportWriteResult> {
+  if (plan.errors.length > 0) {
+    throw new Error(`refusing to preview a plan with ${plan.errors.length} error(s)`);
+  }
+
+  const publishes = plan.facilities.some((entry) => entry.publicationState === "published");
+  const methodologyVersionId = await approvedFacilityMethodologyVersionId(sql);
+  if (publishes && methodologyVersionId === null) {
+    throw new Error(
+      `no approved "${FACILITY_METHODOLOGY_SLUG}" methodology version with an effective date; nothing publishes under rules nobody approved`,
+    );
+  }
+
+  const inserted: string[] = [];
+  const updated: string[] = [];
+  const unchanged: string[] = [];
+  const restamped: Array<{ researchKey: string; from: string; to: string | null }> = [];
+
+  for (const entry of plan.facilities) {
+    const facility = entry.facility;
+    const values = facilityValues(facility, entry.publicationState, methodologyVersionId);
+    const { rows } = await sql.query(
+      `select f.id::text as id,
+              ${FACILITY_FINGERPRINT} as fingerprint,
+              f.methodology_version_id::text as methodology_version_id,
+              ${DESIRED_FACILITY_FINGERPRINT} as desired_fingerprint
+         from (select 1) as singleton
+         left join reference.facilities f on f.research_key = $1`,
+      values,
+    );
+    const row = rows[0] as {
+      id: string | null;
+      fingerprint: string | null;
+      methodology_version_id: string | null;
+      desired_fingerprint: string;
+    };
+
+    if (row.id === null) inserted.push(facility.researchKey);
+    else if (row.fingerprint !== row.desired_fingerprint) updated.push(facility.researchKey);
+    else unchanged.push(facility.researchKey);
+
+    const desiredMethodologyVersionId = entry.publicationState === "published" ? methodologyVersionId : null;
+    if (row.id !== null && row.methodology_version_id !== null && row.methodology_version_id !== desiredMethodologyVersionId) {
+      restamped.push({
+        researchKey: facility.researchKey,
+        from: row.methodology_version_id,
+        to: desiredMethodologyVersionId,
+      });
+    }
+  }
+
+  return {
+    methodologyVersionId,
+    restamped,
+    inserted,
+    updated,
+    unchanged,
+    deleted: [],
+    relationships: plan.counts.relationships,
+    evidence: plan.counts.evidence,
+    claims: plan.counts.claims,
+    facts: plan.counts.facts,
+    aliases: plan.counts.aliases,
+  };
+}
 
 /**
  * Applies the plan. The caller must have established that the plan carries no
@@ -323,6 +412,7 @@ export async function applyImportPlan(sql: SqlExecutor, plan: ImportPlan): Promi
       inserted,
       updated,
       unchanged,
+      deleted: [],
       relationships: relationshipCount,
       evidence: evidenceCount,
       claims: claimCount,
