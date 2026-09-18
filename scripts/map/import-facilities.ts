@@ -24,7 +24,11 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-import { parseFacilityImportDocument, FACILITY_IMPORT_CONTRACT_VERSION } from "@/lib/facilities/contract";
+import {
+  FACILITY_IMPORT_CONTRACT_VERSION,
+  SUPPORTED_FACILITY_IMPORT_CONTRACT_VERSIONS,
+  parseFacilityImportDocument,
+} from "@/lib/facilities/contract";
 import { buildImportPlan } from "@/lib/facilities/import/plan";
 import { applyImportPlan, loadExistingResearchKeys } from "@/lib/facilities/import/persist";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
@@ -73,7 +77,7 @@ async function main(): Promise<void> {
         {
           file,
           stage: "contract",
-          expectedContractVersion: FACILITY_IMPORT_CONTRACT_VERSION,
+          supportedContractVersions: SUPPORTED_FACILITY_IMPORT_CONTRACT_VERSIONS,
           issues,
           wrote: false,
         },
@@ -104,7 +108,9 @@ async function main(): Promise<void> {
       dataset: plan.datasetName,
       researchDocument: plan.researchDocument,
       generatedAt: plan.generatedAt,
-      contractVersion: FACILITY_IMPORT_CONTRACT_VERSION,
+      // Both, because they differ whenever an older dataset is read by a newer
+      // build, and a report that showed only one would hide which.
+      contractVersion: { declared: document.contractVersion, current: FACILITY_IMPORT_CONTRACT_VERSION },
       mode: write ? "write" : "dry-run",
       databaseConfigured: sql !== null,
       digest: plan.digest,

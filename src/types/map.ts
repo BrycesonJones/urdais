@@ -22,7 +22,8 @@ export type MapPointCategory = FacilityCategory;
  * placing it somewhere in order to say it had not been placed. Whether a record
  * is ready to be shown is a publication decision that now lives in the
  * database, and a facility that fails it is simply not in this list. Every
- * point here is a published, placed, sourced facility.
+ * point here is a public, placed, sourced facility, either verified or
+ * explicitly labelled as research.
  */
 export type UrdaisMapPoint = {
   /** Stable, unique across the whole point set; becomes the GeoJSON feature id. */
@@ -33,6 +34,7 @@ export type UrdaisMapPoint = {
   latitude: number;
   name: string;
   category: MapPointCategory;
+  verificationStatus?: "verified" | "research";
   /**
    * Best known address or location string, shown on the profile popup:
    * a full street address ("1500 Beech Road, New Albany, OH, United States")

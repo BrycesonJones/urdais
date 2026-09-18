@@ -1,6 +1,6 @@
 # The map's facility foundation
 
-**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 17 September 2026 when the map stopped drawing demo points (Phase 2); §"The complete dataset" added the same day when the whole research package was projected and dry-run (Phase 3). The public methodology is `docs/methodology/map-facilities.md`; this document describes the implementation that enforces it.
+**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 17 September 2026 when the map stopped drawing demo points (Phase 2); §"The complete dataset" added the same day when the whole research package was projected and dry-run (Phase 3); §"Methodology 2.0.0" the same day when the data-centre scope opened. The public methodology is `docs/methodology/map-facilities.md`; this document describes the implementation that enforces it.
 
 How a researched facility becomes a dot, and what stops one that should not.
 
@@ -325,6 +325,58 @@ allowed a precision without coordinates only for `city`, which was true of the
 sample and false of the package: two records know their street and were never
 geocoded. Recording that is more useful than discarding it, and the invariant
 that matters — coordinates always carry a precision — is unaffected.
+
+## Methodology 2.0.0: the data-centre scope
+
+`supabase/migrations/20260917280000_map_data_center_scope_v2.sql`. The inclusion
+criterion for `data_center` became existence rather than AI relevance, which
+changes the population rather than the handling of a rule — hence a major
+version. The public rules are in `docs/methodology/map-facilities.md`; what
+follows is what enforces them.
+
+**AI relevance** is a column on `reference.facilities`, not a fact row, because
+facts require an `evidence_id` and two of the four states are assertions about
+Urdais's own knowledge rather than about the facility: `no_documented_ai` (we
+looked, the sources are silent) and `unknown` (nobody looked) have no document
+behind them by definition, and collapsing them would lose the distinction the
+enrichment exists to carry. The two positive states do have documents behind
+them, and a deferred trigger insists on it: `documented_ai` or
+`ai_capable_or_high_density` requires at least one cited `ai_relevance` claim.
+Nothing about AI relevance gates publication in either direction.
+
+**Source tiers** are `reference.facility_evidence_source_tier(document_type)`:
+tier 1 primary and authoritative, tier 2 strong corroboration, tier 3 structured
+directory. An unrecognised type falls to tier 3, which is the cautious
+direction — it may discover and may not place.
+
+**The directory rule** lives in `assert_facility_publishable`. A published
+facility needs positioning evidence that is either one tier 1–2 document or two
+tier 3 documents *from different publishers*. Counting publishers rather than
+rows is deliberate: directories copy from each other, so two rows from one
+directory are one lead wearing two names. `hasAdmissiblePositioning` in
+`domain.ts` is the same rule for the importer, which reports it as an error
+naming the record rather than as a trigger failure at commit.
+
+Two document types were added for this work: `property_record` (tier 2) and
+`facility_directory` (tier 3), plus the `ai_relevance` and `cooling` claim
+fields.
+
+**The contract went to `/2`,** and the build reads `/1` as well. The asymmetry
+is the original guarantee kept: a *later* document read by an older build drops
+fields silently, which is what the version check exists to prevent; an *earlier*
+document drops nothing, because every /2 addition is optional. What is refused
+is a /1 document that uses a /2 field, naming the field and the version it
+needs. The Phase 2 and Phase 3 datasets still declare `/1` and were not
+rewritten.
+
+**Nothing restamps a record.** The migration touches no facility row. An import
+stamps the approved version at write time, so a record re-approved under new
+rules moves from 1.0.0 to 2.0.0 — and the importer reports each one in
+`result.restamped` rather than letting it pass as an ordinary edit.
+
+**1.0.0 is superseded, not retired.** It keeps its own content hash and its own
+effective interval, so the rules the first published facilities were approved
+under stay readable.
 
 ## Turning the research Markdown into production JSON
 

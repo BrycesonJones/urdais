@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * The published facility set is live database state. Without this declaration
+ * The public facility set is live database state. Without this declaration
  * Next prerenders the page at build time, where no production database is
  * configured, and serves that empty snapshot forever. See
  * docs/operations/production-environments.md.

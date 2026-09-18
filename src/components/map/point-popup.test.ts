@@ -124,8 +124,18 @@ describe("buildProfileCard", () => {
     });
     expect(card.querySelector("p")?.textContent).toBe("<b>Demo</b> Point");
     expect(card.querySelector("b")).toBeNull();
-    expect([...card.querySelectorAll("dt")].map((term) => term.textContent)).toEqual(["Category:", "Address:", "Owner:", "Operator:", "Status:", "Verified:"]);
+    expect([...card.querySelectorAll("dt")].map((term) => term.textContent)).toEqual(["Category:", "Address:", "Owner:", "Operator:", "Status:", "Checked:"]);
     expect(card.textContent).not.toContain("gpu_compute_cluster");
+  });
+
+  it("shows the public verification level without creating a map category", () => {
+    expect(readPointProfile(feature({ name: "Research site", category: "data_center", verificationStatus: "research" }))).toEqual({
+      name: "Research site",
+      category: "Data Center",
+      verification: "Research",
+    });
+    const card = buildProfileCard({ name: "Research site", verification: "Research" });
+    expect(card.textContent).toContain("Verification:Research");
   });
 
   it("renders each source as a new-tab link whose href is the source URL", () => {

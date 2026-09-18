@@ -9,13 +9,14 @@ export type MapPointProfile = {
   name: string;
   /** Human-readable category label, never the raw enum value. */
   category?: string;
+  verification?: "Verified" | "Research";
   address?: string;
   owner?: string;
   operator?: string;
   /** Human-readable lifecycle wording, never the raw enum value. */
   status?: string;
   lastVerified?: string;
-  /** The documents behind the record. Every published facility has at least one. */
+  /** The documents behind the record. Every public facility has at least one. */
   sources?: readonly { publisher: string; url: string }[];
 };
 
@@ -81,6 +82,8 @@ export function readPointProfile(feature: Pick<MapGeoJSONFeature, "properties"> 
   if (!name) return null;
   const profile: MapPointProfile = { name };
   if (isMapPointCategory(record.category)) profile.category = MAP_POINT_CATEGORY_LABELS[record.category];
+  if (record.verificationStatus === "verified") profile.verification = "Verified";
+  if (record.verificationStatus === "research") profile.verification = "Research";
   const address = text(record.address);
   if (address) profile.address = address;
   const owner = text(record.ownerName);
@@ -113,11 +116,12 @@ export function buildProfileCard(profile: MapPointProfile): HTMLElement {
   card.append(title);
   const rows: Array<[string, string | undefined]> = [
     ["Category", profile.category],
+    ["Verification", profile.verification],
     ["Address", profile.address],
     ["Owner", profile.owner],
     ["Operator", profile.operator],
     ["Status", profile.status],
-    ["Verified", profile.lastVerified],
+    ["Checked", profile.lastVerified],
   ];
   const present = rows.filter((row): row is [string, string] => Boolean(row[1]));
   const list = document.createElement("dl");

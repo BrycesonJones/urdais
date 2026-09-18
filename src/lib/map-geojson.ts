@@ -19,6 +19,7 @@ import type { MapPointCategory, UrdaisMapPoint } from "@/types/map";
 export type MapPointProperties = {
   name: string;
   category: MapPointCategory;
+  verificationStatus?: "verified" | "research";
   address?: string;
   ownerName?: string;
   operatorName?: string;
@@ -65,6 +66,12 @@ export function buildMapFeatureCollection(points: readonly UrdaisMapPoint[]): Ma
     if (!isMapPointCategory(point.category)) throw new Error(`Map point "${point.id}" has an unknown category: ${String(point.category)}`);
 
     const properties: MapPointProperties = { name: point.name, category: point.category };
+    if (point.verificationStatus !== undefined) {
+      if (point.verificationStatus !== "verified" && point.verificationStatus !== "research") {
+        throw new Error(`Map point "${point.id}" has an invalid verificationStatus: ${String(point.verificationStatus)}`);
+      }
+      properties.verificationStatus = point.verificationStatus;
+    }
 
     const carry = (key: "address" | "ownerName" | "operatorName", value: unknown) => {
       if (value === undefined) return;

@@ -18,7 +18,11 @@ import { resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { FACILITY_IMPORT_CONTRACT_VERSION, parseFacilityImportDocument } from "@/lib/facilities/contract";
+import {
+  FACILITY_IMPORT_CONTRACT_VERSION,
+  SUPPORTED_FACILITY_IMPORT_CONTRACT_VERSIONS,
+  parseFacilityImportDocument,
+} from "@/lib/facilities/contract";
 import { FACILITY_CATEGORIES, MAP_ELIGIBLE_PRECISIONS } from "@/lib/facilities/domain";
 import { buildImportPlan } from "@/lib/facilities/import/plan";
 import { buildMapFeatureCollection } from "@/lib/map-geojson";
@@ -33,10 +37,14 @@ const { document, issues } = parseFacilityImportDocument(raw);
 const plan = document ? buildImportPlan(document, { today: new Date("2026-09-17T00:00:00Z") }) : null;
 
 describe("the sample dataset", () => {
-  it("is a document of the contract version this build reads", () => {
+  it("is a document of a contract version this build reads, and was not rewritten to the newer one", () => {
     expect(issues).toEqual([]);
     expect(document).not.toBeNull();
-    expect(document?.contractVersion).toBe(FACILITY_IMPORT_CONTRACT_VERSION);
+    // It still declares /1, and that is the point: a methodology change does not
+    // reach back and edit datasets already on file.
+    expect(document?.contractVersion).toBe("urdais.map.facility-import/1");
+    expect(SUPPORTED_FACILITY_IMPORT_CONTRACT_VERSIONS).toContain(document?.contractVersion);
+    expect(FACILITY_IMPORT_CONTRACT_VERSION).toBe("urdais.map.facility-import/2");
     expect(document?.researchDocument).toBe("URDAIS_MAP_RESEARCH_PHASE_1.md");
   });
 
@@ -162,6 +170,7 @@ describe("the sample dataset on the map", () => {
       ownerName: facility.ownerName ?? null,
       operatorName: facility.operatorName ?? null,
       lifecycleStatus: facility.lifecycle?.status ?? null,
+      verificationStatus: facility.requestedPublicationState === "published" ? "verified" : "research",
       lastVerifiedDate: facility.quality.lastVerifiedDate!,
       sources: facility.evidence.map((evidence) => ({ publisher: evidence.publisher, title: evidence.title, url: evidence.url })),
     }));

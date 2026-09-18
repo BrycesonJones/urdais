@@ -43,7 +43,7 @@ const MIN_ZOOM = 1;
 /**
  * The Urdais map workspace: one MapLibre GL JS instance filling its
  * container. It renders the basemap plus one GeoJSON point source and one
- * circle layer (see point-layer.ts), fed with the published facilities the
+ * circle layer (see point-layer.ts), fed with the public facilities the
  * server read from the database and handed down as `points`, and the profile
  * popup (point-popup.ts). The source clusters natively, so the `visibility`
  * prop, owned by the workspace that renders the legend, is applied by
@@ -62,7 +62,7 @@ const MIN_ZOOM = 1;
  */
 type UrdaisMapProps = {
   /**
-   * The published facilities to draw. Supplied by the server; an empty list is
+   * The public facilities to draw. Supplied by the server; an empty list is
    * an empty map, never a fallback to sample points.
    */
   points: readonly UrdaisMapPoint[];

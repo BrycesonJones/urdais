@@ -45,20 +45,29 @@ const row = (overrides: Row = {}): Row => ({
   latitude: "64.2319866",
   longitude: "27.691477",
   coordinate_precision: "building",
+  publication_state: "published",
   last_verified_date: "2026-09-17",
   sources: [{ publisher: "CSC", title: "LUMI Supercomputer", url: "https://example.com/csc" }],
   ...overrides,
 });
 
 describe("loadFacilityReadModel", () => {
-  it("selects only published, placeable, current facilities", async () => {
+  it("selects only verified or research, placeable, current facilities", async () => {
     const sql = executor([row()]);
     await loadFacilityReadModel(sql);
     const text = sql.queries[0]!.text;
-    expect(text).toContain("f.publication_state = 'published'");
+    expect(text).toContain("f.publication_state in ('published', 'research')");
     expect(text).toContain("reference.facility_is_map_eligible(f.latitude, f.longitude, f.coordinate_precision)");
+    expect(text).toContain("reference.facility_evidence_source_tier(e.document_type) <= 2");
     expect(text).toContain("f.last_verified_date >= (current_date - ($1::integer))");
     expect(sql.queries[0]!.values).toEqual([FACILITY_VERIFICATION_HORIZON_DAYS]);
+  });
+
+  it("labels verified and public research records without exposing the raw state", async () => {
+    const sql = executor([row(), row({ id: "research-site", publication_state: "research" })]);
+    const loaded = await loadFacilityReadModel(sql);
+    expect(loaded.facilities.map((facility) => facility.verificationStatus)).toEqual(["verified", "research"]);
+    expect(loaded.facilities.some((facility) => "publicationState" in facility)).toBe(false);
   });
 
   it("keeps the power-infrastructure rule in the read path, not only at write time", async () => {
@@ -95,6 +104,7 @@ describe("loadFacilityReadModel", () => {
       ownerName: "CSC – IT Center for Science",
       operatorName: "CSC",
       lifecycleStatus: "operational",
+      verificationStatus: "verified",
       lastVerifiedDate: "2026-09-17",
       sources: [{ publisher: "CSC", title: "LUMI Supercomputer", url: "https://example.com/csc" }],
     });
@@ -129,7 +139,7 @@ describe("loadFacilityReadModel", () => {
     const sql = executor([], 0);
     const loaded = await loadFacilityReadModel(sql);
     expect(loaded.facilities).toEqual([]);
-    expect(loaded.unavailableReason).toBe("no_published_facilities");
+    expect(loaded.unavailableReason).toBe("no_public_facilities");
     expect(loaded.coverage.published).toBe(0);
   });
 

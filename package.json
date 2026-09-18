@@ -17,6 +17,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "map:project": "tsx scripts/map/project-research.ts",
+    "map:phase4b": "tsx scripts/map/project-phase4b-ready.ts",
+    "map:geocode": "tsx scripts/map/geocode-address-queue.ts",
     "map:import": "tsx scripts/map/import-facilities.ts",
     "news:ingest": "tsx scripts/news/ingest.ts",
     "tokens:ingest": "tsx scripts/tokens/ingest.ts",

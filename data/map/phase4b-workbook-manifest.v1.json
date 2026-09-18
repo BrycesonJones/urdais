@@ -1,0 +1,2969 @@
+{
+  "manifestVersion": "urdais.map.phase4b-workbook-manifest/1",
+  "sourceWorkbook": "urdais_map_phase4b_ready_and_manual_v2.xlsx",
+  "generatedAt": "2026-09-18",
+  "ready": [
+    {
+      "ID": "samsung-hwaseong",
+      "Facility": "Samsung Foundry Hwaseong",
+      "Operator": null,
+      "Country": null,
+      "Prior Location": "geocoded_review",
+      "Address / Campus": "1 Samsungjeonja-ro (삼성전자로 1), Banwol-dong, Hwaseong-si, Gyeonggi-do 18448",
+      "Latitude": 37.222297,
+      "Longitude": 127.066425,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": null,
+      "Sources": "Samsung Foundry IATF/ISO certificates (T1 street); Korean living-safety / chemical-facility map (safemap) for 삼성전자(주)화성사업장 at that address, 37.222297, 127.066425",
+      "Notes": "Nominatim returned the road name only. Government GIS for the named Hwaseong plant corroborates campus coordinates. Multi-fab campus; campus precision. Suitable for a public research pin.",
+      "Research Batch": "Directory Pass — Workstream A"
+    },
+    {
+      "ID": "switch-citadel-tahoe-reno",
+      "Facility": "Switch Citadel Campus (Tahoe Reno)",
+      "Operator": null,
+      "Country": null,
+      "Prior Location": "geocode_no_match",
+      "Address / Campus": "1 Superloop Circle, McCarran, NV 89434 (Tahoe Reno Industrial Center; postal Sparks 89437 also appears)",
+      "Latitude": 39.5141,
+      "Longitude": -119.4755,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": null,
+      "Sources": "Data Center Map; datacenterHawk; MapQuest (Class B); Compute Atlas OSM way/1116775094; GridCensus 39.5141,-119.4755; Wikimapia 39°30'50\"N 119°28'31\"W (~39.5139,-119.4753)",
+      "Notes": "Operator omits street. Two T3 directories + OSM named Citadel campus agree. Campus precision (multiple Citadel halls). Do not use Tesla Gigafactory pin. Suitable for a public research pin.",
+      "Research Batch": "Directory Pass — Workstream A"
+    },
+    {
+      "ID": "tsmc-ap6-zhunan",
+      "Facility": "TSMC Advanced Backend Fab 6 (Zhunan)",
+      "Operator": null,
+      "Country": null,
+      "Prior Location": "geocode_no_match",
+      "Address / Campus": "350-012 苗栗縣竹南鎮科專一路1號 (1 Kezhuan 1st Rd, Zhunan Township, Miaoli; Hsinchu Science Park Zhunan)",
+      "Latitude": 24.706944,
+      "Longitude": 120.907222,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": null,
+      "Sources": "TSMC Fabs directory (T1); SIPA Zhunan park; Wikipedia/GeoHack TSMC Advanced Backend Fab 6 24°42′25″N 120°54′26″E (OSM-linked named building)",
+      "Notes": "Official street already on the record. Named-fab geocode matches Zhunan Science Park. Suitable for a public research pin.",
+      "Research Batch": "Directory Pass — Workstream A"
+    },
+    {
+      "ID": "vantage-berlin-i",
+      "Facility": "Vantage Berlin I (BER1)",
+      "Operator": null,
+      "Country": null,
+      "Prior Location": "geocode_no_match",
+      "Address / Campus": "Brandenburg Park, Uferring 5, Ludwigsfelde 14974, Germany",
+      "Latitude": 52.3220594,
+      "Longitude": 13.2947156,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": null,
+      "Sources": "Vantage Berlin I page (T1); Nominatim/OSM named building BER11, house number 5, Uferring, Brandenburg Park Nord, 52.3220594, 13.2947156; Data Center Map Uferring 5",
+      "Notes": "OSM names the Vantage BER11 hall at the operator street. Campus has multiple planned buildings; pin is the named BER11 building. DC Atlas 52.32,13.3 approximate — not used. Suitable for a public research pin.",
+      "Research Batch": "Directory Pass — Workstream A"
+    },
+    {
+      "ID": "vantage-cardiff",
+      "Facility": "Vantage Cardiff (CWL1)",
+      "Operator": null,
+      "Country": null,
+      "Prior Location": "geocode_no_match",
+      "Address / Campus": "Celtic Way, Coedkernew, Duffryn, Newport NP10 8BE, United Kingdom",
+      "Latitude": 51.5554234,
+      "Longitude": -3.0373944,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": null,
+      "Sources": "Vantage Cardiff page (T1); vantage-dc-cardiff.co.uk contact (T1); OSM way 26794336 named Vantage Data Centers CWL1 at 51.5554234,-3.0373944 (Scrutica/DC Hub citing OSM)",
+      "Notes": "Operator street/campus without house number + named OSM CWL1 feature. Suitable for a public research pin. Inflect lists NP10 8FQ variant — same Celtic Way campus.",
+      "Research Batch": "Directory Pass — Workstream A"
+    },
+    {
+      "ID": "coreweave-lancaster-pa",
+      "Facility": "CoreWeave Lancaster Pennsylvania Data Center",
+      "Operator": "CoreWeave",
+      "Country": "United States",
+      "Prior Location": null,
+      "Address / Campus": "216 Greenfield Road, Lancaster, PA (former R.R. Donnelley / LSC plant)",
+      "Latitude": 40.0472199,
+      "Longitude": -76.2555314,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://www.cityoflancasterpa.gov/data-center/ ; https://lancasteronline.com/news/local/plans-submitted-for-lancaster-city-data-centers-second-phase/article_d97cd11b-cb7f-49c8-9f57-7bb2a5a0facf.html",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "digital-realty-melbourne",
+      "Facility": "Digital Realty Melbourne",
+      "Operator": "Digital Realty",
+      "Country": "Australia",
+      "Prior Location": "Melbourne",
+      "Address / Campus": "MEL11: 72 Radnor Dr, Deer Park, VIC 3023",
+      "Latitude": -37.7818947,
+      "Longitude": 144.7778402,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://www.digitalrealty.com/data-centers/asia-pacific/melbourne ; OSM way 485850330 named MEL11",
+      "Notes": "Single building. OSM industrial building named MEL11.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "digital-realty-zagreb",
+      "Facility": "Digital Realty Zagreb",
+      "Operator": "Digital Realty",
+      "Country": "Croatia",
+      "Prior Location": "Zagreb",
+      "Address / Campus": "ZAG1: Selska cesta 93, 10000 Zagreb",
+      "Latitude": 45.8036656,
+      "Longitude": 15.9442063,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://www.digitalrealty.com/data-centers/emea/zagreb ; https://www.peeringdb.com/fac/1368 ; OSM way 90642590 at Selska cesta 93",
+      "Notes": "Single DLR building. OSM labels Ericsson; PeeringDB aka Altus IT (45.803311, 15.943893). Same street number.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "digital-realty-accra",
+      "Facility": "Digital Realty Accra",
+      "Operator": "Digital Realty",
+      "Country": "Ghana",
+      "Prior Location": "Accra",
+      "Address / Campus": "ACR2: Bank Street and Prof. Atta Mills High St, Accra",
+      "Latitude": 5.542329,
+      "Longitude": -0.206419,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "https://www.digitalrealty.com/data-centers/emea/accra ; https://www.peeringdb.com/fac/14469",
+      "Notes": "Single building (intersection). OSM empty. PeeringDB geocode of the same named ACR2 facility; not Accra centroid (~5.60, -0.19).",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "digital-realty-barcelona",
+      "Facility": "Digital Realty Barcelona",
+      "Operator": "Digital Realty",
+      "Country": "Spain",
+      "Prior Location": "Barcelona",
+      "Address / Campus": "BCN1: Av. del Maresme 43, 08918 Badalona, Barcelona",
+      "Latitude": 41.4299843,
+      "Longitude": 2.2326251,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://www.digitalrealty.com/data-centers/emea/barcelona ; OSM node 6034207506",
+      "Notes": "Single building. Operator: Badalona. May 2026 DLR press said Sant Adrià de Besòs; Av. del Maresme is the municipal edge. OSM interpolation in Badalona.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "digital-realty-phoenix-van-buren",
+      "Facility": "Digital Realty Phoenix (120 East Van Buren)",
+      "Operator": "Digital Realty",
+      "Country": "United States",
+      "Prior Location": null,
+      "Address / Campus": "120 East Van Buren, Phoenix, AZ",
+      "Latitude": 33.4519107,
+      "Longitude": -112.0719077,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://www.digitalrealty.com/data-centers/americas",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "equinix-adelaide",
+      "Facility": "Equinix Adelaide",
+      "Operator": "Equinix",
+      "Country": "Australia",
+      "Prior Location": "Adelaide",
+      "Address / Campus": "274 Hindley Street, Adelaide SA 5000",
+      "Latitude": -34.923252,
+      "Longitude": 138.589214,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T3+T3",
+      "Sources": "datacenters.com/equinix-ae1-adelaide; PeeringDB fac 8147",
+      "Notes": "Sole IBX AE1. Equinix AE1 page omitted street. Two independent T3s agree on 274 Hindley. PDB coords are west CBD (Hindley), not Adelaide centroid.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-brisbane",
+      "Facility": "Equinix Brisbane",
+      "Operator": "Equinix",
+      "Country": "Australia",
+      "Prior Location": "Brisbane",
+      "Address / Campus": "54-58 Alfred Street, Fortitude Valley QLD 4006",
+      "Latitude": -27.455185,
+      "Longitude": 153.03407,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T3+T3",
+      "Sources": "datacenters.com (AE1 page lists BR1 street); PeeringDB fac 5922",
+      "Notes": "Sole IBX BR1. Equinix BR1 page city-only. Two T3s agree Fortitude Valley street.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-canberra",
+      "Facility": "Equinix Canberra",
+      "Operator": "Equinix",
+      "Country": "Australia",
+      "Prior Location": "Canberra",
+      "Address / Campus": "51 Dacre Street, Mitchell ACT 2911",
+      "Latitude": -35.2085,
+      "Longitude": 149.13536,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T3+T3",
+      "Sources": "datacenters.com (AE1 page lists CA1 street); PeeringDB fac 9378",
+      "Notes": "Sole IBX CA1. Equinix CA1 page city-only (ACT 2911). Mitchell industrial, not Civic centroid.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-kamloops",
+      "Facility": "Equinix Kamloops",
+      "Operator": "Equinix",
+      "Country": "Canada",
+      "Prior Location": "Kamloops, BC",
+      "Address / Campus": "1460 Bunker Road, Kamloops, BC V2C 0B5",
+      "Latitude": 50.675455,
+      "Longitude": -120.379861,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/ka1; PeeringDB fac 9552; docs.equinix.com",
+      "Notes": "Sole IBX KA1.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-ottawa",
+      "Facility": "Equinix Ottawa",
+      "Operator": "Equinix",
+      "Country": "Canada",
+      "Prior Location": "Ottawa, ON",
+      "Address / Campus": "200 Avenue Lepine, Gatineau, QC J8L 0B3",
+      "Latitude": 45.575353,
+      "Longitude": -75.398115,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/ot1; PeeringDB fac 9551",
+      "Notes": "Sole IBX OT1 (Gatineau serving Ottawa).",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-saint-john",
+      "Facility": "Equinix Saint John",
+      "Operator": "Equinix",
+      "Country": "Canada",
+      "Prior Location": "Saint John, NB",
+      "Address / Campus": "7 McIntosh Street, Saint John, NB E2K 5B7",
+      "Latitude": 45.292567,
+      "Longitude": -66.099191,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/sj1; PeeringDB fac 9550",
+      "Notes": "Sole IBX SJ1.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-vancouver",
+      "Facility": "Equinix Vancouver",
+      "Operator": "Equinix",
+      "Country": "Canada",
+      "Prior Location": "Vancouver, BC",
+      "Address / Campus": "4185 Still Creek Drive, Unit B, Burnaby, BC V5C 6G9",
+      "Latitude": 49.260409,
+      "Longitude": -123.01094,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/va1; PeeringDB fac 9548",
+      "Notes": "Sole IBX VA1 (Burnaby). No VA2 page retrieved.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-winnipeg",
+      "Facility": "Equinix Winnipeg",
+      "Operator": "Equinix",
+      "Country": "Canada",
+      "Prior Location": "Winnipeg, MB",
+      "Address / Campus": "1450 Waverley Street, Winnipeg, MB R3T 0P6",
+      "Latitude": 49.824978,
+      "Longitude": -97.178151,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/wi1; PeeringDB fac 9547",
+      "Notes": "Sole IBX WI1.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-abidjan",
+      "Facility": "Equinix Abidjan",
+      "Operator": "Equinix",
+      "Country": "Côte d’Ivoire",
+      "Prior Location": "Abidjan",
+      "Address / Campus": "VITIB Zone Franche Grand-Bassam, Ilot 6, Lot 46, BP 605",
+      "Latitude": 5.230347,
+      "Longitude": -3.757779,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/ab1; PeeringDB fac 12168",
+      "Notes": "Sole IBX AB1. Equinix lot/campus + PDB named facility in Grand-Bassam free zone (not Abidjan centroid).",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-bordeaux",
+      "Facility": "Equinix Bordeaux",
+      "Operator": "Equinix",
+      "Country": "France",
+      "Prior Location": "Bordeaux",
+      "Address / Campus": "39 rue de Strasbourg, 33520 Bruges",
+      "Latitude": 44.89582,
+      "Longitude": -0.611387,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/bx1; PeeringDB fac 11287",
+      "Notes": "Sole IBX BX1 (Bruges suburb).",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-dusseldorf",
+      "Facility": "Equinix Düsseldorf",
+      "Operator": "Equinix",
+      "Country": "Germany",
+      "Prior Location": "Düsseldorf",
+      "Address / Campus": "Albertstrasse 27, 40233 Düsseldorf",
+      "Latitude": 51.219632,
+      "Longitude": 6.80715,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/du1; PeeringDB fac 351",
+      "Notes": "Sole IBX DU1.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-fr7",
+      "Facility": "Equinix FR7",
+      "Operator": "Equinix",
+      "Country": "Germany",
+      "Prior Location": "Frankfurt",
+      "Address / Campus": "Gutleutstrasse 310, 60327 Frankfurt",
+      "Latitude": 50.0974261,
+      "Longitude": 8.6443332,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+OSM+T3",
+      "Sources": "equinix.com/fr7; OSM “Equinix FR7”; PeeringDB fac 74",
+      "Notes": "Central Frankfurt IBX; PDB 50.096869,8.644169.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-hamburg",
+      "Facility": "Equinix Hamburg",
+      "Operator": "Equinix",
+      "Country": "Germany",
+      "Prior Location": "Hamburg",
+      "Address / Campus": "Vierenkamp 1, 22453 Hamburg (Niendorf)",
+      "Latitude": 53.64479,
+      "Longitude": 9.97477,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/hh1; PeeringDB fac 7868",
+      "Notes": "Sole IBX HH1.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-accra",
+      "Facility": "Equinix Accra",
+      "Operator": "Equinix",
+      "Country": "Ghana",
+      "Prior Location": "Accra",
+      "Address / Campus": "Plot No 1, Benin Boulevard, Appolonia Industrial Park, Appolonia City",
+      "Latitude": 5.802659,
+      "Longitude": -0.094369,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/ac1; PeeringDB fac 1965",
+      "Notes": "Sole IBX AC1.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-chennai",
+      "Facility": "Equinix Chennai",
+      "Operator": "Equinix",
+      "Country": "India",
+      "Prior Location": "Chennai",
+      "Address / Campus": "Plot H12, SIPCOT Industrial Park, Siruseri, Chengalpet, 603103",
+      "Latitude": 12.826015,
+      "Longitude": 80.219345,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/cn1; PeeringDB fac 16763",
+      "Notes": "Sole IBX CN1 retrieved; no CN2 page. SIPCOT plot, not Chennai centroid.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-genoa",
+      "Facility": "Equinix Genoa",
+      "Operator": "Equinix",
+      "Country": "Italy",
+      "Prior Location": "Genoa",
+      "Address / Campus": "Via Lungobisagno Istria 14/A, 16141 Genova",
+      "Latitude": 44.426913,
+      "Longitude": 8.950105,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/gn1; PeeringDB fac 15046",
+      "Notes": "Sole IBX GN1.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-ty1",
+      "Facility": "Equinix TY1",
+      "Operator": "Equinix",
+      "Country": "Japan",
+      "Prior Location": "Tokyo",
+      "Address / Campus": "TRC C Building, B Block 4F, 6-5-1 Heiwajima, Ota-ku, Tokyo 143-0006",
+      "Latitude": 35.576366,
+      "Longitude": 139.749055,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/ty1; PeeringDB fac 168",
+      "Notes": "Floor in Tokyo Ryutsu Center complex; Equinix IBX not a cage-in-another-DC. PDB named TY1.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-ty11",
+      "Facility": "Equinix TY11",
+      "Operator": "Equinix",
+      "Country": "Japan",
+      "Prior Location": "Tokyo",
+      "Address / Campus": "1-2-41 Ariake, Koto-ku, Tokyo 135-0063",
+      "Latitude": 35.639737,
+      "Longitude": 139.792362,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/ty11; PeeringDB fac 8924",
+      "Notes": null,
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-ty2",
+      "Facility": "Equinix TY2",
+      "Operator": "Equinix",
+      "Country": "Japan",
+      "Prior Location": "Tokyo",
+      "Address / Campus": "3-8-21 Higashi-Shinagawa, Shinagawa-ku, Tokyo 140-0002",
+      "Latitude": 35.617432,
+      "Longitude": 139.748106,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/ty2; PeeringDB fac 452",
+      "Notes": null,
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-ty3",
+      "Facility": "Equinix TY3",
+      "Operator": "Equinix",
+      "Country": "Japan",
+      "Prior Location": "Tokyo",
+      "Address / Campus": "1-9-20 Edagawa, Koto-ku, Tokyo 135-0051",
+      "Latitude": 35.6567,
+      "Longitude": 139.803428,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/ty3; PeeringDB fac 1253",
+      "Notes": null,
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-ty4",
+      "Facility": "Equinix TY4",
+      "Operator": "Equinix",
+      "Country": "Japan",
+      "Prior Location": "Tokyo",
+      "Address / Campus": "Otemachi Financial City North Tower B1F, 1-9-5 Otemachi, Chiyoda-ku, Tokyo 100-0004",
+      "Latitude": 35.688354,
+      "Longitude": 139.765922,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/ty4; PeeringDB fac 1893",
+      "Notes": "IBX in mixed-use tower basement, not a cage in another DC.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-ty6",
+      "Facility": "Equinix TY6",
+      "Operator": "Equinix",
+      "Country": "Japan",
+      "Prior Location": "Tokyo",
+      "Address / Campus": "2-2-43 Higashi-Shinagawa, Shinagawa-ku, Tokyo 140-0002",
+      "Latitude": 35.622542,
+      "Longitude": 139.748312,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/ty6; PeeringDB fac 3333",
+      "Notes": "Same published street as TY7; Equinix treats as separate IBX (5-storey vs TY7 7-storey).",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-ty7",
+      "Facility": "Equinix TY7",
+      "Operator": "Equinix",
+      "Country": "Japan",
+      "Prior Location": "Tokyo",
+      "Address / Campus": "2-2-43 Higashi-Shinagawa, Shinagawa-ku, Tokyo 140-0002",
+      "Latitude": 35.622542,
+      "Longitude": 139.748312,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/ty7; PeeringDB fac 3335",
+      "Notes": "Do not collapse with TY6.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-ty8",
+      "Facility": "Equinix TY8",
+      "Operator": "Equinix",
+      "Country": "Japan",
+      "Prior Location": "Tokyo",
+      "Address / Campus": "Harbor Premium II, 2-1-7 Higashi-Shinagawa, Shinagawa-ku, Tokyo 140-0002",
+      "Latitude": 35.622203,
+      "Longitude": 139.747926,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/ty8; PeeringDB fac 3336",
+      "Notes": null,
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-am11",
+      "Facility": "Equinix AM11",
+      "Operator": "Equinix",
+      "Country": "Netherlands",
+      "Prior Location": "Amsterdam",
+      "Address / Campus": "Lemelerbergweg 28, 1101 AH Amsterdam",
+      "Latitude": 52.3040255,
+      "Longitude": 4.9393076,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+OSM+T3",
+      "Sources": "equinix.com/am11; OSM “Equinix AM11”; PeeringDB fac 1222",
+      "Notes": "Equinix notes unmanned site next to AM7.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-am5",
+      "Facility": "Equinix AM5",
+      "Operator": "Equinix",
+      "Country": "Netherlands",
+      "Prior Location": "Amsterdam",
+      "Address / Campus": "Schepenbergweg 42, 1105 AT Amsterdam",
+      "Latitude": 52.2934707,
+      "Longitude": 4.9447435,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+OSM+T3",
+      "Sources": "equinix.com/am5; OSM “Equinix Amsterdam AM5”; PeeringDB fac 1236",
+      "Notes": "PDB 52.293351,4.945054.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-am6",
+      "Facility": "Equinix AM6",
+      "Operator": "Equinix",
+      "Country": "Netherlands",
+      "Prior Location": "Amsterdam",
+      "Address / Campus": "Duivendrechtsekade 80A, 1096 AH Amsterdam",
+      "Latitude": 52.3372041,
+      "Longitude": 4.9331725,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+OSM",
+      "Sources": "equinix.com/am6; OSM “Equinix AM6”",
+      "Notes": "Equinix related cards also say Amstel Business Park Campus.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-am7",
+      "Facility": "Equinix AM7",
+      "Operator": "Equinix",
+      "Country": "Netherlands",
+      "Prior Location": "Amsterdam",
+      "Address / Campus": "Kuiperbergweg 13–19 campus, 1101 AE Amsterdam",
+      "Latitude": 52.3030586,
+      "Longitude": 4.9379392,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+OSM+T3",
+      "Sources": "equinix.com/am7; OSM “Equinix AM7” at 13; PeeringDB fac 62; archello.com AM7 expansion at 19",
+      "Notes": "Equinix current Address block is 19; OSM/PDB/related cards use 13. Adjacent expansion/FoH on same Amstel III campus — not a city pin.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-am8",
+      "Facility": "Equinix AM8",
+      "Operator": "Equinix",
+      "Country": "Netherlands",
+      "Prior Location": "Amsterdam",
+      "Address / Campus": "Gyroscoopweg 2E-2F, 1042 AB Amsterdam",
+      "Latitude": 52.3971397,
+      "Longitude": 4.8388491,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+OSM+T3",
+      "Sources": "equinix.com/am8; OSM “Equinix AM8”; PeeringDB fac 80",
+      "Notes": "OSM labels 2F; Equinix 2E-2F.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-lima",
+      "Facility": "Equinix Lima",
+      "Operator": "Equinix",
+      "Country": "Peru",
+      "Prior Location": "Lima",
+      "Address / Campus": "Calle Centauro 115, Santiago de Surco, Lima 15023",
+      "Latitude": -12.087361,
+      "Longitude": -76.97314,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/lm1; PeeringDB fac 7320",
+      "Notes": "Sole IBX LM1.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-ld4",
+      "Facility": "Equinix LD4",
+      "Operator": "Equinix",
+      "Country": "United Kingdom",
+      "Prior Location": null,
+      "Address / Campus": "Slough Trading Estate",
+      "Latitude": 51.5226239,
+      "Longitude": -0.6274534,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://www.equinix.com/data-centers/europe-colocation/united-kingdom-colocation/london-data-centers",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "equinix-ld5",
+      "Facility": "Equinix LD5",
+      "Operator": "Equinix",
+      "Country": "United Kingdom",
+      "Prior Location": null,
+      "Address / Campus": "Slough Trading Estate",
+      "Latitude": 51.5226239,
+      "Longitude": -0.6274534,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://www.equinix.com/data-centers/europe-colocation/united-kingdom-colocation/london-data-centers",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "equinix-ld6",
+      "Facility": "Equinix LD6",
+      "Operator": "Equinix",
+      "Country": "United Kingdom",
+      "Prior Location": null,
+      "Address / Campus": "Slough Trading Estate",
+      "Latitude": 51.5226239,
+      "Longitude": -0.6274534,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://www.equinix.com/data-centers/europe-colocation/united-kingdom-colocation/london-data-centers",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "equinix-ld8",
+      "Facility": "Equinix LD8",
+      "Operator": "Equinix",
+      "Country": "United Kingdom",
+      "Prior Location": "London",
+      "Address / Campus": "6/7/8/9 Harbour Exchange Square, Limeharbour, E14 9GE London",
+      "Latitude": 51.498842,
+      "Longitude": -0.014327,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/ld8; PeeringDB fac 45 “Equinix LD8 - London, Docklands”",
+      "Notes": "PDB named facility + Equinix street; Docklands not London centroid.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-dc14",
+      "Facility": "Equinix DC14",
+      "Operator": "Equinix",
+      "Country": "United States",
+      "Prior Location": "Manassas, VA",
+      "Address / Campus": "7400 Infantry Ridge Road, Manassas, VA 20109",
+      "Latitude": 38.8034063,
+      "Longitude": -77.5105681,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+OSM",
+      "Sources": "equinix.com/dc14; OSM way 1227539675 “Equinix DC14”; datacentermap.com/equinix-dc14",
+      "Notes": "OSM named facility includes 7400; matches Equinix Address block.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-dc15",
+      "Facility": "Equinix DC15",
+      "Operator": "Equinix",
+      "Country": "United States",
+      "Prior Location": "Ashburn, VA",
+      "Address / Campus": "44780 Performance Circle, Ashburn, VA 20147",
+      "Latitude": 39.0225002,
+      "Longitude": -77.4502558,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+OSM",
+      "Sources": "equinix.com/dc15; OSM “Equinix Ashburn DC15”",
+      "Notes": "Do not use Ashburn campus Filigree Ct bundle pin.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-dc16",
+      "Facility": "Equinix DC16",
+      "Operator": "Equinix",
+      "Country": "United States",
+      "Prior Location": "Ashburn, VA",
+      "Address / Campus": "44740 Performance Circle, Ashburn, VA 20147",
+      "Latitude": 39.0242346,
+      "Longitude": -77.4522874,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+OSM+T3",
+      "Sources": "equinix.com/dc16; OSM “Equinix Ashburn DC16”; PeeringDB fac 15438",
+      "Notes": "PDB 39.024202,-77.452284 agrees with OSM building.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-dc21",
+      "Facility": "Equinix DC21",
+      "Operator": "Equinix",
+      "Country": "United States",
+      "Prior Location": null,
+      "Address / Campus": "22175 Beaumeade Circle, Ashburn, VA",
+      "Latitude": 39.0115448,
+      "Longitude": -77.454718,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/washington-dc-data-centers",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "equinix-houston",
+      "Facility": "Equinix Houston",
+      "Operator": "Equinix",
+      "Country": "United States",
+      "Prior Location": "Houston, TX",
+      "Address / Campus": "1515 Aldine Meadows Road, Houston, TX 77032",
+      "Latitude": 29.9358,
+      "Longitude": -95.36435,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/ho1; PeeringDB fac 5334",
+      "Notes": "Sole IBX HO1.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-ny2",
+      "Facility": "Equinix NY2",
+      "Operator": "Equinix",
+      "Country": "United States",
+      "Prior Location": "Secaucus, NJ",
+      "Address / Campus": "275 Hartz Way, Secaucus, NJ 07094",
+      "Latitude": 40.7775822,
+      "Longitude": -74.0759403,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+OSM",
+      "Sources": "equinix.com/ny2; OSM “Equinix New York Secaucus NY2”",
+      "Notes": "Reject PeeringDB fac 36 bundle at 800 Secaucus Rd (NY5).",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-ny3",
+      "Facility": "Equinix NY3",
+      "Operator": "Equinix",
+      "Country": "United States",
+      "Prior Location": "Secaucus, NJ",
+      "Address / Campus": "600 Jefferson Avenue, Secaucus, NJ 07094",
+      "Latitude": 40.7746352,
+      "Longitude": -74.0689686,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+OSM+T3",
+      "Sources": "equinix.com/ny3; OSM “Equinix NY3”; PeeringDB fac 16827",
+      "Notes": "PDB 40.775204,-74.068019 agrees with OSM/Equinix street.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-ny4",
+      "Facility": "Equinix NY4",
+      "Operator": "Equinix",
+      "Country": "United States",
+      "Prior Location": null,
+      "Address / Campus": "755 Secaucus Road, Secaucus, NJ 07094",
+      "Latitude": 40.7764281,
+      "Longitude": -74.0697759,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers/ny4",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "equinix-ny5",
+      "Facility": "Equinix NY5",
+      "Operator": "Equinix",
+      "Country": "United States",
+      "Prior Location": "Secaucus, NJ",
+      "Address / Campus": "800 Secaucus Rd, Secaucus, NJ 07094",
+      "Latitude": 40.7786296,
+      "Longitude": -74.0722997,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+OSM",
+      "Sources": "equinix.com/ny5; OSM “Equinix New York Secaucus NY5”",
+      "Notes": null,
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-ny6",
+      "Facility": "Equinix NY6",
+      "Operator": "Equinix",
+      "Country": "United States",
+      "Prior Location": "Secaucus, NJ",
+      "Address / Campus": "105 Enterprise Avenue South, Secaucus, NJ 07094",
+      "Latitude": 40.7774913,
+      "Longitude": -74.0726876,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+OSM",
+      "Sources": "equinix.com/ny6; OSM “Equinix Secaucus NY6”",
+      "Notes": "OSM names building on Enterprise Avenue South; Equinix supplies number 105.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "equinix-ny9",
+      "Facility": "Equinix NY9",
+      "Operator": "Equinix",
+      "Country": "United States",
+      "Prior Location": null,
+      "Address / Campus": "111 8th Avenue, New York, NY 10011",
+      "Latitude": 40.7417176,
+      "Longitude": -74.0041592,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers/ny9",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "equinix-philadelphia",
+      "Facility": "Equinix Philadelphia",
+      "Operator": "Equinix",
+      "Country": "United States",
+      "Prior Location": "Philadelphia, PA",
+      "Address / Campus": "401 N Broad Street, Suite 990, Philadelphia, PA 19108",
+      "Latitude": 39.959668,
+      "Longitude": -75.161377,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3",
+      "Sources": "equinix.com/ph1; PeeringDB fac 146",
+      "Notes": "Sole IBX PH1 is a suite in the 401 N Broad carrier hotel (multi-operator). Pin is the named building, not City Hall centroid (~0.8 km south).",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "google-pryor-mayes-county",
+      "Facility": "Google Pryor / Mayes County Data Center",
+      "Operator": "Google",
+      "Country": "United States",
+      "Prior Location": null,
+      "Address / Campus": "4581 Webb Street, Pryor, OK 74361 (MidAmerica Industrial Park)",
+      "Latitude": 36.2411721,
+      "Longitude": -95.3300473,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://tulsachamber.com/membership/active-member/google-inc./ ; https://www.google.com/about/datacenters/locations/",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "google-stillwater",
+      "Facility": "Google Stillwater Data Center Campus",
+      "Operator": "Google",
+      "Country": "United States",
+      "Prior Location": null,
+      "Address / Campus": "1500 E. Richmond Road; SW corner Richmond Road & Jardot Road / Perkins Road (US-177) & Richmond Road, Stillwater, OK",
+      "Latitude": 36.17408,
+      "Longitude": -97.0408584,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://www.okcommerce.gov/google-has-acquired-land-in-stillwater/ ; https://www.thestillwegian.news/planning-commission-advances-google-data-center-final-plat/ ; https://www.google.com/about/datacenters/locations/",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "hetzner-falkenstein",
+      "Facility": "Hetzner Datacenter-Park Falkenstein",
+      "Operator": "Hetzner Online",
+      "Country": "Germany",
+      "Prior Location": "Falkenstein",
+      "Address / Campus": "Am Datacenter-Park 1, 08223 Falkenstein/Vogtland, Germany",
+      "Latitude": 50.478786,
+      "Longitude": 12.334859,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T3 map",
+      "Sources": "Hetzner colocation page (T1); DataCenters.com; Data Center Map; HostDir citing PeeringDB 50.4787860, 12.3348590",
+      "Notes": "Hetzner-owned park (FSN1, 22 halls). Campus precision. PeeringDB geocode corroborates the operator street. Suitable for a public research pin. Do not explode DC1–DC22.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "micron-boise",
+      "Facility": "Micron Boise Campus / HVM Fab",
+      "Operator": "Micron",
+      "Country": null,
+      "Prior Location": null,
+      "Address / Campus": "8000 S Federal Way, Boise, ID 83716 (existing campus; new HVM fabs co-located)",
+      "Latitude": 43.5301411,
+      "Longitude": -116.150825,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://www.micron.com/about/locations ; https://www.nist.gov/chips/micron-idaho-boise",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "micron-singapore-hbm-packaging",
+      "Facility": "Micron Singapore HBM Advanced Packaging Facility",
+      "Operator": "Micron",
+      "Country": null,
+      "Prior Location": null,
+      "Address / Campus": "Adjacent to Micron Woodlands campus at 1 Woodlands Industrial Park D Street 1, Singapore 738799",
+      "Latitude": 1.431993,
+      "Longitude": 103.7673775,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://investors.micron.com/news/press-release/2025/Micron-Breaks-Ground-on-New-HBM-Advanced-Packaging-Facility-in-Singapore-01-08-2025/default.aspx ; https://www.businesstimes.com.sg/companies-markets/micron-invests-us7-billion-woodlands-advanced-packaging-site-1400-jobs-be-created",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "microsoft-cheyenne-business-parkway",
+      "Facility": "Microsoft Cheyenne Business Parkway Datacenter",
+      "Operator": "Microsoft",
+      "Country": "United States",
+      "Prior Location": null,
+      "Address / Campus": "Cheyenne Business Parkway, Cheyenne, WY",
+      "Latitude": 41.1421309,
+      "Longitude": -104.7164285,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://datacenters.microsoft.com/home/",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "nscc-aspire-2a",
+      "Facility": "NSCC ASPIRE 2A",
+      "Operator": "NSCC",
+      "Country": null,
+      "Prior Location": null,
+      "Address / Campus": "NUS Innovation 4.0 (i4.0) building, 3 Research Link, Singapore 117602 (Level 2 data halls)",
+      "Latitude": 1.2945764,
+      "Longitude": 103.7756446,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://help.nscc.sg/aspire2a/urgent_maintenance_2a_30_apr_2026-3-2-2-3/ ; https://sbr.com.sg/co-written-partner/event-news/bringing-sustainable-supercomputing-tropics",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "qts-vimercate",
+      "Facility": "QTS Vimercate",
+      "Operator": "QTS",
+      "Country": "Italy",
+      "Prior Location": "Vimercate, Italy",
+      "Address / Campus": "Via John Fitzgerald Kennedy 34, 20871 Vimercate (MB), Italy (former IBM industrial site; 3 buildings planned)",
+      "Latitude": 45.6284131,
+      "Longitude": 9.3568827,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://va.mite.gov.it/File/Documento/1311403 ; https://q.com/data-centers/vimercate-en/ ; OSM way 338684982 (Castel, 34 Via JFK)",
+      "Notes": "Italian EIA T1. Not Via C. Olivetti (STMicroelectronics Agrate). OSM industrial building on the parcel.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-eemshaven",
+      "Facility": "QTS Netherlands Eemshaven",
+      "Operator": "QTS",
+      "Country": "Netherlands",
+      "Prior Location": "Eemshaven",
+      "Address / Campus": "EEM1: Huibertgatweg 2, 9979 XZ Eemshaven, Netherlands",
+      "Latitude": 53.4368242,
+      "Longitude": 6.8591669,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/netherlands-eemshaven-nl/ ; QTS Compliance Matrix ; https://www.peeringdb.com/fac/532 ; OSM node Huibertgatweg 2",
+      "Notes": "Distinct from Google Eemshaven. OSM house + PeeringDB 53.437293, 6.858243.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-groningen",
+      "Facility": "QTS Netherlands Groningen",
+      "Operator": "QTS",
+      "Country": "Netherlands",
+      "Prior Location": "Groningen",
+      "Address / Campus": "GRO1: Zernikelaan 16, 9747 AA Groningen, Netherlands",
+      "Latitude": 53.2460957,
+      "Longitude": 6.5286202,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "QTS Compliance Matrix ; https://www.dutchdatacenters.nl/en/participants/qts/ ; https://www.peeringdb.com/fac/426 ; OSM node Zernikelaan 16",
+      "Notes": "Distinct from Google Groningen (planned). OSM house + PeeringDB 53.246048, 6.52852.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-ashburn-1",
+      "Facility": "QTS Ashburn 1",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Sterling, VA",
+      "Address / Campus": "ASH1 campus: DC1 22271 Broderick Dr, Sterling, VA 20166; DC2 22280 Randolph Dr (under construction)",
+      "Latitude": 38.9996134,
+      "Longitude": -77.4501392,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/ashburn-1/ ; https://q.com/wp-content/uploads/2025/03/QTS_ComplianceMatrix.pdf ; OSM way 701923200 named QTS Ashburn 1",
+      "Notes": "OSM building pin on DC1. Multi-building campus; keep as one campus ID.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-ashburn-2",
+      "Facility": "QTS Ashburn 2",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Sterling, VA",
+      "Address / Campus": "ASH2 Lockridge: DC1 44675 Quality Tech Ln; DC2 44655 Quality Tech Ln, Sterling, VA 20166",
+      "Latitude": 38.9951642,
+      "Longitude": -77.4551149,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/ashburn-2/ ; OSM way 1188680253 named QTS Ashburn Lockridge",
+      "Notes": "Distinct from Ashburn 1 / 3 / Moran. OSM names Lockridge campus.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-ashburn-3",
+      "Facility": "QTS Ashburn 3",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Ashburn, VA",
+      "Address / Campus": "ASH3: DC1 22291 Shellhorn Rd; DC2 22271 Shellhorn Rd, Ashburn, VA 20147",
+      "Latitude": 38.9980479,
+      "Longitude": -77.4756034,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/ashburn-3/ ; QTS Compliance Matrix ; OSM way 1003348567 named QTS Ashburn-Shellhorn DC1",
+      "Notes": "Do not confuse 22271 Shellhorn (ASH3 DC2) with 22271 Broderick (ASH1).",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-ashburn-moran",
+      "Facility": "QTS Ashburn Moran",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Sterling, VA",
+      "Address / Campus": "44874 Moran Rd, Sterling, VA 20166",
+      "Latitude": 38.9940802,
+      "Longitude": -77.4480309,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/ashburn-moran/ ; QTS Compliance Matrix ; OSM way 460175664 named QTS Ashburn-Moran",
+      "Notes": "Operator T1 is 44874 Moran Rd. OSM named building uses 1510 Moran Rd. Same named facility; house-number conflict only.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-atlanta-1",
+      "Facility": "QTS Atlanta 1",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Atlanta, GA",
+      "Address / Campus": "ATL1 99-acre campus: DC1 1033 Jefferson St NW; DC2 1025 Jefferson St NW; DC3 953 Herndon St NW; DC4 1103 Herndon St NW, Atlanta, GA 30318",
+      "Latitude": 33.7783453,
+      "Longitude": -84.4210909,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/atlanta-1/ ; OSM way 269847438 named QTS Atlanta Data Center 1",
+      "Notes": "Four buildings, one campus. Not Fayetteville / Fairwater.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-augusta",
+      "Facility": "QTS Augusta",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Augusta, GA",
+      "Address / Campus": "2883 Gordon Hwy, Augusta, GA 30909 (Project Eisenhower / Eagle South LLC; 6-building campus)",
+      "Latitude": 33.4377472,
+      "Longitude": -82.1547421,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://theaugustapress.com/augusta-planning-commission-votes-to-recommend-rezoning-for-data-center-on-gordon-highway/ ; https://theaugustapress.com/qts-unveils-more-about-gordon-highway-data-project/ ; OSM house 2883 Gordon Highway",
+      "Notes": "T1/T2: Augusta Planning Commission rezoning + QTS staff-quoted address. OSM is address interpolation (street, not footprint). Community-meeting school address is not the DC.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-blakely",
+      "Facility": "QTS Blakely",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Blakely, GA",
+      "Address / Campus": "Project Blue Hole, undeveloped land off Martha Berry Hwy near Early County Airport, Blakely, GA",
+      "Latitude": 31.406296,
+      "Longitude": -84.912908,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1",
+      "Sources": "https://apps.dca.ga.gov/DRI/InitialForm.aspx?driid=4651 ; https://q.com/data-centers/blakely/",
+      "Notes": "Georgia DRI T1 GPS for QTS-Blakely. No house number. Campus pin is the filed site, not a city centroid.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-cedar-rapids",
+      "Facility": "QTS Cedar Rapids",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Cedar Rapids, IA",
+      "Address / Campus": "CDR1: 6200 76th Ave SW Units 100/200/300, Cedar Rapids, IA 52228 (Big Cedar Industrial Center; 612 acres planned)",
+      "Latitude": 41.9056197,
+      "Longitude": -91.7509874,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/cedar-rapids/ ; OSM house 6200 76th Avenue Southwest",
+      "Notes": "Distinct from Google Cedar Rapids. OSM interpolation (street).",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-chicago",
+      "Facility": "QTS Chicago",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Chicago, IL",
+      "Address / Campus": "CHI1 30-acre campus, 2800 S Ashland Ave, Chicago, IL 60608 (2 buildings, same campus)",
+      "Latitude": 41.8422152,
+      "Longitude": -87.6689701,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/chicago/ ; QTS Compliance Matrix ; OSM way 209786637 named QTS Chicago",
+      "Notes": "Do not split. Second building is on the same Ashland campus, not a second Chicago site.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-colorado-springs",
+      "Facility": "QTS Colorado Springs",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Colorado Springs, CO",
+      "Address / Campus": "311 S Rockrimmon Blvd, Colorado Springs, CO 80919",
+      "Latitude": 38.9220674,
+      "Longitude": -104.8426568,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/colorado-springs/ ; OSM house 311 South Rockrimmon Boulevard",
+      "Notes": "Single building. OSM interpolation.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-denver-aurora",
+      "Facility": "QTS Denver (Aurora)",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Aurora, CO",
+      "Address / Campus": "DEN1: 1160 N Gun Club Rd, Aurora, CO 80018",
+      "Latitude": 39.7323334,
+      "Longitude": -104.7158893,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/denver/ ; QTS Compliance Matrix ; OSM house 1160 North Gun Club Road",
+      "Notes": "OSM interpolation.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-east-windsor",
+      "Facility": "QTS East Windsor",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "East Windsor, NJ",
+      "Address / Campus": "PJC1: 159 Princeton-Hightstown Rd, East Windsor, NJ 08520",
+      "Latitude": 40.2805645,
+      "Longitude": -74.5540415,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/east-windsor/ ; QTS Compliance Matrix ; OSM house 159 Princeton-Hightstown Road",
+      "Notes": "OSM interpolation.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-fort-worth",
+      "Facility": "QTS Fort Worth",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Fort Worth, TX",
+      "Address / Campus": "FTW1: DC1 14100 Park Vista Blvd; DC2 14052 Park Vista Blvd, Fort Worth, TX 76177",
+      "Latitude": 32.981432,
+      "Longitude": -97.262693,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/fort-worth/ ; QTS Compliance Matrix ; OSM house 14100 Park Vista Boulevard",
+      "Notes": "Two buildings, one campus. OSM interpolation on DC1.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-hillsboro-1",
+      "Facility": "QTS Hillsboro 1",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Hillsboro, OR",
+      "Address / Campus": "HIL1 DC1: 4951 NE Huffman St, Hillsboro, OR 97124",
+      "Latitude": 45.5589678,
+      "Longitude": -122.9278524,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/hillsboro-1/ ; OSM way 729192992 named QTS Data Center - Hillsboro 1",
+      "Notes": "Distinct from Hillsboro 2/3 and from Digital Realty PDX10/PDX12.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-hillsboro-2",
+      "Facility": "QTS Hillsboro 2",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Hillsboro, OR",
+      "Address / Campus": "HIL2: DC1 4755; DC2 4425; DC3 4327; DC5 4113 NE Huffman St, Hillsboro, OR",
+      "Latitude": 45.5588758,
+      "Longitude": -122.9296051,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/hillsboro-2/ ; OSM way 909742340 named QTS Data Center - Hillsboro 2",
+      "Notes": "Four buildings on Huffman. Baxtel mis-assigns some Huffman numbers to Hillsboro 3 — ignore that for HIL3.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-irving",
+      "Facility": "QTS Irving",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Irving, TX",
+      "Address / Campus": "DFW1 Longhorn campus: 6431 / 6351 / 6311 / 6300 / 6440 Longhorn Dr, Irving, TX 75063",
+      "Latitude": 32.8972712,
+      "Longitude": -96.9830172,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/irving/ ; OSM way 526806006 named QTS Irving - Dallas Data Center Campus",
+      "Notes": "Six buildings, one campus. Do not split.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-manassas-1",
+      "Facility": "QTS Manassas 1",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Manassas, VA",
+      "Address / Campus": "MAN1: DC1 9400 Godwin Dr; DC2 9420 Godwin Dr, Manassas, VA 20110; DC5 9301 Freedom Center Blvd, Manassas, VA 20109; DC3/4/6 TBD",
+      "Latitude": 38.7524411,
+      "Longitude": -77.5125406,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/manassas/ ; OSM ways named QTS Manassas DC1 (38.7524411, -77.5125406) and DC2 (38.7530647, -77.5107693)",
+      "Notes": "Pin is OSM DC1. Freedom Center Blvd is on-campus DC5, not a second Manassas city site.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-miami",
+      "Facility": "QTS Miami",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Miami, FL",
+      "Address / Campus": "MIA1: 11234 NW 20th St, Miami, FL 33172",
+      "Latitude": 25.7915329,
+      "Longitude": -80.3795596,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/miami/ ; QTS Compliance Matrix ; OSM way 255489281",
+      "Notes": "OSM places the building in Sweetwater, Miami-Dade (33172). Postal Miami / physical Sweetwater.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-new-albany-1",
+      "Facility": "QTS New Albany 1",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "New Albany, OH",
+      "Address / Campus": "DC1 1235 Beech Rd SW; DC2 1225 Beech Rd SW, New Albany, OH 43054 (one operator line also lists DC1 Etna, OH 43062)",
+      "Latitude": 40.066823,
+      "Longitude": -82.754489,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/new-albany-1/ ; OSM house 1235 Beech Road Southwest",
+      "Notes": "Distinct from Meta/Google/Vantage/Intel New Albany. OSM interpolation. Etna vs New Albany is postal/township overlap on Beech Rd.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-new-albany-2",
+      "Facility": "QTS New Albany 2",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "New Albany, OH",
+      "Address / Campus": "DC1 785 Beech Rd SW; DC2 675 Beech Rd SW, New Albany, OH 43054",
+      "Latitude": 40.0725064,
+      "Longitude": -82.7538763,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/new-albany-2/ ; OSM house 785 Beech Road Southwest",
+      "Notes": "Separate Beech Rd campus north of New Albany 1. OSM interpolation.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-phoenix-2",
+      "Facility": "QTS Phoenix 2",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Phoenix, AZ",
+      "Address / Campus": "PHX2: DC1 1200; DC2 1250; DC3 1400; DC4 1450; DC5 1500 N 40th St, Phoenix, AZ 85008",
+      "Latitude": 33.4623279,
+      "Longitude": -111.9951635,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/phoenix-2/ ; https://www.peeringdb.com/fac/13686 (33.462368, -111.995794) ; OSM house 1200 North 40th Street",
+      "Notes": "Not DLR 120 E Van Buren (PeeringDB still lists legacy QTS PHX1 there). OSM interpolation agrees with PeeringDB.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-piscataway",
+      "Facility": "QTS Piscataway",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Piscataway Township, NJ",
+      "Address / Campus": "PNJ1: 101 Possumtown Rd, Piscataway, NJ 08854 (38-acre campus incl. Piscataway 2 expansion)",
+      "Latitude": 40.5569548,
+      "Longitude": -74.4841745,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/piscataway/ ; https://www.peeringdb.com/fac/1177 ; OSM way 362662493 named QTS Piscataway Data Center",
+      "Notes": "Do not split. Piscataway 2 is the on-campus expansion at the same address (Baxtel).",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-richmond-1",
+      "Facility": "QTS Richmond 1",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Sandston, VA",
+      "Address / Campus": "RIC1 White Oak Technology Park: DC1–DC3 6000 Technology Blvd; DC4 3560 Portugee Rd; DC5 3540 Portugee Rd; DC6 3520 Portugee Rd, Sandston, VA 23150",
+      "Latitude": 37.4888273,
+      "Longitude": -77.24749,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/richmond/ ; OSM relation 9892863 at 6000 Technology Boulevard",
+      "Notes": "Multi-building campus. Distinct from RIC2/3/5.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-richmond-2",
+      "Facility": "QTS Richmond 2",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Sandston, VA",
+      "Address / Campus": "RIC2: DC1 6030; DC2 6040; DC3 6050; DC5 6060; DC6 6070 Technology Blvd, Sandston, VA 23150",
+      "Latitude": 37.4881733,
+      "Longitude": -77.2400618,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/richmond-2/ ; OSM way 1493516623 named RIC2 DC1",
+      "Notes": "Numbered campus distinct from RIC1. OSM construction/industrial building RIC2 DC1.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-richmond-3",
+      "Facility": "QTS Richmond 3",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Sandston, VA",
+      "Address / Campus": "RIC3: DC1 3525; DC2 3529; DC3 3535; DC4 3539; DC5 3543 Portugee Rd, Sandston, VA 23150",
+      "Latitude": 37.4805042,
+      "Longitude": -77.2516219,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/richmond-3/ ; OSM way 1493516629 named RIC3 DC1",
+      "Notes": "South side of Portugee Rd vs RIC1 Portugee buildings. OSM type=construction.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-sacramento",
+      "Facility": "QTS Sacramento",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Sacramento, CA",
+      "Address / Campus": "SAC1: 1100 N Market Blvd, Sacramento, CA 95834",
+      "Latitude": 38.646312,
+      "Longitude": -121.4862722,
+      "Precision": "building",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/sacramento/ ; OSM way 194049551 named QTS Sacramento",
+      "Notes": "Single building.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-san-antonio",
+      "Facility": "QTS San Antonio",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "San Antonio, TX",
+      "Address / Campus": "SAT2: 8535 Potranco Rd, San Antonio, TX 78251",
+      "Latitude": 29.4459502,
+      "Longitude": -98.6559305,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/san-antonio/ ; QTS Compliance Matrix ; OSM house 8535 Potranco Road",
+      "Notes": "Operator brands San Antonio 2. OSM interpolation.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-santa-clara",
+      "Facility": "QTS Santa Clara",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Santa Clara, CA",
+      "Address / Campus": "SJC1 campus: DC1 2805 Mission College Blvd; DC2 2807 Mission College Blvd, Santa Clara, CA 95054",
+      "Latitude": 37.3927403,
+      "Longitude": -121.9783809,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/santa-clara/ ; QTS Compliance Matrix ; OSM way 58708529 named QTS Santa Clara 2 at 2805",
+      "Notes": "Two adjacent buildings, one 4-acre campus. Do not split.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "qts-suwanee-1",
+      "Facility": "QTS Suwanee 1",
+      "Operator": "QTS",
+      "Country": "United States",
+      "Prior Location": "Suwanee, GA",
+      "Address / Campus": "SUW1: DC1 300 Satellite Blvd NW; DC2 120 Satellite Blvd NW, Suwanee, GA 30024",
+      "Latitude": 34.0352667,
+      "Longitude": -84.0613078,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "T1+T2",
+      "Sources": "https://q.com/data-centers/suwanee/ ; OSM way 387378765 named QTS Suwanee Data Center 1",
+      "Notes": "Also QTS Operations Support Center. Two buildings, one campus. Do not split.",
+      "Research Batch": "Directory Pass — Workstream B"
+    },
+    {
+      "ID": "related-the-barn-saline",
+      "Facility": "The Barn (Saline Township Stargate Campus)",
+      "Operator": "Related Digital / Oracle",
+      "Country": "United States",
+      "Prior Location": null,
+      "Address / Campus": "11600 W Michigan Avenue, Saline Township, MI 48176 (plus adjoining parcels on N side of US-12 / Michigan Ave, east of Rustic Glen Golf Club, ~575 acres)",
+      "Latitude": 42.115196,
+      "Longitude": -83.8812746,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://thesuntimesnews.com/saline-twp-board-of-trustees-notice-of-public-hearing-9-10-25/ ; https://salinetownship.org/uploads/notices/SalineDataCenterConsentJudgmentFinalExecutionCopy492124804975v1.pdf",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "samsung-taylor-tx",
+      "Facility": "Samsung Taylor Semiconductor Campus",
+      "Operator": "Samsung",
+      "Country": null,
+      "Prior Location": null,
+      "Address / Campus": "1530 FM 973, Taylor, TX 76574-4540; campus between Highway 79 and FM 973 (CR 404 runs through the site)",
+      "Latitude": 30.5320474,
+      "Longitude": -97.4474569,
+      "Precision": "campus",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://records.tceq.texas.gov/cs/idcplg?IdcService=TCEQ_EXTERNAL_SEARCH_GET_FILE&Rendition=Web&dID=9611376&searchType=External ; https://www.taylortx.gov/1276/Samsung-Austin-Semiconductor",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "vantage-frankfurt-i",
+      "Facility": "Vantage Frankfurt I",
+      "Operator": "Vantage Data Centers",
+      "Country": "Germany",
+      "Prior Location": null,
+      "Address / Campus": "Goethering 27, Offenbach am Main 63067",
+      "Latitude": 50.1091096,
+      "Longitude": 8.7438831,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://vantage-dc.com/data-center-locations/",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "vantage-frankfurt-ii",
+      "Facility": "Vantage Frankfurt II",
+      "Operator": "Vantage Data Centers",
+      "Country": "Germany",
+      "Prior Location": null,
+      "Address / Campus": "Alexander-von-Humboldt-Straße 4, Raunheim 65479",
+      "Latitude": 50.0131911,
+      "Longitude": 8.4624392,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://vantage-dc.com/data-center-locations/",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "vantage-warsaw",
+      "Facility": "Vantage Warsaw",
+      "Operator": "Vantage Data Centers",
+      "Country": "Poland",
+      "Prior Location": null,
+      "Address / Campus": "Zgrupowania AK Kampinos 42D, Warsaw 01-949",
+      "Latitude": 52.2931661,
+      "Longitude": 20.9217258,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://vantage-dc.com/data-center-locations/",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "vantage-zurich-i",
+      "Facility": "Vantage Zurich I",
+      "Operator": "Vantage Data Centers",
+      "Country": "Switzerland",
+      "Prior Location": null,
+      "Address / Campus": "12 Fabrikstrasse, Winterthur 8404",
+      "Latitude": 47.5004571,
+      "Longitude": 8.7614463,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://vantage-dc.com/data-center-locations/",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "vantage-ashburn-i",
+      "Facility": "Vantage Ashburn I",
+      "Operator": "Vantage Data Centers",
+      "Country": "United States",
+      "Prior Location": null,
+      "Address / Campus": "45200 Vantage Data Plaza, Sterling, VA 20166",
+      "Latitude": 39.0023686,
+      "Longitude": -77.4376872,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://vantage-dc.com/data-center-locations/",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "vantage-ashburn-ii",
+      "Facility": "Vantage Ashburn II",
+      "Operator": "Vantage Data Centers",
+      "Country": "United States",
+      "Prior Location": null,
+      "Address / Campus": "22435 Glenn Drive, Sterling, VA 20164",
+      "Latitude": 38.9978663,
+      "Longitude": -77.4301823,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://vantage-dc.com/data-center-locations/",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "vantage-phoenix-goodyear",
+      "Facility": "Vantage Phoenix (Goodyear)",
+      "Operator": "Vantage Data Centers",
+      "Country": "United States",
+      "Prior Location": null,
+      "Address / Campus": "45 S. Bullard Avenue, Goodyear, AZ 85338",
+      "Latitude": 33.4464557,
+      "Longitude": -112.3738845,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://vantage-dc.com/data-center-locations/",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "vantage-santa-clara-ii",
+      "Facility": "Vantage Santa Clara II",
+      "Operator": "Vantage Data Centers",
+      "Country": "United States",
+      "Prior Location": null,
+      "Address / Campus": "737 Mathew Street, Santa Clara, CA 95051",
+      "Latitude": 37.3640694,
+      "Longitude": -121.9469073,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://vantage-dc.com/data-center-locations/",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    },
+    {
+      "ID": "vantage-santa-clara-iii",
+      "Facility": "Vantage Santa Clara III",
+      "Operator": "Vantage Data Centers",
+      "Country": "United States",
+      "Prior Location": null,
+      "Address / Campus": "2590 Walsh Avenue, Santa Clara, CA 95051",
+      "Latitude": 37.3712362,
+      "Longitude": -121.9740103,
+      "Precision": "street",
+      "Outcome": "resolved_map_ready",
+      "Evidence Tier": "Phase 4A validated",
+      "Sources": "https://vantage-dc.com/data-center-locations/",
+      "Notes": "Ready from the original 60-record geocoding queue.",
+      "Research Batch": "Phase 4A geocoding"
+    }
+  ],
+  "manualLookup": [
+    {
+      "ID": "aws-morrow-county",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "cyrusone-aurora-chi",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "cyrusone-sterling-nva",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-vienna",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-brussels",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-rio",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-sao-paulo",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-toronto",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-santiago",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-bogota",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-copenhagen",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-marseille",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-paris",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-dusseldorf",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-frankfurt",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-athens",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-hong-kong",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-jakarta",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-dublin",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-osaka",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-tokyo",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-mombasa",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-nairobi",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-queretaro",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-amsterdam",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-lagos",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-singapore",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-madrid",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-stockholm",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-zurich",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-london",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "digital-realty-hillsboro",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-melbourne",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-perth",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-sydney",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-rio-de-janeiro",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-sao-paulo",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-sofia",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-calgary",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-montreal",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-toronto",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-santiago",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-shanghai",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-bogota",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-helsinki",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-paris",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-munich",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-hong-kong",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-mumbai",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-dublin",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-milan",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-osaka",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-monterrey",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-queretaro",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-lagos",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-manila",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-warsaw",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-lisbon",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-singapore",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-seoul",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-barcelona",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-madrid",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-stockholm",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-geneva",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-zurich",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-istanbul",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-dubai",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-manchester",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-atlanta",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-boston",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-chicago",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-culpeper",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-dallas",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-denver",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-los-angeles",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-miami",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-seattle",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "equinix-silicon-valley",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "google-andhra-pradesh",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "google-selangor",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "google-singapore",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "google-chesterfield-va",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "google-columbus-oh",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "google-haskell-county-tx",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "google-kansas-city-mo",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "google-the-dalles",
+      "Current Outcome": "entity_split_required"
+    },
+    {
+      "ID": "cyrusone-chandler-phx",
+      "Current Outcome": "human_review"
+    },
+    {
+      "ID": "equinix-abu-dhabi",
+      "Current Outcome": "human_review"
+    },
+    {
+      "ID": "google-st-ghislain",
+      "Current Outcome": "human_review"
+    },
+    {
+      "ID": "google-berkeley-county-sc",
+      "Current Outcome": "human_review"
+    },
+    {
+      "ID": "google-papillion",
+      "Current Outcome": "human_review"
+    },
+    {
+      "ID": "google-lowcountry-sc",
+      "Current Outcome": "human_review"
+    },
+    {
+      "ID": "hetzner-singapore",
+      "Current Outcome": "human_review"
+    },
+    {
+      "ID": "hetzner-ashburn",
+      "Current Outcome": "human_review"
+    },
+    {
+      "ID": "hetzner-hillsboro",
+      "Current Outcome": "human_review"
+    },
+    {
+      "ID": "vantage-santa-clara-i",
+      "Current Outcome": "identity_conflict"
+    },
+    {
+      "ID": "digital-realty-cape-town",
+      "Current Outcome": "identity_conflict"
+    },
+    {
+      "ID": "digital-realty-durban",
+      "Current Outcome": "identity_conflict"
+    },
+    {
+      "ID": "digital-realty-johannesburg",
+      "Current Outcome": "identity_conflict"
+    },
+    {
+      "ID": "cyrusone-dfw10-bosque",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "dataone-vineland",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "fermi-project-matador-campus",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "fermi-matador-gas-generation",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "google-canelones",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "google-cedar-rapids",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "intel-ohio-one",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "meta-eagle-mountain",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "meta-hyperion",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "meta-richland-parish",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "microsoft-cheyenne-bison-business-park",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "microsoft-sweden-staffanstorp",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "naver-gak-sejong",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nebius-vineland-cluster",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "project-jupiter-dona-ana",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "sk-hynix-cheongju",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "sk-hynix-yongin",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "samsung-pyeongtaek",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "vantage-ashburn-iii",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "vantage-berlin-ii",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "vantage-fredericksburg",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "vantage-johannesburg-i",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "vantage-lighthouse-port-washington",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "vantage-milan-i",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "vantage-milan-ii",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "vantage-new-albany",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "vantage-quincy",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "vantage-reno",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "vantage-zurich-ii",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "cyrusone-allen-dfw3",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "cyrusone-carrollton-dfw1",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "cyrusone-lewisville-dfw2",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "digital-realty-fortaleza",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "digital-realty-heraklion",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "digital-realty-rome",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "digital-realty-maputo",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "digital-realty-lisbon",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "equinix-jakarta",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "equinix-ty10",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "equinix-ty12x",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "equinix-ty13x",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "equinix-ty15",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "equinix-ty5",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "equinix-ty9",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "equinix-salalah",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "equinix-johannesburg",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "equinix-ld10",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "equinix-ld11x",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "equinix-ld13x",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "equinix-ld9",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "equinix-ny13",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "google-eemshaven",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "google-lenoir",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "google-new-albany-oh",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "hetzner-helsinki",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "hetzner-nuremberg",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-a1-adelaide",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-b1-brisbane",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-b2-brisbane",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-c1-canberra",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-d1-darwin",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-m1-melbourne",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-m2-melbourne",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-m3-melbourne",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-ne1-newman",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-p1-perth",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-p2-perth",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-ph1-port-hedland",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-s1-sydney",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-s2-sydney",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-s4-sydney",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-s6-sydney",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-s7-sydney",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-sc1-sunshine-coast",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "nextdc-kl1-kuala-lumpur",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "qts-cambois",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "qts-bessemer",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "qts-eagle-mountain",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "qts-phoenix-3",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "qts-phoenix-4",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "qts-richmond-5",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "qts-south-dallas",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "qts-van-wert",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "qts-york-county",
+      "Current Outcome": "resolved_address_only"
+    },
+    {
+      "ID": "airtrunk-bom2",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "airtrunk-bom3",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "airtrunk-hyd1",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "airtrunk-maa1",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-paris-par1",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-frankfurt-fra",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-dublin-dub1",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-milan-mil",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-osaka-osk1",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-amsterdam-ams1",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-madrid-mad1",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-london-lon",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-austin-aus",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-cincinnati-cin2",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-council-bluffs-ocb1",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-durham",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-florence-cin6",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-freestone-county",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-houston-hou",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-jack-county",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-lebanon-oh-cin5",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-lee-county-nc",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-medina-county",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-norwalk-nym5",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-quincy-pnw1",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-san-antonio-sat1",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-san-antonio-sat2",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-san-antonio-sat5",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-sangamon-county",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-somerset-nym1",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-sulphur-springs",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-totowa-nym2",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-wappingers-nym7",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "cyrusone-yorkville",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "equinix-muscat",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "uae-us-ai-campus-abu-dhabi",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-kronstorf",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-farciennes",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-quilicura",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-fredericia",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-muhos",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-vaala",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-dietzenbach",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-hanau",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-dublin",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-groningen",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-middenmeer",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-winschoten",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-skien",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-horndal",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-changhua",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-chonburi",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-waltham-cross",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-armstrong-county-tx",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-columbia-county-ga",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-dorchester-county-sc",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-douglas-county-ga",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-fort-wayne",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-henderson-nv",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-hermantown",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-jackson-county-al",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-lagrange-ga",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-lancaster-oh",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-lincoln-ne",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-loudoun-county-va",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-mesa-az",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-michigan-city-in",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-midlothian-tx",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-montgomery-county-tn",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-morgan-county-in",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-muskogee-county-ok",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-new-florence-mo",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-omaha",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-pampa-tx",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-pine-island-mn",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-prince-william-va",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-red-oak-tx",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-storey-county-nv",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-tulsa",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-van-buren-mi",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-west-memphis-ar",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "google-wilbarger-county-tx",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "iren-sweetwater",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-aiken",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-altoona",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-beaver-dam",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-bowling-green",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-cheyenne",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-dekalb",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-el-paso",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-forest-city",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-fort-worth",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-gallatin",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-henrico",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-huntsville",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-jeffersonville",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-kansas-city",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-kuna",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-lebanon",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-los-lunas",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-mesa",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-montgomery",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-prineville",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-rosemount",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-sarpy",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-stanton-springs",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-temple",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "meta-tulsa",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "microsoft-sweden-sandviken",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "naver-gak-chuncheon",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "nextdc-gc1-gold-coast",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "nextdc-ge1-geelong",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "nextdc-m4-melbourne",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "nextdc-s5-sydney",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "nextdc-tk1-tokyo",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "nextdc-tk2-tokyo",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "nextdc-ak1-auckland",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "qts-hillsboro-3",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "qts-salem-township",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "teraco-durban",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "vantage-montreal-i",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "vantage-montreal-ii",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "vantage-montreal-iii",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "vantage-quebec-city",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "vantage-dublin",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "vantage-cyberjaya-ii",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "vantage-johannesburg-ii",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "vantage-london-i",
+      "Current Outcome": "still_city_only"
+    },
+    {
+      "ID": "vantage-london-ii",
+      "Current Outcome": "still_city_only"
+    }
+  ]
+}

@@ -1,10 +1,10 @@
 /**
- * Server-only loading of the published facility set.
+ * Server-only loading of the public facility set.
  *
  * Four conditions decide what the public map shows, and all four are in the one
  * query rather than spread between SQL and TypeScript:
  *
- *   1. the record is published,
+ *   1. the record is verified (`published`) or a public research record,
  *   2. it has a position better than a city centroid — through the same
  *      `reference.facility_is_map_eligible` the write-side constraint uses, so
  *      the read filter and the write gate cannot drift,
@@ -47,6 +47,7 @@ const PUBLISHED_FACILITIES_SQL = `
          f.latitude                         as latitude,
          f.longitude                        as longitude,
          f.coordinate_precision             as coordinate_precision,
+         f.publication_state                as publication_state,
          to_char(f.last_verified_date, 'YYYY-MM-DD') as last_verified_date,
          coalesce(
            (select json_agg(json_build_object('publisher', e.publisher, 'title', e.title, 'url', e.document_url)
@@ -56,10 +57,27 @@ const PUBLISHED_FACILITIES_SQL = `
            '[]'::json
          )                                  as sources
     from reference.facilities f
-   where f.publication_state = 'published'
+   where f.publication_state in ('published', 'research')
      and reference.facility_is_map_eligible(f.latitude, f.longitude, f.coordinate_precision)
+     and (f.lifecycle_status is null or f.lifecycle_status not in ('cancelled', 'retired'))
      and f.last_verified_date is not null
      and f.last_verified_date >= (current_date - ($1::integer))
+     and exists (select 1 from reference.facility_evidence e where e.facility_id = f.id)
+     and (
+       exists (
+         select 1 from reference.facility_evidence e
+         join reference.facility_evidence_claims c on c.evidence_id = e.id
+         where e.facility_id = f.id and c.claim_field in ('location', 'coordinates')
+           and reference.facility_evidence_source_tier(e.document_type) <= 2
+       )
+       or 2 <= (
+         select count(distinct lower(btrim(e.publisher)))
+         from reference.facility_evidence e
+         join reference.facility_evidence_claims c on c.evidence_id = e.id
+         where e.facility_id = f.id and c.claim_field in ('location', 'coordinates')
+           and reference.facility_evidence_source_tier(e.document_type) = 3
+       )
+     )
      and (
        f.category <> 'power_infrastructure'
        or exists (
@@ -116,21 +134,22 @@ function toPublicFacility(row: Record<string, unknown>): PublicFacility | null {
     ownerName: text(row.owner_name),
     operatorName: text(row.operator_name),
     lifecycleStatus: (text(row.lifecycle_status) as PublicFacility["lifecycleStatus"]) ?? null,
+    verificationStatus: row.publication_state === "published" ? "verified" : "research",
     lastVerifiedDate: String(row.last_verified_date),
     sources: readSources(row.sources),
   };
 }
 
-/** How many facilities are published at all, whatever the staleness filter then does. */
-async function countPublished(sql: SqlExecutor): Promise<number> {
-  const { rows } = await sql.query(`select count(*)::int as n from reference.facilities where publication_state = 'published'`, []);
+/** How many facilities are candidates for a public map, before map-safety filters. */
+async function countPublicCandidates(sql: SqlExecutor): Promise<number> {
+  const { rows } = await sql.query(`select count(*)::int as n from reference.facilities where publication_state in ('published', 'research')`, []);
   return Number(rows[0]?.n ?? 0);
 }
 
 export async function loadFacilityReadModel(sql: SqlExecutor): Promise<FacilityMapReadModel> {
   const [{ rows }, published] = await Promise.all([
     sql.query(PUBLISHED_FACILITIES_SQL, [FACILITY_VERIFICATION_HORIZON_DAYS]),
-    countPublished(sql),
+    countPublicCandidates(sql),
   ]);
 
   const byCategory: Record<FacilityCategory, number> = {
@@ -160,7 +179,7 @@ export async function loadFacilityReadModel(sql: SqlExecutor): Promise<FacilityM
   };
 
   if (facilities.length === 0) {
-    return { ...emptyFacilityReadModel("no_published_facilities"), coverage };
+    return { ...emptyFacilityReadModel("no_public_facilities"), coverage };
   }
 
   return {
