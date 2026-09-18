@@ -1,0 +1,147 @@
+name: Map production import
+
+# Manual only. Nothing about the facility map is on a schedule: an import is a
+# decision to change what a public map claims exists, and a decision needs a
+# person to make it.
+on:
+  workflow_dispatch:
+    inputs:
+      write:
+        description: "Write to UrdaisProd. Leave false for a dry run."
+        type: boolean
+        required: false
+        default: false
+      dataset:
+        description: "Dataset file to import."
+        type: string
+        required: false
+        default: data/map/facilities.v1.json
+      expected_public:
+        description: "Assert this many map-visible facilities after the run. Blank to skip."
+        type: string
+        required: false
+        default: ""
+      expected_digest:
+        description: "Pin the dataset digest the dispatch intends to write. Blank to skip."
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+# Two imports writing the same table at once is the one thing that could leave
+# it half-written, so runs queue rather than cancel: cancelling mid-transaction
+# is not safer, it just loses the report.
+concurrency:
+  group: map-production-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    name: ${{ inputs.write && 'import (write)' || 'import (dry run)' }}
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.URDAIS_PRODUCTION_DATABASE_URL }}
+      DATASET: ${{ inputs.dataset }}
+      EXPECTED_PUBLIC: ${{ inputs.expected_public }}
+      EXPECTED_DIGEST: ${{ inputs.expected_digest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Require a production database
+        run: |
+          set -euo pipefail
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "URDAIS_PRODUCTION_DATABASE_URL is not set for this repository."
+            echo "This workflow imports into UrdaisProd and cannot run without it."
+            exit 1
+          fi
+
+      # Always, and before anything else. A dry run against production reads the
+      # research keys already stored, so it resolves relationships and reports
+      # duplicates exactly as the write would -- which a dry run with no
+      # database cannot do. It writes nothing.
+      - name: Dry run against production
+        run: |
+          set -euo pipefail
+          npm run --silent map:import -- --file "${DATASET}" | tee dry-run.json
+
+      # Read-only, and a snapshot rather than a gate: before the first import the
+      # table is empty, so every comparison legitimately disagrees. Baseline mode
+      # prints all of it and still fails on the only two things that should stop
+      # a run this early -- a dataset that does not plan cleanly, and a dataset
+      # that is not the one the dispatch pinned.
+      - name: Production readiness before the import
+        run: |
+          set -euo pipefail
+          ARGS=(--dataset "${DATASET}" --baseline)
+          if [ -n "${EXPECTED_DIGEST}" ]; then
+            ARGS+=(--expected-digest "${EXPECTED_DIGEST}")
+          fi
+          npm run --silent map:production:check -- "${ARGS[@]}" | tee before.json
+
+      - name: Write to production
+        if: ${{ inputs.write }}
+        run: |
+          set -euo pipefail
+          npm run --silent map:import -- --file "${DATASET}" --write | tee write.json
+
+      # The same command a second time. A correct importer makes this a no-op;
+      # one that re-inserted or re-stamped every run would look identical on the
+      # map while churning the rows underneath it, which is exactly what the
+      # readiness check asserts against this report.
+      - name: Re-run the import to prove idempotence
+        if: ${{ inputs.write }}
+        run: |
+          set -euo pipefail
+          npm run --silent map:import -- --file "${DATASET}" --write | tee rewrite.json
+
+      # Database counts, the deployed API's count, and the public map page. The
+      # expectation is asserted only when the operator gave one.
+      - name: Verify production after the import
+        if: ${{ inputs.write }}
+        run: |
+          set -euo pipefail
+          ARGS=(--dataset "${DATASET}" --idempotence rewrite.json)
+          if [ -n "${EXPECTED_PUBLIC}" ]; then
+            ARGS+=(--expected-public "${EXPECTED_PUBLIC}")
+          fi
+          if [ -n "${EXPECTED_DIGEST}" ]; then
+            ARGS+=(--expected-digest "${EXPECTED_DIGEST}")
+          fi
+          npm run --silent map:production:check -- "${ARGS[@]}" | tee after.json
+
+      - name: Say what happened
+        if: ${{ !inputs.write }}
+        run: |
+          echo "Dry run only. Nothing was written."
+          echo "Re-dispatch with write=true to import."
+
+      # The reports are the record of what an import did to a public surface.
+      # They contain counts, digests and review candidates; the importer and the
+      # check never print a connection string.
+      - name: Upload the reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: map-import-reports
+          path: |
+            dry-run.json
+            before.json
+            write.json
+            rewrite.json
+            after.json
+          if-no-files-found: ignore
+          retention-days: 90
