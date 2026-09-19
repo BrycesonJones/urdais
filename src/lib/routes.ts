@@ -5,7 +5,7 @@ export const MARKETS_HREF = "/markets";
 /** The Model Economics analytical market. Not an index route: it has no symbol. */
 export const MODEL_ECONOMICS_HREF = `${MARKETS_HREF}/model-economics`;
 
-/** The Compute Analytics analytical market: forward pricing, utilization, and hardware economics. Not an index route. */
+/** The Compute Economics analytical market: current listed pricing and modeled hardware payback. Not an index route. */
 export const COMPUTE_ANALYTICS_HREF = `${MARKETS_HREF}/compute-analytics`;
 
 /** The Power Analytics analytical market: grid delivery capacity, not price. Not an index route. */

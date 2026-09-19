@@ -8,7 +8,7 @@ vi.mock("@/components/model-economics/utvi-section", () => ({ UtviSection: () =>
 vi.mock("@/components/model-economics/market-share-chart", () => ({ MarketShareChart: () => null }));
 vi.mock("@/components/model-economics/model-frontier-chart", () => ({ ModelFrontierChart: () => null }));
 vi.mock("@/components/model-economics/open-weight-analysis", () => ({ OpenWeightAnalysis: () => null }));
-vi.mock("@/components/compute-analytics/payback-period-chart", () => ({ PaybackPeriodChart: () => null }));
+vi.mock("@/components/compute-analytics/compute-economics-analysis", () => ({ ComputeEconomicsAnalysis: () => null }));
 vi.mock("@/components/power-analytics/flexible-capacity-chart", () => ({ FlexibleCapacityChart: () => null }));
 vi.mock("@/components/power-analytics/grid-buildout-chart", () => ({ GridBuildoutChart: () => null }));
 vi.mock("@/components/power-analytics/interconnection-queue", () => ({ InterconnectionQueue: () => null }));
@@ -29,10 +29,10 @@ const PAGES = [
     tabs: ["Price", "Volume", "Share", "Frontier", "Open-weight"],
   },
   {
-    renderPage: () => render(<ComputeAnalyticsPage />),
-    title: "Compute Analytics",
-    subtitle: "Compute investment economics and payback.",
-    description: "Estimate hardware cost recovery for the selected AI accelerator.",
+    renderPage: () => render(<ComputeAnalyticsPage model={{ generatedAt: "2026-09-18T12:00:00.000Z", instruments: [], unavailableReason: "no_supported_price" }} />),
+    title: "Compute Economics",
+    subtitle: "Investment economics for AI accelerators using observed compute prices and explicit operating assumptions.",
+    description: "A modeled scenario, not an observed operator return or a forecast of future compute prices.",
     tabs: [],
   },
   {
