@@ -147,6 +147,14 @@ export const docPages: readonly DocPage[] = [
     file: "methodology/open-weight-proprietary.md",
   },
   {
+    slug: "methodology/available-compute-capacity",
+    title: "Available Compute Capacity",
+    description:
+      "Draft methodology for the observed compute supply dataset: the measurement hierarchy from exact quantity to availability state, aggregation, deduplication, freshness, and why an advertised price is not evidence of capacity.",
+    section: "Methodology",
+    file: "methodology/available-compute-capacity.md",
+  },
+  {
     slug: "methodology/map-facilities",
     title: "Map Facilities",
     description:
