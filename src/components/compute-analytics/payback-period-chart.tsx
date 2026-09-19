@@ -17,7 +17,7 @@ const PADDING = { top: 24, right: 48, bottom: 30, left: 8 };
 /**
  * Payback Period: years to recover the selected accelerator's acquisition
  * cost at each forward tenor, from the same forward marks, the latest
- * fleet utilization, and explicit hardware and operating assumptions.
+ * utilization assumption, and explicit hardware and operating assumptions.
  * Lower is better and the copy says so; a tenor whose net revenue is not
  * positive is shown as "Not economic" rather than a negative number.
  */
@@ -51,11 +51,11 @@ export function PaybackPeriodChart({ instrumentId }: { instrumentId: string }) {
     .join(", ")}. Lower is better.`;
 
   return (
-    <section id="payback" aria-labelledby="payback-heading" className="scroll-mt-24 border-t border-white/10 pt-8">
+    <section id="payback" aria-labelledby="payback-heading" className="scroll-mt-24">
       <SectionHeading
         id="payback-heading"
         title="Payback Period"
-        subtitle="Years to recover hardware investment along the forward curve"
+        subtitle="Years to recover hardware investment under demo pricing scenarios"
         aside={
           <p className="tabular-nums sm:text-right">
             <span className="block font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">{analysis.label} · spot payback</span>
@@ -106,7 +106,7 @@ export function PaybackPeriodChart({ instrumentId }: { instrumentId: string }) {
         ))}
       </ol>
       <p className="mt-3 text-xs text-neutral-500">
-        Demo assumptions · utilization {formatNumber(analysis.utilizationPercent, 0)}% (latest fleet observation) · acquisition ${formatNumber(analysis.economics.acquisitionCostUsd, 0)} · power {formatNumber(analysis.economics.powerDrawKw, 2)} kW while rented · electricity ${formatNumber(analysis.electricityCostPerKwh, 2)}/kWh · hosting ${formatNumber(analysis.economics.hostingCostPerGpuHour, 2)}/GPU-hour available · other ${formatNumber(analysis.economics.otherOperatingCostPerGpuHour, 2)}/GPU-hour rented. Payback = acquisition cost ÷ (gross rental revenue − electricity − hosting − other), over 8,760 hours.
+        Demo assumptions · utilization {formatNumber(analysis.utilizationPercent, 0)}% (assumed) · acquisition ${formatNumber(analysis.economics.acquisitionCostUsd, 0)} · power {formatNumber(analysis.economics.powerDrawKw, 2)} kW while rented · electricity ${formatNumber(analysis.electricityCostPerKwh, 2)}/kWh · hosting ${formatNumber(analysis.economics.hostingCostPerGpuHour, 2)}/GPU-hour available · other ${formatNumber(analysis.economics.otherOperatingCostPerGpuHour, 2)}/GPU-hour rented. Payback = acquisition cost ÷ (gross rental revenue − electricity − hosting − other), over 8,760 hours.
         {viable.length < analysis.points.length && " Tenors marked Not economic have no positive net revenue, so the hardware never pays back."}
       </p>
     </section>

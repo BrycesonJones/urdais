@@ -8,8 +8,6 @@ vi.mock("@/components/model-economics/utvi-section", () => ({ UtviSection: () =>
 vi.mock("@/components/model-economics/market-share-chart", () => ({ MarketShareChart: () => null }));
 vi.mock("@/components/model-economics/model-frontier-chart", () => ({ ModelFrontierChart: () => null }));
 vi.mock("@/components/model-economics/open-weight-analysis", () => ({ OpenWeightAnalysis: () => null }));
-vi.mock("@/components/compute-analytics/compute-forward-curve", () => ({ ComputeForwardCurve: () => null }));
-vi.mock("@/components/compute-analytics/available-capacity-section", () => ({ AvailableCapacitySection: () => null }));
 vi.mock("@/components/compute-analytics/payback-period-chart", () => ({ PaybackPeriodChart: () => null }));
 vi.mock("@/components/power-analytics/flexible-capacity-chart", () => ({ FlexibleCapacityChart: () => null }));
 vi.mock("@/components/power-analytics/grid-buildout-chart", () => ({ GridBuildoutChart: () => null }));
@@ -18,17 +16,9 @@ vi.mock("@/components/power-analytics/power-delivery-gap-chart", () => ({ PowerD
 vi.mock("@/components/power-analytics/transmission-headroom", () => ({ TransmissionHeadroom: () => null }));
 
 import { ComputeAnalyticsPage } from "@/components/compute-analytics/compute-analytics-page";
-import { emptyCapacityReadModel, emptyCoverage } from "@/lib/capacity/read/read-model";
 import { MeasurementTaxonomySection } from "@/components/home/measurement-taxonomy-section";
 import { ModelEconomicsPage } from "@/components/model-economics/model-economics-page";
 import { PowerAnalyticsPage } from "@/components/power-analytics/power-analytics-page";
-
-/**
- * Compute Analytics takes its capacity model from the server, and the empty
- * one is the state these header tests want: the header must render identically
- * whether or not the dataset has any observations.
- */
-const EMPTY_CAPACITY = emptyCapacityReadModel("no_eligible_source", emptyCoverage());
 
 const PAGES = [
   {
@@ -39,11 +29,11 @@ const PAGES = [
     tabs: ["Price", "Volume", "Share", "Frontier", "Open-weight"],
   },
   {
-    renderPage: () => render(<ComputeAnalyticsPage capacity={EMPTY_CAPACITY} />),
+    renderPage: () => render(<ComputeAnalyticsPage />),
     title: "Compute Analytics",
-    subtitle: "The economics of computational infrastructure.",
-    description: "Forward pricing, observed available capacity, and hardware payback across the compute market.",
-    tabs: ["Forwards", "Capacity", "Payback"],
+    subtitle: "Compute investment economics and payback.",
+    description: "Estimate hardware cost recovery for the selected AI accelerator.",
+    tabs: [],
   },
   {
     renderPage: () => render(<PowerAnalyticsPage />),
@@ -76,9 +66,13 @@ describe.each(PAGES)("$title header", ({ renderPage, title, subtitle, descriptio
     const header = screen.getByRole("banner");
     expect(within(header).getByText(subtitle)).toBeInTheDocument();
     expect(within(header).getByText(description)).toBeInTheDocument();
-    const nav = screen.getByRole("navigation", { name: "Sections" });
-    for (const tab of tabs) {
-      expect(within(nav).getByRole("link", { name: tab })).toBeInTheDocument();
+    if (tabs.length === 0) {
+      expect(screen.queryByRole("navigation", { name: "Sections" })).not.toBeInTheDocument();
+    } else {
+      const nav = screen.getByRole("navigation", { name: "Sections" });
+      for (const tab of tabs) {
+        expect(within(nav).getByRole("link", { name: tab })).toBeInTheDocument();
+      }
     }
   });
 });
