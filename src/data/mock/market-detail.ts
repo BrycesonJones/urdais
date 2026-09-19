@@ -166,7 +166,7 @@ const UCPI_MARKET: MarketDetail = {
       label: "Compute",
       instruments: buildFamilyInstruments(COMPUTE_SPECS),
       defaultInstrumentId: "ucpi-h100-sxm",
-      explore: { label: "Explore Compute Analytics", href: COMPUTE_ANALYTICS_HREF },
+      explore: { label: "Explore Compute Economics", href: COMPUTE_ANALYTICS_HREF },
     },
     {
       id: "tokens",

@@ -155,6 +155,14 @@ export const docPages: readonly DocPage[] = [
     file: "methodology/available-compute-capacity.md",
   },
   {
+    slug: "methodology/compute-economics",
+    title: "Compute Economics",
+    description:
+      "Production methodology for Payback: current released Urdais listed-GPU prices combined with explicit scenario assumptions, reproducible cash-flow formulas, freshness controls, and utilization sensitivity.",
+    section: "Methodology",
+    file: "methodology/compute-economics.md",
+  },
+  {
     slug: "methodology/map-facilities",
     title: "Map Facilities",
     description:
