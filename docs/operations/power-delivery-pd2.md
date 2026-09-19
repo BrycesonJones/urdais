@@ -31,7 +31,7 @@ For each UTC hour, select one current `actual_load` observation for every member
 
 EIA is registered in the existing provider/source-interface/permission registry. Every API page is recorded in `pipeline.source_retrievals`; every native row is retained in append-only `pipeline.raw_power_records`. Identical re-reads retain raw evidence without duplicating current canonical state. A changed value inserts a new `pipeline.power_observations` row and supersedes the prior row, preserving what EIA previously reported and when the change was observed.
 
-The collector requires server-only `EIA_API_KEY`. Scheduled runs reread the previous 48 completed hours so revisions are observed. `npm run power-delivery:ingest -- --start YYYY-MM-DDTHH --end YYYY-MM-DDTHH --backfill` provides the historical path. Reruns are content-idempotent, API pages are paginated, transient errors are retried, and each completed run is summarized in `pipeline.power_ingestion_runs`.
+The collector requires server-only `EIA_API_KEY`. Scheduled runs reread the previous 48 completed hours so revisions are observed and request the current plus next 23 UTC hours so available day-ahead `DF` rows reach the operational-forecast read path. Future `D` rows remain absent/unavailable; they are never fabricated. `npm run power-delivery:ingest -- --start YYYY-MM-DDTHH --end YYYY-MM-DDTHH --backfill` provides the historical path. Reruns are content-idempotent, API pages are paginated, transient errors are retried, and each completed run is summarized in `pipeline.power_ingestion_runs`.
 
 ## Explicit exclusions
 

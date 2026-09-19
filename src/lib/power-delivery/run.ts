@@ -23,10 +23,13 @@ function utcHour(date: Date): string {
   return date.toISOString().slice(0, 13);
 }
 
-/** Default scheduled window: the previous 48 completed UTC hours, allowing EIA revisions. */
+/**
+ * Default collection window: reread the previous 48 completed UTC hours for revisions and
+ * request the current plus next 23 UTC hours so the day-ahead DF read surface has live data.
+ */
 export function scheduledPowerWindow(now = new Date()): { start: string; end: string } {
   const currentHour = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours());
-  return { start: utcHour(new Date(currentHour - 48 * 3_600_000)), end: utcHour(new Date(currentHour - 3_600_000)) };
+  return { start: utcHour(new Date(currentHour - 48 * 3_600_000)), end: utcHour(new Date(currentHour + 23 * 3_600_000)) };
 }
 
 export async function runPowerIngestion(
