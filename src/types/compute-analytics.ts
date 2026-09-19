@@ -1,13 +1,16 @@
 /**
  * Compute Analytics: the economics of owning, renting, and deploying
  * computational infrastructure. These shapes describe one demo data graph
- * (UCPI compute instruments → spot history, forward marks, fleet
- * observations, hardware economics) and the views derived from it. UCPI
- * answers what usable compute costs today; this answers where it is
- * priced forward, how tight the fleet is, and how fast hardware pays back.
+ * (UCPI compute instruments → spot history, forward marks, hardware
+ * economics) and the views derived from it. UCPI answers what usable
+ * compute costs today; this answers where it is priced forward and how
+ * fast hardware pays back.
+ *
+ * Observed market supply is not here. Available Compute Capacity is a real
+ * dataset over real source observations and lives in @/lib/capacity; it
+ * shares no types with this file precisely so that a demo number can never
+ * reach it.
  */
-
-import type { TimeSeriesPoint } from "@/types/market";
 
 /** Term structure tenors, in display order. "spot" is the current UCPI mark. */
 export const TENORS = ["spot", "1M", "3M", "6M", "1Y"] as const;
@@ -49,22 +52,6 @@ export type ForwardCurve = {
   shape: CurveShape;
 };
 
-/** A fleet observation: rented GPUs out of those available to rent. */
-export type FleetObservation = {
-  time: number;
-  instrumentId: string;
-  availableGpuCount: number;
-  rentedGpuCount: number;
-};
-
-export type UtilizationSeries = {
-  instrumentId: string;
-  label: string;
-  /** utilization = rented ÷ available, percent, one point per observation. */
-  points: TimeSeriesPoint[];
-  currentPercent: number;
-};
-
 export type PaybackPoint = {
   tenor: Tenor;
   forwardPricePerGpuHour: number;
@@ -80,7 +67,11 @@ export type PaybackPoint = {
 export type PaybackAnalysis = {
   instrumentId: string;
   label: string;
-  /** Utilization used for every tenor: the latest fleet observation. */
+  /**
+   * The utilization assumption every tenor is computed at. A disclosed
+   * assumption, not an observation: no source Urdais can reach reports
+   * provider utilization, and this surface is demo pricing regardless.
+   */
   utilizationPercent: number;
   economics: HardwareEconomics;
   electricityCostPerKwh: number;

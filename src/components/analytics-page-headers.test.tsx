@@ -9,7 +9,7 @@ vi.mock("@/components/model-economics/market-share-chart", () => ({ MarketShareC
 vi.mock("@/components/model-economics/model-frontier-chart", () => ({ ModelFrontierChart: () => null }));
 vi.mock("@/components/model-economics/open-weight-analysis", () => ({ OpenWeightAnalysis: () => null }));
 vi.mock("@/components/compute-analytics/compute-forward-curve", () => ({ ComputeForwardCurve: () => null }));
-vi.mock("@/components/compute-analytics/fleet-utilization-chart", () => ({ FleetUtilizationChart: () => null }));
+vi.mock("@/components/compute-analytics/available-capacity-section", () => ({ AvailableCapacitySection: () => null }));
 vi.mock("@/components/compute-analytics/payback-period-chart", () => ({ PaybackPeriodChart: () => null }));
 vi.mock("@/components/power-analytics/flexible-capacity-chart", () => ({ FlexibleCapacityChart: () => null }));
 vi.mock("@/components/power-analytics/grid-buildout-chart", () => ({ GridBuildoutChart: () => null }));
@@ -18,27 +18,35 @@ vi.mock("@/components/power-analytics/power-delivery-gap-chart", () => ({ PowerD
 vi.mock("@/components/power-analytics/transmission-headroom", () => ({ TransmissionHeadroom: () => null }));
 
 import { ComputeAnalyticsPage } from "@/components/compute-analytics/compute-analytics-page";
+import { emptyCapacityReadModel, emptyCoverage } from "@/lib/capacity/read/read-model";
 import { MeasurementTaxonomySection } from "@/components/home/measurement-taxonomy-section";
 import { ModelEconomicsPage } from "@/components/model-economics/model-economics-page";
 import { PowerAnalyticsPage } from "@/components/power-analytics/power-analytics-page";
 
+/**
+ * Compute Analytics takes its capacity model from the server, and the empty
+ * one is the state these header tests want: the header must render identically
+ * whether or not the dataset has any observations.
+ */
+const EMPTY_CAPACITY = emptyCapacityReadModel("no_eligible_source", emptyCoverage());
+
 const PAGES = [
   {
-    Page: ModelEconomicsPage,
+    renderPage: () => render(<ModelEconomicsPage />),
     title: "Model Economics",
     subtitle: "The economics of machine intelligence.",
     description: "Price, consumption, market share, and capability across the model economy.",
     tabs: ["Price", "Volume", "Share", "Frontier", "Open-weight"],
   },
   {
-    Page: ComputeAnalyticsPage,
+    renderPage: () => render(<ComputeAnalyticsPage capacity={EMPTY_CAPACITY} />),
     title: "Compute Analytics",
     subtitle: "The economics of computational infrastructure.",
-    description: "Forward pricing, fleet utilization, and hardware payback across the compute market.",
-    tabs: ["Forwards", "Utilization", "Payback"],
+    description: "Forward pricing, observed available capacity, and hardware payback across the compute market.",
+    tabs: ["Forwards", "Capacity", "Payback"],
   },
   {
-    Page: PowerAnalyticsPage,
+    renderPage: () => render(<PowerAnalyticsPage />),
     title: "Power Analytics",
     subtitle: "The infrastructure delivering power to the Information Age.",
     description: "Load, interconnection, transmission capacity, grid buildout, and flexibility.",
@@ -46,9 +54,9 @@ const PAGES = [
   },
 ];
 
-describe.each(PAGES)("$title header", ({ Page, title, subtitle, description, tabs }) => {
+describe.each(PAGES)("$title header", ({ renderPage, title, subtitle, description, tabs }) => {
   it("renders the H1 without a duplicate eyebrow above it", () => {
-    render(<Page />);
+    renderPage();
     const header = screen.getByRole("banner");
     expect(within(header).getByRole("heading", { level: 1, name: title })).toBeInTheDocument();
     // The page title appears exactly once in the header: the H1 itself.
@@ -64,7 +72,7 @@ describe.each(PAGES)("$title header", ({ Page, title, subtitle, description, tab
   });
 
   it("keeps the subtitle, supporting copy, and section tabs", () => {
-    render(<Page />);
+    renderPage();
     const header = screen.getByRole("banner");
     expect(within(header).getByText(subtitle)).toBeInTheDocument();
     expect(within(header).getByText(description)).toBeInTheDocument();
