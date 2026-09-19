@@ -222,6 +222,9 @@ export function ComputeEconomicsAnalysis({ instrument }: { instrument: ComputeEc
               <div><dt className="text-neutral-500">Hosting expense</dt><dd className="mt-1 tabular-nums text-neutral-200">{usd(result!.hostingAnnualCostUsd)}</dd></div>
               <div><dt className="text-neutral-500">Other operating expense</dt><dd className="mt-1 tabular-nums text-neutral-200">{usd(result!.otherAnnualCostUsd)}</dd></div>
             </dl>
+            <p className="mt-5 text-xs leading-5 text-neutral-500">
+              Calculation basis: 8,760 hours per year. Gross revenue = price × utilization × hours. Power = kW × electricity price × utilization × hours. Hosting = hosting rate × hours. Other operating cost = other rate × utilization × hours. Payback = acquisition cost ÷ positive annual net cash flow.
+            </p>
             {result!.paybackYears === null && <p className="mt-4 text-sm text-amber-200/80">Annual net cash flow is not positive under these assumptions, so the scenario has no finite payback.</p>}
           </section>
 
