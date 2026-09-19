@@ -30,11 +30,9 @@ begin
   -- compute-price one. Narrowed by name rather than dropped.
   select count(*) into n from reference.permission_grants g
     join reference.source_interfaces si on si.id = g.source_interface_id
-   where si.source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface',
-                                 'regulatory_filing_repository',
-                                  'equity_eod_price_interface',
-                                  'issuer_fundamentals_interface',
-                                  'exchange_rate_series');
+   where si.source_class in ('offer_interface', 'catalog_price_interface', 'availability_interface',
+                             'product_reference_documentation', 'hardware_reference_documentation',
+                             'provider_terms_documentation', 'price_surface');
   if n <> 1 then raise exception 'expected one compute-market grant, found %', n; end if;
 
   -- The attribution string is recorded verbatim in the evidence.

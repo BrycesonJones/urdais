@@ -48,7 +48,8 @@
     "ubwi:verify-terms": "tsx scripts/ubwi/verify-terms.ts",
     "utvi:settlement-study": "tsx scripts/research/utvi-settlement-study/run.ts",
     "utvi:settlement-study:report": "tsx scripts/research/utvi-settlement-study/run.ts --report-only",
-    "ugai:prices": "tsx scripts/ugai/prices/ingest.ts"
+    "ugai:prices": "tsx scripts/ugai/prices/ingest.ts",
+    "power-delivery:ingest": "tsx scripts/power-delivery/ingest.ts"
   },
   "dependencies": {
     "github-slugger": "^2.0.0",

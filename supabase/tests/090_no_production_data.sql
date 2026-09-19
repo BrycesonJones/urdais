@@ -125,10 +125,9 @@ begin
   -- about the compute market.
   select count(*) into n from reference.source_interfaces
    where production_access_state = 'production_approved'
-     and source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface',
-                              'equity_eod_price_interface',
-                                  'issuer_fundamentals_interface',
-                                  'exchange_rate_series');
+     and source_class in ('offer_interface', 'catalog_price_interface', 'availability_interface',
+                          'product_reference_documentation', 'hardware_reference_documentation',
+                          'provider_terms_documentation', 'price_surface');
   if n <> 1 then raise exception 'expected exactly one production-approved compute source, found %', n; end if;
   -- No *compute-market* provider interface is cleared on both axes. The UBWI denominator
   -- and FX sources are: they were reviewed in Phases 2B and 2C and each is anchored to a
@@ -141,22 +140,10 @@ begin
   -- docs/architecture/sources/openrouter-datasets.md and exercised in 290.
   select count(*) into n from reference.source_interfaces
    where terms_review_state = 'permitted' and data_use_terms_state = 'permitted'
-     and slug <> 'price-of-compute-prices' and source_class <> 'news_feed'
-     and source_class not in ('statistical_dataset', 'exchange_rate_series', 'usage_dataset_interface',
-                              -- Epoch's benchmark bundle is cleared on both axes by its own
-                              -- CC BY 4.0 grant, stated in the bundle README. Reviewed in
-                              -- docs/research/model-frontier/ and exercised in 300.
-                              'benchmark_dataset_interface',
-                              -- TWSE's OpenAPI is cleared on both axes by the Taiwan Open
-                              -- Government Data License, which the API declares in its own
-                              -- service metadata and which grants derivative works for any
-                              -- purpose subject to attribution. Reviewed in
-                              -- docs/architecture/ugai-production-foundation.md and exercised
-                              -- in 330. Nasdaq, reviewed in the same pass, is refused on both
-                              -- axes and is blocked -- so this class is not a blanket pass.
-                              'equity_eod_price_interface',
-                                  'issuer_fundamentals_interface',
-                                  'exchange_rate_series');
+     and slug <> 'price-of-compute-prices'
+     and source_class in ('offer_interface', 'catalog_price_interface', 'availability_interface',
+                          'product_reference_documentation', 'hardware_reference_documentation',
+                          'provider_terms_documentation', 'price_surface');
   if n <> 0 then raise exception '% direct source(s) cleared on both terms axes without review', n; end if;
 
   -- Every UBWI source that is cleared shows the artifact its state rests on.
@@ -177,11 +164,9 @@ begin
   select count(*) into n from pipeline.source_retrievals where retrieval_purpose <> 'research';
   if n <> 0 then raise exception 'a non-research retrieval exists'; end if;
   select count(*) into n from reference.permission_grants g join reference.source_interfaces si on si.id = g.source_interface_id
-   where si.source_class not in ('news_feed', 'usage_dataset_interface', 'benchmark_dataset_interface',
-                                  'regulatory_filing_repository',
-                                  'equity_eod_price_interface',
-                                  'issuer_fundamentals_interface',
-                                  'exchange_rate_series')
+   where si.source_class in ('offer_interface', 'catalog_price_interface', 'availability_interface',
+                             'product_reference_documentation', 'hardware_reference_documentation',
+                             'provider_terms_documentation', 'price_surface')
      and (si.slug <> 'price-of-compute-prices' or g.grant_kind <> 'provider_terms');
   if n <> 0 then raise exception 'a permission grant exists for a direct provider interface'; end if;
   -- No operator attribution and no tenancy evidence were seeded.

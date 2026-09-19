@@ -95,7 +95,11 @@ declare
     -- evidenced edges between facilities.
     'reference.facilities', 'reference.facility_aliases',
     'reference.facility_evidence', 'reference.facility_evidence_claims',
-    'reference.facility_facts', 'reference.facility_relationships'
+    'reference.facility_facts', 'reference.facility_relationships',
+    -- Power Delivery: physical grid identity, versioned aggregation membership and hourly evidence.
+    'reference.grid_operators', 'reference.grid_areas', 'reference.grid_universes',
+    'reference.grid_universe_versions', 'reference.grid_area_memberships', 'reference.power_metrics',
+    'pipeline.raw_power_records', 'pipeline.power_observations', 'pipeline.power_ingestion_runs'
   ];
   n integer;
 begin
