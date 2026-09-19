@@ -1,10 +1,10 @@
 /**
  * Compute Analytics: the economics of owning, renting, and deploying
- * computational infrastructure. These shapes describe one demo data graph
- * (UCPI compute instruments → spot history, forward marks, hardware
- * economics) and the views derived from it. UCPI answers what usable
- * compute costs today; this answers where it is priced forward and how
- * fast hardware pays back.
+ * computational infrastructure. These shapes describe the demo data graph
+ * currently retained for Payback (UCPI compute instruments → spot history,
+ * synthetic forward marks, hardware economics). The forward-specific shapes
+ * remain only because Phase 1 Payback still consumes them; Phase 2 removes
+ * that dependency when Payback moves to the production price path.
  *
  * Observed market supply is not here. Available Compute Capacity is a real
  * dataset over real source observations and lives in @/lib/capacity; it

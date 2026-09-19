@@ -5,17 +5,18 @@
  *   UCPI compute instruments (same ids, labels, spot histories)
  *     ↓
  *   Spot price (latest UCPI value)   ─┐
- *   Forward marks by tenor            ├→ Compute Forward Curve
+ *   Forward marks by tenor            ─┐
  *   Hardware economics + assumptions  ─┴→ Payback Period
  *
  * Observed market supply is deliberately absent from this file. Available
  * Compute Capacity is a real dataset built from real source observations and
  * lives in @/lib/capacity, with no demo path into it.
  *
- * Every number these two demo views show is computed here; nothing is typed
- * into the UI. Spot marks are read from the UCPI instruments, so the two surfaces
- * cannot drift. Forward marks are demo term pricing, not exchange-traded
- * futures. All values are deterministic demo data anchored at MOCK_AS_OF.
+ * Compute Analytics V1 now renders Payback only. Payback still consumes the
+ * synthetic forward marks below, so this is the minimum forward machinery kept
+ * temporarily for Phase 1. Phase 2 must replace that dependency with the
+ * production price path before these objects and their types can be removed.
+ * All values remain deterministic demo data anchored at MOCK_AS_OF.
  */
 
 import { MARKETS } from "@/data/mock/market-detail";
