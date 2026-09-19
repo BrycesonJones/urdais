@@ -6,29 +6,30 @@
  *     ↓
  *   Spot price (latest UCPI value)   ─┐
  *   Forward marks by tenor            ├→ Compute Forward Curve
- *   Fleet observations (rented/avail) ─┼→ Fleet Utilization
  *   Hardware economics + assumptions  ─┴→ Payback Period
  *
- * Every number the page shows is computed here; nothing is typed into the
- * UI. Spot marks are read from the UCPI instruments, so the two surfaces
+ * Observed market supply is deliberately absent from this file. Available
+ * Compute Capacity is a real dataset built from real source observations and
+ * lives in @/lib/capacity, with no demo path into it.
+ *
+ * Every number these two demo views show is computed here; nothing is typed
+ * into the UI. Spot marks are read from the UCPI instruments, so the two surfaces
  * cannot drift. Forward marks are demo term pricing, not exchange-traded
  * futures. All values are deterministic demo data anchored at MOCK_AS_OF.
  */
 
 import { MARKETS } from "@/data/mock/market-detail";
 import { MOCK_AS_OF } from "@/data/mock/ucpi";
-import type { MarketInstrumentDetail, TimeSeriesPoint } from "@/types/market";
+import type { MarketInstrumentDetail } from "@/types/market";
 import { TENORS } from "@/types/compute-analytics";
 import type {
   CurveShape,
-  FleetObservation,
   ForwardCurve,
   ForwardMark,
   HardwareEconomics,
   PaybackAnalysis,
   PaybackPoint,
   Tenor,
-  UtilizationSeries,
 } from "@/types/compute-analytics";
 
 export const COMPUTE_ANALYTICS_AS_OF = MOCK_AS_OF;
@@ -125,71 +126,39 @@ export function findForwardCurve(instrumentId: string): ForwardCurve {
   return curve;
 }
 
-/* ---------- Fleet utilization ---------- */
-
-const WEEK = 7 * 86_400;
-/** Weekly fleet observations over the trailing year. */
-const FLEET_WEEKS = 53;
-
-type FleetProfile = { available2025: number; fleetGrowth: number; targetUtilization: number; trend: number; wave: number; seed: number };
-
-/** Fleet size at the start of the window, its growth over the year, and the utilization shape it settles into. */
-const FLEET_PROFILES: Record<string, FleetProfile> = {
-  "ucpi-h100-sxm": { available2025: 380_000, fleetGrowth: 0.18, targetUtilization: 0.86, trend: 0.05, wave: 0.02, seed: 1 },
-  "ucpi-h200": { available2025: 120_000, fleetGrowth: 0.6, targetUtilization: 0.85, trend: 0.03, wave: 0.025, seed: 2 },
-  "ucpi-a100-sxm4": { available2025: 260_000, fleetGrowth: -0.06, targetUtilization: 0.76, trend: -0.07, wave: 0.02, seed: 3 },
-  "ucpi-rtx-5090": { available2025: 45_000, fleetGrowth: 1.2, targetUtilization: 0.7, trend: 0.06, wave: 0.04, seed: 4 },
-  "ucpi-b200": { available2025: 30_000, fleetGrowth: 2.4, targetUtilization: 0.78, trend: 0.06, wave: 0.03, seed: 5 },
-};
-
-const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+/* ---------- Payback utilization assumption ---------- */
 
 /**
- * Rented and available GPU counts per week. Utilization is never stored:
- * it is always rented ÷ available, and the modelled share is clamped so it
- * stays inside 0–100%.
+ * The utilization each payback calculation is run at.
+ *
+ * This is a **disclosed assumption**, not an observation, and it is a constant
+ * for that reason. It replaced a generated weekly fleet series that looked like
+ * measurement and was not: no source Urdais can reach reports how much of any
+ * provider's fleet is rented, and the Available Compute Capacity methodology
+ * establishes that provider utilization is not estimable from observable supply
+ * data at all.
+ *
+ * Payback remains demo term pricing. The assumption is surfaced in the payback
+ * view so a reader can see which number the result turns on.
  */
-export const FLEET_OBSERVATIONS: FleetObservation[] = COMPUTE_INSTRUMENTS.flatMap((instrument) => {
-  const p = FLEET_PROFILES[instrument.id];
-  if (!p) throw new Error(`No fleet profile for ${instrument.id}`);
-  return Array.from({ length: FLEET_WEEKS }, (_, index) => {
-    const progress = index / (FLEET_WEEKS - 1);
-    const time = COMPUTE_ANALYTICS_AS_OF - (FLEET_WEEKS - 1 - index) * WEEK;
-    const available = Math.round(p.available2025 * (1 + p.fleetGrowth * progress));
-    const share = clamp(
-      p.targetUtilization + p.trend * (progress - 0.5) + p.wave * Math.sin(p.seed * 1.3 + index * 0.55) + 0.01 * Math.cos(p.seed + index * 1.9),
-      0.05,
-      0.99,
-    );
-    return { time, instrumentId: instrument.id, availableGpuCount: available, rentedGpuCount: Math.round(available * share) };
-  });
-});
+const PAYBACK_UTILIZATION_ASSUMPTION: Record<string, number> = {
+  "ucpi-h100-sxm": 0.88,
+  "ucpi-h200": 0.86,
+  "ucpi-a100-sxm4": 0.73,
+  "ucpi-rtx-5090": 0.72,
+  "ucpi-b200": 0.81,
+};
 
-export function utilizationPercent(observation: FleetObservation): number {
-  return (observation.rentedGpuCount / observation.availableGpuCount) * 100;
-}
-
-export const UTILIZATION_SERIES: UtilizationSeries[] = COMPUTE_INSTRUMENTS.map((instrument) => {
-  const points: TimeSeriesPoint[] = FLEET_OBSERVATIONS.filter((row) => row.instrumentId === instrument.id).map((row) => ({
-    time: row.time,
-    value: utilizationPercent(row),
-  }));
-  return { instrumentId: instrument.id, label: instrument.shortLabel, points, currentPercent: points[points.length - 1]!.value };
-});
-
-/** Current utilization, highest first. */
-export const UTILIZATION_RANKING: UtilizationSeries[] = [...UTILIZATION_SERIES].sort((a, b) => b.currentPercent - a.currentPercent);
-
-export function findUtilization(instrumentId: string): UtilizationSeries {
-  const series = UTILIZATION_SERIES.find((candidate) => candidate.instrumentId === instrumentId);
-  if (!series) throw new Error(`No utilization series for ${instrumentId}`);
-  return series;
+function utilizationAssumption(instrumentId: string): number {
+  const assumption = PAYBACK_UTILIZATION_ASSUMPTION[instrumentId];
+  if (assumption === undefined) throw new Error(`No utilization assumption for ${instrumentId}`);
+  return assumption;
 }
 
 /* ---------- Payback ---------- */
 
 /**
- * Payback along the forward curve, using the latest fleet utilization:
+ * Payback along the forward curve, at the disclosed utilization assumption:
  *   gross      = forward price × utilization × 8,760
  *   electricity = kW × 8,760 × utilization × $/kWh   (power is drawn while rented)
  *   hosting    = hosting $/GPU-hour × 8,760             (paid on availability)
@@ -200,7 +169,7 @@ export function findUtilization(instrumentId: string): UtilizationSeries {
 export function paybackAnalysis(instrumentId: string): PaybackAnalysis {
   const instrument = findComputeInstrument(instrumentId);
   const economics = findHardwareEconomics(instrumentId);
-  const utilization = findUtilization(instrumentId).currentPercent / 100;
+  const utilization = utilizationAssumption(instrumentId);
   const curve = findForwardCurve(instrumentId);
   const points: PaybackPoint[] = curve.marks.map((mark) => {
     const gross = mark.forwardPricePerGpuHour * utilization * HOURS_PER_YEAR;
