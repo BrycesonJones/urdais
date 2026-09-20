@@ -1,0 +1,784 @@
+{
+  "title": "Urdais Power Delivery — PD-3 long-horizon planning demand",
+  "as_of": "2026-09-19",
+  "status": "internal research; establishes no legal right; does not write code, design UI, or select a deliverable-capacity methodology",
+  "product_policy_note": {
+    "applies_to": "public_display_status and v1_states",
+    "note": "public_display_status reflects the research and legal assessment only. Urdais product policy may separately permit public display of sources classified ambiguous_requires_legal_review under founder-accepted legal risk, while preserving the original rights classification, attribution requirements, and unresolved issue in provenance. Sources classified unsuitable_without_permission remain blocked unless explicit permission is obtained.",
+    "changes_nothing_below": "No rights_classification, public_display_status or v1_state value in this file is modified by this note. The research assessment and the product publication policy are separate layers.",
+    "see": "docs/operations/power-delivery-pd3-planning-foundation.md"
+  },
+  "companion_markdown": "docs/research/power-delivery/phase-3-planning-demand.md",
+  "evidence_classes": ["verified", "retrieved", "inferred"],
+  "rights_classes": [
+    "clearly_reusable",
+    "reusable_with_attribution_or_conditions",
+    "ambiguous_requires_legal_review",
+    "unsuitable_without_permission"
+  ],
+  "v1_states": [
+    "production-ready",
+    "production-ready_with_attribution",
+    "internally_ingestible_not_publicly_publishable",
+    "blocked_pending_permission_or_legal_review",
+    "blocked_methodological_incompatibility"
+  ],
+  "pd2_universe": {
+    "slug": "seven_organized_us_wholesale_markets",
+    "note": "PD-3 geography must align to PD-2 physical BA codes, not wholesale-price instruments",
+    "eia930_ba_codes": {
+      "ERCOT": "ERCO",
+      "PJM": "PJM",
+      "MISO": "MISO",
+      "SPP": "SWPP",
+      "CAISO": "CISO",
+      "NYISO": "NYIS",
+      "ISO-NE": "ISNE"
+    }
+  },
+  "executive_conclusions": {
+    "cleanest_planning_forecast_path": [
+      {
+        "market": "ERCOT",
+        "why": "Only market that is both first-party hourly and rights-clean enough to publish with attribution. Latest complete published vintage is April 2025 ERCOT Adjusted Forecast; 2026 LTLF not finalized as of 2026-09-19.",
+        "evidence": "verified"
+      },
+      {
+        "market": "PJM",
+        "why": "Independent staff 20-year zonal/LDA/RTO forecast with Excel, hourly ZIPs, Previous Reports ZIP, and Manual 19 Attachment B large-load screen. Rights block public display.",
+        "evidence": "verified"
+      },
+      {
+        "market": "CAISO",
+        "why": "CEC CED 2025 is the source of record, with CAISO-BAA hourly files and Known Loads split. CEC commercial-use sentence blocks public display pending legal review.",
+        "evidence": "verified"
+      }
+    ],
+    "rights_blockers": [
+      {
+        "source": "MISO website / LTLF whitepapers / OMS-MISO",
+        "classification": "unsuitable_without_permission",
+        "issue": "Website ToU forbids publish, distribute, or derivative works of website content"
+      },
+      {
+        "source": "SPP RA reports",
+        "classification": "unsuitable_without_permission",
+        "issue": "Commercial publication requires express written authorization"
+      },
+      {
+        "source": "CEC CED / IEPR",
+        "classification": "ambiguous_requires_legal_review",
+        "issue": "PRA public-use with credit plus a commercial/profit-making prohibition; scopes the CAISO planning-forecast gate"
+      },
+      {
+        "source": "PJM pjm.com Load Forecast PDFs/XLS",
+        "classification": "ambiguous_requires_legal_review",
+        "issue": "Not Data Miner, but website copyright still applies. Data Miner derived-data ban does not automatically attach."
+      },
+      {
+        "source": "NYISO Gold Book",
+        "classification": "ambiguous_requires_legal_review",
+        "issue": "Access confers no licence; IP reserved"
+      },
+      {
+        "source": "ISO-NE CELT",
+        "classification": "ambiguous_requires_legal_review",
+        "issue": "Content copyrighted; non-personal duplication may violate copyright"
+      }
+    ],
+    "methodology_blockers": [
+      {
+        "market": "MISO",
+        "issue": "No public first-party vintageed MW demand time series at BA grain. Module E is participant-private. OMS-MISO is a 5-year resource survey CAGR. Dec 2024 whitepaper is CAGR trajectories, not a downloadable year-by-year Excel."
+      },
+      {
+        "market": "SPP",
+        "issue": "Public product is LRE-submitted Net Peak Demand in a 6-year RA report, not an independent ISO long-term load forecast. LRE workbooks not public."
+      },
+      {
+        "source": "FERC Form 714",
+        "issue": "Planning-area geography, no scenarios, no large-load documentation, mapping error-prone; cannot replace ISO forecasts for V1."
+      }
+    ],
+    "seven_market_aggregation_defensible": false,
+    "aggregation_recommendation": "option_A_market_specific_only",
+    "aggregation_rationale": "Option B (sum of official peaks) mixes non-coincident peaks, time zones, peak seasons, weather bases, gross/net definitions, large-load screens, and vintages. Option C requires hourly planning profiles for all seven markets; only ERCOT, CEC CAISO, and PJM were confirmed to publish them. NYISO, MISO, and SPP lack public ISO-coincident 8760s; ISO-NE hourly methodology exists but the public workbook URL was not extracted.",
+    "ferc714_materially_improves_path": {
+      "as_iso_replacement": false,
+      "as_rights_cleaner_internal_cross_check": true,
+      "note": "Annual vintage of 10-year summer/winter peak and annual energy. Useful for utility-level backfill. Not ISO coincident peak, not PD-2 BA geography, likely weak ERCOT coverage."
+    }
+  },
+  "markets": [
+    {
+      "market": "ERCOT",
+      "eia_ba_code": "ERCO",
+      "source": "2025 Long-Term Demand and Energy Forecast (LTDEF / LTLF); CDR uses Adjusted Forecast",
+      "publisher": "Electric Reliability Council of Texas, Inc.",
+      "url": "https://www.ercot.com/gridinfo/load/forecast",
+      "related_urls": [
+        "https://www.ercot.com/gridinfo/resource",
+        "https://www.ercot.com/files/docs/2026/09/11/14-Batch-Zero-Update.pdf",
+        "https://interchange.puc.texas.gov/Documents/59772_1_1645544.PDF",
+        "https://interchange.puc.texas.gov/Documents/58317_27_1672569.PDF"
+      ],
+      "current_vintage": "April 2025 ERCOT Adjusted Forecast (hourly XLSB 2025-04-15). December 2025 CDR uses this vintage. 2026 LTLF not finalized as of 2026-09-19.",
+      "forecast_horizon": "Hourly files cover the next ~10 years (2025 report: 2025-2034/2035)",
+      "publication_cadence": "Annual LTLF intended; CDR semiannual intended. May 2026 CDR skipped load/reserve tables during recalibration.",
+      "native_grain": [
+        "hourly_by_weather_zone",
+        "hourly_ercot_total",
+        "monthly_peaks_and_energy",
+        "coincident_and_noncoincident_summer_winter_peaks",
+        "weather_year_scenarios",
+        "p50_p90"
+      ],
+      "geographic_coverage": "ERCOT region / eight weather zones. Lubbock and additional RCEC load are explicit adders. Aligns to PD-2 ERCO.",
+      "geographic_match_to_pd2": "aligned_with_documented_footprint_additions",
+      "scenarios": [
+        "ERCOT_Adjusted (focus case)",
+        "TSP_Provided",
+        "weather_years_2008_2024",
+        "P90",
+        "Uri_Feb2021",
+        "Elliott_Dec2022"
+      ],
+      "large_load_treatment": "TSP RFI. Contracts = signed agreement + financial commitment. Officer Letters = TSP officer attestation without signed agreement. Adjusted Forecast: 180-day delay; data-center requested MW x 49.8%; officer-letter MW x 55.4%. Types: hydrogen, data centers, crypto, oil and gas, industrial. LFL modeled separately. 2026 Batch Zero Base/Studied/Excluded paused for audit; verification report due 2026-12-10.",
+      "ai_data_center_explicit": true,
+      "historical_vintages": "Current Load Forecast page lists 2025 LTLF files only. CDR archives exist on the Resource Adequacy page. Do not invent a complete LTLF hourly archive.",
+      "format": "XLSB hourly, XLSX peaks/energy/scenarios, DOCX/PDF methodology",
+      "machine_readable": true,
+      "rights_classification": "reusable_with_attribution_or_conditions",
+      "public_display_status": "production-ready_with_attribution",
+      "v1_state": "production-ready_with_attribution",
+      "evidence": "verified",
+      "notes": "Appendix A 2025 report: summer peak 85759 MW (2025), 94650 (2026), 144522 (2031). Net Forecast = Base + EV + LFL + Adjusted Contracts + Adjusted Officer Letters - PV. Freeze public series on April 2025 Adjusted until a finalized 2026 LTLF exists."
+    },
+    {
+      "market": "PJM",
+      "eia_ba_code": "PJM",
+      "source": "2026 Load Forecast Report + Tables/Data XLS + Long-Term Load Forecast Supplement",
+      "publisher": "PJM Interconnection (Resource Adequacy Planning Department, independent staff forecast)",
+      "url": "https://www.pjm.com/planning/resource-adequacy-planning/load-forecast-dev-process",
+      "related_urls": [
+        "https://www.pjm.com/-/media/DotCom/library/reports-notices/load-forecast/2026-load-report.pdf",
+        "https://www.pjm.com/-/media/DotCom/planning/res-adeq/load-forecast/2026-load-report-tables.xlsx",
+        "https://www.pjm.com/-/media/DotCom/planning/res-adeq/load-forecast/load-forecast-supplement-2026.pdf",
+        "https://www.pjm.com/-/media/DotCom/documents/manuals/m19"
+      ],
+      "current_vintage": "Posted 2026-01-14. Supplement 2026-02-06. Mid-year update 2026-07-24 informational only. Data Center Accuracy Report 2026-05-29.",
+      "forecast_horizon": "20-year peaks, net energy, load management, distributed solar, PEVs, battery storage",
+      "publication_cadence": "Annual (January); mid-year informational",
+      "native_grain": [
+        "annual_seasonal_unrestricted_peaks",
+        "net_energy",
+        "zonal",
+        "lda",
+        "rto",
+        "hourly_zonal_zip",
+        "rto_hourly_shape_zip"
+      ],
+      "geographic_coverage": "PJM RTO / Control Area as of the report, with zone incorporation dates (OVEC 2018-12-01, EKPC 2013-06-01, DOM 2005-05-01, etc.). Aligns to PD-2 PJM; store zone-set with vintage.",
+      "geographic_match_to_pd2": "aligned_time_varying_membership",
+      "scenarios": [
+        "single_independent_staff_forecast",
+        "403_weather_simulations_internal_1994_2024",
+        "unrestricted_vs_after_load_management"
+      ],
+      "large_load_treatment": "Manual 19 Attachment B. EDC/LSE submissions >= 50 MW. ESO / Construction Commitment / Other. Firm (ESO or CC plus meaningful financial commitment) may affect RPM-period years; Non-Firm derated and generally excluded from near-term RPM years. 2026 implementation: typically >= 36-month ramp, ~70% utilization unless supported.",
+      "ai_data_center_explicit": true,
+      "historical_vintages": "Previous Reports ZIP on the Load Forecast Development Process page.",
+      "format": "PDF + XLS + ZIP",
+      "machine_readable": true,
+      "rights_classification": "ambiguous_requires_legal_review",
+      "public_display_status": "internally_ingestible_not_publicly_publishable",
+      "v1_state": "internally_ingestible_not_publicly_publishable",
+      "do_not_ingest_via": "PJM Data Miner 2 (unsuitable_without_permission for redistribution of data or derivatives)",
+      "evidence": "verified",
+      "notes": "Published peaks are non-coincident unrestricted unless noted otherwise. 2026 vintage is lower than 2025 through 2032: -2564 MW / -1.6% for 2026 (3rd IA). Summer unrestricted RTO peak 222106 MW in 2036 (10-year +65733 MW)."
+    },
+    {
+      "market": "MISO",
+      "eia_ba_code": "MISO",
+      "source": "December 2024 Long-Term Load Forecast whitepaper; 2026 LTLF workshop. Not Module E public data. Not OMS-MISO as a demand series.",
+      "publisher": "Midcontinent Independent System Operator",
+      "url": "https://cdn.misoenergy.org/MISO%20Long-Term%20Load%20Forecast%20Whitepaper_December%202024667166.pdf",
+      "related_urls": [
+        "https://www.misoenergy.org/engage/stakeholder-feedback/2026/workshops-long-term-load-forecast-20260413/",
+        "https://www.misoenergy.org/engage/committees/long-term-load-forecast/",
+        "https://www.misoenergy.org/meet-miso/media-center/2026---news-releases/omsmiso-survey-shows-surge-in-new-resource-additions/"
+      ],
+      "current_vintage": "Dec 2024 whitepaper is the latest independently extracted first-party document. A May 2026 whitepaper is referenced by stakeholders; CDN fetch returned HTTP 500. Do not treat press figures as verified.",
+      "forecast_horizon": "2024-2044 coincident peak trajectories",
+      "publication_cadence": "Irregular workshops; not an annual Excel product analogous to PJM/CELT/Gold Book",
+      "native_grain": [
+        "coincident_peak_cagr_trajectories",
+        "energy_by_driver",
+        "lrz_narrative"
+      ],
+      "geographic_coverage": "MISO footprint / 10 LRZs. Generally aligns to PD-2 MISO; LRZ 9 includes Louisiana and eastern Texas.",
+      "geographic_match_to_pd2": "generally_aligned_membership_must_be_versioned",
+      "scenarios": [
+        "Low_1.1pct_CAGR",
+        "Current_1.6pct_CAGR",
+        "High_2.0pct_CAGR"
+      ],
+      "large_load_treatment": "Data centers are an explicit modeled driver in the 2024 whitepaper (149-241 TWh by 2044). No public ESO/CC-style inclusion screen found. Module E coincident peaks are LSE-submitted in MECT and participant-private.",
+      "ai_data_center_explicit": true,
+      "historical_vintages": "Futures Series 1 (2021), 1A (2023), Series 2 (2026) are transmission-planning scenarios, not RA demand vintages. Dec 2024 LTLF is one published load-forecast vintage.",
+      "format": "PDF whitepaper; some Futures hourly XLSX on the Futures page",
+      "machine_readable": false,
+      "rights_classification": "unsuitable_without_permission",
+      "public_display_status": "blocked_pending_permission_or_legal_review",
+      "v1_state": "blocked_pending_permission_or_legal_review",
+      "additional_v1_state": "blocked_methodological_incompatibility",
+      "evidence": "verified",
+      "notes": "122 GW in 2024 to 152-186 GW in 2044 per Dec 2024 whitepaper. OMS-MISO 2026: 3.1%-5.1% five-year member-reported load CAGR; capacity-oriented, not a PD-3 demand series. Weakest of the seven for a defensible PD-3 ingest."
+    },
+    {
+      "market": "SPP",
+      "eia_ba_code": "SWPP",
+      "source": "2026 Summer Season Resource Adequacy Report (East BAA)",
+      "publisher": "Southwest Power Pool",
+      "url": "https://spp.org/documents/76932/2026%20spp%20summer%20resource%20adequacy%20report.pdf",
+      "related_urls": [
+        "https://www.spp.org/engineering/resource-adequacy/",
+        "https://spp.org/documents/58597/attachment%20aa%20tariff.pdf"
+      ],
+      "current_vintage": "Published 2026-06-15",
+      "forecast_horizon": "Upcoming summer plus summer 2027 through summer 2031 (six-year class, not 10-20)",
+      "publication_cadence": "Seasonal (summer and winter RA reports)",
+      "native_grain": [
+        "lre_forecasted_net_peak_demand_aggregate",
+        "noncoincident_lre_peak_in_prior_year_tables",
+        "not_hourly"
+      ],
+      "geographic_coverage": "SPP East BAA only. Not WEIS. Aligns to PD-2 SWPP.",
+      "geographic_match_to_pd2": "aligned_if_weis_excluded",
+      "scenarios": [
+        "no_published_high_low_demand_fan",
+        "net_peak_already_nets_dr_and_firm_power_adjustments"
+      ],
+      "large_load_treatment": "LREs submit Workbook Net Peak Demand. Workbooks are not public. No public ISO-level ESO/CC-style screen.",
+      "ai_data_center_explicit": false,
+      "ai_data_center_note": "Secondary coverage of SPP's FERC information report discusses immature data-center interconnection requests in utility forecasts. Not independently extracted from the RA PDF as a source-published screen.",
+      "historical_vintages": "Prior-year RA reports exist as separate PDFs (e.g. 2024). This pass did not build a complete year list.",
+      "format": "PDF. Table 1 numeric cells not extracted as text. LRE workbooks not public.",
+      "machine_readable": false,
+      "rights_classification": "unsuitable_without_permission",
+      "public_display_status": "internally_ingestible_not_publicly_publishable",
+      "v1_state": "internally_ingestible_not_publicly_publishable",
+      "evidence": "verified",
+      "notes": "2026 summer: 65 LREs met RAR; ACAP PRM 7.06%; East BAA ACAP reserve margin 17.1% (~5752 MW excess above RAR). Existing-only resources: aggregate RAR deficiency beginning 2029; 28% increase in LRE Net Peak Demand by 2031. Do not invent 2026 Net Peak Demand MW. ITP is a different product."
+    },
+    {
+      "market": "CAISO",
+      "eia_ba_code": "CISO",
+      "source": "CEC California Energy Demand (CED) 2025 / 2025 IEPR. CAISO 2026 SLRA uses CED; it does not originate the planning forecast.",
+      "publisher": "California Energy Commission (forecast); CAISO (seasonal assessment citing CEC)",
+      "url": "https://www.energy.ca.gov/data-reports/california-energy-planning-library/forecasts-and-system-planning/demand-side-3",
+      "related_urls": [
+        "https://www.caiso.com/documents/2026-summer-loads-and-resources-assessment.pdf",
+        "https://www.energy.ca.gov/conditions-of-use",
+        "https://www.energy.ca.gov/sites/default/files/2026-04/Data_Center_Methodology_Memo_ada.pdf"
+      ],
+      "current_vintage": "CED 2025 adopted 2026-01-21 for years 2025-2045; some files extrapolated to 2050. SLRA 2026 uses CED 2025 1-in-2 Planning.",
+      "forecast_horizon": "2025-2045 (hourly files include 2050 extrapolation)",
+      "publication_cadence": "Biennial IEPR plus update years",
+      "native_grain": [
+        "hourly_caiso_baa_planning",
+        "hourly_caiso_baa_local_reliability",
+        "hourly_caiso_baa_local_reliability_plus_known_loads",
+        "lse_baa_annual_tables",
+        "peak_forecast_workbooks",
+        "iou_planning_area_hourlies"
+      ],
+      "geographic_coverage": "CED CAISO hourly files align to PD-2 CISO. CED Total State / LADWP / SMUD / IID / BANC do not. Never substitute California statewide demand for CAISO BAA.",
+      "geographic_match_to_pd2": "caiso_hourly_files_aligned_statewide_not_aligned",
+      "scenarios": [
+        "baseline_vs_managed_aaee_aafs",
+        "planning_vs_local_reliability",
+        "with_without_known_loads",
+        "1_in_2",
+        "1_in_5",
+        "1_in_10",
+        "1_in_20",
+        "self_gen_high_mid_low"
+      ],
+      "large_load_treatment": "Known Loads = utility energization requests; included in Local Reliability, excluded from 2025 Planning. Data centers = project-based utility applications; 67% utilization; confidence by signed agreement / active application / inquiry. SLRA: 2026 CAISO 1-in-2 Planning peak 46844 MW on 2026-09-02 HE18 PDT excluding Known Loads; Known Loads could add ~1569 MW.",
+      "ai_data_center_explicit": true,
+      "historical_vintages": "CED 2024 Planning Forecast Updated LSE/BA tables posted on the CED 2025 page. Older IEPR/CEDU cycles exist as separate pages.",
+      "format": "XLS hourly and peak files",
+      "machine_readable": true,
+      "rights_classification": "ambiguous_requires_legal_review",
+      "public_display_status": "internally_ingestible_not_publicly_publishable",
+      "v1_state": "internally_ingestible_not_publicly_publishable",
+      "evidence": "verified",
+      "notes": "1-in-5/10/20 peaks 49534 / 50872 / 52122 MW. SLRA load numbers are CEC CED numbers; CAISO website PRA language does not escape the CEC commercial-use clause."
+    },
+    {
+      "market": "NYISO",
+      "eia_ba_code": "NYIS",
+      "source": "2026 Load & Capacity Data Report (Gold Book)",
+      "publisher": "New York Independent System Operator",
+      "url": "https://www.nyiso.com/load-capacity-data-report-gold-book-",
+      "related_urls": [
+        "https://www.nyiso.com/library/"
+      ],
+      "current_vintage": "Posted 2026-04-29: Gold Book PDF; Baseline / Higher Demand / Lower Demand XLSX. Direct 2026 PDF URL attempted in this pass returned 404; 2026 cell-level MW not independently extracted.",
+      "forecast_horizon": "Energy and seasonal peaks through ~2055 in the 2025 Gold Book structure; treat 2026 similarly until 2026 PDF is extracted",
+      "publication_cadence": "Annual (April)",
+      "native_grain": [
+        "nyca_annual_energy",
+        "summer_coincident_peak",
+        "winter_coincident_peak",
+        "eleven_zones",
+        "not_8760"
+      ],
+      "geographic_coverage": "New York Control Area. Aligns to PD-2 NYIS.",
+      "geographic_match_to_pd2": "aligned",
+      "scenarios": [
+        "Baseline",
+        "Higher_Demand",
+        "Lower_Demand",
+        "p90_p10_p99_weather",
+        "prior_to_large_load_growth_columns"
+      ],
+      "large_load_treatment": "Table I-14 is not the interconnection queue. 2025 notes: tables do not necessarily reflect Table IV-7 queue MW/dates and include some non-queue projects. Higher/Lower scenarios scale large-load growth. Secondary coverage of 2026 Gold Book reports 538 MW 2026 summer large-load impact vs queue >12 GW (not verified from 2026 PDF).",
+      "ai_data_center_explicit": true,
+      "historical_vintages": "Gold Book page lists 2026 and 2025. Library keeps current plus two previous years; See More for a longer listing.",
+      "format": "PDF + XLSX",
+      "machine_readable": true,
+      "rights_classification": "ambiguous_requires_legal_review",
+      "public_display_status": "internally_ingestible_not_publicly_publishable",
+      "v1_state": "internally_ingestible_not_publicly_publishable",
+      "evidence": "retrieved",
+      "notes": "2025 Gold Book: most TOs 50th percentile peak weather; Con Edison and O&R 67th. Hydrogen electrolysis excluded from baseline. Wholesale storage is not a peak reducer. Confirm 2026 tables on ingest."
+    },
+    {
+      "market": "ISO-NE",
+      "eia_ba_code": "ISNE",
+      "source": "CELT 2026 and Forecast Data workbook",
+      "publisher": "ISO New England",
+      "url": "https://www.iso-ne.com/celt",
+      "related_urls": [
+        "https://www.iso-ne.com/system-planning/system-forecasting/load-forecast",
+        "https://www.iso-ne.com/static-assets/documents/100033/fx2026_large_loads.pdf",
+        "https://isonewswire.com/2026/05/18/iso-ne-establishes-forecast-framework-for-data-centers-other-large-loads/"
+      ],
+      "current_vintage": "CELT 2026 published 2026-05-01 covering 2026-2035 (ISO Newswire). CELT and Load Forecast page document tables were JS-empty; no direct XLSX URL extracted.",
+      "forecast_horizon": "10-year CELT; some component discussion into the 2040s",
+      "publication_cadence": "Annual (1 May)",
+      "native_grain": [
+        "regional_state_zonal_energy",
+        "seasonal_peaks",
+        "50_50_and_90_10",
+        "gross_reconstituted_vs_net_of_btm_pv",
+        "hourly_methodology_since_celt_2025_public_8760_not_confirmed"
+      ],
+      "geographic_coverage": "New England Control Area. Aligns to PD-2 ISNE.",
+      "geographic_match_to_pd2": "aligned",
+      "scenarios": [
+        "50_50_net_of_btm_pv",
+        "90_10",
+        "gross_reconstituted_for_aras",
+        "ee_dg_ev_hp_bess_large_load_components"
+      ],
+      "large_load_treatment": "Debut in CELT 2026. Inclusion: >20 MW expected nameplate AND a formal study agreement. Near-term summer/winter limited to projects under construction. Final-draft: two projects (NEMA data center 200 MW; CT general electrification 85 MW); none under construction, so contribution to winter 2026/27 and summer 2026 and 2027 = 0.",
+      "ai_data_center_explicit": true,
+      "historical_vintages": "Annual CELT series is the intended backfill path. Confirm file listing on ingest; do not invent years.",
+      "format": "PDF + intended Forecast Data workbook",
+      "machine_readable": true,
+      "machine_readable_caveat": "Workbook URL not independently extracted in this pass",
+      "rights_classification": "ambiguous_requires_legal_review",
+      "public_display_status": "internally_ingestible_not_publicly_publishable",
+      "v1_state": "internally_ingestible_not_publicly_publishable",
+      "evidence": "retrieved",
+      "notes": "Material regional difference vs ERCOT/PJM: official near-term large-load contribution is zero because of the construction screen. ISO Newswire: ~110 MW peak in the 2030s, ~130 MW in the 2040s."
+    }
+  ],
+  "ferc714_fallback": {
+    "form": "FERC Form No. 714 Annual Electric Balancing Authority Area and Planning Area Report",
+    "schedule": "Part III Schedule 2 forecast block (summer peak MW, winter peak MW, annual net energy for load MWh, next ten years)",
+    "authority": "18 CFR 141.51; Federal Power Act",
+    "url": "https://www.ferc.gov/industries-data/electric/general-information/electric-industry-forms/form-no-714-annual-electric/overview",
+    "data_url": "https://www.ferc.gov/industries-data/electric/general-information/electric-industry-forms/form-no-714-annual-electric/data",
+    "filing_cadence": "On or before June 1 for the preceding calendar year",
+    "respondent_geography": "Planning areas with peak load greater than 200 MW based on net energy for load; typical respondent is the principal resource-planning entity with obligation to serve. Balancing-authority filers are a separate 141.51(a)(1) class. Not 1:1 with PD-2 BAs.",
+    "mapping_to_seven_markets": "Possible only with a respondent crosswalk. PUDL notes utility-vs-BA ambiguity and CSV-vs-XBRL identifier differences. This pass did not produce a crosswalk and did not confirm an ERCOT Inc. filing. ERCOT FERC-jurisdictional status makes a 1:1 BA filing unlikely.",
+    "historical_vintages": "1993-2005 ASCII; 2006-2010 CSV; 2011+ XBRL",
+    "data_quality": "Filer-dependent completeness; footprints change with mergers; no scenario or large-load metadata; hourly actuals are standard-time",
+    "can_replace_iso_forecasts_for_v1": false,
+    "useful_as": "Rights-cleaner internal vintage backfill and diagnostic when ISO numbers diverge from in-footprint 714 respondents",
+    "rights_classification": "reusable_with_attribution_or_conditions",
+    "rights_note": "U.S. government-works practice; no EIA-style FERC reuse page found. Classification is inferred, not a FERC grant.",
+    "evidence": "retrieved"
+  },
+  "scenario_normalization": [
+    {
+      "market": "ERCOT",
+      "canonical_base_candidate": "ERCOT Adjusted Forecast (source-labeled focus case)",
+      "alternate_scenarios": ["TSP Provided", "weather-year 2008-2024", "P90", "Uri", "Elliott"],
+      "weather_basis": "Rank-and-average / 2008 mapping as 50th-percentile coincident; P90 from weather-year distribution",
+      "gross_net": "Waterfall net of BTM PV; CDR also publishes peak net load",
+      "btm_treatment": "BTM PV reconstituted historically then subtracted; frozen-efficiency base",
+      "large_load_treatment": "Contracts + officer letters with realization factors; 2026 Batch Zero not yet in a published LTLF",
+      "peak_type": "Hourly; coincident summer Jun-Sep and winter Dec-Mar; weather-zone coincident and non-coincident"
+    },
+    {
+      "market": "PJM",
+      "canonical_base_candidate": "Single independent staff forecast",
+      "alternate_scenarios": ["403 weather simulations internal", "unrestricted vs after load management", "mid-year informational"],
+      "weather_basis": "Weather-normalized / median seasonal from 1994-2024 simulations",
+      "gross_net": "Unrestricted peak after BTM solar/battery (summer) and after EV, before load management",
+      "btm_treatment": "BTM solar/battery from S&P Global, applied by PJM",
+      "large_load_treatment": "Manual 19 Att. B Firm vs Non-Firm; 50 MW; ~70% utilization; >=36-month ramp",
+      "peak_type": "Non-coincident unrestricted unless noted; zonal/LDA; hourly shapes available"
+    },
+    {
+      "market": "MISO",
+      "canonical_base_candidate": "Current Trajectory 1.6% CAGR is labeled Current, not an RA official peak",
+      "alternate_scenarios": ["Low 1.1%", "High 2.0%", "OMS-MISO member forecasts", "Futures F1/F2/F3"],
+      "weather_basis": "Climate/weather discussed in whitepaper; not a 50/50 vs 90/10 table",
+      "gross_net": "Coincident net peak in the 2024 whitepaper",
+      "btm_treatment": "DER as a separate driver",
+      "large_load_treatment": "Data centers modeled as a driver; no public contract/construction screen",
+      "peak_type": "Coincident peak (whitepaper); Module E 50/50 coincident (private)"
+    },
+    {
+      "market": "SPP",
+      "canonical_base_candidate": "LRE Workbook Net Peak Demand as aggregated in the RA report",
+      "alternate_scenarios": ["Non-coincident LRE peak in prior-year tables", "no high/low fan"],
+      "weather_basis": "Not a published 50/50 vs 90/10 in the 2026 summer report extract",
+      "gross_net": "Net Peak Demand = peak minus DR minus firm-power adjustments",
+      "btm_treatment": "Not a first-class BTM table in the RA report",
+      "large_load_treatment": "LRE-submitted; no public ISO screen",
+      "peak_type": "Seasonal Net Peak Demand, East BAA aggregate"
+    },
+    {
+      "market": "CAISO",
+      "canonical_base_candidate": "CED Planning, 1-in-2, without Known Loads (what CAISO SLRA used for 2026)",
+      "alternate_scenarios": ["Local Reliability", "Local Reliability + Known Loads", "1-in-5/10/20", "baseline vs managed", "self-gen High/Mid/Low"],
+      "weather_basis": "1-in-N weather",
+      "gross_net": "Managed vs baseline; Planning vs Local Reliability",
+      "btm_treatment": "Dedicated BTM DG forecast; hourly BTM PV and storage",
+      "large_load_treatment": "Known Loads excluded from Planning; data centers project-based with 67% utilization",
+      "peak_type": "Hourly CAISO BAA; annual 1-in-N peaks"
+    },
+    {
+      "market": "NYISO",
+      "canonical_base_candidate": "Baseline (expected NYCA load)",
+      "alternate_scenarios": ["Higher Demand", "Lower Demand", "90/10/99 weather", "prior to large load growth"],
+      "weather_basis": "50th percentile most TOs; 67th ConEd/O&R; temperature trends",
+      "gross_net": "Baseline after BTM PV and BTM storage peak reductions; wholesale storage not netted from peak",
+      "btm_treatment": "BTM PV, BTM non-solar DG, BTM storage as explicit tables",
+      "large_load_treatment": "Table I-14 screened subset of queue plus some non-queue; Higher/Lower scale it; hydrogen excluded from baseline",
+      "peak_type": "NYCA coincident summer and winter; zonal"
+    },
+    {
+      "market": "ISO-NE",
+      "canonical_base_candidate": "50/50 net of BTM PV (CELT long-term) plus separate ARA gross tabs",
+      "alternate_scenarios": ["90/10", "gross reconstituted for remaining ARAs", "EE/DG/EV/HP/BESS/large-load components"],
+      "weather_basis": "50/50 and 90/10",
+      "gross_net": "Gross vs net of BTM PV is first-class",
+      "btm_treatment": "BTM PV and BTM BESS component forecasts",
+      "large_load_treatment": ">20 MW plus study agreement; construction screen zeros 2026-2027 summer",
+      "peak_type": "Seasonal peaks; zonal; hourly methodology exists"
+    }
+  ],
+  "forecast_vintage_design": {
+    "minimum_fields": [
+      "market",
+      "source",
+      "publisher",
+      "publication_date",
+      "retrieved_at",
+      "target_year",
+      "target_season",
+      "scenario",
+      "weather_basis",
+      "peak_type",
+      "gross_net_status",
+      "large_load_policy",
+      "value",
+      "unit",
+      "methodology_or_source_version",
+      "source_provenance",
+      "geographic_grain",
+      "footprint_as_of"
+    ],
+    "grain_of_truth": "vintage (publication_date + source + scenario), not target_year",
+    "historical_vintage_backfill": {
+      "PJM": "yes_previous_reports_zip",
+      "NYISO": "yes_with_library_see_more",
+      "CEC": "partial_ced_2024_on_ced_2025_page",
+      "ERCOT_CDR": "yes_resource_adequacy_archives",
+      "ERCOT_LTLF_hourly": "current_page_shows_2025_only",
+      "ISO-NE_CELT": "intended_yes_confirm_file_listing",
+      "SPP_RA": "partial_discrete_annual_pdfs",
+      "MISO": "weak_whitepapers_and_futures",
+      "FERC_714": "yes_1993_forward"
+    }
+  },
+  "aggregation": {
+    "option_A_market_specific_only": {
+      "defensible": true,
+      "v1_recommendation": true,
+      "note": "Each market retains native grain, scenario, weather basis, large-load policy, and vintage."
+    },
+    "option_B_simple_sum_of_official_peaks": {
+      "defensible": false,
+      "fatal_issues": [
+        "non_coincident_peaks",
+        "time_zones",
+        "different_peak_seasons",
+        "different_weather_assumptions",
+        "different_gross_net_btm_definitions",
+        "different_large_load_screens",
+        "different_forecast_vintages"
+      ]
+    },
+    "option_C_urdais_modeled_aggregate": {
+      "conceptually_only_honest_aggregate": true,
+      "currently_buildable_for_seven_markets": false,
+      "hourly_profiles_confirmed": ["ERCOT_adjusted_xlsb", "CEC_caiso_hourly", "PJM_zonal_hourly_zips_and_rto_hourly_shape"],
+      "hourly_profiles_missing_or_unconfirmed": ["NYISO_8760", "SPP_8760", "MISO_official_ltlf_8760", "ISO-NE_public_8760_file"],
+      "evidence_required_before_use": [
+        "hourly or same-timezone profiles for all seven, or an explicit versioned coincidence factor",
+        "one documented Urdais scenario mapping per market",
+        "one weather philosophy",
+        "one large-load policy philosophy",
+        "UTC coincident sum then peak-of-sum, never sum-of-peaks",
+        "rights path for every hourly file used in a public derived series"
+      ]
+    }
+  },
+  "rights_matrix": [
+    {
+      "source": "EIA-930",
+      "scope_note": "Operational only; not a PD-3 planning source",
+      "internal_retention": true,
+      "internal_calculation": true,
+      "public_raw_value_display": true,
+      "public_derived_value_display": true,
+      "attribution": "EIA plus publication date",
+      "unresolved_terms_issue": "Counsel confirm API ToS get language covers a commercial terminal",
+      "classification": "clearly_reusable"
+    },
+    {
+      "source": "FERC Form 714 Schedule 2 forecast",
+      "internal_retention": true,
+      "internal_calculation": true,
+      "public_raw_value_display": "likely_yes_us_government_work",
+      "public_derived_value_display": "likely_yes",
+      "attribution": "FERC Form 714, respondent, report year",
+      "unresolved_terms_issue": "No FERC copyrights-and-reuse page equivalent to EIA",
+      "classification": "reusable_with_attribution_or_conditions"
+    },
+    {
+      "source": "ERCOT.com LTLF / CDR",
+      "internal_retention": true,
+      "internal_calculation": true,
+      "public_raw_value_display": true,
+      "public_derived_value_display": true,
+      "attribution": "Credit ERCOT; raw data need not retain notices per ToU section 5",
+      "unresolved_terms_issue": "Confirm grant covers Public API versus HTML/files",
+      "classification": "reusable_with_attribution_or_conditions"
+    },
+    {
+      "source": "PJM Load Forecast on pjm.com",
+      "internal_retention": true,
+      "internal_calculation": true,
+      "public_raw_value_display": false,
+      "public_derived_value_display": false,
+      "attribution": "If later permitted, PJM plus report date",
+      "unresolved_terms_issue": "Does website copyright bar numeric tables in a commercial product?",
+      "classification": "ambiguous_requires_legal_review"
+    },
+    {
+      "source": "PJM Data Miner 2",
+      "internal_retention": "members_per_dla",
+      "internal_calculation": "members_per_dla",
+      "public_raw_value_display": false,
+      "public_derived_value_display": false,
+      "attribution": null,
+      "unresolved_terms_issue": "Derived-data ban. Do not use Data Miner for PD-3.",
+      "classification": "unsuitable_without_permission"
+    },
+    {
+      "source": "MISO website / whitepapers",
+      "internal_retention": "engineering_copy_high_caution",
+      "internal_calculation": "high_caution_tou_bars_derivative_works",
+      "public_raw_value_display": false,
+      "public_derived_value_display": false,
+      "attribution": null,
+      "unresolved_terms_issue": "Does ToU reach PDF whitepapers and Engage files?",
+      "classification": "unsuitable_without_permission"
+    },
+    {
+      "source": "SPP RA PDF",
+      "internal_retention": true,
+      "internal_calculation": true,
+      "public_raw_value_display": false,
+      "public_derived_value_display": false,
+      "attribution": "Citation allowed for non-commercial copy",
+      "unresolved_terms_issue": "Will SPP grant commercial publication of Table 1 peaks? Confirm whether Portal ToU also governs spp.org engineering PDFs.",
+      "classification": "unsuitable_without_permission"
+    },
+    {
+      "source": "CEC CED / IEPR",
+      "internal_retention": true,
+      "internal_calculation": true,
+      "public_raw_value_display": false,
+      "public_derived_value_display": false,
+      "attribution": "Credit CEC if any public use",
+      "unresolved_terms_issue": "Scope of commercial-use prohibition versus PRA public-use paragraph; does it reach CED XLS?",
+      "classification": "ambiguous_requires_legal_review"
+    },
+    {
+      "source": "CAISO SLRA PDF",
+      "internal_retention": true,
+      "internal_calculation": true,
+      "public_raw_value_display": "website_pra_language_permissive",
+      "public_derived_value_display": "same_with_credit",
+      "attribution": "Credit CAISO",
+      "unresolved_terms_issue": "SLRA load numbers are CEC numbers; CEC clause may still bind",
+      "classification": "reusable_with_attribution_or_conditions"
+    },
+    {
+      "source": "NYISO Gold Book",
+      "internal_retention": true,
+      "internal_calculation": true,
+      "public_raw_value_display": false,
+      "public_derived_value_display": false,
+      "attribution": "If later permitted, NYISO plus Gold Book year",
+      "unresolved_terms_issue": "Silence on numeric Excel republication",
+      "classification": "ambiguous_requires_legal_review"
+    },
+    {
+      "source": "ISO-NE CELT",
+      "internal_retention": true,
+      "internal_calculation": true,
+      "public_raw_value_display": false,
+      "public_derived_value_display": false,
+      "attribution": "If later permitted, ISO-NE plus CELT year",
+      "unresolved_terms_issue": "Does non-personal use reach CELT Forecast Data cells?",
+      "classification": "ambiguous_requires_legal_review"
+    },
+    {
+      "source": "NERC LTRA",
+      "internal_retention": "secondary_read_only",
+      "internal_calculation": false,
+      "public_raw_value_display": false,
+      "public_derived_value_display": false,
+      "attribution": null,
+      "unresolved_terms_issue": "Copyright asserted; out of PD-3 V1",
+      "classification": "unsuitable_without_permission"
+    }
+  ],
+  "recommended_pd3_v1": {
+    "ingest_internal": [
+      {
+        "priority": 1,
+        "source": "ERCOT 2025 Adjusted LTLF hourly XLSB plus peak/energy XLSX plus December 2025 CDR load tables"
+      },
+      {
+        "priority": 2,
+        "source": "CEC CED 2025 CAISO hourly files (Planning, Local Reliability, Local Reliability + Known Loads)"
+      },
+      {
+        "priority": 3,
+        "source": "PJM 2026 Load Forecast tables XLS plus report PDF plus Previous Reports ZIP plus Manual 19 Attachment B"
+      },
+      {
+        "priority": 4,
+        "source": "NYISO 2026 Gold Book Baseline/Higher/Lower XLSX"
+      },
+      {
+        "priority": 5,
+        "source": "ISO-NE CELT 2026 Forecast Data workbook (confirm file URL) plus large-load deck"
+      },
+      {
+        "priority": 6,
+        "source": "SPP 2026 Summer RA Report and winter counterpart when posted"
+      },
+      {
+        "priority": 7,
+        "source": "FERC 714 yearly planning-area forecast XBRL/CSV as cross-check, not a market series"
+      }
+    ],
+    "hold_context_only": ["MISO Dec 2024 LTLF whitepaper PDF", "MISO 2026 workshop materials"],
+    "publish_now": [
+      {
+        "market": "ERCOT",
+        "source": "ERCOT Adjusted Long-Term Load Forecast",
+        "vintage": "2025-04",
+        "scenario": "Adjusted",
+        "geography": "ERCOT region / ERCO",
+        "do_not_publish": "2026 LTLF or Batch Zero figures until ERCOT posts a finalized file"
+      }
+    ],
+    "internal_only_no_public_raw_or_derived": [
+      "PJM Load Forecast",
+      "CEC CED including CAISO hourlies",
+      "NYISO Gold Book",
+      "ISO-NE CELT",
+      "SPP RA tables",
+      "FERC 714 until counsel confirms government-works display",
+      "MISO whitepaper figures"
+    ],
+    "aggregate": "deferred_option_A_only",
+    "out_of_scope": [
+      "operational EIA-930 DF (already PD-2)",
+      "deliverable capacity / delivery gap",
+      "interconnection-queue GW as demand",
+      "UEPI / wholesale prices",
+      "NERC LTRA table republication",
+      "California statewide CED as CAISO",
+      "SPP WEIS",
+      "MISO Module E participant data",
+      "choosing a single canonical scenario across markets",
+      "unlabeled quarterly interpolation",
+      "shipping unpublished ERCOT 2026 / 368 GW preliminary figures"
+    ],
+    "market_states": {
+      "ERCOT": "production-ready_with_attribution",
+      "PJM": "internally_ingestible_not_publicly_publishable",
+      "CAISO": "internally_ingestible_not_publicly_publishable",
+      "NYISO": "internally_ingestible_not_publicly_publishable",
+      "ISO-NE": "internally_ingestible_not_publicly_publishable",
+      "SPP": "internally_ingestible_not_publicly_publishable",
+      "MISO": "blocked_pending_permission_or_legal_review_and_blocked_methodological_incompatibility"
+    }
+  },
+  "open_questions": [
+    "May Urdais publicly display ERCOT Adjusted LTLF numeric peaks in a commercial product under ERCOT.com ToU section 5?",
+    "Does the CEC commercial-use sentence apply to CED 2025 hourly XLS workbooks?",
+    "Does pjm.com copyright bar republication of Load Forecast Excel numbers?",
+    "Will SPP grant written authorization to display East BAA Net Peak Demand?",
+    "Does MISO website ToU reach LTLF whitepapers and Engage PDFs?",
+    "Is NYISO Gold Book XLSX commercially republishable?",
+    "Does ISO-NE non-personal-use language reach CELT Forecast Data cells?",
+    "Does U.S. government-works treatment cover FERC 714 XBRL forecast tables Urdais would store and display?",
+    "If a derived seven-market model is ever built from CEC plus PJM hourlies, do CEC and PJM terms still attach?",
+    "Enumerate ERCOT LTLF hourly archives before 2025.",
+    "Extract the 2026 Gold Book PDF (direct URL 404ed) and confirm Table I-14 2026 MW.",
+    "Confirm the CELT 2026 Forecast Data workbook file URL and whether 8760s are inside it.",
+    "Obtain the May 2026 MISO LTLF whitepaper (CDN 500) and any accompanying Excel.",
+    "Extract SPP 2026 RA Report Table 1 MW.",
+    "Inventory FERC 714 planning-area respondents and map to PD-2 BAs; confirm whether ERCOT Inc. files.",
+    "For ERCOT public V1, is April 2025 Adjusted acceptable while 2026 LTLF is delayed?",
+    "Which CEC scenario is the CAISO internal default: Planning 1-in-2 without Known Loads, or Local Reliability with Known Loads?",
+    "PJM: store unrestricted non-coincident and any coincident tables separately.",
+    "ISO-NE: store both 50/50 net and ARA gross.",
+    "Is there any public MISO year-by-year coincident-peak Excel this pass missed?",
+    "Is SPP ITP 50/50 load a better long-horizon demand source than RA Net Peak Demand, and is it public at BA grain?",
+    "Peak load versus peak net load for ERCOT and CAISO.",
+    "What estimation sample would be required before Option C is more than a labeled prototype?",
+    "PJM zone-set by vintage splice rules.",
+    "MISO South / LRZ 9 versus EIA MISO.",
+    "SPP East BAA versus future RTO expansion; never include WEIS.",
+    "CEC CAISO BAA versus PGE/SCE/SDGE TAC versus statewide.",
+    "Hash and retain terms artifacts per source at ingest time."
+  ]
+}

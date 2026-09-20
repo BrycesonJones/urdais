@@ -27,6 +27,18 @@ describe("coincident Power Delivery aggregation", () => {
     } }]);
   });
 
+  it("refuses a planning forecast offered as an operational member", () => {
+    const planning = { areaId: PD2_V1_AREAS[0]!.id, periodStart: H1, periodEnd: end(H1), valueMw: 144522, targetYear: 2031, scenarioId: "s1" };
+    expect(() => aggregateCoincidentActualLoad([planning as never], PD2_V1_AREAS.map((area) => area.id)))
+      .toThrow(/planning forecast data cannot enter operational coincident aggregation/);
+  });
+
+  it("refuses a member whose interval is not one operational hour", () => {
+    const annual = { areaId: PD2_V1_AREAS[0]!.id, periodStart: "2031-01-01T00:00:00.000Z", periodEnd: "2032-01-01T00:00:00.000Z", valueMw: 144522 };
+    expect(() => aggregateCoincidentActualLoad([annual], PD2_V1_AREAS.map((area) => area.id)))
+      .toThrow(/one-hour operational intervals only/);
+  });
+
   it("does not sum market peaks that occurred at different hours", () => {
     const rows = PD2_V1_AREAS.flatMap((area, index) => [
       { areaId: area.id, periodStart: H1, periodEnd: end(H1), valueMw: index === 0 ? 1000 : 10 },
