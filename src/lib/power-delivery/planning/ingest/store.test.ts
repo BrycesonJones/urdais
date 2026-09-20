@@ -12,12 +12,29 @@ import type { PlanningSqlExecutor } from "@/lib/power-delivery/planning/read";
  * path depends on -- unique keys that make an insert a no-op, and one live point per identity --
  * so an idempotent rerun is proved by running it, not by asserting on SQL strings.
  */
-function fakeDatabase() {
+/**
+ * PostgreSQL's rendering of a numeric, reproduced.
+ *
+ * `value::text` is the exact stored decimal. `value::float8` is printed with
+ * `extra_float_digits` significant digits, and production runs that setting at 0, which caps it
+ * at fifteen. The fake honours whichever cast the query asks for, so a store that goes back to
+ * reading float8 fails these tests instead of passing them and churning in production.
+ */
+function renderNumeric(stored: string, cast: "text" | "float8", extraFloatDigits: number): string {
+  if (cast === "text") return stored;
+  const digits = 15 + extraFloatDigits;
+  const rendered = Number(stored).toPrecision(digits);
+  // toPrecision keeps trailing zeros and may use exponent form; PostgreSQL prints neither.
+  return String(Number(rendered));
+}
+
+function fakeDatabase(options: { extraFloatDigits?: number } = {}) {
+  const extraFloatDigits = options.extraFloatDigits ?? 0;
   const retrievals = new Map<string, string>();
   const rawRecords = new Map<string, string>();
   const vintages = new Map<string, string>();
   const scenarios = new Map<string, string>();
-  const points = new Map<string, { id: string; value: number }>();
+  const points = new Map<string, { id: string; value: string }>();
   const superseded: { id: string; by: string }[] = [];
   const rawInserts: unknown[][] = [];
   let sequence = 0;
@@ -84,7 +101,9 @@ function fakeDatabase() {
       }
       if (text.includes("from pipeline.planning_forecast_points")) {
         const found = points.get(JSON.stringify(p));
-        return { rows: found === undefined ? [] : [{ id: found.id, value: found.value }] };
+        if (found === undefined) return { rows: [] };
+        const cast = text.includes("value::text") ? "text" : "float8";
+        return { rows: [{ id: found.id, value: renderNumeric(found.value, cast, extraFloatDigits) }] };
       }
       if (text.includes("update pipeline.planning_forecast_points")) {
         superseded.push({ id: String(p[1]), by: String(p[0]) });
@@ -93,7 +112,9 @@ function fakeDatabase() {
       }
       if (text.includes("insert into pipeline.planning_forecast_points")) {
         const identity = JSON.stringify([p[2], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[14], p[13]]);
-        points.set(identity, { id: String(p[0]), value: Number(p[12]) });
+        // node-postgres serialises a JS number parameter with String(), and numeric stores those
+        // digits exactly; the fake stores the same text.
+        points.set(identity, { id: String(p[0]), value: String(p[12]) });
         return { rows: [] };
       }
       throw new Error(`unexpected query: ${text.slice(0, 80)}`);
@@ -213,5 +234,90 @@ describe("planning ingestion write path", () => {
     expect(params[19]).toBe("peaks");
     expect(params[20]).toBe("xl/worksheets/sheet1.xml");
     expect(params[21]).toBe("a".repeat(64));
+  });
+});
+
+/**
+ * PD-3E. The production defect, reproduced at the store level and guarded.
+ *
+ * ERCOT publishes weather-zone and scenario values carrying sixteen significant digits. Read
+ * back through `value::float8` under production's `extra_float_digits = 0` they return with
+ * fifteen, compare unequal to the number they were stored from, and are superseded and
+ * re-inserted on every run. 285 of 982 ERCOT points churned that way in production while PJM,
+ * the CEC and ISO-NE, whose published values are shorter, stayed idempotent.
+ */
+describe("value comparison across a rerun", () => {
+  // One of the 285 that churned in production, and its neighbours that did not.
+  const SIXTEEN_DIGITS = 173231.3029514549;
+  const production = () => fakeDatabase({ extraFloatDigits: 0 });
+
+  it("reproduces PostgreSQL's rendering, so these tests can tell the two casts apart", () => {
+    // Proves the guard itself works: at extra_float_digits=0 a float8 read loses the digit.
+    expect(renderNumeric("173231.3029514549", "float8", 0)).toBe("173231.302951455");
+    expect(renderNumeric("173231.3029514549", "text", 0)).toBe("173231.3029514549");
+    // Local PostgreSQL defaults to 1, which is why the local suite never saw the defect.
+    expect(renderNumeric("173231.3029514549", "float8", 1)).toBe("173231.3029514549");
+    // A short value renders identically either way.
+    expect(renderNumeric("144521.884", "float8", 0)).toBe("144521.884");
+  });
+
+  it("leaves a sixteen-digit value unchanged on an identical rerun", async () => {
+    const db = production();
+    await run(db, SIXTEEN_DIGITS);
+    const second = await run(db, SIXTEEN_DIGITS);
+    expect(second.pointsUnchanged).toBe(1);
+    expect(second.pointsRevised).toBe(0);
+    expect(second.pointsInserted).toBe(0);
+    // No supersession, and no replacement row.
+    expect(db.superseded).toEqual([]);
+    expect(db.points.size).toBe(1);
+  });
+
+  it("changes nothing else about the vintage, scenario, evidence or rights on that rerun", async () => {
+    const db = production();
+    await run(db, SIXTEEN_DIGITS);
+    const second = await run(db, SIXTEEN_DIGITS);
+    expect(second).toMatchObject({
+      vintage: "existing", retrievalsInserted: 0, retrievalsReused: 1, rightsSnapshots: 0,
+      scenariosCreated: 0, scenariosExisting: 1, rawRecordsInserted: 0, rawRecordsDuplicate: 1,
+    });
+  });
+
+  it("still records exactly one revision when the publisher genuinely restates the value", async () => {
+    const db = production();
+    await run(db, SIXTEEN_DIGITS);
+    const corrected = Buffer.from("corrected artifact");
+    const second = await run(db, 173999.4029514549, { ...artifact, body: corrected, sha256: sha256(corrected) });
+    expect(second.pointsRevised).toBe(1);
+    expect(second.pointsUnchanged).toBe(0);
+    expect(db.superseded).toHaveLength(1);
+  });
+
+  it("catches a restatement that only differs in the sixteenth digit", async () => {
+    // The digit float8 was dropping. Reading the exact decimal is what makes this detectable.
+    const db = production();
+    await run(db, SIXTEEN_DIGITS);
+    const corrected = Buffer.from("corrected artifact");
+    const second = await run(db, 173231.3029514548, { ...artifact, body: corrected, sha256: sha256(corrected) });
+    expect(second.pointsRevised).toBe(1);
+  });
+
+  it("leaves shorter PJM, CEC and ISO-NE style values idempotent, as they always were", async () => {
+    for (const value of [144521.884, 15624, 49398, 25228, 62000]) {
+      const db = production();
+      await run(db, value);
+      const second = await run(db, value);
+      expect(second.pointsUnchanged, `value ${value}`).toBe(1);
+      expect(second.pointsRevised, `value ${value}`).toBe(0);
+    }
+  });
+
+  it("is idempotent at every extra_float_digits setting, not only production's", async () => {
+    for (const extraFloatDigits of [0, 1, 2, 3]) {
+      const db = fakeDatabase({ extraFloatDigits });
+      await run(db, SIXTEEN_DIGITS);
+      const second = await run(db, SIXTEEN_DIGITS);
+      expect(second.pointsRevised, `extra_float_digits=${extraFloatDigits}`).toBe(0);
+    }
   });
 });

@@ -294,7 +294,14 @@ export async function persistPlanningExtraction(
         point.targetPeriodKind, point.targetYear, point.targetSeason, point.targetMonth,
         point.targetTimestamp, point.peakType, point.unit];
       const current = await sql.query(
-        `select id, value::float8 as value from pipeline.planning_forecast_points
+        // `value::text`, not `value::float8`. A numeric rendered as float8 is printed with
+        // `extra_float_digits` significant digits, and production runs that setting at 0, which
+        // truncates to fifteen. Every ERCOT value needing sixteen came back short, compared
+        // unequal to the number it was stored from, and was superseded and re-inserted on every
+        // run -- 285 phantom revisions of 982 points, with the old and new values numerically
+        // identical. `::text` is the exact stored decimal and does not depend on a server
+        // setting, so the comparison means the same thing on every database.
+        `select id, value::text as value from pipeline.planning_forecast_points
           where scenario_id=$1 and geographic_grain=$2 and native_geography_label is not distinct from $3
             and target_period_kind=$4 and target_year=$5 and target_season is not distinct from $6
             and target_month is not distinct from $7
@@ -303,6 +310,8 @@ export async function persistPlanningExtraction(
         identity,
       );
       const live = current.rows[0];
+      // Parsed back to a number so the comparison keeps the semantics it always had: equal
+      // values are unchanged, and a genuinely restated value is still one revision.
       if (live !== undefined && Number(live.value) === point.value) {
         result.pointsUnchanged += 1;
         continue;
