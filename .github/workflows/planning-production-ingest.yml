@@ -1,0 +1,110 @@
+name: Planning forecast production ingestion
+
+# Manual only. A planning vintage is an annual publication, and ingesting one is a decision that
+# what Urdais serves as a market's official forecast should change. A schedule would re-ask that
+# question nightly for a year in order to hear "no" three hundred and sixty times.
+on:
+  workflow_dispatch:
+    inputs:
+      write:
+        description: "Write to UrdaisProd. Leave false for a dry run."
+        type: boolean
+        required: false
+        default: false
+      expect_project:
+        description: "Supabase project reference this dispatch intends to write to."
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+# Two ingestions writing the same planning tables at once is the one thing that could leave a
+# vintage half-written, so runs queue rather than cancel.
+concurrency:
+  group: planning-production-ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    name: ${{ inputs.write && 'ingest (write)' || 'ingest (dry run)' }}
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.URDAIS_PRODUCTION_DATABASE_URL }}
+      EXPECT_PROJECT: ${{ inputs.expect_project }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Require a production database
+        run: |
+          set -euo pipefail
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "URDAIS_PRODUCTION_DATABASE_URL is not set for this repository."
+            echo "This workflow ingests into UrdaisProd and cannot run without it."
+            exit 1
+          fi
+
+      # The repository's own consistency first, with no credentials involved. A duplicate
+      # migration version would mean the database and the repository disagree about what ran.
+      - name: Repository migration integrity
+        run: npm run --silent migrations:check
+
+      # Always, and before anything else. The gate names the database it reached, refuses one
+      # that is not the project the dispatch named, and refuses any whose migration ledger is
+      # behind the repository. It writes nothing.
+      - name: Dry run against production
+        run: |
+          set -euo pipefail
+          npm run --silent power-delivery:planning-production -- --expect-project "${EXPECT_PROJECT}" | tee dry-run.json
+
+      - name: Write to production
+        if: ${{ inputs.write }}
+        run: |
+          set -euo pipefail
+          npm run --silent power-delivery:planning-production -- --expect-project "${EXPECT_PROJECT}" --write | tee write.json
+
+      # The same command again. A correct ingestion makes this a no-op; one that re-inserted
+      # every run would look identical in the read surface while churning the rows underneath.
+      - name: Re-run to prove idempotence
+        if: ${{ inputs.write }}
+        run: |
+          set -euo pipefail
+          npm run --silent power-delivery:planning-production -- --expect-project "${EXPECT_PROJECT}" --write | tee rewrite.json
+
+      - name: Verify what production now serves
+        if: ${{ inputs.write }}
+        run: |
+          set -euo pipefail
+          npm run --silent power-delivery:planning-verify | tee after.json
+
+      - name: Say what happened
+        if: ${{ !inputs.write }}
+        run: |
+          echo "Dry run only. Nothing was written."
+          echo "Re-dispatch with write=true to ingest."
+
+      # The record of what an ingestion did. These reports carry counts, vintage keys and
+      # currentness; no command in this workflow prints a connection string.
+      - name: Upload the reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: planning-ingest-reports
+          path: |
+            dry-run.json
+            write.json
+            rewrite.json
+            after.json
+          if-no-files-found: ignore
+          retention-days: 90

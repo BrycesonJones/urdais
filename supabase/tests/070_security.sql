@@ -105,7 +105,9 @@ declare
     'reference.source_rights_classifications', 'reference.source_use_purposes',
     'reference.source_use_permissions', 'pipeline.retrieval_rights_snapshots',
     'pipeline.planning_forecast_vintages', 'pipeline.planning_forecast_scenarios',
-    'pipeline.raw_planning_forecast_records', 'pipeline.planning_forecast_points'
+    'pipeline.raw_planning_forecast_records', 'pipeline.planning_forecast_points',
+    -- PD-3D: where to look for a newer release, and the evidence of each look.
+    'reference.planning_source_monitors', 'pipeline.planning_source_checks'
   ];
   n integer;
 begin

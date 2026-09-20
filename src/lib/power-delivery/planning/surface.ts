@@ -1,10 +1,9 @@
 import { resolveTokenDatabaseUrl, tokenSqlExecutor } from "@/lib/tokens/read/database";
 import {
-  publishableLatestVintageByMarket,
   publishablePointsForScenario,
   publishableScenariosForVintage,
-  type PublishablePlanningVintage,
 } from "@/lib/power-delivery/planning/read";
+import { planningMarketStatuses, type PlanningMarketStatus } from "@/lib/power-delivery/planning/market-status";
 import type { PlanningForecastPoint, PlanningForecastScenario, PublicPlanningUsePurpose } from "@/lib/power-delivery/planning/types";
 
 /**
@@ -15,7 +14,12 @@ import type { PlanningForecastPoint, PlanningForecastScenario, PublicPlanningUse
  * classification, attribution and unresolved-rights note that must be shown with it.
  */
 export type PublicPlanningForecastData = {
-  latestByMarket: PublishablePlanningVintage[];
+  /**
+   * Every monitored market with both gates resolved. A caller presents a market as the current
+   * official forecast only where `publishableAsCurrent` is true; the rest carry the status that
+   * says why not.
+   */
+  markets: PlanningMarketStatus[];
   scenarios: PlanningForecastScenario[];
   points: PlanningForecastPoint[];
 };
@@ -29,11 +33,11 @@ export async function loadPublicPlanningForecasts(input?: {
   if (!url) return null;
   const sql = await tokenSqlExecutor(url);
   const purpose = input?.purpose ?? "public_raw_planning_value_display";
-  const latestByMarket = await publishableLatestVintageByMarket(sql, purpose);
-  if (!input?.vintageId) return { latestByMarket, scenarios: [], points: [] };
+  const markets = await planningMarketStatuses(sql, { purpose });
+  if (!input?.vintageId) return { markets, scenarios: [], points: [] };
   const scenarios = await publishableScenariosForVintage(sql, input.vintageId, purpose);
   const points = input.scenarioId
     ? await publishablePointsForScenario(sql, input.vintageId, input.scenarioId, purpose)
     : [];
-  return { latestByMarket, scenarios, points };
+  return { markets, scenarios, points };
 }
