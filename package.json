@@ -49,7 +49,9 @@
     "utvi:settlement-study": "tsx scripts/research/utvi-settlement-study/run.ts",
     "utvi:settlement-study:report": "tsx scripts/research/utvi-settlement-study/run.ts --report-only",
     "ugai:prices": "tsx scripts/ugai/prices/ingest.ts",
-    "power-delivery:ingest": "tsx scripts/power-delivery/ingest.ts"
+    "power-delivery:ingest": "tsx scripts/power-delivery/ingest.ts",
+    "power-delivery:planning-ingest": "tsx scripts/power-delivery/planning-ingest.ts",
+    "power-delivery:planning-verify": "tsx scripts/power-delivery/planning-verify.ts"
   },
   "dependencies": {
     "github-slugger": "^2.0.0",
