@@ -2,6 +2,12 @@
   "title": "Urdais Power Delivery — PD-3 long-horizon planning demand",
   "as_of": "2026-09-19",
   "status": "internal research; establishes no legal right; does not write code, design UI, or select a deliverable-capacity methodology",
+  "product_policy_note": {
+    "applies_to": "public_display_status and v1_states",
+    "note": "public_display_status reflects the research and legal assessment only. Urdais product policy may separately permit public display of sources classified ambiguous_requires_legal_review under founder-accepted legal risk, while preserving the original rights classification, attribution requirements, and unresolved issue in provenance. Sources classified unsuitable_without_permission remain blocked unless explicit permission is obtained.",
+    "changes_nothing_below": "No rights_classification, public_display_status or v1_state value in this file is modified by this note. The research assessment and the product publication policy are separate layers.",
+    "see": "docs/operations/power-delivery-pd3-planning-foundation.md"
+  },
   "companion_markdown": "docs/research/power-delivery/phase-3-planning-demand.md",
   "evidence_classes": ["verified", "retrieved", "inferred"],
   "rights_classes": [

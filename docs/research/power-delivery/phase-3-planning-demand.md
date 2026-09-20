@@ -2,6 +2,8 @@
 
 **Status: internal research document. Not a methodology page, not routed publicly, not registered in the docs catalog.** It writes no ingestion code, designs no UI, and selects no deliverable-capacity methodology. It establishes no legal right.
 
+**Research assessment versus Urdais product policy.** The `public_display_status` values in this document, and in the machine-readable matrix beside it, reflect the research and legal assessment only. Urdais product policy may separately permit public display of sources classified `ambiguous_requires_legal_review` under founder-accepted legal risk, while preserving the original rights classification, attribution requirements, and unresolved issue in provenance. Sources classified `unsuitable_without_permission` remain blocked unless explicit permission is obtained. See `docs/operations/power-delivery-pd3-planning-foundation.md`. This note explains that the two are separate layers; it changes no finding, no rights classification, and no `public_display_status` value in this document.
+
 **Scope.** Official long-horizon planning demand forecasts for the seven PD-2 physical-grid markets (ERCOT, PJM, MISO, SPP, CAISO, NYISO, ISO-NE). Operational EIA-930 `D` / `DF` is out of scope except as the geographic universe PD-3 must align to.
 
 **Product baseline.** PD-2 already has a production operational foundation: `actual_load` = EIA-930 `D`, `operational_demand_forecast` = EIA-930 `DF`, hourly native grain, BA codes `ERCO` / `PJM` / `MISO` / `SWPP` / `CISO` / `NYIS` / `ISNE`. PD-3 asks what Urdais can defensibly ingest, retain, normalize, and potentially publish as *planning* demand.
