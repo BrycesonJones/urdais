@@ -99,7 +99,13 @@ declare
     -- Power Delivery: physical grid identity, versioned aggregation membership and hourly evidence.
     'reference.grid_operators', 'reference.grid_areas', 'reference.grid_universes',
     'reference.grid_universe_versions', 'reference.grid_area_memberships', 'reference.power_metrics',
-    'pipeline.raw_power_records', 'pipeline.power_observations', 'pipeline.power_ingestion_runs'
+    'pipeline.raw_power_records', 'pipeline.power_observations', 'pipeline.power_ingestion_runs',
+    -- Power Delivery PD-3: the source-rights model and the planning-demand domain, which is
+    -- deliberately a separate set of tables from the hourly operational store above.
+    'reference.source_rights_classifications', 'reference.source_use_purposes',
+    'reference.source_use_permissions', 'pipeline.retrieval_rights_snapshots',
+    'pipeline.planning_forecast_vintages', 'pipeline.planning_forecast_scenarios',
+    'pipeline.raw_planning_forecast_records', 'pipeline.planning_forecast_points'
   ];
   n integer;
 begin

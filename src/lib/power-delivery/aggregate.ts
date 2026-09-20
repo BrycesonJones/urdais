@@ -4,6 +4,30 @@ import type { CoincidentAggregatePoint } from "@/lib/power-delivery/types";
 export type AggregateMember = { areaId: string; periodStart: string; periodEnd: string; valueMw: number };
 
 /**
+ * Fields that only a planning forecast carries. A planning value has a target year, a scenario
+ * and a vintage; it has no hour it was measured in, and summing seven of them across markets
+ * would produce a number describing no moment that ever existed. The type system stops the
+ * obvious mistake and this stops the one that arrives through `unknown` or a JSON payload.
+ */
+const PLANNING_ONLY_FIELDS = [
+  "vintageId", "scenarioId", "targetYear", "targetSeason", "targetPeriodKind",
+  "rightsClassification", "peakType", "weatherBasis", "largeLoadPolicy",
+] as const;
+
+function assertOperational(member: AggregateMember): void {
+  const carrier = member as unknown as Record<string, unknown>;
+  const planningField = PLANNING_ONLY_FIELDS.find((field) => carrier[field] !== undefined);
+  if (planningField !== undefined) {
+    throw new Error(
+      `planning forecast data cannot enter operational coincident aggregation (member carries ${planningField})`,
+    );
+  }
+  if (new Date(member.periodEnd).valueOf() - new Date(member.periodStart).valueOf() !== 3_600_000) {
+    throw new Error("coincident aggregation accepts one-hour operational intervals only");
+  }
+}
+
+/**
  * Sum simultaneous hourly member observations. Missing members make the result unavailable;
  * they never become zero. Callers may calculate peaks only from this coincident series.
  */
@@ -27,6 +51,7 @@ export function aggregateCoincidentActualLoad(
     }
   }
   for (const observation of observations) {
+    assertOperational(observation);
     if (!expected.has(observation.areaId)) throw new Error(`observation area ${observation.areaId} is not in the selected universe version`);
     byPeriod.set(observation.periodStart, [...(byPeriod.get(observation.periodStart) ?? []), observation]);
   }
