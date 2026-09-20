@@ -56,20 +56,35 @@ function sheetXml(sheet: FixtureSheet, sharedStrings: string[]): string {
   return `<?xml version="1.0"?><worksheet><sheetData>${rows}</sheetData>${merges}</worksheet>`;
 }
 
-function zip(members: { name: string; body: Buffer }[]): Buffer {
+/**
+ * Test-only corruptions of a member's central-directory metadata, so the integrity checks in
+ * `readZipMember` can be exercised against an archive that lies about its own contents.
+ */
+export type ZipCorruption = { member: string; crc?: number; uncompressedSize?: number };
+
+export function buildFixtureZip(
+  members: { name: string; body: Buffer }[],
+  corruptions: readonly ZipCorruption[] = [],
+): Buffer {
+  return zip(members, corruptions);
+}
+
+function zip(members: { name: string; body: Buffer }[], corruptions: readonly ZipCorruption[] = []): Buffer {
   const local: Buffer[] = [];
   const central: Buffer[] = [];
   let offset = 0;
   for (const member of members) {
     const name = Buffer.from(member.name, "utf8");
-    const crc = crc32(member.body);
+    const corruption = corruptions.find((entry) => entry.member === member.name);
+    const crc = corruption?.crc ?? crc32(member.body);
+    const declaredSize = corruption?.uncompressedSize ?? member.body.length;
     const header = Buffer.alloc(30);
     header.writeUInt32LE(0x04034b50, 0);
     header.writeUInt16LE(20, 4);
     header.writeUInt16LE(0, 8); // stored
     header.writeUInt32LE(crc, 14);
     header.writeUInt32LE(member.body.length, 18);
-    header.writeUInt32LE(member.body.length, 22);
+    header.writeUInt32LE(declaredSize, 22);
     header.writeUInt16LE(name.length, 26);
     local.push(header, name, member.body);
 
@@ -80,7 +95,7 @@ function zip(members: { name: string; body: Buffer }[]): Buffer {
     entry.writeUInt16LE(0, 10);
     entry.writeUInt32LE(crc, 16);
     entry.writeUInt32LE(member.body.length, 20);
-    entry.writeUInt32LE(member.body.length, 24);
+    entry.writeUInt32LE(declaredSize, 24);
     entry.writeUInt16LE(name.length, 28);
     entry.writeUInt32LE(offset, 42);
     central.push(entry, name);
@@ -96,7 +111,10 @@ function zip(members: { name: string; body: Buffer }[]): Buffer {
   return Buffer.concat([...local, centralBuffer, eocd]);
 }
 
-export function buildFixtureWorkbook(sheets: FixtureSheet[]): Buffer {
+export function buildFixtureWorkbook(
+  sheets: FixtureSheet[],
+  corruptions: readonly ZipCorruption[] = [],
+): Buffer {
   const sharedStrings: string[] = [];
   const sheetParts = sheets.map((sheet, index) => ({
     sheet,
@@ -118,5 +136,5 @@ export function buildFixtureWorkbook(sheets: FixtureSheet[]): Buffer {
     { name: "xl/_rels/workbook.xml.rels", body: Buffer.from(rels, "utf8") },
     { name: "xl/sharedStrings.xml", body: Buffer.from(shared, "utf8") },
     ...sheetParts.map((entry) => ({ name: entry.part, body: Buffer.from(entry.xml, "utf8") })),
-  ]);
+  ], corruptions);
 }

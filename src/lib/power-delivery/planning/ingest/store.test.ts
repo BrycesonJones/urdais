@@ -19,6 +19,7 @@ function fakeDatabase() {
   const scenarios = new Map<string, string>();
   const points = new Map<string, { id: string; value: number }>();
   const superseded: { id: string; by: string }[] = [];
+  const rawInserts: unknown[][] = [];
   let sequence = 0;
   const id = () => `id-${(sequence += 1)}`;
 
@@ -72,6 +73,7 @@ function fakeDatabase() {
         return { rows: [{ id: value }] };
       }
       if (text.includes("insert into pipeline.raw_planning_forecast_records")) {
+        rawInserts.push(p);
         const key = `${p[0]}|${p[2]}`;
         if (rawRecords.has(key)) return { rows: [] };
         rawRecords.set(key, id());
@@ -97,7 +99,7 @@ function fakeDatabase() {
       throw new Error(`unexpected query: ${text.slice(0, 80)}`);
     },
   };
-  return { sql, points, superseded, rawRecords, retrievals };
+  return { sql, points, superseded, rawRecords, retrievals, rawInserts };
 }
 
 const body = Buffer.from("fixture artifact");
@@ -119,6 +121,7 @@ function extraction(value: number): PlanningExtraction {
     rawPayload: { value }, locator: {
       extractionMethod: "workbook_cell", workbookSheet: "Summer", workbookCell: "J22",
       archiveRef: "peaks", archiveMember: "xl/worksheets/sheet1.xml",
+      archiveMemberHash: "a".repeat(64),
     },
     point: {
       scenarioKey: "ERCOT_Adjusted", geographicGrain: "balancing_authority", nativeGeographyLabel: null,
@@ -199,5 +202,16 @@ describe("planning ingestion write path", () => {
     expect(planningRecordHash(base)).not.toBe(planningRecordHash({ ...base, nativeValue: "144523" }));
     expect(planningRecordHash(base))
       .not.toBe(planningRecordHash({ ...base, locator: { workbook_sheet: "Summer", workbook_cell: "J23" } }));
+  });
+
+  it("persists the archive member and its hash into raw provenance", async () => {
+    const db = fakeDatabase();
+    await run(db);
+    // The raw-record insert names its columns in order; archive_member_hash is the last.
+    const params = db.rawInserts[0]!;
+    expect(params[3]).toBe("ercot/peaks");
+    expect(params[19]).toBe("peaks");
+    expect(params[20]).toBe("xl/worksheets/sheet1.xml");
+    expect(params[21]).toBe("a".repeat(64));
   });
 });

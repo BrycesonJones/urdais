@@ -11,6 +11,8 @@
  * rendered as a date is the classic way a spreadsheet import goes wrong.
  */
 
+import { createHash } from "node:crypto";
+
 import { readZipDirectory, readZipMember, type ZipEntry } from "@/lib/power-delivery/planning/xlsx/zip";
 
 export class XlsxFormatError extends Error {
@@ -83,6 +85,12 @@ export type XlsxSheet = {
   name: string;
   /** The part name inside the archive, retained so provenance can name the exact part. */
   part: string;
+  /**
+   * SHA-256 of the decompressed bytes of that part, exactly as handed to the parser. It pins
+   * provenance to the member a value was read from rather than only to the package that
+   * contained it: two sheets of one workbook are two different members and hash differently.
+   */
+  partSha256: string;
   rows: XlsxRow[];
   /** Merged ranges in A1 notation. A merged range carries its value in the top-left cell only. */
   merges: string[];
@@ -148,8 +156,10 @@ export class XlsxWorkbook {
     }
     const entry = this.entries.get(part);
     if (entry === undefined) throw new XlsxFormatError(`sheet ${name} points at missing part ${part}`);
-    const xml = readZipMember(this.buffer, entry).toString("utf8");
-    return { name, part, rows: this.parseRows(xml), merges: this.parseMerges(xml) };
+    const member = readZipMember(this.buffer, entry);
+    const partSha256 = createHash("sha256").update(member).digest("hex");
+    const xml = member.toString("utf8");
+    return { name, part, partSha256, rows: this.parseRows(xml), merges: this.parseMerges(xml) };
   }
 
   private parseMerges(xml: string): string[] {

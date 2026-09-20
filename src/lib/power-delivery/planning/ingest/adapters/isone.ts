@@ -119,6 +119,7 @@ export const isoneAdapter: PlanningAdapter = {
               workbookCell: `${entry.column}${row.row}`,
               archiveRef: `${artifact.label} (sha256 ${artifact.sha256})`,
               archiveMember: sheet.part,
+              archiveMemberHash: sheet.partSha256,
             },
             point: {
               scenarioKey: entry.key,

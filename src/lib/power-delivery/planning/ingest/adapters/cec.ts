@@ -165,6 +165,7 @@ export const cecAdapter: PlanningAdapter = {
           workbookCell: `${REQUIRED_COLUMNS.MANAGED_NET_LOAD}${row.row}`,
           archiveRef: `${artifact.label} (sha256 ${artifact.sha256})`,
           archiveMember: sheet.part,
+          archiveMemberHash: sheet.partSha256,
         },
         point: {
           scenarioKey,

@@ -120,6 +120,7 @@ export const pjmAdapter: PlanningAdapter = {
               workbookCell: `${measure.column}${row.row}`,
               archiveRef: `${artifact.label} (sha256 ${artifact.sha256})`,
               archiveMember: sheet.part,
+              archiveMemberHash: sheet.partSha256,
             },
             point: {
               scenarioKey: SCENARIO_KEY,

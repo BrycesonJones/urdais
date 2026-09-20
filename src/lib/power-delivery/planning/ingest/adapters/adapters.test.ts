@@ -1,6 +1,9 @@
+import { createHash } from "node:crypto";
+
 import { describe, expect, it } from "vitest";
 
 import { buildFixtureWorkbook, sheetFromGrid, type FixtureCell } from "@/lib/power-delivery/planning/xlsx/fixture-workbook";
+import { readZipDirectory, readZipMember } from "@/lib/power-delivery/planning/xlsx/zip";
 import { sha256 } from "@/lib/power-delivery/planning/ingest/artifact";
 import { cecAdapter } from "@/lib/power-delivery/planning/ingest/adapters/cec";
 import { ercotAdapter } from "@/lib/power-delivery/planning/ingest/adapters/ercot";
@@ -351,5 +354,52 @@ describe("ISO-NE adapter", () => {
       .toThrow(/names 2 columns at exceedance probability 0.5/);
     expect(() => parse(isoneAdapter, isoneFiles({ D: 0.9, E: 0.5, F: 0.2 })))
       .toThrow(/names 0 columns at exceedance probability 0.1/);
+  });
+});
+
+// ------------------------------------------------------------------------- archive provenance
+describe("archive member provenance", () => {
+  it("records the member each value was read from, hashed", () => {
+    const archive = ercotPeaks();
+    const directory = readZipDirectory(archive);
+    const extraction = parse(ercotAdapter, { ...ercotFiles(), "summer-and-winter-peaks": archive });
+
+    for (const record of extraction.records.filter((r) => r.artifactLabel === "summer-and-winter-peaks")) {
+      const member = record.locator.archiveMember!;
+      const expected = createHash("sha256").update(readZipMember(archive, directory.get(member)!)).digest("hex");
+      expect(record.locator.archiveMemberHash).toBe(expected);
+      expect(record.locator.archiveMemberHash).toMatch(/^[0-9a-f]{64}$/);
+    }
+  });
+
+  it("distinguishes the two sheets of one workbook", () => {
+    const extraction = parse(ercotAdapter, ercotFiles());
+    const summer = extraction.records.find((r) => r.locator.workbookSheet === "Summer")!;
+    const winter = extraction.records.find((r) => r.locator.workbookSheet === "Winter")!;
+    expect(summer.locator.archiveMember).not.toBe(winter.locator.archiveMember);
+    expect(summer.locator.archiveMemberHash).not.toBe(winter.locator.archiveMemberHash);
+  });
+
+  it("keeps the outer artifact hash separate from the member hash", () => {
+    const record = parse(ercotAdapter, ercotFiles()).records[0]!;
+    const outer = sha256(ercotFiles()["summer-and-winter-peaks"]);
+    expect(record.locator.archiveRef).toContain(outer);
+    expect(record.locator.archiveMemberHash).not.toBe(outer);
+  });
+
+  it("gives every adapter's records a member hash", () => {
+    const extractions = [
+      parse(ercotAdapter, ercotFiles()), parse(pjmAdapter, pjmFiles()),
+      parse(cecAdapter, cecFiles()), parse(isoneAdapter, isoneFiles()),
+    ];
+    for (const extraction of extractions) {
+      expect(extraction.records.every((r) => /^[0-9a-f]{64}$/.test(r.locator.archiveMemberHash ?? ""))).toBe(true);
+    }
+  });
+
+  it("produces the same member hash on a repeated parse", () => {
+    const files = ercotFiles();
+    expect(parse(ercotAdapter, files).records.map((r) => r.locator.archiveMemberHash))
+      .toEqual(parse(ercotAdapter, files).records.map((r) => r.locator.archiveMemberHash));
   });
 });

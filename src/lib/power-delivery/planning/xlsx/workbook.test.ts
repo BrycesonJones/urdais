@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { buildFixtureWorkbook, sheetFromGrid } from "@/lib/power-delivery/planning/xlsx/fixture-workbook";
+import { createHash } from "node:crypto";
+
+import { buildFixtureWorkbook, buildFixtureZip, sheetFromGrid } from "@/lib/power-delivery/planning/xlsx/fixture-workbook";
 import { XlsxFormatError, XlsxWorkbook, cellNumber, columnToIndex, expandMerges, indexToColumn } from "@/lib/power-delivery/planning/xlsx/workbook";
-import { ZipFormatError, readZipDirectory } from "@/lib/power-delivery/planning/xlsx/zip";
+import { ZipFormatError, ZipIntegrityError, readZipDirectory, readZipMember } from "@/lib/power-delivery/planning/xlsx/zip";
 
 const workbook = () => XlsxWorkbook.open(buildFixtureWorkbook([
   sheetFromGrid("Data", {
@@ -61,5 +63,76 @@ describe("XLSX reading", () => {
     expect(columnToIndex("AA")).toBe(27);
     expect(indexToColumn(27)).toBe("AA");
     expect(indexToColumn(columnToIndex("XFD"))).toBe("XFD");
+  });
+});
+
+const sha256 = (value: Buffer | string) => createHash("sha256").update(value).digest("hex");
+
+describe("ZIP member integrity", () => {
+  const member = { name: "xl/worksheets/sheet1.xml", body: Buffer.from("<worksheet><sheetData/></worksheet>") };
+  const second = { name: "xl/worksheets/sheet2.xml", body: Buffer.from("<worksheet><sheetData><row r=\"1\"/></sheetData></worksheet>") };
+  const read = (archive: Buffer, name: string) => readZipMember(archive, readZipDirectory(archive).get(name)!);
+
+  it("returns the member bytes when CRC and size both agree", () => {
+    const archive = buildFixtureZip([member, second]);
+    expect(read(archive, member.name)).toEqual(member.body);
+    expect(read(archive, second.name)).toEqual(second.body);
+  });
+
+  it("fails closed on a CRC mismatch instead of parsing whatever decompressed", () => {
+    const archive = buildFixtureZip([member, second], [{ member: member.name, crc: 0x12345678 }]);
+    expect(() => read(archive, member.name)).toThrow(ZipIntegrityError);
+    expect(() => read(archive, member.name)).toThrow(/CRC-32 mismatch/);
+    expect(() => read(archive, member.name)).toThrow(new RegExp(member.name));
+    // The sound member in the same archive is unaffected.
+    expect(read(archive, second.name)).toEqual(second.body);
+  });
+
+  it("fails closed when the declared uncompressed size does not match the content", () => {
+    const archive = buildFixtureZip([member], [{ member: member.name, uncompressedSize: member.body.length + 7 }]);
+    expect(() => read(archive, member.name)).toThrow(ZipIntegrityError);
+    expect(() => read(archive, member.name)).toThrow(/declared uncompressed size/);
+  });
+
+  it("refuses a member whose size lives in a ZIP64 extra field rather than misreading it", () => {
+    const archive = buildFixtureZip([member], [{ member: member.name, uncompressedSize: 0xffffffff }]);
+    expect(() => read(archive, member.name)).toThrow(ZipFormatError);
+    expect(() => read(archive, member.name)).toThrow(/ZIP64 extra field/);
+  });
+
+  it("refuses a truncated archive", () => {
+    const archive = buildFixtureZip([member, second]);
+    const directory = readZipDirectory(archive);
+    const truncated = Buffer.concat([archive.subarray(0, 40), archive.subarray(41)]);
+    expect(() => readZipMember(truncated, directory.get(second.name)!)).toThrow();
+  });
+});
+
+describe("sheet member hashes", () => {
+  const book = () => buildFixtureWorkbook([
+    sheetFromGrid("One", { 1: { A: "first" } }),
+    sheetFromGrid("Two", { 1: { A: "second" } }),
+  ]);
+
+  it("hashes the exact decompressed member bytes the parser was given", () => {
+    const archive = book();
+    const sheet = XlsxWorkbook.open(archive).sheet("One");
+    const bytes = readZipMember(archive, readZipDirectory(archive).get(sheet.part)!);
+    expect(sheet.partSha256).toBe(sha256(bytes));
+    expect(sheet.partSha256).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("gives two members of one package two different hashes", () => {
+    const workbook = XlsxWorkbook.open(book());
+    const one = workbook.sheet("One");
+    const two = workbook.sheet("Two");
+    expect(one.part).not.toBe(two.part);
+    expect(one.partSha256).not.toBe(two.partSha256);
+  });
+
+  it("is deterministic across reads, so a rerun produces the same hash", () => {
+    const archive = book();
+    expect(XlsxWorkbook.open(archive).sheet("One").partSha256)
+      .toBe(XlsxWorkbook.open(archive).sheet("One").partSha256);
   });
 });

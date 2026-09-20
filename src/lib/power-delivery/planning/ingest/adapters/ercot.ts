@@ -141,6 +141,7 @@ function seasonalRecords(artifact: RetrievedArtifact, sheetName: TargetSeason ex
               workbookCell: `${letter}${dataRow.row}`,
               archiveRef: `${artifact.label} (sha256 ${artifact.sha256})`,
               archiveMember: sheet.part,
+              archiveMemberHash: sheet.partSha256,
             },
             point: {
               scenarioKey: forecast.key,
@@ -201,6 +202,7 @@ function monthlyRecords(artifact: RetrievedArtifact): ExtractedPlanningRecord[] 
         workbookCell: `C${row.row}`,
         archiveRef: `${artifact.label} (sha256 ${artifact.sha256})`,
         archiveMember: sheet.part,
+        archiveMemberHash: sheet.partSha256,
       },
       point: {
         scenarioKey: FORECAST_SCENARIOS["ERCOT Adjusted"].key,
@@ -298,6 +300,7 @@ function weatherScenarioRecords(artifact: RetrievedArtifact): {
             workbookCell: `${entry.letter}${row.row}`,
             archiveRef: `${artifact.label} (sha256 ${artifact.sha256})`,
             archiveMember: sheet.part,
+            archiveMemberHash: sheet.partSha256,
           },
           point: {
             scenarioKey: entry.key,
