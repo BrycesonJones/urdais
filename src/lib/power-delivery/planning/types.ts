@@ -39,7 +39,9 @@ export type QualityStatus = "accepted" | "provisional" | "suspect";
 export type TargetPeriodKind = "annual" | "seasonal" | "hourly_profile";
 export type TargetSeason = "winter" | "spring" | "summer" | "fall";
 export type GeographicGrain = "balancing_authority" | "zone" | "load_area" | "weather_zone" | "utility" | "sub_region" | "other";
-export type PeakType = "coincident_peak" | "non_coincident_peak" | "hourly_load" | "annual_energy" | "average_load" | "unspecified";
+export type PeakType =
+  | "coincident_peak" | "non_coincident_peak" | "hourly_load"
+  | "annual_energy" | "period_energy" | "average_load" | "unspecified";
 export type LoadBasis = "gross" | "net" | "unspecified";
 export type LargeLoadPolicy = "included_all" | "included_screened" | "included_probability_weighted" | "excluded" | "unspecified";
 export type WeatherBasis =
