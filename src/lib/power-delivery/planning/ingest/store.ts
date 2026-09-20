@@ -15,9 +15,51 @@ import { randomUUID } from "node:crypto";
 
 import { planningRecordHash, planningRetrievalKey } from "@/lib/power-delivery/planning/ingest/artifact";
 import type {
-  ExtractedPlanningRecord, PlanningAdapter, PlanningExtraction, RetrievedArtifact,
+  CanonicalPointDraft, ExtractedPlanningRecord, PlanningAdapter, PlanningExtraction, RetrievedArtifact,
 } from "@/lib/power-delivery/planning/ingest/types";
 import type { PlanningSqlExecutor } from "@/lib/power-delivery/planning/read";
+
+/**
+ * How many rows go into one statement.
+ *
+ * Chosen from the binding limit rather than by feel: PostgreSQL accepts at most 65,535 bound
+ * parameters per statement, and the widest row written here is a raw planning record at 22
+ * columns, so 1,000 rows costs 22,000 parameters -- roughly a third of the ceiling, with room
+ * for the schema to gain columns without anyone having to remember this arithmetic. At PJM's
+ * typical row width that is a few hundred kilobytes per statement, which is an ordinary request.
+ *
+ * It is a parameter rather than a constant so tests can cross batch boundaries with small
+ * fixtures instead of fifteen thousand rows.
+ */
+export const PLANNING_WRITE_BATCH_SIZE = 1_000;
+
+function chunk<T>(items: readonly T[], size: number): T[][] {
+  if (size < 1) throw new Error("batch size must be at least one row");
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += size) chunks.push(items.slice(index, index + size));
+  return chunks;
+}
+
+/**
+ * Build the VALUES list for a multi-row insert. `casts` names the SQL type for columns whose
+ * type PostgreSQL cannot infer from a bound parameter; every row is cast, not just the first,
+ * so the statement does not depend on which row happens to come first.
+ */
+function multiRowValues(
+  rows: readonly (readonly unknown[])[],
+  casts: Readonly<Record<number, string>>,
+): { text: string; params: unknown[] } {
+  const params: unknown[] = [];
+  const tuples = rows.map((row) => {
+    const placeholders = row.map((value, column) => {
+      params.push(value);
+      const cast = casts[column];
+      return cast === undefined ? `$${params.length}` : `$${params.length}::${cast}`;
+    });
+    return `(${placeholders.join(",")})`;
+  });
+  return { text: tuples.join(","), params };
+}
 
 export type PlanningWriteResult = {
   source: string;
@@ -114,7 +156,9 @@ export async function persistPlanningExtraction(
   artifacts: ReadonlyMap<string, RetrievedArtifact>,
   extraction: PlanningExtraction,
   collectorIdentity: string,
+  options: { batchSize?: number } = {},
 ): Promise<PlanningWriteResult> {
+  const batchSize = options.batchSize ?? PLANNING_WRITE_BATCH_SIZE;
   const lineage = await resolvePlanningLineage(sql, adapter.sourceInterfaceSlug, adapter.marketSlug);
   const result: PlanningWriteResult = {
     source: adapter.key, marketSlug: adapter.marketSlug, vintageId: "", vintage: "existing",
@@ -238,15 +282,64 @@ export async function persistPlanningExtraction(
     }
 
     // -------------------------------------------------------- raw evidence and canonical points
-    const ordinals = new Map<string, number>();
-    for (const record of extraction.records) {
-      const retrievalId = retrievalIds.get(record.artifactLabel);
-      if (retrievalId === undefined) throw new Error(`record cites unretrieved artifact ${record.artifactLabel}`);
-      const artifact = artifacts.get(record.artifactLabel)!;
-      const ordinal = ordinals.get(record.artifactLabel) ?? 0;
-      ordinals.set(record.artifactLabel, ordinal + 1);
-      const columns = locatorColumns(record);
-      const recordHash = planningRecordHash({
+    //
+    // Written in bulk rather than a row at a time. The per-record path cost three statements
+    // for every record -- insert the evidence, look up the live point, write the point -- which
+    // is fine locally and is fifty minutes of network latency for PJM's 15,624 rows against a
+    // pooler. The classification each record receives is unchanged; only the number of round
+    // trips it takes to reach it is.
+    const candidates = buildRawCandidates(extraction, artifacts, retrievalIds, adapter.key);
+    const rawIds = await writeRawRecords(sql, candidates, batchSize, result);
+
+    const live = await loadLivePoints(sql, vintageId);
+    const plan = planPointWrites(extraction, candidates, rawIds, scenarioIds, live, result);
+
+    // Supersessions first: the partial unique index permits one live row per identity, so a
+    // replacement cannot be inserted while the row it replaces is still live. The forward
+    // reference is deferrable, so pointing at a row inserted later in this transaction is fine.
+    await applySupersessions(sql, plan.supersessions, batchSize);
+    await insertPoints(sql, plan.inserts, vintageId, lineage.gridAreaId, extraction, batchSize);
+
+
+    await sql.query("commit", []);
+    return result;
+  } catch (error) {
+    await sql.query("rollback", []);
+    throw error;
+  }
+}
+
+// ------------------------------------------------------------------ batched write internals
+
+type RawCandidate = {
+  record: ExtractedPlanningRecord;
+  retrievalId: string;
+  ordinal: number;
+  recordHash: string;
+  columns: Record<string, unknown>;
+  artifactRef: string;
+};
+
+/** Pure: everything a raw row needs, computed before any statement is issued. */
+function buildRawCandidates(
+  extraction: PlanningExtraction,
+  artifacts: ReadonlyMap<string, RetrievedArtifact>,
+  retrievalIds: ReadonlyMap<string, string>,
+  sourceKey: string,
+): RawCandidate[] {
+  const ordinals = new Map<string, number>();
+  return extraction.records.map((record) => {
+    const retrievalId = retrievalIds.get(record.artifactLabel);
+    if (retrievalId === undefined) throw new Error(`record cites unretrieved artifact ${record.artifactLabel}`);
+    const artifact = artifacts.get(record.artifactLabel)!;
+    const ordinal = ordinals.get(record.artifactLabel) ?? 0;
+    ordinals.set(record.artifactLabel, ordinal + 1);
+    const columns = locatorColumns(record);
+    return {
+      record, retrievalId, ordinal, columns,
+      // Matches the per-record path exactly: the source key, then the artifact label.
+      artifactRef: `${sourceKey}/${record.artifactLabel}`,
+      recordHash: planningRecordHash({
         artifactSha256: artifact.sha256,
         nativeGeography: record.nativeGeography,
         nativePeriod: record.nativePeriod,
@@ -254,101 +347,221 @@ export async function persistPlanningExtraction(
         nativeValue: record.nativeValue,
         nativeUnit: record.nativeUnit,
         locator: { ...columns, extraction_method: record.locator.extractionMethod },
-      });
-      const insertedRaw = await sql.query(
-        `insert into pipeline.raw_planning_forecast_records
-           (retrieval_id,row_ordinal,record_hash,artifact_ref,native_geography,native_period,
-            native_scenario,native_value,native_unit,raw_payload,extraction_method,extraction_version,
-            workbook_sheet,workbook_range,workbook_cell,pdf_page,pdf_table,csv_row_number,html_selector,
-            archive_ref,archive_member,archive_member_hash)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
-         on conflict do nothing returning id`,
-        [retrievalId, ordinal, recordHash, `${adapter.key}/${record.artifactLabel}`,
-          record.nativeGeography, record.nativePeriod, record.nativeScenario, record.nativeValue,
-          record.nativeUnit, JSON.stringify(record.rawPayload), record.locator.extractionMethod,
-          PLANNING_EXTRACTION_VERSION,
-          columns.workbook_sheet, columns.workbook_range, columns.workbook_cell, columns.pdf_page,
-          columns.pdf_table, columns.csv_row_number, columns.html_selector,
-          columns.archive_ref, columns.archive_member, columns.archive_member_hash],
-      );
-      let rawId: string;
-      if (insertedRaw.rows[0] !== undefined) {
-        rawId = String(insertedRaw.rows[0]!.id);
-        result.rawRecordsInserted += 1;
-      } else {
-        const existing = await sql.query(
-          `select id from pipeline.raw_planning_forecast_records where retrieval_id = $1 and record_hash = $2`,
-          [retrievalId, recordHash],
-        );
-        if (!existing.rows[0]) {
-          throw new Error(`raw planning record ${recordHash} collided on ordinal ${ordinal} without matching content`);
-        }
-        rawId = String(existing.rows[0]!.id);
-        result.rawRecordsDuplicate += 1;
-      }
+      }),
+    };
+  });
+}
 
-      const point = record.point;
-      const scenarioId = scenarioIds.get(point.scenarioKey);
-      if (scenarioId === undefined) throw new Error(`record cites undeclared scenario ${point.scenarioKey}`);
-      const identity = [scenarioId, point.geographicGrain, point.nativeGeographyLabel,
-        point.targetPeriodKind, point.targetYear, point.targetSeason, point.targetMonth,
-        point.targetTimestamp, point.peakType, point.unit];
-      const current = await sql.query(
-        // `value::text`, not `value::float8`. A numeric rendered as float8 is printed with
-        // `extra_float_digits` significant digits, and production runs that setting at 0, which
-        // truncates to fifteen. Every ERCOT value needing sixteen came back short, compared
-        // unequal to the number it was stored from, and was superseded and re-inserted on every
-        // run -- 285 phantom revisions of 982 points, with the old and new values numerically
-        // identical. `::text` is the exact stored decimal and does not depend on a server
-        // setting, so the comparison means the same thing on every database.
-        `select id, value::text as value from pipeline.planning_forecast_points
-          where scenario_id=$1 and geographic_grain=$2 and native_geography_label is not distinct from $3
-            and target_period_kind=$4 and target_year=$5 and target_season is not distinct from $6
-            and target_month is not distinct from $7
-            and target_timestamp is not distinct from $8::timestamptz
-            and peak_type=$9 and unit=$10 and superseded_by_id is null`,
-        identity,
-      );
-      const live = current.rows[0];
-      // Parsed back to a number so the comparison keeps the semantics it always had: equal
-      // values are unchanged, and a genuinely restated value is still one revision.
-      if (live !== undefined && Number(live.value) === point.value) {
-        result.pointsUnchanged += 1;
-        continue;
-      }
-      const nextId = randomUUID();
-      if (live !== undefined) {
-        await sql.query(
-          `update pipeline.planning_forecast_points
-              set superseded_by_id=$1, superseded_at=now(),
-                  supersession_reason='the publisher restated this value in a corrected or reissued artifact'
-            where id=$2`,
-          [nextId, String(live.id)],
-        );
-      }
-      await sql.query(
-        `insert into pipeline.planning_forecast_points
-           (id,vintage_id,scenario_id,grid_area_id,raw_record_id,geographic_grain,native_geography_label,
-            target_period_kind,target_year,target_season,target_month,target_timestamp,value,unit,
-            peak_type,weather_basis,load_basis,large_load_policy,source_methodology_name,
-            source_methodology_version,quality_status)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::timestamptz,$13::numeric,$14,$15,$16,$17,$18,$19,$20,$21)`,
-        [nextId, vintageId, scenarioId, lineage.gridAreaId, rawId, point.geographicGrain,
-          point.nativeGeographyLabel, point.targetPeriodKind, point.targetYear, point.targetSeason,
-          point.targetMonth, point.targetTimestamp, point.value, point.unit, point.peakType,
-          point.weatherBasis, point.loadBasis, point.largeLoadPolicy,
-          extraction.vintage.sourceMethodologyName, extraction.vintage.sourceMethodologyVersion,
-          extraction.vintage.qualityStatus],
-      );
-      if (live !== undefined) result.pointsRevised += 1;
-      else result.pointsInserted += 1;
+const RAW_COLUMNS = `retrieval_id,row_ordinal,record_hash,artifact_ref,native_geography,native_period,
+  native_scenario,native_value,native_unit,raw_payload,extraction_method,extraction_version,
+  workbook_sheet,workbook_range,workbook_cell,pdf_page,pdf_table,csv_row_number,html_selector,
+  archive_ref,archive_member,archive_member_hash`;
+/** Only raw_payload needs a cast; every other column's type is inferable from its target. */
+const RAW_CASTS = { 9: "jsonb" } as const;
+
+/**
+ * Insert evidence in batches and return the row id for every candidate, whether it was written
+ * now or already present. `on conflict do nothing` keeps the `(retrieval_id, record_hash)`
+ * idempotence exactly as it was; the ids of rows it skipped are recovered in one lookup per
+ * batch instead of one per record.
+ */
+async function writeRawRecords(
+  sql: PlanningSqlExecutor,
+  candidates: readonly RawCandidate[],
+  batchSize: number,
+  result: PlanningWriteResult,
+): Promise<Map<string, string>> {
+  const idByKey = new Map<string, string>();
+  const key = (retrievalId: string, hash: string): string => `${retrievalId}|${hash}`;
+
+  for (const batch of chunk(candidates, batchSize)) {
+    const rows = batch.map((candidate) => [
+      candidate.retrievalId, candidate.ordinal, candidate.recordHash,
+      candidate.artifactRef, candidate.record.nativeGeography, candidate.record.nativePeriod,
+      candidate.record.nativeScenario, candidate.record.nativeValue, candidate.record.nativeUnit,
+      JSON.stringify(candidate.record.rawPayload), candidate.record.locator.extractionMethod,
+      PLANNING_EXTRACTION_VERSION,
+      candidate.columns.workbook_sheet, candidate.columns.workbook_range, candidate.columns.workbook_cell,
+      candidate.columns.pdf_page, candidate.columns.pdf_table, candidate.columns.csv_row_number,
+      candidate.columns.html_selector, candidate.columns.archive_ref, candidate.columns.archive_member,
+      candidate.columns.archive_member_hash,
+    ]);
+    const values = multiRowValues(rows, RAW_CASTS);
+    const inserted = await sql.query(
+      `insert into pipeline.raw_planning_forecast_records (${RAW_COLUMNS})
+       values ${values.text} on conflict do nothing returning id, retrieval_id, record_hash`,
+      values.params,
+    );
+    for (const row of inserted.rows) {
+      idByKey.set(key(String(row.retrieval_id), String(row.record_hash)), String(row.id));
+      result.rawRecordsInserted += 1;
     }
 
-    await sql.query("commit", []);
-    return result;
-  } catch (error) {
-    await sql.query("rollback", []);
-    throw error;
+    const missing = batch.filter((candidate) => !idByKey.has(key(candidate.retrievalId, candidate.recordHash)));
+    if (missing.length === 0) continue;
+    const existing = await sql.query(
+      `select id, retrieval_id, record_hash from pipeline.raw_planning_forecast_records
+        where (retrieval_id, record_hash) in (select r.retrieval_id::uuid, r.record_hash
+               from unnest($1::uuid[], $2::text[]) as r(retrieval_id, record_hash))`,
+      [missing.map((candidate) => candidate.retrievalId), missing.map((candidate) => candidate.recordHash)],
+    );
+    for (const row of existing.rows) {
+      idByKey.set(key(String(row.retrieval_id), String(row.record_hash)), String(row.id));
+    }
+    for (const candidate of missing) {
+      if (!idByKey.has(key(candidate.retrievalId, candidate.recordHash))) {
+        throw new Error(`raw planning record ${candidate.recordHash} was neither inserted nor found`);
+      }
+      result.rawRecordsDuplicate += 1;
+    }
+  }
+  return idByKey;
+}
+
+/**
+ * The identity the live index enforces, as a string. Both sides are normalised the same way so
+ * a value read back from PostgreSQL and one parsed from a workbook key identically.
+ */
+function pointIdentityKey(parts: {
+  scenarioId: string; geographicGrain: string; nativeGeographyLabel: string | null;
+  targetPeriodKind: string; targetYear: number; targetSeason: string | null;
+  targetMonth: number | null; targetTimestamp: string | null; peakType: string; unit: string;
+}): string {
+  return JSON.stringify([
+    parts.scenarioId, parts.geographicGrain, parts.nativeGeographyLabel, parts.targetPeriodKind,
+    parts.targetYear, parts.targetSeason, parts.targetMonth,
+    parts.targetTimestamp === null ? null : new Date(parts.targetTimestamp).toISOString(),
+    parts.peakType, parts.unit,
+  ]);
+}
+
+type LivePoint = { id: string; value: number; fromThisRun: boolean };
+
+/** Every live point of this vintage, in one statement instead of one lookup per record. */
+async function loadLivePoints(sql: PlanningSqlExecutor, vintageId: string): Promise<Map<string, LivePoint>> {
+  const { rows } = await sql.query(
+    `select id, scenario_id, geographic_grain, native_geography_label, target_period_kind,
+            target_year, target_season, target_month, target_timestamp, peak_type, unit,
+            value::text as value
+       from pipeline.planning_forecast_points
+      where vintage_id = $1 and superseded_by_id is null`,
+    [vintageId],
+  );
+  const live = new Map<string, LivePoint>();
+  for (const row of rows) {
+    live.set(pointIdentityKey({
+      scenarioId: String(row.scenario_id),
+      geographicGrain: String(row.geographic_grain),
+      nativeGeographyLabel: row.native_geography_label == null ? null : String(row.native_geography_label),
+      targetPeriodKind: String(row.target_period_kind),
+      targetYear: Number(row.target_year),
+      targetSeason: row.target_season == null ? null : String(row.target_season),
+      targetMonth: row.target_month == null ? null : Number(row.target_month),
+      targetTimestamp: row.target_timestamp == null ? null : new Date(String(row.target_timestamp)).toISOString(),
+      peakType: String(row.peak_type),
+      unit: String(row.unit),
+    }), { id: String(row.id), value: Number(row.value), fromThisRun: false });
+  }
+  return live;
+}
+
+type PointInsert = { id: string; rawId: string; scenarioId: string; point: CanonicalPointDraft };
+type PointPlan = { inserts: PointInsert[]; supersessions: { oldId: string; nextId: string }[] };
+
+/**
+ * Classify every incoming point against what is live. Records are walked in order and the map is
+ * updated as they are classified, so a second record claiming an identity the first just created
+ * is compared against it -- the behaviour the per-record path had, preserved.
+ */
+function planPointWrites(
+  extraction: PlanningExtraction,
+  candidates: readonly RawCandidate[],
+  rawIds: ReadonlyMap<string, string>,
+  scenarioIds: ReadonlyMap<string, string>,
+  live: Map<string, LivePoint>,
+  result: PlanningWriteResult,
+): PointPlan {
+  const plan: PointPlan = { inserts: [], supersessions: [] };
+  for (const candidate of candidates) {
+    const point = candidate.record.point;
+    const scenarioId = scenarioIds.get(point.scenarioKey);
+    if (scenarioId === undefined) throw new Error(`record cites undeclared scenario ${point.scenarioKey}`);
+    const rawId = rawIds.get(`${candidate.retrievalId}|${candidate.recordHash}`);
+    if (rawId === undefined) throw new Error(`raw planning record ${candidate.recordHash} has no id`);
+
+    const key = pointIdentityKey({ ...point, scenarioId });
+    const current = live.get(key);
+    if (current !== undefined && current.value === point.value) {
+      result.pointsUnchanged += 1;
+      continue;
+    }
+    if (current !== undefined && current.fromThisRun) {
+      // Two source rows claiming one canonical identity with different values. The per-record
+      // path would have superseded a row it had just written; that is a source-format fault, and
+      // failing loudly is better than recording a restatement nobody made.
+      throw new Error(
+        `two extracted records claim the same canonical identity with different values (${current.value} then ${point.value}); the source has duplicate rows`,
+      );
+    }
+    const nextId = randomUUID();
+    if (current !== undefined) {
+      plan.supersessions.push({ oldId: current.id, nextId });
+      result.pointsRevised += 1;
+    } else {
+      result.pointsInserted += 1;
+    }
+    plan.inserts.push({ id: nextId, rawId, scenarioId, point });
+    live.set(key, { id: nextId, value: point.value, fromThisRun: true });
+  }
+  return plan;
+}
+
+async function applySupersessions(
+  sql: PlanningSqlExecutor,
+  supersessions: readonly { oldId: string; nextId: string }[],
+  batchSize: number,
+): Promise<void> {
+  for (const batch of chunk(supersessions, batchSize)) {
+    await sql.query(
+      `update pipeline.planning_forecast_points p
+          set superseded_by_id = s.next_id, superseded_at = now(),
+              supersession_reason = 'the publisher restated this value in a corrected or reissued artifact'
+         from unnest($1::uuid[], $2::uuid[]) as s(old_id, next_id)
+        where p.id = s.old_id`,
+      [batch.map((entry) => entry.oldId), batch.map((entry) => entry.nextId)],
+    );
+  }
+}
+
+const POINT_COLUMNS = `id,vintage_id,scenario_id,grid_area_id,raw_record_id,geographic_grain,
+  native_geography_label,target_period_kind,target_year,target_season,target_month,target_timestamp,
+  value,unit,peak_type,weather_basis,load_basis,large_load_policy,source_methodology_name,
+  source_methodology_version,quality_status`;
+const POINT_CASTS = { 11: "timestamptz", 12: "numeric" } as const;
+
+async function insertPoints(
+  sql: PlanningSqlExecutor,
+  inserts: readonly PointInsert[],
+  vintageId: string,
+  gridAreaId: string,
+  extraction: PlanningExtraction,
+  batchSize: number,
+): Promise<void> {
+  for (const batch of chunk(inserts, batchSize)) {
+    const rows = batch.map((entry) => [
+      entry.id, vintageId, entry.scenarioId, gridAreaId, entry.rawId,
+      entry.point.geographicGrain, entry.point.nativeGeographyLabel, entry.point.targetPeriodKind,
+      entry.point.targetYear, entry.point.targetSeason, entry.point.targetMonth,
+      entry.point.targetTimestamp, entry.point.value, entry.point.unit, entry.point.peakType,
+      entry.point.weatherBasis, entry.point.loadBasis, entry.point.largeLoadPolicy,
+      extraction.vintage.sourceMethodologyName, extraction.vintage.sourceMethodologyVersion,
+      extraction.vintage.qualityStatus,
+    ]);
+    const values = multiRowValues(rows, POINT_CASTS);
+    await sql.query(
+      `insert into pipeline.planning_forecast_points (${POINT_COLUMNS}) values ${values.text}`,
+      values.params,
+    );
   }
 }
 
