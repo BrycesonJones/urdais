@@ -11,6 +11,7 @@
 import { createTokenSqlExecutor, resolveTokenDatabaseUrl } from "@/lib/tokens/read/database";
 import { latestVintageByMarketInternal, planningRightsMetadataInternal } from "@/lib/power-delivery/planning/read";
 import { mayPublishPlanningForecast } from "@/lib/power-delivery/planning/rights";
+import { planningMarketStatuses } from "@/lib/power-delivery/planning/market-status";
 import { PLANNING_ADAPTERS, PLANNING_SOURCE_BLOCKERS } from "@/lib/power-delivery/planning/ingest/registry";
 
 async function main(): Promise<void> {
@@ -18,6 +19,8 @@ async function main(): Promise<void> {
   if (url === null) throw new Error("no database URL is configured");
   const sql = await createTokenSqlExecutor(url);
   try {
+    const statuses = await planningMarketStatuses(sql);
+    const freshnessByMarket = new Map(statuses.map((status) => [status.marketSlug, status]));
     const vintages = await latestVintageByMarketInternal(sql);
     const report = [];
     for (const vintage of vintages) {
@@ -37,12 +40,26 @@ async function main(): Promise<void> {
         rights: vintage.rights, publicationState: vintage.publicationState,
         purpose: "public_raw_planning_value_display",
       });
+      const status = freshnessByMarket.get(vintage.marketSlug) ?? null;
       report.push({
         market: vintage.marketName,
         sourceInterface: vintage.sourceInterfaceSlug,
         latestVintage: vintage.nativeVintageKey,
         reportTitle: vintage.reportTitle,
         publishedAt: vintage.publishedAt.slice(0, 10),
+        sourceMethodology: vintage.sourceMethodologyName,
+        sourceMethodologyVersion: vintage.sourceMethodologyVersion,
+        currentness: status === null ? null : {
+          status: status.freshness.status,
+          isCurrent: status.freshness.isCurrent,
+          latestKnownVintage: status.freshness.latestKnownVintageKey,
+          lastCheckedAt: status.freshness.lastCheckedAt,
+          lastSuccessfulCheckAt: status.freshness.lastSuccessfulCheckAt,
+          checkExpiresAt: status.freshness.checkExpiresAt,
+          expectedCadence: status.freshness.expectedCadence,
+          detail: status.freshness.detail,
+        },
+        publishableAsCurrent: status?.publishableAsCurrent ?? false,
         rightsClassification: vintage.rightsClassification,
         publication: {
           allowed: decision.allowed,
@@ -71,10 +88,12 @@ async function main(): Promise<void> {
         rights: publicRight, publicationState: "internal_only",
         purpose: "public_raw_planning_value_display",
       });
+      const status = freshnessByMarket.get(blocker.marketSlug) ?? null;
       noData.push({
         market: blocker.marketSlug,
         sourceInterface: blocker.sourceInterfaceSlug,
         state: "no vintage ingested",
+        currentness: status?.freshness.status ?? null,
         blockerKind: blocker.kind,
         rightsClassification: publicRight?.rightsClassification ?? null,
         wouldPublish: decision.allowed,

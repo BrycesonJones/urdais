@@ -289,6 +289,16 @@ export type PublishablePlanningVintage = {
   publication: PlanningPublicationDecision;
 };
 
+/**
+ * A note on what the `publishable*` family does and does not assert.
+ *
+ * These reads answer one question: does the rights policy permit showing this vintage. They say
+ * nothing about whether the publisher has since released a replacement, and a caller must not
+ * read "publishable" as "current". Currentness lives in
+ * `@/lib/power-delivery/planning/market-status`, whose `publishableAsCurrent` is the only field
+ * that asserts both gates at once.
+ */
+
 /** The single gate. Nothing in the public family reaches a caller without passing through it. */
 function gate(
   candidate: PlanningForecastVintage,
