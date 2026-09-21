@@ -30,7 +30,8 @@ begin
   select count(distinct s.slug) into n
     from reference.source_use_permissions sup
     join reference.source_interfaces s on s.id = sup.source_interface_id
-   where sup.rights_classification = 'ambiguous_requires_legal_review';
+   where sup.rights_classification = 'ambiguous_requires_legal_review'
+     and s.source_class = 'power_system_planning_forecast';
   if n <> 4 then raise exception 'expected four ambiguous planning sources, found %', n; end if;
 end $$;
 

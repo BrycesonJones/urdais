@@ -5,9 +5,15 @@ begin;
 do $$
 declare n integer;
 begin
-  select count(*) into n from reference.planning_source_monitors;
+  -- Scoped by source class: the monitor table is shared with the capacity sources, which have
+  -- their own monitors and their own counts.
+  select count(*) into n from reference.planning_source_monitors m
+    join reference.source_interfaces s on s.id = m.source_interface_id
+   where s.source_class = 'power_system_planning_forecast';
   if n <> 7 then raise exception 'expected seven planning monitors, found %', n; end if;
-  select count(*) into n from reference.planning_source_monitors where monitoring_state = 'active';
+  select count(*) into n from reference.planning_source_monitors m
+    join reference.source_interfaces s on s.id = m.source_interface_id
+   where s.source_class = 'power_system_planning_forecast' and m.monitoring_state = 'active';
   if n <> 4 then raise exception 'expected four active monitors, found %', n; end if;
 
   -- Every planning source interface has a monitor: a market with no data must say why.

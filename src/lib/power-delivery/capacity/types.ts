@@ -23,7 +23,8 @@ export const SOURCE_PUBLISHED_QUANTITY_KINDS = [
 export const CAPACITY_COMPONENT_KINDS = [
   "accredited_resource_capacity", "procured_capacity", "installed_capacity",
   "import_capability", "export_capability", "transfer_capability",
-  "reserve_requirement", "local_reliability_requirement",
+  "reserve_requirement", "net_reserve_requirement", "local_reliability_requirement",
+  "local_sourcing_requirement", "transmission_security_requirement", "tie_benefit",
   "demand_response", "storage_capability", "firm_capacity", "other",
 ] as const;
 export type CapacityComponentKind = (typeof CAPACITY_COMPONENT_KINDS)[number];
