@@ -203,6 +203,29 @@ const identity = (versionId: string, pair: Pair): string => JSON.stringify([
   pair.targetYear, pair.targetSeason, pair.peakType, pair.unit,
 ]);
 
+/**
+ * What the approved pairings say should currently be paired, without writing anything.
+ *
+ * The read model uses this to tell a live result from a stale one: a gap is stale when the rows
+ * it froze are no longer the rows this returns, which happens as soon as a new source release is
+ * ingested and the calculation has not been rerun. Sharing the function rather than restating the
+ * rules is the point — two implementations of "what pairs" would eventually disagree.
+ */
+export async function currentEligiblePairs(
+  sql: CapacitySqlExecutor,
+  marketSlug: string,
+): Promise<{ planningPointId: string; capacityResultId: string; targetYear: number; targetSeason: string | null }[]> {
+  const pairing = GAP_PAIRINGS.find((entry) => entry.marketSlug === marketSlug);
+  if (pairing === undefined) return [];
+  const found = await eligiblePairs(sql, pairing);
+  return found.pairs.map((pair) => ({
+    planningPointId: pair.planningPointId,
+    capacityResultId: pair.capacityResultId,
+    targetYear: pair.targetYear,
+    targetSeason: pair.targetSeason,
+  }));
+}
+
 export async function calculateDeliveryGaps(
   sql: CapacitySqlExecutor,
   options: { markets?: readonly string[] } = {},

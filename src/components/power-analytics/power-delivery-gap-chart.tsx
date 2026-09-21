@@ -1,191 +1,301 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
-import type { PointerEvent } from "react";
 
-import { useContainerSize } from "@/components/charts/use-container-size";
 import { SectionHeading } from "@/components/analytics/section-heading";
-import { DELIVERY_SERIES, HORIZON_DELIVERY_GAP, TODAY_POINT } from "@/data/mock/power-analytics";
-import type { DeliveryPoint } from "@/data/mock/power-analytics";
-import { formatNumber, formatQuarter } from "@/lib/format";
+import { useContainerSize } from "@/components/charts/use-container-size";
+import { formatNumber, formatSigned } from "@/lib/format";
+import type { DeliveryGapReadModel } from "@/lib/power-delivery/gap/read";
 
-const LOAD_LINE = "#b6c7ff";
-const CAPACITY_LINE = "#d4a56a";
-const GAP_FILL = "#c96b6b";
+const SUMMER = "#d4a56a";
+const WINTER = "#8ca4ff";
 const AXIS_TEXT = "#8a8a8a";
 const GRID_LINE = "rgba(255,255,255,0.06)";
-const TODAY_LINE = "#aab2c5";
-const SURFACE = "#0a0a0a";
-const PADDING = { top: 20, right: 56, bottom: 30, left: 8 };
-/** Below this width the chart labels every other year. */
-const NARROW_CHART_WIDTH = 560;
+const ZERO_LINE = "rgba(255,255,255,0.35)";
+const PADDING = { top: 24, right: 62, bottom: 34, left: 8 };
+
+const SEASON_COLOR: Record<string, string> = { summer: SUMMER, winter: WINTER };
+const seasonLabel = (season: string) => season.charAt(0).toUpperCase() + season.slice(1);
+
+/** A megawatt figure as the product shows it: whole numbers, grouped. */
+const mw = (value: number) => `${formatNumber(value, 0)} MW`;
 
 /**
- * Power Delivery Gap: observed load as a solid line up to today, forecast
- * demand as a dashed continuation, deliverable grid capacity as a second
- * line, and a restrained shaded band wherever forecast demand exceeds what
- * the grid can deliver. A vertical "today" marker separates history from
- * forecast, and the headline quotes the gap at the horizon year.
+ * The ERCOT Power Delivery Gap: forecast peak demand minus approved planning capacity, one bar
+ * per season and forecast year, around a zero line that is always drawn.
+ *
+ * Bars rather than a continuous line, because the underlying data is ten discrete seasonal
+ * statements and not a time series. Nothing is interpolated between them, and nothing is clipped:
+ * a negative gap means approved capacity exceeds forecast demand and belongs below the axis,
+ * which is a real and currently common state in the early forecast years.
  */
-export function PowerDeliveryGapChart() {
+export function PowerDeliveryGapChart({ model }: { model: DeliveryGapReadModel }) {
   const { ref, size } = useContainerSize<HTMLDivElement>();
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
+  const series = model.series;
   const geometry = useMemo(() => {
-    if (!size || size.width <= 0 || size.height <= 0) return null;
+    if (!size || size.width <= 0 || size.height <= 0 || series.length === 0) return null;
     const plotLeft = PADDING.left;
     const plotRight = size.width - PADDING.right;
     const plotTop = PADDING.top;
     const plotBottom = size.height - PADDING.bottom;
-    const series = DELIVERY_SERIES;
-    const tMin = series[0]!.time;
-    const tMax = series[series.length - 1]!.time;
-    const values = series.flatMap((point) => [point.actualLoadGw ?? 0, point.forecastLoadGw ?? 0, point.deliverableCapacityGw]);
-    const step = 100;
-    const yMin = Math.floor((Math.min(...values.filter((value) => value > 0)) * 0.94) / step) * step;
-    const yMax = Math.ceil((Math.max(...values) * 1.04) / step) * step;
-    const x = (time: number) => plotLeft + ((time - tMin) / (tMax - tMin)) * (plotRight - plotLeft);
+
+    const values = series.map((point) => point.gapMw);
+    const step = 10_000;
+    // Zero is always inside the range, so the axis is never implied off-screen.
+    const yMin = Math.min(0, Math.floor((Math.min(...values) * 1.08) / step) * step);
+    const yMax = Math.max(0, Math.ceil((Math.max(...values) * 1.08) / step) * step);
     const y = (value: number) => plotBottom - ((value - yMin) / (yMax - yMin)) * (plotBottom - plotTop);
-    const path = (pick: (point: DeliveryPoint) => number | null) => {
-      const points = series.filter((point) => pick(point) !== null);
-      return `M${points.map((point) => `${x(point.time).toFixed(1)},${y(pick(point)!).toFixed(1)}`).join("L")}`;
-    };
-    // The forecast starts from the last observed point so the line is continuous.
-    const forecastPoints = [TODAY_POINT, ...series.filter((point) => point.forecastLoadGw !== null)];
-    const forecastPath = `M${forecastPoints.map((point) => `${x(point.time).toFixed(1)},${y(point.forecastLoadGw ?? point.actualLoadGw!).toFixed(1)}`).join("L")}`;
-    const gapPoints = series.filter((point) => point.forecastLoadGw !== null && point.deliveryGapGw !== null && point.deliveryGapGw > 0);
-    const gapPath =
-      gapPoints.length > 1
-        ? `M${gapPoints.map((point) => `${x(point.time).toFixed(1)},${y(point.forecastLoadGw!).toFixed(1)}`).join("L")}L${[...gapPoints]
-            .reverse()
-            .map((point) => `${x(point.time).toFixed(1)},${y(point.deliverableCapacityGw).toFixed(1)}`)
-            .join("L")}Z`
-        : null;
+
+    const slot = (plotRight - plotLeft) / series.length;
+    const barWidth = Math.max(6, Math.min(34, slot * 0.62));
+    const x = (index: number) => plotLeft + slot * (index + 0.5);
+
     const yTicks: number[] = [];
     for (let value = yMin; value <= yMax; value += step) yTicks.push(value);
-    const years = [...new Set(series.map((point) => new Date(point.time * 1000).getUTCFullYear()))];
-    return { plotLeft, plotRight, plotTop, plotBottom, x, y, yTicks, years, actualPath: path((point) => point.actualLoadGw), forecastPath, capacityPath: path((point) => point.deliverableCapacityGw), gapPath, tMin, tMax };
-  }, [size]);
+    const years = [...new Set(series.map((point) => point.targetYear))];
+    return { plotLeft, plotRight, plotTop, plotBottom, x, y, yTicks, slot, barWidth, years, zero: y(0) };
+  }, [size, series]);
 
-  function handlePointerMove(event: PointerEvent<SVGSVGElement>) {
-    if (!geometry) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    const px = Math.min(Math.max(event.clientX - rect.left, geometry.plotLeft), geometry.plotRight);
-    const time = geometry.tMin + ((px - geometry.plotLeft) / (geometry.plotRight - geometry.plotLeft)) * (geometry.tMax - geometry.tMin);
-    let best = 0;
-    DELIVERY_SERIES.forEach((point, index) => {
-      if (Math.abs(point.time - time) < Math.abs(DELIVERY_SERIES[best]!.time - time)) best = index;
-    });
-    setHoverIndex(best);
-  }
+  const hovered = hoverIndex === null ? null : series[hoverIndex] ?? null;
+  const latest = series.at(-1) ?? null;
 
-  const hovered = hoverIndex === null ? null : DELIVERY_SERIES[hoverIndex]!;
-  const description = `Aggregate peak load across seven U.S. power markets, ${formatQuarter(DELIVERY_SERIES[0]!.time)} to ${formatQuarter(
-    DELIVERY_SERIES[DELIVERY_SERIES.length - 1]!.time,
-  )}: observed load ${formatNumber(TODAY_POINT.actualLoadGw!, 0)} GW at ${formatQuarter(TODAY_POINT.time)}, forecast demand ${formatNumber(
-    HORIZON_DELIVERY_GAP.forecastLoadGw,
-    0,
-  )} GW against ${formatNumber(HORIZON_DELIVERY_GAP.deliverableCapacityGw, 0)} GW of deliverable capacity by the end of ${HORIZON_DELIVERY_GAP.year}, a delivery gap of ${formatNumber(
-    HORIZON_DELIVERY_GAP.gapGw,
-    0,
-  )} GW.`;
+  const description = series.length === 0
+    ? `ERCOT Power Delivery Gap: ${model.reason}`
+    : `ERCOT Power Delivery Gap by season, ${series[0]!.targetYear} to ${series.at(-1)!.targetYear}. `
+      + series.map((point) => `${seasonLabel(point.season)} ${point.targetYear}: ${formatSigned(point.gapMw, 0)} MW`).join("; ");
 
   return (
-    <section id="delivery" aria-labelledby="delivery-heading" className="scroll-mt-24">
+    <section aria-labelledby="delivery" className="scroll-mt-24">
       <SectionHeading
-        id="delivery-heading"
-        title="Power Delivery Gap"
-        subtitle="Actual load, forecast demand, and the grid capacity available to serve it"
-        aside={
+        id="delivery"
+        title="ERCOT Power Delivery Gap"
+        subtitle="Planning forecast peak demand minus approved planning capacity, by season and forecast year."
+        badge={<LifecycleBadge model={model} />}
+        aside={latest === null ? undefined : (
           <p className="tabular-nums">
-            <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">{HORIZON_DELIVERY_GAP.year} delivery gap</span>
+            <span className="block font-mono text-[11px] uppercase tracking-[0.2em] text-neutral-500">
+              {seasonLabel(latest.season)} {latest.targetYear} gap
+            </span>
             <span className="mt-1 block text-3xl font-semibold tracking-tight text-neutral-50 md:text-4xl">
-              {formatNumber(HORIZON_DELIVERY_GAP.gapGw, 0)} <span className="text-base font-normal text-neutral-400">GW</span>
+              {formatSigned(latest.gapMw, 0)} <span className="text-base font-normal text-neutral-400">MW</span>
             </span>
             <span className="block text-xs text-neutral-500">
-              forecast {formatNumber(HORIZON_DELIVERY_GAP.forecastLoadGw, 0)} GW vs deliverable {formatNumber(HORIZON_DELIVERY_GAP.deliverableCapacityGw, 0)} GW
+              demand {mw(latest.demandMw)} − capacity {mw(latest.capacityMw)}
             </span>
           </p>
-        }
+        )}
       />
 
-      <ul className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-neutral-400">
-        <li className="flex items-center gap-2"><span aria-hidden="true" className="inline-block h-[2.5px] w-4 rounded-full" style={{ backgroundColor: LOAD_LINE }} /><span className="text-neutral-200">Actual load</span></li>
-        <li className="flex items-center gap-2"><span aria-hidden="true" className="inline-block w-4 border-t-2 border-dashed" style={{ borderColor: LOAD_LINE }} /><span className="text-neutral-200">Forecast demand</span></li>
-        <li className="flex items-center gap-2"><span aria-hidden="true" className="inline-block h-[1.5px] w-4 rounded-full" style={{ backgroundColor: CAPACITY_LINE }} /><span className="text-neutral-200">Deliverable capacity</span></li>
-        <li className="flex items-center gap-2"><span aria-hidden="true" className="inline-block size-3 rounded-[1px]" style={{ backgroundColor: GAP_FILL, opacity: 0.35 }} /><span className="text-neutral-200">Delivery gap</span></li>
-        <li className="text-neutral-500">GW, seven U.S. markets combined</li>
-      </ul>
+      {series.length === 0 ? (
+        <UnavailableNotice model={model} />
+      ) : (
+        <>
+          <ul className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-neutral-400">
+            {["summer", "winter"].map((season) => (
+              <li key={season} className="flex items-center gap-2">
+                <span aria-hidden="true" className="inline-block size-3 rounded-[1px]" style={{ backgroundColor: SEASON_COLOR[season] }} />
+                <span className="text-neutral-200">{seasonLabel(season)}</span>
+              </li>
+            ))}
+            <li className="text-neutral-500">
+              MW · positive means forecast demand exceeds approved planning capacity
+            </li>
+          </ul>
 
-      <div ref={ref} className="relative mt-3 h-[320px] sm:h-[380px] lg:h-[420px]">
-        {geometry && size && (
-          <svg
-            role="img"
-            aria-label="Power Delivery Gap: actual load, forecast demand, and deliverable capacity"
-            width={size.width}
-            height={size.height}
-            viewBox={`0 0 ${size.width} ${size.height}`}
-            className="block select-none"
-            onPointerMove={handlePointerMove}
-            onPointerLeave={() => setHoverIndex(null)}
-          >
-            <title>Power Delivery Gap: actual load, forecast demand, and deliverable capacity</title>
-            <desc>{description}</desc>
-            {geometry.yTicks.map((tick) => (
-              <g key={tick}>
-                <line x1={geometry.plotLeft} x2={geometry.plotRight} y1={geometry.y(tick)} y2={geometry.y(tick)} stroke={GRID_LINE} />
-                <text x={geometry.plotRight + 8} y={geometry.y(tick)} fill={AXIS_TEXT} fontSize={11} dominantBaseline="middle" className="tabular-nums">{formatNumber(tick, 0)}</text>
-              </g>
-            ))}
-            {/* Every year fits at desktop widths; narrow charts label every other year so the labels never collide. */}
-            {geometry.years.filter((_, index) => size.width >= NARROW_CHART_WIDTH || index % 2 === 0).map((year, index) => (
-              <text
-                key={year}
-                x={geometry.x(Date.UTC(year, 0, 1) / 1000)}
-                y={size.height - 10}
-                fill={AXIS_TEXT}
-                fontSize={11}
-                textAnchor={index === 0 ? "start" : "middle"}
+          {/*
+            The series in words, always present. The chart itself can only be drawn once the
+            container has been measured, and a reader using a screen reader should not depend on
+            that having happened.
+          */}
+          <p className="sr-only" data-testid="gap-series-summary">{description}</p>
+
+          <div ref={ref} className="relative mt-3 h-[320px] sm:h-[380px] lg:h-[420px]">
+            {geometry && size && (
+              <svg
+                role="img"
+                aria-label="ERCOT Power Delivery Gap by season and forecast year"
+                width={size.width}
+                height={size.height}
+                viewBox={`0 0 ${size.width} ${size.height}`}
+                className="block select-none"
+                onPointerMove={(event) => {
+                  const bounds = event.currentTarget.getBoundingClientRect();
+                  const offset = event.clientX - bounds.left - geometry.plotLeft;
+                  const index = Math.floor(offset / geometry.slot);
+                  setHoverIndex(index >= 0 && index < series.length ? index : null);
+                }}
+                onPointerLeave={() => setHoverIndex(null)}
               >
-                {year}
-              </text>
-            ))}
-            {geometry.gapPath && <path d={geometry.gapPath} fill={GAP_FILL} fillOpacity={0.22} />}
-            <path d={geometry.capacityPath} fill="none" stroke={CAPACITY_LINE} strokeWidth={1.5} strokeLinejoin="round" />
-            <path d={geometry.forecastPath} fill="none" stroke={LOAD_LINE} strokeWidth={2} strokeDasharray="5 4" strokeLinejoin="round" />
-            <path d={geometry.actualPath} fill="none" stroke={LOAD_LINE} strokeWidth={2} strokeLinejoin="round" />
-            {/* Today: the boundary between observed and forecast. */}
-            <line x1={geometry.x(TODAY_POINT.time)} x2={geometry.x(TODAY_POINT.time)} y1={geometry.plotTop} y2={geometry.plotBottom} stroke={TODAY_LINE} strokeOpacity={0.6} strokeDasharray="2 3" />
-            <text x={geometry.x(TODAY_POINT.time) + 6} y={geometry.plotTop + 10} fill={TODAY_LINE} fontSize={10} className="font-mono uppercase tracking-[0.2em]">Today</text>
-            <circle cx={geometry.x(TODAY_POINT.time)} cy={geometry.y(TODAY_POINT.actualLoadGw!)} r={4} fill={LOAD_LINE} stroke={SURFACE} strokeWidth={2} />
-            {hovered && (
-              <g pointerEvents="none">
-                <line x1={geometry.x(hovered.time)} x2={geometry.x(hovered.time)} y1={geometry.plotTop} y2={geometry.plotBottom} stroke={TODAY_LINE} strokeOpacity={0.7} strokeDasharray="6 4" />
-                {(hovered.actualLoadGw ?? hovered.forecastLoadGw) !== null && (
-                  <circle cx={geometry.x(hovered.time)} cy={geometry.y((hovered.actualLoadGw ?? hovered.forecastLoadGw)!)} r={4.5} fill={SURFACE} stroke={LOAD_LINE} strokeWidth={2} />
-                )}
-                <circle cx={geometry.x(hovered.time)} cy={geometry.y(hovered.deliverableCapacityGw)} r={4} fill={SURFACE} stroke={CAPACITY_LINE} strokeWidth={1.5} />
-              </g>
+                <title>ERCOT Power Delivery Gap by season and forecast year</title>
+                <desc>{description}</desc>
+                {geometry.yTicks.map((tick) => (
+                  <g key={tick}>
+                    <line x1={geometry.plotLeft} x2={geometry.plotRight} y1={geometry.y(tick)} y2={geometry.y(tick)} stroke={GRID_LINE} />
+                    <text x={geometry.plotRight + 8} y={geometry.y(tick)} fill={AXIS_TEXT} fontSize={11} dominantBaseline="middle" className="tabular-nums">
+                      {formatNumber(tick / 1000, 0)}k
+                    </text>
+                  </g>
+                ))}
+                {/* Zero is drawn explicitly: the sign of this number is the whole point. */}
+                <line x1={geometry.plotLeft} x2={geometry.plotRight} y1={geometry.zero} y2={geometry.zero} stroke={ZERO_LINE} strokeWidth={1} />
+
+                {series.map((point, index) => {
+                  const top = point.gapMw >= 0 ? geometry.y(point.gapMw) : geometry.zero;
+                  const height = Math.max(1, Math.abs(geometry.y(point.gapMw) - geometry.zero));
+                  return (
+                    <rect
+                      key={`${point.season}-${point.targetYear}`}
+                      x={geometry.x(index) - geometry.barWidth / 2}
+                      y={top}
+                      width={geometry.barWidth}
+                      height={height}
+                      fill={SEASON_COLOR[point.season] ?? SUMMER}
+                      fillOpacity={hoverIndex === null || hoverIndex === index ? 0.85 : 0.35}
+                    />
+                  );
+                })}
+
+                {geometry.years.map((year) => {
+                  const first = series.findIndex((point) => point.targetYear === year);
+                  const count = series.filter((point) => point.targetYear === year).length;
+                  return (
+                    <text
+                      key={year}
+                      x={geometry.x(first) + (geometry.slot * (count - 1)) / 2}
+                      y={size.height - 12}
+                      fill={AXIS_TEXT}
+                      fontSize={11}
+                      textAnchor="middle"
+                    >
+                      {year}
+                    </text>
+                  );
+                })}
+              </svg>
             )}
-          </svg>
-        )}
-        {geometry && hovered && size && (
-          <div
-            className="pointer-events-none absolute z-10 rounded-md border border-white/10 bg-neutral-900/95 px-3 py-2 text-xs shadow-lg shadow-black/40"
-            style={{ top: geometry.plotTop + 4, ...(geometry.x(hovered.time) > size.width * 0.55 ? { right: size.width - geometry.x(hovered.time) + 12 } : { left: geometry.x(hovered.time) + 12 }) }}
-          >
-            <p className="whitespace-nowrap text-neutral-400">{formatQuarter(hovered.time)}{hovered.forecastLoadGw !== null ? " · forecast" : ""}</p>
-            <ul className="mt-1.5 flex flex-col gap-1 tabular-nums">
-              <li className="flex justify-between gap-4"><span className="text-neutral-400">{hovered.actualLoadGw !== null ? "Actual load" : "Forecast demand"}</span><span className="font-medium text-neutral-50">{formatNumber((hovered.actualLoadGw ?? hovered.forecastLoadGw)!, 0)} GW</span></li>
-              <li className="flex justify-between gap-4"><span className="text-neutral-400">Deliverable capacity</span><span className="font-medium text-neutral-50">{formatNumber(hovered.deliverableCapacityGw, 0)} GW</span></li>
-              {hovered.deliveryGapGw !== null && <li className="flex justify-between gap-4 border-t border-white/10 pt-1"><span className="text-neutral-400">Delivery gap</span><span className="font-medium text-neutral-50">{formatNumber(hovered.deliveryGapGw, 0)} GW</span></li>}
-            </ul>
+            {geometry && hovered && size && hoverIndex !== null && (
+              <div
+                className="pointer-events-none absolute z-10 rounded-md border border-white/10 bg-neutral-900/95 px-3 py-2 text-xs shadow-lg shadow-black/40"
+                style={{
+                  top: geometry.plotTop,
+                  ...(geometry.x(hoverIndex) > size.width * 0.55
+                    ? { right: size.width - geometry.x(hoverIndex) + 14 }
+                    : { left: geometry.x(hoverIndex) + 14 }),
+                }}
+              >
+                <p className="whitespace-nowrap text-neutral-400">
+                  {seasonLabel(hovered.season)} {hovered.targetYear}
+                </p>
+                {/* The subtraction, legible: demand − capacity = gap. */}
+                <ul className="mt-1.5 flex flex-col gap-1 tabular-nums">
+                  <li className="flex justify-between gap-4"><span className="text-neutral-400">Forecast demand</span><span className="font-medium text-neutral-50">{mw(hovered.demandMw)}</span></li>
+                  <li className="flex justify-between gap-4"><span className="text-neutral-400">Approved capacity</span><span className="font-medium text-neutral-50">− {mw(hovered.capacityMw)}</span></li>
+                  <li className="flex justify-between gap-4 border-t border-white/10 pt-1"><span className="text-neutral-400">Delivery gap</span><span className="font-medium text-neutral-50">{formatSigned(hovered.gapMw, 0)} MW</span></li>
+                </ul>
+                <p className="mt-1.5 whitespace-nowrap text-[11px] text-neutral-500">
+                  {hovered.demandScenarioLabel} · {hovered.capacityScenarioLabel} · {hovered.capacityBasis}
+                </p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-      <p className="mt-3 text-xs text-neutral-500">
-        Deliverable capacity is what transmission, substations, and interconnection can physically serve, not generation capacity. Forecast demand includes large loads now waiting in the queue.
-      </p>
+        </>
+      )}
+
+      <GapFootnotes model={model} />
     </section>
+  );
+}
+
+function LifecycleBadge({ model }: { model: DeliveryGapReadModel }) {
+  const tone = model.lifecycle === "live"
+    ? "border-emerald-700/60 text-emerald-300"
+    : model.lifecycle === "stale"
+      ? "border-amber-700/60 text-amber-300"
+      : "border-neutral-700 text-neutral-400";
+  const label = model.lifecycle === "live" ? "Live"
+    : model.lifecycle === "stale" ? "Stale"
+      : model.lifecycle === "blocked" ? "Not published" : "Not initialized";
+  return (
+    <span title={model.reason} className={`rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${tone}`}>
+      {label}
+    </span>
+  );
+}
+
+/** What the section shows when there is nothing to plot. Never an empty chart. */
+function UnavailableNotice({ model }: { model: DeliveryGapReadModel }) {
+  return (
+    <div className="mt-5 rounded-md border border-white/10 bg-white/[0.02] px-4 py-5">
+      <p className="text-sm text-neutral-300">No delivery gap is published for ERCOT right now.</p>
+      <p className="mt-1 text-sm text-neutral-500">{model.reason}</p>
+    </div>
+  );
+}
+
+function GapFootnotes({ model }: { model: DeliveryGapReadModel }) {
+  const updated = model.calculatedAt === null
+    ? null
+    : new Date(model.calculatedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
+
+  return (
+    <div className="mt-5 flex flex-col gap-3 border-t border-white/10 pt-4 text-xs text-neutral-500">
+      <p className="text-neutral-400">
+        Positive means forecast demand exceeds approved planning capacity; negative means approved
+        planning capacity exceeds forecast demand.
+      </p>
+
+      {/* Mandatory, and kept to one line with the detail behind the methodology link. */}
+      <p className="text-neutral-400">
+        <span className="text-neutral-300">Not ERCOT&rsquo;s reserve margin.</span>{" "}
+        Urdais measures against the full ERCOT Adjusted forecast peak; ERCOT&rsquo;s reserve margin uses
+        firm peak load.{" "}
+        <Link
+          href="/docs/methodology/power-delivery-gap"
+          className="text-neutral-300 underline decoration-neutral-600 underline-offset-2 hover:text-neutral-100"
+        >
+          Methodology {model.methodology.version}
+        </Link>
+      </p>
+
+      <p>
+        {model.demandSource === null || model.capacitySource === null
+          ? "Sources unavailable."
+          : `Sources: ${model.demandSource.sourceName} and ${model.capacitySource.sourceName} (ERCOT). ${model.attributionNote}`}
+        {updated === null ? "" : ` Last calculated ${updated}.`}
+      </p>
+
+      <MarketCoverage model={model} />
+    </div>
+  );
+}
+
+/**
+ * The six markets that produce no gap, named with their reasons.
+ *
+ * They are listed rather than hidden because the alternative reads as a product that covers seven
+ * markets and happens to be missing six, which is the opposite of what is true.
+ */
+function MarketCoverage({ model }: { model: DeliveryGapReadModel }) {
+  return (
+    <details className="group">
+      <summary className="cursor-pointer list-none text-neutral-400 hover:text-neutral-200">
+        <span className="underline decoration-neutral-700 underline-offset-2">
+          Why only ERCOT? ({model.otherMarkets.length} markets unavailable)
+        </span>
+      </summary>
+      <ul className="mt-2 flex flex-col gap-1.5 border-l border-white/10 pl-3">
+        {model.otherMarkets.map((market) => (
+          <li key={market.marketSlug} className="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
+            <span className="font-mono text-[11px] uppercase tracking-wide text-neutral-400 sm:w-16 sm:shrink-0">
+              {market.marketSlug}
+            </span>
+            <span className="text-neutral-500">{market.blocker}</span>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }

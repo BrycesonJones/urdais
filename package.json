@@ -54,7 +54,7 @@
     "power-delivery:planning-verify": "tsx scripts/power-delivery/planning-verify.ts",
     "power-delivery:capacity-ingest": "tsx scripts/power-delivery/capacity-ingest.ts",
     "power-delivery:capacity-results": "tsx scripts/power-delivery/capacity-results.ts",
-    "power-delivery:delivery-gap": "tsx scripts/power-delivery/delivery-gap.ts",
+    "power-delivery:gap": "tsx scripts/power-delivery/gap.ts",
     "power-delivery:planning-check": "tsx scripts/power-delivery/planning-source-check.ts",
     "power-delivery:planning-production": "tsx scripts/power-delivery/planning-production.ts"
   },

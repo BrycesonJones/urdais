@@ -1,5 +1,5 @@
 import { SectionHeading } from "@/components/analytics/section-heading";
-import { HEADROOM_MODERATE_PERCENT, HEADROOM_ROWS, HEADROOM_TIGHT_PERCENT, TODAY_POINT } from "@/data/mock/power-analytics";
+import { HEADROOM_MODERATE_PERCENT, HEADROOM_ROWS, HEADROOM_TIGHT_PERCENT, DEMO_AS_OF_TIME } from "@/data/mock/power-analytics";
 import { formatNumber, formatQuarter } from "@/lib/format";
 import type { HeadroomState } from "@/types/power-analytics";
 
@@ -25,7 +25,7 @@ export function TransmissionHeadroom() {
         subtitle="Remaining physical capacity across major power markets"
         aside={
           <p className="text-xs text-neutral-500">
-            Headroom = deliverable capacity − peak load, {formatQuarter(TODAY_POINT.time)} · Tight &lt; {HEADROOM_TIGHT_PERCENT}%, Moderate &lt; {HEADROOM_MODERATE_PERCENT}%
+            Headroom = deliverable capacity − peak load, {formatQuarter(DEMO_AS_OF_TIME)} · Tight &lt; {HEADROOM_TIGHT_PERCENT}%, Moderate &lt; {HEADROOM_MODERATE_PERCENT}%
           </p>
         }
       />

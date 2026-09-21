@@ -150,7 +150,6 @@ const wobble = (seed: number, index: number, amplitude: number) => amplitude * M
 export const TIMELINE_START_YEAR = 2024;
 export const TIMELINE_END_YEAR = 2031;
 /** The forecast horizon the headline delivery gap is quoted at. */
-export const DELIVERY_GAP_HORIZON_YEAR = 2030;
 
 const quarterStart = (year: number, quarter: number) => Date.UTC(year, quarter * 3, 1) / 1000;
 
@@ -195,48 +194,19 @@ export const LOAD_OBSERVATIONS: LoadObservation[] = POWER_MARKETS.flatMap((marke
   return rows;
 });
 
-/** One point of the aggregate delivery picture across all seven markets. */
-export type DeliveryPoint = {
-  time: number;
-  actualLoadGw: number | null;
-  forecastLoadGw: number | null;
-  deliverableCapacityGw: number;
-  /** forecast − capacity when positive, else 0; null before the forecast begins. */
-  deliveryGapGw: number | null;
-};
-
-/** The hero series: every market summed by quarter. */
-export const DELIVERY_SERIES: DeliveryPoint[] = (() => {
-  const byTime = new Map<number, LoadObservation[]>();
-  for (const row of LOAD_OBSERVATIONS) byTime.set(row.time, [...(byTime.get(row.time) ?? []), row]);
-  return [...byTime.entries()]
-    .sort((a, b) => a[0] - b[0])
-    .map(([time, rows]) => {
-      const sum = (pick: (row: LoadObservation) => number | null) => {
-        const values = rows.map(pick);
-        return values.every((value) => value === null) ? null : round1(values.reduce<number>((total, value) => total + (value ?? 0), 0));
-      };
-      const actual = sum((row) => row.actualLoadGw);
-      const forecast = sum((row) => row.forecastLoadGw);
-      const capacity = sum((row) => row.deliverableCapacityGw)!;
-      return {
-        time,
-        actualLoadGw: actual,
-        forecastLoadGw: forecast,
-        deliverableCapacityGw: capacity,
-        deliveryGapGw: forecast === null ? null : round1(Math.max(0, forecast - capacity)),
-      };
-    });
-})();
-
-/** The last quarter with observed load: the "today" boundary on the chart. */
-export const TODAY_POINT: DeliveryPoint = [...DELIVERY_SERIES].reverse().find((point) => point.actualLoadGw !== null)!;
-
-/** Delivery gap at the horizon year's final quarter: forecast demand minus deliverable capacity. */
-export const HORIZON_DELIVERY_GAP = (() => {
-  const point = DELIVERY_SERIES.find((candidate) => candidate.time === quarterStart(DELIVERY_GAP_HORIZON_YEAR, 3))!;
-  return { year: DELIVERY_GAP_HORIZON_YEAR, gapGw: point.deliveryGapGw ?? 0, forecastLoadGw: point.forecastLoadGw ?? 0, deliverableCapacityGw: point.deliverableCapacityGw };
-})();
+/**
+ * The delivery-gap demo series used to live here: a quarterly seven-market aggregate with a
+ * "today" marker and a gap clipped at zero. PD-5B replaced it with the real ERCOT product, which
+ * is seasonal rather than quarterly, covers one market rather than seven, and keeps negative gaps
+ * negative. Nothing reconstructs it, because every assumption in it was wrong about the data that
+ * actually exists.
+ *
+ * The last observed quarter is still the "as of" label the remaining demo sections use.
+ */
+export const DEMO_AS_OF_TIME: number = [...LOAD_OBSERVATIONS]
+  .filter((row) => row.actualLoadGw !== null)
+  .sort((a, b) => a.time - b.time)
+  .at(-1)!.time;
 
 /* ---------- Interconnection queue ---------- */
 
@@ -289,7 +259,7 @@ function headroomState(percent: number): HeadroomState {
  * on the wires, not unused generation. Ranked by headroom %, tightest first.
  */
 export const HEADROOM_ROWS: HeadroomRow[] = POWER_MARKETS.map((market) => {
-  const latest = LOAD_OBSERVATIONS.filter((row) => row.marketId === market.id && row.time === TODAY_POINT.time)[0]!;
+  const latest = LOAD_OBSERVATIONS.filter((row) => row.marketId === market.id && row.time === DEMO_AS_OF_TIME)[0]!;
   const loadGw = latest.actualLoadGw!;
   const headroomGw = round1(latest.deliverableCapacityGw - loadGw);
   const headroomPercent = (headroomGw / latest.deliverableCapacityGw) * 100;
