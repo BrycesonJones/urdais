@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  CapacityCombinationError, assertCombinable, assertDifferenceable, refuseSevenMarketCapacityTotal,
-  type CombinableQuantity,
+  CapacityCombinationError, assertCombinable, assertDifferenceable, refuseNestedSubareaTotal,
+  refuseSevenMarketCapacityTotal, type CombinableQuantity,
 } from "@/lib/power-delivery/capacity/combine";
 
 const base: CombinableQuantity = {
@@ -102,5 +102,41 @@ describe("the seven-market total", () => {
     const markets = ["ercot", "pjm", "miso", "spp", "caiso", "nyiso", "iso-ne"]
       .map((gridAreaId) => q({ gridAreaId }));
     expect(() => assertCombinable(markets, "seven-market total")).toThrow(/two markets/);
+  });
+});
+
+describe("a requirement stated as a rate", () => {
+  // NYISO publishes locational requirements only as percentages of each locality's own peak, and
+  // PJM states its reserve margin the same way. Two such rates describe different denominators,
+  // so adding them produces nothing, and a rate added to a megawatt is worse than nothing.
+  const rate = q({ quantityKind: "requirement", unit: "percent", capacityBasis: "icap" });
+
+  it("is never an addend, even with another rate", () => {
+    expect(() => assertCombinable([rate, q({ ...rate, gridSubareaId: null })], "locality total"))
+      .toThrow(/a rate, not an amount/);
+  });
+
+  it("is refused before the unit mismatch is even reached", () => {
+    expect(() => assertCombinable([rate, q({ quantityKind: "requirement" })], "mixed"))
+      .toThrow(CapacityCombinationError);
+  });
+
+  it("does not stop two ordinary megawatt figures combining", () => {
+    expect(() => assertCombinable([base, q({})], "control")).not.toThrow();
+  });
+});
+
+describe("the total across nested localities", () => {
+  it("does not exist and says why", () => {
+    expect(() => refuseNestedSubareaTotal("PJM"))
+      .toThrow(/they nest, each one's figure already counts the areas inside it/);
+  });
+
+  it("is not reachable through the combination guard either", () => {
+    // MAAC contains EMAAC, which contains PS. The guard refuses a mixture of grains outright,
+    // and nothing in the pipeline offers a way to add sibling localities.
+    const areas = ["MAAC", "EMAAC", "PS"].map((gridSubareaId) => q({ gridSubareaId }));
+    expect(() => assertCombinable([...areas, q({ gridSubareaId: null })], "PJM area total"))
+      .toThrow(CapacityCombinationError);
   });
 });
