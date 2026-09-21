@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { PowerAnalyticsPage } from "@/components/power-analytics/power-analytics-page";
+import { loadQueueAnalytics, unavailableQueueAnalytics } from "@/lib/interconnection-queue/analytics/read";
 import { loadDeliveryGapReadModel, unconfiguredDeliveryGapReadModel } from "@/lib/power-delivery/gap/read";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
 
@@ -11,8 +12,8 @@ export const metadata: Metadata = {
   description: "Whether the grid can deliver enough power, fast enough, to the Information Age: load, interconnection, transmission, buildout, and flexibility.",
 };
 
-// The delivery gap section reads the database on every request, so the page is never statically
-// cached with one calculation's numbers baked into it.
+// The delivery gap and interconnection queue sections read the database on every request, so the
+// page is never statically cached with one calculation's numbers baked into it.
 export const dynamic = "force-dynamic";
 
 /** The Power Analytics analytical market: not an index route, so it has no symbol. */
@@ -22,12 +23,20 @@ export default async function PowerAnalyticsRoute() {
   // not-initialized model rather than to an error page.
   const databaseUrl = (process.env.DATABASE_URL ?? process.env.URDAIS_DATABASE_URL ?? "").trim();
   let gap = unconfiguredDeliveryGapReadModel();
+  let queue = unavailableQueueAnalytics();
   if (databaseUrl) {
     const sql = await createTokenSqlExecutor(databaseUrl);
     try {
       gap = await loadDeliveryGapReadModel(sql);
     } catch (error) {
       console.error(`power analytics: delivery gap read failed (${error instanceof Error ? error.message : String(error)})`);
+    }
+    try {
+      // Publishable results only: the read model filters blocked markets in SQL, so nothing a
+      // publisher forbids can reach a rendered prop.
+      queue = await loadQueueAnalytics(sql);
+    } catch (error) {
+      console.error(`power analytics: interconnection queue read failed (${error instanceof Error ? error.message : String(error)})`);
     } finally {
       await sql.end();
     }
@@ -36,7 +45,7 @@ export default async function PowerAnalyticsRoute() {
   return (
     <>
       <SiteHeader />
-      <PowerAnalyticsPage gap={gap} />
+      <PowerAnalyticsPage gap={gap} queue={queue} />
       <SiteFooter />
     </>
   );

@@ -57,7 +57,8 @@
     "power-delivery:gap": "tsx scripts/power-delivery/gap.ts",
     "power-delivery:planning-check": "tsx scripts/power-delivery/planning-source-check.ts",
     "power-delivery:planning-production": "tsx scripts/power-delivery/planning-production.ts",
-    "interconnection-queue:ingest": "tsx scripts/interconnection-queue/ingest.ts"
+    "interconnection-queue:ingest": "tsx scripts/interconnection-queue/ingest.ts",
+    "interconnection-queue:analytics": "tsx scripts/interconnection-queue/analytics.ts"
   },
   "dependencies": {
     "github-slugger": "^2.0.0",

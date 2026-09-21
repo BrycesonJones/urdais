@@ -186,6 +186,14 @@ export const docPages: readonly DocPage[] = [
     section: "Methodology",
     file: "methodology/power-delivery-gap.md",
   },
+  {
+    slug: "methodology/interconnection-queue-analytics",
+    title: "Interconnection Queue Analytics",
+    description:
+      "Production methodology for the interconnection queue: which analytics are defensible across seven markets and which are not, why no cross-market capacity total exists, the cohort and maturity rules that decide when a completion rate may be published, and the evidence each market does and does not provide.",
+    section: "Methodology",
+    file: "methodology/interconnection-queue-analytics.md",
+  },
 ];
 
 export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];
