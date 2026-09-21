@@ -82,6 +82,8 @@ export function observationHash(record: NormalizedQueueRecord): string {
     nativeSubstation: record.nativeSubstation,
     nativeTransmissionOwner: record.nativeTransmissionOwner,
     sourcePartition: record.sourcePartition,
+    requestSubtype: record.requestSubtype ?? null,
+    nativeRequestType: record.nativeRequestType ?? null,
     nativeEndUse: record.nativeEndUse ?? null,
     loadEndUse: record.loadEndUse ?? null,
     quantities: [...record.quantities]

@@ -448,6 +448,7 @@ export async function persistQueueExtraction(
             record.nativeState, record.nativeCounty, record.nativeZone, record.nativePoi,
             record.nativeSubstation, record.nativeTransmissionOwner, record.sourcePartition,
             record.nativeEndUse ?? null, record.loadEndUse ?? null,
+            record.requestSubtype ?? "not_distinguished", record.nativeRequestType ?? null,
           );
         }
         count();
@@ -459,7 +460,7 @@ export async function persistQueueExtraction(
               requested_on, proposed_in_service_on, revised_in_service_on, actual_in_service_on,
               agreement_executed_on, withdrawn_on, native_state, native_county, native_zone,
               native_poi, native_substation, native_transmission_owner, source_partition,
-              native_end_use, load_end_use)
+              native_end_use, load_end_use, request_subtype, native_request_type)
            select v.request_id::uuid, v.first_snapshot_id::uuid, v.last_snapshot_id::uuid,
                   v.first_raw_record_id::uuid, v.last_raw_record_id::uuid,
                   v.observation_ordinal::integer, v.observation_hash,
@@ -469,15 +470,15 @@ export async function persistQueueExtraction(
                   v.actual_in_service_on::date, v.agreement_executed_on::date, v.withdrawn_on::date,
                   v.native_state, v.native_county, v.native_zone, v.native_poi,
                   v.native_substation, v.native_transmission_owner, v.source_partition,
-                  v.native_end_use, v.load_end_use
-             from (values ${placeholders(batch.length, 28)}) as v(request_id, first_snapshot_id,
+                  v.native_end_use, v.load_end_use, v.request_subtype, v.native_request_type
+             from (values ${placeholders(batch.length, 30)}) as v(request_id, first_snapshot_id,
                    last_snapshot_id, first_raw_record_id, last_raw_record_id, observation_ordinal,
                    observation_hash, native_project_name, native_customer, native_status,
                    native_status_display, lifecycle_stage, request_class, requested_on,
                    proposed_in_service_on, revised_in_service_on, actual_in_service_on,
                    agreement_executed_on, withdrawn_on, native_state, native_county, native_zone,
                    native_poi, native_substation, native_transmission_owner, source_partition,
-              native_end_use, load_end_use)
+              native_end_use, load_end_use, request_subtype, native_request_type)
            returning id, request_id, observation_ordinal`,
           values,
         );

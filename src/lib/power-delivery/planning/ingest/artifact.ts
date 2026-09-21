@@ -27,7 +27,7 @@ export function httpArtifactFetcher(options?: { timeoutMs?: number }): ArtifactF
       const response = await fetch(ref.url, {
         redirect: "follow",
         signal: controller.signal,
-        headers: { "user-agent": USER_AGENT, accept: "*/*" },
+        headers: { "user-agent": USER_AGENT, accept: "*/*", ...(ref.headers ?? {}) },
       });
       const body = Buffer.from(await response.arrayBuffer());
       if (!response.ok) {

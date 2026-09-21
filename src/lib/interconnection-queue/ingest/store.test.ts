@@ -121,7 +121,7 @@ function database() {
       }
       if (text.includes("insert into pipeline.interconnection_request_observations")) {
         const written: Row[] = [];
-        for (const values of rowsOf(p, 28)) {
+        for (const values of rowsOf(p, 30)) {
           const row = {
             id: id(), request_id: values[0], first_snapshot_id: values[1], last_snapshot_id: values[2],
             first_raw_record_id: values[3], last_raw_record_id: values[4],

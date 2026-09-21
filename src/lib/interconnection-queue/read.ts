@@ -9,6 +9,8 @@
 
 import { isTerminal, type CurrentnessStatus, type LifecycleStage, type QuantityKind,
   type QuantityUnit, type RequestClass, type Technology } from "@/lib/interconnection-queue/types";
+import { mayPublishSourceValue, type PermissionDisposition, type PublicationDecision,
+  type RightsClassification } from "@/lib/rights/publication";
 import type { CapacitySqlExecutor } from "@/lib/power-delivery/capacity/read";
 
 export type QueueRequest = {
@@ -427,4 +429,148 @@ export async function loadEndUseCounts(
   const counts: Record<string, number> = {};
   for (const row of result.rows) counts[String(row.end_use)] = Number(row.n);
   return counts;
+}
+
+// ---------------------------------------------------------------- publication eligibility
+
+export const PUBLIC_QUEUE_PURPOSE = "public_interconnection_queue_display";
+export const PUBLIC_QUEUE_DERIVED_PURPOSE = "public_interconnection_queue_derived_metric_display";
+
+export type QueuePublicationEligibility = {
+  marketSlug: string;
+  sourceInterfaceSlug: string;
+  rightsClassification: RightsClassification | null;
+  disposition: PermissionDisposition | null;
+  rawDisplay: PublicationDecision;
+  derivedDisplay: PublicationDecision;
+};
+
+/**
+ * Whether a market's queue values may be shown publicly, decided by the shared rights policy.
+ *
+ * This exists so that whoever builds the public API in a later phase cannot reach for the data
+ * without also reaching for the answer. SPP is the case that matters: its terms permit copying
+ * "except when such materials will be used in commercial publication", which is a stated
+ * exclusion rather than an open question, so it is retained internally and blocked from display.
+ * No founder-accepted-risk path reaches it.
+ */
+export async function queuePublicationEligibility(
+  sql: CapacitySqlExecutor, marketSlug: string,
+): Promise<QueuePublicationEligibility | null> {
+  const result = await sql.query(
+    `select s.slug as source_slug, s.name as source_name, sup.purpose_code,
+            sup.rights_classification, sup.disposition, sup.attribution_required,
+            sup.attribution_text, sup.conditions, sup.unresolved_issue,
+            sup.terms_document_url, sup.reviewed_by, sup.reviewed_on::text as reviewed_on
+       from reference.source_interfaces s
+       join reference.source_use_permissions sup on sup.source_interface_id = s.id
+       join pipeline.interconnection_requests r on r.source_interface_id = s.id
+       join reference.grid_areas a on a.id = r.grid_area_id
+      where a.slug = $1 and sup.purpose_code = any($2::text[])
+      group by 1,2,3,4,5,6,7,8,9,10,11,12`,
+    [marketSlug, [PUBLIC_QUEUE_PURPOSE, PUBLIC_QUEUE_DERIVED_PURPOSE]],
+  );
+  if (result.rows.length === 0) return null;
+
+  const state = (purpose: string) => {
+    const row = result.rows.find((candidate) => String(candidate.purpose_code) === purpose);
+    if (row === undefined) return null;
+    return {
+      sourceInterfaceSlug: String(row.source_slug), sourceName: String(row.source_name),
+      purpose,
+      rightsClassification: String(row.rights_classification) as RightsClassification,
+      disposition: String(row.disposition) as PermissionDisposition,
+      attributionRequired: row.attribution_required === true,
+      attributionText: row.attribution_text == null ? null : String(row.attribution_text),
+      conditions: row.conditions == null ? null : String(row.conditions),
+      unresolvedIssue: row.unresolved_issue == null ? null : String(row.unresolved_issue),
+      termsDocumentUrl: row.terms_document_url == null ? null : String(row.terms_document_url),
+      reviewedBy: row.reviewed_by == null ? null : String(row.reviewed_by),
+      reviewedOn: row.reviewed_on == null ? null : String(row.reviewed_on),
+    };
+  };
+
+  const raw = state(PUBLIC_QUEUE_PURPOSE);
+  const derived = state(PUBLIC_QUEUE_DERIVED_PURPOSE);
+  const first = result.rows[0]!;
+
+  return {
+    marketSlug,
+    sourceInterfaceSlug: String(first.source_slug),
+    rightsClassification: raw?.rightsClassification ?? null,
+    disposition: raw?.disposition ?? null,
+    rawDisplay: mayPublishSourceValue({
+      rights: raw, publicationState: "publication_candidate",
+      purpose: PUBLIC_QUEUE_PURPOSE, isPublicPurpose: true,
+    }),
+    derivedDisplay: mayPublishSourceValue({
+      rights: derived, publicationState: "publication_candidate",
+      purpose: PUBLIC_QUEUE_DERIVED_PURPOSE, isPublicPurpose: true,
+    }),
+  };
+}
+
+// ---------------------------------------------------------------- request kinds
+
+export type SubtypeCount = { requestSubtype: string; isNewCapability: boolean; requests: number };
+
+/**
+ * How many requests of each kind a market holds, by their latest observation.
+ *
+ * `isNewCapability` is the flag a later total must respect. ISO-NE is the market that makes it
+ * matter: two thirds of its published MW belongs to capacity-rights requests against resources
+ * that already exist.
+ */
+export async function requestSubtypeCounts(
+  sql: CapacitySqlExecutor, marketSlug: string,
+): Promise<SubtypeCount[]> {
+  const result = await sql.query(
+    `select o.request_subtype, t.is_new_capability, count(*)::int as n
+       from pipeline.interconnection_request_observations o
+       join pipeline.interconnection_requests r on r.id = o.request_id
+       join reference.grid_areas a on a.id = r.grid_area_id
+       join reference.interconnection_request_subtypes t on t.code = o.request_subtype
+      where a.slug = $1 and o.is_latest
+      group by 1, 2 order by 3 desc`,
+    [marketSlug],
+  );
+  return result.rows.map((row) => ({
+    requestSubtype: String(row.request_subtype),
+    isNewCapability: row.is_new_capability === true,
+    requests: Number(row.n),
+  }));
+}
+
+/**
+ * Quantities on a market's latest observations, split by whether the request proposes new
+ * capability.
+ *
+ * Returned as counts and exact text sums per named field — never one number. A caller that wants
+ * "the queue MW" still has to say which field it means, and cannot reach a total that mixes new
+ * generation with capacity rights, because the two are separated here and the database refuses to
+ * put a new-generation quantity on a capacity-rights request in the first place.
+ */
+export async function quantitiesByCapability(
+  sql: CapacitySqlExecutor, marketSlug: string,
+): Promise<{ isNewCapability: boolean; nativeField: string; quantityKind: QuantityKind;
+  rows: number; total: string }[]> {
+  const result = await sql.query(
+    `select t.is_new_capability, q.native_field, q.quantity_kind,
+            count(*)::int as n, sum(q.value)::text as total
+       from pipeline.interconnection_request_quantities q
+       join pipeline.interconnection_request_observations o on o.id = q.observation_id
+       join pipeline.interconnection_requests r on r.id = o.request_id
+       join reference.grid_areas a on a.id = r.grid_area_id
+       join reference.interconnection_request_subtypes t on t.code = o.request_subtype
+      where a.slug = $1 and o.is_latest
+      group by 1, 2, 3 order by 1 desc, 4 desc`,
+    [marketSlug],
+  );
+  return result.rows.map((row) => ({
+    isNewCapability: row.is_new_capability === true,
+    nativeField: String(row.native_field),
+    quantityKind: String(row.quantity_kind) as QuantityKind,
+    rows: Number(row.n),
+    total: String(row.total),
+  }));
 }

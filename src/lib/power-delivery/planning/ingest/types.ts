@@ -107,7 +107,19 @@ export type PlanningExtraction = {
   records: ExtractedPlanningRecord[];
 };
 
-export type PlanningArtifactRef = { label: string; url: string };
+export type PlanningArtifactRef = {
+  label: string;
+  url: string;
+  /**
+   * Request headers this artifact needs to be served at all.
+   *
+   * ISO-NE's queue sits behind an ASP.NET cookie-detection redirect that loops forever unless the
+   * client presents the cookie the server is testing for. Stating that on the artifact keeps the
+   * requirement next to the URL it belongs to, rather than teaching the shared fetcher about one
+   * publisher's session handling.
+   */
+  headers?: Record<string, string>;
+};
 
 export type RetrievedArtifact = {
   label: string;
