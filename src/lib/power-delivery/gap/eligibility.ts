@@ -44,6 +44,12 @@ export type ExcludedGapMarket = {
   marketSlug: string;
   status: Exclude<GapStatus, "public_gap_eligible" | "internal_gap_eligible">;
   blocker: string;
+  /**
+   * The same fact in one line, for a public surface. Kept beside the full blocker so the two
+   * cannot drift: a product that explains an absence differently from the methodology is worse
+   * than one that does not explain it at all.
+   */
+  publicBlocker: string;
   unblockedBy: string;
 };
 
@@ -76,6 +82,8 @@ export const GAP_PAIRINGS: readonly GapPairing[] = [
 export const EXCLUDED_GAP_MARKETS: readonly ExcludedGapMarket[] = [
   {
     marketSlug: "pjm",
+    publicBlocker:
+      "PJM's demand forecast and capacity result use different periods, load bases and resource footprints, so they cannot be differenced.",
     status: "capacity_only",
     blocker:
       "Three independent mismatches, each sufficient alone. The demand forecast is monthly and the "
@@ -91,6 +99,8 @@ export const EXCLUDED_GAP_MARKETS: readonly ExcludedGapMarket[] = [
   },
   {
     marketSlug: "miso",
+    publicBlocker:
+      "MISO publishes no planning demand forecast Urdais may use.",
     status: "capacity_only",
     blocker:
       "There is no planning demand series for MISO at all: its long-term load forecast was blocked "
@@ -103,6 +113,8 @@ export const EXCLUDED_GAP_MARKETS: readonly ExcludedGapMarket[] = [
   },
   {
     marketSlug: "caiso",
+    publicBlocker:
+      "CAISO has a demand forecast but no approved capacity result.",
     status: "demand_only",
     blocker:
       "Demand exists; no approved capacity result does. CAISO's net qualifying capacity is "
@@ -112,6 +124,8 @@ export const EXCLUDED_GAP_MARKETS: readonly ExcludedGapMarket[] = [
   },
   {
     marketSlug: "iso-ne",
+    publicBlocker:
+      "ISO New England has a demand forecast but no approved capacity result.",
     status: "demand_only",
     blocker:
       "Demand exists; no approved capacity result does. The ingested ISO-NE artifact's only "
@@ -121,6 +135,8 @@ export const EXCLUDED_GAP_MARKETS: readonly ExcludedGapMarket[] = [
   },
   {
     marketSlug: "nyiso",
+    publicBlocker:
+      "NYISO publishes neither a usable demand forecast nor a capacity figure.",
     status: "component_only",
     blocker:
       "Neither side. NYISO publishes no machine-readable demand series this pipeline holds and no "
@@ -130,6 +146,8 @@ export const EXCLUDED_GAP_MARKETS: readonly ExcludedGapMarket[] = [
   },
   {
     marketSlug: "spp",
+    publicBlocker:
+      "SPP publishes neither side, and its terms prohibit public display.",
     status: "blocked",
     blocker:
       "Neither side, and publication is prohibited regardless. SPP's terms were reviewed and "
