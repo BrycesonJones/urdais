@@ -115,7 +115,7 @@ begin
     from reference.source_use_permissions sup
    where sup.source_interface_id = iface and sup.effective_to is null;
   select count(*) into n from pipeline.retrieval_rights_snapshots where retrieval_id = retrieval;
-  if n <> 4 then raise exception 'retrieval froze % rights determinations, expected 4', n; end if;
+  if n <> 5 then raise exception 'retrieval froze % rights determinations, expected 5', n; end if;
   begin
     update pipeline.retrieval_rights_snapshots set disposition = 'prohibited' where retrieval_id = retrieval;
     raise exception 'a frozen rights snapshot was editable';

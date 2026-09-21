@@ -14,7 +14,9 @@ begin
   select count(*) into n from reference.source_use_permissions u
     join reference.source_interfaces s on s.id = u.source_interface_id
    where s.source_class = 'power_system_capacity_assessment' and u.effective_to is null;
-  if n <> 45 then raise exception 'expected forty-five capacity determinations, found %', n; end if;
+  -- Forty-five capacity purposes, plus the delivery-gap display purpose PD-5A added to
+  -- the ERCOT report as one half of the only approved gap pairing.
+  if n <> 46 then raise exception 'expected forty-six capacity determinations, found %', n; end if;
 
   -- Every capacity interface approved for production collection has a grant in force. The
   -- blocked ones deliberately have neither, and are counted separately below.

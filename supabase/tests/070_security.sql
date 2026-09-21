@@ -115,7 +115,9 @@ declare
     'pipeline.grid_capacity_vintages', 'pipeline.grid_capacity_scenarios',
     'pipeline.raw_grid_capacity_records', 'pipeline.grid_capacity_components',
     'pipeline.grid_constraint_values', 'pipeline.deliverable_capacity_results',
-    'pipeline.deliverable_capacity_result_inputs'
+    'pipeline.deliverable_capacity_result_inputs',
+    -- PD-5A: the delivery gap and the two rows behind each one.
+    'pipeline.delivery_gap_results', 'pipeline.delivery_gap_result_inputs'
   ];
   n integer;
 begin
