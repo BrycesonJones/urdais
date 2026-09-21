@@ -125,7 +125,8 @@ declare
     'pipeline.interconnection_queue_snapshots', 'pipeline.raw_interconnection_queue_records',
     'pipeline.interconnection_requests', 'pipeline.interconnection_request_observations',
     'pipeline.interconnection_request_quantities', 'pipeline.interconnection_request_resources',
-    'pipeline.interconnection_queue_deferrals', 'pipeline.interconnection_source_checks'
+    'pipeline.interconnection_queue_deferrals', 'pipeline.interconnection_source_checks',
+    'reference.interconnection_load_end_uses'
   ];
   n integer;
 begin

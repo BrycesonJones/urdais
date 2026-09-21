@@ -121,7 +121,7 @@ function database() {
       }
       if (text.includes("insert into pipeline.interconnection_request_observations")) {
         const written: Row[] = [];
-        for (const values of rowsOf(p, 26)) {
+        for (const values of rowsOf(p, 28)) {
           const row = {
             id: id(), request_id: values[0], first_snapshot_id: values[1], last_snapshot_id: values[2],
             first_raw_record_id: values[3], last_raw_record_id: values[4],
@@ -232,7 +232,11 @@ describe("persisting a queue extraction", () => {
     expect(written.observationsConfirmed).toBe(0);
   });
 
-  it("writes nothing on an exact rerun and confirms instead", async () => {
+  it("does nothing at all on an exact rerun", async () => {
+    // The same bytes resolve to the same snapshot, and a snapshot that already exists was fully
+    // processed when it was written. Reprocessing it can only produce what is already there —
+    // and for an archive replay it would do harm, comparing a 2018 artifact against a request's
+    // current state and writing an observation dated backwards.
     const db = database();
     const body = "v1";
     await persistQueueExtraction(db.sql, adapter, artifactFor(body), extraction([record()]), "test");
@@ -240,12 +244,11 @@ describe("persisting a queue extraction", () => {
 
     expect(rerun.snapshot).toBe("existing");
     expect(rerun.rawRecordsInserted).toBe(0);
-    expect(rerun.rawRecordsDuplicate).toBe(1);
     expect(rerun.requestsInserted).toBe(0);
     expect(rerun.observationsInserted).toBe(0);
     expect(rerun.quantitiesInserted).toBe(0);
     expect(rerun.resourcesInserted).toBe(0);
-    expect(rerun.observationsConfirmed).toBe(1);
+    expect(rerun.observationsConfirmed).toBe(0);
     expect(db.observations).toHaveLength(1);
   });
 
@@ -378,7 +381,8 @@ describe("cost", () => {
     const many = Array.from({ length: 2_000 }, (_, index) => record({ nativeQueueId: `Q${index}` }));
     await persistQueueExtraction(db.sql, adapter, artifactFor("many"), extraction(many), "test");
     const rerun = await persistQueueExtraction(db.sql, adapter, artifactFor("many"), extraction(many), "test");
-    expect(rerun.statements).toBeLessThan(25);
+    // A seen artifact stops at the snapshot lookup, so the rerun is cheaper still.
+    expect(rerun.statements).toBeLessThan(15);
   });
 });
 

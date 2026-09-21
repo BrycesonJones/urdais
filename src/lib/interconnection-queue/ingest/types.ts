@@ -12,7 +12,7 @@ import type {
   DeferralKind, LifecycleStage, QuantityKind, QuantityUnit, RequestClass, Technology,
 } from "@/lib/interconnection-queue/types";
 
-export const QUEUE_SOURCE_KEYS = ["pjm", "miso", "caiso"] as const;
+export const QUEUE_SOURCE_KEYS = ["pjm", "miso", "caiso", "ercot", "nyiso"] as const;
 export type QueueSourceKey = (typeof QUEUE_SOURCE_KEYS)[number];
 
 export type QueueLocator = {
@@ -74,6 +74,10 @@ export type NormalizedQueueRecord = {
   nativeTransmissionOwner: string | null;
   /** CAISO's sheet membership, which is itself lifecycle evidence. */
   sourcePartition: string | null;
+  /** The publisher's own end-use code for a load request, verbatim. */
+  nativeEndUse?: string | null;
+  /** Normalized only from an explicit source code, never from a project name. */
+  loadEndUse?: string | null;
 
   quantities: NormalizedQuantity[];
   resources: NormalizedResource[];
@@ -95,6 +99,26 @@ export type QueueDeferral = {
   nativeValue: string | null;
   detail: string;
   locator: QueueLocator;
+};
+
+/**
+ * One artifact an archive source offers, with what the publisher's own index says about it.
+ *
+ * A single-file source needs none of this: its artifact is always the current one. An archive
+ * source needs all of it, because the same report period can be published more than once and the
+ * order the artifacts are ingested in decides which state ends up canonical.
+ */
+export type QueueArtifactRef = {
+  label: string;
+  url: string;
+  /** The period the artifact reports on, as an ISO date, distinct from when it was published. */
+  reportPeriod: string | null;
+  /** When the publisher released it. Archive ingestion runs in this order, oldest first. */
+  publishedAt: string | null;
+  /** True when the publisher reissued an artifact for a period it had already reported. */
+  isCorrection: boolean;
+  nativeDocumentId: string | null;
+  archiveMetadata: Record<string, unknown>;
 };
 
 export type QueueSnapshotDraft = {
@@ -120,8 +144,16 @@ export interface QueueAdapter {
   sourceInterfaceSlug: string;
   retrievalPurpose: "production" | "research";
   artifacts: { label: string; url: string }[];
+  /**
+   * An archive source implements this to enumerate what the publisher actually holds, rather
+   * than declaring a fixed URL. Each returned artifact becomes its own snapshot, so ERCOT's 99
+   * monthly workbooks are 99 observed source states rather than one.
+   *
+   * Absent for a source that publishes only its current file.
+   */
+  discover?(fetch: (url: string) => Promise<RetrievedArtifact>): Promise<QueueArtifactRef[]>;
   /** Pure: the same artifacts always produce the same records, in the same order. */
-  parse(artifacts: ReadonlyMap<string, RetrievedArtifact>): QueueExtraction;
+  parse(artifacts: ReadonlyMap<string, RetrievedArtifact>, ref?: QueueArtifactRef): QueueExtraction;
 }
 
 export class QueueSourceFormatError extends Error {

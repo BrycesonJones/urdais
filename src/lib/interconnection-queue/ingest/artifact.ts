@@ -82,6 +82,8 @@ export function observationHash(record: NormalizedQueueRecord): string {
     nativeSubstation: record.nativeSubstation,
     nativeTransmissionOwner: record.nativeTransmissionOwner,
     sourcePartition: record.sourcePartition,
+    nativeEndUse: record.nativeEndUse ?? null,
+    loadEndUse: record.loadEndUse ?? null,
     quantities: [...record.quantities]
       .sort((a, b) => (a.nativeField < b.nativeField ? -1 : a.nativeField > b.nativeField ? 1
         : (a.resourceOrdinal ?? 0) - (b.resourceOrdinal ?? 0)))
