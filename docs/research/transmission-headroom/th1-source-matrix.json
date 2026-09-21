@@ -1,5 +1,5 @@
 {
-  "phase": "TH-1",
+  "phase": "TH-1 (updated by TH-1A)",
   "product": "Transmission Headroom",
   "status": "research_only",
   "preparedOn": "2026-09-21",
@@ -8,7 +8,12 @@
   "workingDefinition": {
     "statement": "Transmission headroom is the signed MW by which flow across a specific monitored element or interface, in a specific direction, under a specific contingency assumption, differs from the limit the operator was enforcing at that moment.",
     "formula": "headroom_mw = applicable_limit_mw - observed_flow_mw",
-    "grain": ["element_or_interface", "direction", "contingency", "interval"],
+    "grain": [
+      "element_or_interface",
+      "direction",
+      "contingency",
+      "interval"
+    ],
     "operationalAndPlanningMustBeSeparate": true,
     "v1Recommendation": "operational_only"
   },
@@ -23,16 +28,59 @@
       "market": "nyiso",
       "class": "B",
       "retrieved": true,
-      "sourceName": "NYISO Market Information System — External Limits and Flows",
-      "endpoint": "http://mis.nyiso.com/public/csv/ExternalLimitsFlows/YYYYMMDDExternalLimitsFlows.csv",
-      "archiveEndpoint": "http://mis.nyiso.com/public/csv/ExternalLimitsFlows/YYYYMM01ExternalLimitsFlows_csv.zip",
+      "sourceName": "NYISO Market Information System \u2014 External Limits and Flows",
+      "endpoint": "https://mis.nyiso.com/public/csv/ExternalLimitsFlows/YYYYMMDDExternalLimitsFlows.csv",
+      "archiveEndpoint": "https://mis.nyiso.com/public/csv/ExternalLimitsFlows/YYYYMM01ExternalLimitsFlows_csv.zip",
       "format": "csv",
       "auth": "none",
-      "cadence": "5_minute",
-      "granularity": ["interface", "import_export_path"],
+      "cadence": "irregular_event_series",
+      "granularity": [
+        "interface",
+        "import_export_path"
+      ],
       "entityKindsInOneFile": 2,
-      "identity": { "field": "Point ID", "kind": "numeric_source_native", "stable": true },
-      "fields": ["Timestamp", "Interface Name", "Point ID", "Flow (MWH)", "Positive Limit (MWH)", "Negative Limit (MWH)"],
+      "identity": {
+        "field": "Point ID",
+        "kind": "numeric_source_native",
+        "stable": true,
+        "namesAreUnstable": true,
+        "renamedPointIds": 8,
+        "examples": {
+          "23316": [
+            "PJM-NYPP",
+            "PJM-NYISO",
+            "SCH - PJ - NY"
+          ],
+          "23324": [
+            "HQ - NYPP",
+            "HQ - NYISO",
+            "SCH - HQ - NY"
+          ],
+          "23315": [
+            "UPNY-CONED",
+            "UPNY CONED"
+          ]
+        },
+        "identityChangeTrap": "CENTRAL-EAST (23313) ends 2005-01 and CENTRAL EAST - VC (23330) begins 2005-02. Different Point IDs. A name matcher would merge two distinct entities.",
+        "retiredPointIds": [
+          "23321",
+          "23322",
+          "23323",
+          "23325",
+          "23331",
+          "23332",
+          "23333",
+          "23334"
+        ]
+      },
+      "fields": [
+        "Timestamp",
+        "Interface Name",
+        "Point ID",
+        "Flow (MWH)",
+        "Positive Limit (MWH)",
+        "Negative Limit (MWH)"
+      ],
       "publishesFlow": true,
       "publishesLimit": true,
       "limitIsDynamic": true,
@@ -41,36 +89,260 @@
       "contingencyNamed": false,
       "contingencyNote": "Interface limits are all-in operating limits that already embed contingency analysis; they cannot be decomposed into pre- and post-contingency.",
       "observed": {
-        "date": "2026-09-21",
-        "bytes": 232329,
-        "rows": 4237,
-        "timestamps": 221,
+        "date": "2026-09-20",
+        "bytes": 301766,
+        "rows": 5491,
+        "timestamps": 289,
         "interfaces": 19,
-        "partialDay": true
+        "partialDay": false,
+        "note": "TH-1A re-fetched a full day; TH-1 had sampled a partial day (4237 rows)."
       },
       "history": {
         "monthlyArchivesReturn200From": "2002-01",
-        "usableLimitHistoryBeginsBetween": ["2006", "2010"],
+        "usableLimitHistoryBeginsBetween": null,
         "evidence": [
-          { "month": "2005-01", "rows": 4015, "interfaces": 11, "stampsPerDay": 365, "negativeLimitSentinel": "9999", "allRowsSentinel": true, "firstTimestamp": "00:01:35" },
-          { "month": "2010-01", "rows": 4896, "interfaces": 17, "stampsPerDay": 288, "negativeLimitSentinel": "-9999", "allRowsSentinel": false, "firstTimestamp": "00:00" },
-          { "month": "2015-01", "rows": 5184, "interfaces": 18, "stampsPerDay": 288, "negativeLimitSentinel": "-9999", "allRowsSentinel": false, "firstTimestamp": "00:00" },
-          { "month": "2020-01", "rows": 5184, "interfaces": 18, "stampsPerDay": 288, "negativeLimitSentinel": "-9999", "allRowsSentinel": false, "firstTimestamp": "00:00" },
-          { "month": "2026-01", "rows": 5202, "interfaces": 18, "stampsPerDay": 289, "negativeLimitSentinel": "-9999", "allRowsSentinel": false, "firstTimestamp": "00:00" }
-        ]
+          {
+            "month": "2004-12",
+            "allDaysSentinel": true,
+            "note": "every file in the month is sentinel"
+          },
+          {
+            "month": "2005-02",
+            "allDaysReal": true,
+            "firstTimestamp": "00:00",
+            "note": "first month with real limits and clean HH:MM"
+          },
+          {
+            "month": "2005-01",
+            "rows": 4015,
+            "interfaces": 11,
+            "stampsPerDay": 365,
+            "negativeLimitSentinel": "9999",
+            "allRowsSentinel": true,
+            "firstTimestamp": "00:01:35"
+          },
+          {
+            "month": "2010-01",
+            "rows": 4896,
+            "interfaces": 17,
+            "stampsPerDay": 288,
+            "negativeLimitSentinel": "-9999",
+            "allRowsSentinel": false,
+            "firstTimestamp": "00:00"
+          },
+          {
+            "month": "2015-01",
+            "rows": 5184,
+            "interfaces": 18,
+            "stampsPerDay": 288,
+            "negativeLimitSentinel": "-9999",
+            "allRowsSentinel": false,
+            "firstTimestamp": "00:00"
+          },
+          {
+            "month": "2020-01",
+            "rows": 5184,
+            "interfaces": 18,
+            "stampsPerDay": 288,
+            "negativeLimitSentinel": "-9999",
+            "allRowsSentinel": false,
+            "firstTimestamp": "00:00"
+          },
+          {
+            "month": "2026-01",
+            "rows": 5202,
+            "interfaces": 18,
+            "stampsPerDay": 289,
+            "negativeLimitSentinel": "-9999",
+            "allRowsSentinel": false,
+            "firstTimestamp": "00:00"
+          }
+        ],
+        "usableLimitHistoryBeginsExactly": "2005-02-01",
+        "supersededByTh1a": "TH-1 estimated 2006-2010 from yearly samples; TH-1A bisected to the day."
       },
       "traps": [
-        { "id": "sentinel", "severity": "critical", "detail": "9999 and -9999 mean unmonitored in that direction, not a limit. headroom = 1273.04 - (-9999) would fabricate 11272 MW on CENTRAL EAST. Six interfaces carry -9999; WEST CENTRAL carries +9999." },
-        { "id": "sentinel_convention_changed", "severity": "high", "detail": "In 2005 every row carried unsigned 9999 in BOTH limit columns. The signed -9999 convention appears by 2010." },
-        { "id": "dynamic_limits", "severity": "high", "detail": "CENTRAL EAST carried both 2690 and 2740 within one day; UPNY CONED 5680 and 5800; SCH - HQ - NY negative limit -100 and -985. No static rating table is valid." },
-        { "id": "cadence_changed", "severity": "medium", "detail": "2005 had 365 irregular stamps per day; 2010 onward is a clean 288 x 5 minutes." },
-        { "id": "roster_growth", "severity": "medium", "detail": "11 interfaces in 2005 to 19 in 2026. SCH - HQ_CHPE (Point ID 625211) is recently energized. Identity must be Point ID, never name." },
-        { "id": "dead_tie", "severity": "medium", "detail": "SCH - HQ_CEDARS has limits 49/0 and flow 0.0 all day. Arithmetic headroom exists but the tie is not carrying. Needs a state, not a number." },
-        { "id": "zero_is_real", "severity": "medium", "detail": "SCH - PJM_NEPTUNE sat at exactly 660.0 against a 660 limit for every interval. Headroom 0.0 is a correct observation and must not render as missing." }
+        {
+          "id": "sentinel",
+          "severity": "critical",
+          "detail": "9999 and -9999 mean unmonitored in that direction, not a limit. headroom = 1273.04 - (-9999) would fabricate 11272 MW on CENTRAL EAST. Six interfaces carry -9999; WEST CENTRAL carries +9999."
+        },
+        {
+          "id": "sentinel_convention_changed",
+          "severity": "high",
+          "detail": "In 2002-01 through 2005-01 every row carried unsigned 9999 in BOTH limit columns. Real limits begin exactly 2005-02-01; the signed -9999 sentinel appears from 2007-11."
+        },
+        {
+          "id": "dynamic_limits",
+          "severity": "high",
+          "detail": "CENTRAL EAST carried both 2690 and 2740 within one day; UPNY CONED 5680 and 5800; SCH - HQ - NY negative limit -100 and -985. No static rating table is valid."
+        },
+        {
+          "id": "cadence_changed",
+          "severity": "medium",
+          "detail": "Pre-2005-02 timestamps were irregular with seconds. From 2005-02 they are clean HH:MM, but the series is still NOT a fixed 5-minute grid: off-grid stamps and skipped slots occur daily (see cadenceEvidence)."
+        },
+        {
+          "id": "roster_growth",
+          "severity": "medium",
+          "detail": "11 interfaces in 2002 to 19 in 2026, and 8 Point IDs were renamed (some twice). Identity must be Point ID, never name. CENTRAL-EAST 23313 was replaced by a DIFFERENT id 23330, which a name matcher would wrongly merge."
+        },
+        {
+          "id": "dead_tie",
+          "severity": "medium",
+          "detail": "SCH - HQ_CEDARS has limits 49/0 and flow 0.0 all day. Record as zero_flow_direction_undetermined; inactivity is a property of a run of observations, not one row, and the source publishes no in-service flag."
+        },
+        {
+          "id": "zero_is_real",
+          "severity": "medium",
+          "detail": "SCH - PJM_NEPTUNE sat at exactly 660.0 against a 660 limit for every interval. Headroom 0.0 is a correct observation and must not render as missing."
+        },
+        {
+          "id": "zero_headroom_is_not_congestion",
+          "severity": "high",
+          "detail": "All 1218 zero-headroom rows on 2026-09-20 are HVDC or controllable merchant ties at exactly their rating. On a scheduled tie that is routine full scheduling; on a free-flowing AC interface the same arithmetic means congestion. No \"interfaces at their limit\" count may be published until subtype is resolved."
+        }
       ],
       "acquisitionRisk": "low",
-      "rights": { "classification": "ambiguous_requires_legal_review", "determined": false, "termsUrl": "https://www.nyiso.com/legal-notice", "decisiveWording": "Access to this Web site does not confer any license or ownership interest in either the form or content of the Web site.", "note": "No affirmative reuse grant and no explicit prohibition on CSV data. The image/video reproduction prohibition is specific to images and video. Must be recorded independently of the NYISO Interconnection Queue determination." },
-      "th2Candidate": true
+      "rights": {
+        "classification": "ambiguous_requires_legal_review",
+        "determined": true,
+        "determinedBy": "TH-1A first-hand review",
+        "termsUrl": "https://www.nyiso.com/legal-notice",
+        "misHostHasSeparateTerms": false,
+        "decisiveWording": [
+          "Copyright (c) 2026 New York Independent System Operator. All Rights Reserved.",
+          "Access to this Web site does not confer any license or ownership interest in either the form or content of the Web site.",
+          "Downloading, republishing, retransmitting, reproducing, or other use of any image or video on this website as a stand-alone file is strictly prohibited."
+        ],
+        "analysis": "Reproduction prohibition scoped explicitly to images and video. No affirmative grant covering data and no explicit prohibition on data. No attribution text specified.",
+        "founderRiskApplies": true,
+        "notRelabelled": "Remains ambiguous; publication proceeds under recorded accepted risk."
+      },
+      "th2Candidate": true,
+      "th1aVerified": true,
+      "schemeNote": "HTTPS verified working and preferred; TH-1 used HTTP.",
+      "directoryListing": "403 - filenames must be constructed, not discovered",
+      "nativeKey": [
+        "Point ID",
+        "Timestamp"
+      ],
+      "nativeKeyVerifiedUnique": "0 duplicates in 5491 rows (2026-09-20)",
+      "unitNote": "Header says MWH; values are instantaneous MW. Record the label, publish as MW.",
+      "timestampNote": "Local clock, no timezone or UTC offset. DST handling unverified.",
+      "cadenceEvidence": {
+        "date": "2026-09-20",
+        "timestamps": 289,
+        "offGrid": [
+          "04:39",
+          "04:41",
+          "17:37"
+        ],
+        "skippedSlots": [
+          "04:45",
+          "17:50"
+        ],
+        "gapMinutesHistogram": {
+          "5": 281,
+          "4": 1,
+          "1": 2,
+          "9": 1,
+          "2": 1,
+          "3": 1,
+          "10": 1
+        }
+      },
+      "sentinelRule": {
+        "rule": "abs(limit) == 9999 exactly",
+        "whyNotThreshold": "max genuine limit observed is 9899 on SCH - HQ_IMPORT_EXPORT (4074 observations), only 100 MW below the sentinel. A >=9000 threshold would discard real data.",
+        "rawStringsInBand": {
+          "9999": 61438,
+          "-9999": 17412,
+          "-9899": 4074
+        },
+        "zeroIsReal": true,
+        "blankNeverObserved": true
+      },
+      "eraMap": [
+        {
+          "era": 1,
+          "span": "2002-01-01..2005-01-31",
+          "positive": "9999 all rows",
+          "negative": "9999 all rows (UNSIGNED)",
+          "timestamp": "irregular with seconds",
+          "usable": false
+        },
+        {
+          "era": 2,
+          "span": "2005-02-01..2007-10",
+          "positive": "real/zero",
+          "negative": "real/zero, no sentinel",
+          "timestamp": "clean HH:MM",
+          "usable": true
+        },
+        {
+          "era": 3,
+          "span": "2007-11 onward",
+          "positive": "real/zero",
+          "negative": "real/zero/-9999",
+          "timestamp": "clean",
+          "usable": true
+        },
+        {
+          "era": 4,
+          "span": "by 2020 (exact onset unresolved)..current",
+          "positive": "real/zero/9999",
+          "negative": "real/zero/-9999",
+          "timestamp": "clean",
+          "usable": true
+        }
+      ],
+      "subtypeRule": {
+        "resolved": false,
+        "reason": "Source publishes no structured subtype field. Name prefix \"SCH - \" is a heuristic and names are provably unstable. Point ID range fails: external ties 23316/23317/23318/23324 sit inside the internal series. No NYISO interface catalogue found (MIS directory listing 403).",
+        "recommendation": "Record Interface Name and Point ID raw; implement no subtype classifier. Logged unresolved, not guessed."
+      },
+      "directionFormula": {
+        "selectLimitBeforeAbsoluteValue": true,
+        "pseudocode": "if flow>0: sentinel(pos)? unmonitored : pos-flow | if flow<0: sentinel(neg)? unmonitored : abs(neg)-abs(flow) | if flow==0: zero_flow_direction_undetermined",
+        "testedOn": "2026-09-20 full day, 5491 rows",
+        "outcomes": {
+          "ok": 4481,
+          "unmonitored_direction": 578,
+          "zero_flow_direction_undetermined": 432,
+          "negativeHeadroom": 0,
+          "exactlyZeroHeadroom": 1218
+        }
+      },
+      "zeroAndDeadStates": {
+        "states": [
+          "ok_headroom_zero",
+          "unmonitored_direction",
+          "zero_flow_direction_undetermined",
+          "real_zero_limit"
+        ],
+        "zeroHeadroomByInterface": {
+          "SCH - PJM_NEPTUNE": 289,
+          "SCH - PJM_VFT": 263,
+          "SCH - PJM_HTP": 260,
+          "SCH - HQ - NY": 252,
+          "SCH - HQ_CHPE": 131,
+          "SCH - NPX_CSC": 23
+        },
+        "finding": "Every zero-headroom interface is an HVDC or controllable merchant tie at exactly its rating. On a scheduled controllable tie, flow == limit is routine full scheduling, not congestion. On a free-flowing AC interface the same arithmetic means congestion.",
+        "consequence": "No \"interfaces at their limit\" count may be published until the subtype question is resolved.",
+        "deadTieNote": "SCH - HQ_CEDARS (limits 49/0, flow 0.0 all 289 observations) looks inactive, but the source publishes no in-service flag and inactivity is a property of a run of observations, not one row. Record each row as zero_flow_direction_undetermined."
+      },
+      "attribution": "Source: New York Independent System Operator, Inc., External Limits and Flows.",
+      "backfill": {
+        "startDate": "2005-02-01",
+        "monthlyArchives": 260,
+        "doNotIngestBefore": "2005-02-01",
+        "reason": "Real limits, end of the unsigned-9999 convention and clean HH:MM timestamps all begin on the same date.",
+        "estimatedObservations": 43000000,
+        "estimatedMarginYieldPct": 82
+      },
+      "readiness": "ready_with_founder_risk"
     },
     {
       "market": "ercot",
@@ -83,9 +355,37 @@
       "format": "csv_in_zip",
       "auth": "none",
       "cadence": "5_minute_sced",
-      "granularity": ["monitored_element", "zone_base_case_constraint"],
-      "identity": { "field": "ConstraintID", "kind": "numeric_source_native", "stable": true },
-      "fields": ["SCEDTimeStamp", "RepeatedHourFlag", "ConstraintID", "ConstraintName", "ContingencyName", "ShadowPrice", "MaxShadowPrice", "Limit", "Value", "ViolatedMW", "FromStation", "ToStation", "FromStationkV", "ToStationkV", "CCTStatus"],
+      "granularity": [
+        "monitored_element",
+        "zone_base_case_constraint"
+      ],
+      "identity": {
+        "field": "(ConstraintName, ContingencyName)",
+        "kind": "composite_source_native",
+        "constraintIdIsNotStable": true,
+        "evidence": {
+          "constraintIdsMappingToMultipleNames": 28,
+          "constraintNamesMappingToMultipleIds": 71
+        },
+        "note": "ConstraintID is a per-SCED-run handle retained as raw metadata only. This corrects TH-1."
+      },
+      "fields": [
+        "SCEDTimeStamp",
+        "RepeatedHourFlag",
+        "ConstraintID",
+        "ConstraintName",
+        "ContingencyName",
+        "ShadowPrice",
+        "MaxShadowPrice",
+        "Limit",
+        "Value",
+        "ViolatedMW",
+        "FromStation",
+        "ToStation",
+        "FromStationkV",
+        "ToStationkV",
+        "CCTStatus"
+      ],
       "publishesFlow": true,
       "publishesLimit": true,
       "directional": "implicit_via_element_orientation",
@@ -106,17 +406,181 @@
         "rowsWithShadowPriceAboveZero": 105,
         "rowsGenuinelyViolated": 1
       },
-      "sourceBackedBindingIndicator": { "field": "ShadowPrice", "rule": "ShadowPrice > 0", "agreementWithMarginLeqZero": "105/105" },
+      "sourceBackedBindingIndicator": {
+        "field": "ShadowPrice",
+        "rule": "ShadowPrice > 0",
+        "agreementWithMarginLeqZero": "105/105"
+      },
       "traps": [
-        { "id": "binding_subset", "severity": "critical", "detail": "Only constraints SCED was actively managing appear. 30 constraints out of thousands of elements. An element with abundant headroom never appears, so the denominator is invisible and this cannot answer 'how much headroom does ERCOT have'." },
-        { "id": "violated_mw_rounding", "severity": "low", "detail": "ViolatedMW equals -(Limit - Value) to within 0.1 MW; 52 of 332 rows differ by rounding only." },
-        { "id": "cctstatus_vocabulary", "severity": "low", "detail": "NONCOMP on every observed row; vocabulary unresolved." },
-        { "id": "empty_stations", "severity": "low", "detail": "Base-case constraints such as NELRIO carry empty FromStation/ToStation and 0 kV." }
+        {
+          "id": "binding_subset",
+          "severity": "critical",
+          "detail": "Only constraints SCED was actively managing appear. 30 constraints out of thousands of elements. An element with abundant headroom never appears, so the denominator is invisible and this cannot answer 'how much headroom does ERCOT have'."
+        },
+        {
+          "id": "violated_mw_rounding",
+          "severity": "low",
+          "detail": "ViolatedMW equals -(Limit - Value) to within 0.1 MW; 52 of 332 rows differ by rounding only."
+        },
+        {
+          "id": "cctstatus_vocabulary",
+          "severity": "low",
+          "detail": "NONCOMP on every observed row; vocabulary unresolved."
+        },
+        {
+          "id": "empty_stations",
+          "severity": "low",
+          "detail": "Base-case constraints such as NELRIO carry empty FromStation/ToStation and 0 kV."
+        }
       ],
       "acquisitionRisk": "medium",
       "acquisitionNote": "doclookupId values are opaque and must be scraped from a rolling HTML listing. Long history needs continuous capture or the ERCOT archive product. The IQ-3 ERCOT reader already handles this listing idiom.",
-      "rights": { "classification": "unknown", "determined": false, "note": "Must be determined independently of the ERCOT Generator Interconnection Status Report determination." },
-      "th2Candidate": true
+      "rights": {
+        "classification": "reusable_with_attribution_or_conditions",
+        "determined": true,
+        "determinedBy": "TH-1A first-hand review",
+        "termsUrl": "https://www.ercot.com/help/terms",
+        "decisiveWording": [
+          "The publicly available contents of this website may be used, reproduced, and redistributed, provided that the contents are not modified and that you maintain all copyright and other notices contained in the contents.",
+          "Raw data provided in public portions of this website may be used, reproduced, and redistributed in compilations, charts, and analyses without maintaining such notices."
+        ],
+        "conditions": [
+          "verbatim content unmodified with notices retained",
+          "raw data in compilations/charts/analyses exempt from the notice requirement",
+          "no logo or trademark use without written permission",
+          "terms may change without notice; re-verify periodically"
+        ],
+        "strongerThanNyiso": true
+      },
+      "th2Candidate": true,
+      "th1aVerified": true,
+      "artifactNamePattern": "cdr.00012302.0000000000000000.<YYYYMMDD>.<HHMMSSmmm>.SCEDBTCNP686_csv.zip",
+      "displayDuration": "7 days (ERCOT product page)",
+      "observedMultiArtifact": {
+        "artifacts": 9,
+        "span": "2026-09-14..2026-09-21",
+        "rows": 1216,
+        "distinctScedTimestamps": 85,
+        "headerIdenticalAcrossAll": true
+      },
+      "population": {
+        "definition": "constraints ERCOT real-time dispatch was actively tracking",
+        "includesBinding": true,
+        "includesMonitoredNotYetBinding": true,
+        "evidence": {
+          "shadowPriceAboveZero": 443,
+          "marginLeqZero": 444,
+          "totalRows": 1216,
+          "rowsWithZeroShadowPriceAndPositiveMargin": 773
+        },
+        "isNotNetworkWide": true
+      },
+      "sentinelRule": {
+        "exactValueExists": false,
+        "observed": {
+          "85999.1": 5,
+          "84999.1": 2
+        },
+        "allOn": "EASTEX base-case constraint with ShadowPrice 0",
+        "faceValueMargin": 83449,
+        "rule": "plausibility bound, not equality",
+        "state": "limit_implausible",
+        "weakerThanNyiso": true,
+        "mustBeStatedInMethodology": true
+      },
+      "cctStatus": {
+        "resolved": true,
+        "meaning": "Constraint Competitiveness Test result",
+        "values": {
+          "COMP": 463,
+          "NONCOMP": 753
+        },
+        "governs": "market-power mitigation; tested before each SCED execution",
+        "orthogonalToHeadroom": true,
+        "crosstab": {
+          "NONCOMP_BASE": 91,
+          "NONCOMP_named": 662,
+          "COMP_BASE": 51,
+          "COMP_named": 412
+        },
+        "mustNotGateEligibility": true
+      },
+      "directionFormula": {
+        "negativeLimits": 0,
+        "negativeValues": 0,
+        "rowsChecked": 1216,
+        "limitRange": [
+          29.4,
+          85999.1
+        ],
+        "valueRange": [
+          24.0,
+          3263.4
+        ],
+        "formula": "headroom_mw = Limit - Value",
+        "directionSelectionRequired": false,
+        "note": "ERCOT publishes flow already oriented into the direction the constraint protects. Physical orientation is not published, so no directional label may be invented."
+      },
+      "contingencyModel": {
+        "kinds": [
+          "base_case",
+          "post_contingency"
+        ],
+        "counts": {
+          "BASE CASE": 142,
+          "named": 1074
+        },
+        "retainNamedStringVerbatim": true,
+        "neverCollapse": true
+      },
+      "bindingState": {
+        "source": "ShadowPrice",
+        "rule": "ShadowPrice > 0",
+        "agreementWithMarginLeqZero": "1215/1216",
+        "exception": {
+          "constraint": "2270__B",
+          "contingency": "SBLURDH8",
+          "limit": 33.3,
+          "value": 33.3,
+          "margin": 0.0,
+          "shadowPrice": 0.0
+        },
+        "rule2": "Do not derive binding from margin or margin from binding; let them disagree at the boundary."
+      },
+      "archive": {
+        "decision": "forward_only",
+        "confirmsTh1": true,
+        "listingArtifacts": 368,
+        "csvArtifacts": 184,
+        "distinctDates": 8,
+        "span": "2026-09-14..2026-09-21",
+        "archiveEndpointsTried": [
+          {
+            "url": "data-product-archive?id=NP6-86-CD",
+            "http": 404
+          },
+          {
+            "url": "getReportTypeList?reportTypeId=12302",
+            "http": 404
+          }
+        ],
+        "doclookupIdStableWithinWindow": true,
+        "refetchByteIdentical": true,
+        "intervalOverlapAcrossArtifacts": 0,
+        "correctionsObserved": 0,
+        "repeatedHourFlagObserved": [
+          "N"
+        ],
+        "gapBeyond7DaysIsUnrecoverable": true
+      },
+      "attribution": "Source: Electric Reliability Council of Texas, Inc., SCED Shadow Prices and Binding Transmission Constraints (NP6-86-CD).",
+      "backfill": {
+        "decision": "forward_only",
+        "startAt": "TH-2 first run",
+        "backfillPossible": false,
+        "sweepCadence": "at least daily"
+      },
+      "readiness": "ready"
     },
     {
       "market": "caiso",
@@ -127,9 +591,29 @@
       "format": "xml_in_zip",
       "auth": "none",
       "cadence": "15_minute",
-      "granularity": ["import_export_path"],
-      "identity": { "field": "RESOURCE_NAME", "kind": "string_source_native", "stable": "unverified" },
-      "dataItems": ["TTC_MW", "ATC_MW", "OTC_MW", "TRM_MW", "TRM_FTO_MW", "TRM_SPI_MW", "TRM_UF_MW", "CBM_MW", "CONSTRAINT_MW", "MKT_XFER_CAP_MW", "USEAGE_MW", "AS_IMPORT_MW", "ENE_IMPORT_MW"],
+      "granularity": [
+        "import_export_path"
+      ],
+      "identity": {
+        "field": "RESOURCE_NAME",
+        "kind": "string_source_native",
+        "stable": "unverified"
+      },
+      "dataItems": [
+        "TTC_MW",
+        "ATC_MW",
+        "OTC_MW",
+        "TRM_MW",
+        "TRM_FTO_MW",
+        "TRM_SPI_MW",
+        "TRM_UF_MW",
+        "CBM_MW",
+        "CONSTRAINT_MW",
+        "MKT_XFER_CAP_MW",
+        "USEAGE_MW",
+        "AS_IMPORT_MW",
+        "ENE_IMPORT_MW"
+      ],
       "publishesFlow": false,
       "publishesLimit": "capability_not_thermal_limit",
       "directional": true,
@@ -156,9 +640,22 @@
           "ATC answers 'how much more could be scheduled', not 'how far is flow from the limit'."
         ]
       },
-      "otherQuerynames": { "PRC_NOMOGRAM": { "retrieved": true, "bytes": 15597 }, "ATL_CNSTR": "INVALID_REQUEST err 1001", "ATL_ATC": "INVALID_REQUEST err 1001", "ATL_TTC": "INVALID_REQUEST err 1001", "ATL_OPS_BNDRY": "INVALID_REQUEST err 1001", "ATL_BRANCH_LIMIT": "INVALID_REQUEST err 1001" },
+      "otherQuerynames": {
+        "PRC_NOMOGRAM": {
+          "retrieved": true,
+          "bytes": 15597
+        },
+        "ATL_CNSTR": "INVALID_REQUEST err 1001",
+        "ATL_ATC": "INVALID_REQUEST err 1001",
+        "ATL_TTC": "INVALID_REQUEST err 1001",
+        "ATL_OPS_BNDRY": "INVALID_REQUEST err 1001",
+        "ATL_BRANCH_LIMIT": "INVALID_REQUEST err 1001"
+      },
       "acquisitionRisk": "low_endpoint_medium_coverage",
-      "rights": { "classification": "unknown", "determined": false },
+      "rights": {
+        "classification": "unknown",
+        "determined": false
+      },
       "th2Candidate": false,
       "th2Exclusion": "Public data is capability, not headroom. Publishing ATC as headroom is the single most likely way to get this product wrong."
     },
@@ -172,21 +669,64 @@
       "format": "csv",
       "auth": "none",
       "cadence": "5_minute",
-      "granularity": ["flowgate"],
-      "identity": { "field": "NERCID", "kind": "nerc_registered_flowgate_id", "stable": true },
-      "fields": ["Interval", "GMTIntervalEnd", "Constraint Name", "Constraint Type", "NERCID", "TLR Level", "State", "Shadow Price", "Monitored Facility", "Contingent Facility", "Source Limit", "Real Time Effective Limit", "Initial Effective Limit", "Interconnect"],
+      "granularity": [
+        "flowgate"
+      ],
+      "identity": {
+        "field": "NERCID",
+        "kind": "nerc_registered_flowgate_id",
+        "stable": true
+      },
+      "fields": [
+        "Interval",
+        "GMTIntervalEnd",
+        "Constraint Name",
+        "Constraint Type",
+        "NERCID",
+        "TLR Level",
+        "State",
+        "Shadow Price",
+        "Monitored Facility",
+        "Contingent Facility",
+        "Source Limit",
+        "Real Time Effective Limit",
+        "Initial Effective Limit",
+        "Interconnect"
+      ],
       "publishesFlow": false,
       "publishesLimit": true,
       "limitCount": 3,
       "contingencyNamed": true,
-      "sourceBackedState": { "field": "State", "observedValues": ["ACTIVATED", "BINDING"] },
-      "observed": { "date": "2026-09-20", "bytes": 2067092, "rows": 13936 },
+      "sourceBackedState": {
+        "field": "State",
+        "observedValues": [
+          "ACTIVATED",
+          "BINDING"
+        ]
+      },
+      "observed": {
+        "date": "2026-09-20",
+        "bytes": 2067092,
+        "rows": 13936
+      },
       "traps": [
-        { "id": "three_limits", "severity": "critical", "detail": "Source Limit 70, Real Time Effective Limit 63.7, Initial Effective Limit 67.9 on the same constraint in the same interval. Choosing wrong is a 9% error. The limit field used must be first-class, not a convention." },
-        { "id": "no_flow", "severity": "critical", "detail": "No flow column, so limit - flow is not derivable." }
+        {
+          "id": "three_limits",
+          "severity": "critical",
+          "detail": "Source Limit 70, Real Time Effective Limit 63.7, Initial Effective Limit 67.9 on the same constraint in the same interval. Choosing wrong is a 9% error. The limit field used must be first-class, not a convention."
+        },
+        {
+          "id": "no_flow",
+          "severity": "critical",
+          "detail": "No flow column, so limit - flow is not derivable."
+        }
       ],
       "acquisitionRisk": "low",
-      "rights": { "classification": "requires_independent_determination", "determined": false, "note": "The Interconnection Queue blocks SPP's Generator Interconnection Active Request Listing as unsuitable_without_permission. That attached to that interface. portal.spp.org Marketplace is a different interface. It would be equally wrong to assume it is blocked and to assume it is clear." },
+      "rights": {
+        "classification": "requires_independent_determination",
+        "determined": false,
+        "note": "The Interconnection Queue blocks SPP's Generator Interconnection Active Request Listing as unsuitable_without_permission. That attached to that interface. portal.spp.org Marketplace is a different interface. It would be equally wrong to assume it is blocked and to assume it is clear."
+      },
       "th2Candidate": false,
       "th2Exclusion": "No flow published, and rights undetermined."
     },
@@ -196,22 +736,62 @@
       "retrieved": true,
       "sourceName": "MISO Real-Time Binding Constraints",
       "endpoint": "https://docs.misoenergy.org/marketreports/YYYY_rt_bc_HIST.csv",
-      "dailyEndpoints": ["https://docs.misoenergy.org/marketreports/YYYYMMDD_rt_bc.xls", "https://docs.misoenergy.org/marketreports/YYYYMMDD_da_bc.xls"],
+      "dailyEndpoints": [
+        "https://docs.misoenergy.org/marketreports/YYYYMMDD_rt_bc.xls",
+        "https://docs.misoenergy.org/marketreports/YYYYMMDD_da_bc.xls"
+      ],
       "format": "csv_and_xls",
       "auth": "none",
       "cadence": "5_minute_with_annual_history_file",
-      "granularity": ["flowgate", "line"],
-      "identity": { "field": "Constraint_ID", "secondary": "Flowgate NERCID", "kind": "numeric_source_native" },
-      "fields": ["Market Date", "Flowgate NERCID", "Constraint_ID", "Constraint Name", "Branch Name ( Branch Type / From CA / To CA )", "Contingency Description", "Hour of Occurrence", "Preliminary Shadow Price", "Constraint Description", "Override", "Curve Type", "BP1", "PC1", "BP2", "PC2"],
+      "granularity": [
+        "flowgate",
+        "line"
+      ],
+      "identity": {
+        "field": "Constraint_ID",
+        "secondary": "Flowgate NERCID",
+        "kind": "numeric_source_native"
+      },
+      "fields": [
+        "Market Date",
+        "Flowgate NERCID",
+        "Constraint_ID",
+        "Constraint Name",
+        "Branch Name ( Branch Type / From CA / To CA )",
+        "Contingency Description",
+        "Hour of Occurrence",
+        "Preliminary Shadow Price",
+        "Constraint Description",
+        "Override",
+        "Curve Type",
+        "BP1",
+        "PC1",
+        "BP2",
+        "PC2"
+      ],
       "publishesFlow": false,
       "publishesLimit": false,
       "contingencyNamed": true,
-      "observed": { "date": "2026-09-21", "historyFileBytes": 60321025, "historyRows": 364923, "historyCoverage": "2026 year to date", "dailyRtBytes": 153088, "dailyDaBytes": 73728 },
+      "observed": {
+        "date": "2026-09-21",
+        "historyFileBytes": 60321025,
+        "historyRows": 364923,
+        "historyCoverage": "2026 year to date",
+        "dailyRtBytes": 153088,
+        "dailyDaBytes": 73728
+      },
       "traps": [
-        { "id": "percent_breakpoints_not_mw", "severity": "critical", "detail": "BP1/BP2 are penalty-curve breakpoints as PERCENT of limit (100.0, 102.0) paired with penalty prices PC1 1000.0, PC2 2000.0. They show the constraint bound at ~100% of a limit whose MW value is never published." }
+        {
+          "id": "percent_breakpoints_not_mw",
+          "severity": "critical",
+          "detail": "BP1/BP2 are penalty-curve breakpoints as PERCENT of limit (100.0, 102.0) paired with penalty prices PC1 1000.0, PC2 2000.0. They show the constraint bound at ~100% of a limit whose MW value is never published."
+        }
       ],
       "acquisitionRisk": "low",
-      "rights": { "classification": "unknown", "determined": false },
+      "rights": {
+        "classification": "unknown",
+        "determined": false
+      },
       "th2Candidate": false,
       "th2Exclusion": "No limit MW and no flow. Rich for congestion work, unable to support headroom MW."
     },
@@ -223,9 +803,18 @@
       "endpoint": "https://api.pjm.com/api/v1/",
       "auth": "Ocp-Apim-Subscription-Key, issued only after a PJM Tools account is registered and approved by a Customer Account Manager",
       "probeResults": [
-        { "url": "https://api.pjm.com/api/v1/", "http": 401 },
-        { "url": "https://api.pjm.com/api/v1/rt_transmission_constraints", "http": 404 },
-        { "url": "https://api.pjm.com/api/v1/transmission_constraints", "http": 404 }
+        {
+          "url": "https://api.pjm.com/api/v1/",
+          "http": 401
+        },
+        {
+          "url": "https://api.pjm.com/api/v1/rt_transmission_constraints",
+          "http": 404
+        },
+        {
+          "url": "https://api.pjm.com/api/v1/transmission_constraints",
+          "http": 404
+        }
       ],
       "publishesFlow": "unknown",
       "publishesLimit": "unknown",
@@ -250,16 +839,35 @@
       "endpoint": "https://webservices.iso-ne.com/api/v1.1/",
       "auth": "registered account required",
       "probeResults": [
-        { "url": "https://webservices.iso-ne.com/api/v1.1/limits/current", "http": 401 },
-        { "url": "https://webservices.iso-ne.com/api/v1.1/fiveminutesystemload/current.json", "http": 401 },
-        { "url": "https://www.iso-ne.com/ws/wsclient", "http": 500 },
-        { "url": "https://www.iso-ne.com/static-transform/csv/histRpts/ext-flow-5min/...", "http": 404 },
-        { "url": "https://www.iso-ne.com/transform/csv/extflow5min", "http": 404 }
+        {
+          "url": "https://webservices.iso-ne.com/api/v1.1/limits/current",
+          "http": 401
+        },
+        {
+          "url": "https://webservices.iso-ne.com/api/v1.1/fiveminutesystemload/current.json",
+          "http": 401
+        },
+        {
+          "url": "https://www.iso-ne.com/ws/wsclient",
+          "http": 500
+        },
+        {
+          "url": "https://www.iso-ne.com/static-transform/csv/histRpts/ext-flow-5min/...",
+          "http": 404
+        },
+        {
+          "url": "https://www.iso-ne.com/transform/csv/extflow5min",
+          "http": 404
+        }
       ],
       "publishesFlow": "unknown",
       "publishesLimit": "unknown",
       "fieldClaimsAreFirstHand": false,
-      "rights": { "classification": "unknown", "determined": false, "nonInheritanceNote": "IQ-4 classified the ISO-NE Interconnection Request Queue from a public unauthenticated page. Web Services is a different interface behind an account agreement and needs its own review." },
+      "rights": {
+        "classification": "unknown",
+        "determined": false,
+        "nonInheritanceNote": "IQ-4 classified the ISO-NE Interconnection Request Queue from a public unauthenticated page. Web Services is a different interface behind an account agreement and needs its own review."
+      },
       "acquisitionRisk": "medium",
       "th2Candidate": false,
       "th2Exclusion": "No artifact retrievable in this phase. Revisitable once an account and its terms are reviewed."
@@ -273,46 +881,176 @@
     "whatTravels": "The shape of the finding, not the magnitude. 'This interface is at its limit' is comparable; 'this market has N MW of headroom' is not."
   },
   "candidateV1Metrics": [
-    { "metric": "interface_headroom_mw", "verdict": "market_specific_defensible", "markets": ["nyiso"] },
-    { "metric": "interface_utilization_pct", "verdict": "market_specific_defensible", "markets": ["nyiso"], "condition": "direction-matched limit, never when the limit is a sentinel" },
-    { "metric": "hours_at_zero_headroom", "verdict": "market_specific_defensible", "markets": ["nyiso"] },
-    { "metric": "constraint_margin_mw_when_binding", "verdict": "market_specific_defensible", "markets": ["ercot"] },
-    { "metric": "binding_constraint_count", "verdict": "subset_only", "markets": ["ercot", "spp", "miso"] },
-    { "metric": "median_or_p10_interface_headroom", "verdict": "subset_only", "markets": ["nyiso"] },
-    { "metric": "headroom_history", "verdict": "defensible", "markets": ["nyiso", "ercot"] },
-    { "metric": "available_transfer_capability", "verdict": "market_specific_must_not_be_called_headroom", "markets": ["caiso"] },
-    { "metric": "import_export_headroom", "verdict": "market_specific", "markets": ["nyiso"] },
-    { "metric": "planning_transfer_margin", "verdict": "not_defensible", "reason": "no planning source retrieved in any market" },
-    { "metric": "cross_market_headroom_mw", "verdict": "not_defensible" },
-    { "metric": "cross_market_constrained_interface_count", "verdict": "not_defensible" }
+    {
+      "metric": "interface_headroom_mw",
+      "verdict": "market_specific_defensible",
+      "markets": [
+        "nyiso"
+      ]
+    },
+    {
+      "metric": "interface_utilization_pct",
+      "verdict": "market_specific_defensible",
+      "markets": [
+        "nyiso"
+      ],
+      "condition": "direction-matched limit, never when the limit is a sentinel"
+    },
+    {
+      "metric": "hours_at_zero_headroom",
+      "verdict": "market_specific_defensible",
+      "markets": [
+        "nyiso"
+      ]
+    },
+    {
+      "metric": "constraint_margin_mw_when_binding",
+      "verdict": "market_specific_defensible",
+      "markets": [
+        "ercot"
+      ]
+    },
+    {
+      "metric": "binding_constraint_count",
+      "verdict": "subset_only",
+      "markets": [
+        "ercot",
+        "spp",
+        "miso"
+      ]
+    },
+    {
+      "metric": "median_or_p10_interface_headroom",
+      "verdict": "subset_only",
+      "markets": [
+        "nyiso"
+      ]
+    },
+    {
+      "metric": "headroom_history",
+      "verdict": "defensible",
+      "markets": [
+        "nyiso",
+        "ercot"
+      ]
+    },
+    {
+      "metric": "available_transfer_capability",
+      "verdict": "market_specific_must_not_be_called_headroom",
+      "markets": [
+        "caiso"
+      ]
+    },
+    {
+      "metric": "import_export_headroom",
+      "verdict": "market_specific",
+      "markets": [
+        "nyiso"
+      ]
+    },
+    {
+      "metric": "planning_transfer_margin",
+      "verdict": "not_defensible",
+      "reason": "no planning source retrieved in any market"
+    },
+    {
+      "metric": "cross_market_headroom_mw",
+      "verdict": "not_defensible"
+    },
+    {
+      "metric": "cross_market_constrained_interface_count",
+      "verdict": "not_defensible"
+    }
   ],
   "entityModelRecommendation": {
-    "keepSeparate": ["transmission_interface", "transmission_element"],
+    "keepSeparate": [
+      "transmission_interface",
+      "transmission_element"
+    ],
     "reason": "Different identity sources, different limit semantics, different directional meaning. One generalized table would force a lowest-common-denominator schema and lose the distinctions that make the product defensible.",
     "proposedEntities": [
-      { "name": "transmission_interface", "identityFrom": "source-native numeric id", "example": "NYISO Point ID 23314" },
-      { "name": "transmission_element", "identityFrom": "source-native constraint id", "example": "ERCOT ConstraintID 24" },
-      { "name": "transmission_limit_observation", "grain": ["entity", "direction", "contingency", "interval"], "mustRecord": "limit_field_used" },
-      { "name": "transmission_flow_observation", "grain": ["entity", "interval"], "signed": true },
-      { "name": "transmission_margin", "derived": true, "onlyWhen": "both a limit and a flow exist for the same entity, direction, contingency and interval" }
+      {
+        "name": "transmission_interface",
+        "identityFrom": "source-native numeric id",
+        "example": "NYISO Point ID 23314"
+      },
+      {
+        "name": "transmission_element",
+        "identityFrom": "source-native constraint id",
+        "example": "ERCOT ConstraintID 24"
+      },
+      {
+        "name": "transmission_limit_observation",
+        "grain": [
+          "entity",
+          "direction",
+          "contingency",
+          "interval"
+        ],
+        "mustRecord": "limit_field_used"
+      },
+      {
+        "name": "transmission_flow_observation",
+        "grain": [
+          "entity",
+          "interval"
+        ],
+        "signed": true
+      },
+      {
+        "name": "transmission_margin",
+        "derived": true,
+        "onlyWhen": "both a limit and a flow exist for the same entity, direction, contingency and interval"
+      }
     ],
     "identityRule": "Source-native stable IDs only. Never name similarity.",
     "observationFieldClassification": {
-      "raw_source_native": ["native_element_id", "native_element_name", "native_limit_value", "native_flow_value", "native_contingency_name", "source_artifact", "source_timestamp"],
-      "normalized": ["market", "element_type", "direction", "interval_start", "interval_end", "limit_field_used", "contingency_kind"],
-      "derived": ["headroom_mw", "utilization_pct", "constraint_state"]
+      "raw_source_native": [
+        "native_element_id",
+        "native_element_name",
+        "native_limit_value",
+        "native_flow_value",
+        "native_contingency_name",
+        "source_artifact",
+        "source_timestamp"
+      ],
+      "normalized": [
+        "market",
+        "element_type",
+        "direction",
+        "interval_start",
+        "interval_end",
+        "limit_field_used",
+        "contingency_kind"
+      ],
+      "derived": [
+        "headroom_mw",
+        "utilization_pct",
+        "constraint_state"
+      ]
     }
   },
   "hardInvariants": [
-    "queue MW != transmission headroom",
-    "deliverable capacity != transmission headroom",
-    "a sentinel limit (+/-9999) is unmonitored, never a number",
-    "headroom is signed and is never clamped at zero",
-    "utilization is computed only against a direction-matched, non-sentinel limit",
-    "every derived margin records which published limit field it used"
+    "a margin may only be formed from a flow and a limit sharing market, source interface, entity, observation instant and direction",
+    "a sentinel limit never produces a margin: NYISO abs(limit)==9999 exactly; ERCOT limit failing the plausibility bound is limit_implausible",
+    "an unavailable or undetermined direction is null with a state, never 0",
+    "negative margin is preserved with its sign and never clamped",
+    "direction is selected before any absolute value is taken",
+    "ERCOT contingency_kind is retained and never collapsed",
+    "NYISO identity is Point ID; Interface Name never participates in matching",
+    "ERCOT identity is (ConstraintName, ContingencyName); ConstraintID is raw metadata only",
+    "raw source values are never overwritten by derived values",
+    "no cross-market aggregation of any kind",
+    "ATC never enters an operational headroom series",
+    "limit_field_used is recorded on every derived margin",
+    "binding state comes from the source (ShadowPrice), never derived from the margin",
+    "no count of \"interfaces at their limit\" until the NYISO subtype question is resolved"
   ],
   "recommendedTh2": {
-    "markets": ["nyiso", "ercot"],
+    "markets": [
+      "nyiso",
+      "ercot"
+    ],
     "rationale": "NYISO is the only source publishing flow and a directional limit together as a standing series, with no auth, a stable schema since 2010, a numeric Point ID and roughly two decades of monthly archives. ERCOT publishes genuine limit/flow pairs with explicit contingency naming and a clean source-backed binding indicator, and the IQ-3 ERCOT reader already solves its listing idiom.",
     "scope": [
       "canonical foundation with transmission_interface and transmission_element separate",
@@ -354,5 +1092,172 @@
     "schemaImplemented": false,
     "derivedAnalyticsTables": false,
     "ingestionAdapters": false
-  }
+  },
+  "th1aUpdatedOn": "2026-09-21",
+  "th1aBaseCommit": "42106f609fdecdefb5ba7dfef6c9f667c5b5aecc",
+  "th1aCorrectionsToTh1": [
+    {
+      "field": "ercot.identity",
+      "th1": "ConstraintID, stable: true",
+      "th1a": "FALSE. ConstraintID is a per-interval handle: 28 IDs map to multiple names, 71 names map to multiple IDs. Identity is (ConstraintName, ContingencyName)."
+    },
+    {
+      "field": "ercot.CCTStatus",
+      "th1": "NONCOMP on every observed row",
+      "th1a": "Single-artifact sampling artifact. Across 9 artifacts: NONCOMP 753, COMP 463."
+    },
+    {
+      "field": "nyiso.history",
+      "th1": "usable limit history begins between 2006 and 2010",
+      "th1a": "Exactly 2005-02-01, verified day by day across Dec 2004 and Jan 2005."
+    },
+    {
+      "field": "nyiso.cadence",
+      "th1": "clean 288 x 5 minutes from 2010",
+      "th1a": "FALSE. Irregular event series: off-grid stamps (04:39, 04:41, 17:37) and skipped slots (04:45, 17:50) on a single sampled day."
+    }
+  ],
+  "publicationGateMatrix": {
+    "nyiso": {
+      "transmission_headroom_retention": {
+        "classification": "ambiguous_requires_legal_review",
+        "disposition": "permitted_under_accepted_risk"
+      },
+      "transmission_headroom_calculation": {
+        "classification": "ambiguous_requires_legal_review",
+        "disposition": "permitted_under_accepted_risk"
+      },
+      "public_transmission_headroom_display": {
+        "classification": "ambiguous_requires_legal_review",
+        "disposition": "permitted_under_accepted_risk"
+      },
+      "public_transmission_headroom_derived_metric_display": {
+        "classification": "ambiguous_requires_legal_review",
+        "disposition": "permitted_under_accepted_risk"
+      },
+      "public_transmission_utilization_display": {
+        "classification": "ambiguous_requires_legal_review",
+        "disposition": "permitted_under_accepted_risk"
+      }
+    },
+    "ercot": {
+      "transmission_headroom_retention": {
+        "classification": "reusable_with_attribution_or_conditions",
+        "disposition": "permitted"
+      },
+      "transmission_headroom_calculation": {
+        "classification": "reusable_with_attribution_or_conditions",
+        "disposition": "permitted"
+      },
+      "public_transmission_headroom_display": {
+        "classification": "reusable_with_attribution_or_conditions",
+        "disposition": "permitted"
+      },
+      "public_transmission_headroom_derived_metric_display": {
+        "classification": "reusable_with_attribution_or_conditions",
+        "disposition": "permitted"
+      },
+      "public_transmission_utilization_display": {
+        "classification": "reusable_with_attribution_or_conditions",
+        "disposition": "permitted"
+      }
+    }
+  },
+  "derivedVsRawPublication": {
+    "nyiso": "ambiguous for every purpose; accepted risk applies uniformly",
+    "ercot": "MORE permissive for derived analytics than for verbatim republication: raw data in compilations, charts and analyses is exempt from the notice requirement, while verbatim content must be unmodified with notices retained."
+  },
+  "metricNames": {
+    "nyiso": [
+      "interface_headroom_mw",
+      "interface_utilization_pct"
+    ],
+    "ercot": [
+      "constraint_margin_mw",
+      "constraint_utilization_pct"
+    ],
+    "rejected": [
+      "network_headroom"
+    ],
+    "rejectionReason": "Neither source observes a network."
+  },
+  "productCopy": {
+    "nyiso": "Remaining operating margin on the nineteen transmission interfaces NYISO publishes, in the direction power is actually flowing. It covers those published interfaces only, not every line in New York, and a direction NYISO does not monitor is reported as unavailable rather than as zero.",
+    "ercot": "Remaining margin on the transmission constraints ERCOT's real-time dispatch was actively tracking, under the specific contingency each one protects against. ERCOT publishes these only while a constraint is being managed, so this describes where the grid was tight, not how much room the network has overall."
+  },
+  "th2SchemaContract": {
+    "transmission_interface": [
+      "id",
+      "market",
+      "native_id",
+      "native_name",
+      "first_seen_at",
+      "last_seen_at",
+      "subtype (nullable, unpopulated pending subtype resolution)"
+    ],
+    "transmission_element": [
+      "id",
+      "market",
+      "native_constraint_name",
+      "native_contingency_name",
+      "contingency_kind",
+      "from_station",
+      "to_station",
+      "from_station_kv",
+      "to_station_kv",
+      "first_seen_at",
+      "last_seen_at"
+    ],
+    "transmission_limit_observation": [
+      "id",
+      "entity_ref",
+      "direction",
+      "observed_at",
+      "limit_mw_signed",
+      "limit_field_used",
+      "limit_state",
+      "unit_as_published",
+      "source_artifact_id",
+      "source_row_ordinal"
+    ],
+    "transmission_flow_observation": [
+      "id",
+      "entity_ref",
+      "observed_at",
+      "flow_mw_signed",
+      "unit_as_published",
+      "source_artifact_id",
+      "source_row_ordinal"
+    ],
+    "transmission_margin": [
+      "id",
+      "entity_ref",
+      "direction",
+      "observed_at",
+      "headroom_mw (nullable signed)",
+      "utilization_pct (nullable)",
+      "state",
+      "limit_field_used",
+      "binding_from_source (nullable)",
+      "methodology_version_id",
+      "publication_state",
+      "rights_reason"
+    ],
+    "traceability": "every table carries source_artifact_id and source_row_ordinal so any published number traces to a retrieved file and a line within it"
+  },
+  "th2Readiness": {
+    "nyiso": "ready_with_founder_risk",
+    "ercot": "ready",
+    "bothMayProceed": true
+  },
+  "th1aUnresolved": [
+    "NYISO subtype: no structured discriminator exists; blocks any \"interfaces at their limit\" count and nothing else",
+    "NYISO -9899 on SCH - HQ_IMPORT_EXPORT: treated as real under the exact-9999 rule, but 4074 identical values on one interface may be another disabled-limit convention",
+    "NYISO era-4 onset: positive 9999 reappears by 2020, exact month unbisected; harmless under the exact rule",
+    "NYISO timezone: timestamps carry no offset; DST and the repeated autumn hour are unverified",
+    "ERCOT implausible-limit bound: no exact sentinel exists, so the threshold is a judgement that must be stated in the methodology",
+    "ERCOT RepeatedHourFlag: N on all 1216 rows; the DST-repeat case is unobserved",
+    "ERCOT terms volatility: ERCOT may change terms without notice; re-verify periodically",
+    "neither source publishes a rating type (normal/emergency/ambient-adjusted); limit_field_used records the column, not the rating class"
+  ]
 }
