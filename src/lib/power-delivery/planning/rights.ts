@@ -22,6 +22,7 @@
  *      the first one on a source nobody was watching.
  */
 
+import { mayPublishSourceValue, publicationNotice } from "@/lib/rights/publication";
 import {
   isPublicPlanningUsePurpose,
   type PlanningRightsState,
@@ -71,70 +72,20 @@ export type PlanningPublicationSubject = {
   purpose: PlanningUsePurpose;
 };
 
-function decision(
-  subject: { purpose: PublicPlanningUsePurpose; rights: PlanningRightsState | null },
-  allowed: boolean,
-  reasonCode: PlanningPublicationReason,
-): PlanningPublicationDecision {
-  const rights = subject.rights;
-  return {
-    allowed,
-    rightsClassification: rights?.rightsClassification ?? null,
-    attributionRequired: rights?.attributionRequired ?? false,
-    attributionText: rights?.attributionText ?? null,
-    conditions: rights?.conditions ?? null,
-    unresolvedIssue: rights?.unresolvedIssue ?? null,
-    reasonCode,
-    purpose: subject.purpose,
-  };
-}
-
 /**
- * Whether one planning vintage may be shown publicly, and on what basis. The reason code is part
- * of the answer in both directions: a blocked read should be able to say why without a caller
- * inspecting the classification and reaching its own conclusion.
+ * The planning entry point. PD-4 needs the identical rule for capacity values, so the decision
+ * itself lives in `@/lib/rights/publication` and this is a typed wrapper: it fixes the purpose
+ * vocabulary to the planning purposes and returns the planning-shaped result. The policy is the
+ * shared one, and the tests in this file are what prove the move changed nothing.
  */
 export function mayPublishPlanningForecast(subject: PlanningPublicationSubject): PlanningPublicationDecision {
-  if (!isPublicPlanningUsePurpose(subject.purpose)) {
-    throw new Error(`${subject.purpose} is an internal purpose; publication is not the question being asked`);
-  }
-  const purpose = subject.purpose;
-  const rights = subject.rights;
-  const context = { purpose, rights };
-
-  if (rights === null) return decision(context, false, "blocked_no_rights_record");
-  if (rights.purpose !== purpose) {
-    throw new Error(`rights determination is for ${rights.purpose}, not ${purpose}`);
-  }
-  if (rights.disposition === "prohibited") return decision(context, false, "blocked_permission_prohibited");
-  if (rights.disposition === "revoked") return decision(context, false, "blocked_permission_revoked");
-
-  // Urdais's own gate. A permissive source still does not reach the public surface while the
-  // vintage is held internal or has been withdrawn.
-  if (subject.publicationState === "internal_only") return decision(context, false, "blocked_internal_only");
-  if (subject.publicationState === "withdrawn") return decision(context, false, "blocked_withdrawn_vintage");
-
-  // A condition that cannot be honoured is a condition that has not been met.
-  if (rights.attributionRequired && (rights.attributionText === null || rights.attributionText.trim() === "")) {
-    return decision(context, false, "blocked_attribution_unavailable");
-  }
-
-  // An explicit permission is decisive regardless of how restrictive the source's published
-  // terms were when they were first reviewed. The classification stays as the reviewer left it.
-  if (rights.disposition === "permitted" && rights.rightsClassification === "unsuitable_without_permission") {
-    return decision(context, true, "allowed_by_explicit_permission_grant");
-  }
-
-  switch (rights.rightsClassification) {
-    case "clearly_reusable":
-      return decision(context, true, "allowed_clearly_reusable");
-    case "reusable_with_attribution_or_conditions":
-      return decision(context, true, "allowed_with_attribution_or_conditions");
-    case "ambiguous_requires_legal_review":
-      return decision(context, true, "allowed_under_founder_accepted_legal_risk");
-    case "unsuitable_without_permission":
-      return decision(context, false, "blocked_unsuitable_without_permission");
-  }
+  const decision = mayPublishSourceValue({
+    rights: subject.rights,
+    publicationState: subject.publicationState,
+    purpose: subject.purpose,
+    isPublicPurpose: isPublicPlanningUsePurpose(subject.purpose),
+  });
+  return { ...decision, purpose: decision.purpose as PublicPlanningUsePurpose };
 }
 
 /** The attribution and open-question text a public surface is obliged to render alongside a value. */
@@ -146,11 +97,5 @@ export type PlanningPublicationNotice = {
 };
 
 export function planningPublicationNotice(decisionResult: PlanningPublicationDecision): PlanningPublicationNotice {
-  if (!decisionResult.allowed) throw new Error("a blocked planning forecast has no publication notice");
-  return {
-    attribution: decisionResult.attributionRequired ? decisionResult.attributionText : null,
-    conditions: decisionResult.conditions,
-    unresolvedIssue: decisionResult.unresolvedIssue,
-    rightsClassification: decisionResult.rightsClassification,
-  };
+  return publicationNotice(decisionResult);
 }

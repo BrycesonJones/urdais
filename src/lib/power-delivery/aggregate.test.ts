@@ -30,7 +30,13 @@ describe("coincident Power Delivery aggregation", () => {
   it("refuses a planning forecast offered as an operational member", () => {
     const planning = { areaId: PD2_V1_AREAS[0]!.id, periodStart: H1, periodEnd: end(H1), valueMw: 144522, targetYear: 2031, scenarioId: "s1" };
     expect(() => aggregateCoincidentActualLoad([planning as never], PD2_V1_AREAS.map((area) => area.id)))
-      .toThrow(/planning forecast data cannot enter operational coincident aggregation/);
+      .toThrow(/planning or capacity data cannot enter operational coincident aggregation/);
+  });
+
+  it("refuses a grid capacity value offered as an operational member", () => {
+    const capacity = { areaId: PD2_V1_AREAS[0]!.id, periodStart: H1, periodEnd: end(H1), valueMw: 85000, quantityKind: "capability", capacityBasis: "ucap" };
+    expect(() => aggregateCoincidentActualLoad([capacity as never], PD2_V1_AREAS.map((area) => area.id)))
+      .toThrow(/planning or capacity data cannot enter operational coincident aggregation/);
   });
 
   it("refuses a member whose interval is not one operational hour", () => {

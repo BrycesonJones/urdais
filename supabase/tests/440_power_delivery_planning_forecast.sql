@@ -12,8 +12,11 @@ begin
     raise exception 'unexpected rights classification vocabulary: %', classes;
   end if;
 
-  select count(*) into n from reference.source_use_purposes where is_public;
-  if n <> 2 then raise exception 'expected two public use purposes, found %', n; end if;
+  -- The two public planning purposes specifically. Other domains add their own public purposes
+  -- to the same vocabulary; counting all of them would make this assertion about PD-4.
+  select count(*) into n from reference.source_use_purposes
+   where is_public and code like '%planning%';
+  if n <> 2 then raise exception 'expected two public planning use purposes, found %', n; end if;
 
   -- Every ambiguous determination states the question it is unresolved on. Publication under
   -- an ambiguous classification is only defensible while that is true.

@@ -4,7 +4,7 @@ import type { CoincidentAggregatePoint } from "@/lib/power-delivery/types";
 export type AggregateMember = { areaId: string; periodStart: string; periodEnd: string; valueMw: number };
 
 /**
- * Fields that only a planning forecast carries. A planning value has a target year, a scenario
+ * Fields that only a planning forecast or a grid capacity value carries. A planning value has a target year, a scenario
  * and a vintage; it has no hour it was measured in, and summing seven of them across markets
  * would produce a number describing no moment that ever existed. The type system stops the
  * obvious mistake and this stops the one that arrives through `unknown` or a JSON payload.
@@ -12,6 +12,10 @@ export type AggregateMember = { areaId: string; periodStart: string; periodEnd: 
 const PLANNING_ONLY_FIELDS = [
   "vintageId", "scenarioId", "targetYear", "targetSeason", "targetPeriodKind",
   "rightsClassification", "peakType", "weatherBasis", "largeLoadPolicy",
+  // PD-4 grid capacity is the same category of mistake: an accredited capability has no hour it
+  // was measured in, and summing seven of them across markets describes no moment that existed.
+  "quantityKind", "componentKind", "capacityBasis", "periodBasis", "constraintKind",
+  "gridSubareaId", "gridInterfaceId", "methodologyVersionId",
 ] as const;
 
 function assertOperational(member: AggregateMember): void {
@@ -19,7 +23,7 @@ function assertOperational(member: AggregateMember): void {
   const planningField = PLANNING_ONLY_FIELDS.find((field) => carrier[field] !== undefined);
   if (planningField !== undefined) {
     throw new Error(
-      `planning forecast data cannot enter operational coincident aggregation (member carries ${planningField})`,
+      `planning or capacity data cannot enter operational coincident aggregation (member carries ${planningField})`,
     );
   }
   if (new Date(member.periodEnd).valueOf() - new Date(member.periodStart).valueOf() !== 3_600_000) {
