@@ -272,3 +272,159 @@ export async function lifecycleCounts(
   for (const row of result.rows) counts[String(row.lifecycle_stage)] = Number(row.n);
   return counts;
 }
+
+// ---------------------------------------------------------------- archive history
+
+export type SnapshotPeriod = {
+  id: string;
+  reportPeriod: string | null;
+  isCorrection: boolean;
+  nativeSnapshotKey: string;
+  sourcePublishedAt: string | null;
+  recordCount: number;
+  nativeDocumentId: string | null;
+};
+
+/** Every observed state of an archive source, oldest report period first. */
+export async function snapshotsByReportPeriod(
+  sql: CapacitySqlExecutor, sourceInterfaceSlug: string,
+): Promise<SnapshotPeriod[]> {
+  const result = await sql.query(
+    `select q.id, q.report_period::text as report_period, q.is_correction, q.native_snapshot_key,
+            q.source_published_at::text as source_published_at, q.record_count, q.native_document_id
+       from pipeline.interconnection_queue_snapshots q
+       join reference.source_interfaces s on s.id = q.source_interface_id
+      where s.slug = $1
+      order by q.report_period nulls last, q.is_correction, q.source_published_at`,
+    [sourceInterfaceSlug],
+  );
+  return result.rows.map((row) => ({
+    id: String(row.id),
+    reportPeriod: row.report_period == null ? null : String(row.report_period),
+    isCorrection: row.is_correction === true,
+    nativeSnapshotKey: String(row.native_snapshot_key),
+    sourcePublishedAt: row.source_published_at == null ? null : String(row.source_published_at),
+    recordCount: Number(row.record_count),
+    nativeDocumentId: row.native_document_id == null ? null : String(row.native_document_id),
+  }));
+}
+
+export type RequestPresence = {
+  snapshotId: string;
+  reportPeriod: string | null;
+  isCorrection: boolean;
+  sourcePublishedAt: string | null;
+};
+
+/**
+ * Which observed source states held this request.
+ *
+ * No presence table exists and none is needed: every retrieval writes one raw record per source
+ * row, carrying both the snapshot and the native queue id, so presence is already a fact the
+ * evidence records. Asking it this way also means presence can never drift from the evidence,
+ * which a separate table would eventually do.
+ *
+ * Absence from a snapshot is only absence. It is not a withdrawal, a cancellation or an
+ * operation, and nothing here infers one.
+ */
+export async function requestPresence(
+  sql: CapacitySqlExecutor, sourceInterfaceSlug: string, nativeQueueId: string,
+): Promise<RequestPresence[]> {
+  const result = await sql.query(
+    `select distinct q.id, q.report_period::text as report_period, q.is_correction,
+            q.source_published_at::text as source_published_at
+       from pipeline.raw_interconnection_queue_records r
+       join pipeline.interconnection_queue_snapshots q on q.id = r.snapshot_id
+       join reference.source_interfaces s on s.id = q.source_interface_id
+      where s.slug = $1 and r.native_queue_id = $2
+      order by q.report_period nulls last, q.source_published_at`,
+    [sourceInterfaceSlug, nativeQueueId],
+  );
+  return result.rows.map((row) => ({
+    snapshotId: String(row.id),
+    reportPeriod: row.report_period == null ? null : String(row.report_period),
+    isCorrection: row.is_correction === true,
+    sourcePublishedAt: row.source_published_at == null ? null : String(row.source_published_at),
+  }));
+}
+
+/**
+ * The first and last observed source state that held this request, and how many held it.
+ *
+ * Deliberately not called "entered the queue" or "left the queue": Urdais observed a publisher's
+ * file, and a request that stops appearing has stopped appearing. What that means is a question
+ * for a methodology, not for a read model.
+ */
+export async function requestPresenceRange(
+  sql: CapacitySqlExecutor, sourceInterfaceSlug: string, nativeQueueId: string,
+): Promise<{ firstSeen: string | null; lastSeen: string | null; snapshots: number }> {
+  const result = await sql.query(
+    `select min(q.report_period)::text as first_seen, max(q.report_period)::text as last_seen,
+            count(distinct q.id)::int as snapshots
+       from pipeline.raw_interconnection_queue_records r
+       join pipeline.interconnection_queue_snapshots q on q.id = r.snapshot_id
+       join reference.source_interfaces s on s.id = q.source_interface_id
+      where s.slug = $1 and r.native_queue_id = $2`,
+    [sourceInterfaceSlug, nativeQueueId],
+  );
+  const row = result.rows[0];
+  return {
+    firstSeen: row?.first_seen == null ? null : String(row.first_seen),
+    lastSeen: row?.last_seen == null ? null : String(row.last_seen),
+    snapshots: row?.snapshots == null ? 0 : Number(row.snapshots),
+  };
+}
+
+// ---------------------------------------------------------------- load requests
+
+/**
+ * Load interconnection requests, by the publisher's own end-use classification.
+ *
+ * Load is structurally separate from generation throughout: a different request class, a
+ * different quantity kind, and a filter here that cannot accidentally return a generator.
+ */
+export async function loadRequests(
+  sql: CapacitySqlExecutor, marketSlug: string,
+  options: { loadEndUse?: string; limit?: number } = {},
+): Promise<(QueueObservation & { nativeEndUse: string | null; loadEndUse: string | null })[]> {
+  const parameters: unknown[] = [marketSlug];
+  let filter = "";
+  if (options.loadEndUse !== undefined) {
+    parameters.push(options.loadEndUse);
+    filter = ` and o.load_end_use = $${parameters.length}`;
+  }
+  parameters.push(options.limit ?? 500);
+  const result = await sql.query(
+    `select ${OBSERVATION_COLUMNS}, o.native_end_use, o.load_end_use
+       from pipeline.interconnection_request_observations o
+       join pipeline.interconnection_requests r on r.id = o.request_id
+       join reference.grid_areas a on a.id = r.grid_area_id
+      where a.slug = $1 and o.is_latest and o.request_class = 'load'${filter}
+      order by o.requested_on nulls last
+      limit $${parameters.length}`,
+    parameters,
+  );
+  return result.rows.map((row) => ({
+    ...toObservation(row),
+    nativeEndUse: row.native_end_use == null ? null : String(row.native_end_use),
+    loadEndUse: row.load_end_use == null ? null : String(row.load_end_use),
+  }));
+}
+
+/** How many load requests sit under each end use, by their latest observation. */
+export async function loadEndUseCounts(
+  sql: CapacitySqlExecutor, marketSlug: string,
+): Promise<Record<string, number>> {
+  const result = await sql.query(
+    `select coalesce(o.load_end_use, 'unknown') as end_use, count(*)::int as n
+       from pipeline.interconnection_request_observations o
+       join pipeline.interconnection_requests r on r.id = o.request_id
+       join reference.grid_areas a on a.id = r.grid_area_id
+      where a.slug = $1 and o.is_latest and o.request_class = 'load'
+      group by 1`,
+    [marketSlug],
+  );
+  const counts: Record<string, number> = {};
+  for (const row of result.rows) counts[String(row.end_use)] = Number(row.n);
+  return counts;
+}

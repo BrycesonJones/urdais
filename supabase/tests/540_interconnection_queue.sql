@@ -43,8 +43,13 @@ begin
   if n <> 1 then raise exception 'expected exactly one component-level quantity kind, found %', n; end if;
 
   -- ------------------------------------------------------------------ sources and rights
-  select count(*) into n from reference.source_interfaces where source_class = 'interconnection_queue';
-  if n <> 3 then raise exception 'expected three queue interfaces, found %', n; end if;
+  -- The three this phase registered. Later phases add more, so this names them rather than
+  -- counting every queue interface in the registry.
+  select count(*) into n from reference.source_interfaces
+   where source_class = 'interconnection_queue'
+     and slug in ('pjm-planning-queues', 'miso-generator-interconnection-queue',
+                  'caiso-public-queue-report');
+  if n <> 3 then raise exception 'expected the three IQ-2 queue interfaces, found %', n; end if;
 
   select count(*) into n from reference.source_use_purposes
    where code in ('interconnection_queue_retention', 'interconnection_queue_calculation',
@@ -52,17 +57,19 @@ begin
                   'public_interconnection_queue_derived_metric_display');
   if n <> 4 then raise exception 'expected four queue rights purposes, found %', n; end if;
 
-  -- All three sources are ambiguous and none was quietly relabelled as cleared.
+  -- All three of these sources are ambiguous and none was quietly relabelled as cleared.
   select count(*) into n from reference.source_use_permissions sup
     join reference.source_interfaces s on s.id = sup.source_interface_id
-   where s.source_class = 'interconnection_queue'
+   where s.slug in ('pjm-planning-queues', 'miso-generator-interconnection-queue',
+                    'caiso-public-queue-report')
      and sup.rights_classification <> 'ambiguous_requires_legal_review';
-  if n <> 0 then raise exception 'a queue source is recorded as something other than ambiguous'; end if;
+  if n <> 0 then raise exception 'an IQ-2 queue source is recorded as something other than ambiguous'; end if;
 
   -- Ambiguous still publishes under the founder-accepted-risk policy, and the open question stays.
   select count(*) into n from reference.source_use_permissions sup
     join reference.source_interfaces s on s.id = sup.source_interface_id
-   where s.source_class = 'interconnection_queue'
+   where s.slug in ('pjm-planning-queues', 'miso-generator-interconnection-queue',
+                    'caiso-public-queue-report')
      and sup.purpose_code = 'public_interconnection_queue_display'
      and (sup.disposition <> 'permitted' or sup.unresolved_issue is null
           or sup.attribution_required is not true);

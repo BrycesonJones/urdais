@@ -28,8 +28,15 @@ async function main(): Promise<void> {
   const all = process.argv.includes("--all");
   const dryRun = process.argv.includes("--dry-run");
   const source = flag("source");
+  // Archive sources only: take the most recent N artifacts instead of the whole archive.
+  const limitFlag = flag("limit");
+  const limit = limitFlag === null ? undefined : Number(limitFlag);
+  if (limit !== undefined && (!Number.isInteger(limit) || limit < 1)) {
+    console.error("--limit must be a positive integer");
+    process.exit(2);
+  }
   if (!all && source === null) {
-    console.error(`usage: --source <${INGESTIBLE_QUEUE_SOURCES.join("|")}> | --all  [--dry-run]`);
+    console.error(`usage: --source <${INGESTIBLE_QUEUE_SOURCES.join("|")}> | --all  [--dry-run] [--limit N]`);
     process.exit(2);
   }
   const sources = all ? INGESTIBLE_QUEUE_SOURCES : [source!];
@@ -39,7 +46,9 @@ async function main(): Promise<void> {
   const sql = url === null ? null : await createTokenSqlExecutor(url);
   const startedAt = Date.now();
   try {
-    const report = await runQueueIngestion(sql, sources, { dryRun });
+    const report = await runQueueIngestion(sql, sources, {
+      dryRun, ...(limit === undefined ? {} : { limit }),
+    });
     const currentness = sql === null ? [] : await sourceCurrentness(sql);
     console.log(JSON.stringify({
       ...report,

@@ -18,7 +18,7 @@
 
 import { observationHash, queueRecordHash, queueRetrievalKey, snapshotKey, QUEUE_EXTRACTION_VERSION }
   from "@/lib/interconnection-queue/ingest/artifact";
-import type { QueueAdapter, QueueExtraction, NormalizedQueueRecord }
+import type { QueueAdapter, QueueArtifactRef, QueueExtraction, NormalizedQueueRecord }
   from "@/lib/interconnection-queue/ingest/types";
 import type { CapacitySqlExecutor } from "@/lib/power-delivery/capacity/read";
 import type { RetrievedArtifact } from "@/lib/power-delivery/planning/ingest/types";
@@ -128,7 +128,7 @@ export async function persistQueueExtraction(
   artifacts: ReadonlyMap<string, RetrievedArtifact>,
   extraction: QueueExtraction,
   collectorIdentity: string,
-  options: { batchSize?: number; observedAt?: string } = {},
+  options: { batchSize?: number; observedAt?: string; ref?: QueueArtifactRef } = {},
 ): Promise<QueueWriteResult> {
   const batchSize = options.batchSize ?? QUEUE_WRITE_BATCH_SIZE;
   let statements = 0;
@@ -215,12 +215,16 @@ export async function persistQueueExtraction(
     const snapshotInsert = await sql.query(
       `insert into pipeline.interconnection_queue_snapshots
          (source_interface_id, grid_area_id, retrieval_id, native_snapshot_key, artifact_sha256,
-          source_published_at, observed_at, currentness_status, is_latest, record_count)
-       values ($1,$2,$3,$4,$5,$6,$7,'current',false,$8)
+          source_published_at, observed_at, currentness_status, is_latest, record_count,
+          report_period, is_correction, native_document_id, archive_metadata)
+       values ($1,$2,$3,$4,$5,$6,$7,'current',false,$8,$9::date,$10,$11,$12::jsonb)
        on conflict (source_interface_id, artifact_sha256, native_snapshot_key) do nothing
        returning id`,
       [lineage.sourceInterfaceId, lineage.gridAreaId, retrievalId, key, primary.sha256,
-        extraction.snapshot.sourcePublishedAt, observedAt, extraction.records.length],
+        extraction.snapshot.sourcePublishedAt, observedAt, extraction.records.length,
+        options.ref?.reportPeriod ?? null, options.ref?.isCorrection ?? false,
+        options.ref?.nativeDocumentId ?? null,
+        options.ref === undefined ? null : JSON.stringify(options.ref.archiveMetadata)],
     );
     let snapshotId: string;
     if (snapshotInsert.rows[0] !== undefined) {
@@ -229,12 +233,26 @@ export async function persistQueueExtraction(
       // Exactly one snapshot per interface is the latest. The new row is inserted not-latest and
       // the flag moves in a single statement, because clearing the old one afterwards would leave
       // two rows claiming it for the duration of the insert and trip the unique index.
+      // The latest snapshot is the one the publisher released most recently, not simply the one
+      // just written: a historical backfill ingests December 2018 long after August 2026 was
+      // fetched. Cleared and set in two statements because the partial unique index is checked
+      // per row, and a single statement can hold two rows claiming the flag at once.
       count();
       await sql.query(
         `update pipeline.interconnection_queue_snapshots
-            set is_latest = (id = $2)
-          where source_interface_id = $1 and (is_latest or id = $2)`,
-        [lineage.sourceInterfaceId, snapshotId],
+            set is_latest = false
+          where source_interface_id = $1 and is_latest`,
+        [lineage.sourceInterfaceId],
+      );
+      count();
+      await sql.query(
+        `update pipeline.interconnection_queue_snapshots
+            set is_latest = true
+          where id = (select id from pipeline.interconnection_queue_snapshots
+                       where source_interface_id = $1
+                       order by coalesce(source_published_at, observed_at) desc, observed_at desc
+                       limit 1)`,
+        [lineage.sourceInterfaceId],
       );
     } else {
       count();
@@ -247,6 +265,22 @@ export async function persistQueueExtraction(
       snapshotId = String(existing.rows[0]!.id);
     }
     result.snapshotId = snapshotId;
+
+    // --------------------------------------------------------------- an artifact seen before
+    //
+    // A snapshot that already exists was fully processed in an earlier run — persistence is
+    // transactional per artifact, so the snapshot row and everything derived from it committed
+    // together. Reprocessing it can only produce what is already there, and for an archive
+    // replay it would do real harm: comparing December 2018's content against a request's
+    // current state would look like a change and write an observation dated backwards.
+    //
+    // So this is where an exact rerun stops.
+    if (result.snapshot === "existing") {
+      count();
+      await sql.query("commit", []);
+      result.statements = statements;
+      return result;
+    }
 
     // --------------------------------------------------------------- raw evidence
     const hashed = extraction.records.map((record) => ({
@@ -413,6 +447,7 @@ export async function persistQueueExtraction(
             record.actualInServiceOn, record.agreementExecutedOn, record.withdrawnOn,
             record.nativeState, record.nativeCounty, record.nativeZone, record.nativePoi,
             record.nativeSubstation, record.nativeTransmissionOwner, record.sourcePartition,
+            record.nativeEndUse ?? null, record.loadEndUse ?? null,
           );
         }
         count();
@@ -423,7 +458,8 @@ export async function persistQueueExtraction(
               native_status, native_status_display, lifecycle_stage, request_class,
               requested_on, proposed_in_service_on, revised_in_service_on, actual_in_service_on,
               agreement_executed_on, withdrawn_on, native_state, native_county, native_zone,
-              native_poi, native_substation, native_transmission_owner, source_partition)
+              native_poi, native_substation, native_transmission_owner, source_partition,
+              native_end_use, load_end_use)
            select v.request_id::uuid, v.first_snapshot_id::uuid, v.last_snapshot_id::uuid,
                   v.first_raw_record_id::uuid, v.last_raw_record_id::uuid,
                   v.observation_ordinal::integer, v.observation_hash,
@@ -432,14 +468,16 @@ export async function persistQueueExtraction(
                   v.requested_on::date, v.proposed_in_service_on::date, v.revised_in_service_on::date,
                   v.actual_in_service_on::date, v.agreement_executed_on::date, v.withdrawn_on::date,
                   v.native_state, v.native_county, v.native_zone, v.native_poi,
-                  v.native_substation, v.native_transmission_owner, v.source_partition
-             from (values ${placeholders(batch.length, 26)}) as v(request_id, first_snapshot_id,
+                  v.native_substation, v.native_transmission_owner, v.source_partition,
+                  v.native_end_use, v.load_end_use
+             from (values ${placeholders(batch.length, 28)}) as v(request_id, first_snapshot_id,
                    last_snapshot_id, first_raw_record_id, last_raw_record_id, observation_ordinal,
                    observation_hash, native_project_name, native_customer, native_status,
                    native_status_display, lifecycle_stage, request_class, requested_on,
                    proposed_in_service_on, revised_in_service_on, actual_in_service_on,
                    agreement_executed_on, withdrawn_on, native_state, native_county, native_zone,
-                   native_poi, native_substation, native_transmission_owner, source_partition)
+                   native_poi, native_substation, native_transmission_owner, source_partition,
+              native_end_use, load_end_use)
            returning id, request_id, observation_ordinal`,
           values,
         );
