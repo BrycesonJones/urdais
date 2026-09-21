@@ -53,6 +53,7 @@
     "power-delivery:planning-ingest": "tsx scripts/power-delivery/planning-ingest.ts",
     "power-delivery:planning-verify": "tsx scripts/power-delivery/planning-verify.ts",
     "power-delivery:capacity-ingest": "tsx scripts/power-delivery/capacity-ingest.ts",
+    "power-delivery:capacity-results": "tsx scripts/power-delivery/capacity-results.ts",
     "power-delivery:planning-check": "tsx scripts/power-delivery/planning-source-check.ts",
     "power-delivery:planning-production": "tsx scripts/power-delivery/planning-production.ts"
   },
