@@ -170,6 +170,22 @@ export const docPages: readonly DocPage[] = [
     section: "Methodology",
     file: "methodology/map-facilities.md",
   },
+  {
+    slug: "methodology/deliverable-capacity",
+    title: "Deliverable Capacity",
+    description:
+      "Production methodology for planning capacity: the four quantities a grid publisher actually releases, why no universal cross-market formula is defensible, and the capability identities approved for ERCOT and the PJM RTO publicly and MISO internally, leaving CAISO, NYISO, ISO-NE and SPP component-only each for a recorded reason. Approves no arithmetic.",
+    section: "Methodology",
+    file: "methodology/deliverable-capacity.md",
+  },
+  {
+    slug: "methodology/power-delivery-gap",
+    title: "Power Delivery Gap",
+    description:
+      "Production methodology for the delivery gap: forecast peak demand minus approved planning capacity, for the market-season pairs where both sides describe the same thing. One market of seven qualifies, the sign convention is stated, and the result is explicitly not a reserve margin, transmission headroom, or a resource adequacy surplus.",
+    section: "Methodology",
+    file: "methodology/power-delivery-gap.md",
+  },
 ];
 
 export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];

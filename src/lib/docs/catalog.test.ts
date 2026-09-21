@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
@@ -113,11 +114,27 @@ describe("compute price child specifications", () => {
     expect(read(ucpi!.file)).toContain("version 0.1.2-draft");
   });
 
-  it("routed methodology pages contain no markdown tables, which the renderer does not support", () => {
+  it("routed pages may use markdown tables, and every one of them is well formed", () => {
+    // The renderer supports pipe tables, so the constraint is no longer "none" but "parseable":
+    // a header row, a separator row directly beneath it, and a consistent column count.
+    let tables = 0;
     for (const page of docPages) {
-      const doc = readFileSync(path.join(process.cwd(), "docs", page.file), "utf8");
-      expect(doc.split("\n").filter((line) => line.trimStart().startsWith("|"))).toEqual([]);
+      const lines = readFileSync(path.join(process.cwd(), "docs", page.file), "utf8").split("\n");
+      const columns = (line: string) => line.trim().replace(/^\||\|$/g, "").split("|").length;
+
+      for (const [i, line] of lines.entries()) {
+        if (!line.trimStart().startsWith("|")) continue;
+        const previous = lines[i - 1] ?? "";
+        if (previous.trimStart().startsWith("|")) continue; // a body row; its header was checked
+
+        const separator = lines[i + 1] ?? "";
+        expect(separator.trim(), `${page.file}:${i + 2} separator`).toMatch(/^\|(\s*:?-{3,}:?\s*\|)+$/);
+        expect(columns(separator), `${page.file}:${i + 1} column count`).toBe(columns(line));
+        tables += 1;
+      }
     }
+    // The assertion only means something if documents actually exercise it.
+    expect(tables).toBeGreaterThan(0);
   });
 });
 
@@ -330,5 +347,52 @@ describe("output methodology pages", () => {
     expect(read(universe!.file)).toContain(`](${docHref(uavi!.slug)})`);
     expect(read(ugai!.file)).toContain(`](${docHref(uavi!.slug)})`);
     expect(read("methodology.md")).toContain(`](${docHref(uavi!.slug)})`);
+  });
+});
+
+describe("power delivery methodology pages", () => {
+  const capacity = findDoc("methodology/deliverable-capacity");
+  const gap = findDoc("methodology/power-delivery-gap");
+  const read = (file: string) => readFileSync(path.join(process.cwd(), "docs", file), "utf8");
+  const digest = (file: string) =>
+    createHash("sha256").update(readFileSync(path.join(process.cwd(), "docs", file))).digest("hex");
+
+  it("registers both approved documents, so their production routes exist", () => {
+    // The route sets dynamicParams = false: an unregistered slug is a hard 404, and the live
+    // delivery-gap chart links to one of these.
+    expect(capacity).toMatchObject({ section: "Methodology", file: "methodology/deliverable-capacity.md" });
+    expect(gap).toMatchObject({ section: "Methodology", file: "methodology/power-delivery-gap.md" });
+    expect(docHref(capacity!.slug)).toBe("/docs/methodology/deliverable-capacity");
+    expect(docHref(gap!.slug)).toBe("/docs/methodology/power-delivery-gap");
+  });
+
+  it("resolves both source files, each approved at 1.0.0 with a single title", () => {
+    for (const page of [capacity!, gap!]) {
+      const doc = read(page.file);
+      expect(doc.match(/^# /gm)).toHaveLength(1);
+      expect(doc).toContain("version 1.0.0");
+    }
+  });
+
+  /**
+   * The bytes of these two documents are the `content_hash` of approved methodology versions
+   * already applied to production. Registering a document for routing must not change it, so the
+   * digests are asserted against the migrations that bound them rather than against constants.
+   */
+  it("leaves both documents byte-identical to what production approved", () => {
+    const bound = [
+      { page: capacity!, migration: "20260927100000_deliverable_capacity_methodology_1_0_0.sql" },
+      { page: gap!, migration: "20260928100000_delivery_gap.sql" },
+    ];
+    for (const { page, migration } of bound) {
+      const sql = readFileSync(path.join(process.cwd(), "supabase", "migrations", migration), "utf8");
+      expect(sql, `${page.file} digest is not the one ${migration} approved`).toContain(digest(page.file));
+    }
+  });
+
+  it("states the coverage that makes these documents worth routing", () => {
+    expect(read(gap!.file)).toMatch(/Positive means forecast demand exceeds approved planning capacity/);
+    expect(read(gap!.file)).toContain("`public_gap_eligible`");
+    expect(read(capacity!.file)).toContain("`approved_result`");
   });
 });

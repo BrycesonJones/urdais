@@ -46,3 +46,101 @@ describe("repository-backed documentation", () => {
     expect(container.querySelector('a[href^="javascript:"]')).toBeNull();
   });
 });
+
+describe("markdown tables", () => {
+  const TABLE = [
+    "# Test",
+    "",
+    "| Market | Status | Why |",
+    "| --- | --- | --- |",
+    "| ERCOT | `public_gap_eligible` | Both sides exist |",
+    "| SPP | **blocked** | Publication prohibited |",
+  ].join("\n");
+
+  const renderMarkdown = (markdown: string) =>
+    render(<DocArticle page={{ ...docPages[0]!, markdown }} />).container;
+
+  it("renders a pipe table as a table rather than as text", () => {
+    const container = renderMarkdown(TABLE);
+    const table = container.querySelector("table");
+    expect(table).not.toBeNull();
+    // The syntax itself never reaches the reader.
+    expect(container.querySelector("article")?.textContent).not.toContain("| --- |");
+    expect(container.querySelector("article")?.textContent).not.toContain("| Market |");
+  });
+
+  it("separates the header row from the body rows", () => {
+    const container = renderMarkdown(TABLE);
+    const headers = [...container.querySelectorAll("thead th")].map((cell) => cell.textContent);
+    expect(headers).toEqual(["Market", "Status", "Why"]);
+
+    const body = [...container.querySelectorAll("tbody tr")];
+    expect(body).toHaveLength(2);
+    expect(body.map((row) => [...row.querySelectorAll("td")].map((cell) => cell.textContent))).toEqual([
+      ["ERCOT", "public_gap_eligible", "Both sides exist"],
+      ["SPP", "blocked", "Publication prohibited"],
+    ]);
+    // The header cells are th, and the body cells are not.
+    expect(container.querySelectorAll("tbody th")).toHaveLength(0);
+    expect(container.querySelectorAll("thead td")).toHaveLength(0);
+  });
+
+  it("renders the inline Markdown the approved documents use inside cells", () => {
+    const container = renderMarkdown(TABLE);
+    expect(container.querySelector("tbody code")?.textContent).toBe("public_gap_eligible");
+    expect(container.querySelector("tbody strong")?.textContent).toBe("blocked");
+  });
+
+  it("keeps a header cell that the document leaves empty", () => {
+    // deliverable-capacity opens a matrix with an unlabelled first column.
+    const container = renderMarkdown("# Test\n\n| | What it is |\n| --- | --- |\n| Capability | What exists |");
+    const headers = [...container.querySelectorAll("thead th")].map((cell) => cell.textContent);
+    expect(headers).toEqual(["", "What it is"]);
+  });
+
+  it("escapes cell contents rather than trusting them", () => {
+    const container = renderMarkdown([
+      "# Test",
+      "",
+      "| Payload | Link |",
+      "| --- | --- |",
+      "| <script>alert(1)</script> | [x](javascript:alert%281%29) |",
+      "| <img src=x onerror=alert(1)> | ok |",
+    ].join("\n"));
+
+    expect(container.querySelector("script")).toBeNull();
+    expect(container.querySelector("img")).toBeNull();
+    expect(container.querySelector('a[href^="javascript:"]')).toBeNull();
+    // The markup is inert text in a cell, which is what escaping looks like from the outside.
+    expect(container.querySelector("tbody")?.textContent).toContain("alert(1)");
+    expect(container.innerHTML).not.toContain("<script>");
+    expect(container.innerHTML).not.toContain("onerror");
+  });
+
+  it("scrolls a wide table without breaking the table element", () => {
+    const container = renderMarkdown(TABLE);
+    const scroller = container.querySelector(".docs-table-scroll");
+    expect(scroller).not.toBeNull();
+    expect(scroller?.querySelector("table")).not.toBeNull();
+  });
+
+  it("leaves documents without tables rendering exactly as before", async () => {
+    // A page that predates table support: same headings, same anchors, and no table introduced.
+    const page = await readDoc("methodology/ucpi");
+    const { container } = render(<DocArticle page={page!} />);
+    expect(container.querySelector("table")).toBeNull();
+    expect(container.querySelectorAll("h1")).toHaveLength(1);
+    expect(getHeadings(page!.markdown).length).toBeGreaterThan(0);
+    for (const heading of getHeadings(page!.markdown)) {
+      expect(container.querySelectorAll(`[id="${heading.id}"]`).length).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("switches on tables only, leaving the rest of GFM off", () => {
+    // Full GFM would also change how existing documents render; table support must not.
+    const container = renderMarkdown("# Test\n\n~~struck~~ and www.example.com\n\n- [ ] a task");
+    expect(container.querySelector("del")).toBeNull();
+    expect(container.querySelector('input[type="checkbox"]')).toBeNull();
+    expect(container.querySelector('a[href*="example.com"]')).toBeNull();
+  });
+});
