@@ -117,7 +117,15 @@ declare
     'pipeline.grid_constraint_values', 'pipeline.deliverable_capacity_results',
     'pipeline.deliverable_capacity_result_inputs',
     -- PD-5A: the delivery gap and the two rows behind each one.
-    'pipeline.delivery_gap_results', 'pipeline.delivery_gap_result_inputs'
+    'pipeline.delivery_gap_results', 'pipeline.delivery_gap_result_inputs',
+    -- Interconnection Queue: a separate domain from capacity, and locked down the same way.
+    'reference.interconnection_lifecycle_stages', 'reference.interconnection_request_classes',
+    'reference.interconnection_quantity_kinds', 'reference.interconnection_technologies',
+    'reference.interconnection_source_monitors',
+    'pipeline.interconnection_queue_snapshots', 'pipeline.raw_interconnection_queue_records',
+    'pipeline.interconnection_requests', 'pipeline.interconnection_request_observations',
+    'pipeline.interconnection_request_quantities', 'pipeline.interconnection_request_resources',
+    'pipeline.interconnection_queue_deferrals', 'pipeline.interconnection_source_checks'
   ];
   n integer;
 begin

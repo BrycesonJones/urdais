@@ -2,7 +2,7 @@
   "name": "urdais",
   "version": "0.1.0",
   "private": true,
-  "description": "Urdais \u2014 an information and market-data platform for the Information Age.",
+  "description": "Urdais — an information and market-data platform for the Information Age.",
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
@@ -56,7 +56,8 @@
     "power-delivery:capacity-results": "tsx scripts/power-delivery/capacity-results.ts",
     "power-delivery:gap": "tsx scripts/power-delivery/gap.ts",
     "power-delivery:planning-check": "tsx scripts/power-delivery/planning-source-check.ts",
-    "power-delivery:planning-production": "tsx scripts/power-delivery/planning-production.ts"
+    "power-delivery:planning-production": "tsx scripts/power-delivery/planning-production.ts",
+    "interconnection-queue:ingest": "tsx scripts/interconnection-queue/ingest.ts"
   },
   "dependencies": {
     "github-slugger": "^2.0.0",
