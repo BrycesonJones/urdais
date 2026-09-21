@@ -107,7 +107,15 @@ declare
     'pipeline.planning_forecast_vintages', 'pipeline.planning_forecast_scenarios',
     'pipeline.raw_planning_forecast_records', 'pipeline.planning_forecast_points',
     -- PD-3D: where to look for a newer release, and the evidence of each look.
-    'reference.planning_source_monitors', 'pipeline.planning_source_checks'
+    'reference.planning_source_monitors', 'pipeline.planning_source_checks',
+    -- PD-4: the grid capacity domain. Distinct from pipeline.capacity_observations above, which
+    -- is rentable GPU supply and shares nothing with it but a word.
+    'reference.capacity_quantity_kinds', 'reference.capacity_component_kinds', 'reference.capacity_bases',
+    'reference.grid_subareas', 'reference.grid_interfaces',
+    'pipeline.grid_capacity_vintages', 'pipeline.grid_capacity_scenarios',
+    'pipeline.raw_grid_capacity_records', 'pipeline.grid_capacity_components',
+    'pipeline.grid_constraint_values', 'pipeline.deliverable_capacity_results',
+    'pipeline.deliverable_capacity_result_inputs'
   ];
   n integer;
 begin
