@@ -1,8 +1,8 @@
 {
   "methodology": "interconnection-queue-analytics",
-  "version": "0.1.0-draft",
+  "version": "1.0.0",
   "generated_on": "2026-09-21",
-  "status": "research artifact; not registered in the docs catalog; approves nothing for publication",
+  "status": "research artifact; not registered in the docs catalog; the diagnostics the approved 1.0.0 methodology was written against",
   "active_lifecycle": [
     "requested",
     "study",

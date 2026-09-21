@@ -126,7 +126,9 @@ declare
     'pipeline.interconnection_requests', 'pipeline.interconnection_request_observations',
     'pipeline.interconnection_request_quantities', 'pipeline.interconnection_request_resources',
     'pipeline.interconnection_queue_deferrals', 'pipeline.interconnection_source_checks',
-    'reference.interconnection_load_end_uses', 'reference.interconnection_request_subtypes'
+    'reference.interconnection_load_end_uses', 'reference.interconnection_request_subtypes',
+    'reference.interconnection_metric_definitions',
+    'pipeline.interconnection_analytics_runs', 'pipeline.interconnection_metric_results'
   ];
   n integer;
 begin

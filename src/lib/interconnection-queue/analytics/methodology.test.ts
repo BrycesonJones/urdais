@@ -283,14 +283,22 @@ describe("the methodology document", () => {
 
   it("declares the version this module encodes", () => {
     expect(METHODOLOGY_SLUG).toBe("interconnection-queue-analytics");
-    expect(METHODOLOGY_VERSION).toBe("0.1.0-draft");
-    expect(document).toContain("# Urdais Interconnection Queue Analytics — 0.1.0-draft");
+    expect(METHODOLOGY_VERSION).toBe("1.0.0");
+    expect(document).toContain("# Urdais Interconnection Queue Analytics — 1.0.0");
     expect(document.match(/^# /gm)).toHaveLength(1);
   });
 
-  it("approves nothing for publication at this version", () => {
-    expect(document).toMatch(/No production value, public metric or chart is established/);
-    expect(document).toContain("Open gates before 1.0.0");
+  it("is approved, and keeps the draft it supersedes in its lineage", () => {
+    expect(document).toMatch(/\*\*Status: approved, version 1\.0\.0/);
+    expect(document).toContain("How the 0.1.0-draft gates were resolved");
+    expect(document).toContain("0.1.0-draft, 21 September 2026");
+  });
+
+  it("closes every gate the draft left open, including by declining to ship", () => {
+    // Four of the six close by refusing to publish something rather than by finding an answer.
+    expect(document).toMatch(/PJM publishes no active-MW metric in V1/);
+    expect(document).toMatch(/ERCOT publishes no active-MW metric in V1/);
+    expect(document).toMatch(/\*\*Deferred for every market\*\*/);
   });
 
   it("states the findings the rules rest on", () => {

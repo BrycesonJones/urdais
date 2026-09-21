@@ -5,14 +5,46 @@
  * IQ-6 implements them instead of re-deciding them, and so the invariants that protect the
  * product's honesty are enforced by tests rather than by memory.
  *
- * The specification is docs/methodology/interconnection-queue-analytics.md, version 0.1.0-draft.
+ * The specification is docs/methodology/interconnection-queue-analytics.md, version 1.0.0.
  * Where the two disagree the document is authoritative and this file is a bug.
  */
+
+import { createHash } from "node:crypto";
 
 import type { LifecycleStage, QuantityKind, RequestClass } from "@/lib/interconnection-queue/types";
 
 export const METHODOLOGY_SLUG = "interconnection-queue-analytics";
-export const METHODOLOGY_VERSION = "0.1.0-draft";
+export const METHODOLOGY_VERSION = "1.0.0";
+
+/**
+ * SHA-256 of the approved methodology document.
+ *
+ * An approved version and its document are one thing. If the file moves and this does not, a
+ * calculation would be running rules nobody approved, so `assertMethodologyDocument` refuses to
+ * proceed rather than quietly computing under a changed specification.
+ */
+export const METHODOLOGY_DOCUMENT_SHA256 =
+  "391ccc7e4f9dd3ef5777d7bc8b2f1b75518d0fe4c022b5ce3f81da111068d754";
+export const METHODOLOGY_DOCUMENT_PATH = "docs/methodology/interconnection-queue-analytics.md";
+
+export class MethodologyDriftError extends Error {
+  constructor(expected: string, actual: string) {
+    super(`the interconnection queue analytics methodology document has changed: ${METHODOLOGY_VERSION} `
+      + `was approved against ${expected}, the file now hashes to ${actual}. An approved version is `
+      + "never edited in place; supersede it with a successor version instead.");
+    this.name = "MethodologyDriftError";
+  }
+}
+
+/** Throws unless the document on disk is the one the approved version was hashed against. */
+export function assertMethodologyDocument(documentBytes: Buffer | string): void {
+  const actual = createHash("sha256")
+    .update(typeof documentBytes === "string" ? Buffer.from(documentBytes, "utf8") : documentBytes)
+    .digest("hex");
+  if (actual !== METHODOLOGY_DOCUMENT_SHA256) {
+    throw new MethodologyDriftError(METHODOLOGY_DOCUMENT_SHA256, actual);
+  }
+}
 
 // ------------------------------------------------------------------ lifecycle
 

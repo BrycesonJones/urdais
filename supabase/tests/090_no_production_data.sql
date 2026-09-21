@@ -72,14 +72,16 @@ begin
   -- seeds no observation and no value. Deliverable Capacity 1.0.0 is approved from PD-4F and
   -- its superseded draft is non-draft too; both seed nothing, and the assertion that
   -- pipeline.deliverable_capacity_results is empty on a bootstrapped database still holds.
-  -- PD-5A approved Power Delivery Gap 1.0.0 on the same footing: it seeds no gap either.
+  -- PD-5A approved Power Delivery Gap 1.0.0 on the same footing: it seeds no gap either, and
+  -- IQ-6 approved Interconnection Queue Analytics 1.0.0, which seeds no metric result.
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id
    where mv.status <> 'draft'
      and m.slug not in ('ubwi', 'ucpi-listed-gpu', 'utvi', 'model-frontier', 'open-weight-proprietary',
-                        'map-facilities', 'deliverable-capacity', 'power-delivery-gap');
+                        'map-facilities', 'deliverable-capacity', 'power-delivery-gap',
+                        'interconnection-queue-analytics');
   if n <> 0 then
-    raise exception 'a non-draft methodology version exists outside UBWI, UCPI-LISTED-GPU, UTVI, Model Frontier, Open-weight vs Proprietary, Map Facilities, Deliverable Capacity and Power Delivery Gap';
+    raise exception 'a non-draft methodology version exists outside UBWI, UCPI-LISTED-GPU, UTVI, Model Frontier, Open-weight vs Proprietary, Map Facilities, Deliverable Capacity, Power Delivery Gap and Interconnection Queue Analytics';
   end if;
 
   -- And a bootstrapped database holds no facility, published or otherwise.

@@ -1,6 +1,8 @@
-# Urdais Interconnection Queue Analytics — 0.1.0-draft
+# Urdais Interconnection Queue Analytics — 1.0.0
 
-**Status: proposed methodology, version 0.1.0-draft.** Prepared 21 September 2026 against the canonical evidence base built by IQ-2 through IQ-4. No production value, public metric or chart is established by this document. Nothing here is approved for publication, and the version is deliberately a draft because several metric gates remain open.
+**Status: approved, version 1.0.0, effective 21 September 2026.** Written against the canonical evidence base built by IQ-2 through IQ-4, covering all seven organized U.S. wholesale markets.
+
+This version approves a deliberately small set of metrics for publication and refuses a larger set, each with its reason. The refusals are the load-bearing part: an interconnection queue is unusually easy to describe with a number that is four times too large, and most of what follows exists to prevent that.
 
 This document follows the principles of the [Urdais methodology framework](/docs/methodology). It defines which interconnection queue analytics are defensible, for which markets, from which fields — and, at least as importantly, which are not.
 
@@ -24,11 +26,11 @@ Every decision below was made against the seven ingested datasets, not against a
 
 A request is **active** when its latest observation is in one of:
 
-`requested` · `study` · `agreement_pending` · `agreement_executed` · `under_construction`
+`requested` · `study` · `agreement_pending` · `agreement_executed` · `under_construction` · `suspended`
 
 A request is **terminal** when its latest observation is `operational` or `withdrawn`.
 
-Two stages are deliberately neither.
+Two stages need saying explicitly.
 
 **`suspended` is active.** PJM publishes 140 suspended requests and suspension is routinely lifted; a suspended project has not left the queue. It is included in stock and flagged, never silently.
 
@@ -82,9 +84,9 @@ What replaces it: **market-specific MW, each naming its field**, and **project c
 | ISO-NE | `Summer MW`, new-capability requests only | approved, market-specific |
 | SPP | `MAX Summer MW` | internal only |
 
-PJM is deferred deliberately. `MWEnergy` and `MWCapacity` are two different service rights and `MaximumFacilityOutput` is neither; nothing in the source says which one a reader means by "the queue". Choosing the largest because it is largest is exactly the error this methodology exists to prevent. IQ-6 must not resolve this by picking one — it needs a stated reason, and 0.1.0-draft does not have one.
+PJM is deferred deliberately. `MWEnergy` and `MWCapacity` are two different service rights and `MaximumFacilityOutput` is neither; nothing in the source says which one a reader means by "the queue". Choosing the largest because it is largest is exactly the error this methodology exists to prevent. V1 therefore ships no PJM active-MW figure at all, which costs PJM one metric and costs the product nothing it could have stated honestly.
 
-ERCOT is deferred because a net change is not a level. A repowering that reduces output by 53.3 MW is a real published value and summing it with additions produces a number that is neither the queue nor the change in it.
+ERCOT is deferred because a net change is not a level. A repowering that reduces output by 53.3 MW is a real published value, and summing it with additions produces a number that is neither the queue nor the change in it. V1 ships no ERCOT active-MW figure.
 
 ## 5. Generation and load never mix
 
@@ -184,7 +186,7 @@ Both conditions are necessary, and each binds in a different place:
 
 The rule's necessity is visible in the data it rejects. PJM's 2021 cohort has 1,328 entrants and **0% operational** with 79.7% unresolved; published as a completion rate it would read as total failure. CAISO's 2022 cohort has 0% unresolved and would pass condition (2) — on a sample of four.
 
-**Mature-cohort results** (diagnostic, not for publication at 0.1.0-draft):
+**Mature-cohort results** (the published figures):
 
 | Market | Cohorts | Entered | Operational | Withdrawn |
 | --- | --- | --- | --- | --- |
@@ -308,17 +310,48 @@ Everything else waits.
 | MW completion rate | No market has both a mature cohort and an unambiguous cohort quantity field |
 | Mean queue age | Distribution is skewed; CAISO p90 is 15.5 years against a 6.5-year median |
 
-## 22. Open gates before 1.0.0
+## 22. How the 0.1.0-draft gates were resolved
 
-This version is a draft because these are unresolved:
+The draft left six questions open. All six are closed here, and four of them are closed by
+*declining* to ship something rather than by finding an answer.
 
-1. **PJM's MW field.** Three candidates, no stated reason to prefer one.
-2. **ERCOT's net-change quantity.** It needs its own quantity kind, distinct from `maximum_facility_output`, because it is a change rather than a level.
-3. **MW completion rate** for any market.
-4. **ISO-NE's sample size.** 28 active new-capability requests is below the median floor.
-5. **Whether `unknown`-stage requests get a published coverage figure** or only an internal one.
-6. **Whether ERCOT's first-seen entries may sit on the same chart** as application-date entries, given they measure different things.
+1. **PJM's MW field.** Not resolved, and therefore **not shipped**. `MWEnergy`, `MWCapacity` and
+   `MaximumFacilityOutput` remain three different things with no source statement preferring one.
+   PJM publishes no active-MW metric in V1, and this does not block the rest of PJM.
+2. **ERCOT's net-change quantity.** Not resolved, and therefore **not shipped**. A net change is
+   not a level. ERCOT publishes no active-MW metric in V1.
+3. **MW completion rate.** **Deferred for every market**, permanently in V1. The two markets that
+   support a project completion rate are exactly the two with no agreed MW field, so the MW
+   version cannot be derived from the project version. It is exposed as a named metric with
+   status `methodology_deferred`, never as a blank or a zero.
+4. **ISO-NE's sample size.** Resolved by the existing sample floors: 28 active requests is below
+   the median floor of 30, so ISO-NE's queue age reports `insufficient_sample` with its actual n.
+   This is the designed behaviour, not a gap.
+5. **Coverage for `unknown`-stage requests.** Resolved: every published metric carries a coverage
+   figure naming how many requests were excluded and why, `unknown` among them.
+6. **ERCOT first-seen entries beside application-date entries.** Resolved: **no**. They measure
+   different things and never share a series. Every entry figure carries its basis, and a reader
+   is told which one they are looking at.
+
+## 23. Known limitations
+
+- **No cross-market MW figure of any kind exists**, and none can be constructed from these seven
+  sources. Project counts are the cross-market comparable.
+- **ERCOT contributes no age, exit or completion metric.** It publishes no request date and no
+  actual commercial operation date.
+- **SPP contributes nothing public.** Any multi-market statement names it as excluded.
+- **ISO-NE's queue position is not unique.** 242 rows have no canonical identity and are excluded
+  from counts as stated evidence.
+- **Completion rates describe mature cohorts only**, which means they describe projects that
+  entered years ago. They are not a forecast of what today's entrants will do.
 
 ## Version history
 
-**0.1.0-draft, 21 September 2026.** First specification, written against the complete seven-market canonical evidence base. Approves nothing for publication.
+**1.0.0, 21 September 2026.** Approved. Ships project completion, time to operation, active
+counts, technology mix, queue age, entries, withdrawals, four market-specific MW metrics and the
+NYISO AI data-centre load. Defers MW completion for every market, and declines to ship a PJM or
+ERCOT active-MW figure rather than choose a field the source does not prefer.
+
+**0.1.0-draft, 21 September 2026.** First specification, written against the complete seven-market
+canonical evidence base. Approved nothing for publication and left six gates open; superseded by
+1.0.0, which closes all six. Nothing was ever published under the draft.

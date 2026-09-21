@@ -1,6 +1,8 @@
 import { FlexibleCapacityChart } from "@/components/power-analytics/flexible-capacity-chart";
 import { unconfiguredDeliveryGapReadModel, type DeliveryGapReadModel } from "@/lib/power-delivery/gap/read";
 import { GridBuildoutChart } from "@/components/power-analytics/grid-buildout-chart";
+import { unavailableQueueAnalytics, type QueueAnalyticsReadModel }
+  from "@/lib/interconnection-queue/analytics/read";
 import { InterconnectionQueue } from "@/components/power-analytics/interconnection-queue";
 import { PowerDeliveryGapChart } from "@/components/power-analytics/power-delivery-gap-chart";
 import { TransmissionHeadroom } from "@/components/power-analytics/transmission-headroom";
@@ -25,7 +27,10 @@ const SECTIONS = [
  * database work lives in the route and this stays renderable without one — which is also what
  * lets it be tested for its heading structure without a connection.
  */
-export function PowerAnalyticsPage({ gap = unconfiguredDeliveryGapReadModel() }: { gap?: DeliveryGapReadModel } = {}) {
+export function PowerAnalyticsPage({
+  gap = unconfiguredDeliveryGapReadModel(),
+  queue = unavailableQueueAnalytics(),
+}: { gap?: DeliveryGapReadModel; queue?: QueueAnalyticsReadModel } = {}) {
   return (
     <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-6 text-neutral-50 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-screen-2xl">
@@ -33,7 +38,7 @@ export function PowerAnalyticsPage({ gap = unconfiguredDeliveryGapReadModel() }:
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="text-3xl font-semibold tracking-tight text-neutral-50 md:text-4xl">Power Analytics</h1>
             <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
-              Demo data except Delivery
+              Demo data except Delivery and Interconnection
             </span>
           </div>
           <p className="mt-2 text-base text-neutral-300 md:text-lg">The infrastructure delivering power to the Information Age.</p>
@@ -57,7 +62,7 @@ export function PowerAnalyticsPage({ gap = unconfiguredDeliveryGapReadModel() }:
 
         <div className="mt-10 flex flex-col gap-14">
           <PowerDeliveryGapChart model={gap} />
-          <InterconnectionQueue />
+          <InterconnectionQueue analytics={queue} />
           <TransmissionHeadroom />
           <GridBuildoutChart />
           <FlexibleCapacityChart />
