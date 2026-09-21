@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 import { FACILITY_VERIFICATION_HORIZON_DAYS } from "@/lib/facilities/domain";
 import {
   composeAddress,
+  streetAddressStates,
   emptyFacilityReadModel,
   validatePublicFacilities,
   type FacilityMapReadModel,
@@ -123,5 +124,143 @@ describe("composeAddress", () => {
   it("returns null rather than an empty line when nothing was published", () => {
     expect(composeAddress({ streetAddress: null, locality: null, adminArea: null, countryName: null })).toBeNull();
     expect(composeAddress({ streetAddress: "  ", locality: null, adminArea: null, countryName: null })).toBeNull();
+  });
+
+  describe("when the street address is already a complete postal address", () => {
+    // 145 of 271 public facilities rendered their city and country twice,
+    // because many sources publish the whole postal address in the street field
+    // and the tail was appended to it regardless.
+    it("does not repeat the locality, admin area and country", () => {
+      expect(
+        composeAddress({
+          streetAddress: "Camino a Nativitas 800, Colon, Querétaro, Mexico",
+          locality: "Colón",
+          adminArea: "Querétaro",
+          countryName: "Mexico",
+        }),
+      ).toBe("Camino a Nativitas 800, Colon, Querétaro, Mexico");
+    });
+
+    it("matches across accents, case and punctuation", () => {
+      // "Colon" is the street's spelling and "Colón" the locality's; "Qro." and
+      // "Qro" are the same abbreviation. None of those is a second place.
+      expect(
+        composeAddress({
+          streetAddress: "Parcela 10 Z-1 P1/1 del Ejido San Vicente, 76295 COLON, Qro., MEXICO",
+          locality: "Colón",
+          adminArea: "Qro",
+          countryName: "Mexico",
+        }),
+      ).toBe("Parcela 10 Z-1 P1/1 del Ejido San Vicente, 76295 COLON, Qro., MEXICO");
+    });
+
+    it("finds a city fused to its postcode, as British and Dutch addresses write it", () => {
+      expect(
+        composeAddress({
+          streetAddress: "11 Hanbury Street, Block B, London E1 6QR, United Kingdom",
+          locality: "London",
+          adminArea: null,
+          countryName: "United Kingdom",
+        }),
+      ).toBe("11 Hanbury Street, Block B, London E1 6QR, United Kingdom");
+      expect(
+        composeAddress({
+          streetAddress: "Koolhovenlaan 25, Schiphol-Rijk 1119 NB, Netherlands",
+          locality: "Schiphol-Rijk",
+          adminArea: "North Holland",
+          countryName: "Netherlands",
+        }),
+      ).toBe("Koolhovenlaan 25, Schiphol-Rijk 1119 NB, Netherlands");
+    });
+  });
+
+  describe("when the street address is partial", () => {
+    it("still gains its city, state and country", () => {
+      expect(
+        composeAddress({ streetAddress: "3231 Paul R. Lowry Road", locality: "Memphis", adminArea: "TN", countryName: "United States" }),
+      ).toBe("3231 Paul R. Lowry Road, Memphis, TN, United States");
+    });
+
+    it("appends only what is missing", () => {
+      expect(
+        composeAddress({
+          streetAddress: "216 Greenfield Road, Lancaster, PA (former R.R. Donnelley plant)",
+          locality: "Lancaster",
+          adminArea: "PA",
+          countryName: "United States",
+        }),
+      ).toBe("216 Greenfield Road, Lancaster, PA (former R.R. Donnelley plant), United States");
+    });
+
+    it("works with no admin area", () => {
+      expect(composeAddress({ streetAddress: "1 Superloop Circle", locality: "McCarran", adminArea: null, countryName: "United States" })).toBe(
+        "1 Superloop Circle, McCarran, United States",
+      );
+    });
+  });
+
+  describe("what it must not drop or collapse", () => {
+    it("keeps a country that only appears inside a proper noun", () => {
+      // "Southern Taiwan Science Park" names Taiwan without being addressed to
+      // it. Reading that as the country would delete the country from the line.
+      expect(
+        composeAddress({
+          streetAddress: "8, Beiyuan Rd. 2, Southern Taiwan Science Park",
+          locality: "Tainan",
+          adminArea: "Tainan",
+          countryName: "Taiwan",
+        }),
+      ).toBe("8, Beiyuan Rd. 2, Southern Taiwan Science Park, Tainan, Taiwan");
+    });
+
+    it("does not let a short admin code match a longer word", () => {
+      // "PA" must not be found inside "Paul".
+      expect(composeAddress({ streetAddress: "100 Paul Street", locality: "Lancaster", adminArea: "PA", countryName: "United States" })).toBe(
+        "100 Paul Street, Lancaster, PA, United States",
+      );
+    });
+
+    it("says a city once where the city and its division share a name", () => {
+      expect(
+        composeAddress({ streetAddress: "8, Beiyuan Rd. 2", locality: "Tainan", adminArea: "Tainan", countryName: "Taiwan" }),
+      ).toBe("8, Beiyuan Rd. 2, Tainan, Taiwan");
+    });
+
+    it("keeps a repeat the source itself wrote", () => {
+      // Bogotá is both the city and the department; the source publishes both,
+      // and rewriting a source's own address is not this function's business.
+      expect(
+        composeAddress({
+          streetAddress: "Carrera 19 16-98, Bogotá, Bogotá, Colombia",
+          locality: "Bogotá",
+          adminArea: "Bogotá",
+          countryName: "Colombia",
+        }),
+      ).toBe("Carrera 19 16-98, Bogotá, Bogotá, Colombia");
+    });
+
+    it("keeps a genuinely distinct city and state that resemble each other", () => {
+      expect(
+        composeAddress({ streetAddress: "350 5th Ave", locality: "New York", adminArea: "NY", countryName: "United States" }),
+      ).toBe("350 5th Ave, New York, NY, United States");
+    });
+  });
+});
+
+describe("streetAddressStates", () => {
+  it("matches whole words, ignoring case, accents and punctuation", () => {
+    expect(streetAddressStates("76295 Colón, Qro., Mexico", "colon")).toBe(true);
+    expect(streetAddressStates("London E1 6QR", "London")).toBe(true);
+    expect(streetAddressStates("Hwaseong-si, Gyeonggi-do 18448", "Hwaseong")).toBe(true);
+  });
+
+  it("does not match a fragment of a longer word", () => {
+    expect(streetAddressStates("100 Paul Street", "PA")).toBe(false);
+    expect(streetAddressStates("Springfield Road", "Spring")).toBe(false);
+  });
+
+  it("is false for an empty or absent component", () => {
+    expect(streetAddressStates("anywhere", null)).toBe(false);
+    expect(streetAddressStates("anywhere", "   ")).toBe(false);
   });
 });

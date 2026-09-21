@@ -10,15 +10,15 @@ Generated 21 September 2026 from the frozen manual-verification input. The sourc
 | Physical facilities | 166 |
 | Successfully geolocated and canonical-write eligible | 135 |
 | Unresolved / excluded | 31 |
-| Exact-address / rooftop or named-feature results | 71 |
-| Interpolated / street-level results | 64 |
+| Exact-address / rooftop or named-feature results | 65 |
+| Interpolated / street-level results | 70 |
 | Lower-precision results | 7 |
 | Shared-address groups | 10 |
 | Duplicate-coordinate groups | 21 |
 | Suspicious duplicate-coordinate groups | 0 |
 | Hard errors | 0 |
 
-Canonical dataset digest after projection: 9f9d8ff2d07c1c0031a16b33bb7b87aec8ac7c76dd45f8a4dedff9d83a88c2e8.
+Canonical dataset digest after projection: 622b6b42f6fe4e762012adc47f1899f8ee16c6cda811d4409e767861ba9f8af8.
 
 MEX01 is included as `digital-realty-mex01` with the superseding verified address `Camino a Nativitas 800, Colon, Querétaro, Mexico`.
 

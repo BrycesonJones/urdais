@@ -97,18 +97,136 @@ export function emptyFacilityReadModel(reason: FacilityUnavailableReason): Facil
   };
 }
 
-/** Assembles the one-line address from whichever parts a source published. */
+/**
+ * Comparable form of an address component: lower case, unaccented, punctuation
+ * dropped, whitespace collapsed, split into words.
+ *
+ * Accents and punctuation are removed because the same place is written both
+ * ways by different sources — a facility page says "Colon" where the locality
+ * field says "Colón", and "Qro." is "Qro". Comparing on words rather than on
+ * raw substrings is what keeps "PA" from matching the "Pa" inside "Paul".
+ */
+function addressWords(value: string): string[] {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(" ")
+    .filter((word) => word !== "");
+}
+
+/** Whether `words` contains `needle` as a contiguous run of whole words. */
+function containsRun(words: readonly string[], needle: readonly string[]): boolean {
+  if (needle.length === 0 || needle.length > words.length) return false;
+  for (let start = 0; start + needle.length <= words.length; start += 1) {
+    let hit = true;
+    for (let offset = 0; offset < needle.length; offset += 1) {
+      if (words[start + offset] !== needle[offset]) {
+        hit = false;
+        break;
+      }
+    }
+    if (hit) return true;
+  }
+  return false;
+}
+
+/**
+ * Whether a street address already states this component.
+ *
+ * Checked per comma-separated component rather than across the whole string, so
+ * "London" is found inside "London E1 6QR" — the postcode is attached to the
+ * city in British addresses — without a component boundary hiding it.
+ */
+export function streetAddressStates(streetAddress: string, component: string | null): boolean {
+  const needle = addressWords(component ?? "");
+  if (needle.length === 0) return false;
+  return streetAddress.split(",").some((part) => containsRun(addressWords(part), needle));
+}
+
+/**
+ * Whether a street address *ends* with this component — the test for whether it
+ * is a complete postal address.
+ *
+ * Deliberately stricter than `streetAddressStates`, because a country name can
+ * appear inside a proper noun partway through an address: "8, Beiyuan Rd. 2,
+ * Southern Taiwan Science Park" mentions Taiwan without being addressed to
+ * Taiwan, and treating it as complete would drop the country from the rendered
+ * line. An administrative tail sits at the end or it is not a tail.
+ */
+function streetAddressEndsWith(streetAddress: string, component: string | null): boolean {
+  const needle = addressWords(component ?? "");
+  if (needle.length === 0) return false;
+  const parts = streetAddress.split(",");
+  const last = addressWords(parts[parts.length - 1] ?? "");
+  if (last.length < needle.length) return false;
+  return needle.every((word, index) => last[last.length - needle.length + index] === word);
+}
+
+/**
+ * Assembles the one-line address from whichever parts a source published,
+ * without saying the same thing twice.
+ *
+ * The duplication this exists to prevent was on 145 of 271 public facilities:
+ * many sources publish `streetAddress` as a *complete* postal address, and
+ * appending the locality, admin area and country to that produced
+ * "Camino a Nativitas 800, Colon, Querétaro, Mexico, Colón, Querétaro, Mexico"
+ * on the public map.
+ *
+ * The rule, in two parts:
+ *
+ *   1. A street address that already names the country — and the locality, or
+ *      has no locality to name — is a complete address, and is returned as the
+ *      source wrote it. Appending to it can only repeat it.
+ *   2. Otherwise each remaining component is appended only if the street does
+ *      not already state it, so a partial street still gains its city, state
+ *      and country.
+ *
+ * Nothing is removed from what a source wrote: the street address is never
+ * rewritten, only left un-suffixed. Canonical rows are untouched; this is a
+ * presentation rule applied when the public read model is assembled.
+ */
 export function composeAddress(parts: {
   streetAddress: string | null;
   locality: string | null;
   adminArea: string | null;
   countryName: string | null;
 }): string | null {
-  const line = [parts.streetAddress, parts.locality, parts.adminArea, parts.countryName]
-    .map((part) => part?.trim() ?? "")
-    .filter((part) => part !== "")
-    .join(", ");
-  return line === "" ? null : line;
+  const street = parts.streetAddress?.trim() ?? "";
+  const tail = [parts.locality, parts.adminArea, parts.countryName].map((part) => part?.trim() ?? "");
+
+  if (street === "") {
+    const line = tail.filter((part) => part !== "").join(", ");
+    return line === "" ? null : line;
+  }
+
+  const locality = tail[0] ?? "";
+  const countryName = tail[2] ?? "";
+  const statesCountry = countryName !== "" && streetAddressEndsWith(street, countryName);
+  const statesLocality = locality === "" || streetAddressStates(street, locality);
+  // A complete postal address. Returning it verbatim is both the correct
+  // rendering and the one that cannot reorder what the source wrote.
+  if (statesCountry && statesLocality) return street;
+
+  // Appended in order, skipping anything the street already states and anything
+  // an earlier addition already said: a city and its administrative division
+  // frequently share a name (Tainan in Tainan, Bogotá in Bogotá), and printing
+  // it twice is noise rather than information.
+  const additions: string[] = [];
+  tail.forEach((part, index) => {
+    if (part === "") return;
+    // The country is matched only at the tail, for the same reason rule 1 is:
+    // "Southern Taiwan Science Park" names Taiwan without being addressed to it,
+    // and treating that as stated would drop the country from the line.
+    const isCountry = index === 2;
+    const alreadyInStreet = isCountry ? streetAddressEndsWith(street, part) : streetAddressStates(street, part);
+    if (alreadyInStreet) return;
+    if (additions.some((added) => streetAddressStates(added, part) && streetAddressStates(part, added))) return;
+    additions.push(part);
+  });
+  return [street, ...additions].join(", ");
 }
 
 /** Internal field names that must never appear on a public facility. */

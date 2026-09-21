@@ -267,6 +267,57 @@ export function applyDigitalRealtyReviewDecisions(
   });
 }
 
+/**
+ * Demotes `building` precision where several facilities resolved to one point.
+ *
+ * Digital Realty publishes separately named halls at a single street address —
+ * "11 Hanbury Street, Block B / Block C / Block D", "Louis-Häfliger-Gasse 10,
+ * Building 1 / Building 2" — and the geocoder is queried with the street, not
+ * the block. One point comes back for the property and is then carried by every
+ * block, which OpenStreetMap makes plain: the London query returns a feature
+ * named "Digital Realty London LON3" and the Vienna one returns
+ * "Digital Realty VIE1 & VIE2".
+ *
+ * The shared coordinate is correct and stays. What is wrong is the precision:
+ * `building` claims each block was located, when what was located is the
+ * address they share. So the claim is lowered to `street`, which is what the
+ * geocode actually establishes.
+ *
+ * Deliberately not done: moving the points apart. Co-located facilities are a
+ * normal and truthful shape for this dataset, and nudging dots to separate them
+ * visually would invent positions nobody surveyed.
+ */
+export function demoteSharedBuildingPrecision(
+  results: readonly DigitalRealtyGeocodeResult[],
+): { results: DigitalRealtyGeocodeResult[]; demoted: string[] } {
+  const atPoint = new Map<string, DigitalRealtyGeocodeResult[]>();
+  for (const result of results) {
+    if (result.latitude === null || result.longitude === null) continue;
+    const key = `${result.latitude},${result.longitude}`;
+    atPoint.set(key, [...(atPoint.get(key) ?? []), result]);
+  }
+  const shared = new Set<string>();
+  for (const [, group] of atPoint) {
+    if (group.length < 2) continue;
+    for (const result of group) if (result.coordinatePrecision === "building") shared.add(result.researchKey);
+  }
+
+  const demoted: string[] = [];
+  const next = results.map((result) => {
+    if (!shared.has(result.researchKey)) return result;
+    demoted.push(result.researchKey);
+    return {
+      ...result,
+      coordinatePrecision: "street" as const,
+      precisionClass: "interpolated_or_street" as const,
+      outcomeReason:
+        `${result.outcomeReason} Precision lowered to street: this coordinate is shared with another facility at the same published address, ` +
+        `so it locates the property rather than this named building.`,
+    };
+  });
+  return { results: next, demoted: demoted.sort() };
+}
+
 export function canonicalDigitalRealtyFacility(item: DigitalRealtyQueueItem, result: DigitalRealtyGeocodeResult): ContractFacility {
   if (result.outcome !== "geocoded_ready" || result.latitude === null || result.longitude === null) throw new Error(`${item.researchKey} is not ready for canonical projection`);
   return {

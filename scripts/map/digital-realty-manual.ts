@@ -16,6 +16,7 @@ import {
   DIGITAL_REALTY_EXPECTED_FACILITIES,
   DIGITAL_REALTY_EXPECTED_MARKETS,
   applyDigitalRealtyReviewDecisions,
+  demoteSharedBuildingPrecision,
   enrichDigitalRealtyResult,
   materializeDigitalRealtyQueue,
   normalizedAddress,
@@ -243,10 +244,15 @@ async function main(): Promise<void> {
     reviewedAt: "2026-09-21T00:00:00.000Z",
     decisions: [],
   });
-  const results = applyDigitalRealtyReviewDecisions(queue.map((item) => chooseResult(item, cache)), decisions);
+  const reviewed = applyDigitalRealtyReviewDecisions(queue.map((item) => chooseResult(item, cache)), decisions);
+  // A point shared by two facilities locates the address they share, not either
+  // building. Applied after the review decisions so a reviewer's explicit
+  // precision is still subject to what the coordinate can actually support.
+  const demotion = demoteSharedBuildingPrecision(reviewed);
+  const results = demotion.results;
   const qa = qaReport(queue, results);
   writeJson(PATHS.results, { resultVersion: "urdais.map.digital-realty-geocode-results/1", generatedAt: "2026-09-21", provider: "Nominatim", results });
-  writeJson(PATHS.qa, { qaVersion: "urdais.map.digital-realty-geocode-qa/1", ...qa });
+  writeJson(PATHS.qa, { qaVersion: "urdais.map.digital-realty-geocode-qa/1", ...qa, sharedPointPrecisionDemotions: demotion.demoted });
 
   let projectedDigest: string | null = null;
   let canonicalBefore: number | null = null;
