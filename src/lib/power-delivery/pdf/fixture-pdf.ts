@@ -177,6 +177,19 @@ export function showText(resource: string, text: string): string {
   return `BT /${resource} 12 Tf 72 720 Td (${escaped}) Tj ET`;
 }
 
+/**
+ * A content stream that draws one line per text-positioning move, which is how a real report
+ * produces the line breaks a reader sees. A newline inside a single string literal would be a
+ * character the font has no glyph for; these are moves, not characters.
+ */
+export function showLines(resource: string, lines: readonly string[]): string {
+  const drawn = lines.map((line) => {
+    const escaped = line.replace(/([\\()])/g, "\\$1");
+    return `0 -14 Td (${escaped}) Tj`;
+  }).join("\n");
+  return `BT /${resource} 12 Tf 72 720 Td\n${drawn}\nET`;
+}
+
 /** A content stream that shows two-byte codes, as a composite font requires. */
 export function showCodes(resource: string, codes: readonly number[]): string {
   return `BT /${resource} 12 Tf 72 720 Td <${codes.map(hex4).join("")}> Tj ET`;

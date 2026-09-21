@@ -31,7 +31,7 @@ begin
      and (sup.attribution_required is not true or sup.attribution_text is null);
   if n <> 0 then raise exception '% PD-4D public determination(s) carry no attribution', n; end if;
 
-  -- Every capacity source has a currentness monitor.
+  -- Every capacity source has a currentness monitor, blocked ones included.
   select count(*) into n from reference.source_interfaces s
    where s.source_class = 'power_system_capacity_assessment'
      and not exists (select 1 from reference.planning_source_monitors m where m.source_interface_id = s.id);

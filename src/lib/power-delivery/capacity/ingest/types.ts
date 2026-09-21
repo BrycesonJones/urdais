@@ -17,7 +17,9 @@ import type {
   CapacitySeason, CapacityUnit, GridConstraintKind, GridInterfaceKind, GridSubareaKind,
 } from "@/lib/power-delivery/capacity/types";
 
-export const CAPACITY_SOURCE_KEYS = ["ercot", "caiso", "iso-ne", "pjm-parameters", "pjm-bra", "nyiso"] as const;
+export const CAPACITY_SOURCE_KEYS = [
+  "ercot", "caiso", "iso-ne", "pjm-parameters", "pjm-bra", "nyiso", "miso-lole", "miso-limits", "spp",
+] as const;
 export type CapacitySourceKey = (typeof CAPACITY_SOURCE_KEYS)[number];
 
 export type CapacityExtractionMethod =

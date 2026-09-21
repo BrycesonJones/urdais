@@ -9,25 +9,28 @@ declare n integer;
 begin
   select count(*) into n from reference.source_interfaces
    where source_class = 'power_system_capacity_assessment';
-  if n <> 6 then raise exception 'expected six capacity interfaces, found %', n; end if;
+  if n <> 9 then raise exception 'expected nine capacity interfaces, found %', n; end if;
 
   select count(*) into n from reference.source_use_permissions u
     join reference.source_interfaces s on s.id = u.source_interface_id
    where s.source_class = 'power_system_capacity_assessment' and u.effective_to is null;
-  if n <> 30 then raise exception 'expected thirty capacity determinations, found %', n; end if;
+  if n <> 45 then raise exception 'expected forty-five capacity determinations, found %', n; end if;
 
-  -- Every capacity interface can be collected from, and every one of them has a grant in force.
+  -- Every capacity interface approved for production collection has a grant in force. The
+  -- blocked ones deliberately have neither, and are counted separately below.
   select count(*) into n from reference.source_interfaces s
    where s.source_class = 'power_system_capacity_assessment'
-     and s.production_access_state not in ('production_approved', 'production_approved_under_accepted_risk');
-  if n <> 0 then raise exception '% capacity interface(s) are not approved for collection', n; end if;
+     and s.production_access_state not in
+         ('production_approved', 'production_approved_under_accepted_risk', 'production_blocked');
+  if n <> 0 then raise exception '% capacity interface(s) are in no recognised access state', n; end if;
 
   select count(*) into n from reference.source_interfaces s
    where s.source_class = 'power_system_capacity_assessment'
+     and s.production_access_state <> 'production_blocked'
      and not exists (select 1 from reference.permission_grants g
                       where g.source_interface_id = s.id and g.effective_from <= now()
                         and (g.effective_to is null or g.effective_to > now()));
-  if n <> 0 then raise exception '% capacity interface(s) have no grant in force', n; end if;
+  if n <> 0 then raise exception '% collectable capacity interface(s) have no grant in force', n; end if;
 
   -- The accepted-risk state is Urdais policy and never a rights conclusion: a source approved
   -- under it still has an open terms review.
