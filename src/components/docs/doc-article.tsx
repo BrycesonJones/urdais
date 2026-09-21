@@ -3,7 +3,7 @@ import type { ComponentPropsWithoutRef } from "react";
 import Markdown, { type Components } from "react-markdown";
 
 import { docHref, docPages, type DocPage } from "@/lib/docs/catalog";
-import { getHeadings } from "@/lib/docs/markdown";
+import { getHeadings, remarkTables } from "@/lib/docs/markdown";
 
 type HeadingProps = ComponentPropsWithoutRef<"h2"> & {
   node?: { tagName: string; position?: { start: { line: number } } };
@@ -39,6 +39,11 @@ export function DocArticle({ page }: { page: DocPage & { markdown: string } }) {
     a: ({ href, children }) => href?.startsWith("/") && !href.startsWith("//")
       ? <Link href={href}>{children}</Link>
       : <a href={href}>{children}</a>,
+    // A coverage matrix is wider than a phone. Scroll the table rather than the page,
+    // and keep the table element itself intact so it stays a table to a screen reader.
+    table: ({ children, ...props }) => (
+      <div className="docs-table-scroll"><table {...props}>{children}</table></div>
+    ),
   };
   const index = docPages.findIndex((item) => item.slug === page.slug);
   const previous = docPages[index - 1];
@@ -66,7 +71,7 @@ export function DocArticle({ page }: { page: DocPage & { markdown: string } }) {
           </details>
         )}
         <article className="docs-prose">
-          <Markdown skipHtml components={components}>{page.markdown}</Markdown>
+          <Markdown skipHtml remarkPlugins={[remarkTables]} components={components}>{page.markdown}</Markdown>
         </article>
         <nav className="docs-pagination" aria-label="Documentation pages">
           {previous && (
