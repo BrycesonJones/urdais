@@ -69,13 +69,16 @@ begin
   -- only thing its approval enables is an importer run somebody has to start.
   -- Note that this file is about a *bootstrapped* database holding no production data, and
   -- the pipeline assertions below are what establish that; an approved methodology on its own
-  -- seeds no observation and no value.
+  -- seeds no observation and no value. Deliverable Capacity 1.0.0 is approved from PD-4F and
+  -- its superseded draft is non-draft too; both seed nothing, and the assertion that
+  -- pipeline.deliverable_capacity_results is empty on a bootstrapped database still holds.
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id
    where mv.status <> 'draft'
-     and m.slug not in ('ubwi', 'ucpi-listed-gpu', 'utvi', 'model-frontier', 'open-weight-proprietary', 'map-facilities');
+     and m.slug not in ('ubwi', 'ucpi-listed-gpu', 'utvi', 'model-frontier', 'open-weight-proprietary',
+                        'map-facilities', 'deliverable-capacity');
   if n <> 0 then
-    raise exception 'a non-draft methodology version exists outside UBWI, UCPI-LISTED-GPU, UTVI, Model Frontier, Open-weight vs Proprietary and Map Facilities';
+    raise exception 'a non-draft methodology version exists outside UBWI, UCPI-LISTED-GPU, UTVI, Model Frontier, Open-weight vs Proprietary, Map Facilities and Deliverable Capacity';
   end if;
 
   -- And a bootstrapped database holds no facility, published or otherwise.
