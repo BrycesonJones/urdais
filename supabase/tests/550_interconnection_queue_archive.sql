@@ -13,8 +13,13 @@ begin
   select count(*) into n from reference.interconnection_load_end_uses where code = 'data_center_ai';
   if n <> 1 then raise exception 'the AI data centre end use is missing'; end if;
 
-  select count(*) into n from reference.source_interfaces where source_class = 'interconnection_queue';
-  if n <> 5 then raise exception 'expected five queue interfaces, found %', n; end if;
+  -- The five registered by IQ-3. Later phases add more, so this names them rather than counting
+  -- every queue interface in the registry.
+  select count(*) into n from reference.source_interfaces
+   where source_class = 'interconnection_queue'
+     and slug in ('pjm-planning-queues', 'miso-generator-interconnection-queue',
+                  'caiso-public-queue-report', 'ercot-gis-report', 'nyiso-interconnection-queue');
+  if n <> 5 then raise exception 'expected the five IQ-3 queue interfaces, found %', n; end if;
 
   -- ERCOT is the one queue source with an affirmative grant; the other four stay ambiguous.
   select count(*) into n from reference.source_use_permissions sup

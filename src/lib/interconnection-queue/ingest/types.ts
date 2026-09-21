@@ -12,11 +12,11 @@ import type {
   DeferralKind, LifecycleStage, QuantityKind, QuantityUnit, RequestClass, Technology,
 } from "@/lib/interconnection-queue/types";
 
-export const QUEUE_SOURCE_KEYS = ["pjm", "miso", "caiso", "ercot", "nyiso"] as const;
+export const QUEUE_SOURCE_KEYS = ["pjm", "miso", "caiso", "ercot", "nyiso", "iso-ne", "spp"] as const;
 export type QueueSourceKey = (typeof QUEUE_SOURCE_KEYS)[number];
 
 export type QueueLocator = {
-  extractionMethod: "xml_element" | "json_object" | "workbook_row";
+  extractionMethod: "xml_element" | "json_object" | "workbook_row" | "html_row" | "csv_row";
   /** PJM: the element path. CAISO: the sheet name. MISO: the array name. */
   container?: string;
   /** Ordinal within the container, 1-based and in document order. */
@@ -24,6 +24,8 @@ export type QueueLocator = {
   workbookSheet?: string;
   workbookRow?: number;
   jsonPath?: string;
+  htmlSelector?: string;
+  csvRowNumber?: number;
   elementPath?: string;
   field?: string;
 };
@@ -74,6 +76,14 @@ export type NormalizedQueueRecord = {
   nativeTransmissionOwner: string | null;
   /** CAISO's sheet membership, which is itself lifecycle evidence. */
   sourcePartition: string | null;
+  /**
+   * What kind of request this is, where the publisher distinguishes. Omitted by a source that
+   * publishes one queue of ordinary interconnection requests; the store defaults those to
+   * `not_distinguished` rather than asserting a kind the publisher never stated.
+   */
+  requestSubtype?: string | null;
+  /** The publisher's own words for the request kind. */
+  nativeRequestType?: string | null;
   /** The publisher's own end-use code for a load request, verbatim. */
   nativeEndUse?: string | null;
   /** Normalized only from an explicit source code, never from a project name. */
@@ -143,7 +153,8 @@ export interface QueueAdapter {
   marketSlug: string;
   sourceInterfaceSlug: string;
   retrievalPurpose: "production" | "research";
-  artifacts: { label: string; url: string }[];
+  /** `headers` covers a publisher whose server will not serve the file without one. */
+  artifacts: { label: string; url: string; headers?: Record<string, string> }[];
   /**
    * An archive source implements this to enumerate what the publisher actually holds, rather
    * than declaring a fixed URL. Each returned artifact becomes its own snapshot, so ERCOT's 99

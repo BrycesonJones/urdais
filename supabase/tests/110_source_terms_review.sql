@@ -244,7 +244,7 @@ begin
   -- PD-3B added SPP and MISO, whose planning terms forbid commercial publication outright.
   -- PD-4E added their capacity sources on the same footing: two MISO releases and one SPP
   -- release, blocked for the same reasons and with no permission grant of any kind.
-  if n <> 22 then raise exception 'expected 22 blocked interfaces (settled prohibitions only), found %', n; end if;
+  if n <> 23 then raise exception 'expected 23 blocked interfaces (settled prohibitions only), found %', n; end if;
   select count(*) into n from reference.source_interfaces
    where terms_review_state = 'under_review' or data_use_terms_state = 'under_review';
   if n < 3 then raise exception 'expected at least 3 interfaces with an unresolved axis, found %', n; end if;

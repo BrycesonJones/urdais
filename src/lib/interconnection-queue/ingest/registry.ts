@@ -2,6 +2,8 @@
 
 import { caisoQueueAdapter } from "@/lib/interconnection-queue/ingest/adapters/caiso";
 import { ercotQueueAdapter } from "@/lib/interconnection-queue/ingest/adapters/ercot";
+import { isoneQueueAdapter } from "@/lib/interconnection-queue/ingest/adapters/isone";
+import { sppQueueAdapter } from "@/lib/interconnection-queue/ingest/adapters/spp";
 import { nyisoQueueAdapter } from "@/lib/interconnection-queue/ingest/adapters/nyiso";
 import { misoQueueAdapter } from "@/lib/interconnection-queue/ingest/adapters/miso";
 import { pjmQueueAdapter } from "@/lib/interconnection-queue/ingest/adapters/pjm";
@@ -14,6 +16,8 @@ const ADAPTERS: Record<QueueSourceKey, QueueAdapter> = {
   caiso: caisoQueueAdapter,
   ercot: ercotQueueAdapter,
   nyiso: nyisoQueueAdapter,
+  "iso-ne": isoneQueueAdapter,
+  spp: sppQueueAdapter,
 };
 
 export const INGESTIBLE_QUEUE_SOURCES: readonly QueueSourceKey[] = QUEUE_SOURCE_KEYS;
