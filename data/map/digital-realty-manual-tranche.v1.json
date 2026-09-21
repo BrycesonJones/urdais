@@ -1,0 +1,234 @@
+{
+  "trancheVersion": "urdais.map.digital-realty-manual-tranche/1",
+  "datasetName": "Digital Realty manual-verification tranche",
+  "generatedAt": "2026-09-21",
+  "operator": "Digital Realty",
+  "sourceWorkbook": "urdais_map_phase4b_ready_and_manual_v2 (1).xlsx",
+  "provenance": "Addresses and facility codes manually verified by Bryceson against the Digital Realty market pages during the 2026-09-21 verification pass. This artifact supersedes the workbook's unresolved parent-market queue for the listed markets.",
+  "markets": [
+    {"parentLocationId":"digital-realty-vienna","market":"Vienna","countryName":"Austria","countryCode":"AT","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/vienna","facilities":[
+      {"facilityCode":"VIE1","researchKey":"digital-realty-vie1","address":"Louis-Häfliger-Gasse 10, Building 1, Vienna 1210, Austria","locality":"Vienna","adminArea":"Vienna"},
+      {"facilityCode":"VIE2","researchKey":"digital-realty-vie2","address":"Louis-Häfliger-Gasse 10, Building 2, Vienna 1210, Austria","locality":"Vienna","adminArea":"Vienna"},
+      {"facilityCode":"VIE13","researchKey":"digital-realty-vie13","address":"Siemensstrasse 91, Building 1, Vienna, Austria","locality":"Vienna","adminArea":"Vienna"}
+    ]},
+    {"parentLocationId":"digital-realty-brussels","market":"Brussels","countryName":"Belgium","countryCode":"BE","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/brussels","facilities":[
+      {"facilityCode":"BRU1","researchKey":"digital-realty-bru1","address":"Wezembeekstraat 2/bus 1, 1930 Zaventem, Belgium","locality":"Zaventem","adminArea":"Flemish Brabant"},
+      {"facilityCode":"BRU3","researchKey":"digital-realty-bru3","address":"Mercuriusstraat 27, 1930 Zaventem, Belgium","locality":"Zaventem","adminArea":"Flemish Brabant"},
+      {"facilityCode":"BRU4","researchKey":"digital-realty-bru4","address":"Mercuriusstraat 27, 1930 Zaventem, Belgium","locality":"Zaventem","adminArea":"Flemish Brabant"}
+    ]},
+    {"parentLocationId":"digital-realty-rio","market":"Rio de Janeiro","countryName":"Brazil","countryCode":"BR","sourceUrl":"https://www.digitalrealty.com/data-centers/americas/rio-de-janeiro","facilities":[
+      {"facilityCode":"RIO01","researchKey":"digital-realty-rio01","address":"Avenida Coronel Phidias Tavora, 513, Building #1, Rio de Janeiro, 21535-510, Brazil","locality":"Rio de Janeiro","adminArea":"Rio de Janeiro"},
+      {"facilityCode":"RIO02","researchKey":"digital-realty-rio02","address":"Avenida Beirute, 863 – Medeiros, Jundiaí – SP, 13212-215, Brazil","locality":"Jundiaí","adminArea":"São Paulo"}
+    ]},
+    {"parentLocationId":"digital-realty-sao-paulo","market":"São Paulo","countryName":"Brazil","countryCode":"BR","sourceUrl":"https://www.digitalrealty.com/data-centers/americas/sao-paulo","facilities":[
+      {"facilityCode":"CPS01","researchKey":"digital-realty-cps01","address":"Avenida Pierre Simon de Laplace, 1211, Campinas, SP 13069-320, Brazil","locality":"Campinas","adminArea":"São Paulo"},
+      {"facilityCode":"HTL01","researchKey":"digital-realty-htl01","address":"Rua Papa João Paulo II, 4, Building #1, Hortolândia, SP 13185-252, Brazil","locality":"Hortolândia","adminArea":"São Paulo"},
+      {"facilityCode":"HTL02","researchKey":"digital-realty-htl02","address":"Rua Papa João Paulo II, 4, Building #2, Hortolândia, SP 13185-252, Brazil","locality":"Hortolândia","adminArea":"São Paulo"},
+      {"facilityCode":"HTL03","researchKey":"digital-realty-htl03","address":"Rua Papa João Paulo II, 4, Building #3, Hortolândia, SP 13185-252, Brazil","locality":"Hortolândia","adminArea":"São Paulo"},
+      {"facilityCode":"HTL04","researchKey":"digital-realty-htl04","address":"Rua Papa João Paulo II, 4, Building #4, Hortolândia, SP 13185-252, Brazil","locality":"Hortolândia","adminArea":"São Paulo"},
+      {"facilityCode":"HTL05","researchKey":"digital-realty-htl05","address":"Rua Papa João Paulo II, 5, Building #5, Hortolândia, SP 13185-252, Brazil","locality":"Hortolândia","adminArea":"São Paulo"},
+      {"facilityCode":"HTL06","researchKey":"digital-realty-htl06","address":"Rua Papa João Paulo II, 4, Hortolândia, SP 13185-252, Brazil","locality":"Hortolândia","adminArea":"São Paulo"},
+      {"facilityCode":"JDI01","researchKey":"digital-realty-jdi01","address":"Rua Presbítero Plínio Alves de Souza, 757, Building #1, Jundiaí, SP 13212-181, Brazil","locality":"Jundiaí","adminArea":"São Paulo"},
+      {"facilityCode":"JDI02","researchKey":"digital-realty-jdi02","address":"Rua Presbítero Plínio Alves de Souza, 757, Building #2, Jundiaí, SP 13212-181, Brazil","locality":"Jundiaí","adminArea":"São Paulo"},
+      {"facilityCode":"PLN01","researchKey":"digital-realty-pln01","address":"Rua Sebastião Cardoso, 350, Paulínia, São Paulo, CEP 13141-005, Brazil","locality":"Paulínia","adminArea":"São Paulo"},
+      {"facilityCode":"SP01","researchKey":"digital-realty-sp01","address":"Avenida Roberto Pinto Sobrinho, 350, Building #1, Osasco, SP 06268-120, Brazil","locality":"Osasco","adminArea":"São Paulo"},
+      {"facilityCode":"SP02","researchKey":"digital-realty-sp02","address":"Avenida Roberto Pinto Sobrinho, 350, Building #2, Osasco, SP 06268-120, Brazil","locality":"Osasco","adminArea":"São Paulo"},
+      {"facilityCode":"SP03","researchKey":"digital-realty-sp03","address":"Avenida Roberto Pinto Sobrinho, 350, Building #3, Osasco, SP 06268-120, Brazil","locality":"Osasco","adminArea":"São Paulo"},
+      {"facilityCode":"SP04","researchKey":"digital-realty-sp04","address":"R. Bento de Souza Borges, 21, Industrial Anhangüera, Osasco, SP 06276-016, Brazil","locality":"Osasco","adminArea":"São Paulo"},
+      {"facilityCode":"SP05","researchKey":"digital-realty-sp05","address":"Roberto Pinto Sobrinho, 350, Building 4, Osasco, São Paulo, SP 06268-120, Brazil","locality":"Osasco","adminArea":"São Paulo"},
+      {"facilityCode":"SP06","researchKey":"digital-realty-sp06","address":"Roberto Pinto Sobrinho, 350, Building 4, Osasco, São Paulo, SP 06268-120, Brazil","locality":"Osasco","adminArea":"São Paulo"},
+      {"facilityCode":"SUM01","researchKey":"digital-realty-sum01","address":"Rodovia Anhanguera, s/n, Building #1, Sumaré, SP 13177-435, Brazil","locality":"Sumaré","adminArea":"São Paulo"},
+      {"facilityCode":"SUM02","researchKey":"digital-realty-sum02","address":"Rodovia Anhanguera, s/n, Building #2, Sumaré, SP 13177-435, Brazil","locality":"Sumaré","adminArea":"São Paulo"},
+      {"facilityCode":"SUM03","researchKey":"digital-realty-sum03","address":"Rodovia Anhanguera, s/n, Building #3, Sumaré, SP 13177-435, Brazil","locality":"Sumaré","adminArea":"São Paulo"},
+      {"facilityCode":"SUM04","researchKey":"digital-realty-sum04","address":"Rodovia Anhanguera, s/n, Building #4, Sumaré, SP 13177-435, Brazil","locality":"Sumaré","adminArea":"São Paulo"},
+      {"facilityCode":"SUM05","researchKey":"digital-realty-sum05","address":"Rodovia Anhanguera, s/n, Building 5, Sumaré, SP 13177-435, Brazil","locality":"Sumaré","adminArea":"São Paulo"},
+      {"facilityCode":"VIN01","researchKey":"digital-realty-vin01","address":"Av. 2, 50, Quadra G1, Distrito Industrial Benedito Storani, Vinhedo, SP 13288-162, Brazil","locality":"Vinhedo","adminArea":"São Paulo"},
+      {"facilityCode":"VIN02","researchKey":"digital-realty-vin02","address":"Av. 2, 50, Quadra G1, Distrito Industrial Benedito Storani, Vinhedo, SP 13288-162, Brazil","locality":"Vinhedo","adminArea":"São Paulo"}
+    ]},
+    {"parentLocationId":"digital-realty-toronto","market":"Toronto","countryName":"Canada","countryCode":"CA","sourceUrl":"https://www.digitalrealty.com/data-centers/americas/toronto","facilities":[
+      {"facilityCode":"TOR1","researchKey":"digital-realty-tor1","address":"11 Century Place, Vaughan, ON L4L 8R2, Canada","locality":"Vaughan","adminArea":"Ontario"},
+      {"facilityCode":"YYZ10","researchKey":"digital-realty-yyz10","address":"371 Gough Road, Markham, ON L3R 4B6, Canada","locality":"Markham","adminArea":"Ontario"},
+      {"facilityCode":"YYZ12","researchKey":"digital-realty-yyz12","address":"151 Front St, Toronto, ON M5J 2N1, Canada","locality":"Toronto","adminArea":"Ontario"}
+    ]},
+    {"parentLocationId":"digital-realty-santiago","market":"Santiago","countryName":"Chile","countryCode":"CL","sourceUrl":"https://www.digitalrealty.com/data-centers/americas/santiago","facilities":[
+      {"facilityCode":"CHL01","researchKey":"digital-realty-chl01","address":"Guacolda 2100, Quilicura, Renca, Región Metropolitana, Building 1, Chile","locality":"Renca","adminArea":"Región Metropolitana"},
+      {"facilityCode":"CHL02","researchKey":"digital-realty-chl02","address":"Guacolda 2100, Quilicura, Renca, Región Metropolitana, Building 2, Chile","locality":"Renca","adminArea":"Región Metropolitana"},
+      {"facilityCode":"CHL03","researchKey":"digital-realty-chl03","address":"Guacolda 2100, Quilicura, Renca, Región Metropolitana, Building 2, Chile","locality":"Renca","adminArea":"Región Metropolitana"}
+    ]},
+    {"parentLocationId":"digital-realty-bogota","market":"Bogotá","countryName":"Colombia","countryCode":"CO","sourceUrl":"https://www.digitalrealty.com/data-centers/americas/bogota","facilities":[
+      {"facilityCode":"BOG1","researchKey":"digital-realty-bog1","address":"Carrera 19 16-98, Bogotá, Bogotá, Colombia","locality":"Bogotá","adminArea":"Bogotá"},
+      {"facilityCode":"BOG2","researchKey":"digital-realty-bog2","address":"Carrera 19 16-98, Bogotá, Bogotá, Colombia","locality":"Bogotá","adminArea":"Bogotá"}
+    ]},
+    {"parentLocationId":"digital-realty-copenhagen","market":"Copenhagen","countryName":"Denmark","countryCode":"DK","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/copenhagen","facilities":[
+      {"facilityCode":"CPH-RS","researchKey":"digital-realty-cph-rs","address":"Carl Jacobsensvej 20, Valby, DK-2750, Denmark","locality":"Valby","adminArea":"Capital Region"},
+      {"facilityCode":"CPH1","researchKey":"digital-realty-cph1","address":"Industriparken 20A, Ballerup, DK-2750, Denmark","locality":"Ballerup","adminArea":"Capital Region"},
+      {"facilityCode":"CPH2","researchKey":"digital-realty-cph2","address":"Industriparken 20A, Ballerup, DK-2750, Denmark","locality":"Ballerup","adminArea":"Capital Region"},
+      {"facilityCode":"CPH3","researchKey":"digital-realty-cph3","address":"Industriparken 24, DK-2750 Ballerup, Denmark","locality":"Ballerup","adminArea":"Capital Region"}
+    ]},
+    {"parentLocationId":"digital-realty-marseille","market":"Marseille","countryName":"France","countryCode":"FR","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/marseille","facilities":[
+      {"facilityCode":"MRS1","researchKey":"digital-realty-mrs1","address":"40 Avenue Roger Salengro, Marseille 13003, France","locality":"Marseille","adminArea":"Provence-Alpes-Côte d’Azur"},
+      {"facilityCode":"MRS2","researchKey":"digital-realty-mrs2","address":"Enceinte Portuaire, Porte 4, 13015, France","locality":"Marseille","adminArea":"Provence-Alpes-Côte d’Azur"},
+      {"facilityCode":"MRS3","researchKey":"digital-realty-mrs3","address":"Enceinte Portuaire, Porte 4, 13015, France","locality":"Marseille","adminArea":"Provence-Alpes-Côte d’Azur"},
+      {"facilityCode":"MRS4","researchKey":"digital-realty-mrs4","address":"Enceinte Portuaire, Porte 4, 13015, France","locality":"Marseille","adminArea":"Provence-Alpes-Côte d’Azur"},
+      {"facilityCode":"MRS5","researchKey":"digital-realty-mrs5","address":"Enceinte Portuaire, Porte 4, 13015, France","locality":"Marseille","adminArea":"Provence-Alpes-Côte d’Azur"}
+    ]},
+    {"parentLocationId":"digital-realty-paris","market":"Paris","countryName":"France","countryCode":"FR","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/paris","facilities":[
+      {"facilityCode":"PAR1","researchKey":"digital-realty-par1","address":"45 avenue Victor Hugo, 93300 Aubervilliers, Bâtiment 260, France","locality":"Aubervilliers","adminArea":"Île-de-France"},
+      {"facilityCode":"PAR2","researchKey":"digital-realty-par2","address":"20-22 rue des Gardinoux, 93300 Aubervilliers, Bâtiment E501, France","locality":"Aubervilliers","adminArea":"Île-de-France"},
+      {"facilityCode":"PAR3","researchKey":"digital-realty-par3","address":"7-9 avenue des Arts et Métiers, Saint-Denis 93200, France","locality":"Saint-Denis","adminArea":"Île-de-France"},
+      {"facilityCode":"PAR4","researchKey":"digital-realty-par4","address":"21 Rue du Port, Parc de L’ile-Allee Bleue, Nanterre 92000, France","locality":"Nanterre","adminArea":"Île-de-France"},
+      {"facilityCode":"PAR5","researchKey":"digital-realty-par5","address":"11-13 Avenue des Arts et Metiers, Saint-Denis 93200, France","locality":"Saint-Denis","adminArea":"Île-de-France"},
+      {"facilityCode":"PAR6","researchKey":"digital-realty-par6","address":"11-15 Rue Galliee, Ivry-sur-Seine 94200, France","locality":"Ivry-sur-Seine","adminArea":"Île-de-France"},
+      {"facilityCode":"PAR7","researchKey":"digital-realty-par7","address":"1-3 rue Rateau, 93120 La Courneuve, France","locality":"La Courneuve","adminArea":"Île-de-France"},
+      {"facilityCode":"PAR8","researchKey":"digital-realty-par8","address":"2 Avenue Marcel Cachin, 93120 La Courneuve, France","locality":"La Courneuve","adminArea":"Île-de-France"},
+      {"facilityCode":"PAR9","researchKey":"digital-realty-par9","address":"3 Avenue Marcel Cachin, 93120 La Courneuve, France","locality":"La Courneuve","adminArea":"Île-de-France"},
+      {"facilityCode":"PAR10","researchKey":"digital-realty-par10","address":"2 avenue Marcel Cachin, 93120 La Courneuve, France","locality":"La Courneuve","adminArea":"Île-de-France"},
+      {"facilityCode":"PAR11","researchKey":"digital-realty-par11","address":"2 Avenue Marcel Cachin, 93120 La Courneuve, France","locality":"La Courneuve","adminArea":"Île-de-France"},
+      {"facilityCode":"PAR12","researchKey":"digital-realty-par12","address":"16 Avenue Joseph Froelicher, 77164 Ferrières-en-Brie, France","locality":"Ferrières-en-Brie","adminArea":"Île-de-France"},
+      {"facilityCode":"PAR13","researchKey":"digital-realty-par13","address":"14 rue de l'Orme à Moineaux, 91940 Les Ulis, France","locality":"Les Ulis","adminArea":"Île-de-France"}
+    ]},
+    {"parentLocationId":"digital-realty-dusseldorf","market":"Düsseldorf","countryName":"Germany","countryCode":"DE","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/dusseldorf","facilities":[
+      {"facilityCode":"DUS1","researchKey":"digital-realty-dus1","address":"In der Steele 25-45, 40599 Düsseldorf, Germany","locality":"Düsseldorf","adminArea":"North Rhine-Westphalia"},
+      {"facilityCode":"DUS2","researchKey":"digital-realty-dus2","address":"In der Steele 39-45, 40599 Düsseldorf, Germany","locality":"Düsseldorf","adminArea":"North Rhine-Westphalia"},
+      {"facilityCode":"DUS3","researchKey":"digital-realty-dus3","address":"In der Steele 27-43, 40599 Düsseldorf, Germany","locality":"Düsseldorf","adminArea":"North Rhine-Westphalia"}
+    ]},
+    {"parentLocationId":"digital-realty-frankfurt","market":"Frankfurt","countryName":"Germany","countryCode":"DE","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/frankfurt","facilities":[
+      {"facilityCode":"FRA1","researchKey":"digital-realty-fra1","address":"Hanauer Landstrasse 302, 60314 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA2","researchKey":"digital-realty-fra2","address":"Hanauer Landstrasse 304-306, 60314 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA4","researchKey":"digital-realty-fra4","address":"Weismüllerstraße 19, 60314 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA5","researchKey":"digital-realty-fra5","address":"Hanauer Landstraße 308-310, 60314 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA6","researchKey":"digital-realty-fra6","address":"Hanauer Landstrasse 300-300a, 60314 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA7","researchKey":"digital-realty-fra7","address":"Hanauer Landstraße 296a, 60314 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA8","researchKey":"digital-realty-fra8","address":"Weismüllerstrasse 36, 60314 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA9","researchKey":"digital-realty-fra9","address":"Weismüllerstrasse 25-27, 60314 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA10","researchKey":"digital-realty-fra10","address":"Weismüllerstrasse 38, 60314 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA11","researchKey":"digital-realty-fra11","address":"Weismüllerstrasse 40, 60314 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA12","researchKey":"digital-realty-fra12","address":"Weismüllerstrasse 29-31, 60314 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA13","researchKey":"digital-realty-fra13","address":"Weismüllerstrasse 42, 60314 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA14","researchKey":"digital-realty-fra14","address":"Weismüllerstrasse 34, 60314 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA15","researchKey":"digital-realty-fra15","address":"Weismüllerstrasse 1, 60314 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA16","researchKey":"digital-realty-fra16","address":"Weismüllerstraße 37-39, 60314 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA17","researchKey":"digital-realty-fra17","address":"Hugo-Junkers-Straße 7a, 60386 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA18","researchKey":"digital-realty-fra18","address":"Hanauer Landstrasse 360, Building 2, 60386 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA20","researchKey":"digital-realty-fra20","address":"Hugo-Junkers-Strasse 5a, 60386 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA27","researchKey":"digital-realty-fra27","address":"Hugo-Junkers-Strasse 5-7, 60386 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA29","researchKey":"digital-realty-fra29","address":"Wilhelm-Fay-Strasse 15, 65936 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA30","researchKey":"digital-realty-fra30","address":"Wilhelm-Fay-Straße 24, 65936 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA31","researchKey":"digital-realty-fra31","address":"Wilhelm-Fay-Straße 24a, 65936 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA32","researchKey":"digital-realty-fra32","address":"Wilhelm-Fay-Straße 24b, 65936 Frankfurt am Main, Germany","locality":"Frankfurt am Main","adminArea":"Hesse"},
+      {"facilityCode":"FRA33","researchKey":"digital-realty-fra33","address":"Mainzer Landstrasse 500, 65795 Hattersheim am Main, Germany","locality":"Hattersheim am Main","adminArea":"Hesse"}
+    ]},
+    {"parentLocationId":"digital-realty-athens","market":"Athens","countryName":"Greece","countryCode":"GR","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/athens","facilities":[
+      {"facilityCode":"ATH1","researchKey":"digital-realty-ath1","address":"Ifestou 76, Koropi, Attica, Athens, Greece","locality":"Koropi","adminArea":"Attica"},
+      {"facilityCode":"ATH2","researchKey":"digital-realty-ath2","address":"Ifestou 76, Koropi, Attica, Athens, Greece — Second Entrance","locality":"Koropi","adminArea":"Attica"},
+      {"facilityCode":"ATH3","researchKey":"digital-realty-ath3","address":"Ifestou 74, Koropi, Attica, Athens, Greece","locality":"Koropi","adminArea":"Attica"}
+    ]},
+    {"parentLocationId":"digital-realty-hong-kong","market":"Hong Kong","countryName":"Hong Kong","countryCode":"HK","sourceUrl":"https://www.digitalrealty.com/data-centers/asia-pacific/hong-kong","facilities":[
+      {"facilityCode":"HKG10","researchKey":"digital-realty-hkg10","address":"33 Chun Choi Street, Tseung Kwan O, Sai Kung, Hong Kong","locality":"Tseung Kwan O","adminArea":"Sai Kung"},
+      {"facilityCode":"HKG11","researchKey":"digital-realty-hkg11","address":"11 Kin Chuen, Kwai Chung, Hong Kong","locality":"Kwai Chung","adminArea":"New Territories"}
+    ]},
+    {"parentLocationId":"digital-realty-jakarta","market":"Jakarta","countryName":"Indonesia","countryCode":"ID","sourceUrl":"https://www.digitalrealty.com/data-centers/asia-pacific/jakarta","facilities":[
+      {"facilityCode":"CGK10","researchKey":"digital-realty-cgk10","address":"Daan Mogot Rd, Kalideres, West Jakarta, Indonesia","locality":"West Jakarta","adminArea":"Jakarta"},
+      {"facilityCode":"CGK11","researchKey":"digital-realty-cgk11","address":"MT Haryono St, Jatinegara, East Jakarta, Indonesia","locality":"East Jakarta","adminArea":"Jakarta"}
+    ]},
+    {"parentLocationId":"digital-realty-dublin","market":"Dublin","countryName":"Ireland","countryCode":"IE","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/dublin","facilities":[
+      {"facilityCode":"DUB1","researchKey":"digital-realty-dub1","address":"Unit 35, Lavery Avenue, Parkwest, Dublin 12, Ireland","locality":"Dublin","adminArea":"County Dublin"},
+      {"facilityCode":"DUB2","researchKey":"digital-realty-dub2","address":"Unit 24, Hume Avenue, Parkwest, Dublin 12, Ireland","locality":"Dublin","adminArea":"County Dublin"},
+      {"facilityCode":"DUB3","researchKey":"digital-realty-dub3","address":"Grange Castle Business Park, Nangor Road, Dublin 22, Ireland","locality":"Dublin","adminArea":"County Dublin"},
+      {"facilityCode":"DUB4","researchKey":"digital-realty-dub4","address":"Grange Castle Business Park, Nangor Road, Dublin 22, Ireland","locality":"Dublin","adminArea":"County Dublin"},
+      {"facilityCode":"DUB10","researchKey":"digital-realty-dub10","address":"Blanchardstown Corporate Park, Unit 9, Dublin 15, Ireland","locality":"Dublin","adminArea":"County Dublin"},
+      {"facilityCode":"DUB11","researchKey":"digital-realty-dub11","address":"Clonshaugh Industrial Estate, Dublin, Ireland","locality":"Dublin","adminArea":"County Dublin"},
+      {"facilityCode":"DUB12","researchKey":"digital-realty-dub12","address":"Clonshaugh Industrial Estate, Dublin 17, Ireland","locality":"Dublin","adminArea":"County Dublin"},
+      {"facilityCode":"DUB13","researchKey":"digital-realty-dub13","address":"Profile Park 1, Kilcarbery, Dublin, Ireland","locality":"Dublin","adminArea":"County Dublin"},
+      {"facilityCode":"DUB14","researchKey":"digital-realty-dub14","address":"Profile Park 2, Kilcarbery, Dublin 22, Ireland","locality":"Dublin","adminArea":"County Dublin"}
+    ]},
+    {"parentLocationId":"digital-realty-osaka","market":"Osaka","countryName":"Japan","countryCode":"JP","sourceUrl":"https://www.digitalrealty.com/data-centers/asia-pacific/osaka","facilities":[
+      {"facilityCode":"KIX10","researchKey":"digital-realty-kix10","address":"5-8-1, Saito Yamabuki, Ibaraki-shi, Osaka, Japan","locality":"Ibaraki","adminArea":"Osaka"},
+      {"facilityCode":"KIX11","researchKey":"digital-realty-kix11","address":"6-1, Saito Aokita, Mino-shi, Osaka, Japan","locality":"Minoh","adminArea":"Osaka"},
+      {"facilityCode":"KIX12","researchKey":"digital-realty-kix12","address":"6-2-1, Saito Aokita, Mino-shi, Osaka, Japan","locality":"Minoh","adminArea":"Osaka"},
+      {"facilityCode":"KIX13","researchKey":"digital-realty-kix13","address":"5-2-1, Saito Aokita, Mino-shi, Osaka, Japan","locality":"Minoh","adminArea":"Osaka"}
+    ]},
+    {"parentLocationId":"digital-realty-tokyo","market":"Tokyo","countryName":"Japan","countryCode":"JP","sourceUrl":"https://www.digitalrealty.com/data-centers/asia-pacific/tokyo","facilities":[
+      {"facilityCode":"HND10","researchKey":"digital-realty-hnd10","address":"8-7-2, Shimorenjaku, Mitaka-city, Tokyo, Japan","locality":"Mitaka","adminArea":"Tokyo"},
+      {"facilityCode":"NRT10","researchKey":"digital-realty-nrt10","address":"2-9-3, Otsuka, Inzai-city, Chiba, Japan","locality":"Inzai","adminArea":"Chiba"},
+      {"facilityCode":"NRT12","researchKey":"digital-realty-nrt12","address":"2-4-1, Otsuka, Inzai-city, Chiba, Japan","locality":"Inzai","adminArea":"Chiba"},
+      {"facilityCode":"NRT14","researchKey":"digital-realty-nrt14","address":"2-4-3, Otsuka, Inzai-city, Chiba, Japan","locality":"Inzai","adminArea":"Chiba"}
+    ]},
+    {"parentLocationId":"digital-realty-mombasa","market":"Mombasa","countryName":"Kenya","countryCode":"KE","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/mombasa","facilities":[
+      {"facilityCode":"MBA1","researchKey":"digital-realty-mba1","address":"Mombassa Road, Mombasa, Kenya","locality":"Mombasa","adminArea":"Mombasa County"},
+      {"facilityCode":"MBA2","researchKey":"digital-realty-mba2","address":"Kongoni Road, off Beach Rd, Mombasa, Kenya","locality":"Mombasa","adminArea":"Mombasa County"}
+    ]},
+    {"parentLocationId":"digital-realty-nairobi","market":"Nairobi","countryName":"Kenya","countryCode":"KE","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/nairobi","facilities":[
+      {"facilityCode":"NBO1","researchKey":"digital-realty-nbo1","address":"Langata S Rd & LRC Rd, Nairobi, Kenya","locality":"Nairobi","adminArea":"Nairobi County"},
+      {"facilityCode":"NBO2","researchKey":"digital-realty-nbo2","address":"Langata S Rd / LRC Rd, Nairobi, Kenya","locality":"Nairobi","adminArea":"Nairobi County"}
+    ]},
+    {"parentLocationId":"digital-realty-queretaro","market":"Querétaro","countryName":"Mexico","countryCode":"MX","sourceUrl":"https://www.digitalrealty.com/data-centers/americas/queretaro","facilities":[
+      {"facilityCode":"MEX01","researchKey":"digital-realty-mex01","address":"Camino a Nativitas 800, Colon, Querétaro, Mexico","locality":"Colón","adminArea":"Querétaro"},
+      {"facilityCode":"MEX02","researchKey":"digital-realty-mex02","address":"Carretera Estatal 100, Colón, Querétaro, 76270, Mexico","locality":"Colón","adminArea":"Querétaro"},
+      {"facilityCode":"MEX03","researchKey":"digital-realty-mex03","address":"Parcela 10 Z-1 P1/1 del Ejido San Vicente, 76295 Colón, Qro., Mexico","locality":"Colón","adminArea":"Querétaro"}
+    ]},
+    {"parentLocationId":"digital-realty-amsterdam","market":"Amsterdam","countryName":"Netherlands","countryCode":"NL","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/amsterdam","facilities":[
+      {"facilityCode":"AMS3","researchKey":"digital-realty-ams3","address":"Cessnalaan 1-33, Schiphol-Rijk 1119 NJ, The Netherlands","locality":"Schiphol-Rijk","adminArea":"North Holland"},
+      {"facilityCode":"AMS5","researchKey":"digital-realty-ams5","address":"Tupolevlaan 101, Schiphol-Rijk 1119 PA, The Netherlands","locality":"Schiphol-Rijk","adminArea":"North Holland"},
+      {"facilityCode":"AMS6","researchKey":"digital-realty-ams6","address":"Koolhovenlaan 25, Schiphol-Rijk 1119 NB, Netherlands","locality":"Schiphol-Rijk","adminArea":"North Holland"},
+      {"facilityCode":"AMS7","researchKey":"digital-realty-ams7","address":"Cessnalaan 50, Schiphol-Rijk 1119 NL, The Netherlands","locality":"Schiphol-Rijk","adminArea":"North Holland"},
+      {"facilityCode":"AMS8","researchKey":"digital-realty-ams8","address":"Pudongweg 37, Rozenburg 1437 EM, The Netherlands","locality":"Rozenburg","adminArea":"North Holland"},
+      {"facilityCode":"AMS9","researchKey":"digital-realty-ams9","address":"Science Park 121, Amsterdam 1098 XG, The Netherlands","locality":"Amsterdam","adminArea":"North Holland"},
+      {"facilityCode":"AMS10","researchKey":"digital-realty-ams10","address":"Pudongweg 25, Rozenburg 1437 EM, The Netherlands","locality":"Rozenburg","adminArea":"North Holland"},
+      {"facilityCode":"AMS11","researchKey":"digital-realty-ams11","address":"Koolhovenlaan 35-45, 1119 NB Schiphol-Rijk, The Netherlands","locality":"Schiphol-Rijk","adminArea":"North Holland"},
+      {"facilityCode":"AMS15","researchKey":"digital-realty-ams15","address":"Jan Wijsmullerdreef 10, Hoofddorp 2132 PW, The Netherlands","locality":"Hoofddorp","adminArea":"North Holland"},
+      {"facilityCode":"AMS16","researchKey":"digital-realty-ams16","address":"Jan Wijsmullerdreef 4, Hoofddorp 2132 PW, The Netherlands","locality":"Hoofddorp","adminArea":"North Holland"},
+      {"facilityCode":"AMS17","researchKey":"digital-realty-ams17","address":"Science Park 120, Amsterdam 1098 XG, The Netherlands","locality":"Amsterdam","adminArea":"North Holland"},
+      {"facilityCode":"AMS18","researchKey":"digital-realty-ams18","address":"H.J.E. Wenckebachweg 127, Amsterdam 1096 AM, The Netherlands","locality":"Amsterdam","adminArea":"North Holland"}
+    ]},
+    {"parentLocationId":"digital-realty-lagos","market":"Lagos","countryName":"Nigeria","countryCode":"NG","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/lagos","facilities":[
+      {"facilityCode":"LKK1","researchKey":"digital-realty-lkk1","address":"Mopo Onibeju Village, Ogbombo Road, Building 1, Lagos, Nigeria","locality":"Lagos","adminArea":"Lagos State"},
+      {"facilityCode":"LKK2","researchKey":"digital-realty-lkk2","address":"Mopo Onibeju Village, Ogbombo Road, Building 2, Lagos, Nigeria","locality":"Lagos","adminArea":"Lagos State"},
+      {"facilityCode":"LOS1","researchKey":"digital-realty-los1","address":"8A Saka Tinubu Street, Victoria Island, Lagos, Nigeria","locality":"Lagos","adminArea":"Lagos State"},
+      {"facilityCode":"LOS2","researchKey":"digital-realty-los2","address":"8B Saka Tinubu Street, Victoria Island, Lagos, Nigeria","locality":"Lagos","adminArea":"Lagos State"}
+    ]},
+    {"parentLocationId":"digital-realty-singapore","market":"Singapore","countryName":"Singapore","countryCode":"SG","sourceUrl":"https://www.digitalrealty.com/data-centers/asia-pacific/singapore","facilities":[
+      {"facilityCode":"SIN10","researchKey":"digital-realty-sin10","address":"29A International Business Park, Jurong East, Singapore 609934","locality":"Singapore","adminArea":"Singapore"},
+      {"facilityCode":"SIN11","researchKey":"digital-realty-sin11","address":"Digital Loyang 1, 3 Loyang Way, Singapore 508719","locality":"Singapore","adminArea":"Singapore"},
+      {"facilityCode":"SIN12","researchKey":"digital-realty-sin12","address":"Digital Loyang 2, 11 Loyang Close, Singapore 506756","locality":"Singapore","adminArea":"Singapore"}
+    ]},
+    {"parentLocationId":"digital-realty-madrid","market":"Madrid","countryName":"Spain","countryCode":"ES","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/madrid","facilities":[
+      {"facilityCode":"MAD1","researchKey":"digital-realty-mad1","address":"Calle Albasanz 71, Madrid, 28037, Spain","locality":"Madrid","adminArea":"Community of Madrid"},
+      {"facilityCode":"MAD2","researchKey":"digital-realty-mad2","address":"Calle Albasanz 73, Madrid, 28037, Spain","locality":"Madrid","adminArea":"Community of Madrid"},
+      {"facilityCode":"MAD3","researchKey":"digital-realty-mad3","address":"Calle Emilio Muñoz 49, Madrid, 28037, Spain","locality":"Madrid","adminArea":"Community of Madrid"},
+      {"facilityCode":"MAD4","researchKey":"digital-realty-mad4","address":"Calle de Alfonso Gómez 4, Madrid, 28037, Spain","locality":"Madrid","adminArea":"Community of Madrid"}
+    ]},
+    {"parentLocationId":"digital-realty-stockholm","market":"Stockholm","countryName":"Sweden","countryCode":"SE","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/stockholm","facilities":[
+      {"facilityCode":"STO1","researchKey":"digital-realty-sto1","address":"Esbogatan 11, Kista, 16474, Sweden","locality":"Kista","adminArea":"Stockholm County"},
+      {"facilityCode":"STO2","researchKey":"digital-realty-sto2","address":"Esbogatan 11, Building 1, Kista, 16474, Sweden","locality":"Kista","adminArea":"Stockholm County"},
+      {"facilityCode":"STO3","researchKey":"digital-realty-sto3","address":"Esbogatan 11, Building 2, Kista, 16474, Sweden","locality":"Kista","adminArea":"Stockholm County"},
+      {"facilityCode":"STO4","researchKey":"digital-realty-sto4","address":"Esbogatan 11, Building 3, Kista, 16474, Sweden","locality":"Kista","adminArea":"Stockholm County"},
+      {"facilityCode":"STO5","researchKey":"digital-realty-sto5","address":"Esbogatan 11, Building 4, Kista, 16474, Sweden","locality":"Kista","adminArea":"Stockholm County"},
+      {"facilityCode":"STO6","researchKey":"digital-realty-sto6","address":"Vandagatan 3, 16474 Akalla Kista, Sweden","locality":"Kista","adminArea":"Stockholm County"}
+    ]},
+    {"parentLocationId":"digital-realty-zurich","market":"Zürich","countryName":"Switzerland","countryCode":"CH","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/zurich","facilities":[
+      {"facilityCode":"ZUR1","researchKey":"digital-realty-zur1","address":"Sägereistrasse 35, Building 1, Glattbrugg, CH-8152, Switzerland","locality":"Glattbrugg","adminArea":"Zürich"},
+      {"facilityCode":"ZUR2","researchKey":"digital-realty-zur2","address":"Bäulerwisenstrasse 4, 8152 Glattbrugg, Switzerland","locality":"Glattbrugg","adminArea":"Zürich"},
+      {"facilityCode":"ZUR3","researchKey":"digital-realty-zur3","address":"Bäulerwisenstrasse 6, Building 2, CH-8152 Glattbrugg, Switzerland","locality":"Glattbrugg","adminArea":"Zürich"}
+    ]},
+    {"parentLocationId":"digital-realty-london","market":"London","countryName":"United Kingdom","countryCode":"GB","sourceUrl":"https://www.digitalrealty.com/data-centers/emea/london","facilities":[
+      {"facilityCode":"LGW14","researchKey":"digital-realty-lgw14","address":"Unit 21 Goldsworth Park Trading Estate, Woking, GU21 3BA, United Kingdom","locality":"Woking","adminArea":"England"},
+      {"facilityCode":"LGW15","researchKey":"digital-realty-lgw15","address":"Crawley Unit 1, Unit 1, Power Avenue, Manor Royal, Crawley RH10 9BE, United Kingdom","locality":"Crawley","adminArea":"England"},
+      {"facilityCode":"LGW16","researchKey":"digital-realty-lgw16","address":"Crawley Unit 2, Unit 2, Connect Way, Manor Royal, Crawley RH10 9BD, United Kingdom","locality":"Crawley","adminArea":"England"},
+      {"facilityCode":"LHR13","researchKey":"digital-realty-lhr13","address":"Fountain Court, Cox Lane, Chessington, KT9 1SJ, United Kingdom","locality":"Chessington","adminArea":"England"},
+      {"facilityCode":"LHR17","researchKey":"digital-realty-lhr17","address":"1 Airport Gate, Bath Road, West Drayton, Middlesex UB7 0NA, United Kingdom","locality":"West Drayton","adminArea":"England"},
+      {"facilityCode":"LHR18","researchKey":"digital-realty-lhr18","address":"Oliver’s Yard, London, EC1Y 1HQ, United Kingdom","locality":"London","adminArea":"England"},
+      {"facilityCode":"LHR19","researchKey":"digital-realty-lhr19","address":"Cloud House, London, E14 9SZ, United Kingdom","locality":"London","adminArea":"England"},
+      {"facilityCode":"LHR20","researchKey":"digital-realty-lhr20","address":"227 Marsh Wall, London E14 9SD, United Kingdom","locality":"London","adminArea":"England"},
+      {"facilityCode":"LHR26","researchKey":"digital-realty-lhr26","address":"630 Slough, London, SL1 4DG, United Kingdom","locality":"Slough","adminArea":"England"},
+      {"facilityCode":"LHR27","researchKey":"digital-realty-lhr27","address":"631 Ajax Ave, London, SL1 4DG, United Kingdom","locality":"Slough","adminArea":"England"},
+      {"facilityCode":"LON1","researchKey":"digital-realty-lon1","address":"11 Hanbury Street, Block B, London E1 6QR, United Kingdom","locality":"London","adminArea":"England"},
+      {"facilityCode":"LON2","researchKey":"digital-realty-lon2","address":"11 Hanbury Street, Block C, London E1 6QR, United Kingdom","locality":"London","adminArea":"England"},
+      {"facilityCode":"LON3","researchKey":"digital-realty-lon3","address":"11 Hanbury Street, Block D, London E1 6QR, United Kingdom","locality":"London","adminArea":"England"}
+    ]},
+    {"parentLocationId":"digital-realty-hillsboro","market":"Hillsboro","countryName":"United States","countryCode":"US","sourceUrl":"https://www.digitalrealty.com/data-centers/americas/portland","facilities":[
+      {"facilityCode":"PDX10","researchKey":"digital-realty-pdx10","address":"3825 NW Aloclek Street, Hillsboro, OR 97124, United States","locality":"Hillsboro","adminArea":"Oregon"},
+      {"facilityCode":"PDX12","researchKey":"digital-realty-pdx12","address":"5870 NE Schaaf Street, Hillsboro, OR 97124, United States","locality":"Hillsboro","adminArea":"Oregon"}
+    ]}
+  ]
+}
