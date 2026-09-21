@@ -7,7 +7,8 @@ do $$
 declare n integer; cls text;
 begin
   select count(*) into n from reference.source_interfaces
-   where production_access_state = 'production_approved_under_accepted_risk';
+   where production_access_state = 'production_approved_under_accepted_risk'
+     and source_class = 'power_system_planning_forecast';
   if n <> 4 then raise exception 'expected four accepted-risk planning interfaces, found %', n; end if;
 
   select rights_classification into cls from reference.source_use_permissions sup

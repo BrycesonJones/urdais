@@ -114,6 +114,8 @@ function zip(members: { name: string; body: Buffer }[], corruptions: readonly Zi
 export function buildFixtureWorkbook(
   sheets: FixtureSheet[],
   corruptions: readonly ZipCorruption[] = [],
+  /** Written into docProps/core.xml, for readers that date a release by when the file was saved. */
+  documentModified?: string,
 ): Buffer {
   const sharedStrings: string[] = [];
   const sheetParts = sheets.map((sheet, index) => ({
@@ -131,7 +133,13 @@ export function buildFixtureWorkbook(
   const shared = `<?xml version="1.0"?><sst count="${sharedStrings.length}">${
     sharedStrings.map((value) => `<si><t>${escapeXml(value)}</t></si>`).join("")
   }</sst>`;
+  const core = `<?xml version="1.0"?><cp:coreProperties`
+    + ` xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties"`
+    + ` xmlns:dcterms="http://purl.org/dc/terms/">`
+    + `<dcterms:modified xsi:type="dcterms:W3CDTF">${escapeXml(documentModified ?? "")}</dcterms:modified>`
+    + `</cp:coreProperties>`;
   return zip([
+    ...(documentModified === undefined ? [] : [{ name: "docProps/core.xml", body: Buffer.from(core, "utf8") }]),
     { name: "xl/workbook.xml", body: Buffer.from(workbook, "utf8") },
     { name: "xl/_rels/workbook.xml.rels", body: Buffer.from(rels, "utf8") },
     { name: "xl/sharedStrings.xml", body: Buffer.from(shared, "utf8") },
