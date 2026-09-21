@@ -14,6 +14,9 @@
 import { caisoCapacityAdapter } from "@/lib/power-delivery/capacity/ingest/adapters/caiso";
 import { ercotCapacityAdapter } from "@/lib/power-delivery/capacity/ingest/adapters/ercot";
 import { isoneCapacityAdapter } from "@/lib/power-delivery/capacity/ingest/adapters/isone";
+import { misoLimitsAdapter } from "@/lib/power-delivery/capacity/ingest/adapters/miso-limits";
+import { misoLoleAdapter } from "@/lib/power-delivery/capacity/ingest/adapters/miso-lole";
+import { sppCapacityAdapter } from "@/lib/power-delivery/capacity/ingest/adapters/spp";
 import { nyisoCapacityAdapter } from "@/lib/power-delivery/capacity/ingest/adapters/nyiso";
 import { pjmBraAdapter } from "@/lib/power-delivery/capacity/ingest/adapters/pjm-bra";
 import { pjmParametersAdapter } from "@/lib/power-delivery/capacity/ingest/adapters/pjm-parameters";
@@ -28,7 +31,20 @@ export const CAPACITY_ADAPTERS: Record<string, CapacityAdapter> = {
   "pjm-parameters": pjmParametersAdapter,
   "pjm-bra": pjmBraAdapter,
   nyiso: nyisoCapacityAdapter,
+  // MISO publishes what it requires and what its network permits as two releases, as PJM does.
+  "miso-lole": misoLoleAdapter,
+  "miso-limits": misoLimitsAdapter,
+  spp: sppCapacityAdapter,
 };
+
+/**
+ * Sources whose values may never reach a public surface.
+ *
+ * Kept as a list rather than inferred, so a test can assert it and a reader can see it. The rights
+ * determinations in the database are what actually block publication; this names the same sources
+ * in code so that adding one without the other is visible.
+ */
+export const INTERNAL_ONLY_CAPACITY_SOURCES: readonly string[] = ["miso-lole", "miso-limits", "spp"];
 
 export const INGESTIBLE_CAPACITY_SOURCES = Object.keys(CAPACITY_ADAPTERS);
 
@@ -194,6 +210,66 @@ export const CAPACITY_DEFERRALS: CapacityDeferral[] = [
       + "Converting the requirement percentages this phase does hold into megawatts would need a "
       + "locality peak forecast from that book, so no megawatt figure is derived either.",
     unblockedBy: "A NYISO-published workbook or CSV of the Gold Book capacity and peak load tables.",
+  },
+  {
+    source: "miso-lole",
+    metric: "Committed Seasonal Accredited Capacity, final PRMR and zonal Local Clearing Requirements",
+    quantityKind: "capability",
+    kind: "absent",
+    artifactUrl: "https://cdn.misoenergy.org/2026%20PRA%20Results%20Posting%2020260428754715.pdf",
+    reason:
+      "These are the Planning Resource Auction's figures, not the study's, and MISO's posting of "
+      + "the 2026 results is not publicly retrievable: its content delivery network answers that "
+      + "address with HTTP 403 Access Denied, while the equivalent 2025 posting at the same host "
+      + "serves normally. So no seasonal accredited capacity is held for MISO, and the unforced "
+      + "and installed capacity the study does state are stored under their own bases rather than "
+      + "relabelled as accredited.",
+    unblockedBy: "A retrievable MISO posting of the Planning Resource Auction results.",
+  },
+  {
+    source: "miso-lole",
+    metric: "The Local Clearing Requirement implied by LRR less CIL",
+    quantityKind: "requirement",
+    kind: "methodology",
+    artifactUrl: null,
+    reason:
+      "MISO states the relationship plainly: a zone's Local Clearing Requirement is its Local "
+      + "Reliability Requirement reduced by that zone's seasonal Capacity Import Limit. Both inputs "
+      + "are now held, so the subtraction would be easy and it is still not performed. The two come "
+      + "from different releases with different dates, and PD-4A left MISO's locational arithmetic "
+      + "unapproved pending confirmation of whether imports are already embedded in the local "
+      + "figures. An easy calculation is not an approved one.",
+    unblockedBy: "Confirmation of BPM-011 semantics for LRR, LCR and CIL, and an approved methodology.",
+  },
+  {
+    source: "spp",
+    metric: "Accredited capacity totals and the aggregate Resource Adequacy Requirement",
+    quantityKind: "capability",
+    kind: "format",
+    artifactUrl: "https://spp.org/documents/76932/2026%20spp%20summer%20resource%20adequacy%20report.pdf",
+    reason:
+      "The five-year outlook table, the reserve margin distributions and the fuel-type projections "
+      + "are raster images embedded in the page, carrying no text. Every capacity total and the "
+      + "aggregate requirement live in those pictures. Reading them would need optical recognition, "
+      + "which this pipeline does not do, so SPP contributes a requirement and two diagnostics and "
+      + "no capability at all.",
+    unblockedBy: "An SPP workbook of the resource adequacy outlook, or tables published as text.",
+  },
+  {
+    source: "spp",
+    metric: "Deliverable Capacity by resource and by fuel type",
+    quantityKind: "capability",
+    kind: "absent",
+    artifactUrl: "https://www.spp.org/documents/75526/2026%20deliverability%20study%20summer%20season%20report.pdf",
+    reason:
+      "The Summer Season Deliverability Study states total deliverable capacity and a breakdown by "
+      + "fuel type, and it is stamped \"SPP Internal Only\" on every one of its nineteen pages. A "
+      + "document its publisher marks as not for distribution is not retained, even internally and "
+      + "even though the file answers a public address; the rights policy has no override for a "
+      + "source whose terms were reviewed and refused, and a confidentiality mark on the document "
+      + "itself is a clearer statement than any site terms. The adapter refuses such an artifact "
+      + "rather than relying on anyone remembering this.",
+    unblockedBy: "Written permission from SPP, or an equivalent study published without the marking.",
   },
   {
     source: "ercot",

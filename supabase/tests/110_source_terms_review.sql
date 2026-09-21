@@ -242,7 +242,9 @@ begin
   -- venue both currently eligible UGAI issuers list on, which is why it is worth counting.
   select count(*) into n from reference.source_interfaces where production_access_state = 'production_blocked';
   -- PD-3B added SPP and MISO, whose planning terms forbid commercial publication outright.
-  if n <> 19 then raise exception 'expected 19 blocked interfaces (settled prohibitions only), found %', n; end if;
+  -- PD-4E added their capacity sources on the same footing: two MISO releases and one SPP
+  -- release, blocked for the same reasons and with no permission grant of any kind.
+  if n <> 22 then raise exception 'expected 22 blocked interfaces (settled prohibitions only), found %', n; end if;
   select count(*) into n from reference.source_interfaces
    where terms_review_state = 'under_review' or data_use_terms_state = 'under_review';
   if n < 3 then raise exception 'expected at least 3 interfaces with an unresolved axis, found %', n; end if;
