@@ -25,6 +25,7 @@ export const CAPACITY_COMPONENT_KINDS = [
   "import_capability", "export_capability", "transfer_capability",
   "reserve_requirement", "net_reserve_requirement", "local_reliability_requirement",
   "local_sourcing_requirement", "transmission_security_requirement", "tie_benefit",
+  "capacity_transfer_requirement",
   "demand_response", "storage_capability", "firm_capacity", "other",
 ] as const;
 export type CapacityComponentKind = (typeof CAPACITY_COMPONENT_KINDS)[number];
@@ -43,7 +44,12 @@ export const CAPACITY_PERIOD_BASES = [
 export type CapacityPeriodBasis = (typeof CAPACITY_PERIOD_BASES)[number];
 
 export type CapacitySeason = "winter" | "spring" | "summer" | "fall";
-export type CapacityUnit = "MW" | "GW";
+/**
+ * MW and GW are amounts of power. `percent` is for a requirement its publisher states as a
+ * proportion of forecast peak — a reserve margin, a locational capacity requirement — which is
+ * kept as the rate rather than multiplied by a peak Urdais chose.
+ */
+export type CapacityUnit = "MW" | "GW" | "percent";
 export type CapacityQualityStatus = "accepted" | "provisional" | "suspect";
 
 export const GRID_SUBAREA_KINDS = [

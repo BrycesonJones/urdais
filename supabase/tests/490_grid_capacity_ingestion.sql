@@ -9,12 +9,12 @@ declare n integer;
 begin
   select count(*) into n from reference.source_interfaces
    where source_class = 'power_system_capacity_assessment';
-  if n <> 3 then raise exception 'expected three capacity interfaces, found %', n; end if;
+  if n <> 6 then raise exception 'expected six capacity interfaces, found %', n; end if;
 
   select count(*) into n from reference.source_use_permissions u
     join reference.source_interfaces s on s.id = u.source_interface_id
    where s.source_class = 'power_system_capacity_assessment' and u.effective_to is null;
-  if n <> 15 then raise exception 'expected fifteen capacity determinations, found %', n; end if;
+  if n <> 30 then raise exception 'expected thirty capacity determinations, found %', n; end if;
 
   -- Every capacity interface can be collected from, and every one of them has a grant in force.
   select count(*) into n from reference.source_interfaces s

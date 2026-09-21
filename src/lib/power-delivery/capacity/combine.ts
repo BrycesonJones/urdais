@@ -53,6 +53,16 @@ export function assertCombinable(quantities: readonly CombinableQuantity[], purp
   }
   const [first, ...rest] = quantities as [CombinableQuantity, ...CombinableQuantity[]];
 
+  // A rate is not an addend. Two localities' capacity requirements, each a percentage of its own
+  // peak, do not add up to anything; neither does a reserve margin plus a megawatt.
+  for (const quantity of quantities) {
+    if (quantity.unit === "percent") {
+      throw new CapacityCombinationError(
+        `${purpose}: a value stated as a percent is a rate, not an amount, and is never an addend`,
+      );
+    }
+  }
+
   for (const other of rest) {
     // A capability and a requirement are not addends. Whether they may be differenced is a
     // methodology question; that they may not be summed is not.
@@ -128,6 +138,20 @@ export function assertDifferenceable(
  * at one instant. Capacities are accredited over different periods, on different bases, against
  * different reliability standards, and adding them produces a number describing no system.
  */
+/**
+ * Localities nest. PJM's MAAC contains EMAAC, which contains PS, and each area's published
+ * capability already counts every resource inside the areas below it; PJM states the nesting in
+ * Schedule 10.1 of the Reliability Assurance Agreement rather than in any artifact Urdais
+ * ingests, so nothing here knows which areas overlap. Adding locality figures together therefore
+ * double counts by an amount this code cannot even measure, and the operation is refused outright
+ * instead of guarded by a hierarchy Urdais would have to invent.
+ */
+export function refuseNestedSubareaTotal(marketSlug: string): never {
+  throw new CapacityCombinationError(
+    `there is no total across ${marketSlug} localities: they nest, each one's figure already counts the areas inside it, and the nesting is published in a tariff this pipeline does not ingest`,
+  );
+}
+
 export function refuseSevenMarketCapacityTotal(): never {
   throw new CapacityCombinationError(
     "there is no seven-market deliverable capacity total: the markets accredit capacity on different bases, over different delivery periods, against different reliability standards",
