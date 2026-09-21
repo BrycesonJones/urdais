@@ -1,0 +1,763 @@
+{
+  "qaVersion": "urdais.map.digital-realty-geocode-qa/1",
+  "generatedAt": "2026-09-21",
+  "markets": 29,
+  "physicalFacilities": 166,
+  "successfullyGeolocated": 135,
+  "unresolved": 31,
+  "excludedFromCanonicalWrite": 31,
+  "precision": {
+    "exactOrRooftop": 71,
+    "interpolatedOrStreet": 64,
+    "lowerPrecision": 7,
+    "unresolved": 21
+  },
+  "sharedAddressGroups": [
+    {
+      "normalizedAddress": "carrera 19 16 98 bogota bogota colombia",
+      "researchKeys": [
+        "digital-realty-bog1",
+        "digital-realty-bog2"
+      ],
+      "addresses": [
+        "Carrera 19 16-98, Bogotá, Bogotá, Colombia",
+        "Carrera 19 16-98, Bogotá, Bogotá, Colombia"
+      ]
+    },
+    {
+      "normalizedAddress": "mercuriusstraat 27 1930 zaventem belgium",
+      "researchKeys": [
+        "digital-realty-bru3",
+        "digital-realty-bru4"
+      ],
+      "addresses": [
+        "Mercuriusstraat 27, 1930 Zaventem, Belgium",
+        "Mercuriusstraat 27, 1930 Zaventem, Belgium"
+      ]
+    },
+    {
+      "normalizedAddress": "guacolda 2100 quilicura renca region metropolitana building 2 chile",
+      "researchKeys": [
+        "digital-realty-chl02",
+        "digital-realty-chl03"
+      ],
+      "addresses": [
+        "Guacolda 2100, Quilicura, Renca, Región Metropolitana, Building 2, Chile",
+        "Guacolda 2100, Quilicura, Renca, Región Metropolitana, Building 2, Chile"
+      ]
+    },
+    {
+      "normalizedAddress": "industriparken 20a ballerup dk 2750 denmark",
+      "researchKeys": [
+        "digital-realty-cph1",
+        "digital-realty-cph2"
+      ],
+      "addresses": [
+        "Industriparken 20A, Ballerup, DK-2750, Denmark",
+        "Industriparken 20A, Ballerup, DK-2750, Denmark"
+      ]
+    },
+    {
+      "normalizedAddress": "grange castle business park nangor road dublin 22 ireland",
+      "researchKeys": [
+        "digital-realty-dub3",
+        "digital-realty-dub4"
+      ],
+      "addresses": [
+        "Grange Castle Business Park, Nangor Road, Dublin 22, Ireland",
+        "Grange Castle Business Park, Nangor Road, Dublin 22, Ireland"
+      ]
+    },
+    {
+      "normalizedAddress": "enceinte portuaire porte 4 13015 france",
+      "researchKeys": [
+        "digital-realty-mrs2",
+        "digital-realty-mrs3",
+        "digital-realty-mrs4",
+        "digital-realty-mrs5"
+      ],
+      "addresses": [
+        "Enceinte Portuaire, Porte 4, 13015, France",
+        "Enceinte Portuaire, Porte 4, 13015, France",
+        "Enceinte Portuaire, Porte 4, 13015, France",
+        "Enceinte Portuaire, Porte 4, 13015, France"
+      ]
+    },
+    {
+      "normalizedAddress": "langata s rd lrc rd nairobi kenya",
+      "researchKeys": [
+        "digital-realty-nbo1",
+        "digital-realty-nbo2"
+      ],
+      "addresses": [
+        "Langata S Rd & LRC Rd, Nairobi, Kenya",
+        "Langata S Rd / LRC Rd, Nairobi, Kenya"
+      ]
+    },
+    {
+      "normalizedAddress": "2 avenue marcel cachin 93120 la courneuve france",
+      "researchKeys": [
+        "digital-realty-par10",
+        "digital-realty-par11",
+        "digital-realty-par8"
+      ],
+      "addresses": [
+        "2 avenue Marcel Cachin, 93120 La Courneuve, France",
+        "2 Avenue Marcel Cachin, 93120 La Courneuve, France",
+        "2 Avenue Marcel Cachin, 93120 La Courneuve, France"
+      ]
+    },
+    {
+      "normalizedAddress": "roberto pinto sobrinho 350 building 4 osasco sao paulo sp 06268 120 brazil",
+      "researchKeys": [
+        "digital-realty-sp05",
+        "digital-realty-sp06"
+      ],
+      "addresses": [
+        "Roberto Pinto Sobrinho, 350, Building 4, Osasco, São Paulo, SP 06268-120, Brazil",
+        "Roberto Pinto Sobrinho, 350, Building 4, Osasco, São Paulo, SP 06268-120, Brazil"
+      ]
+    },
+    {
+      "normalizedAddress": "av 2 50 quadra g1 distrito industrial benedito storani vinhedo sp 13288 162 brazil",
+      "researchKeys": [
+        "digital-realty-vin01",
+        "digital-realty-vin02"
+      ],
+      "addresses": [
+        "Av. 2, 50, Quadra G1, Distrito Industrial Benedito Storani, Vinhedo, SP 13288-162, Brazil",
+        "Av. 2, 50, Quadra G1, Distrito Industrial Benedito Storani, Vinhedo, SP 13288-162, Brazil"
+      ]
+    }
+  ],
+  "duplicateCoordinateGroups": [
+    {
+      "coordinates": "4.5408968,-74.1517093",
+      "researchKeys": [
+        "digital-realty-bog1",
+        "digital-realty-bog2"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Carrera 19 16-98, Bogotá, Bogotá, Colombia",
+        "Carrera 19 16-98, Bogotá, Bogotá, Colombia"
+      ]
+    },
+    {
+      "coordinates": "50.8735659,4.5026695",
+      "researchKeys": [
+        "digital-realty-bru3",
+        "digital-realty-bru4"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Mercuriusstraat 27, 1930 Zaventem, Belgium",
+        "Mercuriusstraat 27, 1930 Zaventem, Belgium"
+      ]
+    },
+    {
+      "coordinates": "-33.4097364,-70.6986412",
+      "researchKeys": [
+        "digital-realty-chl01",
+        "digital-realty-chl02",
+        "digital-realty-chl03"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Guacolda 2100, Quilicura, Renca, Región Metropolitana, Building 1, Chile",
+        "Guacolda 2100, Quilicura, Renca, Región Metropolitana, Building 2, Chile",
+        "Guacolda 2100, Quilicura, Renca, Región Metropolitana, Building 2, Chile"
+      ]
+    },
+    {
+      "coordinates": "55.7280810,12.3775200",
+      "researchKeys": [
+        "digital-realty-cph1",
+        "digital-realty-cph2"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Industriparken 20A, Ballerup, DK-2750, Denmark",
+        "Industriparken 20A, Ballerup, DK-2750, Denmark"
+      ]
+    },
+    {
+      "coordinates": "53.4059326,-6.2207786",
+      "researchKeys": [
+        "digital-realty-dub11",
+        "digital-realty-dub12"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Clonshaugh Industrial Estate, Dublin, Ireland",
+        "Clonshaugh Industrial Estate, Dublin 17, Ireland"
+      ]
+    },
+    {
+      "coordinates": "53.3143206,-6.4444743",
+      "researchKeys": [
+        "digital-realty-dub13",
+        "digital-realty-dub14"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Profile Park 1, Kilcarbery, Dublin, Ireland",
+        "Profile Park 2, Kilcarbery, Dublin 22, Ireland"
+      ]
+    },
+    {
+      "coordinates": "53.3252611,-6.3560250",
+      "researchKeys": [
+        "digital-realty-dub3",
+        "digital-realty-dub4"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Grange Castle Business Park, Nangor Road, Dublin 22, Ireland",
+        "Grange Castle Business Park, Nangor Road, Dublin 22, Ireland"
+      ]
+    },
+    {
+      "coordinates": "51.1856980,6.8702725",
+      "researchKeys": [
+        "digital-realty-dus1",
+        "digital-realty-dus3"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "In der Steele 25-45, 40599 Düsseldorf, Germany",
+        "In der Steele 27-43, 40599 Düsseldorf, Germany"
+      ]
+    },
+    {
+      "coordinates": "50.1235889,8.7432054",
+      "researchKeys": [
+        "digital-realty-fra2",
+        "digital-realty-fra6"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Hanauer Landstrasse 304-306, 60314 Frankfurt am Main, Germany",
+        "Hanauer Landstrasse 300-300a, 60314 Frankfurt am Main, Germany"
+      ]
+    },
+    {
+      "coordinates": "50.1254530,8.7546293",
+      "researchKeys": [
+        "digital-realty-fra20",
+        "digital-realty-fra27"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Hugo-Junkers-Strasse 5a, 60386 Frankfurt am Main, Germany",
+        "Hugo-Junkers-Strasse 5-7, 60386 Frankfurt am Main, Germany"
+      ]
+    },
+    {
+      "coordinates": "-22.8952247,-47.1769331",
+      "researchKeys": [
+        "digital-realty-htl01",
+        "digital-realty-htl02",
+        "digital-realty-htl03",
+        "digital-realty-htl04",
+        "digital-realty-htl05",
+        "digital-realty-htl06"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Rua Papa João Paulo II, 4, Building #1, Hortolândia, SP 13185-252, Brazil",
+        "Rua Papa João Paulo II, 4, Building #2, Hortolândia, SP 13185-252, Brazil",
+        "Rua Papa João Paulo II, 4, Building #3, Hortolândia, SP 13185-252, Brazil",
+        "Rua Papa João Paulo II, 4, Building #4, Hortolândia, SP 13185-252, Brazil",
+        "Rua Papa João Paulo II, 5, Building #5, Hortolândia, SP 13185-252, Brazil",
+        "Rua Papa João Paulo II, 4, Hortolândia, SP 13185-252, Brazil"
+      ]
+    },
+    {
+      "coordinates": "-23.1879291,-46.9730533",
+      "researchKeys": [
+        "digital-realty-jdi01",
+        "digital-realty-jdi02"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Rua Presbítero Plínio Alves de Souza, 757, Building #1, Jundiaí, SP 13212-181, Brazil",
+        "Rua Presbítero Plínio Alves de Souza, 757, Building #2, Jundiaí, SP 13212-181, Brazil"
+      ]
+    },
+    {
+      "coordinates": "51.5217361,-0.0730612",
+      "researchKeys": [
+        "digital-realty-lon1",
+        "digital-realty-lon2",
+        "digital-realty-lon3"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "11 Hanbury Street, Block B, London E1 6QR, United Kingdom",
+        "11 Hanbury Street, Block C, London E1 6QR, United Kingdom",
+        "11 Hanbury Street, Block D, London E1 6QR, United Kingdom"
+      ]
+    },
+    {
+      "coordinates": "6.4270355,3.4202447",
+      "researchKeys": [
+        "digital-realty-los1",
+        "digital-realty-los2"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "8A Saka Tinubu Street, Victoria Island, Lagos, Nigeria",
+        "8B Saka Tinubu Street, Victoria Island, Lagos, Nigeria"
+      ]
+    },
+    {
+      "coordinates": "48.9275660,2.3967380",
+      "researchKeys": [
+        "digital-realty-par10",
+        "digital-realty-par11",
+        "digital-realty-par8"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "2 avenue Marcel Cachin, 93120 La Courneuve, France",
+        "2 Avenue Marcel Cachin, 93120 La Courneuve, France",
+        "2 Avenue Marcel Cachin, 93120 La Courneuve, France"
+      ]
+    },
+    {
+      "coordinates": "48.9146012,2.3616553",
+      "researchKeys": [
+        "digital-realty-par3",
+        "digital-realty-par5"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "7-9 avenue des Arts et Métiers, Saint-Denis 93200, France",
+        "11-13 Avenue des Arts et Metiers, Saint-Denis 93200, France"
+      ]
+    },
+    {
+      "coordinates": "-23.4946731,-46.7789307",
+      "researchKeys": [
+        "digital-realty-sp01",
+        "digital-realty-sp02",
+        "digital-realty-sp03",
+        "digital-realty-sp05",
+        "digital-realty-sp06"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Avenida Roberto Pinto Sobrinho, 350, Building #1, Osasco, SP 06268-120, Brazil",
+        "Avenida Roberto Pinto Sobrinho, 350, Building #2, Osasco, SP 06268-120, Brazil",
+        "Avenida Roberto Pinto Sobrinho, 350, Building #3, Osasco, SP 06268-120, Brazil",
+        "Roberto Pinto Sobrinho, 350, Building 4, Osasco, São Paulo, SP 06268-120, Brazil",
+        "Roberto Pinto Sobrinho, 350, Building 4, Osasco, São Paulo, SP 06268-120, Brazil"
+      ]
+    },
+    {
+      "coordinates": "59.4136883,17.9402184",
+      "researchKeys": [
+        "digital-realty-sto1",
+        "digital-realty-sto2",
+        "digital-realty-sto3",
+        "digital-realty-sto4",
+        "digital-realty-sto5"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Esbogatan 11, Kista, 16474, Sweden",
+        "Esbogatan 11, Building 1, Kista, 16474, Sweden",
+        "Esbogatan 11, Building 2, Kista, 16474, Sweden",
+        "Esbogatan 11, Building 3, Kista, 16474, Sweden",
+        "Esbogatan 11, Building 4, Kista, 16474, Sweden"
+      ]
+    },
+    {
+      "coordinates": "-22.8147828,-47.2072645",
+      "researchKeys": [
+        "digital-realty-sum01",
+        "digital-realty-sum02",
+        "digital-realty-sum03",
+        "digital-realty-sum04",
+        "digital-realty-sum05"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Rodovia Anhanguera, s/n, Building #1, Sumaré, SP 13177-435, Brazil",
+        "Rodovia Anhanguera, s/n, Building #2, Sumaré, SP 13177-435, Brazil",
+        "Rodovia Anhanguera, s/n, Building #3, Sumaré, SP 13177-435, Brazil",
+        "Rodovia Anhanguera, s/n, Building #4, Sumaré, SP 13177-435, Brazil",
+        "Rodovia Anhanguera, s/n, Building 5, Sumaré, SP 13177-435, Brazil"
+      ]
+    },
+    {
+      "coordinates": "48.2689496,16.4103665",
+      "researchKeys": [
+        "digital-realty-vie1",
+        "digital-realty-vie2"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Louis-Häfliger-Gasse 10, Building 1, Vienna 1210, Austria",
+        "Louis-Häfliger-Gasse 10, Building 2, Vienna 1210, Austria"
+      ]
+    },
+    {
+      "coordinates": "-23.0614869,-46.9935474",
+      "researchKeys": [
+        "digital-realty-vin01",
+        "digital-realty-vin02"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Av. 2, 50, Quadra G1, Distrito Industrial Benedito Storani, Vinhedo, SP 13288-162, Brazil",
+        "Av. 2, 50, Quadra G1, Distrito Industrial Benedito Storani, Vinhedo, SP 13288-162, Brazil"
+      ]
+    }
+  ],
+  "suspiciousDuplicateCoordinateGroups": [],
+  "hardErrors": [],
+  "unresolvedRecords": [
+    {
+      "parentLocationId": "digital-realty-athens",
+      "facilityCode": "ATH1",
+      "researchKey": "digital-realty-ath1",
+      "address": "Ifestou 76, Koropi, Attica, Athens, Greece",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-athens",
+      "facilityCode": "ATH2",
+      "researchKey": "digital-realty-ath2",
+      "address": "Ifestou 76, Koropi, Attica, Athens, Greece — Second Entrance",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-athens",
+      "facilityCode": "ATH3",
+      "researchKey": "digital-realty-ath3",
+      "address": "Ifestou 74, Koropi, Attica, Athens, Greece",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-copenhagen",
+      "facilityCode": "CPH-RS",
+      "researchKey": "digital-realty-cph-rs",
+      "address": "Carl Jacobsensvej 20, Valby, DK-2750, Denmark",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-hong-kong",
+      "facilityCode": "HKG10",
+      "researchKey": "digital-realty-hkg10",
+      "address": "33 Chun Choi Street, Tseung Kwan O, Sai Kung, Hong Kong",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-hong-kong",
+      "facilityCode": "HKG11",
+      "researchKey": "digital-realty-hkg11",
+      "address": "11 Kin Chuen, Kwai Chung, Hong Kong",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-tokyo",
+      "facilityCode": "HND10",
+      "researchKey": "digital-realty-hnd10",
+      "address": "8-7-2, Shimorenjaku, Mitaka-city, Tokyo, Japan",
+      "returnedCoordinates": [
+        35.6833926,
+        139.5592421
+      ],
+      "precision": "lower_precision",
+      "outcome": "geocoded_review",
+      "reason": "Provider resolved a city, not a physical address/campus feature."
+    },
+    {
+      "parentLocationId": "digital-realty-osaka",
+      "facilityCode": "KIX10",
+      "researchKey": "digital-realty-kix10",
+      "address": "5-8-1, Saito Yamabuki, Ibaraki-shi, Osaka, Japan",
+      "returnedCoordinates": [
+        34.8621004,
+        135.5173887
+      ],
+      "precision": "lower_precision",
+      "outcome": "geocoded_review",
+      "reason": "Returned locality does not clearly match Ibaraki."
+    },
+    {
+      "parentLocationId": "digital-realty-osaka",
+      "facilityCode": "KIX11",
+      "researchKey": "digital-realty-kix11",
+      "address": "6-1, Saito Aokita, Mino-shi, Osaka, Japan",
+      "returnedCoordinates": [
+        34.859917,
+        135.5109068
+      ],
+      "precision": "lower_precision",
+      "outcome": "geocoded_review",
+      "reason": "Returned locality does not clearly match Minoh."
+    },
+    {
+      "parentLocationId": "digital-realty-osaka",
+      "facilityCode": "KIX12",
+      "researchKey": "digital-realty-kix12",
+      "address": "6-2-1, Saito Aokita, Mino-shi, Osaka, Japan",
+      "returnedCoordinates": [
+        34.859917,
+        135.5109068
+      ],
+      "precision": "lower_precision",
+      "outcome": "geocoded_review",
+      "reason": "Returned locality does not clearly match Minoh."
+    },
+    {
+      "parentLocationId": "digital-realty-osaka",
+      "facilityCode": "KIX13",
+      "researchKey": "digital-realty-kix13",
+      "address": "5-2-1, Saito Aokita, Mino-shi, Osaka, Japan",
+      "returnedCoordinates": [
+        34.859917,
+        135.5109068
+      ],
+      "precision": "lower_precision",
+      "outcome": "geocoded_review",
+      "reason": "Returned locality does not clearly match Minoh."
+    },
+    {
+      "parentLocationId": "digital-realty-london",
+      "facilityCode": "LGW14",
+      "researchKey": "digital-realty-lgw14",
+      "address": "Unit 21 Goldsworth Park Trading Estate, Woking, GU21 3BA, United Kingdom",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-london",
+      "facilityCode": "LHR13",
+      "researchKey": "digital-realty-lhr13",
+      "address": "Fountain Court, Cox Lane, Chessington, KT9 1SJ, United Kingdom",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-london",
+      "facilityCode": "LHR17",
+      "researchKey": "digital-realty-lhr17",
+      "address": "1 Airport Gate, Bath Road, West Drayton, Middlesex UB7 0NA, United Kingdom",
+      "returnedCoordinates": [
+        51.481285,
+        -0.4854929
+      ],
+      "precision": "exact_or_rooftop",
+      "outcome": "geocoded_review",
+      "reason": "Returned locality does not clearly match West Drayton."
+    },
+    {
+      "parentLocationId": "digital-realty-london",
+      "facilityCode": "LHR19",
+      "researchKey": "digital-realty-lhr19",
+      "address": "Cloud House, London, E14 9SZ, United Kingdom",
+      "returnedCoordinates": [
+        51.4968139,
+        -0.0188181
+      ],
+      "precision": "exact_or_rooftop",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "parentLocationId": "digital-realty-lagos",
+      "facilityCode": "LKK1",
+      "researchKey": "digital-realty-lkk1",
+      "address": "Mopo Onibeju Village, Ogbombo Road, Building 1, Lagos, Nigeria",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-lagos",
+      "facilityCode": "LKK2",
+      "researchKey": "digital-realty-lkk2",
+      "address": "Mopo Onibeju Village, Ogbombo Road, Building 2, Lagos, Nigeria",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-mombasa",
+      "facilityCode": "MBA1",
+      "researchKey": "digital-realty-mba1",
+      "address": "Mombassa Road, Mombasa, Kenya",
+      "returnedCoordinates": [
+        -4.0474076,
+        39.6723075
+      ],
+      "precision": "exact_or_rooftop",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "parentLocationId": "digital-realty-marseille",
+      "facilityCode": "MRS2",
+      "researchKey": "digital-realty-mrs2",
+      "address": "Enceinte Portuaire, Porte 4, 13015, France",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-marseille",
+      "facilityCode": "MRS3",
+      "researchKey": "digital-realty-mrs3",
+      "address": "Enceinte Portuaire, Porte 4, 13015, France",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-marseille",
+      "facilityCode": "MRS4",
+      "researchKey": "digital-realty-mrs4",
+      "address": "Enceinte Portuaire, Porte 4, 13015, France",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-marseille",
+      "facilityCode": "MRS5",
+      "researchKey": "digital-realty-mrs5",
+      "address": "Enceinte Portuaire, Porte 4, 13015, France",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-nairobi",
+      "facilityCode": "NBO1",
+      "researchKey": "digital-realty-nbo1",
+      "address": "Langata S Rd & LRC Rd, Nairobi, Kenya",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-nairobi",
+      "facilityCode": "NBO2",
+      "researchKey": "digital-realty-nbo2",
+      "address": "Langata S Rd / LRC Rd, Nairobi, Kenya",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-tokyo",
+      "facilityCode": "NRT10",
+      "researchKey": "digital-realty-nrt10",
+      "address": "2-9-3, Otsuka, Inzai-city, Chiba, Japan",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-tokyo",
+      "facilityCode": "NRT12",
+      "researchKey": "digital-realty-nrt12",
+      "address": "2-4-1, Otsuka, Inzai-city, Chiba, Japan",
+      "returnedCoordinates": [
+        35.8322582,
+        140.1452981
+      ],
+      "precision": "lower_precision",
+      "outcome": "geocoded_review",
+      "reason": "Provider resolved a city, not a physical address/campus feature."
+    },
+    {
+      "parentLocationId": "digital-realty-tokyo",
+      "facilityCode": "NRT14",
+      "researchKey": "digital-realty-nrt14",
+      "address": "2-4-3, Otsuka, Inzai-city, Chiba, Japan",
+      "returnedCoordinates": [
+        35.8322582,
+        140.1452981
+      ],
+      "precision": "lower_precision",
+      "outcome": "geocoded_review",
+      "reason": "Provider resolved a city, not a physical address/campus feature."
+    },
+    {
+      "parentLocationId": "digital-realty-paris",
+      "facilityCode": "PAR6",
+      "researchKey": "digital-realty-par6",
+      "address": "11-15 Rue Galliee, Ivry-sur-Seine 94200, France",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-hillsboro",
+      "facilityCode": "PDX10",
+      "researchKey": "digital-realty-pdx10",
+      "address": "3825 NW Aloclek Street, Hillsboro, OR 97124, United States",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-rio",
+      "facilityCode": "RIO02",
+      "researchKey": "digital-realty-rio02",
+      "address": "Avenida Beirute, 863 – Medeiros, Jundiaí – SP, 13212-215, Brazil",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "parentLocationId": "digital-realty-sao-paulo",
+      "facilityCode": "SP04",
+      "researchKey": "digital-realty-sp04",
+      "address": "R. Bento de Souza Borges, 21, Industrial Anhangüera, Osasco, SP 06276-016, Brazil",
+      "returnedCoordinates": null,
+      "precision": "unresolved",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    }
+  ]
+}

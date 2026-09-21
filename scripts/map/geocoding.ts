@@ -23,7 +23,7 @@ export type GeocodeQueueItem = {
   coordinatePrecision: Extract<CoordinatePrecision, "building" | "campus" | "street">;
   query: string;
   sources: readonly { label: string; url: string }[];
-  queueSources: readonly ("class_b_28" | "global_expansion")[];
+  queueSources: readonly ("class_b_28" | "global_expansion" | "manual_verification")[];
   existingFacility: boolean;
   operatorName: string | null;
   lifecycleStatus: string | null;

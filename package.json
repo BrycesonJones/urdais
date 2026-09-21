@@ -19,6 +19,7 @@
     "map:project": "tsx scripts/map/project-research.ts",
     "map:phase4b": "tsx scripts/map/project-phase4b-ready.ts",
     "map:geocode": "tsx scripts/map/geocode-address-queue.ts",
+    "map:digital-realty": "tsx scripts/map/digital-realty-manual.ts",
     "map:import": "tsx scripts/map/import-facilities.ts",
     "map:production:check": "tsx scripts/map/production-check.ts",
     "news:ingest": "tsx scripts/news/ingest.ts",
