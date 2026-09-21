@@ -1,0 +1,1766 @@
+{
+  "methodology": "interconnection-queue-analytics",
+  "version": "0.1.0-draft",
+  "generated_on": "2026-09-21",
+  "status": "research artifact; not registered in the docs catalog; approves nothing for publication",
+  "active_lifecycle": [
+    "requested",
+    "study",
+    "agreement_pending",
+    "agreement_executed",
+    "under_construction",
+    "suspended"
+  ],
+  "terminal_lifecycle": [
+    "operational",
+    "withdrawn"
+  ],
+  "excluded_lifecycle": [
+    "unknown"
+  ],
+  "eligible_subtypes": [
+    "new_generation",
+    "not_distinguished"
+  ],
+  "excluded_subtypes": [
+    "capacity_rights",
+    "elective_transmission_upgrade",
+    "transmission_service",
+    "unknown"
+  ],
+  "minimum_samples": {
+    "median": 30,
+    "p75": 50,
+    "p90": 100,
+    "completion_rate": 100,
+    "technology_share": 30
+  },
+  "maturity_rule": {
+    "conditions": [
+      "observation window >= market p90 time to operation",
+      "cohort unresolved share <= 15%"
+    ],
+    "both_required": true,
+    "observed": {
+      "pjm": {
+        "p90_years": "6.45",
+        "mature_cohorts": "2010-2016",
+        "cut_by": "unresolved share"
+      },
+      "caiso": {
+        "p90_years": "10.43",
+        "mature_cohorts": "2010-2015",
+        "cut_by": "observation window"
+      }
+    }
+  },
+  "publication": {
+    "pjm": {
+      "classification": "ambiguous_requires_legal_review",
+      "raw": true,
+      "rawReason": "allowed_under_founder_accepted_legal_risk",
+      "derived": true,
+      "derivedReason": "allowed_under_founder_accepted_legal_risk"
+    },
+    "miso": {
+      "classification": "ambiguous_requires_legal_review",
+      "raw": true,
+      "rawReason": "allowed_under_founder_accepted_legal_risk",
+      "derived": true,
+      "derivedReason": "allowed_under_founder_accepted_legal_risk"
+    },
+    "caiso": {
+      "classification": "ambiguous_requires_legal_review",
+      "raw": true,
+      "rawReason": "allowed_under_founder_accepted_legal_risk",
+      "derived": true,
+      "derivedReason": "allowed_under_founder_accepted_legal_risk"
+    },
+    "ercot": {
+      "classification": "reusable_with_attribution_or_conditions",
+      "raw": true,
+      "rawReason": "allowed_with_attribution_or_conditions",
+      "derived": true,
+      "derivedReason": "allowed_with_attribution_or_conditions"
+    },
+    "nyiso": {
+      "classification": "ambiguous_requires_legal_review",
+      "raw": true,
+      "rawReason": "allowed_under_founder_accepted_legal_risk",
+      "derived": true,
+      "derivedReason": "allowed_under_founder_accepted_legal_risk"
+    },
+    "iso-ne": {
+      "classification": "ambiguous_requires_legal_review",
+      "raw": true,
+      "rawReason": "allowed_under_founder_accepted_legal_risk",
+      "derived": true,
+      "derivedReason": "allowed_under_founder_accepted_legal_risk"
+    },
+    "spp": {
+      "classification": "unsuitable_without_permission",
+      "raw": false,
+      "rawReason": "blocked_permission_prohibited",
+      "derived": false,
+      "derivedReason": "blocked_permission_prohibited"
+    }
+  },
+  "comparability_tiers": {
+    "A": "same semantic metric across all publishable markets",
+    "B": "comparable across a documented subset",
+    "C": "market-specific only; never compared"
+  },
+  "metrics": [
+    {
+      "id": "active_request_count",
+      "family": "stock",
+      "tier": "A",
+      "unit": "requests",
+      "markets": {
+        "pjm": {
+          "state": "approved",
+          "reason": "2641 active new-capability generation/storage requests"
+        },
+        "miso": {
+          "state": "approved",
+          "reason": "1336 active new-capability generation/storage requests"
+        },
+        "caiso": {
+          "state": "approved",
+          "reason": "261 active new-capability generation/storage requests"
+        },
+        "ercot": {
+          "state": "approved",
+          "reason": "3160 active new-capability generation/storage requests"
+        },
+        "nyiso": {
+          "state": "approved",
+          "reason": "184 active new-capability generation/storage requests"
+        },
+        "iso-ne": {
+          "state": "approved",
+          "reason": "28 active new-capability generation/storage requests"
+        },
+        "spp": {
+          "state": "internal_only",
+          "reason": "computable internally; publication blocked by SPP terms"
+        }
+      }
+    },
+    {
+      "id": "active_request_count_by_technology",
+      "family": "stock",
+      "tier": "A",
+      "unit": "requests",
+      "markets": {
+        "pjm": {
+          "state": "approved",
+          "reason": "multi-label; a hybrid is one project tagged with each technology it names"
+        },
+        "miso": {
+          "state": "approved",
+          "reason": "multi-label; a hybrid is one project tagged with each technology it names"
+        },
+        "caiso": {
+          "state": "approved",
+          "reason": "multi-label; a hybrid is one project tagged with each technology it names"
+        },
+        "ercot": {
+          "state": "approved",
+          "reason": "multi-label; a hybrid is one project tagged with each technology it names"
+        },
+        "nyiso": {
+          "state": "approved",
+          "reason": "multi-label; a hybrid is one project tagged with each technology it names"
+        },
+        "iso-ne": {
+          "state": "insufficient_sample",
+          "reason": "multi-label; a hybrid is one project tagged with each technology it names"
+        },
+        "spp": {
+          "state": "internal_only",
+          "reason": "computable internally; publication blocked by SPP terms"
+        }
+      }
+    },
+    {
+      "id": "active_mw",
+      "family": "stock",
+      "tier": "C",
+      "unit": "MW",
+      "markets": {
+        "pjm": {
+          "state": "deferred",
+          "reason": "three candidate fields (MWEnergy/MWCapacity/MaximumFacilityOutput); no stated reason to prefer one"
+        },
+        "miso": {
+          "state": "market_specific",
+          "reason": "summerNetMW"
+        },
+        "caiso": {
+          "state": "market_specific",
+          "reason": "Net MWs to Grid; component MW never summed"
+        },
+        "ercot": {
+          "state": "deferred",
+          "reason": "Capacity (MW) is a net-change basis with negative values; not a level"
+        },
+        "nyiso": {
+          "state": "market_specific",
+          "reason": "SP (MW), generation only"
+        },
+        "iso-ne": {
+          "state": "market_specific",
+          "reason": "Summer MW on new-capability requests only; capacity rights excluded"
+        },
+        "spp": {
+          "state": "internal_only",
+          "reason": "MAX Summer MW; publication blocked"
+        }
+      }
+    },
+    {
+      "id": "cross_market_queue_mw",
+      "family": "stock",
+      "tier": "none",
+      "unit": "MW",
+      "markets": {
+        "pjm": {
+          "state": "not_defensible",
+          "reason": "no quantity kind exists across all seven markets; best coverage is four, one of which is blocked"
+        },
+        "miso": {
+          "state": "not_defensible",
+          "reason": "no quantity kind exists across all seven markets; best coverage is four, one of which is blocked"
+        },
+        "caiso": {
+          "state": "not_defensible",
+          "reason": "no quantity kind exists across all seven markets; best coverage is four, one of which is blocked"
+        },
+        "ercot": {
+          "state": "not_defensible",
+          "reason": "no quantity kind exists across all seven markets; best coverage is four, one of which is blocked"
+        },
+        "nyiso": {
+          "state": "not_defensible",
+          "reason": "no quantity kind exists across all seven markets; best coverage is four, one of which is blocked"
+        },
+        "iso-ne": {
+          "state": "not_defensible",
+          "reason": "no quantity kind exists across all seven markets; best coverage is four, one of which is blocked"
+        },
+        "spp": {
+          "state": "not_defensible",
+          "reason": "no quantity kind exists across all seven markets; best coverage is four, one of which is blocked"
+        }
+      }
+    },
+    {
+      "id": "queue_age_median",
+      "family": "age",
+      "tier": "A",
+      "unit": "years",
+      "markets": {
+        "pjm": {
+          "state": "approved",
+          "reason": "n=2641, median 5.07y"
+        },
+        "miso": {
+          "state": "approved",
+          "reason": "n=1336, median 4.02y"
+        },
+        "caiso": {
+          "state": "approved",
+          "reason": "n=261, median 6.47y"
+        },
+        "ercot": {
+          "state": "not_defensible",
+          "reason": "ERCOT publishes no request date: 0 of 3,325"
+        },
+        "nyiso": {
+          "state": "approved",
+          "reason": "n=184, median 2.14y"
+        },
+        "iso-ne": {
+          "state": "insufficient_sample",
+          "reason": "n=28, below the median floor of 30"
+        },
+        "spp": {
+          "state": "internal_only",
+          "reason": "computable internally; publication blocked by SPP terms"
+        }
+      }
+    },
+    {
+      "id": "queue_age_p90",
+      "family": "age",
+      "tier": "A",
+      "unit": "years",
+      "markets": {
+        "pjm": {
+          "state": "approved",
+          "reason": "n=2641, p90 6.99y"
+        },
+        "miso": {
+          "state": "approved",
+          "reason": "n=1336, p90 7.40y"
+        },
+        "caiso": {
+          "state": "approved",
+          "reason": "n=261, p90 15.48y"
+        },
+        "ercot": {
+          "state": "not_defensible",
+          "reason": "no request date"
+        },
+        "nyiso": {
+          "state": "approved",
+          "reason": "n=184, p90 8.62y"
+        },
+        "iso-ne": {
+          "state": "insufficient_sample",
+          "reason": "n=28, below the p90 floor of 100"
+        },
+        "spp": {
+          "state": "internal_only",
+          "reason": "computable internally; publication blocked by SPP terms"
+        }
+      }
+    },
+    {
+      "id": "annual_entries_count",
+      "family": "flow",
+      "tier": "A",
+      "unit": "requests",
+      "markets": {
+        "pjm": {
+          "state": "approved",
+          "reason": "application-date basis; 9111 of 9200 requests carry one"
+        },
+        "miso": {
+          "state": "approved",
+          "reason": "application-date basis; 3844 of 3850 requests carry one"
+        },
+        "caiso": {
+          "state": "approved",
+          "reason": "application-date basis; 2278 of 2278 requests carry one"
+        },
+        "ercot": {
+          "state": "approved_basis_differs",
+          "reason": "snapshot first-seen only, from 2019-01; 2959 of 3325 usable, 366 left-censored"
+        },
+        "nyiso": {
+          "state": "approved",
+          "reason": "application-date basis; 2160 of 2160 requests carry one"
+        },
+        "iso-ne": {
+          "state": "approved",
+          "reason": "application-date basis; 1509 of 1509 requests carry one"
+        },
+        "spp": {
+          "state": "internal_only",
+          "reason": "computable internally; publication blocked by SPP terms"
+        }
+      }
+    },
+    {
+      "id": "annual_withdrawal_count",
+      "family": "flow",
+      "tier": "A",
+      "unit": "requests",
+      "markets": {
+        "pjm": {
+          "state": "approved",
+          "reason": "source-reported withdrawal status"
+        },
+        "miso": {
+          "state": "approved",
+          "reason": "source-reported withdrawal status"
+        },
+        "caiso": {
+          "state": "approved",
+          "reason": "source-reported withdrawal status"
+        },
+        "ercot": {
+          "state": "not_defensible",
+          "reason": "ERCOT publishes no withdrawals; disappearance is not withdrawal"
+        },
+        "nyiso": {
+          "state": "approved",
+          "reason": "source-reported withdrawal status"
+        },
+        "iso-ne": {
+          "state": "approved",
+          "reason": "source-reported withdrawal status"
+        },
+        "spp": {
+          "state": "internal_only",
+          "reason": "computable internally; publication blocked by SPP terms"
+        }
+      }
+    },
+    {
+      "id": "annual_withdrawal_flow_by_date",
+      "family": "flow",
+      "tier": "B",
+      "unit": "requests",
+      "markets": {
+        "pjm": {
+          "state": "approved",
+          "reason": "4729 dated withdrawals"
+        },
+        "miso": {
+          "state": "approved",
+          "reason": "2130 dated withdrawals"
+        },
+        "caiso": {
+          "state": "approved",
+          "reason": "1725 dated withdrawals"
+        },
+        "ercot": {
+          "state": "not_defensible",
+          "reason": "no withdrawal evidence at all"
+        },
+        "nyiso": {
+          "state": "deferred",
+          "reason": "withdrawn status published without a date; a count is possible, a time series is not"
+        },
+        "iso-ne": {
+          "state": "approved",
+          "reason": "1095 dated withdrawals"
+        },
+        "spp": {
+          "state": "internal_only",
+          "reason": "computable internally; publication blocked by SPP terms"
+        }
+      }
+    },
+    {
+      "id": "operational_count",
+      "family": "flow",
+      "tier": "A",
+      "unit": "requests",
+      "markets": {
+        "pjm": {
+          "state": "approved",
+          "reason": "explicit operational status"
+        },
+        "miso": {
+          "state": "approved",
+          "reason": "explicit operational status"
+        },
+        "caiso": {
+          "state": "approved",
+          "reason": "explicit operational status"
+        },
+        "ercot": {
+          "state": "not_defensible",
+          "reason": "ERCOT publishes no actual commercial operation date or status"
+        },
+        "nyiso": {
+          "state": "approved",
+          "reason": "explicit operational status"
+        },
+        "iso-ne": {
+          "state": "approved",
+          "reason": "explicit operational status"
+        },
+        "spp": {
+          "state": "internal_only",
+          "reason": "computable internally; publication blocked by SPP terms"
+        }
+      }
+    },
+    {
+      "id": "cohort_project_completion_rate",
+      "family": "cohort",
+      "tier": "B",
+      "unit": "ratio",
+      "markets": {
+        "pjm": {
+          "state": "approved",
+          "reason": "mature cohorts only: window >= p90 (6.45y) and unresolved <= 15%"
+        },
+        "miso": {
+          "state": "not_defensible",
+          "reason": "no actual commercial operation date; an operational count is possible, a completion rate is not"
+        },
+        "caiso": {
+          "state": "approved",
+          "reason": "mature cohorts only: window >= p90 (10.43y) and unresolved <= 15%"
+        },
+        "ercot": {
+          "state": "not_defensible",
+          "reason": "no request date and no actual COD"
+        },
+        "nyiso": {
+          "state": "not_defensible",
+          "reason": "no actual commercial operation date; an operational count is possible, a completion rate is not"
+        },
+        "iso-ne": {
+          "state": "not_defensible",
+          "reason": "no actual commercial operation date; an operational count is possible, a completion rate is not"
+        },
+        "spp": {
+          "state": "internal_only",
+          "reason": "computable internally; publication blocked by SPP terms"
+        }
+      }
+    },
+    {
+      "id": "cohort_mw_completion_rate",
+      "family": "cohort",
+      "tier": "none",
+      "unit": "ratio",
+      "markets": {
+        "pjm": {
+          "state": "deferred",
+          "reason": "requires a defensible cohort quantity field; no market has both a mature cohort and an unambiguous MW field"
+        },
+        "miso": {
+          "state": "deferred",
+          "reason": "requires a defensible cohort quantity field; no market has both a mature cohort and an unambiguous MW field"
+        },
+        "caiso": {
+          "state": "deferred",
+          "reason": "requires a defensible cohort quantity field; no market has both a mature cohort and an unambiguous MW field"
+        },
+        "ercot": {
+          "state": "deferred",
+          "reason": "requires a defensible cohort quantity field; no market has both a mature cohort and an unambiguous MW field"
+        },
+        "nyiso": {
+          "state": "deferred",
+          "reason": "requires a defensible cohort quantity field; no market has both a mature cohort and an unambiguous MW field"
+        },
+        "iso-ne": {
+          "state": "deferred",
+          "reason": "requires a defensible cohort quantity field; no market has both a mature cohort and an unambiguous MW field"
+        },
+        "spp": {
+          "state": "deferred",
+          "reason": "requires a defensible cohort quantity field; no market has both a mature cohort and an unambiguous MW field"
+        }
+      }
+    },
+    {
+      "id": "cohort_withdrawal_rate",
+      "family": "cohort",
+      "tier": "B",
+      "unit": "ratio",
+      "markets": {
+        "pjm": {
+          "state": "approved",
+          "reason": "same cohort and maturity rule as project completion"
+        },
+        "miso": {
+          "state": "deferred",
+          "reason": "maturity rule needs an observed p90 time to operation, which requires actual CODs"
+        },
+        "caiso": {
+          "state": "approved",
+          "reason": "same cohort and maturity rule as project completion"
+        },
+        "ercot": {
+          "state": "deferred",
+          "reason": "maturity rule needs an observed p90 time to operation, which requires actual CODs"
+        },
+        "nyiso": {
+          "state": "deferred",
+          "reason": "maturity rule needs an observed p90 time to operation, which requires actual CODs"
+        },
+        "iso-ne": {
+          "state": "deferred",
+          "reason": "maturity rule needs an observed p90 time to operation, which requires actual CODs"
+        },
+        "spp": {
+          "state": "internal_only",
+          "reason": "computable internally; publication blocked by SPP terms"
+        }
+      }
+    },
+    {
+      "id": "median_time_to_operation",
+      "family": "cohort",
+      "tier": "B",
+      "unit": "years",
+      "markets": {
+        "pjm": {
+          "state": "approved",
+          "reason": "n=1242, median 2.79y"
+        },
+        "miso": {
+          "state": "not_defensible",
+          "reason": "requires both an application date and an actual commercial operation date"
+        },
+        "caiso": {
+          "state": "approved",
+          "reason": "n=236, median 6.18y"
+        },
+        "ercot": {
+          "state": "not_defensible",
+          "reason": "requires both an application date and an actual commercial operation date"
+        },
+        "nyiso": {
+          "state": "not_defensible",
+          "reason": "requires both an application date and an actual commercial operation date"
+        },
+        "iso-ne": {
+          "state": "not_defensible",
+          "reason": "requires both an application date and an actual commercial operation date"
+        },
+        "spp": {
+          "state": "internal_only",
+          "reason": "computable internally; publication blocked by SPP terms"
+        }
+      }
+    },
+    {
+      "id": "active_load_requests",
+      "family": "load",
+      "tier": "C",
+      "unit": "requests",
+      "markets": {
+        "pjm": {
+          "state": "not_applicable",
+          "reason": "this market publishes no load interconnection queue"
+        },
+        "miso": {
+          "state": "not_applicable",
+          "reason": "this market publishes no load interconnection queue"
+        },
+        "caiso": {
+          "state": "not_applicable",
+          "reason": "this market publishes no load interconnection queue"
+        },
+        "ercot": {
+          "state": "not_applicable",
+          "reason": "this market publishes no load interconnection queue"
+        },
+        "nyiso": {
+          "state": "market_specific",
+          "reason": "74 load requests on a dedicated sheet"
+        },
+        "iso-ne": {
+          "state": "not_applicable",
+          "reason": "this market publishes no load interconnection queue"
+        },
+        "spp": {
+          "state": "not_applicable",
+          "reason": "this market publishes no load interconnection queue"
+        }
+      }
+    },
+    {
+      "id": "explicit_ai_data_center_load",
+      "family": "load",
+      "tier": "C",
+      "unit": "requests and MW",
+      "markets": {
+        "pjm": {
+          "state": "unknown_not_zero",
+          "reason": "this market publishes no end-use classification; its AI load is unknown, not zero"
+        },
+        "miso": {
+          "state": "unknown_not_zero",
+          "reason": "this market publishes no end-use classification; its AI load is unknown, not zero"
+        },
+        "caiso": {
+          "state": "unknown_not_zero",
+          "reason": "this market publishes no end-use classification; its AI load is unknown, not zero"
+        },
+        "ercot": {
+          "state": "unknown_not_zero",
+          "reason": "this market publishes no end-use classification; its AI load is unknown, not zero"
+        },
+        "nyiso": {
+          "state": "market_specific",
+          "reason": "12 requests coded DAT-AI by NYISO"
+        },
+        "iso-ne": {
+          "state": "unknown_not_zero",
+          "reason": "this market publishes no end-use classification; its AI load is unknown, not zero"
+        },
+        "spp": {
+          "state": "unknown_not_zero",
+          "reason": "this market publishes no end-use classification; its AI load is unknown, not zero"
+        }
+      }
+    },
+    {
+      "id": "technology_mix_by_mw",
+      "family": "mix",
+      "tier": "none",
+      "unit": "MW",
+      "markets": {
+        "pjm": {
+          "state": "deferred",
+          "reason": "requires attributing project MW to components; only CAISO publishes them and they are non-additive"
+        },
+        "miso": {
+          "state": "deferred",
+          "reason": "requires attributing project MW to components; only CAISO publishes them and they are non-additive"
+        },
+        "caiso": {
+          "state": "deferred",
+          "reason": "requires attributing project MW to components; only CAISO publishes them and they are non-additive"
+        },
+        "ercot": {
+          "state": "deferred",
+          "reason": "requires attributing project MW to components; only CAISO publishes them and they are non-additive"
+        },
+        "nyiso": {
+          "state": "deferred",
+          "reason": "requires attributing project MW to components; only CAISO publishes them and they are non-additive"
+        },
+        "iso-ne": {
+          "state": "deferred",
+          "reason": "requires attributing project MW to components; only CAISO publishes them and they are non-additive"
+        },
+        "spp": {
+          "state": "deferred",
+          "reason": "requires attributing project MW to components; only CAISO publishes them and they are non-additive"
+        }
+      }
+    }
+  ],
+  "diagnostics": {
+    "quantity_kind_coverage": [
+      {
+        "quantity_kind": "summer_mw",
+        "markets": 4,
+        "market_list": [
+          "iso-ne",
+          "miso",
+          "nyiso",
+          "spp"
+        ]
+      },
+      {
+        "quantity_kind": "winter_mw",
+        "markets": 4,
+        "market_list": [
+          "iso-ne",
+          "miso",
+          "nyiso",
+          "spp"
+        ]
+      },
+      {
+        "quantity_kind": "capacity_service_mw",
+        "markets": 3,
+        "market_list": [
+          "miso",
+          "pjm",
+          "spp"
+        ]
+      },
+      {
+        "quantity_kind": "maximum_facility_output",
+        "markets": 3,
+        "market_list": [
+          "ercot",
+          "pjm",
+          "spp"
+        ]
+      },
+      {
+        "quantity_kind": "energy_service_mw",
+        "markets": 3,
+        "market_list": [
+          "miso",
+          "pjm",
+          "spp"
+        ]
+      },
+      {
+        "quantity_kind": "net_mw_to_grid",
+        "markets": 2,
+        "market_list": [
+          "caiso",
+          "iso-ne"
+        ]
+      },
+      {
+        "quantity_kind": "other_mw",
+        "markets": 2,
+        "market_list": [
+          "nyiso",
+          "spp"
+        ]
+      },
+      {
+        "quantity_kind": "in_service_mw",
+        "markets": 1,
+        "market_list": [
+          "pjm"
+        ]
+      },
+      {
+        "quantity_kind": "component_mw",
+        "markets": 1,
+        "market_list": [
+          "caiso"
+        ]
+      }
+    ],
+    "date_coverage": [
+      {
+        "market": "caiso",
+        "requests": 2278,
+        "request_date": 2278,
+        "actual_cod": 239,
+        "withdrawn_date": 1725,
+        "proposed_cod": 2277
+      },
+      {
+        "market": "ercot",
+        "requests": 3325,
+        "request_date": 0,
+        "actual_cod": 0,
+        "withdrawn_date": 0,
+        "proposed_cod": 3325
+      },
+      {
+        "market": "iso-ne",
+        "requests": 1509,
+        "request_date": 1509,
+        "actual_cod": 0,
+        "withdrawn_date": 1095,
+        "proposed_cod": 1501
+      },
+      {
+        "market": "miso",
+        "requests": 3850,
+        "request_date": 3844,
+        "actual_cod": 0,
+        "withdrawn_date": 2130,
+        "proposed_cod": 3818
+      },
+      {
+        "market": "nyiso",
+        "requests": 2160,
+        "request_date": 2160,
+        "actual_cod": 0,
+        "withdrawn_date": 0,
+        "proposed_cod": 0
+      },
+      {
+        "market": "pjm",
+        "requests": 9200,
+        "request_date": 9111,
+        "actual_cod": 1246,
+        "withdrawn_date": 4729,
+        "proposed_cod": 8242
+      },
+      {
+        "market": "spp",
+        "requests": 1016,
+        "request_date": 997,
+        "actual_cod": 294,
+        "withdrawn_date": 0,
+        "proposed_cod": 817
+      }
+    ],
+    "active_stock": [
+      {
+        "market": "caiso",
+        "active_requests": 261
+      },
+      {
+        "market": "ercot",
+        "active_requests": 3160
+      },
+      {
+        "market": "iso-ne",
+        "active_requests": 28
+      },
+      {
+        "market": "miso",
+        "active_requests": 1336
+      },
+      {
+        "market": "nyiso",
+        "active_requests": 184
+      },
+      {
+        "market": "pjm",
+        "active_requests": 2641
+      },
+      {
+        "market": "spp",
+        "active_requests": 536
+      }
+    ],
+    "queue_age": [
+      {
+        "market": "caiso",
+        "n": 261,
+        "median_years": "6.47",
+        "p75_years": "9.40",
+        "p90_years": "15.48"
+      },
+      {
+        "market": "iso-ne",
+        "n": 28,
+        "median_years": "5.64",
+        "p75_years": "7.06",
+        "p90_years": "8.25"
+      },
+      {
+        "market": "miso",
+        "n": 1336,
+        "median_years": "4.02",
+        "p75_years": "5.09",
+        "p90_years": "7.40"
+      },
+      {
+        "market": "nyiso",
+        "n": 184,
+        "median_years": "2.14",
+        "p75_years": "7.28",
+        "p90_years": "8.62"
+      },
+      {
+        "market": "pjm",
+        "n": 2641,
+        "median_years": "5.07",
+        "p75_years": "5.97",
+        "p90_years": "6.99"
+      },
+      {
+        "market": "spp",
+        "n": 536,
+        "median_years": "2.97",
+        "p75_years": "6.41",
+        "p90_years": "8.81"
+      }
+    ],
+    "time_to_operation": [
+      {
+        "market": "caiso",
+        "n": 236,
+        "median_years": "6.18",
+        "p75_years": "8.26",
+        "p90_years": "10.43"
+      },
+      {
+        "market": "pjm",
+        "n": 1242,
+        "median_years": "2.79",
+        "p75_years": "4.72",
+        "p90_years": "6.45"
+      },
+      {
+        "market": "spp",
+        "n": 279,
+        "median_years": "4.22",
+        "p75_years": "5.98",
+        "p90_years": "8.22"
+      }
+    ],
+    "cohorts": [
+      {
+        "market": "caiso",
+        "cohort": 2010,
+        "entered": 239,
+        "operational": 36,
+        "withdrawn": 199,
+        "unresolved": 4,
+        "unresolved_pct": "1.7"
+      },
+      {
+        "market": "caiso",
+        "cohort": 2011,
+        "entered": 211,
+        "operational": 14,
+        "withdrawn": 192,
+        "unresolved": 5,
+        "unresolved_pct": "2.4"
+      },
+      {
+        "market": "caiso",
+        "cohort": 2012,
+        "entered": 65,
+        "operational": 5,
+        "withdrawn": 59,
+        "unresolved": 1,
+        "unresolved_pct": "1.5"
+      },
+      {
+        "market": "caiso",
+        "cohort": 2013,
+        "entered": 61,
+        "operational": 9,
+        "withdrawn": 49,
+        "unresolved": 3,
+        "unresolved_pct": "4.9"
+      },
+      {
+        "market": "caiso",
+        "cohort": 2014,
+        "entered": 88,
+        "operational": 13,
+        "withdrawn": 69,
+        "unresolved": 6,
+        "unresolved_pct": "6.8"
+      },
+      {
+        "market": "caiso",
+        "cohort": 2015,
+        "entered": 124,
+        "operational": 24,
+        "withdrawn": 90,
+        "unresolved": 10,
+        "unresolved_pct": "8.1"
+      },
+      {
+        "market": "caiso",
+        "cohort": 2016,
+        "entered": 124,
+        "operational": 17,
+        "withdrawn": 95,
+        "unresolved": 12,
+        "unresolved_pct": "9.7"
+      },
+      {
+        "market": "caiso",
+        "cohort": 2017,
+        "entered": 91,
+        "operational": 10,
+        "withdrawn": 67,
+        "unresolved": 14,
+        "unresolved_pct": "15.4"
+      },
+      {
+        "market": "caiso",
+        "cohort": 2018,
+        "entered": 99,
+        "operational": 12,
+        "withdrawn": 70,
+        "unresolved": 17,
+        "unresolved_pct": "17.2"
+      },
+      {
+        "market": "caiso",
+        "cohort": 2019,
+        "entered": 140,
+        "operational": 9,
+        "withdrawn": 100,
+        "unresolved": 31,
+        "unresolved_pct": "22.1"
+      },
+      {
+        "market": "caiso",
+        "cohort": 2020,
+        "entered": 151,
+        "operational": 6,
+        "withdrawn": 109,
+        "unresolved": 36,
+        "unresolved_pct": "23.8"
+      },
+      {
+        "market": "caiso",
+        "cohort": 2021,
+        "entered": 362,
+        "operational": 2,
+        "withdrawn": 256,
+        "unresolved": 104,
+        "unresolved_pct": "28.7"
+      },
+      {
+        "market": "caiso",
+        "cohort": 2022,
+        "entered": 4,
+        "operational": 0,
+        "withdrawn": 4,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "caiso",
+        "cohort": 2023,
+        "entered": 1,
+        "operational": 0,
+        "withdrawn": 1,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "iso-ne",
+        "cohort": 2010,
+        "entered": 9,
+        "operational": 3,
+        "withdrawn": 6,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "iso-ne",
+        "cohort": 2011,
+        "entered": 3,
+        "operational": 2,
+        "withdrawn": 1,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "iso-ne",
+        "cohort": 2012,
+        "entered": 7,
+        "operational": 3,
+        "withdrawn": 4,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "iso-ne",
+        "cohort": 2013,
+        "entered": 10,
+        "operational": 4,
+        "withdrawn": 6,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "iso-ne",
+        "cohort": 2014,
+        "entered": 17,
+        "operational": 2,
+        "withdrawn": 15,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "iso-ne",
+        "cohort": 2015,
+        "entered": 21,
+        "operational": 5,
+        "withdrawn": 16,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "iso-ne",
+        "cohort": 2016,
+        "entered": 9,
+        "operational": 4,
+        "withdrawn": 5,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "iso-ne",
+        "cohort": 2017,
+        "entered": 17,
+        "operational": 8,
+        "withdrawn": 6,
+        "unresolved": 3,
+        "unresolved_pct": "17.6"
+      },
+      {
+        "market": "iso-ne",
+        "cohort": 2018,
+        "entered": 72,
+        "operational": 25,
+        "withdrawn": 45,
+        "unresolved": 2,
+        "unresolved_pct": "2.8"
+      },
+      {
+        "market": "iso-ne",
+        "cohort": 2019,
+        "entered": 64,
+        "operational": 16,
+        "withdrawn": 43,
+        "unresolved": 5,
+        "unresolved_pct": "7.8"
+      },
+      {
+        "market": "iso-ne",
+        "cohort": 2020,
+        "entered": 99,
+        "operational": 11,
+        "withdrawn": 85,
+        "unresolved": 3,
+        "unresolved_pct": "3.0"
+      },
+      {
+        "market": "iso-ne",
+        "cohort": 2021,
+        "entered": 59,
+        "operational": 2,
+        "withdrawn": 47,
+        "unresolved": 10,
+        "unresolved_pct": "16.9"
+      },
+      {
+        "market": "iso-ne",
+        "cohort": 2022,
+        "entered": 50,
+        "operational": 2,
+        "withdrawn": 44,
+        "unresolved": 4,
+        "unresolved_pct": "8.0"
+      },
+      {
+        "market": "iso-ne",
+        "cohort": 2023,
+        "entered": 43,
+        "operational": 0,
+        "withdrawn": 42,
+        "unresolved": 1,
+        "unresolved_pct": "2.3"
+      },
+      {
+        "market": "iso-ne",
+        "cohort": 2024,
+        "entered": 42,
+        "operational": 0,
+        "withdrawn": 42,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "miso",
+        "cohort": 2015,
+        "entered": 5,
+        "operational": 0,
+        "withdrawn": 5,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "miso",
+        "cohort": 2016,
+        "entered": 55,
+        "operational": 12,
+        "withdrawn": 39,
+        "unresolved": 4,
+        "unresolved_pct": "7.3"
+      },
+      {
+        "market": "miso",
+        "cohort": 2017,
+        "entered": 188,
+        "operational": 33,
+        "withdrawn": 129,
+        "unresolved": 26,
+        "unresolved_pct": "13.8"
+      },
+      {
+        "market": "miso",
+        "cohort": 2018,
+        "entered": 237,
+        "operational": 16,
+        "withdrawn": 165,
+        "unresolved": 56,
+        "unresolved_pct": "23.6"
+      },
+      {
+        "market": "miso",
+        "cohort": 2019,
+        "entered": 295,
+        "operational": 23,
+        "withdrawn": 151,
+        "unresolved": 121,
+        "unresolved_pct": "41.0"
+      },
+      {
+        "market": "miso",
+        "cohort": 2020,
+        "entered": 291,
+        "operational": 4,
+        "withdrawn": 202,
+        "unresolved": 85,
+        "unresolved_pct": "29.2"
+      },
+      {
+        "market": "miso",
+        "cohort": 2021,
+        "entered": 394,
+        "operational": 1,
+        "withdrawn": 275,
+        "unresolved": 118,
+        "unresolved_pct": "29.9"
+      },
+      {
+        "market": "miso",
+        "cohort": 2022,
+        "entered": 965,
+        "operational": 0,
+        "withdrawn": 572,
+        "unresolved": 393,
+        "unresolved_pct": "40.7"
+      },
+      {
+        "market": "miso",
+        "cohort": 2023,
+        "entered": 18,
+        "operational": 0,
+        "withdrawn": 7,
+        "unresolved": 11,
+        "unresolved_pct": "61.1"
+      },
+      {
+        "market": "miso",
+        "cohort": 2024,
+        "entered": 663,
+        "operational": 0,
+        "withdrawn": 422,
+        "unresolved": 241,
+        "unresolved_pct": "36.3"
+      },
+      {
+        "market": "nyiso",
+        "cohort": 2010,
+        "entered": 5,
+        "operational": 1,
+        "withdrawn": 4,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "nyiso",
+        "cohort": 2011,
+        "entered": 8,
+        "operational": 0,
+        "withdrawn": 8,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "nyiso",
+        "cohort": 2012,
+        "entered": 13,
+        "operational": 6,
+        "withdrawn": 7,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "nyiso",
+        "cohort": 2013,
+        "entered": 5,
+        "operational": 2,
+        "withdrawn": 3,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "nyiso",
+        "cohort": 2014,
+        "entered": 33,
+        "operational": 5,
+        "withdrawn": 28,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "nyiso",
+        "cohort": 2015,
+        "entered": 31,
+        "operational": 3,
+        "withdrawn": 25,
+        "unresolved": 3,
+        "unresolved_pct": "9.7"
+      },
+      {
+        "market": "nyiso",
+        "cohort": 2016,
+        "entered": 37,
+        "operational": 5,
+        "withdrawn": 24,
+        "unresolved": 8,
+        "unresolved_pct": "21.6"
+      },
+      {
+        "market": "nyiso",
+        "cohort": 2017,
+        "entered": 69,
+        "operational": 6,
+        "withdrawn": 57,
+        "unresolved": 6,
+        "unresolved_pct": "8.7"
+      },
+      {
+        "market": "nyiso",
+        "cohort": 2018,
+        "entered": 100,
+        "operational": 14,
+        "withdrawn": 75,
+        "unresolved": 11,
+        "unresolved_pct": "11.0"
+      },
+      {
+        "market": "nyiso",
+        "cohort": 2019,
+        "entered": 162,
+        "operational": 0,
+        "withdrawn": 136,
+        "unresolved": 26,
+        "unresolved_pct": "16.0"
+      },
+      {
+        "market": "nyiso",
+        "cohort": 2020,
+        "entered": 137,
+        "operational": 0,
+        "withdrawn": 123,
+        "unresolved": 14,
+        "unresolved_pct": "10.2"
+      },
+      {
+        "market": "nyiso",
+        "cohort": 2021,
+        "entered": 138,
+        "operational": 0,
+        "withdrawn": 128,
+        "unresolved": 10,
+        "unresolved_pct": "7.2"
+      },
+      {
+        "market": "nyiso",
+        "cohort": 2022,
+        "entered": 149,
+        "operational": 0,
+        "withdrawn": 149,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "nyiso",
+        "cohort": 2023,
+        "entered": 131,
+        "operational": 0,
+        "withdrawn": 131,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "nyiso",
+        "cohort": 2024,
+        "entered": 342,
+        "operational": 0,
+        "withdrawn": 264,
+        "unresolved": 78,
+        "unresolved_pct": "22.8"
+      },
+      {
+        "market": "pjm",
+        "cohort": 2010,
+        "entered": 435,
+        "operational": 79,
+        "withdrawn": 356,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "pjm",
+        "cohort": 2011,
+        "entered": 349,
+        "operational": 58,
+        "withdrawn": 291,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "pjm",
+        "cohort": 2012,
+        "entered": 155,
+        "operational": 52,
+        "withdrawn": 103,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "pjm",
+        "cohort": 2013,
+        "entered": 153,
+        "operational": 75,
+        "withdrawn": 77,
+        "unresolved": 1,
+        "unresolved_pct": "0.7"
+      },
+      {
+        "market": "pjm",
+        "cohort": 2014,
+        "entered": 190,
+        "operational": 72,
+        "withdrawn": 117,
+        "unresolved": 1,
+        "unresolved_pct": "0.5"
+      },
+      {
+        "market": "pjm",
+        "cohort": 2015,
+        "entered": 307,
+        "operational": 71,
+        "withdrawn": 227,
+        "unresolved": 9,
+        "unresolved_pct": "2.9"
+      },
+      {
+        "market": "pjm",
+        "cohort": 2016,
+        "entered": 398,
+        "operational": 105,
+        "withdrawn": 249,
+        "unresolved": 44,
+        "unresolved_pct": "11.1"
+      },
+      {
+        "market": "pjm",
+        "cohort": 2017,
+        "entered": 355,
+        "operational": 70,
+        "withdrawn": 231,
+        "unresolved": 54,
+        "unresolved_pct": "15.2"
+      },
+      {
+        "market": "pjm",
+        "cohort": 2018,
+        "entered": 441,
+        "operational": 51,
+        "withdrawn": 298,
+        "unresolved": 92,
+        "unresolved_pct": "20.9"
+      },
+      {
+        "market": "pjm",
+        "cohort": 2019,
+        "entered": 690,
+        "operational": 70,
+        "withdrawn": 371,
+        "unresolved": 249,
+        "unresolved_pct": "36.1"
+      },
+      {
+        "market": "pjm",
+        "cohort": 2020,
+        "entered": 994,
+        "operational": 31,
+        "withdrawn": 560,
+        "unresolved": 403,
+        "unresolved_pct": "40.5"
+      },
+      {
+        "market": "pjm",
+        "cohort": 2021,
+        "entered": 1328,
+        "operational": 0,
+        "withdrawn": 270,
+        "unresolved": 1058,
+        "unresolved_pct": "79.7"
+      },
+      {
+        "market": "pjm",
+        "cohort": 2022,
+        "entered": 538,
+        "operational": 0,
+        "withdrawn": 120,
+        "unresolved": 418,
+        "unresolved_pct": "77.7"
+      },
+      {
+        "market": "pjm",
+        "cohort": 2023,
+        "entered": 467,
+        "operational": 0,
+        "withdrawn": 16,
+        "unresolved": 451,
+        "unresolved_pct": "96.6"
+      },
+      {
+        "market": "spp",
+        "cohort": 2010,
+        "entered": 15,
+        "operational": 15,
+        "withdrawn": 0,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "spp",
+        "cohort": 2011,
+        "entered": 19,
+        "operational": 17,
+        "withdrawn": 0,
+        "unresolved": 2,
+        "unresolved_pct": "10.5"
+      },
+      {
+        "market": "spp",
+        "cohort": 2012,
+        "entered": 18,
+        "operational": 18,
+        "withdrawn": 0,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "spp",
+        "cohort": 2013,
+        "entered": 13,
+        "operational": 11,
+        "withdrawn": 0,
+        "unresolved": 2,
+        "unresolved_pct": "15.4"
+      },
+      {
+        "market": "spp",
+        "cohort": 2014,
+        "entered": 18,
+        "operational": 18,
+        "withdrawn": 0,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "spp",
+        "cohort": 2015,
+        "entered": 33,
+        "operational": 33,
+        "withdrawn": 0,
+        "unresolved": 0,
+        "unresolved_pct": "0.0"
+      },
+      {
+        "market": "spp",
+        "cohort": 2016,
+        "entered": 68,
+        "operational": 46,
+        "withdrawn": 0,
+        "unresolved": 22,
+        "unresolved_pct": "32.4"
+      },
+      {
+        "market": "spp",
+        "cohort": 2017,
+        "entered": 77,
+        "operational": 24,
+        "withdrawn": 0,
+        "unresolved": 53,
+        "unresolved_pct": "68.8"
+      },
+      {
+        "market": "spp",
+        "cohort": 2018,
+        "entered": 49,
+        "operational": 4,
+        "withdrawn": 0,
+        "unresolved": 45,
+        "unresolved_pct": "91.8"
+      },
+      {
+        "market": "spp",
+        "cohort": 2019,
+        "entered": 20,
+        "operational": 2,
+        "withdrawn": 0,
+        "unresolved": 18,
+        "unresolved_pct": "90.0"
+      },
+      {
+        "market": "spp",
+        "cohort": 2020,
+        "entered": 32,
+        "operational": 11,
+        "withdrawn": 0,
+        "unresolved": 21,
+        "unresolved_pct": "65.6"
+      },
+      {
+        "market": "spp",
+        "cohort": 2021,
+        "entered": 42,
+        "operational": 5,
+        "withdrawn": 0,
+        "unresolved": 37,
+        "unresolved_pct": "88.1"
+      },
+      {
+        "market": "spp",
+        "cohort": 2022,
+        "entered": 30,
+        "operational": 3,
+        "withdrawn": 0,
+        "unresolved": 27,
+        "unresolved_pct": "90.0"
+      },
+      {
+        "market": "spp",
+        "cohort": 2023,
+        "entered": 81,
+        "operational": 7,
+        "withdrawn": 0,
+        "unresolved": 74,
+        "unresolved_pct": "91.4"
+      },
+      {
+        "market": "spp",
+        "cohort": 2024,
+        "entered": 62,
+        "operational": 1,
+        "withdrawn": 0,
+        "unresolved": 61,
+        "unresolved_pct": "98.4"
+      }
+    ],
+    "multi_resource_projects": [
+      {
+        "market": "caiso",
+        "projects_with_multiple_resources": 500
+      },
+      {
+        "market": "iso-ne",
+        "projects_with_multiple_resources": 157
+      },
+      {
+        "market": "miso",
+        "projects_with_multiple_resources": 336
+      },
+      {
+        "market": "pjm",
+        "projects_with_multiple_resources": 578
+      }
+    ],
+    "identity_collisions_excluded": [
+      {
+        "source": "iso-ne-interconnection-queue",
+        "deferrals": 92
+      },
+      {
+        "source": "miso-generator-interconnection-queue",
+        "deferrals": 1
+      },
+      {
+        "source": "nyiso-interconnection-queue",
+        "deferrals": 2
+      }
+    ],
+    "ercot_first_seen": {
+      "total": 3325,
+      "after_archive_opens": 2959,
+      "earliest": "2018-12-01",
+      "latest": "2026-08-01"
+    },
+    "load_end_use": {
+      "pjm": {},
+      "miso": {},
+      "caiso": {},
+      "ercot": {},
+      "nyiso": {
+        "data_center": 28,
+        "data_center_ai": 12,
+        "manufacturing": 5,
+        "other": 1,
+        "research": 5,
+        "unknown": 23
+      },
+      "iso-ne": {},
+      "spp": {}
+    }
+  }
+}
