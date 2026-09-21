@@ -41,6 +41,89 @@ const find = (metrics: MetricValue[], metric: string, dimension?: string) =>
   metrics.find((value) => value.metric === metric
     && (dimension === undefined ? value.dimension === null : value.dimension?.value === dimension));
 
+/**
+ * Technology composition, aggregated for display from the rows the API already serves.
+ *
+ * Two things make this less obvious than a pie chart. A project that names solar and a battery is
+ * counted under both — the API says so on every row (`multiLabel`) — so the technology counts sum
+ * to more than the number of projects, and dividing a technology by that sum would invent a
+ * denominator that double-counts hybrids. The denominator here is the number of active projects in
+ * the markets that actually publish technology labels, so a share reads "this fraction of projects
+ * name this technology" and the shares legitimately total more than 100%.
+ *
+ * The second is coverage. A market whose technology rows carry a status rather than a value
+ * contributes nothing and is named, so the mix is never read as national.
+ */
+export type TechnologyShare = {
+  technology: string;
+  label: string;
+  count: number;
+  /** Share of active projects in the contributing markets that name this technology. */
+  share: number;
+};
+
+export type TechnologyComposition = {
+  rows: TechnologyShare[];
+  /** Active projects in the markets that publish technology labels. The share denominator. */
+  projects: number;
+  contributing: string[];
+  /** Markets present in the read model that published no usable technology row. */
+  omitted: { marketName: string; note: string }[];
+};
+
+const TECHNOLOGY_LABELS: Record<string, string> = {
+  solar: "Solar", wind: "Wind", battery_storage: "Battery storage", natural_gas: "Natural gas",
+  nuclear: "Nuclear", hydro: "Hydro", geothermal: "Geothermal", biomass: "Biomass", coal: "Coal",
+  other_generation: "Other generation", hybrid: "Hybrid", transmission: "Transmission",
+  load: "Load", unknown: "Unknown",
+};
+
+const technologyLabel = (value: string) =>
+  TECHNOLOGY_LABELS[value] ?? value.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+
+export function technologyComposition(analytics: QueueAnalyticsReadModel): TechnologyComposition {
+  const counts = new Map<string, number>();
+  const contributing: string[] = [];
+  const omitted: { marketName: string; note: string }[] = [];
+  let projects = 0;
+
+  for (const market of analytics.markets) {
+    const rows = market.metrics.filter((metric) =>
+      metric.metric === "active_request_count_by_technology" && metric.dimension !== null);
+    // Only a live row carries a number. A status is never read as a zero.
+    const live = rows.filter((row) => row.status === "live" && row.value !== null);
+    if (live.length === 0) {
+      // The note is the market's own reason, not a technology's sample size: ISO-NE has 28 active
+      // projects, and "too few projects (6)" would read as though the market held six.
+      if (rows.length > 0) {
+        const active = find(market.metrics, "active_request_count")?.value;
+        omitted.push({
+          marketName: market.marketName,
+          note: rows[0]!.status === "insufficient_sample" && active !== null && active !== undefined
+            ? `${formatNumber(active, 0)} projects, below the sample floor`
+            : statusNote(rows[0]!),
+        });
+      }
+      continue;
+    }
+    contributing.push(market.marketName);
+    // The market's own active count is the honest denominator contribution; the rows agree with it.
+    projects += find(market.metrics, "active_request_count")?.value ?? live[0]!.populationSize;
+    for (const row of live) {
+      const key = row.dimension!.value;
+      counts.set(key, (counts.get(key) ?? 0) + row.value!);
+    }
+  }
+
+  const rows = [...counts.entries()]
+    .map(([technology, count]) => ({
+      technology, label: technologyLabel(technology), count,
+      share: projects === 0 ? 0 : count / projects,
+    }))
+    .sort((a, b) => b.count - a.count);
+  return { rows, projects, contributing, omitted };
+}
+
 export function InterconnectionQueue({ analytics }: { analytics: QueueAnalyticsReadModel }) {
   const markets = [...analytics.markets].sort((a, b) => {
     const left = find(a.metrics, "active_request_count")?.value ?? -1;
@@ -56,6 +139,7 @@ export function InterconnectionQueue({ analytics }: { analytics: QueueAnalyticsR
     total + (find(market.metrics, "active_request_count")?.value ?? 0), 0);
   const maxActive = Math.max(1, ...markets.map((market) =>
     find(market.metrics, "active_request_count")?.value ?? 0));
+  const technology = technologyComposition(analytics);
 
   if (markets.length === 0) {
     return (
@@ -139,6 +223,58 @@ export function InterconnectionQueue({ analytics }: { analytics: QueueAnalyticsR
           .map((market) => `${market.marketName} reports ${find(market.metrics, "active_mw")!.nativeField}`)
           .join("; ")}.
       </p>
+
+
+      {/* 2. What is waiting to connect? Project counts, never MW, and hybrids counted under each. */}
+      <div className="mt-8">
+        <h3 className="text-sm font-medium text-neutral-100">Technology composition</h3>
+        <p className="mt-1 text-xs text-neutral-500">
+          What is waiting to connect, by number of projects.
+        </p>
+        {technology.rows.length === 0 ? (
+          <p className="mt-3 text-sm text-neutral-400">
+            No market currently publishes a technology breakdown that meets the sample floor.
+          </p>
+        ) : (
+          <>
+            <ol className="mt-3 divide-y divide-white/[0.06]"
+              aria-label="Active interconnection requests by technology">
+              {technology.rows.map((row) => (
+                <li key={row.technology}
+                  className="grid grid-cols-[minmax(6rem,9rem)_minmax(0,1fr)_4.5rem_4rem] items-center gap-x-3 py-2 text-sm">
+                  <span className="min-w-0 truncate text-neutral-300">{row.label}</span>
+                  <span className="relative h-2.5 overflow-hidden rounded-[1px] bg-white/[0.04]" aria-hidden="true">
+                    <span className="absolute inset-y-0 left-0 rounded-[1px] bg-[#7a8de8]"
+                      style={{ width: `${Math.min(100, row.share * 100)}%` }} />
+                  </span>
+                  <span className="text-right font-medium tabular-nums text-neutral-50">
+                    {formatNumber(row.count, 0)}
+                    <span className="sr-only"> projects</span>
+                  </span>
+                  <span className="text-right tabular-nums text-xs text-neutral-500">
+                    {PERCENT(row.share)}
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-3 text-xs text-neutral-500">
+              Counts are projects, not megawatts. A project that names more than one technology is
+              counted under each, so the shares total more than 100%: they read as the share of the{" "}
+              {formatNumber(technology.projects, 0)} active projects in{" "}
+              {technology.contributing.join(", ")} that name each technology.
+              {technology.omitted.length === 0 ? null : (
+                <> Not included: {technology.omitted
+                  .map((market) => `${market.marketName} (${market.note})`).join("; ")}.</>
+              )}
+              {analytics.excludedMarkets.length === 0 ? null : (
+                <> {analytics.excludedMarkets.map((market) => market.marketName).join(", ")}{" "}
+                  {analytics.excludedMarkets.length === 1 ? "is" : "are"} not shown at all. This is the
+                  mix of the markets Urdais may publish, not of the United States.</>
+              )}
+            </p>
+          </>
+        )}
+      </div>
 
       {/* 4 and 5. How many make it through, and how long does that take? */}
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
