@@ -88,10 +88,12 @@ insert into reference.transmission_code_map (domain, code, ordinal) values
   ('margin_state', 'unmonitored_direction', 2),
   ('margin_state', 'zero_flow_direction_undetermined', 3),
   ('margin_state', 'implausible_limit', 4),
-  ('selected_direction', 'undetermined', 0),
+  -- Shares ordinals with limit_direction for every concept both have, because the margin
+  -- compatibility trigger compares them numerically. Only 'undetermined' is selected-only.
+  ('selected_direction', 'undirected', 0),
   ('selected_direction', 'positive', 1),
   ('selected_direction', 'negative', 2),
-  ('selected_direction', 'undirected', 3),
+  ('selected_direction', 'undetermined', 3),
   ('timestamp_zone_status', 'source_stated', 0),
   ('timestamp_zone_status', 'assumed_market_local', 1),
   ('timestamp_zone_status', 'ambiguous', 2),
@@ -221,8 +223,9 @@ create table pipeline.transmission_margins_v2 (
   constraint transmission_margin_v2_value_matches_state check ((state = 1) = (headroom_mw is not null)),
   constraint transmission_margin_v2_ok_has_limit check (
     state <> 1 or (limit_observation_id is not null and limit_field_used is not null)),
+  -- 3 is 'undetermined': zero flow chose no direction, so it may hold no limit.
   constraint transmission_margin_v2_zero_flow_has_no_limit check (
-    state <> 3 or (limit_observation_id is null and selected_direction = 0)),
+    state <> 3 or (limit_observation_id is null and selected_direction = 3)),
   constraint transmission_margin_v2_utilization_range check (utilization_pct is null or utilization_pct >= 0),
   unique (calculation_version_id, entity_id, observed_at, contingency_kind, selected_direction)
 );
