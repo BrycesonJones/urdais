@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 
 import { SnapshotChart } from "@/components/charts/snapshot-chart";
 import { marketIndexHref } from "@/lib/routes";
@@ -11,22 +10,22 @@ type UcpiChartProps = {
   symbol: string;
   unit: string;
   series: IndexSeries;
+  range: TimeRange;
+  onRangeChange: (range: TimeRange) => void;
 };
 
-const DEFAULT_RANGE: TimeRange = "1M";
 const INTRADAY_RANGES: ReadonlySet<TimeRange> = new Set(["1D", "1W"]);
 
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-400";
 
 /**
- * Snapshot preview plus timeframe controls; owns the selected range.
- * The preview is a link to the detail page; the buttons sit beside it,
- * outside the anchor, so they change the range without navigating.
+ * Snapshot preview plus timeframe controls.
+ *
+ * The selected range is owned by the parent summary so the chart, headline
+ * period label, and headline period return always move together.
  */
-export function UcpiChart({ symbol, unit, series }: UcpiChartProps) {
-  const [range, setRange] = useState<TimeRange>(DEFAULT_RANGE);
-
+export function UcpiChart({ symbol, unit, series, range, onRangeChange }: UcpiChartProps) {
   return (
     <div className="flex flex-col gap-3">
       <Link
@@ -50,7 +49,7 @@ export function UcpiChart({ symbol, unit, series }: UcpiChartProps) {
               key={option}
               type="button"
               aria-pressed={selected}
-              onClick={() => setRange(option)}
+              onClick={() => onRangeChange(option)}
               className={`rounded-md px-2.5 py-1 text-xs font-medium tabular-nums transition-colors ${
                 selected
                   ? "bg-white/10 text-neutral-50"
