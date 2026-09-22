@@ -187,6 +187,14 @@ export const docPages: readonly DocPage[] = [
     file: "methodology/power-delivery-gap.md",
   },
   {
+    slug: "methodology/transmission-headroom",
+    title: "Transmission Headroom",
+    description:
+      "Production methodology for operational transmission margin: NYISO interface headroom and ERCOT constraint margin as two separate market-specific measurements, why they are never combined, the exact sentinel and plausibility rules that decide when a published limit is a number at all, and the populations each source actually observes.",
+    section: "Methodology",
+    file: "methodology/transmission-headroom.md",
+  },
+  {
     slug: "methodology/interconnection-queue-analytics",
     title: "Interconnection Queue Analytics",
     description:
