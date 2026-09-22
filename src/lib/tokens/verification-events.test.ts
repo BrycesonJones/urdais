@@ -109,6 +109,11 @@ function memoryDb() {
         return { rows: [...observations].sort((a, b) => String(a.retrieved_at).localeCompare(String(b.retrieved_at))) };
       }
 
+      if (sql.startsWith("SELECT id, idempotency_key FROM pipeline.source_retrievals")) {
+        const wanted = new Set((params[0] as string[]) ?? []);
+        return { rows: [...retrievals.values()].filter((row) => wanted.has(String(row.idempotency_key))).map((row) => ({ id: row.id, idempotency_key: row.idempotency_key })) };
+      }
+
       if (sql.includes("FROM pipeline.source_retrievals r")) {
         const wanted = new Set((params[0] as string[]) ?? []);
         return { rows: [...retrievals.values()].filter((row) => wanted.has(String(row.id))) };
@@ -243,6 +248,13 @@ function memoryDb() {
       }
 
       if (sql.startsWith("INSERT INTO pipeline.token_price_verifications")) {
+        // The real schema has a foreign key here, and it is the whole point: an
+        // attestation that names a retrieval row which does not exist is dangling
+        // provenance. Enforced in the harness so that failure is a test failure
+        // rather than a production one.
+        if (params[7] !== null && ![...retrievals.values()].some((row) => row.id === params[7])) {
+          throw new Error(`foreign key violation: source_retrieval_id ${String(params[7])} is not a retrieval`);
+        }
         const key = String(params[2]);
         if (verifications.some((row) => row.idempotency_key === key)) return { rows: [] };
         const row = {
@@ -323,6 +335,33 @@ async function seedSeptember14(db: MemoryDb): Promise<void> {
       };
     }),
   );
+
+  reproduceProductionRetrievalShape(db);
+}
+
+/**
+ * Production's actual retrieval shape, which the plain seed does not reproduce.
+ *
+ * UrdaisProd carries two retrieval rows per Wave-1 provider for the same artifact:
+ * a legacy one keyed by the instant the operator ran the command, which owns every
+ * observation, and a later one keyed by artifact hash alone, which owns none. That
+ * happened because the manual key was changed to hash-only after the first runs,
+ * deliberately, so a re-read of an unchanged page stops minting retrievals.
+ *
+ * It matters here because the catalog loader only loads retrievals that observations
+ * reference. The store therefore never sees the hash-only row, ingest mints a fresh
+ * in-memory one, its insert is a no-op against the existing key, and the in-memory id
+ * belongs to no row on disk. An attestation that trusted that id pointed at nothing.
+ */
+function reproduceProductionRetrievalShape(db: MemoryDb): void {
+  for (const retrieval of [...db.retrievals.values()]) {
+    const legacyId = `legacy-${String(retrieval.id)}`;
+    const legacyKey = `${String(retrieval.idempotency_key).replace(/:manual_verified$/, "")}:${String(retrieval.completed_at)}`;
+    db.retrievals.set(legacyKey, { ...retrieval, id: legacyId, idempotency_key: legacyKey });
+    for (const observation of db.observations) {
+      if (observation.source_retrieval_id === retrieval.id) observation.source_retrieval_id = legacyId;
+    }
+  }
 }
 
 async function freshnessAt(db: MemoryDb, now: string) {
@@ -355,12 +394,16 @@ describe("an unchanged review refreshes freshness and invents nothing", () => {
     // hash, so re-reading a byte-identical page is the same retrieval. Exactly one
     // is added, xAI's, because that page genuinely changed.
     expect(db.retrievals.size).toBe(retrievalsBefore + 1);
+    // Two rows per unchanged provider, both from before this run: the legacy
+    // instant-keyed retrieval that owns the observations, and the hash-only one
+    // that owns none. The 22 September read added neither.
     const byInterface = (slug: string) => [...db.retrievals.values()].filter((row) => row.source_interface_slug === slug);
-    expect(byInterface("anthropic-api-pricing-docs")).toHaveLength(1);
-    expect(byInterface("openai-api-pricing-docs")).toHaveLength(1);
-    expect(byInterface("deepseek-api-pricing-docs")).toHaveLength(1);
+    expect(byInterface("anthropic-api-pricing-docs")).toHaveLength(2);
+    expect(byInterface("openai-api-pricing-docs")).toHaveLength(2);
+    expect(byInterface("deepseek-api-pricing-docs")).toHaveLength(2);
+    // xAI gains one, because that artifact genuinely changed and hashes differently.
     const xaiRetrievals = byInterface("xai-models-docs");
-    expect(xaiRetrievals).toHaveLength(2);
+    expect(xaiRetrievals).toHaveLength(3);
     expect(new Set(xaiRetrievals.map((row) => row.response_hash)).size).toBe(2);
 
     // The only new price rows in the whole run belong to xAI's newly published model.
@@ -368,6 +411,30 @@ describe("an unchanged review refreshes freshness and invents nothing", () => {
     expect(db.observations.length).toBeGreaterThan(observationsBefore);
     // And the only new benchmark is xAI's successor point.
     expect(db.benchmarks.length - benchmarksBefore).toBe(1);
+  });
+
+  it("links every attestation to a retrieval row that exists", async () => {
+    // The failure this covers reached production. The attestation carried the
+    // in-memory retrieval id from the ingest run, and for an unchanged artifact
+    // that row is never inserted -- its key already exists, so the insert is
+    // correctly a no-op. The id therefore belonged to nothing, the foreign key
+    // refused the whole attestation batch, and a completed review recorded no
+    // evidence at all. Provenance is resolved by idempotency key now, which is
+    // the artifact's stable identity; the row id is not.
+    const db = memoryDb();
+    await seedSeptember14(db);
+    await runProductionVerification(db, SEP_22_REVIEW);
+
+    const retrievalIds = new Set([...db.retrievals.values()].map((row) => row.id));
+    const events = db.verifications.filter((row) => row.verified_at === SEP_22);
+    expect(events).toHaveLength(WAVE1_PROVIDERS.length);
+    for (const event of events) {
+      expect(event.source_retrieval_id).not.toBeNull();
+      expect(retrievalIds.has(event.source_retrieval_id)).toBe(true);
+      // And it is the row that actually holds the artifact the person read.
+      const retrieval = [...db.retrievals.values()].find((row) => row.id === event.source_retrieval_id)!;
+      expect(retrieval.response_hash).toBe(event.artifact_sha256);
+    }
   });
 
   it("turns the watchdog green on the day of the review, with an age of zero", async () => {
