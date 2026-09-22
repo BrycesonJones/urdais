@@ -364,6 +364,107 @@ describe("memory price methodology", () => {
   });
 });
 
+describe("open-data memory price methodology", () => {
+  const kr = findDoc("methodology/umpi-kr-dram");
+  const spot = findDoc("methodology/umpi");
+  const read = (file: string) => readFileSync(path.join(process.cwd(), "docs", file), "utf8");
+
+  it("registers UMPI-KR DRAM under Methodology, directly after the spot document it replaces as V1", () => {
+    expect(kr).toMatchObject({ section: "Methodology", file: "methodology/umpi-kr-dram.md" });
+    expect(docPages[docPages.indexOf(spot!) + 1]).toBe(kr);
+    expect(docHref(kr!.slug)).toBe("/docs/methodology/umpi-kr-dram");
+    const doc = read(kr!.file);
+    expect(doc).toContain("](/docs/methodology)");
+    expect(doc.match(/^# /gm)).toHaveLength(1);
+    expect(read("methodology.md")).toContain(`](${docHref(kr!.slug)})`);
+  });
+
+  it("is a new draft lineage with no effective date, and says why it is not a version bump", () => {
+    const doc = read(kr!.file);
+    expect(doc).toContain("version 0.1.0-draft");
+    expect(doc).toContain("**No effective date**");
+    expect(doc).toContain("Why a new lineage rather than a version bump");
+    expect(doc).toContain("0.1.0-draft, 22 September 2026");
+    expect(doc).not.toMatch(/Status: approved/);
+  });
+
+  it("publishes two monthly index-point series with a MoM change, and no daily semantics anywhere", () => {
+    const doc = read(kr!.file);
+    expect(doc).toContain("`UMPI-KR-DRAM-PPI`");
+    expect(doc).toContain("`UMPI-KR-DRAM-EXPORT-UV`");
+    expect(doc).toContain("| Unit, both | Index points |");
+    expect(doc).toContain("| Cadence, both | Monthly |");
+    expect(doc).toContain("The canonical change is MoM");
+    expect(doc).toContain("MoM_t = (value_t \u2212 value_{t\u22121}) / value_{t\u22121}");
+    expect(doc).toContain("Never `1D`, never `session`, never `today`");
+    expect(doc).toContain("no interpolation of any kind");
+    // The new V1 prices no chips. The test targets what the document *declares* as its own
+    // unit and universe, not any mention of the old ones: the surface requirements have to be
+    // able to say "remove USD/chip", and the deferred spot product has to remain nameable.
+    expect(doc).not.toMatch(/Published unit \| USD/);
+    expect(doc).not.toMatch(/Native unit \| USD ?\/ ?chip/);
+    expect(doc).toContain("Remove `USD/chip`, `1D`, `today` and the branded/eTT family selector");
+    expect(doc).toContain("the six Phase 2A chip instruments under new names");
+    expect(doc).toContain("do not inherit those identifiers");
+    // No generation, density or grade universe is claimed by the new series.
+    expect(doc).toContain("Not branded versus eTT");
+    expect(doc).toContain("BOK surveys **one DRAM commodity**");
+  });
+
+  it("keeps the price index and the unit-value index separate, and never blends them", () => {
+    const doc = read(kr!.file);
+    expect(doc).toContain("The PPI / UV distinction, frozen");
+    expect(doc).toContain("| Kind | **Price index** | **Unit-value index** |");
+    expect(doc).toContain("never averaged, blended, chained, spliced, or used to impute one another");
+    // The mix warning is a property of the series, not optional presentation.
+    expect(doc).toContain("A unit value is not a price");
+    expect(doc).toContain("trade unit-value index");
+    expect(doc).toContain("mix warning");
+  });
+
+  it("records the verified source identifiers and the rebasing rule", () => {
+    const doc = read(kr!.file);
+    expect(doc).toContain("404Y016");
+    expect(doc).toContain("30911201AA");
+    expect(doc).toContain("2020=100");
+    expect(doc).toContain("8542321010");
+    expect(doc).toContain("expDlr");
+    expect(doc).toContain("expWgt");
+    expect(doc).toContain("uv_usd_per_kg_t = expDlr_t / expWgt_t");
+    expect(doc).toContain("The base is the calendar-year 2020 aggregate unit value");
+    // An item code alone is ambiguous across BOK tables; the methodology must say so.
+    expect(doc).toContain("(stat_code, item_code, cycle)");
+  });
+
+  it("requires attribution for both agencies and bans every proprietary source from V1", () => {
+    const doc = read(kr!.file);
+    expect(doc).toContain("Bank of Korea");
+    expect(doc).toContain("Korea Customs Service");
+    expect(doc).toContain("출처가 한국은행임을 반드시 밝혀야 하며");
+    expect(doc).toContain("이용허락범위 제한 없음");
+    expect(doc).toContain("## Prohibited sources");
+    for (const banned of ["TrendForce", "MOTIE", "CFM", "KITA", "Digi-Key", "UN Comtrade", "Aggregators"]) {
+      expect(doc, banned).toContain(banned);
+    }
+    expect(doc).toContain("A restriction on a figure attaches to the figure, not to the page it is read from");
+  });
+
+  it("preserves the spot architecture as deferred rather than deleting or rewriting it", () => {
+    // The deferred document still exists, still carries its own version, and is still readable.
+    const doc = read(spot!.file);
+    expect(doc).toContain("Status: deferred");
+    expect(doc).toContain("Not the UMPI V1 launch methodology");
+    expect(doc).toContain(`](${docHref(kr!.slug)})`);
+    expect(doc).toContain("version 0.1.0-draft");
+    // Its substance survives: the six instruments and their unit are still specified there.
+    expect(doc).toContain("DDR4 16Gb eTT");
+    expect(doc).toContain("USD per chip");
+    // And the new methodology points back at it without reviving it.
+    expect(read(kr!.file)).toContain(`](${docHref(spot!.slug)})`);
+    expect(read(kr!.file)).toContain("deferred, not deleted");
+  });
+});
+
 describe("internal research and architecture artifacts", () => {
   const internalDirs = ["research", "architecture"] as const;
 

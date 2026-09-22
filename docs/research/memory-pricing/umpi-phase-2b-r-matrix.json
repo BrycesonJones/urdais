@@ -1,0 +1,418 @@
+{
+  "title": "UMPI Phase 2B-R — open and commercially reusable source discovery",
+  "as_of": "2026-09-22",
+  "research_window": "2026-09-21/22",
+  "status": "internal licensing/source research; establishes no legal right; does not write code or ingest data",
+  "companion_markdown": "docs/research/memory-pricing/umpi-phase-2b-r.md",
+  "prior_work": [
+    "docs/research/memory-pricing/source-shortlist.md",
+    "docs/research/memory-pricing/umpi-phase-1b.md",
+    "docs/research/memory-pricing/umpi-phase-2b.md"
+  ],
+  "evidence_classes": ["verified", "retrieved", "inferred"],
+  "rights_classes": [
+    "production_safe",
+    "production_safe_derived_only",
+    "ambiguous",
+    "prohibited",
+    "coverage_inadequate"
+  ],
+  "product_intent": {
+    "measures": "DRAM memory pricing",
+    "phase_2a_instruments": [
+      "DDR5 16Gb — 2Gx8 — 4800/5600 — Major",
+      "DDR4 16Gb — 2Gx8 — 3200 — Major",
+      "DDR4 8Gb — 1Gx8 — 3200 — Major",
+      "DDR4 16Gb eTT — 2Gx8 — eTT",
+      "DDR4 8Gb eTT — 1Gx8 — eTT",
+      "DDR3 4Gb — 512Mx8 — 1600/1866 — Major"
+    ],
+    "phase_2a_unit": "USD/chip",
+    "phase_2a_cadence": "daily_spot",
+    "structure_may_change": true,
+    "economic_object_must_remain_dram_pricing": true
+  },
+  "executive_conclusion": {
+    "gate": "OPEN_SOURCE_UMPI_PATH_FOUND",
+    "open_path_is": "monthly official DRAM price-index product",
+    "open_path_is_not": "six-instrument daily USD/chip spot tape",
+    "no_production_safe_usd_per_chip_source": true,
+    "motie_fixed_prices_are_trendforce_lineage": true,
+    "bok_surveys_dram_independently": true,
+    "korea_customs_8542321010_is_open_but_mixed_kg": true,
+    "standard_commercial_apis_do_not_permit_umpi_rights": true,
+    "trendforce_role": "fallback requiring bespoke licence"
+  },
+  "final_gate": "OPEN_SOURCE_UMPI_PATH_FOUND",
+  "engineering_stack": {
+    "step_1": "Register ECOS API key and data.go.kr service key",
+    "step_2": "StatisticItemList on 404Y014, 404Y015, 404Y016, 402Y014 for DRAM",
+    "step_3": "Ingest monthly BOK DRAM PPI as UMPI-KR DRAM PPI (index, MoM, vintage, attribution)",
+    "step_4": "Ingest monthly Customs HS 8542321010 export USD/kg as UMPI-KR DRAM export unit-value index (rebased, mix warning)",
+    "do_not": [
+      "publish USD/chip",
+      "publish six spot instruments",
+      "interpolate daily",
+      "ingest MOTIE 고정가격 footnotes"
+    ],
+    "optional_second_sprint": [
+      "BOK DRAM export-price item once code confirmed",
+      "BLS PCU3344133344131 labelled as US IC PPI not DRAM"
+    ]
+  },
+  "architectures": {
+    "1_open_exact_price_benchmark": {
+      "viable": false,
+      "reason": "no production-safe USD/chip series independent of TrendForce",
+      "can_launch_immediately": false
+    },
+    "2_open_relative_memory_price_index": {
+      "viable": true,
+      "recommended_default": true,
+      "instruments": [
+        "UMPI-KR DRAM PPI",
+        "UMPI-KR DRAM export unit-value index"
+      ],
+      "optional_instrument": "UMPI-KR DRAM export price index (BOK XPI) after item-code confirmation",
+      "unit": "index_points",
+      "cadence": "monthly",
+      "change_label": "MoM",
+      "rights": "production_safe",
+      "can_launch_immediately": "after API keys and live item-code confirmation",
+      "phase_2a_changes_required": true
+    },
+    "3_hybrid_exact_plus_index": {
+      "viable": false,
+      "viable_without_fake_chip_prices": true,
+      "note": "same as architecture 2 plus optional BLS IC PPI and OGDL Taiwan HS 854232 UV labelled as including HBM; do not add MOTIE USD/chip"
+    },
+    "4_customs_derived_benchmark": {
+      "viable_as_usd_per_chip": false,
+      "viable_as_labelled_mixed_uv_index": true,
+      "reason": "8542321010 is all DRAM chips; API returns kg not pieces; no DDR split"
+    },
+    "5_public_plus_standard_license_commercial": {
+      "viable": false,
+      "reason": "no commercial API standard terms already grant storage plus commercial derived publication"
+    }
+  },
+  "motie_fixed_prices": {
+    "agency": "Ministry of Trade, Industry and Energy, 수출입과",
+    "role": "press-release footnote, not an official statistical survey",
+    "densities_printed": ["DDR4 8Gb", "DDR5 16Gb", "NAND 128Gb"],
+    "not_printed_this_pass": ["eTT", "DDR4 16Gb", "DDR3 4Gb"],
+    "april_2026_pdf": {
+      "DDR4_8Gb_usd": {"from": 1.65, "to": 16.0},
+      "DDR5_16Gb_usd": {"from": 4.6, "to": 35.0},
+      "evidence_class": "verified"
+    },
+    "august_2026_html_ddr5_16gb_usd": [35.0, 37.5, 40.0, 45.0, 46.5],
+    "source_named_in_motie_text": false,
+    "independent_attribution_of_same_series": "Yonhap/e-focus attribute DDR4 8Gb 고정거래가격 to DRAMeXchange/TrendForce; MOTIE April $16 matches that April print",
+    "kogl": "MOTIE press text often KOGL Type 1 for text; Type 1 does not license third-party survey numbers",
+    "classification": "prohibited",
+    "evidence_class": "verified"
+  },
+  "bok_ecos": {
+    "ppi_dram": {
+      "exists": true,
+      "unit": "index_2020_equals_100",
+      "cadence": "monthly",
+      "quality_adjusted": true,
+      "stage": "domestic_producer_shipments",
+      "finer_ddr_split_found": false,
+      "working_map_unconfirmed_live": {
+        "stat_code": "404Y016",
+        "item_code1": "30911201AA",
+        "nand_item_code1": "30911202AA",
+        "logic_item_code1": "30911203AA",
+        "source": "pyecos src/pyecos/curation/_generated.py",
+        "evidence_class": "retrieved"
+      },
+      "related_tables": {
+        "404Y014": "생산자물가지수(기본분류)",
+        "404Y015": "생산자물가지수(특수분류)"
+      },
+      "api": "https://ecos.bok.or.kr/api/StatisticSearch/{KEY}/json/kr/1/{n}/{STAT}/M/{YYYYMM}/{YYYYMM}/{ITEM}",
+      "item_list": "https://ecos.bok.or.kr/api/StatisticItemList/{KEY}/json/kr/1/1000/{STAT}",
+      "data_go_kr": {
+        "id": "15059642",
+        "name": "Bank of Korea_Producer Price Survey",
+        "license_field": "The use permission range limitless",
+        "evidence_class": "verified"
+      },
+      "kosis": {
+        "commercial_use": true,
+        "redistribution": true,
+        "must_attribute": true,
+        "must_not_distort": true,
+        "must_not_sell_unmodified_table_as_paid_replica": true,
+        "evidence_class": "verified"
+      },
+      "bok_copyright": {
+        "public_data_list_items_freely_usable": true,
+        "attribution_required": true,
+        "modifications_must_be_disclosed": true,
+        "evidence_class": "verified"
+      },
+      "independent_of_trendforce": true,
+      "rights": "production_safe",
+      "press_examples_not_umpi_prints": [
+        "2026-01 DRAM PPI +49.5% MoM (retrieved)",
+        "2026-08 DRAM +476.1% YoY in PPI coverage (retrieved)"
+      ]
+    },
+    "export_price_dram": {
+      "press_cites_separate_dram_export_price_index": true,
+      "example_retrieved": "2026-01 DRAM XPI 147.44, 2020=100, +102% YoY",
+      "pyecos_maps_semiconductor_aggregate": {
+        "stat_code": "402Y014",
+        "item_code1": "30911AA",
+        "name": "Semiconductor Export Price Index",
+        "do_not_publish_as_dram": true
+      },
+      "dram_item_code": "unconfirmed_this_pass",
+      "currency_bases": ["KRW", "contract_currency", "USD"],
+      "rights_once_identified": "production_safe"
+    }
+  },
+  "korea_customs": {
+    "codes": {
+      "8542321010": "DRAM chips (디램)",
+      "8473304060": "DRAM modules (디램 모듈)",
+      "8542321020": "SRAM (retrieved)",
+      "8542323000": "MCP; secondary sources place HBM here — official HSK text not extracted this pass"
+    },
+    "kosis_warning": "MSIT ICT 'DRAM' export = 8542321010 + 8473304060; do not use that blend as chip UV",
+    "apis": [
+      {
+        "data_go_kr_id": "15101609",
+        "name": "관세청_품목별 수출입실적(GW)",
+        "license_field": "이용허락범위 제한 없음",
+        "evidence_class": "verified"
+      },
+      {
+        "data_go_kr_id": "15100475",
+        "name": "관세청_품목별 국가별 수출입실적(GW)",
+        "endpoint": "https://apis.data.go.kr/1220000/nitemtrade/getNitemtradeList",
+        "required": ["serviceKey", "strtYymm", "endYymm", "cntyCd"],
+        "hs_param": "hsSgn",
+        "fields": ["expWgt", "expDlr", "impWgt", "impDlr"],
+        "quantity_pieces_in_spec": false,
+        "max_window": "1 year",
+        "license_field": "이용허락범위 제한 없음",
+        "evidence_class": "verified"
+      }
+    ],
+    "hs_file": "data.go.kr 15049722 관세청_HS부호_20260101",
+    "unit_value": "expDlr / expWgt = USD/kg",
+    "isolates_ddr_generation": false,
+    "isolates_ett": false,
+    "publish_as": "rebased mixed DRAM-chip export unit-value index",
+    "never_publish_as": "USD/chip or DDR5 16Gb",
+    "kita_trass": {
+      "use_as_production_feed": false,
+      "reason": "KITA terms bar copy/distribution/commercial use without prior approval; K-stat some menus paid/member-only",
+      "evidence_class": "verified"
+    },
+    "rights": "production_safe"
+  },
+  "taiwan": {
+    "mof_bulletin": {
+      "url": "https://service.mof.gov.tw/public/Data/statistic/bulletin/114/2025_20_Memory_Exports_and_Imports.pdf",
+      "date": "2025-10-30",
+      "dram_hs": "854232",
+      "other_memories": ["8542320023", "8542320090"],
+      "dram_includes_hbm": true,
+      "modules_in": "847330",
+      "isolates_ddr_generation": false,
+      "evidence_class": "verified"
+    },
+    "ogdl_taiwan_1_0": {
+      "url": "https://data.gov.tw/en/license",
+      "commercial": true,
+      "derivatives": true,
+      "sublicense": true,
+      "no_additional_writing_required": true,
+      "attribution_failure_voids_licence_ab_initio": true,
+      "evidence_class": "verified"
+    },
+    "ita_query_portal": {
+      "avg_price_per_unit_and_per_kg": true,
+      "footer": "Copyright © 2026 All Rights Reserved",
+      "do_not_assume_ogdl": true,
+      "rights": "ambiguous",
+      "evidence_class": "retrieved"
+    }
+  },
+  "japan": {
+    "boj_cgpi_mos_memory_ics": {
+      "commodity_exists": true,
+      "series_code_this_pass": null,
+      "commercial_reproduction": "prior permission from Research and Statistics Department required",
+      "notice_url": "https://www.stat-search.boj.or.jp/info/notice_en.html",
+      "rights": "ambiguous",
+      "in_v1_stack": false,
+      "evidence_class": "verified"
+    }
+  },
+  "china": {
+    "nbs_ppi": {
+      "series": "计算机、通信和其他电子设备制造业",
+      "dram_item": false,
+      "rights": "ambiguous",
+      "coverage": "coverage_inadequate"
+    },
+    "ndrc_price_monitoring": {
+      "cites_ddr4_8gb_contract_usd": true,
+      "lineage": "commercial survey shape; out of UMPI",
+      "classification": "prohibited"
+    },
+    "customs": {
+      "portal": "http://stats.customs.gov.cn",
+      "hs_854232_exists": true,
+      "rights": "ambiguous",
+      "in_v1_stack": false
+    }
+  },
+  "united_states": {
+    "bls": {
+      "PCU334413334413": "semiconductor and related device manufacturing",
+      "PCU3344133344131": "integrated microcircuits including microprocessors and MOS memories",
+      "is_dram": false,
+      "copyright": "public domain; cite BLS; no emblem",
+      "api": "https://api.bls.gov/publicAPI/v2/timeseries/data/",
+      "rights": "production_safe",
+      "role": "optional_context_only",
+      "evidence_class": "verified"
+    },
+    "census_hs": {
+      "exports": "https://api.census.gov/data/timeseries/intltrade/exports/hs",
+      "imports": "https://api.census.gov/data/timeseries/intltrade/imports/hs",
+      "quantity_at": "HS10",
+      "hs_854232": "memories; US is not a DRAM producer",
+      "rights": "production_safe",
+      "role": "optional_weak_context"
+    }
+  },
+  "procurement": {
+    "recurring_dram_chip_tape_found": false,
+    "what_was_found": "sparse module solicitations/awards (DDR4/DDR5 DIMMs), not chip session prices",
+    "classification": "coverage_inadequate"
+  },
+  "standard_commercial_apis": [
+    {
+      "name": "Digi-Key API",
+      "url": "https://developer.digikey.com/api-user-agreement",
+      "storage": "prohibited as own database",
+      "derivatives": "prohibited",
+      "post_termination": "delete all DigiKey Data",
+      "classification": "prohibited",
+      "evidence_class": "verified"
+    },
+    {
+      "name": "Nexar / Octopart",
+      "url": "https://nexar.com/api/legal",
+      "cache": "max 24 hours",
+      "standalone_redistribution": "prohibited",
+      "classification": "prohibited",
+      "evidence_class": "verified"
+    },
+    {
+      "name": "UN Comtrade",
+      "url": "https://comtradeplus.un.org/LicenseAgreement",
+      "use": "internal",
+      "commercial_redissemination": "prior UN permission / paid licence",
+      "classification": "prohibited",
+      "evidence_class": "verified"
+    },
+    {
+      "name": "Silicon Data RAM Index",
+      "coverage": "GDDR6 only",
+      "classification": "coverage_inadequate"
+    }
+  ],
+  "coverage_vs_phase_2a": [
+    {
+      "instrument": "DDR5 16Gb — 2Gx8 — 4800/5600 — Major",
+      "open_usd_chip": false,
+      "official_index": "collapsed_into_bok_dram",
+      "customs": "collapsed_into_8542321010"
+    },
+    {
+      "instrument": "DDR4 16Gb — 2Gx8 — 3200 — Major",
+      "open_usd_chip": false,
+      "official_index": "collapsed_into_bok_dram",
+      "customs": "collapsed_into_8542321010"
+    },
+    {
+      "instrument": "DDR4 8Gb — 1Gx8 — 3200 — Major",
+      "open_usd_chip": false,
+      "motie_footnote": "trendforce_lineage",
+      "official_index": "collapsed_into_bok_dram",
+      "customs": "collapsed_into_8542321010"
+    },
+    {
+      "instrument": "DDR4 16Gb eTT",
+      "open_usd_chip": false,
+      "official_index": false,
+      "customs": false
+    },
+    {
+      "instrument": "DDR4 8Gb eTT",
+      "open_usd_chip": false,
+      "official_index": false,
+      "customs": false
+    },
+    {
+      "instrument": "DDR3 4Gb — 512Mx8 — 1600/1866 — Major",
+      "open_usd_chip": false,
+      "official_index": "collapsed_into_bok_dram",
+      "customs": "collapsed_into_8542321010"
+    }
+  ],
+  "smallest_launchable_universe": [
+    "UMPI-KR DRAM PPI"
+  ],
+  "recommended_launch_universe": [
+    "UMPI-KR DRAM PPI",
+    "UMPI-KR DRAM export unit-value index (HS 8542321010 USD/kg rebased)"
+  ],
+  "cadence_recommendation": {
+    "observation": "monthly",
+    "change_label": "MoM",
+    "intraday": false,
+    "daily_interpolation": false,
+    "header_word_today": false,
+    "keep_last_updated_vintage": true
+  },
+  "phase_2a_changes": [
+    "replace six USD/chip instruments with one or two monthly official DRAM indexes",
+    "replace unit USD/chip with index points and stated base",
+    "replace 1D/today with MoM",
+    "define object as Korea producer DRAM (quality-adjusted) and mixed Korean DRAM-chip export UV",
+    "do not claim branded vs eTT or org/speed bins",
+    "ban mapping UV or PPI onto old chip IDs",
+    "ban MOTIE/Yonhap/NDRC USD/chip as inputs",
+    "attribution on every surface",
+    "HBM withheld",
+    "TrendForce remains the only path back to six-instrument daily USD/chip"
+  ],
+  "backfill": {
+    "bok_dram_ppi": "yes via StatisticSearch; confirm START_TIME and rebase links",
+    "customs_8542321010": "yes monthly value/kg; mix shift is the series",
+    "taiwan_854232": "annual in MOF bulletin; monthly only if OGDL microdata exists",
+    "six_chip_daily": "no open backfill"
+  },
+  "remaining_blockers": [
+    "live StatisticItemList confirmation of DRAM PPI table/item",
+    "whether 402Y014 has a DRAM item distinct from 30911AA",
+    "current ECOS 통계정보이용지침 vs data.go.kr unlimited-use field",
+    "8542321010 quantity-unit code in HS file 15049722 (V1 still uses kg)",
+    "Taiwan monthly 10-digit OGDL file actually exists",
+    "product choice: monthly index UMPI vs return to TrendForce for daily USD/chip",
+    "counsel: cited BOK/Customs on a commercial page is processed use not as-is paid dump"
+  ],
+  "outreach_required_to_launch_architecture_2": false,
+  "trendforce": "fallback requiring bespoke licence"
+}
