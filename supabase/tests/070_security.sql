@@ -128,7 +128,16 @@ declare
     'pipeline.interconnection_queue_deferrals', 'pipeline.interconnection_source_checks',
     'reference.interconnection_load_end_uses', 'reference.interconnection_request_subtypes',
     'reference.interconnection_metric_definitions',
-    'pipeline.interconnection_analytics_runs', 'pipeline.interconnection_metric_results'
+    'pipeline.interconnection_analytics_runs', 'pipeline.interconnection_metric_results',
+    -- Transmission Headroom (TH-2)
+    'reference.transmission_entity_kinds', 'reference.transmission_contingency_kinds',
+    'reference.transmission_limit_states', 'reference.transmission_margin_states',
+    'reference.transmission_deferral_reasons', 'reference.transmission_calculation_versions',
+    'reference.transmission_source_monitors',
+    'pipeline.transmission_snapshots', 'pipeline.raw_transmission_records',
+    'pipeline.transmission_interfaces', 'pipeline.transmission_elements',
+    'pipeline.transmission_flow_observations', 'pipeline.transmission_limit_observations',
+    'pipeline.transmission_margins', 'pipeline.transmission_deferrals'
   ];
   n integer;
 begin
