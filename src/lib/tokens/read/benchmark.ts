@@ -257,6 +257,28 @@ export const TOKEN_BENCHMARK_WITHHELD: readonly TokenBenchmarkWithholding[] = [
   },
 ];
 
+/**
+ * What makes two benchmark points comparable, as one string.
+ *
+ * The methodology's rule, verbatim: percentage change compares a value "with
+ * the previous benchmark value **in the same constituent lineage**, that is,
+ * computed from the same designated model under the same methodology version".
+ * Both halves matter, and neither alone is the rule -- two values from one
+ * model under different versions were produced by different arithmetic, and two
+ * values under one version from different models measure different objects.
+ *
+ * It lives here, beside the designations, because it is methodology rather than
+ * presentation. The chart consumes it; it does not get to define it.
+ */
+export function benchmarkLineageKey(providerModelId: string, methodologyVersion: string): string {
+  return `${providerModelId}|${methodologyVersion}`;
+}
+
+/** Key for one point of one provider's series, as the chart layer addresses it. */
+export function benchmarkPointKey(seriesId: string, isoTime: string): string {
+  return `${seriesId}|${isoTime}`;
+}
+
 /** Is this provider deliberately withheld rather than simply undesignated? */
 export function withholdingFor(providerSlug: string, onDate: string): TokenBenchmarkWithholding | undefined {
   return TOKEN_BENCHMARK_WITHHELD.filter((row) => row.providerSlug === providerSlug && row.since <= onDate)[0];

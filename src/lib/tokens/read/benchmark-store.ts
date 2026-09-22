@@ -17,6 +17,8 @@
 
 import type { PublicTokenBenchmarkSeries } from "@/lib/tokens/read/api-contract";
 import {
+  benchmarkLineageKey,
+  benchmarkPointKey,
   TOKEN_BENCHMARK_WITHHELD,
   TOKEN_PRICE_BENCHMARK_NAME,
   TOKEN_PRICE_UNIT,
@@ -343,6 +345,23 @@ export function benchmarkSeriesFromPersisted(
     percentageChange: comparable ? percentageChange(previous!.priceUsdPer1m!, latest.priceUsdPer1m!) : null,
     history: points.map((row) => ({ time: row.calculatedAt, priceUsdPer1m: row.priceUsdPer1m! })),
   };
+}
+
+/**
+ * Per-point lineage for frozen rows, addressed the way the chart addresses points.
+ *
+ * Only value rows appear: a withholding is not a point and has nothing to compare.
+ */
+export function benchmarkLineageFromPersisted(rows: readonly PersistedBenchmarkRow[]): Map<string, string> {
+  const lineage = new Map<string, string>();
+  for (const row of rows) {
+    if (row.calculationStatus !== "value" || row.benchmarkModelId === null) continue;
+    lineage.set(
+      benchmarkPointKey(`token-price:${row.providerSlug}`, row.calculatedAt),
+      benchmarkLineageKey(row.benchmarkModelId, row.methodologyVersion),
+    );
+  }
+  return lineage;
 }
 
 /** Every provider with a frozen value, in provider order. */
