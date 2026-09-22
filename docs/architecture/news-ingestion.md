@@ -337,6 +337,15 @@ opt-in is `allowsCloudflareImageTransform` on a single source's `imageHosts`
 entry, off everywhere else — the two publishers sharing one Webflow CDN are
 exactly the case a host-wide transform rule would break.
 
+The 17 articles stored during those four days keep their null image. Article
+metadata is immutable once inserted: the only permitted update sets
+`withdrawn_at` and `withdrawal_reason` together, and a repair that rewrote
+`image_url` was refused by the trigger, as it should have been. The rule is the
+same one Phase 1A met, below — a thumbnail is not a reason to rewrite a stored
+record, and the invariant is what makes repeated ingestion safe. The fix
+applies to what is ingested next; the refused rows age out of the bounded rail
+as newer stories arrive.
+
 | Source | Field | Permitted origin |
 | --- | --- | --- |
 | Google Cloud (both) | `media:content` | `storage.googleapis.com/gweb-cloudblog-publish/` |
