@@ -379,13 +379,38 @@ describe("open-data memory price methodology", () => {
     expect(read("methodology.md")).toContain(`](${docHref(kr!.slug)})`);
   });
 
-  it("is a new draft lineage with no effective date, and says why it is not a version bump", () => {
+  it("is approved at 1.0.0 with one effective date, and retains why it is a new lineage", () => {
     const doc = read(kr!.file);
-    expect(doc).toContain("version 0.1.0-draft");
-    expect(doc).toContain("**No effective date**");
+    expect(doc).toContain("Status: approved, version 1.0.0, effective 22 September 2026.");
+    // The identity table is what a reader checks first; it must not still call this a draft.
+    expect(doc).toContain("| Methodology version | 1.0.0 |");
+    expect(doc).toContain("| Status | Approved |");
+    expect(doc).toContain("| Effective date | 22 September 2026 |");
+    expect(doc).not.toContain("A draft carries no production effective date");
+    // The draft is the superseded predecessor, retained in the history rather than erased.
     expect(doc).toContain("Why a new lineage rather than a version bump");
     expect(doc).toContain("0.1.0-draft, 22 September 2026");
+    expect(doc).toContain("regenerated under 1.0.0 rather than relabelled");
+  });
+
+  it("does not carry approval across to the deferred spot document", () => {
+    const doc = read(spot!.file);
     expect(doc).not.toMatch(/Status: approved/);
+    expect(doc).toContain("0.1.0-draft");
+  });
+
+  /**
+   * The document's bytes are the approved version's `content_hash`. Editing the methodology after
+   * approval, without minting a successor, would leave the registry asserting a digest that no
+   * longer describes anything — so the binding is asserted against the migration, not a constant.
+   */
+  it("is byte-identical to what the approving migration registered", () => {
+    const sql = readFileSync(
+      path.join(process.cwd(), "supabase", "migrations", "20261015100000_umpi_methodology_1_0_0.sql"),
+      "utf8",
+    );
+    const hash = createHash("sha256").update(readFileSync(path.join(process.cwd(), "docs", kr!.file))).digest("hex");
+    expect(sql, `${kr!.file} digest is not the one the approval migration bound`).toContain(hash);
   });
 
   it("publishes two monthly index-point series with a MoM change, and no daily semantics anywhere", () => {

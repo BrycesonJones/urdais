@@ -25,14 +25,21 @@ export type SeriesContext = {
   mixWarningRequired: boolean;
   attributionText: string;
   baseLabel: string;
+  /** Approved and in force today. Publication state follows it; nothing else decides. */
+  methodologyApproved: boolean;
+  methodologyVersion: string;
 };
 
 export async function loadSeriesContext(sql: UmpiSqlExecutor, seriesCode: UmpiSeriesCode): Promise<SeriesContext> {
   const { rows } = await sql.query(
     `select s.id as series_id, s.methodology_version_id, s.level_is_urdais_derived,
-            s.mix_warning_required, s.attribution_text, s.base_label, ss.id as source_series_id
+            s.mix_warning_required, s.attribution_text, s.base_label, ss.id as source_series_id,
+            mv.version as methodology_version,
+            (mv.status = 'approved' and mv.effective_from is not null and mv.effective_from <= current_date
+             and (mv.effective_to is null or mv.effective_to > current_date)) as methodology_approved
        from reference.umpi_series s
        join reference.umpi_source_series ss on ss.series_id = s.id and ss.is_active
+       join reference.methodology_versions mv on mv.id = s.methodology_version_id
       where s.series_code = $1`,
     [seriesCode],
   );
@@ -49,6 +56,8 @@ export async function loadSeriesContext(sql: UmpiSqlExecutor, seriesCode: UmpiSe
     mixWarningRequired: Boolean(row.mix_warning_required),
     attributionText: text(row.attribution_text),
     baseLabel: text(row.base_label),
+    methodologyApproved: Boolean(row.methodology_approved),
+    methodologyVersion: text(row.methodology_version),
   };
 }
 
@@ -275,8 +284,8 @@ export async function publishPoints(
            (id, series_id, methodology_version_id, observation_id, index_base_id, reference_month,
             published_level, base_label, mom_change, mom_withheld_reason, unit_value_usd_per_kg,
             source_vintage_ordinal, vintage_published_at, attribution_text, mix_warning,
-            calculation_version, inputs_digest, previous_observation_id)
-         values ($1, $2, $3, $4, $5, $6::date, $7, $8, $9, $10, $11, $12, now(), $13, $14, $15, $16, $17)`,
+            calculation_version, inputs_digest, previous_observation_id, publication_state)
+         values ($1, $2, $3, $4, $5, $6::date, $7, $8, $9, $10, $11, $12, now(), $13, $14, $15, $16, $17, $18)`,
         [
           publicationId,
           context.seriesId,
@@ -295,6 +304,9 @@ export async function publishPoints(
           UMPI_CALCULATION_VERSION,
           point.inputsDigest,
           point.previousObservationId,
+          // A value is publishable only under an approved, effective methodology. Under a draft
+          // it is still calculated and still stored — it is simply not public.
+          context.methodologyApproved ? "published" : "internal_only",
         ],
       );
 

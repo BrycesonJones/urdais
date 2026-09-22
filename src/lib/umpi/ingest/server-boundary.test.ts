@@ -60,11 +60,15 @@ describe("the ingestion layer stays server-side", () => {
     }
   });
 
-  it("the ingestion entry point is a script, not a route", () => {
+  it("no route performs ingestion: the collector is a script", () => {
+    // Phase 6 added public *read* routes under /api/umpi, which is a different thing. What must
+    // stay true is that nothing reachable over HTTP retrieves from an agency — retrieval happens
+    // because an operator ran it, not because a request arrived.
     const routes = filesUnder("src/app").filter((file) => /route\.tsx?$/.test(file));
     for (const route of routes) {
       const source = readFileSync(path.join(root, "src/app", route), "utf8");
-      expect(source, route).not.toContain("umpi");
+      expect(source, route).not.toMatch(/from "@\/lib\/umpi\/ingest/);
+      expect(source, route).not.toContain("umpi:ingest");
     }
   });
 });

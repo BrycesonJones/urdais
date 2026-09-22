@@ -150,4 +150,4 @@ export const UMPI_SERIES: Readonly<Record<UmpiSeriesCode, UmpiSeriesDefinition>>
  * presentation that a surface may drop.
  */
 export const UMPI_EXPORT_UV_MIX_WARNING =
-  "A trade unit-value index, not a price index: it moves on export composition — generation, density, vendor and product mix — as well as on price.";
+  "UMPI-KR DRAM Export UV is a trade unit-value index, not a pure price index. Movement reflects both price changes and changes in the composition/mix of exported DRAM.";

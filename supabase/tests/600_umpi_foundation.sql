@@ -301,15 +301,21 @@ rollback;
 do $$
 declare n integer; s text;
 begin
-  -- The draft is a draft, with no effective date. Nothing is publishable under it.
-  select mv.status into s from reference.methodology_versions mv
-    join reference.methodologies m on m.id = mv.methodology_id
-   where m.slug = 'umpi-kr-dram';
-  if s <> 'draft' then raise exception 'the UMPI methodology is registered as %, expected draft', s; end if;
+  -- Phase 3 registered a draft; Phase 6 approved 1.0.0 and superseded that draft. What the
+  -- foundation still guarantees is the shape of the lifecycle: exactly one version is in force,
+  -- and the superseded predecessor was never retroactively given an effective date.
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id
-   where m.slug = 'umpi-kr-dram' and mv.effective_from is not null;
-  if n <> 0 then raise exception 'the UMPI draft carries an effective date'; end if;
+   where m.slug = 'umpi-kr-dram' and mv.status = 'approved';
+  if n <> 1 then raise exception 'expected exactly one approved UMPI version, found %', n; end if;
+  select mv.status into s from reference.methodology_versions mv
+    join reference.methodologies m on m.id = mv.methodology_id
+   where m.slug = 'umpi-kr-dram' and mv.version = '0.1.0-draft';
+  if s <> 'superseded' then raise exception 'the UMPI draft predecessor is %, expected superseded', s; end if;
+  select count(*) into n from reference.methodology_versions mv
+    join reference.methodologies m on m.id = mv.methodology_id
+   where m.slug = 'umpi-kr-dram' and mv.status <> 'approved' and mv.effective_from is not null;
+  if n <> 0 then raise exception 'an unapproved UMPI version carries an effective date'; end if;
 
   -- No series is live, and nothing has been ingested or published.
   select count(*) into n from reference.umpi_series where publication_state <> 'not_initialized';

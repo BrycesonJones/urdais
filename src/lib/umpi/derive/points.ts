@@ -77,8 +77,16 @@ export function derivePoints(input: {
   base: StoredBase | null;
   baseLabel: string;
   indexBaseId: string | null;
+  /**
+   * The methodology a published value is governed by — the series' current version, not the
+   * one that happened to be in force when the observation was collected. Those are different
+   * facts: an observation records what governed its retrieval, a publication records what
+   * governs the number. Including it in the digest is what makes an approval regenerate the
+   * published set instead of relabelling it.
+   */
+  publicationMethodologyVersionId: string;
 }): DerivedPoint[] {
-  const { seriesCode, base, baseLabel, indexBaseId } = input;
+  const { seriesCode, base, baseLabel, indexBaseId, publicationMethodologyVersionId } = input;
   const byMonth = new Map(input.observations.map((o) => [o.referenceMonth, o]));
   const months = [...byMonth.keys()].sort();
   const points: DerivedPoint[] = [];
@@ -154,7 +162,7 @@ export function derivePoints(input: {
       baseLabel,
       indexBaseId,
       sourceVintageOrdinal: observation.vintageOrdinal,
-      methodologyVersionId: observation.methodologyVersionId,
+      methodologyVersionId: publicationMethodologyVersionId,
       inputsDigest: publicationDigest({
         seriesCode,
         referenceMonth: month,
@@ -167,7 +175,7 @@ export function derivePoints(input: {
         // The base enters the digest by its own digest, so a rebuilt base propagates to every
         // Series B point that depends on it instead of leaving a stale publication behind.
         indexBaseDigest: base?.inputsDigest ?? null,
-        methodologyVersionId: observation.methodologyVersionId,
+        methodologyVersionId: publicationMethodologyVersionId,
         calculationVersion: UMPI_CALCULATION_VERSION,
       }),
     });
