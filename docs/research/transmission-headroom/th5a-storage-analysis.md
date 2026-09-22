@@ -1,6 +1,6 @@
 # Transmission Headroom TH-5A: storage analysis
 
-**Status: internal research document.** Prepared 22 September 2026 against `main` at `42ca837`. Every figure was measured on one real NYISO month (2005-02: 89,661 source rows → 88,825 flow observations, 177,650 limit observations, 88,835 margins), not estimated.
+**Status: internal research document.** Not a methodology, not routed publicly, not registered in the docs catalog. Prepared 22 September 2026 against `main` at `42ca837`. Every figure was measured on one real NYISO month (2005-02: 89,661 source rows → 88,825 flow observations, 177,650 limit observations, 88,835 margins), not estimated.
 
 ## The problem
 
