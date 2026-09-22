@@ -38,12 +38,12 @@ const META: Record<Wave1Provider, Omit<PricingFixture, "body">> = {
   xai: {
     provider: "xai",
     sourceUrl: "https://docs.x.ai/docs/models",
-    retrievedAt: "2026-09-14T03:10:00Z",
+    retrievedAt: "2026-09-22T00:00:00Z",
     contentType: "text/html; charset=utf-8",
     bodyFile: "xai-pricing.html",
-    sha256: "7f13f36394f39b9aef4b9e52218d22633ce94ab33aa0f8483d87dcad72e42a5b",
+    sha256: "f7d6ef59ad64776c0c22ce094ea0eb5c1984a4947eb329a09f34020e5a1e6aee",
     provenance:
-      "Structural HTML excerpt of the first-party xAI text API pricing table retrieved 2026-09-14 from docs.x.ai/docs/models, plus the published Imagine per-image row (out of unit) and the Batch API note with no rates. Not a full page snapshot. No secrets.",
+      "Structural HTML excerpt of the first-party xAI text API pricing table from docs.x.ai/docs/models, plus the published Imagine per-image row (out of unit) and the Batch API note with no rates. Not a full page snapshot. No secrets. Supersedes the 2026-09-14 excerpt, sha256 7f13f36394f39b9aef4b9e52218d22633ce94ab33aa0f8483d87dcad72e42a5b, which remains retrievable from this file's git history and from the response body retained on its own production retrieval. The single change is the grok-4.7 row, recording the two rates the operator attested on 2026-09-22: input 2.00 and output 6.00 USD per 1M tokens under 200k prompt tokens. This is not a fresh byte-level capture of the page -- automated retrieval of this surface is not permitted -- and the fields the attestation did not cover (grok-4.7's context window, its cached-input rate, and its rates above the 200k threshold) are left explicitly unrecorded rather than carried over from another row.",
   },
   openai: {
     provider: "openai",

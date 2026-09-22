@@ -4,21 +4,35 @@
  * This exists because of what Token Price is, not in spite of it. The methodology records a
  * canonical observation only when a source price changes, so an unchanged price correctly
  * produces no new row -- and a provider nobody has looked at in a month produces exactly the
- * same thing. The two states are indistinguishable from the data alone, which is precisely
- * why production sat on a single 14 September row for two days without anything noticing.
+ * same thing. The two states are indistinguishable from the price data alone, which is
+ * precisely why production sat on a single 14 September row for two days without anything
+ * noticing.
  *
- * So this module does not ask "is the value stale?", which the data cannot answer. It asks
- * "how long since anyone checked?", which it can. That is a question about Urdais's own
- * operating discipline, and it is answered entirely from Urdais's own database: nothing here
- * contacts a provider, reads a pricing page, or touches a source's collection rights. Every
- * Wave-1 token source is `research_usable` / `under_review` and not machine-readable, and
- * docs/methodology/token-price.md states that whether Urdais may retrieve those pages on a
- * schedule "is still open" for every one of them. A watchdog is what may be automated here.
- * The reading itself is not.
+ * So this module does not ask "is the value stale?", which the price data cannot answer. It
+ * asks "how long since anyone checked?", and it answers from the record of people checking:
+ * `pipeline.token_price_verifications`, one row per attestation.
+ *
+ * It did not always. The first version read the newest frozen benchmark's `calculatedAt`,
+ * which is a calculation instant, not a verification instant. Those coincide only on the day
+ * a price moves. An unchanged review writes no observation (the price did not change), freezes
+ * no point (nothing was recalculated) and -- because a manual retrieval is keyed by artifact
+ * hash -- does not even record a second retrieval. Every one of those rules is right, and
+ * together they meant a person could re-read all seven pages and leave the watchdog reporting
+ * that nobody had. Freshness now reads the event that actually happened.
+ *
+ * Two things this deliberately refuses to do. It never treats an attestation alone as health:
+ * a provider with no valid frozen value or recorded withholding behind it is reported as
+ * unverified however many people ran the command, because a verification of nothing is
+ * evidence of nothing. And it contacts no provider, reads no pricing page and touches no
+ * source's collection rights. Every Wave-1 token source is `research_usable` / `under_review`
+ * and not machine-readable, and docs/methodology/token-price.md states that whether Urdais may
+ * retrieve those pages on a schedule "is still open" for every one of them. A watchdog is what
+ * may be automated here. The reading itself is not.
  */
 
 import { WAVE1_PROVIDERS, type Wave1Provider } from "@/lib/tokens/types";
 import type { PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
+import type { TokenVerificationEvent } from "@/lib/tokens/read/verification-events";
 
 /**
  * How long a provider may go unverified before the run reports it as due.
@@ -36,18 +50,33 @@ export type ProviderFreshnessState =
   | "current"
   /** Verified, but longer ago than the review interval: someone should look. */
   | "review_due"
-  /** No production benchmark has ever been frozen for this provider. */
+  /**
+   * No verification stands for this provider. Two conditions reach it, and the
+   * report distinguishes them by `frozenPoints` and `latestStatus` rather than
+   * by adding a fourth state the watchdog contract would have to carry:
+   *
+   *   nothing is frozen at all       -- the provider has never been published
+   *   frozen, but no attestation     -- a value exists that nobody is on record
+   *                                     as having checked
+   *
+   * Both mean the same thing operationally: a person must look before this
+   * provider can be called healthy, which is why both fail closed here.
+   */
   | "never_verified";
 
 export type ProviderFreshness = {
   provider: Wave1Provider;
   state: ProviderFreshnessState;
-  /** The newest frozen calculation's instant, or null where none exists. */
+  /** The newest attestation's instant, or null where none stands. */
   lastVerifiedAt: string | null;
+  /** Who made that attestation, or null where none stands. */
+  lastVerifiedBy: string | null;
   /** Whole days since that instant, or null where there is none. */
   ageDays: number | null;
   /** Frozen calculations on record for this provider. */
   frozenPoints: number;
+  /** Attestations on record for this provider. */
+  verificationEvents: number;
   /**
    * Whether the newest frozen calculation carries a value or is a recorded withholding.
    * A withholding is a decision on the record, not an absence, so it counts as verified.
@@ -86,41 +115,81 @@ function newestByProvider(rows: readonly PersistedBenchmarkRow[]): Map<string, P
 }
 
 /**
+ * The newest attestation per provider, by verification instant.
+ *
+ * An event that names no benchmark is skipped. That is the fail-closed rule in
+ * its narrowest form: an attestation is a statement *about* a provider's valid
+ * state, so one that points at no state is not evidence that the state is
+ * sound. Without this, writing a verification row would be enough to make any
+ * provider look healthy, and the watchdog would be reporting on its own inputs.
+ */
+function newestVerificationByProvider(events: readonly TokenVerificationEvent[]): Map<string, TokenVerificationEvent> {
+  const newest = new Map<string, TokenVerificationEvent>();
+  for (const event of events) {
+    if (event.benchmarkId === null) continue;
+    const held = newest.get(event.providerSlug);
+    if (held === undefined || Date.parse(event.verifiedAt) > Date.parse(held.verifiedAt)) {
+      newest.set(event.providerSlug, event);
+    }
+  }
+  return newest;
+}
+
+/**
  * The freshness report for every Wave-1 provider.
  *
- * Every provider appears, including ones that have never been verified: a provider missing
- * from the frozen rows is the single most important thing this can report, and omitting it
- * would reproduce the silence this exists to break.
+ * Every provider appears, including ones with no verification standing: a provider missing
+ * from the record is the single most important thing this can report, and omitting it would
+ * reproduce the silence this exists to break.
+ *
+ * Both inputs are required, and neither substitutes for the other. The events say when a
+ * person last looked; the frozen rows say whether there is anything valid for them to have
+ * looked at. A provider is current only when both hold.
  */
 export function verificationFreshness(
   rows: readonly PersistedBenchmarkRow[],
+  events: readonly TokenVerificationEvent[],
   now: Date,
   reviewIntervalDays: number = VERIFICATION_REVIEW_INTERVAL_DAYS,
 ): VerificationFreshnessReport {
   const newest = newestByProvider(rows);
+  const newestVerification = newestVerificationByProvider(events);
   const counts = new Map<string, number>();
   for (const row of rows) counts.set(row.providerSlug, (counts.get(row.providerSlug) ?? 0) + 1);
+  const eventCounts = new Map<string, number>();
+  for (const event of events) eventCounts.set(event.providerSlug, (eventCounts.get(event.providerSlug) ?? 0) + 1);
 
   const providers: ProviderFreshness[] = WAVE1_PROVIDERS.map((provider) => {
     const latest = newest.get(provider);
-    if (latest === undefined) {
+    const verification = newestVerification.get(provider);
+    const frozenPoints = counts.get(provider) ?? 0;
+    const verificationEvents = eventCounts.get(provider) ?? 0;
+
+    // Nothing frozen, or nothing attested. Either way no verification stands,
+    // and the provider is reported as needing a person rather than as healthy.
+    if (latest === undefined || verification === undefined) {
       return {
         provider,
         state: "never_verified",
         lastVerifiedAt: null,
+        lastVerifiedBy: null,
         ageDays: null,
-        frozenPoints: 0,
-        latestStatus: null,
-        withheldReason: null,
+        frozenPoints,
+        verificationEvents,
+        latestStatus: latest?.calculationStatus ?? null,
+        withheldReason: latest?.withheldReason ?? null,
       };
     }
-    const ageDays = wholeDaysBetween(latest.calculatedAt, now);
+
+    const ageDays = wholeDaysBetween(verification.verifiedAt, now);
     return {
       provider,
       state: ageDays !== null && ageDays >= reviewIntervalDays ? "review_due" : "current",
-      lastVerifiedAt: latest.calculatedAt,
+      lastVerifiedAt: verification.verifiedAt,
+      lastVerifiedBy: verification.verifiedBy,
       ageDays,
-      frozenPoints: counts.get(provider) ?? 0,
+      frozenPoints,
+      verificationEvents,
       latestStatus: latest.calculationStatus,
       withheldReason: latest.withheldReason,
     };

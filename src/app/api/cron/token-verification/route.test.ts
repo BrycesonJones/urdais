@@ -4,8 +4,9 @@ import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Hoisted with the vi.mock calls, which run before the imports below.
-const { loadPersistedBenchmarks, createTokenSqlExecutor, end } = vi.hoisted(() => ({
+const { loadPersistedBenchmarks, loadVerificationEvents, createTokenSqlExecutor, end } = vi.hoisted(() => ({
   loadPersistedBenchmarks: vi.fn(),
+  loadVerificationEvents: vi.fn(),
   createTokenSqlExecutor: vi.fn(),
   end: vi.fn(async () => {}),
 }));
@@ -14,11 +15,16 @@ vi.mock("@/lib/tokens/read/benchmark-store", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/tokens/read/benchmark-store")>();
   return { ...actual, loadPersistedBenchmarks };
 });
+vi.mock("@/lib/tokens/read/verification-events", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/tokens/read/verification-events")>();
+  return { ...actual, loadVerificationEvents };
+});
 vi.mock("@/lib/tokens/read/database", () => ({ createTokenSqlExecutor }));
 
 import { GET, cronRequestAuthorized } from "@/app/api/cron/token-verification/route";
 import { WAVE1_PROVIDERS } from "@/lib/tokens/types";
 import type { PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
+import type { TokenVerificationEvent } from "@/lib/tokens/read/verification-events";
 
 const SECRET = "a-long-enough-shared-secret";
 
@@ -48,9 +54,29 @@ function frozen(provider: string, calculatedAt: string): PersistedBenchmarkRow {
   };
 }
 
-function serveRows(rows: PersistedBenchmarkRow[]) {
+/** The attestation the operator command writes beside each frozen row. */
+function attested(rows: PersistedBenchmarkRow[], verifiedAt: string): TokenVerificationEvent[] {
+  return rows.map((row) => ({
+    id: `verified-${row.id}`,
+    providerSlug: row.providerSlug,
+    verifiedBy: "Bryceson",
+    verifiedAt,
+    evidence: "read the first-party pricing surface",
+    observedState: row.calculationStatus,
+    benchmarkId: row.id,
+    verificationPurpose: "production" as const,
+  }));
+}
+
+/**
+ * Both halves of what the watchdog reads. Events default to one attestation per
+ * frozen row at the row's own instant, which is the shape a verification run
+ * leaves behind; a caller that wants them to diverge passes its own.
+ */
+function serveRows(rows: PersistedBenchmarkRow[], events?: TokenVerificationEvent[]) {
   createTokenSqlExecutor.mockResolvedValue({ query: vi.fn(), end });
   loadPersistedBenchmarks.mockResolvedValue(rows);
+  loadVerificationEvents.mockResolvedValue(events ?? rows.map((row) => attested([row], row.calculatedAt)[0]!));
 }
 
 afterEach(() => {
@@ -117,6 +143,40 @@ describe("the run reports what it read", () => {
     vi.useRealTimers();
   });
 
+  it("reports a review as due from the age of the attestation, not the calculation", async () => {
+    // The bug, at the route: on 22 September a person had re-read every page that
+    // morning, and the newest frozen calculation was still 14 September because no
+    // price had moved. The watchdog paged for a review that had just happened.
+    vi.stubEnv("CRON_SECRET", SECRET);
+    vi.stubEnv("DATABASE_URL", "postgresql://example/db");
+    vi.setSystemTime(new Date("2026-09-22T07:00:00Z"));
+    const rows = WAVE1_PROVIDERS.map((p) => frozen(p, "2026-09-14T12:03:02.002Z"));
+    serveRows(rows, attested(rows, "2026-09-22T06:00:00Z"));
+
+    const response = await GET(request());
+    const body = (await response.json()) as { ok: boolean; reviewDue: string[]; providers: { ageDays: number }[] };
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.reviewDue).toEqual([]);
+    expect(body.providers.every((p) => p.ageDays === 0)).toBe(true);
+    vi.useRealTimers();
+  });
+
+  it("refuses to call a provider current on an attestation with nothing frozen behind it", async () => {
+    vi.stubEnv("CRON_SECRET", SECRET);
+    vi.stubEnv("DATABASE_URL", "postgresql://example/db");
+    vi.setSystemTime(new Date("2026-09-22T07:00:00Z"));
+    const rows = WAVE1_PROVIDERS.map((p) => frozen(p, "2026-09-14T12:03:02.002Z"));
+    serveRows([], attested(rows, "2026-09-22T06:00:00Z"));
+
+    const response = await GET(request());
+    const body = (await response.json()) as { ok: boolean; neverVerified: string[] };
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(false);
+    expect(body.neverVerified).toEqual([...WAVE1_PROVIDERS]);
+    vi.useRealTimers();
+  });
+
   it("closes the connection it opened, on both paths", async () => {
     vi.stubEnv("CRON_SECRET", SECRET);
     vi.stubEnv("DATABASE_URL", "postgresql://example/db");
@@ -141,6 +201,7 @@ describe("a systemic failure is visible as a failure", () => {
     vi.stubEnv("CRON_SECRET", SECRET);
     vi.stubEnv("DATABASE_URL", "postgresql://example/db");
     createTokenSqlExecutor.mockResolvedValue({ query: vi.fn(), end });
+    loadVerificationEvents.mockResolvedValue([]);
     loadPersistedBenchmarks.mockRejectedValue(new Error("connection terminated"));
 
     const response = await GET(request());
@@ -153,6 +214,7 @@ describe("a systemic failure is visible as a failure", () => {
     vi.stubEnv("CRON_SECRET", SECRET);
     vi.stubEnv("DATABASE_URL", "postgresql://user:hunter2@host/db");
     createTokenSqlExecutor.mockResolvedValue({ query: vi.fn(), end });
+    loadVerificationEvents.mockResolvedValue([]);
     loadPersistedBenchmarks.mockRejectedValue(new Error("connection terminated"));
     const text = await (await GET(request())).text();
     expect(text).not.toContain("hunter2");

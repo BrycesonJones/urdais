@@ -2,6 +2,9 @@
  * The scheduled Token Price verification watchdog.
  *
  * Read the name carefully: this route verifies *that someone verified*, and collects nothing.
+ * It answers from `pipeline.token_price_verifications` -- the durable record of people having
+ * checked -- rather than from frozen benchmark instants, which move only when a price moves
+ * and so said nothing at all about an unchanged review.
  * It issues no request to any provider, parses no pricing page, and writes no price observation.
  * Production acquisition remains a person running the verified operator workflow with evidence.
  *
@@ -16,6 +19,7 @@ import { timingSafeEqual } from "node:crypto";
 import { recordTokenVerificationHeartbeat } from "@/lib/operations/model-economics-heartbeats";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
 import { loadPersistedBenchmarks } from "@/lib/tokens/read/benchmark-store";
+import { loadVerificationEvents } from "@/lib/tokens/read/verification-events";
 import { freshnessSummary, verificationFreshness } from "@/lib/tokens/verification-freshness";
 
 export const dynamic = "force-dynamic";
@@ -49,7 +53,11 @@ export async function GET(request: Request): Promise<Response> {
   const sql = await createTokenSqlExecutor(databaseUrl);
   const ranAt = new Date().toISOString();
   try {
-    const report = verificationFreshness(await loadPersistedBenchmarks(sql), new Date(ranAt));
+    // Both halves of the question, and neither stands in for the other: the
+    // attestations say when a person last looked, the frozen rows say whether
+    // there was anything valid for them to look at.
+    const [benchmarks, verifications] = await Promise.all([loadPersistedBenchmarks(sql), loadVerificationEvents(sql)]);
+    const report = verificationFreshness(benchmarks, verifications, new Date(ranAt));
     const latestVerifiedAt = report.providers
       .map((provider) => provider.lastVerifiedAt)
       .filter((value): value is string => value !== null)
@@ -72,6 +80,8 @@ export async function GET(request: Request): Promise<Response> {
           lastVerifiedAt: provider.lastVerifiedAt,
           ageDays: provider.ageDays,
           latestStatus: provider.latestStatus,
+          lastVerifiedBy: provider.lastVerifiedBy,
+          verificationEvents: provider.verificationEvents,
         })),
       },
       detail: null,

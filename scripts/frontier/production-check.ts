@@ -17,6 +17,7 @@ import { loadAttribution, loadJoinableRows, methodologyApproved } from "@/lib/fr
 import { assessFreshness, freshnessLine } from "@/lib/frontier/freshness";
 import { lastScheduledCheckAt } from "@/lib/frontier/store";
 import { loadPersistedBenchmarks } from "@/lib/tokens/read/benchmark-store";
+import { loadVerificationEvents } from "@/lib/tokens/read/verification-events";
 import { verificationFreshness } from "@/lib/tokens/verification-freshness";
 import { resolveTokenDatabaseUrl, tokenSqlExecutor } from "@/lib/tokens/read/database";
 import { MODEL_FRONTIER_COST_BOUNDARY } from "@/lib/frontier/types";
@@ -55,8 +56,9 @@ async function main(): Promise<void> {
     [],
   );
   const frozenBenchmarks = await loadPersistedBenchmarks(sql);
+  const verificationEvents = await loadVerificationEvents(sql);
   const now = new Date();
-  const verification = verificationFreshness(frozenBenchmarks, now);
+  const verification = verificationFreshness(frozenBenchmarks, verificationEvents, now);
   const newestVerification = verification.providers
     .map((provider) => provider.lastVerifiedAt)
     .filter((at): at is string => at !== null)

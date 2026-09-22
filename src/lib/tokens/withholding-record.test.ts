@@ -19,6 +19,7 @@ import {
 } from "@/lib/tokens/read/benchmark-store";
 import { TOKEN_BENCHMARK_WITHHELD, withholdingFor } from "@/lib/tokens/read/benchmark";
 import { verificationFreshness } from "@/lib/tokens/verification-freshness";
+import type { TokenVerificationEvent } from "@/lib/tokens/read/verification-events";
 import { seedTokenReadCatalog } from "@/lib/tokens/read/test-support";
 import type { TokenReadCatalog } from "@/lib/tokens/read/series";
 
@@ -194,11 +195,32 @@ describe("4. the read model distinguishes withheld from never evaluated", () => 
   });
 });
 
+/**
+ * The attestation that goes with a frozen row.
+ *
+ * Freshness needs both halves: the row says a decision stands, the event says a person made
+ * it at a known moment. A withholding with nobody's name against it is still an unreviewed
+ * provider, so these tests supply the attestation the operator command writes alongside.
+ */
+function attestation(rows: readonly PersistedBenchmarkRow[], verifiedAt: string): TokenVerificationEvent[] {
+  return rows.map((row) => ({
+    id: `verified-${row.id}`,
+    providerSlug: row.providerSlug,
+    verifiedBy: "Bryceson",
+    verifiedAt,
+    evidence: "read the first-party pricing surface",
+    observedState: row.calculationStatus,
+    benchmarkId: row.id,
+    verificationPurpose: "production" as const,
+  }));
+}
+
 describe("5. the watchdog counts a recorded withholding as verified", () => {
   it("no longer reports DeepSeek as never_verified once the row exists", async () => {
     const sql = memorySql();
     await persistProviderBenchmarks(sql, deepseekCatalog(), "production", TODAY);
-    const report = verificationFreshness(await loadPersistedBenchmarks(sql), new Date("2026-09-16T07:00:00Z"));
+    const frozen = await loadPersistedBenchmarks(sql);
+    const report = verificationFreshness(frozen, attestation(frozen, "2026-09-16T06:00:00Z"), new Date("2026-09-16T07:00:00Z"));
     const deepseek = report.providers.find((p) => p.provider === "deepseek")!;
     expect(deepseek.state).toBe("current");
     expect(report.neverVerified).not.toContain("deepseek");
@@ -209,13 +231,23 @@ describe("5. the watchdog counts a recorded withholding as verified", () => {
   it("still ages the decision, so a stale withholding comes up for review", async () => {
     const sql = memorySql();
     await persistProviderBenchmarks(sql, deepseekCatalog(), "production", TODAY);
-    const report = verificationFreshness(await loadPersistedBenchmarks(sql), new Date("2026-10-30T07:00:00Z"));
+    const frozen = await loadPersistedBenchmarks(sql);
+    const report = verificationFreshness(frozen, attestation(frozen, "2026-09-16T06:00:00Z"), new Date("2026-10-30T07:00:00Z"));
     expect(report.providers.find((p) => p.provider === "deepseek")!.state).toBe("review_due");
   });
 
   it("reported never_verified before the row existed, which is the bug being fixed", () => {
-    const report = verificationFreshness([], new Date("2026-09-16T07:00:00Z"));
+    const report = verificationFreshness([], [], new Date("2026-09-16T07:00:00Z"));
     expect(report.neverVerified).toContain("deepseek");
+  });
+
+  it("still refuses a withholding nobody signed for", async () => {
+    // The row alone is a decision on the record; it is not evidence that anyone
+    // checked it recently, and the watchdog must not read it as though it were.
+    const sql = memorySql();
+    await persistProviderBenchmarks(sql, deepseekCatalog(), "production", TODAY);
+    const report = verificationFreshness(await loadPersistedBenchmarks(sql), [], new Date("2026-09-16T07:00:00Z"));
+    expect(report.providers.find((p) => p.provider === "deepseek")!.state).toBe("never_verified");
   });
 });
 

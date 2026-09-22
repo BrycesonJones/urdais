@@ -29,7 +29,11 @@ import { seedWave1ResearchPreview } from "@/lib/tokens/preview-seed";
 import { listVisibleTokenSeries } from "@/lib/tokens/read/series";
 import { InMemoryTokenPricingStore } from "@/lib/tokens/store";
 
-const TODAY = "2026-09-14";
+// The day this suite reasons about. xAI's designation moves to Grok 4.7 on 2026-09-22 and
+// the retained xAI artifact carries that row, so the preview catalog these tests derive from
+// is a 22 September one. Earlier-dated providers still compute under the version in force on
+// their own event dates, which is the point of effective dating and is asserted below.
+const TODAY = "2026-09-22";
 const V11 = methodologyInForce(TODAY)!;
 
 function previewSeries(): PublicTokenSeries[] {
@@ -70,7 +74,7 @@ describe("methodology registry", () => {
     expect(TOKEN_PRICE_WORKLOAD.inputTokens + TOKEN_PRICE_WORKLOAD.outputTokens).toBe(1_000_000);
     expect(V11.inputWeight + V11.outputWeight).toBe(1);
     expect(TOKEN_PRICE_UNIT_CAPTION).toBe("per 1M tokens");
-    expect(TOKEN_PRICE_METHODOLOGY_VERSION).toBe("1.2");
+    expect(TOKEN_PRICE_METHODOLOGY_VERSION).toBe("1.3");
   });
 
   it("applies the exact formula of the version in force, without rounding first", () => {
@@ -81,7 +85,11 @@ describe("methodology registry", () => {
 
   it("is effective-dated, so no version applies before the first", () => {
     expect(methodologyInForce("2026-09-13")).toBeUndefined();
-    expect(methodologyInForce(TODAY)?.version).toBe("1.2");
+    // A later version never reaches back: 1.3 takes effect on 2026-09-22 and days before it
+    // still compute under 1.2, which is what keeps every value published under 1.2 intact.
+    expect(methodologyInForce("2026-09-14")?.version).toBe("1.2");
+    expect(methodologyInForce("2026-09-21")?.version).toBe("1.2");
+    expect(methodologyInForce(TODAY)?.version).toBe("1.3");
     for (const row of TOKEN_PRICE_METHODOLOGY_VERSIONS) expect(row.effectiveFrom).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });
@@ -108,7 +116,7 @@ describe("eligible legs", () => {
     const openai = constituentInForce("openai", TODAY)!;
     expect(xai.baseContextTier).toBe("prompt_lt_200k");
     expect(openai.baseContextTier).toBe("short_context");
-    const xaiLeg = (contextTier: string | null) => leg({ providerSlug: "xai", providerModelId: "grok-4.6", contextTier });
+    const xaiLeg = (contextTier: string | null) => leg({ providerSlug: "xai", providerModelId: "grok-4.7", contextTier });
     expect(isEligibleLeg(xaiLeg("prompt_lt_200k"), xai)).toBe(true);
     expect(isEligibleLeg(xaiLeg("prompt_gte_200k"), xai)).toBe(false);
   });
@@ -121,7 +129,24 @@ describe("constituent selection", () => {
     expect(benchmarkProviders()).not.toContain("deepseek");
     expect(constituentInForce("anthropic", TODAY)?.providerModelId).toBe("claude-fable-5-1");
     expect(constituentInForce("openai", TODAY)?.providerModelId).toBe("gpt-6-astra");
-    expect(constituentInForce("xai", TODAY)?.providerModelId).toBe("grok-4.6");
+    expect(constituentInForce("xai", TODAY)?.providerModelId).toBe("grok-4.7");
+  });
+
+  it("moves xAI to Grok 4.7 from 2026-09-22 without disturbing the Grok 4.6 segment before it", () => {
+    // A constituent change is effective-dated and never retroactive. Every day the 4.6
+    // designation was in force still resolves to 4.6, which is what makes the published
+    // history assemblable segment by segment instead of recomputed.
+    expect(constituentInForce("xai", "2026-09-14")?.providerModelId).toBe("grok-4.6");
+    expect(constituentInForce("xai", "2026-09-21")?.providerModelId).toBe("grok-4.6");
+    expect(constituentInForce("xai", "2026-09-22")?.providerModelId).toBe("grok-4.7");
+
+    const succeeded = TOKEN_BENCHMARK_CONSTITUENTS.find((row) => row.providerModelId === "grok-4.6")!;
+    const successor = TOKEN_BENCHMARK_CONSTITUENTS.find((row) => row.providerModelId === "grok-4.7")!;
+    // The predecessor's record is untouched: same effective date, same version, same tier.
+    expect(succeeded).toMatchObject({ effectiveFrom: "2026-09-14", methodologyVersion: "1.1", baseContextTier: "prompt_lt_200k" });
+    // The successor is a new designation under a new methodology version, on the same tier
+    // and with no declared region, so the legs it selects are the ones 1.1 selected.
+    expect(successor).toMatchObject({ effectiveFrom: "2026-09-22", methodologyVersion: "1.3", baseContextTier: "prompt_lt_200k", baseRegion: null });
   });
 
   it("excludes narrow specialists and access-restricted models", () => {
@@ -324,14 +349,16 @@ describe("Wave-1 benchmark values", () => {
   it.each([
     ["anthropic", "claude-fable-5-1", 10, 50, 30],
     ["openai", "gpt-6-astra", 10, 50, 30],
-    ["xai", "grok-4.6", 2, 6, 4],
+    // Grok 4.7 succeeds Grok 4.6 on 2026-09-22 at the same $2 / $6, so the designation moves
+    // and the value does not. A constituent change is not a price change and vice versa.
+    ["xai", "grok-4.7", 2, 6, 4],
   ])("%s uses %s: (%d + %d) / 2", (provider, modelId, input, output, expected) => {
     const row = benchmarks.find((entry) => entry.providerSlug === provider)!;
     expect(row.current).toMatchObject({ ok: true });
     expect(row.series!.benchmarkModelId).toBe(modelId);
     expect(row.series!.priceUsdPer1m).toBeCloseTo(tokenBenchmarkPrice(input, output, V11), 10);
     expect(row.series!.priceUsdPer1m).toBeCloseTo(expected, 10);
-    expect(row.series!.methodologyVersion).toBe("1.2");
+    expect(row.series!.methodologyVersion).toBe(methodologyInForce(row.series!.updatedAt.slice(0, 10))!.version);
   });
 
   it("carries a real retrieval timestamp, not a date boundary", () => {
@@ -435,7 +462,9 @@ describe("frozen benchmark observations", () => {
       expect(point.outputObservationId).toBeTruthy();
       expect(point.inputPriceUsdPer1m).toBeGreaterThan(0);
       expect(point.outputPriceUsdPer1m).toBeGreaterThan(0);
-      expect(point.methodologyVersion).toBe("1.2");
+      // The version in force on the event's own date, not the newest one: that is the rule
+      // effective dating exists to enforce, and hardcoding a version would stop testing it.
+      expect(point.methodologyVersion).toBe(methodologyInForce(point.time.slice(0, 10))!.version);
       expect(point.time).not.toMatch(/T00:00:00\.000Z$/);
     }
   });

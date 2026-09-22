@@ -32,8 +32,15 @@ const EXPECTED: Partial<Record<Wave1Provider, { input: number; output: number }>
   xai: { input: 2, output: 6 },
   google: { input: 2, output: 12 },
   alibaba: { input: 2, output: 6 },
+  // Moonshot was designated in Wave 3 and this table was not extended with it,
+  // so `--expect` guarded six providers and silently waved the seventh through.
+  // An expectation that covers all but one is not a guard; it is a guard with a
+  // hole in the shape of whichever provider was added last.
+  moonshot: { input: 3, output: 15 },
   // DeepSeek has no expectation because it has no designated legs: it publishes
-  // no standard rate, so its headline value is withheld by design.
+  // no standard rate, so its headline value is withheld by design. A number here
+  // would be an invented standard rate, which is the one thing the withholding
+  // exists to refuse.
 };
 
 async function main(): Promise<void> {
@@ -97,9 +104,19 @@ async function main(): Promise<void> {
   // exactly like one that is.
   console.log(
     inserted === 0 && retrievals === 0 && frozen === 0 && decisions === 0
-      ? "nothing inserted: this verification was already recorded, and the frozen benchmarks and withholding decisions already exist."
+      ? "no price data changed: every published price still matches its retained artifact, so no observation, retrieval, benchmark or withholding decision was written. That is what an unchanged review looks like."
       : `inserted ${inserted} observation(s) and ${retrievals} retrieval(s); froze ${frozen} benchmark(s) and recorded ${decisions} withholding decision(s).`,
   );
+  // The attestation is reported separately from the writes above, because it is
+  // the one part of a run that should land even when nothing else does. A review
+  // that found every price unchanged writes no observation and freezes no
+  // benchmark, and that run is a success, not a no-op.
+  console.log(
+    run.attestations.inserted === 0
+      ? `attestation: already on record for all ${run.attestations.recorded} provider(s) at ${verifiedAt}; this exact verification was recorded before.`
+      : `attestation: recorded ${run.attestations.inserted} of ${run.attestations.recorded} human verification event(s) at ${verifiedAt}. Verification freshness now runs from this instant.`,
+  );
+  for (const skip of run.attestations.skipped) console.error(`  attestation skipped: ${skip}`);
   for (const conflict of run.benchmarks.conflicts) console.error(`  conflict: ${conflict}`);
   if (run.withheld.length > 0) {
     console.log(
