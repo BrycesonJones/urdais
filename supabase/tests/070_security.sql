@@ -146,7 +146,7 @@ declare
     -- UMPI (Phase 3): canonical series, source-series identity, runs, evidence, bases, publications
     'reference.umpi_series', 'reference.umpi_source_series',
     'pipeline.umpi_ingestion_runs', 'pipeline.umpi_observations',
-    'pipeline.umpi_index_bases', 'pipeline.umpi_publications',
+    'pipeline.umpi_index_bases', 'pipeline.umpi_index_base_inputs', 'pipeline.umpi_publications',
     -- Token Price: durable human verification events, the source of truth for freshness
     'pipeline.token_price_verifications',
     -- Grid Buildout Velocity (GBV-2): canonical ingestion foundation

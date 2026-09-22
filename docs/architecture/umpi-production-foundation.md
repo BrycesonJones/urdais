@@ -351,6 +351,85 @@ Stored: BOK 496.84 / 538.74 / 553.02 at 2020=100; Customs 11,175,623,000 / 13,55
 Both interfaces were promoted to `production_approved` on that evidence, with the BOK rights
 ambiguity explicitly preserved.
 
+## Phase 5: derivation and publication
+
+`src/lib/umpi/derive/`, run by `npm run umpi:derive`. It reads current observations, builds the
+Series B base, derives monthly levels and changes, and writes **internal** publication records.
+No scheduler, no public exposure.
+
+**Reuse.** The arithmetic is entirely the Phase 3 primitive layer — `unitValueUsdPerKg`,
+`computeIndexBase`, `rebaseToIndex` and `monthOverMonth` in `src/lib/umpi/calculate.ts` were
+written for exactly this and are not restated. `pipeline.umpi_current_observations` remains the
+one definition of "latest". No derivation run table was added: a derivation has no retrieval, no
+range to request and no source to page, so `umpi_ingestion_runs` could not hold one honestly, and
+the lineage a recalculation needs lives on the publication row.
+
+### Series A — nothing is recomputed
+
+The published level **is** the Bank of Korea level. No rebasing, no rescaling, no currency
+conversion, no unit value. The only Urdais calculation is the month-over-month change.
+
+### Series B — base, then level
+
+```
+base_uv  = Σ export_value_usd(2020) / Σ export_weight_kg(2020)
+uv_t     = export_value_usd_t / export_weight_kg_t
+index_t  = 100 × uv_t / base_uv
+```
+
+**A base is never partially built.** Exactly the twelve months of 2020, each once, each with a
+positive weight, from one source identity under one methodology version. A missing month blocks
+the base and therefore blocks the series — no Series B level exists until the base does, and
+nothing is substituted in the meantime. That refusal is a tested behaviour, not an accident.
+
+The base is stored with its numerator, denominator and month count, and
+`pipeline.umpi_index_base_inputs` records the twelve rows it was computed from **with their
+figures frozen at computation time**, so a later revision cannot silently change what the base
+was built from.
+
+### Two bugs the live rerun caught, worth keeping in mind
+
+1. **The stored base is not the computed base.** `base_unit_value` is `numeric(24,10)`, so the
+   database rounds the computed double. A first run that used the in-memory value and every
+   later run that read the stored one produced *different levels for identical inputs*. The
+   base is now re-read after insert, so the value used is always the one every later run sees.
+2. **Supersede before inserting.** One live publication per series-month is a partial unique
+   index, which cannot be deferred. Inserting the successor first put two live rows in the table
+   for an instant and failed. The predecessor is retired first; the foreign key between them is
+   deferrable, so pointing at a row that does not exist yet is legal inside the transaction.
+
+### MoM
+
+Strictly the immediately preceding calendar month. Withheld — never approximated — when that
+month is absent, when the level before it was not publishable, or across a methodology, source
+or base boundary. **There is no "since the last available observation" fallback**, and the reason
+distinguishes "the series starts here" (`no_prior_month`) from "the month before this one is
+missing" (`prior_month_missing`).
+
+A month that exported weight but no value has a unit value of zero, which is not a price
+measurement. It is admitted as evidence, stored, and **not published**; the following month then
+has no published predecessor and its change is withheld.
+
+### Idempotence and revision propagation
+
+Every publication carries an `inputs_digest` over the observation and its vintage, the base
+digest, the comparison month, the methodology version and the calculation version — and **no
+clock, no run id, no ordering**. A rerun over unchanged inputs writes nothing.
+
+Because the *base digest* is part of each Series B publication's digest, a rebuilt base
+propagates automatically: a revised 2020 month changes the base digest, which changes every
+Series B publication digest, which supersedes every affected month. There is no stale-publication
+failure mode to remember, because the dependency is carried in the identity rather than in an
+operator's head.
+
+### Methodology lifecycle
+
+The methodology remains **`0.1.0-draft`, undated**. Phase 5 writes records at
+`publication_state = 'internal_only'`, which is not publication, so no approval was needed and
+none was taken — converting a draft to an approved, effective methodology is a founder decision,
+not a side effect of a derivation phase. **Approval is the gate for public exposure**, and it
+belongs to the read-model phase.
+
 ## What Phase 4 must not do
 
 Recorded here because the foundation cannot enforce all of it:
