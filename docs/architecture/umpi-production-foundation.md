@@ -201,25 +201,74 @@ month (a yearly or range total) is rejected the same way.
 aborts if any observation already exists for the series. The methodology names the commodity and
 the fields but never a dataset, so nothing in it changes.
 
+## Three kinds of identity
+
+These are the same question asked at three levels, and conflating any two produces a bug. They
+are stated here because the first Phase 4 implementation got the first one wrong.
+
+| Level | Identity | On an exact retry |
+|---|---|---|
+| **Logical run** | source + month range + **payload digest** | **reused** — the same work, re-executed |
+| **HTTP retrieval** | source + month range + **the instant it was fetched** | **a new row** — each attempt is its own audit fact |
+| **Observation** | source series + reference month + **provenance hash** | **nothing written** — the evidence is unchanged |
+
+So an exact retry is **one run row, two retrieval rows, zero new observations**. The three
+answers differ because the three questions do: *was this work done*, *did we call the agency*,
+and *did the agency say anything new*.
+
+`umpi_ingestion_runs.idempotency_key` is unique, and stays unique. The write path inserts with
+`on conflict (idempotency_key) do nothing` and reads the existing row back, rather than adding
+randomness to slip past the constraint — a retry must resolve to the same run, which is what
+the constraint is for.
+
+A **reused run that already completed keeps its counts.** Overwriting them with a replay's
+zeroes would make the run row contradict the observations that carry its id. A reused run whose
+prior state is `failed` is a genuine retry and *is* updated. The caller sees both facts as
+`runReused` and `runCountsPreserved`.
+
+The retrieval key carries the fetch instant rather than a random value: an attempt happens at a
+time, so the time **is** its identity. Persisting the same fetch result twice therefore still
+dedupes, which is what separates a second attempt from a replay of one.
+
 ## Persistence flow
 
 `run.ts` → `store.ts`, one path for everything:
 
 1. `resolveUmpiLineage` resolves series, source series, interface and methodology version **by
    code**, and refuses a series with anything other than exactly one active source identity.
-2. The retrieval is recorded in the shared `pipeline.source_retrievals` — every HTTP attempt
-   gets one, including a repeated one, with its redacted URL, payload digest, record count and
-   Urdais's own `enumeration_assessment`.
-3. A run opens in `pipeline.umpi_ingestion_runs` keyed by a deterministic idempotency key, so a
-   retried run is the same run.
+2. The retrieval is recorded in the shared `pipeline.source_retrievals` — one row per HTTP
+   attempt — with its redacted URL, payload digest, record count and Urdais's own
+   `enumeration_assessment`.
+3. The run is opened, or resolved to the existing one for this exact work.
 4. Per admitted row, inside one transaction: an existing observation with the same source
    series, month and provenance hash means **nothing is written**; otherwise the next vintage is
-   appended and the previous current vintage is superseded.
+   appended and the previous current vintage is superseded. Every inserted observation records
+   **`source_retrieval_id`** — the exact call that produced it — and a `retrieved_at` carried
+   from the fetch, never a database `now()`. Those differ, and the difference is exactly the
+   question "when was this true at the source".
 5. The run closes with honest counts and `idempotence_state` of `no_change` or `changed`. A
    throw rolls the transaction back and closes the run as `failed` — never as a partial success.
 
-**Retrieval audit and observation idempotence are deliberately different things.** Running the
-same range twice produces two retrieval rows and zero new observations.
+## Testing the write path
+
+Two layers, because they catch different things:
+
+* `store.test.ts` runs against an in-memory fake — fast, and proves the decision logic.
+* `store.integration.test.ts` runs **the same store against a real migrated database**, gated on
+  `UMPI_INTEGRATION_DATABASE_URL` so CI and an ordinary `npm test` skip it. It proves what a
+  fake cannot: that a statement's placeholders and parameters agree, that the unique constraint
+  behaves as the code assumes, and that `source_retrieval_id` is really populated.
+
+The integration test **requires a freshly migrated database and cannot clean up after itself**:
+UMPI observations are append-only by trigger, so a delete is refused for every role. Disabling
+that trigger to tidy up would undermine the guarantee being tested, so the test asserts the
+database is empty at the start and the operator resets afterwards:
+
+```
+npm run db:reset && npm run db:migrate
+UMPI_INTEGRATION_DATABASE_URL="$(scripts/db/local.sh url)" npx vitest run src/lib/umpi/ingest/store.integration.test.ts
+npm run db:reset && npm run db:migrate   # leave it clean for the SQL suite
+```
 
 ### Dry run
 

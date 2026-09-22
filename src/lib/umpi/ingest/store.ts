@@ -40,6 +40,10 @@ export type UmpiLineage = {
 export type UmpiWriteResult = {
   runId: string;
   retrievalId: string;
+  /** True when this exact work had already been run and resolved to the existing run row. */
+  runReused: boolean;
+  /** True when a completed run's counts were left as they were rather than overwritten. */
+  runCountsPreserved: boolean;
   rowsReceived: number;
   rowsInserted: number;
   rowsUnchanged: number;
@@ -119,18 +123,33 @@ async function recordRetrieval(
   return text(rows[0]!.id);
 }
 
+type OpenedRun = { runId: string; reused: boolean; priorState: string | null };
+
+/**
+ * Open the logical run, or resolve to the one that already exists for this exact work.
+ *
+ * `idempotency_key` is unique by design and stays that way. An exact retry must resolve to the
+ * same run rather than inventing a second one or defeating the constraint with a random
+ * suffix, so the insert yields on conflict and the existing row is read back.
+ *
+ * `do nothing` rather than `do update`: a successful run's counts describe what that work did
+ * to the database, and a retry that legitimately finds nothing to do must not overwrite them
+ * with zeroes. The retry's own outcome is reported to the caller and recorded as a new
+ * retrieval row; the observations still carry this run's id.
+ */
 async function openRun(
   sql: UmpiSqlExecutor,
   lineage: UmpiLineage,
   fetched: SourceFetchResult,
   options: { fromMonth: string; toMonth: string; runKind: string; idempotencyKey: string },
-): Promise<string> {
+): Promise<OpenedRun> {
   const { rows } = await sql.query(
     `insert into pipeline.umpi_ingestion_runs
        (series_id, source_series_id, source_interface_id, methodology_version_id, idempotency_key,
         run_kind, retrieval_mode, requested_from_month, requested_to_month, started_at,
         payload_digest, rows_received)
      values ($1, $2, $3, $4, $5, $6, 'api', $7::date, $8::date, now(), $9, $10)
+     on conflict (idempotency_key) do nothing
      returning id`,
     [
       lineage.seriesId,
@@ -143,12 +162,22 @@ async function openRun(
       `${options.toMonth}-01`,
       fetched.payloadDigest,
       fetched.rows.length,
-      fetched.enumerationAssessment,
-      fetched.enumerationEvidence,
-      UMPI_COLLECTOR_IDENTITY,
     ],
   );
-  return text(rows[0]!.id);
+  if (rows[0]) return { runId: text(rows[0].id), reused: false, priorState: null };
+
+  const existing = await sql.query(
+    `select id, idempotence_state from pipeline.umpi_ingestion_runs where idempotency_key = $1`,
+    [options.idempotencyKey],
+  );
+  if (!existing.rows[0]) {
+    throw new UmpiPersistenceError(`run ${options.idempotencyKey} was neither inserted nor found`);
+  }
+  return {
+    runId: text(existing.rows[0].id),
+    reused: true,
+    priorState: existing.rows[0].idempotence_state == null ? null : text(existing.rows[0].idempotence_state),
+  };
 }
 
 /**
@@ -161,6 +190,8 @@ async function writeObservation(
   sql: UmpiSqlExecutor,
   lineage: UmpiLineage,
   runId: string,
+  retrievalId: string,
+  retrievedAt: string,
   row: Extract<ParsedRow, { state: "admitted" }>,
 ): Promise<"inserted" | "unchanged" | "revised"> {
   const referenceMonth = `${row.observation.referenceMonth}-01`;
@@ -205,20 +236,26 @@ async function writeObservation(
 
   const inserted = await sql.query(
     `insert into pipeline.umpi_observations
-       (series_id, source_series_id, source_interface_id, ingestion_run_id, methodology_version_id,
-        observation_kind, reference_month, retrieved_at, vintage_ordinal, source_native_unit,
-        index_level, index_base_label, export_value_usd, export_weight_kg,
+       (series_id, source_series_id, source_interface_id, source_retrieval_id, ingestion_run_id,
+        methodology_version_id, observation_kind, reference_month, retrieved_at, vintage_ordinal,
+        source_native_unit, index_level, index_base_label, export_value_usd, export_weight_kg,
         provenance_hash, raw_payload)
-     values ($1, $2, $3, $4, $5, $6, $7::date, now(), $8, $9, $10, $11, $12, $13, $14, $15)
+     values ($1, $2, $3, $4, $5, $6, $7, $8::date, $9, $10, $11, $12, $13, $14, $15, $16, $17)
      returning id`,
     [
       lineage.seriesId,
       lineage.sourceSeriesId,
       lineage.sourceInterfaceId,
+      // The exact retrieval this evidence came from. Without it an observation can say what it
+      // is but not which call produced it, which is half of what lineage means.
+      retrievalId,
       runId,
       lineage.methodologyVersionId,
       observation.kind,
       referenceMonth,
+      // The instant the agency was read, carried from the fetch. Never a database now(): those
+      // differ, and the difference is exactly the question "when was this true at the source".
+      retrievedAt,
       nextOrdinal,
       shape.nativeUnit,
       shape.indexLevel,
@@ -249,14 +286,22 @@ export async function persistUmpiFetch(
   fetched: SourceFetchResult,
   options: { fromMonth: string; toMonth: string; runKind?: string; idempotencyKey: string },
 ): Promise<UmpiWriteResult> {
-  const retrievalId = await recordRetrieval(sql, lineage, fetched, `${options.idempotencyKey}:retrieval`);
-  const runId = await openRun(sql, lineage, fetched, {
+  // One retrieval row per attempt: the key carries the fetch instant, so a second call against
+  // the same range is a second audit row while persisting one result twice is not.
+  const retrievalId = await recordRetrieval(
+    sql,
+    lineage,
+    fetched,
+    `umpi:retrieval:${lineage.seriesCode}:${options.fromMonth}:${options.toMonth}:${fetched.retrievedAt}`,
+  );
+  const opened = await openRun(sql, lineage, fetched, {
     fromMonth: options.fromMonth,
     toMonth: options.toMonth,
     runKind: options.runKind ?? "production",
     idempotencyKey: options.idempotencyKey,
   });
 
+  const runId = opened.runId;
   let inserted = 0;
   let unchanged = 0;
   let revised = 0;
@@ -266,7 +311,7 @@ export async function persistUmpiFetch(
     await sql.query("begin", []);
     for (const row of fetched.rows) {
       if (row.state !== "admitted") continue;
-      const outcome = await writeObservation(sql, lineage, runId, row);
+      const outcome = await writeObservation(sql, lineage, runId, retrievalId, fetched.retrievedAt, row);
       if (outcome === "inserted") inserted += 1;
       else if (outcome === "revised") revised += 1;
       else unchanged += 1;
@@ -288,17 +333,26 @@ export async function persistUmpiFetch(
   }
 
   const idempotenceState = inserted === 0 && revised === 0 ? "no_change" : "changed";
-  await sql.query(
-    `update pipeline.umpi_ingestion_runs
-        set completed_at = now(), rows_inserted = $2, rows_unchanged = $3, rows_revised = $4,
-            rows_rejected = $5, error_count = 0, idempotence_state = $6
-      where id = $1`,
-    [runId, inserted, unchanged, revised, rejected, idempotenceState],
-  );
+
+  // A reused run that already completed keeps the counts describing what it did. Overwriting
+  // them with a replay's zeroes would make the run row contradict the observations that carry
+  // its id. A reused run that previously *failed* is a genuine retry and is updated.
+  const replayed = opened.reused && opened.priorState !== "pending" && opened.priorState !== "failed";
+  if (!replayed) {
+    await sql.query(
+      `update pipeline.umpi_ingestion_runs
+          set completed_at = now(), rows_inserted = $2, rows_unchanged = $3, rows_revised = $4,
+              rows_rejected = $5, error_count = 0, idempotence_state = $6
+        where id = $1`,
+      [runId, inserted, unchanged, revised, rejected, idempotenceState],
+    );
+  }
 
   return {
     runId,
     retrievalId,
+    runReused: opened.reused,
+    runCountsPreserved: replayed,
     rowsReceived: fetched.rows.length,
     rowsInserted: inserted,
     rowsUnchanged: unchanged,

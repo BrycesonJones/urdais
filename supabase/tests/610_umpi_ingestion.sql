@@ -97,6 +97,56 @@ begin
   exception when unique_violation then null;
   end;
 
+  -- ------------------------------------------------------------------- retrieval lineage
+
+  -- An observation must name the retrieval that produced it. The column exists for exactly
+  -- this, and a null there means the evidence can say what it is but not which call found it.
+  select count(*) into n from pipeline.umpi_observations
+   where id = v1 and source_retrieval_id is null;
+  if n <> 0 then raise exception 'an observation was written without its retrieval'; end if;
+
+  -- And the lineage must be internally consistent: the observation, its source series and the
+  -- retrieval all name the same source interface.
+  select count(*) into n
+    from pipeline.umpi_observations o
+    join pipeline.source_retrievals r on r.id = o.source_retrieval_id
+    join reference.umpi_source_series ss on ss.id = o.source_series_id
+   where o.id = v1
+     and r.source_interface_id = o.source_interface_id
+     and ss.source_interface_id = o.source_interface_id;
+  if n <> 1 then raise exception 'observation, source series and retrieval disagree about the interface'; end if;
+
+  -- --------------------------------------------------- the logical run survives an exact retry
+
+  -- The run key is unique by design. An exact retry must resolve to the existing run rather
+  -- than inserting a second one, so the write path yields on conflict and reads the row back.
+  -- This models that: the second insert writes nothing and returns nothing.
+  select count(*) into n from pipeline.umpi_ingestion_runs where idempotency_key = 'test:run:1';
+  if n <> 1 then raise exception 'expected one run for the key, found %', n; end if;
+
+  insert into pipeline.umpi_ingestion_runs
+    (series_id, source_series_id, source_interface_id, methodology_version_id, idempotency_key,
+     retrieval_mode, requested_from_month, requested_to_month, started_at)
+  values (ppi_id, ppi_src, bok_if, mv_id, 'test:run:1', 'api', date '2026-06-01', date '2026-06-01', now())
+  on conflict (idempotency_key) do nothing;
+
+  select count(*) into n from pipeline.umpi_ingestion_runs where idempotency_key = 'test:run:1';
+  if n <> 1 then raise exception 'an exact retry created a second run row, found %', n; end if;
+
+  -- Each HTTP attempt stays its own audit row: the retrieval key carries the fetch instant.
+  insert into pipeline.source_retrievals
+    (source_interface_id, idempotency_key, requested_at, completed_at, request_method,
+     request_url, request_parameters, response_status, response_hash, record_count,
+     enumeration_assessment, enumeration_evidence, collector_identity)
+  values (bok_if, 'umpi:retrieval:UMPI-KR-DRAM-PPI:2026-06:2026-06:2026-09-22T11:00:00.000Z',
+          now(), now(), 'GET',
+          'https://ecos.bok.or.kr/api/StatisticSearch/REDACTED/json/kr/1/1000/404Y016/M/202606/202606/30911201AA',
+          '{"statCode":"404Y016"}'::jsonb, 200, repeat('a', 64), 1,
+          'complete', 'fixture', 'umpi-source-ingestion/1');
+
+  select count(*) into n from pipeline.source_retrievals where source_interface_id = bok_if;
+  if n <> 2 then raise exception 'expected two retrieval rows for two attempts, found %', n; end if;
+
   -- ---------------------------------------------------------------------- official revision
 
   insert into pipeline.umpi_ingestion_runs
