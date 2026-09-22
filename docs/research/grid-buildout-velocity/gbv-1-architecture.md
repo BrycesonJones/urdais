@@ -30,7 +30,7 @@ The net is not "one market instead of two". It is that **the two public markets 
 
 ## 2. Product definition
 
-**Grid Buildout Velocity measures how quickly approved transmission infrastructure moves from authorisation into physical service, using each market's own project records.** `[proposed]`
+**Grid Buildout Velocity measures how quickly tracked transmission infrastructure progresses into physical service, and how delivery schedules move over time, using each market's own project records.** `[proposed]`
 
 It is a **count-and-duration** product, not a capacity product.
 
@@ -39,9 +39,13 @@ It is a **count-and-duration** product, not a capacity product.
 **Velocity** has exactly two admissible senses in V1:
 
 1. **Throughput** — how many tracked projects entered service in a period.
-2. **Schedule adherence** — how far a project's expected in-service date has moved from the date recorded when it was approved.
+2. **Schedule adherence** — how far a project's expected in-service date has moved from the date the publisher recorded for it earlier, where the publisher records such a date.
 
 Both are per-market. Neither is a rate of capacity addition.
+
+**Tracking, not approval, is the inclusion rule.** Membership in the publisher's tracker is what makes a project a GBV project. An approval milestone is **not** required, because it is not generally available: ERCOT's approval-shaped columns are mandatory only for Tier 1–3, and `Tier 4` is 208 of 262 completed rows — 79% `[verified]`. Requiring approval evidence would discard four fifths of the ERCOT census.
+
+Approval therefore appears in exactly one place: **approval-to-service duration is a specific deferred metric, admissible only on the subset where an approval date is actually evidenced, published with its denominator and its scope named** (§7). CAISO's `Transmission Plan Approved` is a structured date across its portfolio `[verified]`, which is why M4 can anchor on it; ERCOT's is not, which is why no ERCOT metric does.
 
 **Explicitly not GBV:**
 
@@ -92,15 +96,17 @@ Canonical classes, with publisher-native text retained verbatim on every observa
 
 ### ERCOT `[verified]`
 
-| Evidence | Canonical | Confidence |
-| --- | --- | --- |
-| Row on `Completed` sheet **and** `Actual In-Service Date` is a real date | `in_service` | authoritative |
-| Row on `Completed` sheet, actual date is the `9999` sentinel (9 rows) | `unknown` | listed complete, date withheld |
-| Row on `Cancelled` sheet | `cancelled` | authoritative |
-| Row on `Future` or `Planned` sheet, status text `Under Construction` | `under_construction` | status-derived, lower confidence |
-| Row on `Future` or `Planned` sheet, status text `Planned` | `planned` | status-derived |
-| Row on `Future` or `Planned` sheet, status text `Conceptual` | `proposed` | status-derived |
-| Row on `Future`/`Planned`, status blank or `In-Service` (14 rows) | `unknown` | contradicts sheet |
+| Evidence | Canonical | Completion date | Confidence |
+| --- | --- | --- | --- |
+| Row on `Completed` sheet **and** `Actual In-Service Date` is a real date | `in_service` | known | authoritative |
+| Row on `Completed` sheet, actual date is the `9999` sentinel (9 rows) | **`in_service`** | **`unknown`** | authoritative lifecycle, unusable date |
+| Row on `Cancelled` sheet | `cancelled` | n/a | authoritative |
+| Row on `Future` or `Planned` sheet, status text `Under Construction` | `under_construction` | n/a | status-derived, lower confidence |
+| Row on `Future` or `Planned` sheet, status text `Planned` | `planned` | n/a | status-derived |
+| Row on `Future` or `Planned` sheet, status text `Conceptual` | `proposed` | n/a | status-derived |
+| Row on `Future`/`Planned`, status blank or `In-Service` (14 rows) | `unknown` | n/a | contradicts sheet |
+
+**Lifecycle and date quality are separate axes, and a defect in one never overwrites the other.** The nine sentinel rows sit on the authoritative Completed sheet; ERCOT has stated they are complete. What is missing is the *precision of when*, not the fact of completion. Demoting them to `unknown` would let a date defect erase an authoritative lifecycle state and would under-report ERCOT's completions. They are therefore `in_service` with `completion_date_quality = sentinel_unknown`, carried in every backlog and stock figure, and excluded only from metrics that need a real date — where they are reported as a named date-quality exclusion, never dropped silently.
 
 ERCOT has **no `approved` state in the tracker**. RPG review and BOD review dates approximate it for Tier 1–3 only. ERCOT has **no `in_development` and no construction-start** field at all.
 
@@ -183,7 +189,7 @@ Numerator, denominator, cohort, date, floor, missing-data rule and scope for eac
 - Date: `Actual In-Service Date` `[verified]`.
 - Cohort: energisation period.
 - Floor: none — a count of zero is publishable and meaningful.
-- Missing data: the 9 `9999` sentinel rows are excluded from the count and **reported as a named exclusion**, never dropped silently.
+- Missing data: the 9 `9999` sentinel rows are `in_service` but carry no usable date, so they **cannot be placed in a period**. They are excluded from this metric only, and published beside it as a named date-quality exclusion with its count. They remain `in_service` everywhere else, including M2 and any stock or cumulative figure.
 - Scope: ERCOT only. Public, with attribution.
 - Caveat published alongside: the Completed sheet is a rolling window, currently 2025–2026 only `[verified]`, so early periods are not comparable to later ones until forward snapshots accumulate.
 
@@ -193,10 +199,33 @@ Numerator, denominator, cohort, date, floor, missing-data rule and scope for eac
 - Missing data: rows whose status contradicts sheet membership are counted as `unknown` and shown as such.
 - Scope: ERCOT. Point-in-time only; not a rate.
 
-**M3 — ERCOT completions by service level kV and by new-versus-rebuilt character**
-- A labelled decomposition of M1 as **counts**, using kV `[verified]` and whether the row reports any new versus any rebuilt mileage.
-- Never a mileage sum. The mileage fields decide the label only.
-- Floor: suppress a kV class with fewer than 5 completions in the period.
+**M3 — ERCOT completions by service level kV and by works character**
+- A labelled decomposition of M1 as **counts**. kV comes from `Service Level kV`, which is Required and 100% populated `[verified]`.
+- Works character is a **four-way classification, including an explicit unknown**, because both mileage columns are **Optional** and a blank is not evidence of zero:
+
+  | Condition | Class |
+  | --- | --- |
+  | new miles > 0 **and** rebuilt miles not > 0 | `new` |
+  | rebuilt miles > 0 **and** new miles not > 0 | `rebuilt_or_reconductored` |
+  | both > 0 | `both` |
+  | neither > 0 — blank, zero, or non-numeric | `unknown_unclassified` |
+
+- **Blank is never coerced to zero.** ERCOT does not state that an empty mileage cell means "no mileage", so a row reporting nothing is unclassified — not a substation project by inference.
+
+  Measured on the current Completed sheet `[verified]`:
+
+  | Class | Rows | Share |
+  | --- | --- | --- |
+  | `new` | 30 | 11.5% |
+  | `rebuilt_or_reconductored` | 60 | 22.9% |
+  | `both` | 3 | 1.1% |
+  | **`unknown_unclassified`** | **169** | **64.5%** |
+
+  Nearly two thirds of ERCOT completions report no mileage at all. Treating that as "zero miles, therefore substation work" would be an inference the source does not support, applied to the **majority** of the series.
+- **The unknown bucket is published whenever it is non-zero**, with its count and share, beside the classified classes. A decomposition that hides it would read as though ERCOT completions were overwhelmingly substation work, which the source does not say.
+- Never a mileage sum. The mileage fields decide a label only; their magnitudes are never added, averaged, or published as a quantity.
+- Floor: suppress a kV class with fewer than 5 completions in the period. The `unknown_unclassified` count is never suppressed, since it is a data-quality disclosure rather than a small-sample statistic.
+- Open question 4 in §17 would collapse this bucket: a publisher statement that blank means zero is the only thing that could justify reclassifying those rows.
 
 **M4 — CAISO schedule slip against the approved in-service date**
 - Numerator: per project, `Current In-Service July 2026 TDF` minus `In-service Date at Approval in Transmission Plan`, in days `[verified]`.
@@ -361,7 +390,7 @@ Invariants:
 1. **An original target is never overwritten by a revision.** Each revision is a new row; the at-approval value is immutable once observed.
 2. **Expected and actual are different kinds and never compared as if equal.** `construction_start_expected` may not be used in any duration metric that implies an actual.
 3. **Precision is stored.** ERCOT dates are month/year by instruction though typed as datetimes `[verified]`; a day-precision reading is not asserted.
-4. **Sentinels are typed, not parsed.** `9999` is `unknown`, carrying the raw value.
+4. **Sentinels are typed, not parsed.** A `9999` actual-in-service value is stored with the raw value preserved and a date quality of `sentinel_unknown`. It makes **the date** unknown, never the lifecycle state the publisher's list already asserts (§4).
 5. **Urdais-derived durations are never stored as milestones.** They are analytics outputs.
 
 ---
@@ -396,7 +425,7 @@ The narrowest defensible shape. `[proposed]`
 
 | Market | Source | Metrics | Cadence | Depth |
 | --- | --- | --- | --- | --- |
-| ERCOT | TPIT public `No Cost` XLSX | M1 completions, M2 backlog, M3 kV/character decomposition | triannual `[research]`, change detected by content hash | 2025–2026 now; forward by snapshot. 2007–2014 archive is a separate optional backfill in a legacy format `[verified]` |
+| ERCOT | TPIT public `No Cost` XLSX | M1 completions, M2 backlog, M3 kV and works-character decomposition with an explicit unknown bucket | triannual `[research]`, change detected by content hash | 2025–2026 now; forward by snapshot. 2007–2014 archive is a separate optional backfill in a legacy format `[verified]` |
 | CAISO | TDF Approved Projects TPP workbook | M4 slip distribution, M5 on-hold/cancelled with reasons | semiannual, Jan and Jul `[research]` | ~15 in-file vintages back to Jan 2022 `[verified]` |
 
 **Deferred to GBV-2 assessment, internal only:** ISO-NE RSP list, the strongest unparsed candidate.
@@ -405,7 +434,7 @@ The narrowest defensible shape. `[proposed]`
 
 **Unit:** project counts and durations in days. No miles, no cost, no capacity.
 
-**What the product says on day one.** For ERCOT, how many tracked transmission projects were energised in each period, decomposed by voltage and by new-versus-rebuilt, with interconnection-driven and unclassified work excluded and counted. For CAISO, how far approved projects have slipped from their board-approved in-service dates, as a distribution with published reasons. Presented as two market-native panels that are never combined.
+**What the product says on day one.** For ERCOT, how many tracked transmission projects were energised in each period, decomposed by voltage and by works character — `new`, `rebuilt_or_reconductored`, `both`, or `unknown_unclassified`, the last being large on current data and published rather than hidden — with interconnection-driven work and completions carrying no usable date excluded and separately counted. For CAISO, how far projects have slipped from the in-service dates recorded when the board approved them, as a distribution with published reasons. Presented as two market-native panels that are never combined.
 
 **What it must not say.** Any national or multi-market total; any capacity, mileage or cost figure; any completion duration that excludes unfinished projects.
 

@@ -7,7 +7,10 @@
   "architecture_document": "docs/research/grid-buildout-velocity/gbv-1-architecture.md",
   "external_research_input": "docs/research/grid-buildout-velocity/gbv-1-external-research.md",
   "parser": "openpyxl 3.1.5",
-  "verified_markets": ["ERCOT", "CAISO"],
+  "verified_markets": [
+    "ERCOT",
+    "CAISO"
+  ],
   "unverified_markets": {
     "PJM": "JS-rendered page; no machine-readable export confirmed",
     "MISO": "login-gated portal; rights-blocked for public use regardless",
@@ -26,77 +29,314 @@
       "header_row": 2,
       "first_data_row": 3,
       "sheets": {
-        "ImprovementCostSummary07172026": { "rows": 39, "cols": 23, "role": "aggregate cost by kV class" },
-        "FutureTPIT071326NoCost": { "rows": 1431, "cols": 33, "data_rows": 1429, "distinct_ids": 1424, "duplicate_ids": 5 },
-        "PlannedTPIT071326NoCost": { "rows": 360, "cols": 33, "data_rows": 358, "distinct_ids": 358, "duplicate_ids": 0 },
-        "CompletedTPIT071326NoCost": { "rows": 264, "cols": 33, "data_rows": 262, "distinct_ids": 262, "duplicate_ids": 0 },
-        "CancelledTPIT071326NoCost": { "rows": 80, "cols": 33, "data_rows": 78, "distinct_ids": 78, "duplicate_ids": 0 },
-        "RTPProjects": { "rows": 90, "cols": 8 },
-        "TransmissionOwnerProjContac": { "rows": 23, "cols": 8, "contains_personal_data": true, "ingest": false },
-        "TSPResponsibility": { "rows": 32, "cols": 2, "role": "embedded field dictionary" },
-        "Cost Summary Info": { "rows": 8, "cols": 4 }
+        "ImprovementCostSummary07172026": {
+          "rows": 39,
+          "cols": 23,
+          "role": "aggregate cost by kV class"
+        },
+        "FutureTPIT071326NoCost": {
+          "rows": 1431,
+          "cols": 33,
+          "data_rows": 1429,
+          "distinct_ids": 1424,
+          "duplicate_ids": 5
+        },
+        "PlannedTPIT071326NoCost": {
+          "rows": 360,
+          "cols": 33,
+          "data_rows": 358,
+          "distinct_ids": 358,
+          "duplicate_ids": 0
+        },
+        "CompletedTPIT071326NoCost": {
+          "rows": 264,
+          "cols": 33,
+          "data_rows": 262,
+          "distinct_ids": 262,
+          "duplicate_ids": 0
+        },
+        "CancelledTPIT071326NoCost": {
+          "rows": 80,
+          "cols": 33,
+          "data_rows": 78,
+          "distinct_ids": 78,
+          "duplicate_ids": 0
+        },
+        "RTPProjects": {
+          "rows": 90,
+          "cols": 8
+        },
+        "TransmissionOwnerProjContac": {
+          "rows": 23,
+          "cols": 8,
+          "contains_personal_data": true,
+          "ingest": false
+        },
+        "TSPResponsibility": {
+          "rows": 32,
+          "cols": 2,
+          "role": "embedded field dictionary"
+        },
+        "Cost Summary Info": {
+          "rows": 8,
+          "cols": 4
+        }
       },
       "sheet_partition_is_disjoint": true,
       "columns": [
-        { "index": 0, "name": "ERCOT Project Number", "obligation": "Required", "role": "native_id" },
-        { "index": 1, "name": "Project Title (text, please start with location name first)", "obligation": "Required" },
-        { "index": 2, "name": "Project Description (text)", "obligation": "Optional" },
-        { "index": 3, "name": "Comments/Reasons for Delays/Changes/Speedup (text) (Optional)", "obligation": "Optional" },
-        { "index": 4, "name": "Terminal \"from\" Location", "obligation": "Optional" },
-        { "index": 5, "name": "Terminal \"to\" Location", "obligation": "Optional" },
-        { "index": 6, "name": "Transmission Status \"under construction, planned or conceptual\"", "obligation": "Optional", "reliability": "contradicts sheet membership on 44.7% of completed rows; not authoritative" },
-        { "index": 7, "name": "Associated Projects (project number) (Optional)", "obligation": "Optional", "role": "relationship" },
-        { "index": 8, "name": "Transmission Owner (text)", "obligation": "Required" },
-        { "index": 9, "name": "TSP/Company Contact", "obligation": "Required", "contains_personal_data": true, "ingest": false },
-        { "index": 10, "name": "Transmission Owner Project Number (Optional)", "obligation": "Optional" },
-        { "index": 11, "name": "Projected In-Service Date (Month/Yr)", "obligation": "Required", "milestone": "target_in_service_current" },
-        { "index": 12, "name": "Actual In-Service Date (Month/Yr)", "obligation": "Required once energized in the field", "milestone": "actual_in_service", "sentinel": "year 9999" },
-        { "index": 13, "name": "Service Level kV", "obligation": "Required" },
-        { "index": 14, "name": "Trans Circuit Miles New", "obligation": "Optional" },
-        { "index": 15, "name": "Trans Circuit Miles Rebuilt, Reconductored or Upgraded", "obligation": "Optional" },
-        { "index": 16, "name": "Autotransformer Capacity (MVA)", "obligation": "Optional" },
-        { "index": 17, "name": "Reactive Capability Added   (Mvar ) (-Reactor, +Capacitor )", "obligation": "Optional" },
-        { "index": 18, "name": "County Location for Substation or Starting Point for a Line", "obligation": "Optional" },
-        { "index": 19, "name": "County Location for Ending Point for a Line (Optional for Substation projects)", "obligation": "Optional" },
-        { "index": 20, "name": "Planning Charter Tier", "obligation": "Required" },
-        { "index": 21, "name": "RPG Number", "obligation": "Required for submitted Tier 1, 2, and 3 projects" },
-        { "index": 22, "name": "Date Submitted TO ERCOT for RPG Review (Month/Yr)", "obligation": "Required for Tier 1-3" },
-        { "index": 23, "name": "Date RPG Review Completed (Month/Yr)", "obligation": "Required for Tier 1-3 if completed", "milestone": "approved" },
-        { "index": 24, "name": "Date ERCOT BOD Review Completed (Month/Yr)", "obligation": "Required for Tier 1 if completed", "milestone": "approved" },
-        { "index": 25, "name": "SSWG Base Case Related Bus Numbers (If applicable)  (CSV)", "obligation": "Required" },
-        { "index": 26, "name": "Is the project reflected in SSWG Base Cases? (Y/N)", "obligation": "Required" },
-        { "index": 27, "name": "Part of Interface (Y/N)", "obligation": "Required" },
-        { "index": 28, "name": "Requested Additional Information (Optional)", "obligation": "Optional" },
-        { "index": 29, "name": "Other (Optional)", "obligation": "Optional" },
-        { "index": 30, "name": "Phase Number", "obligation": "not listed in dictionary" },
-        { "index": 31, "name": "MOD Project Number", "obligation": "not listed in dictionary" },
-        { "index": 32, "name": "RTP Project Number", "obligation": "Required if in RTP" }
+        {
+          "index": 0,
+          "name": "ERCOT Project Number",
+          "obligation": "Required",
+          "role": "native_id"
+        },
+        {
+          "index": 1,
+          "name": "Project Title (text, please start with location name first)",
+          "obligation": "Required"
+        },
+        {
+          "index": 2,
+          "name": "Project Description (text)",
+          "obligation": "Optional"
+        },
+        {
+          "index": 3,
+          "name": "Comments/Reasons for Delays/Changes/Speedup (text) (Optional)",
+          "obligation": "Optional"
+        },
+        {
+          "index": 4,
+          "name": "Terminal \"from\" Location",
+          "obligation": "Optional"
+        },
+        {
+          "index": 5,
+          "name": "Terminal \"to\" Location",
+          "obligation": "Optional"
+        },
+        {
+          "index": 6,
+          "name": "Transmission Status \"under construction, planned or conceptual\"",
+          "obligation": "Optional",
+          "reliability": "contradicts sheet membership on 44.7% of completed rows; not authoritative"
+        },
+        {
+          "index": 7,
+          "name": "Associated Projects (project number) (Optional)",
+          "obligation": "Optional",
+          "role": "relationship"
+        },
+        {
+          "index": 8,
+          "name": "Transmission Owner (text)",
+          "obligation": "Required"
+        },
+        {
+          "index": 9,
+          "name": "TSP/Company Contact",
+          "obligation": "Required",
+          "contains_personal_data": true,
+          "ingest": false
+        },
+        {
+          "index": 10,
+          "name": "Transmission Owner Project Number (Optional)",
+          "obligation": "Optional"
+        },
+        {
+          "index": 11,
+          "name": "Projected In-Service Date (Month/Yr)",
+          "obligation": "Required",
+          "milestone": "target_in_service_current"
+        },
+        {
+          "index": 12,
+          "name": "Actual In-Service Date (Month/Yr)",
+          "obligation": "Required once energized in the field",
+          "milestone": "actual_in_service",
+          "sentinel": "year 9999",
+          "sentinel_semantics": "degrades date quality only; lifecycle stays in_service because Completed-sheet membership is authoritative"
+        },
+        {
+          "index": 13,
+          "name": "Service Level kV",
+          "obligation": "Required"
+        },
+        {
+          "index": 14,
+          "name": "Trans Circuit Miles New",
+          "obligation": "Optional",
+          "blank_semantics": "Optional; blank is not evidence of zero and must not be coerced"
+        },
+        {
+          "index": 15,
+          "name": "Trans Circuit Miles Rebuilt, Reconductored or Upgraded",
+          "obligation": "Optional",
+          "blank_semantics": "Optional; blank is not evidence of zero and must not be coerced"
+        },
+        {
+          "index": 16,
+          "name": "Autotransformer Capacity (MVA)",
+          "obligation": "Optional"
+        },
+        {
+          "index": 17,
+          "name": "Reactive Capability Added   (Mvar ) (-Reactor, +Capacitor )",
+          "obligation": "Optional"
+        },
+        {
+          "index": 18,
+          "name": "County Location for Substation or Starting Point for a Line",
+          "obligation": "Optional"
+        },
+        {
+          "index": 19,
+          "name": "County Location for Ending Point for a Line (Optional for Substation projects)",
+          "obligation": "Optional"
+        },
+        {
+          "index": 20,
+          "name": "Planning Charter Tier",
+          "obligation": "Required"
+        },
+        {
+          "index": 21,
+          "name": "RPG Number",
+          "obligation": "Required for submitted Tier 1, 2, and 3 projects"
+        },
+        {
+          "index": 22,
+          "name": "Date Submitted TO ERCOT for RPG Review (Month/Yr)",
+          "obligation": "Required for Tier 1-3"
+        },
+        {
+          "index": 23,
+          "name": "Date RPG Review Completed (Month/Yr)",
+          "obligation": "Required for Tier 1-3 if completed",
+          "milestone": "approved"
+        },
+        {
+          "index": 24,
+          "name": "Date ERCOT BOD Review Completed (Month/Yr)",
+          "obligation": "Required for Tier 1 if completed",
+          "milestone": "approved"
+        },
+        {
+          "index": 25,
+          "name": "SSWG Base Case Related Bus Numbers (If applicable)  (CSV)",
+          "obligation": "Required"
+        },
+        {
+          "index": 26,
+          "name": "Is the project reflected in SSWG Base Cases? (Y/N)",
+          "obligation": "Required"
+        },
+        {
+          "index": 27,
+          "name": "Part of Interface (Y/N)",
+          "obligation": "Required"
+        },
+        {
+          "index": 28,
+          "name": "Requested Additional Information (Optional)",
+          "obligation": "Optional"
+        },
+        {
+          "index": 29,
+          "name": "Other (Optional)",
+          "obligation": "Optional"
+        },
+        {
+          "index": 30,
+          "name": "Phase Number",
+          "obligation": "not listed in dictionary"
+        },
+        {
+          "index": 31,
+          "name": "MOD Project Number",
+          "obligation": "not listed in dictionary"
+        },
+        {
+          "index": 32,
+          "name": "RTP Project Number",
+          "obligation": "Required if in RTP"
+        }
       ],
       "withheld_from_public_artifact": [
-        { "name": "CONFIDENTIAL Total Project Estimated Cost", "obligation": "Required of TSPs", "note": "present in the dictionary, absent from the No Cost public file; per-project cost is unavailable by design" }
+        {
+          "name": "CONFIDENTIAL Total Project Estimated Cost",
+          "obligation": "Required of TSPs",
+          "note": "present in the dictionary, absent from the No Cost public file; per-project cost is unavailable by design"
+        }
       ],
       "fill_rates_non_empty": {
         "CompletedTPIT071326NoCost": {
-          "ERCOT Project Number": 1.0, "Transmission Owner": 1.0, "Projected In-Service Date": 1.0,
-          "Actual In-Service Date": 1.0, "Service Level kV": 1.0, "Planning Charter Tier": 1.0,
-          "Trans Circuit Miles New": 0.996, "Trans Circuit Miles Rebuilt": 0.996,
-          "RPG Number": 0.198, "Date RPG Review Completed": 0.187, "Date ERCOT BOD Review Completed": 0.069
+          "ERCOT Project Number": 1.0,
+          "Transmission Owner": 1.0,
+          "Projected In-Service Date": 1.0,
+          "Actual In-Service Date": 1.0,
+          "Service Level kV": 1.0,
+          "Planning Charter Tier": 1.0,
+          "Trans Circuit Miles New": 0.996,
+          "Trans Circuit Miles Rebuilt": 0.996,
+          "RPG Number": 0.198,
+          "Date RPG Review Completed": 0.187,
+          "Date ERCOT BOD Review Completed": 0.069
         },
-        "FutureTPIT071326NoCost": { "Actual In-Service Date": 0.013, "RPG Number": 0.262, "Date RPG Review Completed": 0.202 },
-        "PlannedTPIT071326NoCost": { "Actual In-Service Date": 0.039 },
-        "CancelledTPIT071326NoCost": { "Actual In-Service Date": 0.026 }
+        "FutureTPIT071326NoCost": {
+          "Actual In-Service Date": 0.013,
+          "RPG Number": 0.262,
+          "Date RPG Review Completed": 0.202
+        },
+        "PlannedTPIT071326NoCost": {
+          "Actual In-Service Date": 0.039
+        },
+        "CancelledTPIT071326NoCost": {
+          "Actual In-Service Date": 0.026
+        }
       },
       "observed_values": {
-        "transmission_status_on_completed": { "In-Service": 145, "Planned": 104, "Under Construction": 11 },
-        "transmission_status_on_future": { "Planned": 1113, "Conceptual": 279, "Under Construction": 6, "In-Service": 3 },
-        "actual_in_service_year_on_completed": { "2025": 194, "2026": 59, "9999": 9 },
-        "service_level_kv_on_completed": { "138": 163, "345": 76, "69": 23 },
-        "planning_charter_tier_on_completed": { "Tier 4": 208, "Tier 3": 41, "Tier 1": 8, "Tier 2": 5 },
+        "transmission_status_on_completed": {
+          "In-Service": 145,
+          "Planned": 104,
+          "Under Construction": 11
+        },
+        "transmission_status_on_future": {
+          "Planned": 1113,
+          "Conceptual": 279,
+          "Under Construction": 6,
+          "In-Service": 3
+        },
+        "actual_in_service_year_on_completed": {
+          "2025": 194,
+          "2026": 59,
+          "9999": 9
+        },
+        "service_level_kv_on_completed": {
+          "138": 163,
+          "345": 76,
+          "69": 23
+        },
+        "planning_charter_tier_on_completed": {
+          "Tier 4": 208,
+          "Tier 3": 41,
+          "Tier 1": 8,
+          "Tier 2": 5
+        },
         "completed_rows_with_new_miles_gt_zero": 33,
         "completed_rows_with_rebuilt_miles_gt_zero": 63,
         "completed_rows_with_interconnection_request_number": 21,
         "completed_rows_matching_generation_keywords": 53,
-        "completed_rows_point_of_delivery": 9
+        "completed_rows_point_of_delivery": 9,
+        "completed_rows_with_sentinel_actual_date": 9,
+        "works_character_on_completed": {
+          "new": 30,
+          "rebuilt_or_reconductored": 60,
+          "both": 3,
+          "unknown_unclassified": 169,
+          "rule": "positive value in a mileage column only; blank/zero/non-numeric is unclassified, never coerced to zero"
+        }
       },
       "interconnection_request_pattern": "\\d{2}INR\\d{3,5}",
       "archive": {
@@ -105,7 +345,16 @@
         "bytes": 19705062,
         "entries": 74,
         "format": "legacy .xls",
-        "filename_years": { "2007": 1, "2008": 1, "2009": 2, "2010": 6, "2011": 11, "2012": 19, "2013": 6, "2014": 1 },
+        "filename_years": {
+          "2007": 1,
+          "2008": 1,
+          "2009": 2,
+          "2010": 6,
+          "2011": 11,
+          "2012": 19,
+          "2013": 6,
+          "2014": 1
+        },
         "gap": "no public vintage observed between 2014 and 2026-07",
         "internals_parsed": false
       },
@@ -122,37 +371,122 @@
       "bytes": 635627,
       "excluded_sibling_artifact": "https://www.caiso.com/documents/network-upgrades-generation-interconnection-jul-2026.xlsx",
       "sheets": {
-        "Impact Category": { "role": "legend" },
-        "PGaE": { "project_rows": 143 }, "SCE": { "project_rows": 47 }, "SDGaE": { "project_rows": 24 },
-        "LSPower": { "project_rows": 9 }, "VEA_GLW": { "project_rows": 3 }, "HWT": { "project_rows": 2 },
-        "CalGrid": { "project_rows": 2 }, "Lotus": { "project_rows": 1 },
-        "CitizensEnergy": { "project_rows": 1 }, "DCRT": { "project_rows": 1 }
+        "Impact Category": {
+          "role": "legend"
+        },
+        "PGaE": {
+          "project_rows": 143
+        },
+        "SCE": {
+          "project_rows": 47
+        },
+        "SDGaE": {
+          "project_rows": 24
+        },
+        "LSPower": {
+          "project_rows": 9
+        },
+        "VEA_GLW": {
+          "project_rows": 3
+        },
+        "HWT": {
+          "project_rows": 2
+        },
+        "CalGrid": {
+          "project_rows": 2
+        },
+        "Lotus": {
+          "project_rows": 1
+        },
+        "CitizensEnergy": {
+          "project_rows": 1
+        },
+        "DCRT": {
+          "project_rows": 1
+        }
       },
       "total_project_rows": 233,
       "columns": [
-        { "name": "TP Project ID", "role": "native_id" },
-        { "name": "Project" },
-        { "name": "PTO", "role": "sponsor" },
-        { "name": "Transmission Plan Approved", "milestone": "approved" },
-        { "name": "In-service Date at Approval in Transmission Plan", "milestone": "target_in_service_at_approval", "note": "frozen original; preserved beside revisions" },
-        { "name": "Previous In-Service <Month Year> TDF", "milestone": "target_in_service_prior", "occurrences": "approx 15, Jan 2022 through Jan 2026", "note": "in-file longitudinal history; no Urdais snapshot needed for past revisions" },
-        { "name": "Current In-Service July 2026 TDF", "milestone": "target_in_service_current" },
-        { "name": "Project Status", "reliability": "uncontrolled free text" },
-        { "name": "Expected CPUC Permit Application Filing", "milestone": "permit_filing_expected" },
-        { "name": "Expected Construction Start", "milestone": "construction_start_expected", "note": "expected, not actual; includes literal TBD" },
-        { "name": "Reason for ISD Change from Original Comitted Date" },
-        { "name": "Delay Resolver" },
-        { "name": "Notes" }
+        {
+          "name": "TP Project ID",
+          "role": "native_id"
+        },
+        {
+          "name": "Project"
+        },
+        {
+          "name": "PTO",
+          "role": "sponsor"
+        },
+        {
+          "name": "Transmission Plan Approved",
+          "milestone": "approved"
+        },
+        {
+          "name": "In-service Date at Approval in Transmission Plan",
+          "milestone": "target_in_service_at_approval",
+          "note": "frozen original; preserved beside revisions"
+        },
+        {
+          "name": "Previous In-Service <Month Year> TDF",
+          "milestone": "target_in_service_prior",
+          "occurrences": "approx 15, Jan 2022 through Jan 2026",
+          "note": "in-file longitudinal history; no Urdais snapshot needed for past revisions"
+        },
+        {
+          "name": "Current In-Service July 2026 TDF",
+          "milestone": "target_in_service_current"
+        },
+        {
+          "name": "Project Status",
+          "reliability": "uncontrolled free text"
+        },
+        {
+          "name": "Expected CPUC Permit Application Filing",
+          "milestone": "permit_filing_expected"
+        },
+        {
+          "name": "Expected Construction Start",
+          "milestone": "construction_start_expected",
+          "note": "expected, not actual; includes literal TBD"
+        },
+        {
+          "name": "Reason for ISD Change from Original Comitted Date"
+        },
+        {
+          "name": "Delay Resolver"
+        },
+        {
+          "name": "Notes"
+        }
       ],
       "actual_in_service_date_column": null,
       "observed_values": {
         "project_status": {
-          "In-Flight": 90, "Initiating": 37, "Construction": 16, "Engineering": 13, "Design": 12,
-          "Preliminary Engineering": 9, "Planning": 8, "Initiation": 6, "In-Service": 5, "Cancelled": 5,
-          "In-flight": 4, "Permitting, engineering and design": 4, "In flight": 3, "On Hold": 3,
-          "Construction Complete": 3, "Permitting": 3, "On Hold (CAISO)": 2, "In Service": 2,
-          "Initial Development Activities": 2, "Final Engineering": 1, "Engineering Design": 1,
-          "In Flight": 1, "TBD": 1, "Completed": 1
+          "In-Flight": 90,
+          "Initiating": 37,
+          "Construction": 16,
+          "Engineering": 13,
+          "Design": 12,
+          "Preliminary Engineering": 9,
+          "Planning": 8,
+          "Initiation": 6,
+          "In-Service": 5,
+          "Cancelled": 5,
+          "In-flight": 4,
+          "Permitting, engineering and design": 4,
+          "In flight": 3,
+          "On Hold": 3,
+          "Construction Complete": 3,
+          "Permitting": 3,
+          "On Hold (CAISO)": 2,
+          "In Service": 2,
+          "Initial Development Activities": 2,
+          "Final Engineering": 1,
+          "Engineering Design": 1,
+          "In Flight": 1,
+          "TBD": 1,
+          "Completed": 1
         },
         "in_service_equivalent_rows": 8,
         "in_service_or_construction_complete_rows": 11,
@@ -178,6 +512,15 @@
       "any cross-market aggregate"
     ],
     "cross_market_aggregation": "reject",
-    "v1_unit": "project counts and durations in days"
+    "v1_unit": "project counts and durations in days",
+    "ercot_sentinel_rule": "Completed-sheet rows with a 9999 actual date are in_service with completion_date_quality=sentinel_unknown; excluded from date-based throughput only, retained in stock and backlog figures, published as a named exclusion",
+    "ercot_works_character_classes": [
+      "new",
+      "rebuilt_or_reconductored",
+      "both",
+      "unknown_unclassified"
+    ],
+    "blank_miles_rule": "never coerced to zero; unclassified rows are published when non-zero",
+    "inclusion_rule": "tracker membership, not approval; approval-to-service is a scoped deferred metric only where approval is evidenced"
   }
 }

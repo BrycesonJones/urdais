@@ -154,6 +154,8 @@ Nine Completed rows carry `Actual In-Service Date` = year **9999** (e.g. `72876A
 
 This is the same shape as the NYISO `9999` MW sentinel handled in Transmission Headroom. It must be an explicit unknown, excluded from date arithmetic and counted in a stated denominator — never silently coerced or dropped.
 
+**What it does not do is change the lifecycle state.** These rows sit on the Completed sheet, which is the authoritative list, and the field dictionary makes the actual date mandatory only *once energised* — so a sentinel marks a project whose completion ERCOT asserts but whose date it has not yet supplied. The sentinel therefore degrades **date quality**, not lifecycle. The architecture keeps them `in_service` and excludes them only from metrics requiring a real date.
+
 **(e) Circuit miles are separated into new versus rebuilt — but both are Optional, and mostly zero.**
 
 `Trans Circuit Miles New` and `Trans Circuit Miles Rebuilt, Reconductored or Upgraded` are distinct columns, ~99.6% non-empty on Completed. That directly addresses the "rebuilds counted as buildout" risk.
@@ -161,6 +163,8 @@ This is the same shape as the NYISO `9999` MW sentinel handled in Transmission H
 But on the 262 completed rows, only **33 have new miles > 0** and **63 have rebuilt miles > 0**. Roughly three quarters of completed ERCOT projects are substation, transformer, breaker, or reactive work with no line mileage at all.
 
 Both fields are **Optional** in the dictionary, so a `0` cannot be distinguished from "not reported". Under existing publication discipline — empty is not zero — a miles-summing metric is **not defensible**, and the count is the honest unit.
+
+Classifying each completed row by which mileage column carries a positive value gives **new 30 (11.5%), rebuilt or reconductored 60 (22.9%), both 3 (1.1%), and neither 169 (64.5%)**. The majority of ERCOT completions report no mileage at all, so any new-versus-rebuilt split must carry an explicit unclassified bucket rather than assume the silent rows are zero-mileage substation work.
 
 **(f) Per-project cost is permanently unavailable in the public artifact.**
 
