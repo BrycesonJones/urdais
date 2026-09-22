@@ -270,13 +270,35 @@ describe("memory price methodology", () => {
     expect(doc).not.toMatch(/Status: approved/);
   });
 
-  it("fixes the priced object and its unit, and refuses the substitutes it is most likely to be confused with", () => {
+  it("fixes the priced object as a packaged chip and the unit as USD per chip", () => {
     const doc = read(umpi!.file);
-    expect(doc).toContain("USD per die");
-    expect(doc).toContain("gigabits of die density, never in gigabytes of module capacity");
+    expect(doc).toContain("A **DRAM chip** is the packaged semiconductor memory device");
+    expect(doc).toContain("USD per chip");
+    expect(doc).toContain("`USD/chip`");
+    expect(doc).toContain(
+      "One unit = one DRAM chip matching the instrument's canonical generation, density, organization, speed bin and grade",
+    );
     // The generic demo unit is named once, to supersede it.
     expect(doc).toContain("`$ / part`");
-    expect(doc).toContain("never** converted to USD per gigabyte");
+    expect(doc).toContain("never** converted to USD per gigabyte, USD per gigabit, USD per bit, or USD per module");
+    // The priced object is the commercial component, never the silicon or the unit it is sold by.
+    expect(doc).not.toContain("USD per die");
+    expect(doc).not.toContain("USD / die");
+    expect(doc).not.toContain("USD/die");
+  });
+
+  it("keeps density a gigabit device concept and separates the chip from the die, the module and the wafer", () => {
+    const doc = read(umpi!.file);
+    // `die` is still correct terminology for silicon density; the ban is on pricing in it, not on the word.
+    expect(doc).toContain("gigabits of device density, never in gigabytes of module capacity");
+    expect(doc).toContain("`16Gb` denotes the density of the DRAM device in gigabits, not module capacity in gigabytes");
+    expect(doc).toContain("gigabits of die density inside the packaged device");
+    expect(doc).toContain("| **DRAM chip / packaged IC** |");
+    expect(doc).toContain("| **Semiconductor die** |");
+    expect(doc).toContain("| **DIMM / module** |");
+    expect(doc).toContain("| **Wafer** |");
+    // The conflation the correction removed: a die is not "one packaged memory component".
+    expect(doc).not.toMatch(/\*\*Die \/ chip\*\*/);
   });
 
   it("carries the six canonical DRAM instruments with their qualifiers, and keeps branded and eTT apart", () => {
@@ -287,6 +309,7 @@ describe("memory price methodology", () => {
     for (const organization of ["2Gx8", "1Gx8", "512Mx8"]) {
       expect(doc, organization).toContain(organization);
     }
+    expect(doc).toContain("| Spot | USD / chip |");
     expect(doc).toContain("effectively tested");
     expect(doc).toContain("Branded and eTT observations are never combined");
     expect(doc).toContain("Not separately established");
@@ -312,13 +335,31 @@ describe("memory price methodology", () => {
     // Raw republication is a separate right, required here because V1 publishes a source's own figure.
     expect(doc).toContain("the raw-republication right is required in addition to G4");
     expect(doc).toContain("A contractual restriction is never broadened beyond its text");
+    // Calculating a percentage over two licensed closes does not launder the price underneath it.
+    expect(doc).toContain("Calculating the 1D close-to-close change does not change this");
+    expect(doc).toContain("remains subject to the raw-republication right");
+    expect(doc).toContain("G5 Historical retention");
   });
 
-  it("defines the session cadence and the change, and does not leave the header word `today` standing", () => {
+  it("names the Urdais calculation the 1D close-to-close change, distinctly from any source field", () => {
     const doc = read(umpi!.file);
     expect(doc).toContain("business-day session cadence");
-    expect(doc).toContain("The V1 canonical change is the session change");
+    expect(doc).toContain("The V1 canonical change is the 1D close-to-close change");
+    expect(doc).toContain("1D_change = (close_t \u2212 close_{t\u22121}) / close_{t\u22121}");
+    expect(doc).toContain("The product label for this quantity is `1D`");
     expect(doc).toContain("It is never `today`");
+    // The rename exists so a vendor's own "session change" field cannot be mistaken for this one.
+    expect(doc).toContain("A price desk may publish its own field called a session change");
+    expect(doc).not.toContain("canonical change is the session change");
+    expect(doc).not.toContain("session_change");
+  });
+
+  it("keeps the gap rules that stop a missing session from becoming a flat print", () => {
+    const doc = read(umpi!.file);
+    expect(doc).toContain("The change is **withheld**, never displayed as zero");
+    expect(doc).toContain("no zero-change point is created");
+    expect(doc).toContain("Nothing is interpolated across it");
+    expect(doc).toContain("The last eligible session of the source business day");
     expect(doc).toContain("No history is generated from demo or deterministic series");
   });
 });

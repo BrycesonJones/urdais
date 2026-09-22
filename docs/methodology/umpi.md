@@ -13,48 +13,49 @@ This document follows the principles of the [Urdais methodology framework](/docs
 | Output | UMPI-DRAM Spot |
 | Family | UMPI, the Urdais Memory Price Index |
 | Kind | Price product, one published value per canonical instrument |
-| Instruments | Six DRAM dies, fixed by this version |
+| Instruments | Six DRAM chips, fixed by this version |
 | Market | Spot |
-| Native unit | USD per die |
+| Native unit | USD per chip |
 | Cadence | Business-day session, one published value per source business day |
 | Methodology version | 0.1.0-draft |
 | Publication state | **Blocked pending licensed source** |
 | Effective date | None. A draft carries no production effective date |
 
-UMPI-DRAM Spot is not an index level. It has no base date, no base value, no divisor, and no weights. It is a set of six separately published prices, each measuring one object. **There is no UMPI headline number**, no composite, and no average across instruments; a mean of a branded DDR4 die and an eTT die is not a quantity.
+UMPI-DRAM Spot is not an index level. It has no base date, no base value, no divisor, and no weights. It is a set of six separately published prices, each measuring one object. **There is no UMPI headline number**, no composite, and no average across instruments; a mean of a branded DDR4 chip and an eTT chip is not a quantity.
 
 ## Output Definition
 
-> **UMPI-DRAM Spot measures the recurring spot-market price of a defined DRAM die, in United States dollars per die, as observed from an eligible spot-market source.**
+> **UMPI-DRAM Spot measures the recurring spot-market price of a defined DRAM chip, in United States dollars per chip, as observed from an eligible spot-market source.**
 
-Three words in that sentence carry the whole product and each is defined below: **spot**, **die**, and **eligible**.
+Three words in that sentence carry the whole product and each is defined below: **spot**, **chip**, and **eligible**.
 
-### The priced object: a die
+### The priced object: a chip
 
-A **DRAM die** is the individual semiconductor memory component corresponding to the generation, density, organization, speed bin and grade named by the instrument. It is the component that module makers buy loose and mount; it is not the module they sell afterwards.
+A **DRAM chip** is the packaged semiconductor memory device corresponding to the generation, density, organization, speed bin and grade named by the instrument. It is the commercial component that eligible spot sources quote, that module makers buy loose and mount; it is not the module they sell afterwards, and it is not the bare silicon inside it.
 
-Four objects are routinely confused in memory pricing, and UMPI prices exactly the first:
+Five objects are routinely confused in memory pricing, and UMPI prices exactly the first:
 
 | Object | What it is | In UMPI V1 |
 | --- | --- | --- |
-| **Die / chip** | One packaged memory component of a stated density and organization | **The priced object** |
-| **DIMM / module** | An assembly of dies on a PCB, sold by capacity | Not priced. A different product with a different market |
+| **DRAM chip / packaged IC** | The commercial memory component of a stated density and organization, quoted by the eligible spot source | **The priced object** |
+| **Semiconductor die** | The silicon inside the packaged device. Relevant to density terminology, and not separately quoted by any eligible source | Not separately priced |
+| **DIMM / module** | An assembly of several memory devices on a PCB, sold by capacity | Not priced. A different product with a different market |
 | **Gigabyte of module capacity** | A normalization over a module | Not priced, not derived, not displayed |
-| **Wafer** | The substrate the dies are cut from | Not priced. Not observed by any eligible source |
+| **Wafer** | The semiconductor substrate carrying many fabricated dies before singulation | Not priced. Not observed by any eligible source |
 
-**An instrument's density is stated in gigabits of die density, never in gigabytes of module capacity.** `16Gb` is sixteen gigabits on one die. A `16GB` module is a different product whose name differs by one character, which is exactly why this sentence exists. The organizations in the instrument definitions make the arithmetic explicit: `2Gx8` is 2G addresses × 8 bits = 16 gigabits, `1Gx8` is 8 gigabits, `512Mx8` is 4 gigabits.
+**An instrument's density is stated in gigabits of device density, never in gigabytes of module capacity.** `16Gb` denotes the density of the DRAM device in gigabits, not module capacity in gigabytes. A `16GB` module is a different product whose name differs by one character, which is exactly why this sentence exists. The organizations in the instrument definitions make the arithmetic explicit: `2Gx8` is 2G addresses × 8 bits = 16 gigabits, `1Gx8` is 8 gigabits, `512Mx8` is 4 gigabits.
 
-This methodology makes no claim about how a die is manufactured, what process node produced it, what its yield or bin distribution is, or what it costs to make. Those are not observed by any source this product may use, and Phase 1B establishes no evidence for them.
+Density is the one place where the silicon matters to this document: `16Gb`, `8Gb` and `4Gb` are gigabits of die density inside the packaged device, which is why the term survives here and nowhere else in the definition. This methodology makes no claim about how a die is fabricated, what process node produced it, what its yield or bin distribution is, or what it costs to make. Those are not observed by any source this product may use, and Phase 1B establishes no evidence for them.
 
-### The unit: USD per die
+### The unit: USD per chip
 
-> **One unit = one die matching the instrument's canonical generation, density, organization, speed bin and grade, quoted in United States dollars.**
+> **One unit = one DRAM chip matching the instrument's canonical generation, density, organization, speed bin and grade, quoted in United States dollars.**
 
 The unit is the source's own native quotation unit: eligible spot sources quote dollars per piece for exactly this object, so no conversion, bit-normalization or currency translation occurs between observation and publication.
 
-- The official print is **never** converted to USD per gigabyte, USD per gigabit, or USD per module.
+- The official print is **never** converted to USD per gigabyte, USD per gigabit, USD per bit, or USD per module.
 - Two instruments' prices are **never** normalized against each other by density to produce a per-bit series. A per-bit view is a different product and would need its own methodology version.
-- The display caption may be reader-friendly, but the canonical unit recorded against every observation and every published value is `USD/die`. The generic `$ / part` used by the current demo surface is **not** the methodology unit and is superseded by this document.
+- The display caption may be reader-friendly, but the canonical unit recorded against every observation and every published value is `USD/chip`. The generic `$ / part` used by the current demo surface is **not** the methodology unit and is superseded by this document.
 
 ## Canonical Instruments
 
@@ -62,12 +63,12 @@ Six instruments constitute the V1 production family. Each is a distinct economic
 
 | Instrument | Generation | Density | Organization | Speed bin | Grade | Market | Native unit |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| DDR5 16Gb | DDR5 | 16 Gb | 2Gx8 | 4800/5600 | Branded / Major | Spot | USD / die |
-| DDR4 16Gb | DDR4 | 16 Gb | 2Gx8 | 3200 | Branded / Major | Spot | USD / die |
-| DDR4 8Gb | DDR4 | 8 Gb | 1Gx8 | 3200 | Branded / Major | Spot | USD / die |
-| DDR4 16Gb eTT | DDR4 | 16 Gb | 2Gx8 | Not separately established | eTT | Spot | USD / die |
-| DDR4 8Gb eTT | DDR4 | 8 Gb | 1Gx8 | Not separately established | eTT | Spot | USD / die |
-| DDR3 4Gb | DDR3 | 4 Gb | 512Mx8 | 1600/1866 | Branded / Major | Spot | USD / die |
+| DDR5 16Gb | DDR5 | 16 Gb | 2Gx8 | 4800/5600 | Branded / Major | Spot | USD / chip |
+| DDR4 16Gb | DDR4 | 16 Gb | 2Gx8 | 3200 | Branded / Major | Spot | USD / chip |
+| DDR4 8Gb | DDR4 | 8 Gb | 1Gx8 | 3200 | Branded / Major | Spot | USD / chip |
+| DDR4 16Gb eTT | DDR4 | 16 Gb | 2Gx8 | Not separately established | eTT | Spot | USD / chip |
+| DDR4 8Gb eTT | DDR4 | 8 Gb | 1Gx8 | Not separately established | eTT | Spot | USD / chip |
+| DDR3 4Gb | DDR3 | 4 Gb | 512Mx8 | 1600/1866 | Branded / Major | Spot | USD / chip |
 
 **Where an attribute is recorded as not separately established, no value is invented.** The two eTT instruments are quoted by grade and organization and are not separately binned by speed in the evidence Phase 1B collected. An eligible source that does bin them does not thereby change these instruments; admitting a speed-binned eTT instrument would be a new instrument under a new version.
 
@@ -78,7 +79,7 @@ Five attributes are **mandatory identity**: an observation that cannot be resolv
 **eTT means effectively tested**: unmarked, value-grade DRAM sold without a vendor brand, typically to module makers who brand the finished module themselves.
 
 - eTT is a **market grade**, not a JEDEC generation, not a process variant, and not a temperature specification.
-- eTT is a property of how the die reaches the market, so its vendor mix is unknown and unmarked **by construction**. This methodology describes an eTT instrument as unmarked eTT die as surveyed by the eligible source, and never as a qualified part from a named manufacturer.
+- eTT is a property of how the chip reaches the market, so its vendor mix is unknown and unmarked **by construction**. This methodology describes an eTT instrument as unmarked eTT chip as surveyed by the eligible source, and never as a qualified part from a named manufacturer.
 
 > **Branded and eTT observations are never combined, averaged, substituted or interpolated into one another, for any reason, including a matching generation and density.**
 
@@ -86,14 +87,14 @@ This is not a fastidiousness rule. On the spot board Phase 1B inspected on 21 Se
 
 ### Manufacturer
 
-The V1 branded instruments are **not split by manufacturer**. Eligible spot sources print one branded/Major line per instrument, treating qualified dies from the major vendors as substitutes in the channel. That is the market convention for a spot die, and Urdais adopts it rather than asserting a vendor split no source publishes. It is explicitly **not** a claim that vendors are substitutes in OEM qualification, which is a different market this product does not measure.
+The V1 branded instruments are **not split by manufacturer**. Eligible spot sources print one branded/Major line per instrument, treating qualified chips from the major vendors as substitutes in the channel. That is the market convention for a spot chip, and Urdais adopts it rather than asserting a vendor split no source publishes. It is explicitly **not** a claim that vendors are substitutes in OEM qualification, which is a different market this product does not measure.
 
 ## Published Surface
 
 For each of the six instruments, V1 publishes:
 
-- the current value, in USD per die;
-- the session change against the immediately preceding published close, defined under [Change calculation](#docs-change-calculation);
+- the current value, in USD per chip;
+- the 1D close-to-close change against the immediately preceding published close, defined under [Change calculation](#docs-change-calculation);
 - the observation timestamp of the value, carried from the source and never rounded to a date boundary;
 - the methodology version and the source attribution the licence requires.
 
@@ -109,7 +110,7 @@ Four stages, in the framework's separation of data stages:
 | --- | --- |
 | Raw | One source session print, exactly as published, with its retrieval record and the artifact it was read from |
 | Normalized | That print resolved to one canonical instrument, one market, one native currency and one native unit, with its source session identity |
-| Calculated | The published close for a source business day, and the session change derived from consecutive closes |
+| Calculated | The published close for a source business day, and the 1D close-to-close change derived from consecutive closes |
 | Published | The value served for an instrument, bound to its methodology version and its rights state |
 
 A published value must be reconstructible from its stored observations without re-contacting the source. Where the source's licence does not permit retaining the observations that would make that possible, the product is not publishable; see [Rights and publication gates](#docs-rights-and-publication-gates).
@@ -126,7 +127,7 @@ An **eligible UMPI-DRAM Spot observation** is a single value for a single canoni
 | Session identity | The source's own session or publication identity, where the source publishes more than one value per business day |
 | Market | `spot`. A contract, channel or retail observation is not an observation of this product |
 | Native currency | USD |
-| Native unit | USD per die |
+| Native unit | USD per chip |
 | Observed value | The value as published, at the source's own precision. No rounding before storage |
 | Value kind | One of the kinds below, recorded explicitly, never assumed |
 | Provenance | Retrieval time, the artifact or response the value was read from, and its hash |
@@ -159,7 +160,7 @@ For an instrument on a source business day:
 2. Discard nothing on the basis of level. There is no outlier rule, no smoothing, no winsorization and no filter on the published value: a survey average is already a constructed statistic, and a second filter over it would measure Urdais, not the market.
 3. The **published close** for that business day is the value of the **last eligible session** of that day, by the source's own session ordering. Earlier sessions are retained as canonical observations and are not published as separate values.
 4. The published value for the instrument is its most recent published close.
-5. The session change is computed under [Change calculation](#docs-change-calculation).
+5. The 1D close-to-close change is computed under [Change calculation](#docs-change-calculation).
 
 No arithmetic is applied between the source's published figure and the Urdais published value. That is a deliberate property of V1 and it has a direct rights consequence, stated in [Rights and publication gates](#docs-rights-and-publication-gates).
 
@@ -169,13 +170,13 @@ No arithmetic is applied between the source's published figure and the Urdais pu
 
 | Market | What it is | Status in V1 |
 | --- | --- | --- |
-| **Spot** | The broker and module-maker channel for loose dies, surveyed per session on business days | **This product** |
-| **Contract** | Negotiated supply between makers and OEMs, surveyed monthly, frequently on modules rather than dies and sometimes on a different organization for a same-named density | Out of scope. A future `UMPI-DRAM Contract` product under its own methodology |
+| **Spot** | The broker and module-maker channel for loose chips, surveyed per session on business days | **This product** |
+| **Contract** | Negotiated supply between makers and OEMs, surveyed monthly, frequently on modules rather than chips and sometimes on a different organization for a same-named density | Out of scope. A future `UMPI-DRAM Contract` product under its own methodology |
 | **Distributor / channel retail** | Catalog prices to end buyers | Out of scope, and not a price for this object |
 
 These are different economic markets whose prices disagree materially for the same nominal density; Phase 1B records a same-period spot and contract figure for one instrument differing by nearly a factor of two. A single number labelled `DDR4 16Gb` without its market stated would be false, so the market is a mandatory identity attribute of every instrument and every observation.
 
-Spot is also not a proxy for the price of AI memory. It measures the channel market for conventional DRAM dies. This methodology makes no claim that it tracks server, hyperscaler or accelerator memory procurement.
+Spot is also not a proxy for the price of AI memory. It measures the channel market for conventional DRAM chips. This methodology makes no claim that it tracks server, hyperscaler or accelerator memory procurement.
 
 ## HBM status in V1
 
@@ -223,7 +224,7 @@ A source is eligible only if all of the following hold, each on evidence rather 
 | S1 | **Instrument correspondence.** It publishes values that resolve to the canonical instruments on every mandatory identity attribute, without Urdais inferring an attribute the source does not state |
 | S2 | **Recurrence.** It publishes on a regular business-day session cadence, not occasionally and not on request |
 | S3 | **Session identity.** Each value carries the source's own session or publication identity and timestamp |
-| S4 | **Native unit and currency.** It quotes USD per die for the instrument, without Urdais converting from another object |
+| S4 | **Native unit and currency.** It quotes USD per chip for the instrument, without Urdais converting from another object |
 | S5 | **Stated method.** It documents what its values represent, so the value kind is recorded from the source rather than assumed |
 | S6 | **Retained history.** Its own published history is retrievable, so a Urdais series can be reproduced and audited |
 | S7 | **Original source.** It is the desk that constructs the value, not a reproduction of another desk's |
@@ -262,6 +263,8 @@ The distinction above has a specific and uncomfortable consequence for this prod
 
 - Where a published UMPI value is a Urdais calculation over observations that reproduces no single source datum, **G4 is the operative gate** and raw republication is not required.
 - **Where a published UMPI value equals a single source's published figure — which is exactly what [Methodology](#docs-methodology) specifies for V1, since no arithmetic is applied — the published value is that source's datum, and the raw-republication right is required in addition to G4.**
+
+**Calculating the 1D close-to-close change does not change this.** That change is a genuine Urdais calculation over two licensed closes, and G3 is the gate it sits behind. It is computed *from* the published price; it does not replace it, and publishing a percentage alongside a price does not convert that price into an independently owned Urdais series. The price value remains the source's datum and remains subject to the raw-republication right.
 
 V1 is therefore gated on G1, G2, G3, G4, G5 **and** raw republication, for the source that backs it. If a licence grants derived publication but withholds raw republication, V1 as defined here is not publishable from that source, and the honest options are to change the source or to change the product into one that publishes a genuine calculation. Publishing a licensed desk's figure under a Urdais name and calling the relabelling a derivation is not one of the options.
 
@@ -309,7 +312,7 @@ Retention of these outputs beyond a licence term is gate **G5**, and it is a lau
 | Rule | Behaviour |
 | --- | --- |
 | Instrument resolution | An unresolvable observation is rejected, recorded, and never approximated |
-| Unit and currency | A value not natively in USD per die for the instrument is rejected. No conversion path exists in V1 |
+| Unit and currency | A value not natively in USD per chip for the instrument is rejected. No conversion path exists in V1 |
 | Market | A non-spot observation is rejected |
 | Grade | A branded observation never satisfies an eTT instrument, or the reverse |
 | Duplicate session | The same instrument and session recorded twice is one observation, not two |
@@ -331,13 +334,15 @@ Retention of these outputs beyond a licence term is gate **G5**, and it is a lau
 
 The word **today** used by the current generic surface is not this product's change definition and must not be used for it.
 
-> **The V1 canonical change is the session change: the published close against the immediately preceding published close for the same instrument, same source lineage, and same methodology version.**
+> **The V1 canonical change is the 1D close-to-close change: the published close against the immediately preceding published close for the same instrument, same source lineage, and same methodology version.**
 
 ```
-session_change = (close_t − close_{t−1}) / close_{t−1}
+1D_change = (close_t − close_{t−1}) / close_{t−1}
 ```
 
 where `close_t` is the current published close and `close_{t−1}` is the one published before it, whenever that was.
+
+**The name is deliberate.** A price desk may publish its own field called a session change, computed over its own sessions under its own rules. The 1D close-to-close change is **a Urdais calculation over two published closes**, it is never a source field passed through, and the two are never presented as the same quantity.
 
 | Question | Rule |
 | --- | --- |
@@ -349,7 +354,7 @@ where `close_t` is the current published close and `close_{t−1}` is the one pu
 | No prior close | The change is **withheld**, never displayed as zero |
 | Across a source or methodology-version change | The change is **withheld** across the boundary, because the two values are not the same economic object measured the same way |
 
-The product label for this quantity is `1D` or `session`, in line with the label already used elsewhere in Urdais for a daily compute price. It is never `today`, because the two compared closes are frequently not from today and the day before.
+The product label for this quantity is `1D`, in line with the label already used elsewhere in Urdais for a daily compute price. It is never `today`, because the two compared closes are frequently not from today and the day before.
 
 ## Historical series
 
@@ -385,8 +390,8 @@ This version freezes the following. Each is binding on implementation and none m
 
 | # | Decision |
 | --- | --- |
-| 1 | **UMPI V1 is DRAM Spot.** The product is the spot-market price of defined DRAM dies |
-| 2 | **The formal native unit is USD per die**, not the generic `$ / part`, not USD per gigabyte, and not USD per module |
+| 1 | **UMPI V1 is DRAM Spot.** The product is the spot-market price of defined DRAM chips |
+| 2 | **The formal native unit is USD per chip**, not the generic `$ / part`, not USD per gigabyte, not USD per bit, and not USD per module |
 | 3 | **The six existing DRAM instruments survive**, each qualified by generation, density, organization, speed bin where established, grade and market |
 | 4 | **Spot and contract are separate products.** A future `UMPI-DRAM Contract` requires its own methodology; observations are never mixed |
 | 5 | **HBM is withheld in V1**, research-preview at most, with no published price |
@@ -404,8 +409,8 @@ Recorded here because they are conditions of publication, not undertaken in this
 
 | # | Change | Why |
 | --- | --- | --- |
-| P1 | The market header's `today` label must become source- and cadence-aware, showing `1D` or `session` for this product | Decision 12. Two consecutive closes are frequently not today and yesterday |
-| P2 | The DRAM family unit caption must reflect USD per die | Decision 2. A reader-friendly caption is permitted; the canonical unit is not |
+| P1 | The market header's `today` label must become source- and cadence-aware, showing `1D` for this product | Decision 12. Two consecutive closes are frequently not today and yesterday |
+| P2 | The DRAM family unit caption must reflect USD per chip | Decision 2. A reader-friendly caption is permitted; the canonical unit is not |
 | P3 | The demo memory series must not be the production series, and no demo point may be promoted | [Historical series](#docs-historical-series) |
 | P4 | HBM instruments must display as withheld or research-preview with a stated reason, not as a price | Decisions 5 and 6 |
 | P5 | Intraday charting must not be offered for this product | [Cadence](#docs-cadence). There is no tape, and intraday sessions are retained rather than published |
@@ -415,7 +420,7 @@ Recorded here because they are conditions of publication, not undertaken in this
 The evidence behind this document is recorded, and stays recorded, as research rather than methodology:
 
 - `docs/research/memory-pricing/source-shortlist.md` — the 14 September 2026 memory source study.
-- `docs/research/memory-pricing/umpi-phase-1b.md` — the 21 September 2026 production instrument validation: the instrument audit, the die and grade findings, HBM price-observability, the spot-versus-contract comparison, the rights matrix and the engineering gate.
+- `docs/research/memory-pricing/umpi-phase-1b.md` — the 21 September 2026 production instrument validation: the instrument audit, the priced-object and grade findings, HBM price-observability, the spot-versus-contract comparison, the rights matrix and the engineering gate.
 - `docs/research/memory-pricing/umpi-phase-1b-matrix.json` — its machine-readable matrix.
 - `docs/architecture/sources/memory-photonics-outreach-tracker.md` and `memory-photonics-permission-requests.md` — the outreach record.
 
@@ -431,4 +436,4 @@ An approved version is never edited in place. A change to an approved version is
 
 ## Version History
 
-**0.1.0-draft, 22 September 2026.** First definition of UMPI-DRAM Spot. Fixes the product as DRAM spot; defines the priced object as a die and the native unit as USD per die, superseding the generic `$ / part`; freezes the six canonical instruments with their organizations, speed bins and grades, and separates branded from eTT as distinct instruments that are never combined; defines the eligible observation, its mandatory fields and the value-kind taxonomy, and states that V1 consumes a recurring survey or benchmark session value rather than an exchange tape; separates spot from contract as different products; withholds HBM and records that HBM4 shipments do not establish a price; bars public customs and issuer proxies from instrument identity and bars aggregated downstream reproductions as sources; defines the business-day session cadence, the published daily close and the session change, and records that the surface's `today` semantics must change before launch; sets the five rights gates and records that a single-source print additionally requires raw republication. No source is approved, no observation is created, and no production effective date is established.
+**0.1.0-draft, 22 September 2026.** First definition of UMPI-DRAM Spot. Fixes the product as DRAM spot; defines the priced object as a packaged DRAM chip and the native unit as USD per chip, superseding the generic `$ / part`, while keeping `16Gb` as gigabits of die density rather than module capacity; freezes the six canonical instruments with their organizations, speed bins and grades, and separates branded from eTT as distinct instruments that are never combined; defines the eligible observation, its mandatory fields and the value-kind taxonomy, and states that V1 consumes a recurring survey or benchmark session value rather than an exchange tape; separates spot from contract as different products; withholds HBM and records that HBM4 shipments do not establish a price; bars public customs and issuer proxies from instrument identity and bars aggregated downstream reproductions as sources; defines the business-day session cadence, the published daily close and the 1D close-to-close change, and records that the surface's `today` semantics must change before launch; sets the five rights gates and records that a single-source print additionally requires raw republication. No source is approved, no observation is created, and no production effective date is established.

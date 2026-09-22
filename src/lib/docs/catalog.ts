@@ -198,7 +198,7 @@ export const docPages: readonly DocPage[] = [
     slug: "methodology/umpi",
     title: "UMPI-DRAM Spot",
     description:
-      "Draft methodology for the Urdais Memory Price Index V1: the spot-market price of six defined DRAM dies in USD per die, with branded and eTT held apart as separate instruments, spot separated from contract, HBM withheld for want of an observed price, and publication blocked until a source's rights are resolved in writing.",
+      "Draft methodology for the Urdais Memory Price Index V1: the spot-market price of six defined DRAM chips in USD per chip, with branded and eTT held apart as separate instruments, spot separated from contract, HBM withheld for want of an observed price, and publication blocked until a source's rights are resolved in writing.",
     section: "Methodology",
     file: "methodology/umpi.md",
   },
