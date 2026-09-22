@@ -29,7 +29,12 @@ declare
     -- Scheduler heartbeats are runtime operational evidence and migrations seed none.
     'pipeline.utvi_check_runs', 'pipeline.token_verification_check_runs',
     -- News articles come from ingestion. A bootstrapped database has none.
-    'pipeline.news_articles'
+    'pipeline.news_articles',
+    -- UMPI Phase 3 builds the foundation and ingests nothing. The two series are registered
+    -- in reference.umpi_series (catalog rows, checked in 580_umpi_foundation.sql); every
+    -- table that would hold a retrieval, a value or a published point must still be empty.
+    'pipeline.umpi_ingestion_runs', 'pipeline.umpi_observations',
+    'pipeline.umpi_index_bases', 'pipeline.umpi_publications'
   ];
 begin
   foreach tbl in array must_be_empty loop
