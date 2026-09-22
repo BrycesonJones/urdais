@@ -137,7 +137,10 @@ declare
     'pipeline.transmission_snapshots', 'pipeline.raw_transmission_records',
     'pipeline.transmission_interfaces', 'pipeline.transmission_elements',
     'pipeline.transmission_flow_observations', 'pipeline.transmission_limit_observations',
-    'pipeline.transmission_margins', 'pipeline.transmission_deferrals'
+    'pipeline.transmission_margins', 'pipeline.transmission_deferrals',
+    -- Transmission Headroom analytics (TH-3)
+    'reference.transmission_metric_definitions',
+    'pipeline.transmission_analytics_runs', 'pipeline.transmission_metric_results'
   ];
   n integer;
 begin
