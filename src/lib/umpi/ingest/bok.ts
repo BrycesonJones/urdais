@@ -22,8 +22,34 @@ import type { FetchRange, ParseResult, ParsedRow, SourceFetchResult, UmpiSourceA
 
 export const ECOS_BASE_URL = "https://ecos.bok.or.kr/api";
 export const ECOS_SEARCH_SERVICE = "StatisticSearch";
-/** ECOS caps a single response; the adapter pages rather than silently truncating. */
-export const ECOS_PAGE_SIZE = 1000;
+
+/**
+ * The Bank of Korea's published demo key.
+ *
+ * UMPI runs on this rather than a registered key because registration requires Korean identity
+ * verification the founder cannot complete. It returns the exact approved series, and it caps
+ * every response at ten rows — which is why this adapter pages.
+ *
+ * **The rights state is not laundered by using it.** The registry records this source as
+ * `ambiguous_requires_legal_review` with an explicit founder-accepted-risk marker: a key
+ * published for trying an API is not a documented production entitlement, and the record says
+ * so. A registered key would retire both the ambiguity and the ten-row cap.
+ */
+export const ECOS_DEMO_KEY = "sample";
+/** What the demo key returns per call, enforced by the service with `ERROR-301`. */
+export const ECOS_DEMO_PAGE_SIZE = 10;
+/** What a registered key could take in one call, if one is ever issued. */
+export const ECOS_REGISTERED_PAGE_SIZE = 1000;
+/** Refuses to page forever if the service ever reports a nonsensical total. */
+export const ECOS_MAX_PAGES = 600;
+
+/** The demo key unless a registered one is configured; the page size follows the key. */
+export function ecosCredential(env: NodeJS.ProcessEnv = process.env): { apiKey: string; pageSize: number; isDemo: boolean } {
+  const registered = env.UMPI_ECOS_API_KEY?.trim();
+  return registered
+    ? { apiKey: registered, pageSize: ECOS_REGISTERED_PAGE_SIZE, isDemo: false }
+    : { apiKey: ECOS_DEMO_KEY, pageSize: ECOS_DEMO_PAGE_SIZE, isDemo: true };
+}
 
 const MONTH_TOKEN = /^(\d{4})(0[1-9]|1[0-2])$/;
 
@@ -192,29 +218,62 @@ export function createBokAdapter(options: HttpOptions = {}): UmpiSourceAdapter<s
       if (identity.kind !== "bok_ecos_series") {
         throw new UmpiParseError("the BOK adapter was given a non-ECOS identity");
       }
-      const url = buildEcosUrl({ apiKey, identity, range, start: 1, end: ECOS_PAGE_SIZE });
+      const pageSize = apiKey === ECOS_DEMO_KEY ? ECOS_DEMO_PAGE_SIZE : ECOS_REGISTERED_PAGE_SIZE;
       const redact = (target: string) => redactEcosUrl(target, apiKey);
-      const response = await fetchText(url, { ...options, redact });
-      const parsed = parseEcosPayload({ identity, payload: response.body });
 
-      // Paging is explicit rather than assumed: if the service says there are more rows than
-      // one page holds, the caller narrows the range rather than receiving a silent truncation.
-      const total = Number(parsed.sourceMetadata.listTotalCount ?? 0);
-      if (Number.isFinite(total) && total > ECOS_PAGE_SIZE) {
-        throw new UmpiParseError(
-          `ECOS reports ${total} rows for ${range.fromMonth}..${range.toMonth}, more than one page of ${ECOS_PAGE_SIZE}; narrow the range`,
-        );
+      // Page until the service's own count is exhausted. The window is inclusive and 1-based,
+      // and a request wider than the key allows is rejected outright with ERROR-301, so the
+      // page size is taken from the key rather than guessed.
+      const rows: ParsedRow[] = [];
+      const rawForDigest: Record<string, unknown>[] = [];
+      let sourceMetadata: ParseResult["sourceMetadata"] = {};
+      let declaredTotal: number | null = null;
+      let status = 0;
+      let contentType: string | null = null;
+      let byteLength = 0;
+      let firstUrl = "";
+      let pages = 0;
+
+      for (let start = 1; ; start += pageSize) {
+        if (pages >= ECOS_MAX_PAGES) {
+          throw new UmpiParseError(
+            `ECOS paging exceeded ${ECOS_MAX_PAGES} pages for ${range.fromMonth}..${range.toMonth}; refusing to continue`,
+          );
+        }
+        const url = buildEcosUrl({ apiKey, identity, range, start, end: start + pageSize - 1 });
+        if (firstUrl === "") firstUrl = url;
+        const response = await fetchText(url, { ...options, redact });
+        const page = parseEcosPayload({ identity, payload: response.body });
+        pages += 1;
+        status = response.status;
+        contentType = response.contentType;
+        byteLength += response.byteLength;
+        if (start === 1) sourceMetadata = page.sourceMetadata;
+
+        const total = Number(page.sourceMetadata.listTotalCount ?? Number.NaN);
+        if (Number.isFinite(total)) declaredTotal = total;
+
+        rows.push(...page.rows);
+        for (const row of page.rows) rawForDigest.push(row.rawPayload);
+
+        // Stop on the service's own count, or on a short page, whichever comes first. A short
+        // page is the authoritative end even if the count disagrees.
+        if (page.rows.length < pageSize) break;
+        if (declaredTotal !== null && start + pageSize - 1 >= declaredTotal) break;
       }
 
+      const complete = declaredTotal === null || rows.length === declaredTotal;
       return {
-        ...parsed,
-        // A range that would exceed one page throws above, so reaching here means every row the
-        // service holds for the range is in hand.
-        enumerationAssessment: "complete",
-        enumerationEvidence: `ECOS reported ${total} row(s) for ${range.fromMonth}..${range.toMonth}, all within one page of ${ECOS_PAGE_SIZE}`,
-        payloadDigest: payloadDigest(parsed.rows.map((row) => row.rawPayload)),
+        rows,
+        sourceMetadata: { ...sourceMetadata, pagesFetched: pages, pageSize, usedDemoKey: apiKey === ECOS_DEMO_KEY },
+        enumerationAssessment: complete ? "complete" : "unknown",
+        enumerationEvidence:
+          declaredTotal === null
+            ? `ECOS declared no row count; ${rows.length} row(s) collected over ${pages} page(s) of ${pageSize}`
+            : `ECOS declared ${declaredTotal} row(s) and ${rows.length} were collected over ${pages} page(s) of ${pageSize}`,
+        payloadDigest: payloadDigest(rawForDigest),
         retrievedAt: new Date().toISOString(),
-        requestUrl: redact(url),
+        requestUrl: redact(firstUrl),
         requestParameters: {
           service: ECOS_SEARCH_SERVICE,
           statCode: identity.statCode,
@@ -222,11 +281,12 @@ export function createBokAdapter(options: HttpOptions = {}): UmpiSourceAdapter<s
           cycle: identity.cycle,
           startPeriod: toEcosMonth(range.fromMonth),
           endPeriod: toEcosMonth(range.toMonth),
-          rows: `1..${ECOS_PAGE_SIZE}`,
+          pageSize,
+          pagesFetched: pages,
         },
-        httpStatus: response.status,
-        contentType: response.contentType,
-        responseByteLength: response.byteLength,
+        httpStatus: status,
+        contentType,
+        responseByteLength: byteLength,
       };
     },
   };

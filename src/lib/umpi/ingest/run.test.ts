@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { productionIdentityFor } from "../identity";
 import { parseEcosPayload } from "./bok";
 import { BOK_THREE_MONTHS } from "./fixtures/bok";
+import { ECOS_DEMO_KEY, ECOS_DEMO_PAGE_SIZE, ecosCredential } from "./bok";
 import { runUmpiSource, umpiCredentialReport, type UmpiRunOptions } from "./run";
 import type { SourceFetchResult, UmpiSourceAdapter } from "./types";
 
@@ -37,10 +38,28 @@ const withKey = { UMPI_ECOS_API_KEY: "test-key" } as unknown as NodeJS.ProcessEn
 const base: Omit<UmpiRunOptions, "env"> = { fromMonth: "2026-06", toMonth: "2026-08" };
 
 describe("run orchestration", () => {
-  it("fails with a configuration error when the key is absent, before any request", async () => {
-    const outcome = await runUmpiSource(null, "bok", { ...base, env: {} as unknown as NodeJS.ProcessEnv });
-    expect(outcome).toMatchObject({ status: "failed", kind: "configuration" });
-    expect((outcome as { error: string }).error).toContain("UMPI_ECOS_API_KEY");
+  it("runs with no credential configured at all", async () => {
+    // The whole point of the 4A transport change: neither source needs a key from Urdais.
+    const outcome = await runUmpiSource(null, "bok", {
+      ...base,
+      env: {} as unknown as NodeJS.ProcessEnv,
+      dryRun: true,
+      adapter: fixtureAdapter(BOK_THREE_MONTHS),
+    });
+    expect(outcome).toMatchObject({ status: "parsed", rowsAdmitted: 3 });
+  });
+
+  it("uses the published demo key unless a registered one is configured", () => {
+    expect(ecosCredential({} as unknown as NodeJS.ProcessEnv)).toMatchObject({
+      apiKey: ECOS_DEMO_KEY,
+      pageSize: ECOS_DEMO_PAGE_SIZE,
+      isDemo: true,
+    });
+    // A registered key, if one is ever issued, lifts the ten-row cap and retires the ambiguity.
+    expect(ecosCredential({ UMPI_ECOS_API_KEY: "real-key" } as unknown as NodeJS.ProcessEnv)).toMatchObject({
+      apiKey: "real-key",
+      isDemo: false,
+    });
   });
 
   it("validates the month range and refuses a reversed one", async () => {

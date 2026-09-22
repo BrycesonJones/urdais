@@ -1,31 +1,37 @@
 /**
  * Korea Customs adapter for monthly DRAM-chip export value and weight.
  *
+ * ## Transport
+ *
+ * The official trade-statistics portal, `tradedata.go.kr`, answers its own query without a
+ * login: a GET of the public index establishes the session the UI itself uses, then the page's
+ * own form POST returns JSON. That is the transport UMPI uses, because the data.go.kr API
+ * carrying the same figures requires a service key whose registration needs Korean identity
+ * verification, and the portal does not.
+ *
+ * The result page carries 공공누리 제1유형 — attribution, commercial use and derivatives all
+ * permitted — so this is a documented public reuse of a public query, not a way around a gate.
+ *
  * ## The aggregation decision, which is the whole of this file's risk
  *
- * Series B measures **Korea's total exports** of HSK 8542321010 in a month. The Customs portal
- * publishes two different operations, and only one of them answers that question:
+ * Series B measures **Korea's total** monthly exports of HSK 8542321010. This query is the
+ * 품목별 (by-item) view: it carries `cntyCd` and `cntyNm` as **empty** fields and returns one
+ * row per month for the whole country. No country filter is sent, and a response that carries a
+ * populated country field is refused rather than aggregated — summing partner rows, with no
+ * documented aggregate code to reconcile against, is the specific way this product could
+ * quietly become a fiction.
  *
- *   * `Itemtrade/getItemtradeList` (data.go.kr **15101609**, 관세청_품목별 수출입실적) —
- *     "HS Code(2/4/6/10단위) 기준으로 집계한 품목별 수출입무역통계": aggregated **by HS code**.
- *     One row per code per month. No country dimension. **This is what UMPI reads.**
+ * ## Two properties of this payload that will ruin the series if missed
  *
- *   * `nitemtrade/getNitemtradeList` (data.go.kr **15100475**, 관세청_품목별 **국가별** 수출입실적) —
- *     "국가 및 HS Code별 기준으로 집계한 **국가별** 품목별 수출입무역통계": aggregated by country
- *     **and** HS code, with `cntyCd` a required parameter. **UMPI does not read this.**
- *
- * Reading the country-dimension operation would leave two bad options and no good one: request
- * a single `cntyCd` and publish one trading partner as though it were Korea, or request many and
- * sum rows that may or may not already include a total, with no documented aggregate code to
- * check against. Both produce a number that looks like Korean exports and is not. The aggregate
- * operation removes the question rather than answering it carefully.
- *
- * This adapter therefore **refuses** the country-dimension identity outright, and rejects any
- * row that carries a country field — if one appears, the request is on the wrong operation and
- * the correct response is to fail, not to aggregate.
+ * 1. **`expUsdAmt` is thousand USD**, per the portal's own unit line (킬로그램(KG), 천 달러).
+ *    Read as dollars it understates Korean DRAM exports by three orders of magnitude while
+ *    looking entirely plausible. The conversion happens here, once, and is asserted by test.
+ * 2. **The response includes a `총계` total row, and it is the sum of the monthly rows.**
+ *    Verified 22 September 2026: the four months of 2026-05..08 sum to 630,531 kg against the
+ *    total row's 630,532, and to 51,888,695 against 51,888,696 thousand USD. Admitting it
+ *    alongside the months would double every figure. It is rejected on two independent
+ *    grounds — its period is not a month, and its `hsSgn` is empty.
  */
-
-import { childText, childrenNamed, parseXml, XmlFormatError, type XmlElement } from "@/lib/interconnection-queue/xml/document";
 
 import { identityKey } from "../identity";
 import { observationProvenanceHash, payloadDigest } from "../provenance";
@@ -35,81 +41,49 @@ import { UmpiIdentityMismatchError, UmpiParseError, UmpiProviderError } from "./
 import { fetchText, redactUrl, type HttpOptions } from "./http";
 import type { FetchRange, ParseResult, ParsedRow, SourceFetchResult, UmpiSourceAdapter } from "./types";
 
-export const CUSTOMS_ITEM_TRADE_URL = "https://apis.data.go.kr/1220000/Itemtrade/getItemtradeList";
-/** The aggregate-by-item dataset. Named here so a reviewer can check it against the registry. */
-export const CUSTOMS_ITEM_TRADE_DATASET_ID = "15101609";
-/** The country-dimension dataset. Named only to refuse it. */
+export const CUSTOMS_PORTAL_ORIGIN = "https://tradedata.go.kr";
+/** Establishes the public session the portal's own UI uses. No login, no key. */
+export const CUSTOMS_SESSION_URL = `${CUSTOMS_PORTAL_ORIGIN}/cts/index.do`;
+/** The portal's own query endpoint, as the 품목별 page calls it. */
+export const CUSTOMS_QUERY_URL = `${CUSTOMS_PORTAL_ORIGIN}/cts/hmpg/retrieveTrade.do`;
+/** The by-item view: no country dimension. */
+export const CUSTOMS_TRADE_KIND = "ETS_MNK_1020000A";
+/** Weight in kilograms. The form's own default is tonnes, which would be a silent 1000× error. */
+export const CUSTOMS_WEIGHT_KG = "1";
+/** Declaration-acceptance basis, the portal's default for this table. */
+export const CUSTOMS_STATS_BASE = "acptDd";
+/** The dataset identity recorded in the registry for this transport. */
+export const CUSTOMS_PORTAL_DATASET_ID = "15101609";
+/** The country-dimension dataset, named only to refuse it. */
 export const CUSTOMS_COUNTRY_DIMENSION_DATASET_ID = "15100475";
 
-/**
- * Response element names, stated rather than guessed.
- *
- * A missing field raises a parse error naming what was expected and what arrived, so that a
- * change at the agency produces one precise failure in one place instead of a silent zero.
- */
+/** `expUsdAmt` is thousand USD. This is the only place that conversion happens. */
+export const CUSTOMS_USD_SCALE = 1000;
+
 export const CUSTOMS_FIELDS = {
-  period: "year",
-  hsCode: "hsCd",
-  exportValueUsd: "expDlr",
-  exportWeightKg: "expWgt",
-  importValueUsd: "impDlr",
-  importWeightKg: "impWgt",
+  period: "priodTitle",
+  hsCode: "hsSgn",
+  koreanName: "korePrlstNm",
+  exportWeightKg: "expTtwg",
+  exportValueThousandUsd: "expUsdAmt",
 } as const;
 
-/**
- * Any of these appearing on a row means the response carries a country breakdown, which means
- * the request went to the wrong operation.
- */
-const COUNTRY_FIELDS = ["cntyCd", "cntyNm", "statCd", "statCdCntnCd", "cntyNo"] as const;
+/** Any populated one of these means the response carries a country breakdown. */
+const COUNTRY_FIELDS = ["cntyCd", "cntyNm"] as const;
 
+/** `2026.05`, `2026-05`, `202605`. A bare year, or `총계`, is not a month. */
 const MONTH_TOKEN = /^(\d{4})[.\-/]?(0[1-9]|1[0-2])$/;
 
 export function toCustomsMonth(month: ReferenceMonth): string {
   return month.replace("-", "");
 }
 
-/**
- * A period token to a reference month. Accepts the punctuation variants the portal uses and
- * refuses everything else — notably a bare `YYYY`, which is a year total and is not a month.
- */
 export function fromCustomsPeriod(token: string): ReferenceMonth | null {
   const match = MONTH_TOKEN.exec(token.trim());
   return match ? `${match[1]}-${match[2]}` : null;
 }
 
-function gatewayError(root: XmlElement): UmpiProviderError | null {
-  if (root.name !== "OpenAPI_ServiceResponse") return null;
-  const header = childrenNamed(root, "cmmMsgHeader")[0];
-  const message = header ? childText(header, "errMsg") : null;
-  const reason = header ? childText(header, "returnAuthMsg") : null;
-  const code = header ? childText(header, "returnReasonCode") : null;
-  return new UmpiProviderError(
-    `the data.go.kr gateway refused the request: ${message ?? "unknown error"}${reason ? ` (${reason})` : ""}`,
-    code,
-    message,
-  );
-}
-
-function serviceError(root: XmlElement): UmpiProviderError | null {
-  const header = childrenNamed(root, "header")[0];
-  if (!header) return null;
-  const code = childText(header, "resultCode");
-  const message = childText(header, "resultMsg");
-  // "00" is success; the portal's services use it consistently.
-  if (code === null || code === "00") return null;
-  return new UmpiProviderError(`Korea Customs returned ${code}: ${message ?? "no message"}`, code, message);
-}
-
-/** Every child element of an item, as a flat record. Repeated names keep the last value. */
-function itemRecord(item: XmlElement): Record<string, unknown> {
-  const record: Record<string, unknown> = {};
-  for (const child of item.children) {
-    if (typeof child === "string") continue;
-    record[child.name] = childText(item, child.name);
-  }
-  return record;
-}
-
+/** Portal figures arrive space-padded and comma-grouped. */
 function numeric(raw: unknown): number | null {
   if (raw === null || raw === undefined) return null;
   const text = String(raw).trim().replace(/,/g, "");
@@ -118,89 +92,130 @@ function numeric(raw: unknown): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
+export function assertPortalDataset(identity: UmpiSourceIdentity): void {
+  if (identity.kind !== "kcs_trade_commodity") return;
+  if (identity.datasetId === CUSTOMS_COUNTRY_DIMENSION_DATASET_ID) {
+    throw new UmpiIdentityMismatchError(
+      `dataset ${CUSTOMS_COUNTRY_DIMENSION_DATASET_ID} is the country-dimension operation; Series B needs Korea-wide totals`,
+      CUSTOMS_PORTAL_DATASET_ID,
+      identity.datasetId,
+    );
+  }
+  if (identity.datasetId !== CUSTOMS_PORTAL_DATASET_ID) {
+    throw new UmpiIdentityMismatchError(
+      `UMPI V1 reads Customs dataset ${CUSTOMS_PORTAL_DATASET_ID}; refusing ${identity.datasetId}`,
+      CUSTOMS_PORTAL_DATASET_ID,
+      identity.datasetId,
+    );
+  }
+}
+
+export function buildCustomsQueryBody(input: {
+  identity: Extract<UmpiSourceIdentity, { kind: "kcs_trade_commodity" }>;
+  range: FetchRange;
+  rowLimit?: number;
+}): string {
+  const { identity, range, rowLimit } = input;
+  const body = new URLSearchParams();
+  body.set("tradeKind", CUSTOMS_TRADE_KIND);
+  body.set("priodKind", "MON");
+  body.set("statsBase", CUSTOMS_STATS_BASE);
+  body.set("ttwgTpcd", CUSTOMS_WEIGHT_KG);
+  body.set("hsSgnGrpCol", "HS10_SGN");
+  body.set("hsSgnWhrCol", "HS10_SGN");
+  body.set("hsSgn", identity.hsCode);
+  // The portal's period selector values carry a trailing space; the form submits them as-is.
+  body.set("priodFr", `${toCustomsMonth(range.fromMonth)} `);
+  body.set("priodTo", `${toCustomsMonth(range.toMonth)} `);
+  // Large enough that every month in the window comes back on one page, plus the total row.
+  body.set("showPagingLine", String(rowLimit ?? 500));
+  // Deliberately absent: any country parameter. Its presence would change the economic object.
+  return body.toString();
+}
+
+type PortalRow = Record<string, unknown>;
+
 export function parseCustomsPayload(input: { identity: UmpiSourceIdentity; payload: string }): ParseResult {
   const { identity, payload } = input;
   if (identity.kind !== "kcs_trade_commodity") {
     throw new UmpiParseError("the Customs parser was given a non-Customs identity");
   }
-  assertAggregateDataset(identity);
+  assertPortalDataset(identity);
 
-  let root: XmlElement;
+  let document: unknown;
   try {
-    root = parseXml(payload);
+    document = JSON.parse(payload);
   } catch (error) {
-    if (error instanceof XmlFormatError) throw new UmpiParseError(`the Customs response is not well-formed XML: ${error.message}`, { cause: error });
-    throw new UmpiParseError("the Customs response could not be read", { cause: error });
+    throw new UmpiParseError("the Customs portal response is not JSON", { cause: error });
+  }
+  if (document === null || typeof document !== "object") {
+    throw new UmpiParseError("the Customs portal response is not an object");
   }
 
-  const gateway = gatewayError(root);
-  if (gateway) throw gateway;
-  const service = serviceError(root);
-  if (service) throw service;
-
-  const body = childrenNamed(root, "body")[0];
-  if (!body) throw new UmpiParseError("the Customs response carries no <body>");
-  const itemsContainer = childrenNamed(body, "items")[0];
-  // A successful response with no <items> is a real "no data for this range", unlike a missing
-  // body, which is a shape nobody documents.
-  const items = itemsContainer ? childrenNamed(itemsContainer, "item") : [];
+  const envelope = document as Record<string, unknown>;
+  const result = envelope.searchresult;
+  if (result !== undefined && result !== null && String(result) !== "OK") {
+    throw new UmpiProviderError(
+      `the Customs portal reported ${String(result)}`,
+      String(result),
+      typeof envelope.message === "string" ? envelope.message : null,
+    );
+  }
+  const items = envelope.items;
+  if (items === undefined) {
+    throw new UmpiParseError("the Customs portal response carries no items");
+  }
+  if (!Array.isArray(items)) {
+    throw new UmpiParseError("the Customs portal items field is not an array");
+  }
 
   const rows: ParsedRow[] = [];
-  for (const item of items) {
-    const record = itemRecord(item);
+  for (const entry of items as PortalRow[]) {
+    const record = { ...entry };
 
-    // The country guard. If the response carries a country dimension we are on the wrong
-    // operation, and summing these rows would be exactly the mistake this adapter exists to
-    // prevent. Fail the whole parse rather than quietly dropping or adding them.
-    const country = COUNTRY_FIELDS.find((field) => record[field] !== undefined && String(record[field] ?? "").trim() !== "");
+    const country = COUNTRY_FIELDS.find((field) => String(record[field] ?? "").trim() !== "");
     if (country) {
       throw new UmpiIdentityMismatchError(
-        `the Customs response carries a country dimension (${country}); UMPI reads the aggregate-by-item operation only`,
-        `${CUSTOMS_ITEM_TRADE_DATASET_ID} aggregate by item`,
-        `country-dimension response`,
+        `the Customs response carries a country dimension (${country}); UMPI reads the by-item view only`,
+        "by-item, no country dimension",
+        `country-bearing row (${country})`,
       );
     }
 
-    const hsCode = String(record[CUSTOMS_FIELDS.hsCode] ?? "").trim();
-    if (hsCode === "") {
-      throw new UmpiParseError(
-        `a Customs item carries no ${CUSTOMS_FIELDS.hsCode}; fields present: ${Object.keys(record).join(", ") || "none"}`,
-      );
-    }
-    // A shorter code is an aggregate over more than the DRAM chip line; a different code is a
-    // different commodity. Neither is this series.
-    if (hsCode !== identity.hsCode) {
-      rows.push({
-        state: "rejected",
-        code: "hs_code_mismatch",
-        detail: `row is ${hsCode}, series is ${identity.hsCode}`,
-        rawPayload: record,
-      });
-      continue;
-    }
-
-    const periodRaw = record[CUSTOMS_FIELDS.period];
-    const referenceMonth = fromCustomsPeriod(String(periodRaw ?? ""));
+    const periodRaw = String(record[CUSTOMS_FIELDS.period] ?? "");
+    const referenceMonth = fromCustomsPeriod(periodRaw);
     if (referenceMonth === null) {
-      // A year total, a range total or a blank period all land here and none is a month.
+      // The 총계 row lands here, and must: it is the sum of the months beside it, so admitting
+      // it would double the series.
       rows.push({
         state: "rejected",
-        code: "malformed_reference_month",
+        code: periodRaw.trim() === "총계" ? "summary_row" : "malformed_reference_month",
         detail: `${CUSTOMS_FIELDS.period} ${JSON.stringify(periodRaw)} is not a single month`,
         rawPayload: record,
       });
       continue;
     }
 
-    if (record[CUSTOMS_FIELDS.exportValueUsd] === undefined || record[CUSTOMS_FIELDS.exportWeightKg] === undefined) {
+    const hsCode = String(record[CUSTOMS_FIELDS.hsCode] ?? "").trim();
+    if (hsCode !== identity.hsCode) {
+      rows.push({
+        state: "rejected",
+        code: "hs_code_mismatch",
+        detail: hsCode === "" ? "row carries no HS code" : `row is ${hsCode}, series is ${identity.hsCode}`,
+        rawPayload: record,
+      });
+      continue;
+    }
+
+    if (record[CUSTOMS_FIELDS.exportValueThousandUsd] === undefined || record[CUSTOMS_FIELDS.exportWeightKg] === undefined) {
       throw new UmpiParseError(
-        `a Customs item is missing ${CUSTOMS_FIELDS.exportValueUsd} or ${CUSTOMS_FIELDS.exportWeightKg}; fields present: ${Object.keys(record).join(", ")}`,
+        `a Customs row is missing ${CUSTOMS_FIELDS.exportValueThousandUsd} or ${CUSTOMS_FIELDS.exportWeightKg}; fields present: ${Object.keys(record).slice(0, 20).join(", ")}`,
       );
     }
 
-    const exportValueUsd = numeric(record[CUSTOMS_FIELDS.exportValueUsd]);
     const exportWeightKg = numeric(record[CUSTOMS_FIELDS.exportWeightKg]);
-    if (exportValueUsd === null || exportWeightKg === null) {
+    const thousandUsd = numeric(record[CUSTOMS_FIELDS.exportValueThousandUsd]);
+    if (exportWeightKg === null || thousandUsd === null) {
       rows.push({
         state: "rejected",
         code: "non_numeric_value",
@@ -213,7 +228,8 @@ export function parseCustomsPayload(input: { identity: UmpiSourceIdentity; paylo
     const observation: UmpiRawObservation = {
       kind: "kcs_trade_month",
       referenceMonth,
-      exportValueUsd,
+      // The conversion, in one place. The portal publishes thousands of dollars.
+      exportValueUsd: thousandUsd * CUSTOMS_USD_SCALE,
       exportWeightKg,
     };
 
@@ -232,15 +248,14 @@ export function parseCustomsPayload(input: { identity: UmpiSourceIdentity; paylo
     });
   }
 
-  // One row per month is what the aggregate operation returns. Two rows for one month would
-  // mean a breakdown arrived without a recognised country field, and summing them silently is
-  // precisely the failure this adapter refuses.
-  const months = rows.filter((row) => row.state === "admitted").map((row) => (row as Extract<ParsedRow, { state: "admitted" }>).observation.referenceMonth);
+  const months = rows
+    .filter((row): row is Extract<ParsedRow, { state: "admitted" }> => row.state === "admitted")
+    .map((row) => row.observation.referenceMonth);
   const duplicates = months.filter((month, index) => months.indexOf(month) !== index);
   if (duplicates.length > 0) {
     throw new UmpiIdentityMismatchError(
-      `the Customs response carries more than one row for ${[...new Set(duplicates)].join(", ")}; the aggregate operation returns one row per month and these must not be summed`,
-      "one aggregate row per month",
+      `the Customs response carries more than one row for ${[...new Set(duplicates)].join(", ")}; the by-item view returns one row per month and these must not be summed`,
+      "one row per month",
       `${months.length} rows for ${new Set(months).size} months`,
     );
   }
@@ -250,83 +265,68 @@ export function parseCustomsPayload(input: { identity: UmpiSourceIdentity; paylo
     sourceMetadata: {
       datasetId: identity.datasetId,
       hsCode: identity.hsCode,
-      operation: "getItemtradeList",
-      aggregation: "by HS code, no country dimension",
+      transport: "tradedata.go.kr retrieveTrade.do",
+      aggregation: "by item, Korea-wide, no country dimension",
+      weightUnit: "kg",
+      valueUnit: "thousand_usd_converted_to_usd",
+      declaredCount: envelope.count ?? null,
       itemCount: items.length,
-      totalCount: childText(body, "totalCount"),
+      koreanName: (items as PortalRow[]).map((row) => String(row[CUSTOMS_FIELDS.koreanName] ?? "")).find((name) => name !== "") ?? null,
     },
   };
 }
 
-/** Refuse the country-dimension dataset before a request is built. */
-export function assertAggregateDataset(identity: UmpiSourceIdentity): void {
-  if (identity.kind !== "kcs_trade_commodity") return;
-  if (identity.datasetId === CUSTOMS_COUNTRY_DIMENSION_DATASET_ID) {
-    throw new UmpiIdentityMismatchError(
-      `dataset ${CUSTOMS_COUNTRY_DIMENSION_DATASET_ID} is the country-dimension operation; Series B needs Korea-wide totals from ${CUSTOMS_ITEM_TRADE_DATASET_ID}`,
-      CUSTOMS_ITEM_TRADE_DATASET_ID,
-      identity.datasetId,
-    );
-  }
-  if (identity.datasetId !== CUSTOMS_ITEM_TRADE_DATASET_ID) {
-    throw new UmpiIdentityMismatchError(
-      `UMPI V1 reads Customs dataset ${CUSTOMS_ITEM_TRADE_DATASET_ID}; refusing ${identity.datasetId}`,
-      CUSTOMS_ITEM_TRADE_DATASET_ID,
-      identity.datasetId,
-    );
-  }
-}
-
-export function buildCustomsUrl(input: {
-  apiKey: string;
-  identity: Extract<UmpiSourceIdentity, { kind: "kcs_trade_commodity" }>;
-  range: FetchRange;
-}): string {
-  const { apiKey, identity, range } = input;
-  const url = new URL(CUSTOMS_ITEM_TRADE_URL);
-  url.searchParams.set("serviceKey", apiKey);
-  url.searchParams.set("strtYymm", toCustomsMonth(range.fromMonth));
-  url.searchParams.set("endYymm", toCustomsMonth(range.toMonth));
-  url.searchParams.set("hsSgn", identity.hsCode);
-  return url.toString();
-}
-
 export function createCustomsAdapter(options: HttpOptions = {}): UmpiSourceAdapter<string> {
   return {
-    name: "kcs-item-trade-gw",
+    name: "kcs-tradedata-item-query",
     seriesCode: "UMPI-KR-DRAM-EXPORT-UV",
     identityKind: "kcs_trade_commodity",
-    credentialEnv: "UMPI_DATA_GO_KR_SERVICE_KEY",
+    // No credential. The portal query is public; the field is kept for interface shape.
+    credentialEnv: "",
     parse: parseCustomsPayload,
-    async fetch({ identity, range, apiKey }): Promise<SourceFetchResult> {
+    async fetch({ identity, range }): Promise<SourceFetchResult> {
       if (identity.kind !== "kcs_trade_commodity") {
         throw new UmpiParseError("the Customs adapter was given a non-Customs identity");
       }
-      assertAggregateDataset(identity);
-      const url = buildCustomsUrl({ apiKey, identity, range });
-      const response = await fetchText(url, options);
+      assertPortalDataset(identity);
+
+      // Establish the public session the portal's own UI uses, and carry its cookies forward.
+      const session = await fetchText(CUSTOMS_SESSION_URL, { ...options, method: "GET" });
+      const body = buildCustomsQueryBody({ identity, range });
+      const response = await fetchText(CUSTOMS_QUERY_URL, {
+        ...options,
+        method: "POST",
+        body,
+        cookies: session.cookies,
+        headers: {
+          "content-type": "application/x-www-form-urlencoded",
+          "x-requested-with": "XMLHttpRequest",
+          referer: CUSTOMS_SESSION_URL,
+        },
+      });
+
       const parsed = parseCustomsPayload({ identity, payload: response.body });
-      // The service reports how many rows it holds for the range. Equal means the page is the
-      // whole answer; anything else is recorded as unknown rather than assumed complete.
-      const declared = Number(parsed.sourceMetadata.totalCount ?? Number.NaN);
-      const seen = Number(parsed.sourceMetadata.itemCount ?? 0);
-      const complete = Number.isFinite(declared) && declared === seen;
+      const admitted = parsed.rows.filter((row) => row.state === "admitted").length;
+      const expectedMonths = monthsBetween(range.fromMonth, range.toMonth);
+      const complete = admitted === expectedMonths;
+
       return {
         ...parsed,
         enumerationAssessment: complete ? "complete" : "unknown",
-        enumerationEvidence: complete
-          ? `Korea Customs reported totalCount ${declared} and returned ${seen} item(s)`
-          : `Korea Customs reported totalCount ${parsed.sourceMetadata.totalCount ?? "none"} against ${seen} item(s) returned`,
+        enumerationEvidence: `${admitted} month(s) admitted for a ${expectedMonths}-month window ${range.fromMonth}..${range.toMonth}`,
         payloadDigest: payloadDigest(parsed.rows.map((row) => row.rawPayload)),
         retrievedAt: new Date().toISOString(),
-        requestUrl: redactUrl(url),
+        requestUrl: redactUrl(CUSTOMS_QUERY_URL),
         requestParameters: {
-          operation: "getItemtradeList",
-          datasetId: identity.datasetId,
+          transport: "tradedata.go.kr",
+          tradeKind: CUSTOMS_TRADE_KIND,
+          priodKind: "MON",
+          statsBase: CUSTOMS_STATS_BASE,
+          ttwgTpcd: CUSTOMS_WEIGHT_KG,
           hsSgn: identity.hsCode,
-          strtYymm: toCustomsMonth(range.fromMonth),
-          endYymm: toCustomsMonth(range.toMonth),
-          countryParameter: "none — aggregate by item",
+          priodFr: toCustomsMonth(range.fromMonth),
+          priodTo: toCustomsMonth(range.toMonth),
+          countryParameter: "none — by-item view",
         },
         httpStatus: response.status,
         contentType: response.contentType,
@@ -336,8 +336,14 @@ export function createCustomsAdapter(options: HttpOptions = {}): UmpiSourceAdapt
   };
 }
 
-/** The identity this adapter is allowed to read. */
-export const CUSTOMS_EXPECTED_IDENTITY_KEY = `kcs:8542321010/${CUSTOMS_ITEM_TRADE_DATASET_ID}`;
+/** Inclusive month count, for the completeness check. */
+export function monthsBetween(from: ReferenceMonth, to: ReferenceMonth): number {
+  const [fy, fm] = from.split("-").map(Number) as [number, number];
+  const [ty, tm] = to.split("-").map(Number) as [number, number];
+  return (ty - fy) * 12 + (tm - fm) + 1;
+}
+
+export const CUSTOMS_EXPECTED_IDENTITY_KEY = `kcs:8542321010/${CUSTOMS_PORTAL_DATASET_ID}`;
 
 export function assertCustomsIdentity(identity: UmpiSourceIdentity): void {
   const key = identityKey(identity);

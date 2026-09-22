@@ -8,11 +8,11 @@
  * stop trusting, and the audit value of a rehearsal is low.
  */
 
-import { credentialPresence, requireCredential, type UmpiCredentialName } from "../config";
+import { credentialPresence } from "../config";
 import { productionIdentityFor } from "../identity";
 import { isReferenceMonth } from "../reference-month";
 import type { ReferenceMonth, UmpiSeriesCode } from "../types";
-import { assertBokIdentity, createBokAdapter } from "./bok";
+import { assertBokIdentity, createBokAdapter, ecosCredential } from "./bok";
 import { assertCustomsIdentity, createCustomsAdapter } from "./customs";
 import { UmpiConfigurationError, UmpiIngestError } from "./errors";
 import type { HttpOptions } from "./http";
@@ -21,9 +21,16 @@ import type { UmpiSourceAdapter } from "./types";
 
 export type UmpiSourceKey = "bok" | "customs";
 
-export const UMPI_SOURCES: Readonly<Record<UmpiSourceKey, { seriesCode: UmpiSeriesCode; credentialEnv: UmpiCredentialName }>> = {
-  bok: { seriesCode: "UMPI-KR-DRAM-PPI", credentialEnv: "UMPI_ECOS_API_KEY" },
-  customs: { seriesCode: "UMPI-KR-DRAM-EXPORT-UV", credentialEnv: "UMPI_DATA_GO_KR_SERVICE_KEY" },
+/**
+ * Neither source needs a credential from Urdais.
+ *
+ * BOK runs on the Bank's published demo key, and Korea Customs answers its own portal query
+ * inside a public session. A registered ECOS key is still honoured if one is ever configured —
+ * it lifts the ten-row page cap and retires the rights ambiguity — but nothing requires it.
+ */
+export const UMPI_SOURCES: Readonly<Record<UmpiSourceKey, { seriesCode: UmpiSeriesCode; credentialOptional: string | null }>> = {
+  bok: { seriesCode: "UMPI-KR-DRAM-PPI", credentialOptional: "UMPI_ECOS_API_KEY" },
+  customs: { seriesCode: "UMPI-KR-DRAM-EXPORT-UV", credentialOptional: null },
 } as const;
 
 export function adapterFor(source: UmpiSourceKey, options: HttpOptions = {}): UmpiSourceAdapter<string> {
@@ -72,21 +79,14 @@ export async function runUmpiSource(
   try {
     validateRange(fromMonth, toMonth);
 
-    const { seriesCode, credentialEnv } = UMPI_SOURCES[source];
+    const { seriesCode } = UMPI_SOURCES[source];
     const identity = productionIdentityFor(seriesCode);
     // Belt and braces: the identity guards refuse a drifted series before a request is built.
     if (source === "bok") assertBokIdentity(identity);
     else assertCustomsIdentity(identity);
 
-    // `requireCredential` is deliberately dependency-free so the CLI can import it, so its
-    // error is a plain one. Typing it here is what lets an operator see "configuration" rather
-    // than "unknown" when a key is simply absent.
-    let apiKey: string;
-    try {
-      apiKey = requireCredential(credentialEnv, env);
-    } catch (error) {
-      throw new UmpiConfigurationError(error instanceof Error ? error.message : String(error));
-    }
+    // The demo key for BOK unless a registered one is configured; nothing at all for Customs.
+    const apiKey = source === "bok" ? ecosCredential(env).apiKey : "";
     const adapter = options.adapter ?? adapterFor(source, options.http);
     const fetched = await adapter.fetch({ identity, range: { fromMonth, toMonth }, apiKey });
 

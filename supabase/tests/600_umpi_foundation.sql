@@ -321,10 +321,15 @@ begin
   select count(*) into n from pipeline.umpi_index_bases;
   if n <> 0 then raise exception 'the foundation holds % index base(s); the production base must be derived from official observations', n; end if;
 
-  -- No source is production-approved on paper. A collector earns that, a migration does not.
+  -- Phase 3 asserted that no UMPI source was production-approved, because none had been
+  -- collected from. Phase 4A promoted both after a live smoke and an exact rerun, so the
+  -- assertion now checks the thing that still matters: approval requires permitted terms on
+  -- both axes, which the schema enforces and which no migration may route around.
   select count(*) into n from reference.source_interfaces
-   where (slug like 'bok-%' or slug like 'kcs-%') and production_access_state = 'production_approved';
-  if n <> 0 then raise exception '% UMPI source(s) were marked production-approved by a migration', n; end if;
+   where (slug like 'bok-%' or slug like 'kcs-%')
+     and production_access_state = 'production_approved'
+     and (terms_review_state <> 'permitted' or data_use_terms_state <> 'permitted');
+  if n <> 0 then raise exception '% UMPI source(s) are approved without permitted terms', n; end if;
 
   -- No UMPI series draws on a proprietary memory-price vendor. TrendForce exists in the registry
   -- as a *news* provider from earlier work, which is a different thing entirely and is left

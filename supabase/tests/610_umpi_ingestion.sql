@@ -243,10 +243,16 @@ begin
   select count(*) into n from pipeline.source_retrievals;
   if n <> 0 then raise exception 'Phase 4 migrations created % retrieval(s)', n; end if;
 
-  -- Neither interface is promoted by a migration. Promotion follows a live run, not code.
-  select count(*) into n from reference.source_interfaces
-   where (slug like 'bok-%' or slug like 'kcs-%') and production_access_state = 'production_approved';
-  if n <> 0 then raise exception '% UMPI source(s) were promoted by a migration', n; end if;
+  -- Both interfaces are promoted as of Phase 4A, on live-smoke evidence recorded in
+  -- 20261012100000. What must remain true is that the BOK ambiguity survived the promotion:
+  -- production_approved is an operational state, not a rights finding.
+  select count(*) into n from reference.source_use_permissions sup
+    join reference.source_interfaces si on si.id = sup.source_interface_id
+   where si.slug = 'bok-ecos-producer-price-commodity'
+     and sup.effective_to is null
+     and sup.rights_classification = 'ambiguous_requires_legal_review'
+     and sup.notes = 'founder_accepted_risk';
+  if n <> 4 then raise exception 'the BOK founder-accepted ambiguity is not intact, found %', n; end if;
 
   raise notice 'umpi ingestion state: ok';
 end $$;
