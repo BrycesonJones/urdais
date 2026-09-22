@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { loadFeedFixture } from "@/lib/news/fixtures";
 import { parseFeed } from "@/lib/news/feed";
 import { ingestNewsSource, type RetrievedFeed } from "@/lib/news/ingest";
-import { normalizeImageUrl } from "@/lib/news/normalize";
+import { imageOriginPermits, normalizeImageUrl } from "@/lib/news/normalize";
 import { NEWS_SOURCES } from "@/lib/news/sources";
 import { InMemoryNewsStore } from "@/lib/news/store";
 import { NEWS_SOURCE_SLUGS, type NewsSourceSlug } from "@/lib/news/types";
@@ -120,6 +120,67 @@ describe("the image host allowlist", () => {
   });
 });
 
+describe("the publisher's own resizing path, where a source opted in", () => {
+  const BLOCK = NEWS_SOURCES["the-block"].imageHosts;
+  const OPTS = "width=1600,height=900,fit=cover,format=jpeg,quality=80";
+  const permit = (raw: string) => normalizeImageUrl(raw, "feed_media", BLOCK);
+
+  it("still permits the direct asset path the original finding was made about", () => {
+    const url = "https://www.tbstat.com/wp/uploads/2022/05/20220513-News-Sherrod-Brown.jpg";
+    expect(permit(url)).toEqual({ ok: true, value: url });
+  });
+
+  it("permits the transform when the path underneath is the permitted namespace", () => {
+    const url = `https://www.tbstat.com/cdn-cgi/image/${OPTS}/wp/uploads/2022/05/a.jpg`;
+    expect(permit(url)).toEqual({ ok: true, value: url });
+  });
+
+  it("refuses a transform over any other namespace on the same host", () => {
+    expect(permit(`https://www.tbstat.com/cdn-cgi/image/${OPTS}/private/a.jpg`).ok).toBe(false);
+  });
+
+  it("refuses an arbitrary path on the host", () => {
+    expect(permit("https://www.tbstat.com/wp/secret/a.jpg").ok).toBe(false);
+    expect(permit("https://www.tbstat.com/a.jpg").ok).toBe(false);
+  });
+
+  it("refuses the permitted path shape on a host that is not the publisher's", () => {
+    expect(permit(`https://evil.example/cdn-cgi/image/${OPTS}/wp/uploads/a.jpg`).ok).toBe(false);
+    expect(permit("https://tbstat.com.evil.example/wp/uploads/a.jpg").ok).toBe(false);
+  });
+
+  it("refuses a malformed transform: no options, or no asset path under it", () => {
+    for (const path of ["/cdn-cgi/image/", "/cdn-cgi/image", `/cdn-cgi/image/${OPTS}`, "/cdn-cgi/image//wp/uploads/a.jpg"]) {
+      expect(permit(`https://www.tbstat.com${path}`).ok).toBe(false);
+    }
+  });
+
+  it("refuses a traversal that only looks like the permitted namespace", () => {
+    expect(permit(`https://www.tbstat.com/cdn-cgi/image/${OPTS}/../wp/uploads/a.jpg`).ok).toBe(false);
+  });
+
+  it("is still https-only and still reports the refusal rather than dropping it", () => {
+    expect(permit(`http://www.tbstat.com/cdn-cgi/image/${OPTS}/wp/uploads/a.jpg`)).toEqual({ ok: true, value: null });
+    expect(permit(`https://www.tbstat.com/cdn-cgi/image/${OPTS}/private/a.jpg`)).toMatchObject({
+      ok: false,
+      reason: "host_not_permitted",
+    });
+  });
+
+  it("is one source's opt-in and leaves every other source's rule alone", () => {
+    for (const slug of NEWS_SOURCE_SLUGS) {
+      if (slug === "the-block") continue;
+      for (const entry of NEWS_SOURCES[slug].imageHosts) {
+        expect(entry.allowsCloudflareImageTransform ?? false).toBe(false);
+      }
+    }
+    // The shared-CDN publishers are the case a transform must never reach.
+    const together = NEWS_SOURCES["together-ai-blog"].imageHosts;
+    const url = "https://cdn.prod.website-files.com/cdn-cgi/image/w=1/69654e88dce9154b5f12070c/a.jpg";
+    expect(normalizeImageUrl(url, "feed_media", together).ok).toBe(false);
+  });
+});
+
 describe("images through ingestion", () => {
   it("stores the feed's thumbnail for a source that references them", () => {
     const { store } = ingest("coreweave-blog");
@@ -152,9 +213,7 @@ describe("images through ingestion", () => {
       for (const row of store.all) {
         if (row.imageUrl === null) continue;
         const url = new URL(row.imageUrl);
-        expect(
-          source.imageHosts.some((entry) => url.hostname === entry.host && url.pathname.startsWith(entry.pathPrefix)),
-        ).toBe(true);
+        expect(source.imageHosts.some((entry) => imageOriginPermits(url, entry))).toBe(true);
       }
     }
   });

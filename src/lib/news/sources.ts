@@ -289,7 +289,9 @@ export const NEWS_SOURCES: Record<NewsSourceSlug, NewsSourceDefinition> = {
     mechanism: "rss",
     descriptionPolicy: "source_description",
     imagePolicy: "feed_media",
-    imageHosts: [{ host: "www.tbstat.com", pathPrefix: "/wp/uploads/" }],
+    imageHosts: [
+      { host: "www.tbstat.com", pathPrefix: "/wp/uploads/", allowsCloudflareImageTransform: true },
+    ],
     registry: registry("the-block-feed"),
     notes:
       "The only crypto news publisher in the field that published a machine-readable grant rather than a prohibition. Its terms pages return 403 and the review rests on that signal, which the registry evidence records.",

@@ -321,12 +321,29 @@ The path matters as much as the host. CoreWeave and Together AI serve from the
 same Webflow CDN under different site identifiers; a host-only rule would admit
 each other's assets and every other site on that CDN.
 
+A publisher may also put a resizing path in front of its own assets. On
+2026-09-19 The Block began serving every feed image through Cloudflare Images,
+as `/cdn-cgi/image/<options>/` prefixed onto the same `/wp/uploads/` asset;
+`/wp/uploads/` stopped matching and four days of thumbnails were stored as
+NULL against `ENTRY_IMAGE_HOST_NOT_PERMITTED`. That is the gate working — the
+rights finding was made about an asset namespace, and an unfamiliar URL shape
+was refused rather than admitted quietly.
+
+The finding was re-verified and the rule now follows the publisher, but only by
+peeling the prefix off and applying the source's own path prefix to what is
+underneath. It stays pinned to the asset namespace: an arbitrary path on the
+host is still refused, and so is a transform over any other namespace. The
+opt-in is `allowsCloudflareImageTransform` on a single source's `imageHosts`
+entry, off everywhere else — the two publishers sharing one Webflow CDN are
+exactly the case a host-wide transform rule would break.
+
 | Source | Field | Permitted origin |
 | --- | --- | --- |
 | Google Cloud (both) | `media:content` | `storage.googleapis.com/gweb-cloudblog-publish/` |
 | CoreWeave | `media:content` | `cdn.prod.website-files.com/62bc66d283fd9c34ffec780a/` |
 | Together AI | `media:content` | `cdn.prod.website-files.com/69654e88dce9154b5f12070c/` |
 | Cloudflare | `enclosure` (`image/png`) | `blog.cloudflare.com/_emdash/api/media/file/` |
+| The Block | `media:content` | `www.tbstat.com/wp/uploads/`, optionally behind `/cdn-cgi/image/<options>/` |
 | Microsoft Azure, Lambda, DigitalOcean | — | none; feed offers none, or none that is a syndicated enclosure |
 
 ### Referenced, not rehosted
@@ -716,7 +733,7 @@ three that said something different.
 | Publisher | Endpoint | Basis | Description | Image |
 | --- | --- | --- | --- | --- |
 | Bitcoin Optech | `bitcoinops.org/feed.xml` (Atom) | **open licence (MIT)** | publisher abstract | none taken |
-| The Block | `theblock.co/rss.xml` | **machine-readable grant** | publisher dek | `www.tbstat.com/wp/uploads/` |
+| The Block | `theblock.co/rss.xml` | **machine-readable grant** | publisher dek | `www.tbstat.com/wp/uploads/`, and the publisher's own resizing path over it (§6) |
 | Chainalysis | `chainalysis.com/feed/` | feed syndication | publisher summary | none offered |
 
 **Bitcoin Optech** states that "all material produced by Bitcoin Optech is open

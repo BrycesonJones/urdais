@@ -60,7 +60,19 @@ export type ImagePolicy = "feed_media" | "none";
  * publisher's artwork in under the other's decision, and would let in every
  * other site on that CDN besides.
  */
-export type ImageHost = { host: string; pathPrefix: string };
+export type ImageHost = {
+  host: string;
+  pathPrefix: string;
+  /**
+   * Opt-in, per source: also accept the publisher's own Cloudflare image
+   * resizing path, `/cdn-cgi/image/<options>/` prefixed onto the asset's own
+   * path. The prefix is peeled off and `pathPrefix` is then applied to the
+   * path underneath, so the rule stays pinned to the publisher's real asset
+   * namespace and never widens to the whole host. Off unless a source's own
+   * rights finding records the behaviour.
+   */
+  allowsCloudflareImageTransform?: boolean;
+};
 
 /**
  * One approved source. Every source-specific fact lives here — endpoint,

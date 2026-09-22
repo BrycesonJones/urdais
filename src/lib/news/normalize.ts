@@ -143,6 +143,31 @@ export type ImageResult =
  * moving its CDN should look like a diagnostic, not like a feed that quietly
  * stopped having artwork.
  */
+/**
+ * Cloudflare Images serves a resized copy of an asset from the publisher's own
+ * host, by prefixing the asset's path with `/cdn-cgi/image/<options>/`. The
+ * options segment is opaque and publisher-chosen; what matters is the path
+ * underneath it, which is the asset the source's rights finding was made
+ * about. A prefix with no asset path after it matches nothing.
+ */
+const CLOUDFLARE_IMAGE_TRANSFORM = /^\/cdn-cgi\/image\/[^/]+(\/.+)$/;
+
+/**
+ * Whether one permitted origin admits this URL.
+ *
+ * The direct asset path is always the rule. Where a source opts in, the
+ * publisher's own resizing prefix is peeled off first and the same path
+ * requirement is applied to the asset path underneath — never to the host
+ * alone, and never to some other path on the same host.
+ */
+export function imageOriginPermits(url: URL, entry: ImageHost): boolean {
+  if (url.hostname.toLowerCase() !== entry.host.toLowerCase()) return false;
+  if (url.pathname.startsWith(entry.pathPrefix)) return true;
+  if (!entry.allowsCloudflareImageTransform) return false;
+  const underlying = CLOUDFLARE_IMAGE_TRANSFORM.exec(url.pathname)?.[1];
+  return underlying !== undefined && underlying.startsWith(entry.pathPrefix);
+}
+
 export function normalizeImageUrl(
   raw: string | null,
   policy: ImagePolicy,
@@ -157,9 +182,9 @@ export function normalizeImageUrl(
   }
   if (url.protocol !== "https:") return { ok: true, value: null };
   url.hash = "";
-  const host = url.hostname.toLowerCase();
-  const permitted = hosts.some((entry) => host === entry.host.toLowerCase() && url.pathname.startsWith(entry.pathPrefix));
-  if (!permitted) return { ok: false, reason: "host_not_permitted", url: url.toString() };
+  if (!hosts.some((entry) => imageOriginPermits(url, entry))) {
+    return { ok: false, reason: "host_not_permitted", url: url.toString() };
+  }
   return { ok: true, value: url.toString() };
 }
 
