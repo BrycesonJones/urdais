@@ -241,7 +241,7 @@ begin
        observed_at, flow_observation_id, limit_observation_id, selected_direction, limit_field_used,
        state, headroom_mw)
     values (ny_iface, calc, 1, iface_b, 0,
-            timestamptz '2026-09-20T04:00:00Z', flow_b, lim_neg, 0,
+            timestamptz '2026-09-20T04:00:00Z', flow_b, lim_neg, 3,
             2, 3, null);
     raise exception 'a zero-flow margin was stored holding a limit it could not have selected';
   exception when check_violation then null;

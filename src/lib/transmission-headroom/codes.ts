@@ -25,12 +25,20 @@ const map = <T extends string>(entries: Record<T, number>) => ({
 export const contingencyKind = map({ not_applicable: 0, base_case: 1, post_contingency: 2 });
 export const entityKind = map({ interface: 1, element: 2 });
 export const limitState = map({ real: 1, zero: 2, sentinel: 3, implausible: 4 });
+/**
+ * Direction, shared by a limit and by the margin that selected one.
+ *
+ * `selectedDirection` reuses the same ordinals for every concept both domains have, and adds only
+ * `undetermined`, which a limit can never be. The margin compatibility trigger compares these two
+ * numerically, so a concept numbered differently in each domain rejects a correct row: ERCOT's
+ * undirected margins were refused against their own undirected limits until these agreed.
+ */
 export const limitDirection = map({ undirected: 0, positive: 1, negative: 2 });
 export const flowDirection = map({ unspecified: 0, positive: 1, negative: 2, zero: 3 });
 export const marginState = map({
   ok: 1, unmonitored_direction: 2, zero_flow_direction_undetermined: 3, implausible_limit: 4,
 });
-export const selectedDirection = map({ undetermined: 0, positive: 1, negative: 2, undirected: 3 });
+export const selectedDirection = map({ undirected: 0, positive: 1, negative: 2, undetermined: 3 });
 export const zoneStatus = map({ source_stated: 0, assumed_market_local: 1, ambiguous: 2 });
 export const nativeField = map({
   "Flow (MWH)": 1, "Positive Limit (MWH)": 2, "Negative Limit (MWH)": 3, Value: 4, Limit: 5,
