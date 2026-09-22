@@ -21,7 +21,7 @@ import { loadPricingFixture } from "@/lib/tokens/fixtures";
 import { ingestTokenPricing } from "@/lib/tokens/ingest";
 import { constituentInForce, isEligibleLeg, methodologyInForce, tokenBenchmarkPrice, withholdingFor } from "@/lib/tokens/read/benchmark";
 import { loadPersistedBenchmarks, persistProviderBenchmarks, type PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
-import { persistVerificationEvents, type PersistableVerificationEvent } from "@/lib/tokens/read/verification-events";
+import { persistVerificationEvents, resolveRetrievalIds, type PersistableVerificationEvent } from "@/lib/tokens/read/verification-events";
 import { tokenReadCatalogFromStore } from "@/lib/tokens/read/load";
 import { listVisibleTokenSeries } from "@/lib/tokens/read/series";
 import { loadTokenReadCatalogFromSql, persistTokenReadCatalog, type TokenSqlExecutor } from "@/lib/tokens/read/sql";
@@ -158,7 +158,13 @@ export async function runProductionVerification(
   const withheld: ProductionVerificationRun["withheld"] = [];
   // The retained artifact each attestation was made against, so the event that
   // records "a person checked" also records exactly what they were looking at.
-  const artifacts = new Map<Wave1Provider, { retrievalId: string; sha256: string }>();
+  //
+  // Keyed by idempotency key rather than by the in-memory row id. A manually
+  // verified retrieval is keyed by artifact hash, so re-reading an unchanged
+  // page mints a fresh in-memory row whose insert is then a no-op against the
+  // key that already exists -- which is the correct behaviour, and it leaves the
+  // in-memory id pointing at no row at all. The key survives that; the id does not.
+  const artifacts = new Map<Wave1Provider, { idempotencyKey: string | null; sha256: string }>();
   for (const provider of WAVE1_PROVIDERS) {
     const fixture = loadPricingFixture(provider);
     const constituent = constituentInForce(provider, onDate);
@@ -187,7 +193,7 @@ export async function runProductionVerification(
         store,
         verification: { ...verification, sourceUrl: fixture.sourceUrl },
       });
-      artifacts.set(provider, { retrievalId: report.retrievalId, sha256: report.responseHash });
+      artifacts.set(provider, { idempotencyKey: store.findRetrieval(report.retrievalId)?.idempotencyKey ?? null, sha256: report.responseHash });
       withheld.push({
         provider,
         reason: withholding.reason,
@@ -203,7 +209,7 @@ export async function runProductionVerification(
       store,
       expect: expectations[provider],
     });
-    artifacts.set(provider, { retrievalId: report.retrievalId, sha256: report.responseHash });
+    artifacts.set(provider, { idempotencyKey: store.findRetrieval(report.retrievalId)?.idempotencyKey ?? null, sha256: report.responseHash });
     verifications.push({ provider, legs });
   }
 
@@ -256,10 +262,18 @@ async function recordAttestations(
   input: {
     frozen: readonly PersistedBenchmarkRow[];
     verification: Omit<ManualVerification, "sourceUrl">;
-    artifacts: ReadonlyMap<Wave1Provider, { retrievalId: string; sha256: string }>;
+    artifacts: ReadonlyMap<Wave1Provider, { idempotencyKey: string | null; sha256: string }>;
     methodologyVersion: string;
   },
 ): Promise<{ inserted: number; recorded: number; skipped: string[] }> {
+  // Resolve every artifact to the retrieval row that actually holds it. An
+  // attestation that named a row which does not exist would be dangling
+  // provenance, and the foreign key is right to refuse it.
+  const persistedRetrievals = await resolveRetrievalIds(
+    sql,
+    [...input.artifacts.values()].flatMap((artifact) => (artifact.idempotencyKey === null ? [] : [artifact.idempotencyKey])),
+  );
+
   const events: PersistableVerificationEvent[] = [];
   const skipped: string[] = [];
   for (const [provider, artifact] of input.artifacts) {
@@ -275,7 +289,10 @@ async function recordAttestations(
       verifiedAt: input.verification.verifiedAt,
       evidence: input.verification.evidence,
       verificationPurpose: "production",
-      sourceRetrievalId: artifact.retrievalId,
+      // Null where the artifact is on record under no retrieval this run can
+      // resolve. The statement and the state it was made about are the evidence;
+      // a link to a row that is not there would be worse than no link.
+      sourceRetrievalId: artifact.idempotencyKey === null ? null : persistedRetrievals.get(artifact.idempotencyKey) ?? null,
       artifactSha256: artifact.sha256,
       observedState: active.calculationStatus,
       benchmarkId: active.id,
