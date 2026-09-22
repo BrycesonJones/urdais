@@ -197,13 +197,21 @@ export async function loadTransmissionAnalytics(
   const sources = await sql.query(
     `select si.slug,
             (select max(f.observed_at)::text from pipeline.transmission_flow_observations f
-              where f.source_interface_id = si.id) as latest_observation_at,
+              where f.entity_id in (
+                select id from pipeline.transmission_interfaces where source_interface_id = si.id
+                union all
+                select id from pipeline.transmission_elements where source_interface_id = si.id))
+              as latest_observation_at,
             (select max(s.observed_at)::text from pipeline.transmission_snapshots s
               where s.source_interface_id = si.id) as retrieved_at,
             (select case when extract(epoch from (now() - max(f.observed_at))) / 3600
                               > mon.stale_after_hours then 'stale' else 'current' end
                from pipeline.transmission_flow_observations f
-              where f.source_interface_id = si.id) as source_status
+              where f.entity_id in (
+                select id from pipeline.transmission_interfaces where source_interface_id = si.id
+                union all
+                select id from pipeline.transmission_elements where source_interface_id = si.id))
+              as source_status
        from reference.source_interfaces si
        join reference.transmission_source_monitors mon on mon.source_interface_id = si.id`,
     [],

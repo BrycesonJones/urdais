@@ -140,7 +140,9 @@ declare
     'pipeline.transmission_margins', 'pipeline.transmission_deferrals',
     -- Transmission Headroom analytics (TH-3)
     'reference.transmission_metric_definitions',
-    'pipeline.transmission_analytics_runs', 'pipeline.transmission_metric_results'
+    'pipeline.transmission_analytics_runs', 'pipeline.transmission_metric_results',
+    -- Transmission Headroom storage (TH-5A)
+    'reference.transmission_code_map'
   ];
   n integer;
 begin

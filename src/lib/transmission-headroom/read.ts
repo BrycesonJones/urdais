@@ -71,7 +71,7 @@ export async function marginStateBreakdown(
   sql: CapacitySqlExecutor, sourceSlug: string,
 ): Promise<StateBreakdown[]> {
   const rows = await sql.query(
-    `select m.state, count(*)::int as observations, count(distinct m.entity_id)::int as entities
+    `select reference.transmission_code('margin_state', m.state) as state, count(*)::int as observations, count(distinct m.entity_id)::int as entities
        from pipeline.transmission_margins m
        join reference.source_interfaces si on si.id = m.source_interface_id
       where si.slug = $1
@@ -124,11 +124,11 @@ export async function sourceCoverage(
             (select count(*) from pipeline.transmission_snapshots s
               where s.source_interface_id = si.id)::int as snapshots,
             (select min(f.observed_at)::text from pipeline.transmission_flow_observations f
-              where f.source_interface_id = si.id) as first_observed_at,
+              where f.entity_id in (select id from pipeline.transmission_interfaces where source_interface_id = si.id union all select id from pipeline.transmission_elements where source_interface_id = si.id)) as first_observed_at,
             (select max(f.observed_at)::text from pipeline.transmission_flow_observations f
-              where f.source_interface_id = si.id) as last_observed_at,
+              where f.entity_id in (select id from pipeline.transmission_interfaces where source_interface_id = si.id union all select id from pipeline.transmission_elements where source_interface_id = si.id)) as last_observed_at,
             (select count(distinct f.entity_id) from pipeline.transmission_flow_observations f
-              where f.source_interface_id = si.id)::int as entities,
+              where f.entity_id in (select id from pipeline.transmission_interfaces where source_interface_id = si.id union all select id from pipeline.transmission_elements where source_interface_id = si.id))::int as entities,
             (select count(*) from pipeline.transmission_margins m
               where m.source_interface_id = si.id)::int as margins
        from reference.source_interfaces si
@@ -171,7 +171,7 @@ export async function transmissionCurrentness(sql: CapacitySqlExecutor): Promise
        left join lateral (
          select max(f.observed_at) as observed_at
            from pipeline.transmission_flow_observations f
-          where f.source_interface_id = si.id) latest on true
+          where f.entity_id in (select id from pipeline.transmission_interfaces where source_interface_id = si.id union all select id from pipeline.transmission_elements where source_interface_id = si.id)) latest on true
       order by si.slug`,
     [],
   );
