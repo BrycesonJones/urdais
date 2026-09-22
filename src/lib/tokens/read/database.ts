@@ -16,6 +16,7 @@ import {
 } from "@/lib/db/connection";
 import { isProductionRuntime, type ProcessEnvLike } from "@/lib/tokens/read/publication";
 import { loadPersistedBenchmarks, type PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
+import { loadVerificationEvents, type TokenVerificationEvent } from "@/lib/tokens/read/verification-events";
 import { loadTokenReadCatalogFromSql, type TokenSqlExecutor } from "@/lib/tokens/read/sql";
 import type { TokenReadCatalog } from "@/lib/tokens/read/series";
 
@@ -166,6 +167,30 @@ export async function loadFrozenBenchmarksFromDatabase(
     return await loadPersistedBenchmarks(sql);
   } catch (error) {
     console.warn(`token benchmarks: database unavailable (${describeDatabaseError(error)}); falling back to calculation`);
+    return null;
+  }
+}
+
+/**
+ * Every production human verification on record, or null where the database is
+ * out of reach.
+ *
+ * Null and empty are different, and the caller must keep them apart: null means
+ * "could not ask", empty means "asked, nobody has verified anything". Neither
+ * may be turned into a verification date, which is why this returns the events
+ * rather than a timestamp.
+ */
+export async function loadVerificationEventsFromDatabase(
+  env: ProcessEnvLike = process.env,
+): Promise<TokenVerificationEvent[] | null> {
+  const allowLocalDefault = env.NODE_ENV === "development";
+  const url = resolveTokenDatabaseUrl(env, { allowLocalDefault });
+  if (!url) return null;
+  try {
+    const sql = await tokenSqlExecutor(url);
+    return await loadVerificationEvents(sql);
+  } catch (error) {
+    console.warn(`token verifications: database unavailable (${describeDatabaseError(error)}); the header will fall back to the benchmark instant`);
     return null;
   }
 }

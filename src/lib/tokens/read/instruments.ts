@@ -87,6 +87,14 @@ export function benchmarkInstrumentsFromSeries(
    * non-production and test caller relies on.
    */
   lineage?: ReadonlyMap<string, string>,
+  /**
+   * When a person last verified each provider, by provider slug, as an ISO
+   * instant. Optional and separate from the series on purpose: it is not a
+   * price fact, it does not belong in the published benchmark shape, and a
+   * provider with no attestation must simply not get one rather than borrow
+   * the benchmark's own timestamp.
+   */
+  verifiedAt?: ReadonlyMap<string, string>,
 ): MarketInstrumentDetail[] {
   const label = (row: PublicTokenBenchmarkSeries) => row.providerName;
   return benchmarks.map((row) => {
@@ -96,12 +104,16 @@ export function benchmarkInstrumentsFromSeries(
     });
     const latest = daily[daily.length - 1]!;
     const detailed = { daily, intraday: [] };
+    const verified = verifiedAt?.get(row.providerSlug);
     return {
       id: row.seriesId,
       shortLabel: row.providerName,
       symbol: row.providerName,
       name: `${row.benchmarkName} · ${row.benchmarkModelName}`,
       unit: TOKEN_PRICE_UNIT_CAPTION,
+      // Absent where no attestation stands, which makes the header say
+      // "Updated" rather than claiming a verification that did not happen.
+      ...(verified === undefined ? {} : { verifiedAt: toUnix(verified) }),
       benchmarkIdentity: {
         providerSlug: row.providerSlug,
         providerName: row.providerName,
