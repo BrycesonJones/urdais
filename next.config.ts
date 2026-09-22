@@ -28,8 +28,12 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "cdn.prod.website-files.com", pathname: "/69654e88dce9154b5f12070c/**" },
       // Cloudflare blog, served from the publisher's own host.
       { protocol: "https", hostname: "blog.cloudflare.com", pathname: "/_emdash/api/media/file/**" },
-      // The Block, its own asset host.
+      // The Block, its own asset host, and the Cloudflare Images resizing path
+      // the publisher put in front of it on 2026-09-19. A remote pattern cannot
+      // express "then /wp/uploads/ underneath", which the ingestion rule does
+      // require; this entry is the coarser mirror of it, not the gate.
       { protocol: "https", hostname: "www.tbstat.com", pathname: "/wp/uploads/**" },
+      { protocol: "https", hostname: "www.tbstat.com", pathname: "/cdn-cgi/image/**" },
     ],
   },
 };
