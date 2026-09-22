@@ -142,7 +142,11 @@ declare
     'reference.transmission_metric_definitions',
     'pipeline.transmission_analytics_runs', 'pipeline.transmission_metric_results',
     -- Transmission Headroom storage (TH-5A)
-    'reference.transmission_code_map'
+    'reference.transmission_code_map',
+    -- UMPI (Phase 3): canonical series, source-series identity, runs, evidence, bases, publications
+    'reference.umpi_series', 'reference.umpi_source_series',
+    'pipeline.umpi_ingestion_runs', 'pipeline.umpi_observations',
+    'pipeline.umpi_index_bases', 'pipeline.umpi_publications'
   ];
   n integer;
 begin
