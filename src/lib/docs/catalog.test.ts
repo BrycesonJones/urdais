@@ -246,6 +246,83 @@ describe("Bitcoin wealth index methodology", () => {
   });
 });
 
+describe("memory price methodology", () => {
+  const umpi = findDoc("methodology/umpi");
+  const read = (file: string) => readFileSync(path.join(process.cwd(), "docs", file), "utf8");
+
+  it("registers UMPI-DRAM Spot under Methodology and links it both ways with the framework", () => {
+    expect(umpi).toMatchObject({ section: "Methodology", file: "methodology/umpi.md" });
+    expect(docHref(umpi!.slug)).toBe("/docs/methodology/umpi");
+    const doc = read(umpi!.file);
+    expect(doc).toContain("](/docs/methodology)");
+    expect(doc.match(/^# /gm)).toHaveLength(1);
+    expect(read("methodology.md")).toContain(`](${docHref(umpi!.slug)})`);
+  });
+
+  it("is a draft with no effective date, whose publication is blocked on rights rather than on definition", () => {
+    const doc = read(umpi!.file);
+    expect(doc).toContain("version 0.1.0-draft");
+    expect(doc).toContain("Publication blocked pending a licensed source");
+    expect(doc).toContain("blocked pending licensed source");
+    expect(doc).toContain("0.1.0-draft, 22 September 2026");
+    // A draft carries no production effective date; the database constraint says so too.
+    expect(doc).toContain("**No effective date**");
+    expect(doc).not.toMatch(/Status: approved/);
+  });
+
+  it("fixes the priced object and its unit, and refuses the substitutes it is most likely to be confused with", () => {
+    const doc = read(umpi!.file);
+    expect(doc).toContain("USD per die");
+    expect(doc).toContain("gigabits of die density, never in gigabytes of module capacity");
+    // The generic demo unit is named once, to supersede it.
+    expect(doc).toContain("`$ / part`");
+    expect(doc).toContain("never** converted to USD per gigabyte");
+  });
+
+  it("carries the six canonical DRAM instruments with their qualifiers, and keeps branded and eTT apart", () => {
+    const doc = read(umpi!.file);
+    for (const instrument of ["DDR5 16Gb", "DDR4 16Gb", "DDR4 8Gb", "DDR4 16Gb eTT", "DDR4 8Gb eTT", "DDR3 4Gb"]) {
+      expect(doc, instrument).toContain(`| ${instrument} |`);
+    }
+    for (const organization of ["2Gx8", "1Gx8", "512Mx8"]) {
+      expect(doc, organization).toContain(organization);
+    }
+    expect(doc).toContain("effectively tested");
+    expect(doc).toContain("Branded and eTT observations are never combined");
+    expect(doc).toContain("Not separately established");
+  });
+
+  it("separates spot from contract, withholds HBM, and refuses proxies and reproductions as instrument sources", () => {
+    const doc = read(umpi!.file);
+    expect(doc).toContain("UMPI V1 is DRAM Spot");
+    expect(doc).toContain("`UMPI-DRAM Contract`");
+    expect(doc).toContain("are not production UMPI V1 price instruments");
+    expect(doc).toContain("HBM4 commercial availability does not establish a production price");
+    expect(doc).toContain("never mapped onto a UMPI instrument identity");
+    expect(doc).toContain("do-not-ingest-for-production-price");
+    expect(doc).toContain("does not cure the upstream restriction");
+  });
+
+  it("states the rights gates, including the two a price product is most often launched without", () => {
+    const doc = read(umpi!.file);
+    expect(doc).toContain("No gate is satisfied by silence");
+    for (const gate of ["G1 Access / retrieval", "G2 Storage", "G3 Calculation", "G4 Derived publication", "G5 Historical retention"]) {
+      expect(doc, gate).toContain(gate);
+    }
+    // Raw republication is a separate right, required here because V1 publishes a source's own figure.
+    expect(doc).toContain("the raw-republication right is required in addition to G4");
+    expect(doc).toContain("A contractual restriction is never broadened beyond its text");
+  });
+
+  it("defines the session cadence and the change, and does not leave the header word `today` standing", () => {
+    const doc = read(umpi!.file);
+    expect(doc).toContain("business-day session cadence");
+    expect(doc).toContain("The V1 canonical change is the session change");
+    expect(doc).toContain("It is never `today`");
+    expect(doc).toContain("No history is generated from demo or deterministic series");
+  });
+});
+
 describe("internal research and architecture artifacts", () => {
   const internalDirs = ["research", "architecture"] as const;
 
