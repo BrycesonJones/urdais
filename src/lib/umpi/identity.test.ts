@@ -105,7 +105,9 @@ describe("Korea Customs source identity", () => {
 describe("production identities", () => {
   it("binds each V1 series to exactly the verified source identity", () => {
     expect(identityKey(productionIdentityFor("UMPI-KR-DRAM-PPI"))).toBe("bok:404Y016/30911201AA/M");
-    expect(identityKey(productionIdentityFor("UMPI-KR-DRAM-EXPORT-UV"))).toBe("kcs:8542321010/15100475");
+    // Corrected in Phase 4: 15101609 is aggregate-by-item; 15100475 is the country-dimension
+    // operation and cannot yield a Korea-wide total.
+    expect(identityKey(productionIdentityFor("UMPI-KR-DRAM-EXPORT-UV"))).toBe("kcs:8542321010/15101609");
   });
 
   it("never returns an identity that is a human-facing name", () => {

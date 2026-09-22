@@ -52,8 +52,16 @@ describe("the TypeScript constants and the migration agree", () => {
     const sql = migration();
     expect(identityKey(productionIdentityFor("UMPI-KR-DRAM-PPI"))).toBe("bok:404Y016/30911201AA/M");
     expect(sql).toContain("'404Y016', '30911201AA', 'M'");
-    expect(identityKey(productionIdentityFor("UMPI-KR-DRAM-EXPORT-UV"))).toBe("kcs:8542321010/15100475");
+    // Phase 3's migration registered 15100475; Phase 4's migration corrected the binding to the
+    // aggregate-by-item dataset. The TypeScript identity follows the correction.
+    expect(identityKey(productionIdentityFor("UMPI-KR-DRAM-EXPORT-UV"))).toBe("kcs:8542321010/15101609");
     expect(sql).toContain("'8542321010', '15100475'");
+    const correction = readFileSync(
+      path.join(process.cwd(), "supabase", "migrations", "20261009100000_umpi_customs_aggregate_source.sql"),
+      "utf8",
+    );
+    expect(correction).toContain("'15101609'");
+    expect(correction).toContain("country-dimension");
   });
 
   it("registers the methodology as a draft and initializes no series", () => {

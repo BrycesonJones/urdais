@@ -120,6 +120,142 @@ Two adapters are expected:
 
 Parsing is separated from fetching (`UmpiPayloadParser`) so a parser can be tested against a frozen payload with no network and no key. The API key is **passed in**, resolved by the caller from the environment, so an adapter stays a pure function of its inputs.
 
+## Phase 4: the source adapters
+
+Implemented in `src/lib/umpi/ingest/`. Both adapters retrieve and parse; neither decides
+methodology. Manual execution only — there is no scheduler and no cron.
+
+```
+npm run umpi:ingest -- --source bok     --from 2026-06 --to 2026-08
+npm run umpi:ingest -- --source customs --from 2026-06 --to 2026-06 --dry-run
+```
+
+### Bank of Korea — `bok.ts`
+
+`GET https://ecos.bok.or.kr/api/StatisticSearch/{key}/json/kr/{start}/{end}/404Y016/M/{YYYYMM}/{YYYYMM}/30911201AA`
+
+A path-positional API. The key is a path segment, so redaction is path-aware (`redactEcosUrl`).
+
+The identity is asserted twice. Before the request, `assertBokIdentity` refuses anything but
+`bok:404Y016/30911201AA/M`. After it, every returned row's `STAT_CODE` and `ITEM_CODE1` are
+compared to the request, and a mismatch throws `UmpiIdentityMismatchError` rather than being
+parsed — because `30911201AA` is also the DRAM item in the export price table `402Y016`, and a
+response from there would otherwise look entirely reasonable.
+
+ECOS reports its own failures in a `RESULT` envelope under HTTP 200, including "no data". That
+is raised as a provider error and is never read as an empty month. If `list_total_count` exceeds
+one page the adapter refuses rather than truncating, so a successful parse means the range is
+complete — which is what the retrieval's `enumeration_assessment` records.
+
+### Korea Customs — `customs.ts`
+
+`GET https://apis.data.go.kr/1220000/Itemtrade/getItemtradeList?serviceKey=…&strtYymm=…&endYymm=…&hsSgn=8542321010`
+
+**No country parameter is sent, and a country-bearing response is refused.** See below.
+
+Two envelopes are handled: the portal gateway's `OpenAPI_ServiceResponse/cmmMsgHeader/errMsg`
+(observed verbatim from an unauthenticated request) and the service's own
+`response/header/resultCode`. A `00` header with an empty `<items>` is real "no data" and is
+distinguished from both. XML is read with the existing entity-resolving-free reader in
+`src/lib/interconnection-queue/xml/document.ts`; a second XML parser was not added. That reader
+would be better placed under a shared `src/lib/xml/`, which is a tidy-up for its own change
+rather than something to fold into this one.
+
+Field names are stated in `CUSTOMS_FIELDS` rather than guessed. A missing field raises a parse
+error naming what was expected and what arrived, so an agency change produces one precise
+failure in one place instead of a silent zero.
+
+## The Customs aggregation decision
+
+This is the part of UMPI most easily got wrong, so it is written down rather than left in code.
+
+Series B measures **Korea's total** monthly exports of HSK 8542321010. The portal publishes two
+operations and only one answers that:
+
+| Dataset | Operation | Official description | Aggregation |
+|---|---|---|---|
+| **15101609** | `Itemtrade/getItemtradeList` | 관세청_품목별 수출입실적 — "HS Code(2/4/6/10단위)기준으로 집계한 품목별 수출입무역통계" | **By HS code. No country dimension.** |
+| 15100475 | `nitemtrade/getNitemtradeList` | 관세청_품목별 **국가별** 수출입실적 — "국가 및 HS Code별 기준으로 집계한 국가별 품목별 수출입무역통계" | By country **and** HS code; `cntyCd` required |
+
+**UMPI reads 15101609.** One row per commodity per month, so a national total requires no
+summing and no reconciliation, and there is nothing to double-count.
+
+Reading the country-dimension operation would offer only bad options: request one `cntyCd` and
+publish a single trading partner as though it were Korea, or request many and sum rows with no
+documented aggregate code to check against and no way to know whether a total row is already
+among them. Both produce a number that looks like Korean exports and is not.
+
+Three guards enforce this, because a comment would not:
+
+1. `assertAggregateDataset` refuses dataset 15100475 before a request is built.
+2. The parser throws if any row carries a country field (`cntyCd`, `cntyNm`, …) — that means the
+   request reached the wrong operation, and the correct response is to fail, not to aggregate.
+3. The parser throws if two rows share a reference month, which is an undeclared breakdown
+   arriving without a recognised country field.
+
+A six-digit or otherwise different `hsCd` is rejected per row; a `year` that is not a single
+month (a yearly or range total) is rejected the same way.
+
+**Phase 3 bound Series B to 15100475 by mistake.** Migration
+`20261009100000_umpi_customs_aggregate_source.sql` corrects it in place, guarded by a check that
+aborts if any observation already exists for the series. The methodology names the commodity and
+the fields but never a dataset, so nothing in it changes.
+
+## Persistence flow
+
+`run.ts` → `store.ts`, one path for everything:
+
+1. `resolveUmpiLineage` resolves series, source series, interface and methodology version **by
+   code**, and refuses a series with anything other than exactly one active source identity.
+2. The retrieval is recorded in the shared `pipeline.source_retrievals` — every HTTP attempt
+   gets one, including a repeated one, with its redacted URL, payload digest, record count and
+   Urdais's own `enumeration_assessment`.
+3. A run opens in `pipeline.umpi_ingestion_runs` keyed by a deterministic idempotency key, so a
+   retried run is the same run.
+4. Per admitted row, inside one transaction: an existing observation with the same source
+   series, month and provenance hash means **nothing is written**; otherwise the next vintage is
+   appended and the previous current vintage is superseded.
+5. The run closes with honest counts and `idempotence_state` of `no_change` or `changed`. A
+   throw rolls the transaction back and closes the run as `failed` — never as a partial success.
+
+**Retrieval audit and observation idempotence are deliberately different things.** Running the
+same range twice produces two retrieval rows and zero new observations.
+
+### Dry run
+
+`--dry-run` fetches, parses and validates, and **writes nothing at all**: no observation, no run
+row, no retrieval row. A retrieval record would be defensible as an audit fact, but a rehearsal
+that writes to the database is one people stop trusting.
+
+## Error handling
+
+Typed, so an operator and a later monitor can tell the cases apart: `configuration`,
+`transport`, `provider`, `parse`, `validation`, `identity`, `persistence`. Only `transport`
+carries a retryable flag. Retries are restrained — three attempts, 500 ms then 1 s backoff, and
+**no retry at all** for a 4xx, because a rejected key will not become accepted by asking a
+government API again.
+
+## Credentials
+
+`UMPI_ECOS_API_KEY` and `UMPI_DATA_GO_KR_SERVICE_KEY`, resolved by the caller and passed into an
+adapter, which keeps adapters pure and testable without a key. Neither is committed and neither
+appears in any stored URL: `redactUrl` handles the query-parameter form, `redactEcosUrl` the
+path-segment form, and both run before anything is logged or persisted.
+`src/lib/umpi/ingest/server-boundary.test.ts` asserts that no client tree mentions either name
+or imports the ingestion modules.
+
+## Live verification status
+
+**Not performed.** Neither credential is configured in this environment, so no live retrieval
+has run against either agency and both source interfaces remain `research_usable`. Promotion to
+`production_approved` requires a successful narrow retrieval and an exact rerun proving zero new
+observations; until then the registry says what is true.
+
+The one residual unknown a live run resolves: the exact response field names of
+`getItemtradeList`. They are expected to match the documented `expDlr` / `expWgt` / `hsCd` /
+`year` family, and if they differ the parser fails loudly naming the fields it received, which
+is a one-line fix in `CUSTOMS_FIELDS` rather than a silent wrong number.
+
 ## What Phase 4 must not do
 
 Recorded here because the foundation cannot enforce all of it:

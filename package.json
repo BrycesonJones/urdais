@@ -61,7 +61,8 @@
     "interconnection-queue:ingest": "tsx scripts/interconnection-queue/ingest.ts",
     "interconnection-queue:analytics": "tsx scripts/interconnection-queue/analytics.ts",
     "transmission-headroom:ingest": "tsx scripts/transmission-headroom/ingest.ts",
-    "transmission-headroom:analytics": "tsx scripts/transmission-headroom/analytics.ts"
+    "transmission-headroom:analytics": "tsx scripts/transmission-headroom/analytics.ts",
+    "umpi:ingest": "tsx scripts/umpi/ingest.ts"
   },
   "dependencies": {
     "github-slugger": "^2.0.0",
