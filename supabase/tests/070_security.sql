@@ -148,7 +148,18 @@ declare
     'pipeline.umpi_ingestion_runs', 'pipeline.umpi_observations',
     'pipeline.umpi_index_bases', 'pipeline.umpi_publications',
     -- Token Price: durable human verification events, the source of truth for freshness
-    'pipeline.token_price_verifications'
+    'pipeline.token_price_verifications',
+    -- Grid Buildout Velocity (GBV-2): canonical ingestion foundation
+    'reference.buildout_lifecycle_states', 'reference.buildout_lifecycle_bases',
+    'reference.buildout_milestone_kinds', 'reference.buildout_date_qualities',
+    'reference.buildout_date_precisions', 'reference.buildout_quantity_kinds',
+    'reference.buildout_driver_classes', 'reference.buildout_driver_bases',
+    'reference.buildout_relationship_kinds', 'reference.buildout_deferral_reasons',
+    'pipeline.buildout_snapshots', 'pipeline.raw_buildout_records',
+    'pipeline.buildout_projects', 'pipeline.buildout_project_observations',
+    'pipeline.buildout_lifecycle_observations', 'pipeline.buildout_milestones',
+    'pipeline.buildout_quantities', 'pipeline.buildout_relationships',
+    'pipeline.buildout_deferrals'
   ];
   n integer;
 begin
