@@ -195,6 +195,14 @@ export const docPages: readonly DocPage[] = [
     file: "methodology/transmission-headroom.md",
   },
   {
+    slug: "methodology/grid-buildout-velocity",
+    title: "Grid Buildout Velocity",
+    description:
+      "Production methodology for how fast transmission is built: why ERCOT counts completions and CAISO measures schedule slip without the two ever being combined, how a publisher's reported zero is kept distinct from a blank cell, how one project appearing on several owner sheets resolves to one counted project without merging any record, and what each source cannot support.",
+    section: "Methodology",
+    file: "methodology/grid-buildout-velocity.md",
+  },
+  {
     slug: "methodology/interconnection-queue-analytics",
     title: "Interconnection Queue Analytics",
     description:
