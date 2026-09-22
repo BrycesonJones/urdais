@@ -11,8 +11,8 @@ import { createHash } from "node:crypto";
 import type { CapacitySqlExecutor } from "@/lib/power-delivery/capacity/read";
 import type { LatestMargin, MarketInput, MetricResult } from "@/lib/transmission-headroom/analytics/calculate";
 import {
-  APPROVED_MARKETS, METHODOLOGY_SLUG, METHODOLOGY_VERSION, assertMethodologyDocument,
-  type ApprovedMarket,
+  APPROVED_MARKETS, METHODOLOGY_SLUG, METHODOLOGY_VERSION, assertMethodologyApproved,
+  assertMethodologyDocument, type ApprovedMarket,
 } from "@/lib/transmission-headroom/analytics/methodology";
 
 export type MetricDefinition = {
@@ -215,6 +215,7 @@ export async function persistRun(
   sql: CapacitySqlExecutor, inputs: readonly MarketInput[], results: readonly MetricResult[],
   digest: string, options: { calculationVersion?: string } = {},
 ): Promise<PersistOutcome> {
+  await assertMethodologyApproved(sql);
   await assertMethodologyDocument();
   const calculationVersion = options.calculationVersion ?? "0.1.0";
   let statements = 0;
