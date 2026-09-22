@@ -19,7 +19,17 @@ export const BOK_PPI_BY_COMMODITY_STAT_CODE = "404Y016";
 export const BOK_DRAM_ITEM_CODE = "30911201AA";
 /** HSK 8542321010 — 디램. SRAM, flash and MCP are sibling codes and are not this one. */
 export const KCS_DRAM_CHIP_HS_CODE = "8542321010";
-/** data.go.kr 품목별 국가별 수출입실적, the dataset carrying `expDlr` and `expWgt`. */
+/**
+ * data.go.kr 관세청_품목별 수출입실적 — aggregated **by HS code**, no country dimension. One row
+ * per commodity per month, which is what a Korea-wide export total requires.
+ */
+export const KCS_ITEM_TRADE_DATASET_ID = "15101609";
+/**
+ * data.go.kr 관세청_품목별 **국가별** 수출입실적 — aggregated by country AND HS code, with `cntyCd`
+ * required. Named here only so it can be refused: Phase 3 bound Series B to it by mistake, and
+ * reading it would mean publishing one trading partner as Korea, or summing country rows with
+ * no documented aggregate to reconcile against.
+ */
 export const KCS_ITEM_COUNTRY_TRADE_DATASET_ID = "15100475";
 
 /**
@@ -95,7 +105,7 @@ export function productionIdentityFor(seriesCode: UmpiSeriesCode): UmpiSourceIde
     case "UMPI-KR-DRAM-EXPORT-UV":
       return customsSeriesIdentity({
         hsCode: KCS_DRAM_CHIP_HS_CODE,
-        datasetId: KCS_ITEM_COUNTRY_TRADE_DATASET_ID,
+        datasetId: KCS_ITEM_TRADE_DATASET_ID,
       });
   }
 }

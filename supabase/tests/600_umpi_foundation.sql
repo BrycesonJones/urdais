@@ -79,8 +79,11 @@ begin
   end;
 
   -- A customs identity needs its HS code and its dataset, and may not carry BOK fields.
+  -- Phase 3 bound Series B to dataset 15100475; Phase 4 established that this is the
+  -- country-dimension operation and corrected the binding to the aggregate-by-item 15101609.
+  -- The commodity is unchanged, which is the part the methodology names.
   select hs_code || '/' || dataset_id into s from reference.umpi_source_series where id = uv_src;
-  if s <> '8542321010/15100475' then raise exception 'Series B source identity is %, expected 8542321010/15100475', s; end if;
+  if s <> '8542321010/15101609' then raise exception 'Series B source identity is %, expected 8542321010/15101609', s; end if;
   begin
     insert into reference.umpi_source_series
       (series_id, source_interface_id, identity_kind, hs_code, source_native_unit, effective_from_month)

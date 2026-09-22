@@ -19,7 +19,7 @@ describe("admission", () => {
   });
 
   it("rejects a row from a different source identity", () => {
-    const wrongDataset = customsSeriesIdentity({ hsCode: "8542321010", datasetId: "15101609" });
+    const wrongDataset = customsSeriesIdentity({ hsCode: "8542321010", datasetId: "15100475" });
     const result = admit({ expectedIdentity: kcsIdentity, actualIdentity: wrongDataset, observation: kcsRow() });
     expect(result).toMatchObject({ state: "rejected", code: "identity_mismatch" });
   });
