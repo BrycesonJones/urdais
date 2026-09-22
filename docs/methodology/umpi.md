@@ -1,6 +1,18 @@
 # UMPI-DRAM Spot Methodology
 
-**Status: proposed, version 0.1.0-draft. Publication blocked pending a licensed source.** Prepared 22 September 2026. This document defines the Urdais Memory Price Index V1 as a DRAM spot price product. It establishes no right, approves no vendor, creates no observation, and carries no effective date. Every memory value currently visible in the Urdais product is demo data and is not published under this or any methodology version.
+**Status: deferred, version 0.1.0-draft. Not the UMPI V1 launch methodology. Publication blocked pending a licensed source.** Prepared 22 September 2026; deferred 22 September 2026.
+
+> **UMPI V1 launched on a different architecture. See [UMPI-KR DRAM](/docs/methodology/umpi-kr-dram).**
+
+This document is preserved unchanged below because it is still a correct specification — of a product Urdais cannot currently license. Phase 2B established that the source carrying these six instruments does not permit public commercial display of its prices, and Phase 2B-R established that **no open source prices these instruments at all**: no government statistic splits DRAM by generation, density, organization, speed bin or branded-versus-eTT grade. So this specification is not blocked on effort or on a better question — it is blocked on a right that has not been granted, and it stays on the shelf until one is.
+
+**What that means concretely.** This is not UMPI V1, it is not production-ready, it is not the default public methodology for UMPI, and its six instrument identifiers are reserved to it rather than reused elsewhere. It becomes live work again only if Urdais obtains written rights permitting public commercial display of a spot board's prices. Nothing about its gates is weakened by being deferred.
+
+The rest of this document is the specification as it stood, retained in full.
+
+---
+
+This document defines **UMPI-DRAM Spot** as a DRAM spot price product. It establishes no right, approves no vendor, creates no observation, and carries no effective date. Every memory value currently visible in the Urdais product is demo data and is not published under this or any methodology version.
 
 This document follows the principles of the [Urdais methodology framework](/docs/methodology). It is written so that an engineer can implement UMPI-DRAM Spot the day a licence clears, and so that nobody can implement it before then by accident.
 
