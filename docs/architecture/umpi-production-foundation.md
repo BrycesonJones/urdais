@@ -130,11 +130,40 @@ npm run umpi:ingest -- --source bok     --from 2026-06 --to 2026-08
 npm run umpi:ingest -- --source customs --from 2026-06 --to 2026-06 --dry-run
 ```
 
+### Phase 4A: both transports became unauthenticated
+
+Both sources were originally reached through an account whose registration requires Korean
+identity verification the founder cannot complete. Phase 4A replaced the transports with
+official public paths to the **same data**. No economic object changed: same commodity, same
+series identity, same units, same cadence.
+
+| | Before | After |
+|---|---|---|
+| **BOK** | ECOS with a registered key | ECOS with the Bank's **published demo key `sample`**, ten rows per call, paginated |
+| **Customs** | data.go.kr API with a service key | **`tradedata.go.kr` portal query** inside the public session its index page establishes |
+
+**The BOK rights posture is recorded, not resolved.** The demo key returns the exact series, but
+whether a key published for *trying* an API carries a standing production entitlement is not
+documented. The registry keeps that determination at `ambiguous_requires_legal_review` with an
+explicit `founder_accepted_risk` marker and the open question in `unresolved_issue`. Promotion to
+`production_approved` is an operational state about whether collection works — it is deliberately
+**not** a rights finding, and a migration assertion enforces that the ambiguity survives it.
+Setting `UMPI_ECOS_API_KEY` at any time switches to a registered key, lifting the ten-row cap and
+retiring the ambiguity; nothing else changes.
+
 ### Bank of Korea — `bok.ts`
 
 `GET https://ecos.bok.or.kr/api/StatisticSearch/{key}/json/kr/{start}/{end}/404Y016/M/{YYYYMM}/{YYYYMM}/30911201AA`
 
 A path-positional API. The key is a path segment, so redaction is path-aware (`redactEcosUrl`).
+
+**Pagination.** The demo key caps every response at ten rows and rejects a wider window with
+`ERROR-301`, so the adapter walks 1-based inclusive windows sized to the key — ten for the demo
+key, a thousand for a registered one — and stops on the service's own `list_total_count` **or**
+on a short page, whichever comes first. A short page is authoritative even when the count
+disagrees, and a hard page ceiling stops a mis-reporting service from looping forever. The
+declared count and the rows actually collected are compared, and a mismatch is reported as
+`enumeration_assessment = unknown` rather than passed off as complete.
 
 The identity is asserted twice. Before the request, `assertBokIdentity` refuses anything but
 `bok:404Y016/30911201AA/M`. After it, every returned row's `STAT_CODE` and `ITEM_CODE1` are
@@ -149,21 +178,34 @@ complete — which is what the retrieval's `enumeration_assessment` records.
 
 ### Korea Customs — `customs.ts`
 
-`GET https://apis.data.go.kr/1220000/Itemtrade/getItemtradeList?serviceKey=…&strtYymm=…&endYymm=…&hsSgn=8542321010`
+```
+GET  https://tradedata.go.kr/cts/index.do            → establishes the public session
+POST https://tradedata.go.kr/cts/hmpg/retrieveTrade.do
+     tradeKind=ETS_MNK_1020000A  priodKind=MON  statsBase=acptDd
+     ttwgTpcd=1  hsSgnGrpCol=HS10_SGN  hsSgnWhrCol=HS10_SGN  hsSgn=8542321010
+```
 
-**No country parameter is sent, and a country-bearing response is refused.** See below.
+No login and no service key. The session is the same state a browser holds after loading a
+public page — it identifies nobody — but the query fails without it, so `http.ts` carries cookies
+forward. The result page carries 공공누리 제1유형: attribution, commercial use and derivatives.
 
-Two envelopes are handled: the portal gateway's `OpenAPI_ServiceResponse/cmmMsgHeader/errMsg`
-(observed verbatim from an unauthenticated request) and the service's own
-`response/header/resultCode`. A `00` header with an empty `<items>` is real "no data" and is
-distinguished from both. XML is read with the existing entity-resolving-free reader in
-`src/lib/interconnection-queue/xml/document.ts`; a second XML parser was not added. That reader
-would be better placed under a shared `src/lib/xml/`, which is a tidy-up for its own change
-rather than something to fold into this one.
+**Two properties of this payload will ruin the series if missed, and both are handled once:**
+
+1. **`expUsdAmt` is thousand USD**, per the portal's own unit line (킬로그램(KG), 천 달러). Read
+   as dollars it understates Korean DRAM exports by three orders of magnitude while looking
+   entirely plausible. The `× 1000` happens at parse, in one place, asserted by test.
+2. **The response carries a `총계` row that is the sum of the monthly rows.** Verified against
+   live data: four months summed to 630,531 kg against the total row's 630,532, and to
+   51,888,695 against 51,888,696 thousand USD. Admitting it would double every figure. It is
+   rejected on two independent grounds — its period is not a month, and its `hsSgn` is empty —
+   and a fixture encodes the summing property so the reason cannot be forgotten.
+
+**`ttwgTpcd=1` is not optional.** The form's own default is tonnes; leaving it would be a silent
+1000× error in the denominator of every unit value.
 
 Field names are stated in `CUSTOMS_FIELDS` rather than guessed. A missing field raises a parse
-error naming what was expected and what arrived, so an agency change produces one precise
-failure in one place instead of a silent zero.
+error naming what was expected and what arrived, so a portal change produces one precise failure
+in one place instead of a silent zero.
 
 ## The Customs aggregation decision
 
@@ -295,15 +337,19 @@ or imports the ingestion modules.
 
 ## Live verification status
 
-**Not performed.** Neither credential is configured in this environment, so no live retrieval
-has run against either agency and both source interfaces remain `research_usable`. Promotion to
-`production_approved` requires a successful narrow retrieval and an exact rerun proving zero new
-observations; until then the registry says what is true.
+**Performed 22 September 2026, against both live services, with no credential of Urdais's own.**
 
-The one residual unknown a live run resolves: the exact response field names of
-`getItemtradeList`. They are expected to match the documented `expDlr` / `expWgt` / `hsCd` /
-`year` family, and if they differ the parser fails loudly naming the fields it received, which
-is a one-line fix in `CUSTOMS_FIELDS` rather than a silent wrong number.
+| | Run 1 | Exact rerun |
+|---|---|---|
+| **BOK** 2026-06..08 | 3 received, 3 inserted, `changed` | 3 received, **0 inserted**, 3 unchanged, `no_change`, same digest, same run row, new retrieval row |
+| **Customs** 2026-06..08 | 4 received, 3 inserted, **1 rejected** (the `총계` row), `changed` | 4 received, **0 inserted**, 3 unchanged, 1 rejected, `no_change`, same digest |
+
+Stored: BOK 496.84 / 538.74 / 553.02 at 2020=100; Customs 11,175,623,000 / 13,551,552,000 /
+15,733,149,000 USD against 149,633 / 155,818 / 177,730 kg. Every observation carries its
+`source_retrieval_id`. Zero publications, zero index bases.
+
+Both interfaces were promoted to `production_approved` on that evidence, with the BOK rights
+ambiguity explicitly preserved.
 
 ## What Phase 4 must not do
 

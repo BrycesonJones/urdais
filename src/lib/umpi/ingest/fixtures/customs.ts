@@ -1,96 +1,95 @@
 /**
- * Frozen Korea Customs payload fixtures.
+ * Frozen Korea Customs portal payload fixtures.
  *
- * Envelope shapes are the real ones: the data.go.kr gateway error wrapper was observed directly,
- * and the service envelope follows the portal's standard `response/header/body/items/item`
- * form. Values are synthetic and round. No fixture contains a credential.
+ * The envelope shape is the real one, observed from `retrieveTrade.do` on 22 September 2026:
+ * `{count, searchPaging, searchresult, items[]}`, with figures arriving space-padded and
+ * comma-grouped, and `cntyCd` / `cntyNm` present but empty. Values are synthetic and round so a
+ * test asserts arithmetic rather than trusting a copied number. No fixture carries a credential.
+ *
+ * The one fixture modelled on real proportions is `CUSTOMS_TOTAL_ROW_MATCHES_SUM`, because the
+ * property it encodes — that 총계 is the sum of the months beside it — is the reason that row
+ * must never be admitted.
  */
 
-const item = (fields: Record<string, string>) =>
-  `<item>${Object.entries(fields).map(([k, v]) => `<${k}>${v}</${k}>`).join("")}</item>`;
+const row = (fields: Record<string, string>) => ({
+  cntyCd: "",
+  cntyNm: "",
+  hsSgn: "",
+  korePrlstNm: "",
+  englPrlstNm: "",
+  expTtwg: "",
+  expUsdAmt: "",
+  impTtwg: "",
+  impUsdAmt: "",
+  ...fields,
+});
 
-const envelope = (items: string, resultCode = "00") =>
-  `<?xml version="1.0" encoding="UTF-8"?><response><header><resultCode>${resultCode}</resultCode><resultMsg>NORMAL SERVICE.</resultMsg></header><body><items>${items}</items><numOfRows>10</numOfRows><pageNo>1</pageNo><totalCount>1</totalCount></body></response>`;
+const envelope = (items: Record<string, string>[], searchresult = "OK") =>
+  JSON.stringify({ count: items.length, searchPaging: "0", searchresult, items });
 
-/** One aggregate row for one month: the shape Series B depends on. */
-export const CUSTOMS_SINGLE_MONTH = envelope(
-  item({ year: "202606", hsCd: "8542321010", expDlr: "1000000", expWgt: "10000", impDlr: "5000", impWgt: "50" }),
-);
+const month = (priodTitle: string, expTtwg: string, expUsdAmt: string) =>
+  row({ priodTitle, hsSgn: "8542321010", korePrlstNm: "디램", expTtwg, expUsdAmt, impTtwg: "1,000", impUsdAmt: "500" });
 
-export const CUSTOMS_THREE_MONTHS = envelope(
-  [
-    item({ year: "202606", hsCd: "8542321010", expDlr: "1000000", expWgt: "10000", impDlr: "0", impWgt: "0" }),
-    item({ year: "202607", hsCd: "8542321010", expDlr: "1100000", expWgt: "10000", impDlr: "0", impWgt: "0" }),
-    item({ year: "202608", hsCd: "8542321010", expDlr: "1210000", expWgt: "10000", impDlr: "0", impWgt: "0" }),
-  ].join(""),
-);
+/** One month, one row. 10,000 kg against 1,000 thousand USD = 1,000,000 USD. */
+export const CUSTOMS_SINGLE_MONTH = envelope([month("2026.06", "                  10,000", "           1,000")]);
 
-export const CUSTOMS_SINGLE_MONTH_REVISED = envelope(
-  item({ year: "202606", hsCd: "8542321010", expDlr: "1050000", expWgt: "10000", impDlr: "5000", impWgt: "50" }),
-);
+export const CUSTOMS_THREE_MONTHS = envelope([
+  month("2026.06", "10,000", "1,000"),
+  month("2026.07", "10,000", "1,100"),
+  month("2026.08", "10,000", "1,210"),
+]);
 
-/** Zero exported value against a real weight. A real month, admitted. */
-export const CUSTOMS_ZERO_VALUE = envelope(
-  item({ year: "202606", hsCd: "8542321010", expDlr: "0", expWgt: "10000", impDlr: "0", impWgt: "0" }),
-);
-
-/** Zero exported weight. No unit value exists, so the row is rejected with its reason. */
-export const CUSTOMS_ZERO_WEIGHT = envelope(
-  item({ year: "202606", hsCd: "8542321010", expDlr: "1000000", expWgt: "0", impDlr: "0", impWgt: "0" }),
-);
-
-/** A different commodity. The parser must never let this become a DRAM observation. */
-export const CUSTOMS_WRONG_HS = envelope(
-  item({ year: "202606", hsCd: "8542321020", expDlr: "999", expWgt: "9", impDlr: "0", impWgt: "0" }),
-);
-
-/** A six-digit aggregate covering more than DRAM chips. Also not this series. */
-export const CUSTOMS_AGGREGATE_HS = envelope(
-  item({ year: "202606", hsCd: "854232", expDlr: "99999999", expWgt: "999999", impDlr: "0", impWgt: "0" }),
-);
+export const CUSTOMS_SINGLE_MONTH_REVISED = envelope([month("2026.06", "10,000", "1,050")]);
 
 /**
- * The country-dimension response. If this ever arrives, the request went to the wrong
- * operation, and summing these rows would publish a fiction.
+ * A month plus the portal's 총계 row, in the real proportion: the total is exactly the sum.
+ * Admitting it would double the series.
  */
-export const CUSTOMS_COUNTRY_DIMENSION = envelope(
-  [
-    item({ year: "202606", hsCd: "8542321010", cntyCd: "US", cntyNm: "미국", expDlr: "400000", expWgt: "4000" }),
-    item({ year: "202606", hsCd: "8542321010", cntyCd: "CN", cntyNm: "중국", expDlr: "600000", expWgt: "6000" }),
-  ].join(""),
-);
+export const CUSTOMS_TOTAL_ROW_MATCHES_SUM = envelope([
+  row({ priodTitle: "총계", hsSgn: "", expTtwg: "                  20,000", expUsdAmt: "           2,100" }),
+  month("2026.06", "10,000", "1,000"),
+  month("2026.07", "10,000", "1,100"),
+]);
+
+/** Zero exported value against a real weight. A real month. */
+export const CUSTOMS_ZERO_VALUE = envelope([month("2026.06", "10,000", "0")]);
+
+/** Zero exported weight: no unit value exists, so the row is rejected with its reason. */
+export const CUSTOMS_ZERO_WEIGHT = envelope([month("2026.06", "0", "1,000")]);
+
+/** A different commodity. Must never become a DRAM observation. */
+export const CUSTOMS_WRONG_HS = envelope([
+  row({ priodTitle: "2026.06", hsSgn: "8542321020", korePrlstNm: "에스램", expTtwg: "9", expUsdAmt: "1" }),
+]);
+
+/** A country breakdown. If this arrives the query went to the wrong view. */
+export const CUSTOMS_COUNTRY_DIMENSION = envelope([
+  row({ priodTitle: "2026.06", hsSgn: "8542321010", cntyCd: "US", cntyNm: "미국", expTtwg: "4,000", expUsdAmt: "400" }),
+  row({ priodTitle: "2026.06", hsSgn: "8542321010", cntyCd: "CN", cntyNm: "중국", expTtwg: "6,000", expUsdAmt: "600" }),
+]);
 
 /** Two rows for one month with no country field: an undeclared breakdown. Also refused. */
-export const CUSTOMS_DUPLICATE_MONTH = envelope(
-  [
-    item({ year: "202606", hsCd: "8542321010", expDlr: "400000", expWgt: "4000" }),
-    item({ year: "202606", hsCd: "8542321010", expDlr: "600000", expWgt: "6000" }),
-  ].join(""),
-);
+export const CUSTOMS_DUPLICATE_MONTH = envelope([
+  month("2026.06", "4,000", "400"),
+  month("2026.06", "6,000", "600"),
+]);
 
-/** A yearly total. Not a month, and never summed into one. */
-export const CUSTOMS_YEAR_TOTAL = envelope(
-  item({ year: "2026", hsCd: "8542321010", expDlr: "12000000", expWgt: "120000" }),
-);
+/** A yearly total. Not a month. */
+export const CUSTOMS_YEAR_TOTAL = envelope([month("2026", "120,000", "12,000")]);
 
-export const CUSTOMS_MALFORMED_VALUE = envelope(
-  item({ year: "202606", hsCd: "8542321010", expDlr: "n/a", expWgt: "10000" }),
-);
+export const CUSTOMS_MALFORMED_VALUE = envelope([month("2026.06", "10,000", "n/a")]);
 
-/** A successful response with no data for the range. */
-export const CUSTOMS_NO_DATA = `<?xml version="1.0" encoding="UTF-8"?><response><header><resultCode>00</resultCode><resultMsg>NORMAL SERVICE.</resultMsg></header><body><items></items><totalCount>0</totalCount></body></response>`;
+/** A successful query with no data for the range. */
+export const CUSTOMS_NO_DATA = envelope([]);
 
-export const CUSTOMS_SERVICE_ERROR = envelope("", "22");
+/** The portal reporting its own failure. */
+export const CUSTOMS_PORTAL_ERROR = envelope([], "FAIL");
 
-/** The gateway envelope, observed verbatim from an unauthenticated request. */
-export const CUSTOMS_GATEWAY_ERROR = `<?xml version="1.0" encoding="UTF-8"?>
-<OpenAPI_ServiceResponse>
-<cmmMsgHeader>
-  <errMsg>SERVICE_KEY_IS_NOT_REGISTERED_ERROR</errMsg>
-  <returnAuthMsg>등록되지 않은 서비스키</returnAuthMsg>
-  <returnReasonCode>30</returnReasonCode>
-</cmmMsgHeader>
-</OpenAPI_ServiceResponse>`;
+export const CUSTOMS_NOT_JSON = "<html><body>시스템 에러</body></html>";
 
-/** A row with no HS field at all: a shape change at the agency, not a bad row. */
-export const CUSTOMS_MISSING_FIELDS = envelope(item({ year: "202606", expDlr: "1000000", expWgt: "10000" }));
+/** A row with no period field at all: a shape change at the portal, not a bad row. */
+export const CUSTOMS_MISSING_FIELDS = JSON.stringify({
+  count: 1,
+  searchresult: "OK",
+  items: [{ cntyCd: "", cntyNm: "", priodTitle: "2026.06", hsSgn: "8542321010" }],
+});

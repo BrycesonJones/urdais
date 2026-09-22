@@ -46,9 +46,25 @@ export type HttpResponse = {
   contentType: string | null;
   body: string;
   byteLength: number;
+  /**
+   * Cookies the server set, in `name=value` form, ready to send back.
+   *
+   * Carried because one official source needs them: the Korea Customs portal answers its own
+   * query only within the public session its index page establishes. That session is not a
+   * credential and identifies nobody — it is the same state a browser holds after loading a
+   * public page — but the request fails without it.
+   */
+  cookies: string[];
 };
 
-export type HttpFetcher = (url: string, init: { signal: AbortSignal }) => Promise<Response>;
+export type HttpRequestInit = {
+  signal: AbortSignal;
+  method?: string;
+  body?: string;
+  headers?: Record<string, string>;
+};
+
+export type HttpFetcher = (url: string, init: HttpRequestInit) => Promise<Response>;
 
 export type HttpOptions = {
   timeoutMs?: number;
@@ -59,7 +75,23 @@ export type HttpOptions = {
   sleep?: (ms: number) => Promise<void>;
   /** Applied to the URL before it appears in any error message. */
   redact?: (url: string) => string;
+  method?: "GET" | "POST";
+  body?: string;
+  headers?: Record<string, string>;
+  /** Cookies from a previous response, sent back as a session. */
+  cookies?: readonly string[];
 };
+
+/** `name=value` from a Set-Cookie line, dropping attributes. */
+function cookiePairs(response: Response): string[] {
+  const raw =
+    typeof (response.headers as { getSetCookie?: () => string[] }).getSetCookie === "function"
+      ? (response.headers as { getSetCookie: () => string[] }).getSetCookie()
+      : response.headers.get("set-cookie")
+        ? [response.headers.get("set-cookie") as string]
+        : [];
+  return raw.map((line) => line.split(";", 1)[0]!.trim()).filter((pair) => pair.includes("="));
+}
 
 const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -71,7 +103,7 @@ function isRetryableStatus(status: number): boolean {
 export async function fetchText(url: string, options: HttpOptions = {}): Promise<HttpResponse> {
   const timeoutMs = options.timeoutMs ?? 30_000;
   const attempts = options.attempts ?? 3;
-  const fetcher = options.fetcher ?? ((target, init) => fetch(target, init));
+  const fetcher = options.fetcher ?? ((target, init) => fetch(target, init as RequestInit));
   const sleep = options.sleep ?? defaultSleep;
   const redact = options.redact ?? redactUrl;
   const safeUrl = redact(url);
@@ -81,7 +113,14 @@ export async function fetchText(url: string, options: HttpOptions = {}): Promise
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetcher(url, { signal: controller.signal });
+      const headers: Record<string, string> = { ...(options.headers ?? {}) };
+      if (options.cookies && options.cookies.length > 0) headers.cookie = options.cookies.join("; ");
+      const response = await fetcher(url, {
+        signal: controller.signal,
+        method: options.method ?? "GET",
+        ...(options.body === undefined ? {} : { body: options.body }),
+        ...(Object.keys(headers).length === 0 ? {} : { headers }),
+      });
       const body = await response.text();
       if (!response.ok) {
         const retryable = isRetryableStatus(response.status);
@@ -97,6 +136,7 @@ export async function fetchText(url: string, options: HttpOptions = {}): Promise
           contentType: response.headers.get("content-type"),
           body,
           byteLength: Buffer.byteLength(body, "utf8"),
+          cookies: cookiePairs(response),
         };
       }
     } catch (error) {
