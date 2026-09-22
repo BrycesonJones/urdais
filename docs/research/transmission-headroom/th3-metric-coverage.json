@@ -1,0 +1,353 @@
+{
+  "phase": "TH-3",
+  "product": "Transmission Headroom",
+  "methodologyVersion": "1.0.0",
+  "preparedOn": "2026-09-22",
+  "baseCommit": "98384e0d7d4d998789442b9d5f2c2906072d4b8d",
+  "note": "Every approved metric is market_specific. There is no 'approved' cross-market cell in this matrix and no schema column in which one could be stored: NYISO interface headroom and ERCOT constraint margin describe different populations.",
+  "states": {
+    "market_specific": "Approved, and valid only within its own market. Never compared or combined across markets.",
+    "deferred": "Named by the methodology, not approved. Recorded with its reason and never a value.",
+    "not_defensible": "Cannot be derived from what these sources observe. Not a sample-size problem and not fixable by more retrieval."
+  },
+  "registeredMetrics": [
+    {
+      "metric": "binding_tracked_constraints",
+      "market": "ercot",
+      "label": "Binding tracked constraints",
+      "family": "count",
+      "unit": "entities",
+      "scope": "market",
+      "weighting": "entity_point_in_time",
+      "minimumEntities": null,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "constraint_margin_median_mw",
+      "market": "ercot",
+      "label": "Median tracked-constraint margin",
+      "family": "distribution",
+      "unit": "MW",
+      "scope": "market",
+      "weighting": "entity_point_in_time",
+      "minimumEntities": 10,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "constraint_margin_mw",
+      "market": "ercot",
+      "label": "Constraint margin",
+      "family": "headroom",
+      "unit": "MW",
+      "scope": "entity",
+      "weighting": null,
+      "minimumEntities": null,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "constraint_margin_p10_mw",
+      "market": "ercot",
+      "label": "Tracked-constraint margin, 10th percentile",
+      "family": "distribution",
+      "unit": "MW",
+      "scope": "market",
+      "weighting": "entity_point_in_time",
+      "minimumEntities": 12,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "constraint_margin_p25_mw",
+      "market": "ercot",
+      "label": "Tracked-constraint margin, 25th percentile",
+      "family": "distribution",
+      "unit": "MW",
+      "scope": "market",
+      "weighting": "entity_point_in_time",
+      "minimumEntities": 12,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "constraint_negative_margin_observations",
+      "market": "ercot",
+      "label": "Observations with negative margin",
+      "family": "count",
+      "unit": "observations",
+      "scope": "market",
+      "weighting": "observation_history",
+      "minimumEntities": null,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "constraint_utilization_median_pct",
+      "market": "ercot",
+      "label": "Median tracked-constraint utilization",
+      "family": "distribution",
+      "unit": "percent",
+      "scope": "market",
+      "weighting": "entity_point_in_time",
+      "minimumEntities": 10,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "constraint_utilization_p90_pct",
+      "market": "ercot",
+      "label": "Tracked-constraint utilization, 90th percentile",
+      "family": "distribution",
+      "unit": "percent",
+      "scope": "market",
+      "weighting": "entity_point_in_time",
+      "minimumEntities": 12,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "constraint_utilization_pct",
+      "market": "ercot",
+      "label": "Constraint utilization",
+      "family": "utilization",
+      "unit": "percent",
+      "scope": "entity",
+      "weighting": null,
+      "minimumEntities": null,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "ercot_network_headroom_mw",
+      "market": "ercot",
+      "label": "ERCOT network headroom",
+      "family": "headroom",
+      "unit": "MW",
+      "scope": "market",
+      "weighting": null,
+      "minimumEntities": null,
+      "state": "deferred",
+      "reason": "NP6-86-CD publishes only the constraints dispatch was actively tracking, so the denominator is invisible and no network-wide figure can be derived from it. Not a sample-size problem and not resolvable by more retrieval."
+    },
+    {
+      "metric": "interface_headroom_median_mw",
+      "market": "nyiso",
+      "label": "Median interface headroom",
+      "family": "distribution",
+      "unit": "MW",
+      "scope": "market",
+      "weighting": "entity_point_in_time",
+      "minimumEntities": 10,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "interface_headroom_mw",
+      "market": "nyiso",
+      "label": "Interface headroom",
+      "family": "headroom",
+      "unit": "MW",
+      "scope": "entity",
+      "weighting": null,
+      "minimumEntities": null,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "interface_headroom_p10_mw",
+      "market": "nyiso",
+      "label": "Interface headroom, 10th percentile",
+      "family": "distribution",
+      "unit": "MW",
+      "scope": "market",
+      "weighting": "entity_point_in_time",
+      "minimumEntities": 12,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "interface_headroom_p25_mw",
+      "market": "nyiso",
+      "label": "Interface headroom, 25th percentile",
+      "family": "distribution",
+      "unit": "MW",
+      "scope": "market",
+      "weighting": "entity_point_in_time",
+      "minimumEntities": 12,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "interface_negative_headroom_observations",
+      "market": "nyiso",
+      "label": "Observations with negative headroom",
+      "family": "count",
+      "unit": "observations",
+      "scope": "market",
+      "weighting": "observation_history",
+      "minimumEntities": null,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "interface_utilization_median_pct",
+      "market": "nyiso",
+      "label": "Median interface utilization",
+      "family": "distribution",
+      "unit": "percent",
+      "scope": "market",
+      "weighting": "entity_point_in_time",
+      "minimumEntities": 10,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "interface_utilization_p90_pct",
+      "market": "nyiso",
+      "label": "Interface utilization, 90th percentile",
+      "family": "distribution",
+      "unit": "percent",
+      "scope": "market",
+      "weighting": "entity_point_in_time",
+      "minimumEntities": 12,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "interface_utilization_pct",
+      "market": "nyiso",
+      "label": "Interface utilization",
+      "family": "utilization",
+      "unit": "percent",
+      "scope": "entity",
+      "weighting": null,
+      "minimumEntities": null,
+      "state": "market_specific",
+      "reason": null
+    },
+    {
+      "metric": "interfaces_at_limit_count",
+      "market": "nyiso",
+      "label": "Interfaces at their limit",
+      "family": "count",
+      "unit": "entities",
+      "scope": "market",
+      "weighting": "entity_point_in_time",
+      "minimumEntities": null,
+      "state": "deferred",
+      "reason": "Zero headroom on a scheduled HVDC or merchant tie is routine full scheduling, not congestion, and the source publishes no way to separate those ties from free-flowing AC interfaces. Deferred until the subtype question is source-backed."
+    }
+  ],
+  "crossMarketAndRejected": [
+    {
+      "metric": "total_transmission_headroom_mw",
+      "market": "cross_market",
+      "state": "not_defensible",
+      "reason": "NYISO's population is a census of published transfer interfaces; ERCOT's is whichever constraints dispatch was managing. A sum would add two different questions."
+    },
+    {
+      "metric": "average_transmission_headroom_mw",
+      "market": "cross_market",
+      "state": "not_defensible",
+      "reason": "Same population mismatch; an average hides it rather than resolving it."
+    },
+    {
+      "metric": "combined_constrained_element_count",
+      "market": "cross_market",
+      "state": "not_defensible",
+      "reason": "Incompatible denominators: NYISO's is a fixed roster of 19, ERCOT's is the tracked subset of thousands."
+    },
+    {
+      "metric": "national_headroom_mw",
+      "market": "cross_market",
+      "state": "not_defensible",
+      "reason": "Two markets are not a nation, and neither observes its own network in full."
+    },
+    {
+      "metric": "market_wide_historical_average",
+      "market": "nyiso",
+      "state": "deferred",
+      "reason": "NYISO is an irregular event series, so an arithmetic mean over observations is neither time-weighted nor entity-weighted. Deferred rather than resolved by defaulting to whichever weighting a chart prefers."
+    },
+    {
+      "metric": "percent_of_ercot_network_constrained",
+      "market": "ercot",
+      "state": "not_defensible",
+      "reason": "The denominator is invisible: an element with abundant margin never appears in NP6-86-CD."
+    },
+    {
+      "metric": "unconstrained_network_capacity",
+      "market": "cross_market",
+      "state": "not_defensible",
+      "reason": "Neither source observes unconstrained elements at all."
+    },
+    {
+      "metric": "planning_transfer_margin",
+      "market": "cross_market",
+      "state": "not_defensible",
+      "reason": "V1 is operational only. Planning headroom is a separate future product with a different time basis, topology and contingency set."
+    },
+    {
+      "metric": "available_transfer_capability",
+      "market": "cross_market",
+      "state": "not_defensible",
+      "reason": "ATC is a scheduling capability concept, not flow-to-limit headroom. CAISO's ATC exceeded TTC in 27.7% of direction-intervals because it nets counterflow, and its usage column was empty in 100% of rows, so no flow term exists."
+    }
+  ],
+  "empiricalValidation": {
+    "nyiso": {
+      "entitiesObserved": 19,
+      "entitiesEligible": 16,
+      "unmonitoredDirection": 2,
+      "zeroFlowUndetermined": 1,
+      "medianHeadroomMw": 805.235,
+      "p10HeadroomMw": 0.0,
+      "p25HeadroomMw": 188.0,
+      "medianUtilizationPct": 53.8523,
+      "p90UtilizationPct": 100.0,
+      "negativeMarginObservations": 1,
+      "totalObservations": 5092
+    },
+    "ercot": {
+      "entitiesObserved": 222,
+      "entitiesEligible": 221,
+      "implausibleLimitExcluded": 1,
+      "baseCaseEntities": 18,
+      "postContingencyEntities": 203,
+      "bindingFromShadowPrice": 10,
+      "medianMarginMw": 42.5,
+      "p10MarginMw": 6.0,
+      "p25MarginMw": 13.1,
+      "medianUtilizationPct": 78.9894,
+      "p90UtilizationPct": 94.1437,
+      "negativeMarginObservations": 390,
+      "totalObservations": 23795
+    }
+  },
+  "sampleFloors": {
+    "median": 10,
+    "percentile": 12,
+    "rejectedCandidate": 20,
+    "rejectionReason": "NYISO publishes nineteen interfaces in total and sixteen currently carry a valid margin, so a floor of 20 would permanently suppress every NYISO percentile for a market whose data is complete rather than sparse. The floors guard against a degenerate population, not sampling error: NYISO's interfaces are a census.",
+    "disclosure": "Every published percentile carries its sampleSize, so a reader sees n=16."
+  },
+  "ercotPlausibilityDecision": {
+    "approved": true,
+    "boundMw": 50000,
+    "observationsAtOrBelow": 23637,
+    "observationsAbove": 158,
+    "largestBelowMw": 10392.8,
+    "smallestAboveMw": 84999.1,
+    "emptyBandWidthMw": 74606.3,
+    "rationale": "The bound sits inside a completely empty 74,606 MW band, so any threshold between roughly 10,400 and 85,000 MW classifies the data identically. EASTEX under BASE CASE carries 163 real and 158 disabled observations, so being disabled is a state of an observation rather than a property of a constraint.",
+    "handling": "Retained as source evidence; excluded from every derived and published margin."
+  },
+  "confirmations": {
+    "publicApiAdded": false,
+    "frontendChange": false,
+    "productionWrite": false,
+    "mockRemoved": false
+  }
+}
