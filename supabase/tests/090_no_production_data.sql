@@ -34,7 +34,7 @@ declare
     -- in reference.umpi_series (catalog rows, checked in 580_umpi_foundation.sql); every
     -- table that would hold a retrieval, a value or a published point must still be empty.
     'pipeline.umpi_ingestion_runs', 'pipeline.umpi_observations',
-    'pipeline.umpi_index_bases', 'pipeline.umpi_publications'
+    'pipeline.umpi_index_bases', 'pipeline.umpi_index_base_inputs', 'pipeline.umpi_publications'
   ];
 begin
   foreach tbl in array must_be_empty loop
