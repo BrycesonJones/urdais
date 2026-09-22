@@ -1,0 +1,845 @@
+{
+  "title": "UMPI Phase 1B — production instrument validation",
+  "as_of": "2026-09-21",
+  "status": "internal research; establishes no legal right; does not write code, ingest data, or approve a vendor",
+  "companion_markdown": "docs/research/memory-pricing/umpi-phase-1b.md",
+  "prior_work": "docs/research/memory-pricing/source-shortlist.md",
+  "evidence_classes": ["verified", "retrieved", "inferred"],
+  "definition_classes": [
+    "sufficiently-defined-for-production",
+    "usable-with-minor-qualifier-additions",
+    "too-ambiguous-for-production"
+  ],
+  "data_states": [
+    "production_ready_source_identified",
+    "possible_but_rights_unresolved",
+    "possible_but_requires_commercial_license",
+    "observable_only_via_proxy",
+    "estimate_only",
+    "insufficient_market_data"
+  ],
+  "rights_classes": [
+    "public_republication_likely_allowed",
+    "public_republication_with_attribution",
+    "calculation_allowed_raw_republication_restricted",
+    "commercial_license_required",
+    "ambiguous_requires_legal_review",
+    "not_usable"
+  ],
+  "hbm_observation_classes": [
+    "direct_transaction_or_contract_observation",
+    "market_quote",
+    "distributor_list_price",
+    "procurement_award_price",
+    "company_disclosed_asp",
+    "company_disclosed_revenue_or_shipment",
+    "analyst_estimate",
+    "forecast",
+    "inferred_or_model_derived"
+  ],
+  "executive_conclusion": {
+    "smallest_defensible_production_umpi": "licensed_dram_spot_chip_benchmark",
+    "hbm_headline_can_be_production_price": false,
+    "public_data_alone_can_publish_current_surface": false,
+    "dram_labels_are_dramexchange_spot_abbreviations": true,
+    "density_unit": "gigabits",
+    "dram_priced_object": "die_or_chip",
+    "dram_unit_survives": "USD_per_die",
+    "hbm4_commercial_market_exists": true,
+    "hbm4_observed_prices_exist": false,
+    "recommended_architecture": "A_licensed_dram_spot_hbm_withheld_or_research_preview",
+    "do_not_start_ingestion_until": "section_R_engineering_gate"
+  },
+  "current_product": {
+    "frontend_source": "src/data/mock/market-detail.ts",
+    "values_are_demo": true,
+    "families": [
+      {
+        "id": "dram",
+        "displayed_unit": "USD / part",
+        "family_default": "DDR5 16Gb",
+        "instruments": [
+          "DDR5 16Gb",
+          "DDR4 16Gb",
+          "DDR4 8Gb",
+          "DDR4 16Gb eTT",
+          "DDR4 8Gb eTT",
+          "DDR3 4Gb"
+        ]
+      },
+      {
+        "id": "hbm",
+        "displayed_unit": "USD / GB",
+        "headline": "HBM3E",
+        "instruments": ["HBM3E", "HBM3", "HBM4"]
+      }
+    ],
+    "header_change_label": "today",
+    "header_file": "src/components/market-detail/market-header.tsx"
+  },
+  "instruments": [
+    {
+      "id": "ddr5-16gb",
+      "current_label": "DDR5 16Gb",
+      "family": "dram",
+      "canonical_board_name": "DDR5 16Gb (2Gx8) 4800/5600",
+      "real_market_meaning": "Branded/Major DDR5 16-gigabit die, x8 organization, 4800/5600 speed bin",
+      "priced_object": "die",
+      "density_unit": "gigabits",
+      "implied_organization": "2Gx8",
+      "implied_speed": "4800/5600",
+      "implied_grade": "branded_major",
+      "manufacturer_splits_board": false,
+      "density_alone_fungible": false,
+      "comparability_problem": "Label omits organization, speed, and branded-vs-eTT. Same-session eTT print is a different instrument.",
+      "likely_source": "trendforce_dramexchange_spot",
+      "alternate_source": "cfm_major_quote",
+      "likely_cadence": "business_day_session",
+      "likely_unit": "USD_per_die",
+      "definition_class": "usable-with-minor-qualifier-additions",
+      "data_state": "possible_but_requires_commercial_license",
+      "example_observation": {
+        "date": "2026-09-21",
+        "time_zone": "GMT+8",
+        "stamp": "2026-09-21T18:10:00+08:00",
+        "session_average_usd": 56.933,
+        "session_change_pct": 1.67,
+        "class": "survey_session_average",
+        "url": "https://dramexchange.com/",
+        "evidence": "verified"
+      }
+    },
+    {
+      "id": "ddr4-16gb",
+      "current_label": "DDR4 16Gb",
+      "family": "dram",
+      "canonical_board_name": "DDR4 16Gb (2Gx8) 3200",
+      "real_market_meaning": "Branded DDR4 16-gigabit die, x8 organization, 3200",
+      "priced_object": "die",
+      "density_unit": "gigabits",
+      "implied_organization": "2Gx8",
+      "implied_speed": "3200",
+      "implied_grade": "branded_major",
+      "density_alone_fungible": false,
+      "comparability_problem": "Spot and contract prints for the same density are different markets.",
+      "likely_source": "trendforce_dramexchange_spot",
+      "likely_cadence": "business_day_session",
+      "likely_unit": "USD_per_die",
+      "definition_class": "usable-with-minor-qualifier-additions",
+      "data_state": "possible_but_requires_commercial_license",
+      "example_observation": {
+        "date": "2026-09-21",
+        "stamp": "2026-09-21T18:10:00+08:00",
+        "session_average_usd": 85.0,
+        "session_change_pct": -0.88,
+        "class": "survey_session_average",
+        "url": "https://dramexchange.com/",
+        "evidence": "verified"
+      },
+      "same_day_contract_teaser_usd": {
+        "item": "DDR4 16Gb 2Gx8",
+        "session_average_usd": 48.0,
+        "page_stamp": "2026-07-31T15:00:00+08:00",
+        "note": "August contract file noted 2026-08-31; public teaser still labelled 2H Jul",
+        "url": "https://www.trendforce.com/price/dram/dram_contract",
+        "evidence": "verified"
+      }
+    },
+    {
+      "id": "ddr4-8gb",
+      "current_label": "DDR4 8Gb",
+      "family": "dram",
+      "canonical_board_name": "DDR4 8Gb (1Gx8) 3200",
+      "real_market_meaning": "Branded DDR4 8-gigabit die, x8 organization, 3200",
+      "priced_object": "die",
+      "density_unit": "gigabits",
+      "implied_organization": "1Gx8",
+      "implied_speed": "3200",
+      "implied_grade": "branded_major",
+      "density_alone_fungible": false,
+      "comparability_problem": "Spot versus contract disagreement; label omits org/speed/grade.",
+      "likely_source": "trendforce_dramexchange_spot",
+      "likely_cadence": "business_day_session",
+      "likely_unit": "USD_per_die",
+      "definition_class": "usable-with-minor-qualifier-additions",
+      "data_state": "possible_but_requires_commercial_license",
+      "example_observation": {
+        "date": "2026-09-21",
+        "stamp": "2026-09-21T18:10:00+08:00",
+        "session_average_usd": 46.036,
+        "session_change_pct": 0.0,
+        "class": "survey_session_average",
+        "url": "https://dramexchange.com/",
+        "evidence": "verified"
+      },
+      "same_day_contract_teaser_usd": {
+        "item": "DDR4 8Gb 1Gx8",
+        "session_average_usd": 24.0,
+        "evidence": "verified"
+      }
+    },
+    {
+      "id": "ddr4-16gb-ett",
+      "current_label": "DDR4 16Gb eTT",
+      "family": "dram",
+      "canonical_board_name": "DDR4 16Gb (2Gx8) eTT",
+      "real_market_meaning": "Unmarked effectively-tested DDR4 16-gigabit die",
+      "ett_means": "effectively_tested_unmarked_value_grade_not_extended_temperature",
+      "priced_object": "die",
+      "density_unit": "gigabits",
+      "implied_organization": "2Gx8",
+      "implied_grade": "ett",
+      "longitudinal_grade_standardized": true,
+      "jedec_product": false,
+      "density_alone_fungible": false,
+      "comparability_problem": "Grade is the instrument. Branded print the same session was $85.00 versus eTT $13.35.",
+      "likely_source": "trendforce_dramexchange_spot",
+      "likely_cadence": "business_day_session",
+      "likely_unit": "USD_per_die",
+      "definition_class": "usable-with-minor-qualifier-additions",
+      "data_state": "possible_but_requires_commercial_license",
+      "example_observation": {
+        "date": "2026-09-21",
+        "stamp": "2026-09-21T18:10:00+08:00",
+        "session_average_usd": 13.35,
+        "session_change_pct": 0.95,
+        "class": "survey_session_average",
+        "url": "https://dramexchange.com/",
+        "evidence": "verified"
+      }
+    },
+    {
+      "id": "ddr4-8gb-ett",
+      "current_label": "DDR4 8Gb eTT",
+      "family": "dram",
+      "canonical_board_name": "DDR4 8Gb (1Gx8) eTT",
+      "real_market_meaning": "Unmarked effectively-tested DDR4 8-gigabit die",
+      "ett_means": "effectively_tested_unmarked_value_grade_not_extended_temperature",
+      "priced_object": "die",
+      "density_unit": "gigabits",
+      "implied_organization": "1Gx8",
+      "implied_grade": "ett",
+      "density_alone_fungible": false,
+      "comparability_problem": "Grade split versus branded $46.036 the same session.",
+      "likely_source": "trendforce_dramexchange_spot",
+      "likely_cadence": "business_day_session",
+      "likely_unit": "USD_per_die",
+      "definition_class": "usable-with-minor-qualifier-additions",
+      "data_state": "possible_but_requires_commercial_license",
+      "example_observation": {
+        "date": "2026-09-21",
+        "stamp": "2026-09-21T18:10:00+08:00",
+        "session_average_usd": 5.88,
+        "session_change_pct": 1.91,
+        "class": "survey_session_average",
+        "url": "https://dramexchange.com/",
+        "evidence": "verified"
+      }
+    },
+    {
+      "id": "ddr3-4gb",
+      "current_label": "DDR3 4Gb",
+      "family": "dram",
+      "canonical_board_name": "DDR3 4Gb 512Mx8 1600/1866",
+      "real_market_meaning": "Legacy branded DDR3 4-gigabit die, 512Mx8, 1600/1866",
+      "priced_object": "die",
+      "density_unit": "gigabits",
+      "implied_organization": "512Mx8",
+      "implied_speed": "1600/1866",
+      "implied_grade": "branded_major",
+      "density_alone_fungible": false,
+      "comparability_problem": "Contract teaser uses DDR3 4Gb 256Mx16 — a different organization.",
+      "likely_source": "trendforce_dramexchange_spot",
+      "likely_cadence": "business_day_session",
+      "likely_unit": "USD_per_die",
+      "definition_class": "usable-with-minor-qualifier-additions",
+      "data_state": "possible_but_requires_commercial_license",
+      "example_observation": {
+        "date": "2026-09-21",
+        "stamp": "2026-09-21T18:10:00+08:00",
+        "session_average_usd": 13.78,
+        "session_change_pct": 0.0,
+        "class": "survey_session_average",
+        "url": "https://dramexchange.com/",
+        "evidence": "verified"
+      },
+      "contract_teaser_different_org": {
+        "item": "DDR3 4Gb 256Mx16",
+        "session_average_usd": 14.5,
+        "evidence": "verified"
+      }
+    },
+    {
+      "id": "hbm3",
+      "current_label": "HBM3",
+      "family": "hbm",
+      "jedec": "JESD238 family",
+      "real_market_meaning": "HBM3 generation stacks sold under accelerator/package contracts",
+      "public_recurring_price": false,
+      "sold_how": "long_term_agreements_into_accelerator_packages",
+      "generation_only_comparable": false,
+      "mandatory_comparability_attributes": ["generation", "capacity_gb", "stack_height"],
+      "useful_metadata": ["data_rate", "bandwidth"],
+      "usually_unavailable": ["vendor_split_price", "customer_or_accelerator_class"],
+      "likely_source": "trendforce_hbm_package_asp_per_gb",
+      "likely_cadence": "quarterly_datasheet_aperiodic_price_update",
+      "likely_unit": "modelled_USD_per_GB_or_USD_per_Gb",
+      "definition_class": "too-ambiguous-for-production",
+      "data_state": "estimate_only"
+    },
+    {
+      "id": "hbm3e",
+      "current_label": "HBM3E",
+      "family": "hbm",
+      "jedec": "extended HBM3; not a separate public price market",
+      "real_market_meaning": "Vendor name for extended HBM3; shipped as 24GB 8-high and 36GB 12-high among others",
+      "public_recurring_price": false,
+      "current_umpi_headline": true,
+      "generation_only_comparable": false,
+      "mandatory_comparability_attributes": ["generation", "capacity_gb", "stack_height"],
+      "likely_source": "trendforce_hbm_package_asp_per_gb",
+      "likely_cadence": "quarterly_datasheet_aperiodic_price_update",
+      "likely_unit": "modelled_USD_per_GB",
+      "definition_class": "too-ambiguous-for-production",
+      "data_state": "estimate_only"
+    },
+    {
+      "id": "hbm4",
+      "current_label": "HBM4",
+      "family": "hbm",
+      "jedec": "JESD270-4 published 2025-04-16; JESD270-4A Dec 2025; SPHBM4 JESD330-4 Jun 2026 is a different package",
+      "real_market_meaning": "Commercial HBM4 stacks; JEDEC allows 4/8/12/16-high, 24Gb or 32Gb dies, up to 64GB",
+      "commercial_market_as_of": "2026-09",
+      "commercial_shipments": [
+        {
+          "vendor": "Samsung",
+          "claim": "Mass production and commercial shipment",
+          "date": "2026-02-12",
+          "url": "https://news.samsung.com/global/samsung-ships-industry-first-commercial-hbm4-with-ultimate-performance-for-ai-computing",
+          "evidence": "verified"
+        },
+        {
+          "vendor": "Micron",
+          "claim": "Volume shipment of HBM4 36GB 12H for NVIDIA Vera Rubin",
+          "period": "calendar_Q1_2026",
+          "url": "https://investors.micron.com/news/press-release/2026/Micron-in-High-Volume-Production-of-HBM4-Designed-for-NVIDIA-Vera-Rubin-PCIe-Gen6-SSD-and-SOCAMM2-03-16-2026/default.aspx",
+          "evidence": "retrieved"
+        },
+        {
+          "vendor": "SK hynix",
+          "claim": "HBM4 mass shipments began Q2 2026; LTAs with around 10 customers",
+          "date": "2026-07-29",
+          "url": "https://news.skhynix.com/en/q2-2026-business-results/",
+          "evidence": "verified"
+        }
+      ],
+      "observed_prices_exist": false,
+      "recommended_publication_role": "research_preview_instrument_not_production_price",
+      "generation_only_comparable": false,
+      "likely_source": "trendforce_hbm_package_asp_per_gb",
+      "likely_cadence": "event_quarterly_aperiodic",
+      "likely_unit": "none_observed",
+      "definition_class": "too-ambiguous-for-production",
+      "data_state": "estimate_only"
+    }
+  ],
+  "missing_board_instrument_not_in_umpi": {
+    "canonical_board_name": "DDR5 16Gb (2Gx8) eTT",
+    "session_average_usd_2026_09_21": 24.8,
+    "recommendation": "Add only if the licensed feed includes it; not required for taxonomy survival",
+    "evidence": "verified"
+  },
+  "dram_canonical": {
+    "part_definition": "One surveyed die matching locked generation, density in gigabits, organization, speed bin, and grade (branded/Major or eTT), priced in USD",
+    "usd_per_part_survives": true,
+    "do_not_switch_dram_to_usd_per_gb": true,
+    "ett_longitudinal_ok": true,
+    "manufacturer_splits_spot_board": false,
+    "speed_and_grade_required": true
+  },
+  "hbm_canonical": {
+    "sold_how": "stacked_cubes_under_ltas_into_accelerators",
+    "public_spot_board": false,
+    "usd_per_gb_directly_observed": false,
+    "usd_per_gb_usually": "analyst_estimate_or_derived_from_licensed_asp",
+    "preferred_native_unit_if_stack_price_exists": "USD_per_stack",
+    "display_unit_if_derived": "USD_per_GB",
+    "do_not_add_usd_per_gb_per_s_in_v1": true,
+    "sphbm4_not_interchangeable": true
+  },
+  "hbm_price_observations": [
+    {
+      "what": "Samsung HBM4 commercial shipment announcement",
+      "date": "2026-02-12",
+      "figure": null,
+      "class": "company_disclosed_revenue_or_shipment",
+      "url": "https://news.samsung.com/global/samsung-ships-industry-first-commercial-hbm4-with-ultimate-performance-for-ai-computing",
+      "usable_as_umpi_price": false,
+      "evidence": "verified"
+    },
+    {
+      "what": "Micron HBM4 36GB 12H volume shipment for Vera Rubin",
+      "period": "calendar_Q1_2026",
+      "figure": null,
+      "class": "company_disclosed_revenue_or_shipment",
+      "usable_as_umpi_price": false,
+      "evidence": "retrieved"
+    },
+    {
+      "what": "Micron already shipped over $1 billion in HBM4 revenue",
+      "period": "FQ3_FY26_remarks_2026-06-24",
+      "figure": "revenue_not_unit_price",
+      "class": "company_disclosed_revenue_or_shipment",
+      "usable_as_umpi_price": false,
+      "evidence": "retrieved",
+      "note": "Confirm from investors.micron.com prepared-remarks PDF before methodology citation"
+    },
+    {
+      "what": "SK hynix Q2 2026 results; HBM4 mass shipments; ~10 LTAs",
+      "date": "2026-07-29",
+      "figure": null,
+      "class": "company_disclosed_revenue_or_shipment",
+      "url": "https://news.skhynix.com/en/q2-2026-business-results/",
+      "usable_as_umpi_price": false,
+      "evidence": "verified"
+    },
+    {
+      "what": "TrendForce HBM Datasheet field HBM ASP per Gb; aperiodic price update",
+      "figure": "not_public",
+      "class": "analyst_estimate",
+      "url": "https://www.trendforce.com/membership/DRAMeXchange",
+      "usable_as_umpi_price": false,
+      "usable_if_licensed_for_derived_publication": true,
+      "evidence": "verified"
+    },
+    {
+      "what": "KITA HBM-related average export unit value via Seoul Shinmun",
+      "series_usd_per_unit": {
+        "2026-03": 40.68,
+        "2026-04": 53.04,
+        "2026-05": 58.21,
+        "2026-06": 69.51,
+        "2026-07": 76.14,
+        "2026-08": 73.39
+      },
+      "class": "inferred_or_model_derived",
+      "note": "Journalist arithmetic on KITA aggregates; likely MCP/HBM mix, not generation-specific. Do not ingest the article; pull KITA if used.",
+      "usable_as_umpi_price": false,
+      "evidence": "retrieved"
+    },
+    {
+      "what": "Cantor/Fubon SK hynix HBM4 versus HBM3E per-GB estimates",
+      "figure": "about_31_to_32_USD_per_GB_versus_17_to_18",
+      "class": "analyst_estimate",
+      "usable_as_umpi_price": false,
+      "evidence": "retrieved"
+    }
+  ],
+  "direct_hbm_transaction_or_contract_observation_found": false,
+  "sources": [
+    {
+      "id": "trendforce_dramexchange",
+      "organization": "TrendForce Corp. / DRAMeXchange business division",
+      "urls": [
+        "https://dramexchange.com/",
+        "https://www.dramexchange.com/About/TermsOfUse",
+        "https://dramexchange.com/Intelligence/PriceInformation",
+        "https://www.trendforce.com/membership/DRAMeXchange",
+        "https://www.trendforce.com/price/dram/dram_contract"
+      ],
+      "products_covered": [
+        "DRAM spot dies branded and eTT",
+        "DRAM contract chips and modules",
+        "HBM package ASP per Gb",
+        "DXI"
+      ],
+      "observation_type": "survey_session_average_spot_and_contract_benchmark",
+      "price_unit": "USD_per_die_spot; USD_per_module_or_die_contract; HBM_ASP_per_Gb",
+      "spot_vs_contract": "both_separate",
+      "update_cadence": "spot_three_sessions_per_day; contract_monthly; hbm_aperiodic_plus_quarterly_datasheet",
+      "historical_availability": "Silver 5 years Excel; Daily Express from 2003-11-28",
+      "geography": "Asia-centric collection, global reference use",
+      "api_or_download": "Excel download for members; no public API documented",
+      "authentication": "membership_login",
+      "automation_feasibility": "unknown_ask; trendforce.com robots Disallow /api/*",
+      "membership_usd": {
+        "silver": 5000,
+        "gold": 11000,
+        "memory_platinum": 30000,
+        "memory_diamond": 55000,
+        "hbm_package": 30000,
+        "server_dram": 25000
+      },
+      "rights_class": "commercial_license_required",
+      "rights": {
+        "access": "paid_login",
+        "automate": "unknown",
+        "store": "contract_only",
+        "retain_history": "unknown_post_termination",
+        "calculate": "barred_without_consent_section_6_2",
+        "derived_publish": "barred_without_written_consent",
+        "raw_publish": "barred",
+        "commercial": "paid_product_publication_is_second_ask",
+        "post_termination": "unknown_ask"
+      },
+      "verbatim_terms": "YOU MAY NOT REPRODUCE, MODIFY, CREATE DERIVATIVE WORKS FROM, DISPLAY, PERFORM, PUBLISH, DISTRIBUTE, DISSEMINATE, BROADCAST OR CIRCULATE TO ANY THIRD PARTY, ANY MATERIALS CONTAINED ON THE SERVICES WITHOUT THE EXPRESS PRIOR WRITTEN CONSENT OF THE WEBSITE OR ITS LEGAL OWNER.",
+      "betting_clause": true,
+      "material_update_versus_2026_09_14": "Live board confirmed as UMPI DRAM taxonomy plus DDR5 16Gb eTT; public contract teaser shows large spot-contract gap; HBM package cadence is aperiodic",
+      "contact": "SR_MI@trendforce.com",
+      "evidence": "verified"
+    },
+    {
+      "id": "cfm_china_flash_market",
+      "organization": "Shenzhen Flash Market Information Co., Ltd.",
+      "urls": [
+        "https://chinaflashmarket.com/",
+        "https://chinaflashmarket.com/disclaimer",
+        "https://chinaflashmarket.com/newsflash/38874"
+      ],
+      "products_covered": ["DDR Major/eTT chip quotes", "module and SSD channel quotes"],
+      "observation_type": "market_quote",
+      "price_unit": "USD_per_die",
+      "spot_vs_contract": "channel_spot_quotes",
+      "update_cadence": "at_least_weekly_in_free_newsflash; paid_quote_centre",
+      "new_versus_2026_09_14": true,
+      "example_observation": {
+        "date": "2026-09-16",
+        "ddr5_16gb_major_usd": 45.0,
+        "ddr5_16gb_ett_usd": 26.0,
+        "evidence": "verified"
+      },
+      "does_not_match_dx_same_week": true,
+      "api_or_download": "none_found",
+      "authentication": "public_newsflash; paid_centre",
+      "automation_feasibility": "manual_or_ask_for_feed",
+      "rights_class": "commercial_license_required",
+      "contact": "Service@ChinaFlashMarket.com",
+      "evidence": "verified"
+    },
+    {
+      "id": "silicon_data_ram_index",
+      "organization": "Silicon Derivatives Inc.",
+      "urls": [
+        "https://www.silicondata.com/products/ram-index",
+        "https://docs.silicondata.com/api-reference/ram_index_api",
+        "https://portal.silicondata.com/terms-of-service"
+      ],
+      "products_covered": ["GDDR6 only"],
+      "covers_umpi_instruments": false,
+      "history_start": "2026-01-26",
+      "cadence": "daily_business_days_1600_utc",
+      "api_or_download": "API_and_bulk",
+      "rights_class": "commercial_license_required",
+      "material_update_versus_2026_09_14": "ToS confirmed internal-use default; redistribution/settlement licensed separately; still no DDR/HBM",
+      "contact": "support@silicondata.com",
+      "evidence": "retrieved"
+    },
+    {
+      "id": "wsts",
+      "organization": "World Semiconductor Trade Statistics Inc.",
+      "urls": [
+        "https://www.wsts.org/",
+        "https://www.wsts.org/65/Information-Management",
+        "https://www.wsts.org/135/263/265/Conditions-for-Use-of-WSTS-Proprietary-Information"
+      ],
+      "products_covered": ["monthly semiconductor billings including Memory category ASP"],
+      "covers_umpi_instruments": false,
+      "cadence": "monthly",
+      "rights_class": "commercial_license_required",
+      "free_blue_book_rights": "ambiguous_requires_legal_review",
+      "contact": "tp@wsts.org",
+      "evidence": "verified"
+    },
+    {
+      "id": "korea_tradedata",
+      "organization": "Korea Customs Service",
+      "urls": [
+        "https://tradedata.go.kr/cts/index_eng.do",
+        "https://www.customs.go.kr/kcs/cm/cntnts/cntntsView.do?cntntsId=2610&mi=7421"
+      ],
+      "role": "validation_nowcast_directional_not_instrument_level",
+      "native_units": ["USD_per_kg", "possibly_USD_per_piece"],
+      "provisional_cadence": "10_day_and_20_day_plus_monthly_final",
+      "homepage_confirmed_sep_1_20_2026": true,
+      "rights_class": "ambiguous_requires_legal_review",
+      "kogl_mark_on_used_tables": "unconfirmed",
+      "evidence": "verified_for_portal; retrieved_for_kogl"
+    },
+    {
+      "id": "kita_trass",
+      "organization": "Korea International Trade Association / TRASS",
+      "role": "per_piece_unit_values_cited_in_press_for_hbm_related_and_dram",
+      "new_versus_2026_09_14": true,
+      "rights_class": "ambiguous_requires_legal_review",
+      "do_not_ingest_news_articles": true,
+      "municipal_6_digit_collapse_reported": "2026-09",
+      "evidence": "retrieved"
+    },
+    {
+      "id": "taiwan_ita_mof",
+      "organization": "Taiwan International Trade Administration / Ministry of Finance Customs",
+      "urls": [
+        "https://publicinfo.trade.gov.tw/cuswebo/FSCE3000C?table=FSCE3010F",
+        "https://web.customs.gov.tw/statistics/1a98fa48ef6646b6b579c5c6b20e62c5"
+      ],
+      "role": "second_country_HS_854232_unit_and_per_kg_averages",
+      "covers_umpi_instruments": false,
+      "rights_class": "ambiguous_requires_legal_review",
+      "new_versus_2026_09_14": true,
+      "evidence": "retrieved"
+    },
+    {
+      "id": "issuer_filings",
+      "organizations": ["Micron", "SK hynix", "Samsung", "Nanya", "Winbond"],
+      "role": "relative_validation_not_absolute_level",
+      "absolute_asp": false,
+      "hbm_unit_price": false,
+      "rights_class_us_securities_and_twse_prs": "public_republication_with_attribution",
+      "sk_hynix_newsroom_feed": "not_usable",
+      "evidence": "verified_for_nanya_winbond_skhynix; retrieved_for_micron_samsung"
+    },
+    {
+      "id": "aggregators",
+      "examples": ["memoryindex.io", "siliconanalysts.com", "capitalandcompute.net"],
+      "rights_class": "not_usable",
+      "reason": "Third-party reconstructions that name TrendForce/DRAMeXchange as inputs"
+    }
+  ],
+  "korea_customs": {
+    "can_print_umpi_instruments": false,
+    "useful_as": ["validation_signal", "directional_nowcast", "optional_weighting"],
+    "not_useful_as": ["DDR5_16Gb_level", "HBM3E_USD_per_GB", "daily_series"],
+    "cited_hsk_unverified_on_2026_unipass": {
+      "8542.32.1010": "DRAM chips (cited)",
+      "8542.32.1030_or_1090": "NAND (sources disagree)",
+      "8542.32.3000": "MCP including HBM (cited)",
+      "8473.30.4060": "DRAM modules (cited)",
+      "official_extraction_blocker": true
+    },
+    "hs6_854232_mixes": ["DRAM", "NAND", "MCP_HBM"],
+    "trass_municipal_query_reported_collapsed_to_hs6": "2026-09",
+    "quantity_units_reported": ["kg", "pieces"],
+    "ten_day_provisional_too_noisy_to_publish": true
+  },
+  "public_filings": {
+    "can_create_level": false,
+    "can_create_relative_index": true,
+    "can_create_validation_layer": true,
+    "issuers": {
+      "micron": {
+        "recurring": ["quarterly_dram_nand_revenue", "bit_shipment_direction", "asp_percent_change", "hbm_commentary"],
+        "fq3_fy26_dram_revenue_usd_millions": 31328,
+        "fq3_fy26_dram_asp_change": "increased_low_60s_percent_qoq",
+        "hbm4_revenue_comment": "over_1_billion_usd",
+        "evidence": "retrieved"
+      },
+      "sk_hynix": {
+        "q2_2026_revenue_krw_billions": 79318.7,
+        "hbm4_mass_shipments": true,
+        "ltas": "around_10_customers",
+        "absolute_asp": false,
+        "evidence": "verified"
+      },
+      "nanya": {
+        "q2_2026_revenue_twd_millions": 82549,
+        "q2_2026_asp_change": "increased_more_than_60_percent",
+        "q2_2026_bit_shipments": "flat",
+        "monthly_revenue": true,
+        "absolute_asp": false,
+        "url": "https://www.nanya.com/en/IR/16/Press%20Release?IRId=13150",
+        "evidence": "verified"
+      },
+      "winbond": {
+        "august_2026_consolidated_revenue_twd_thousands": 27308717,
+        "includes_nuvoton": true,
+        "contaminated_as_dram_proxy": true,
+        "url": "https://www.winbond.com/hq/about-winbond/news-and-events/news/news00588.html?__locale=en",
+        "evidence": "verified"
+      }
+    }
+  },
+  "spot_versus_contract": {
+    "current_umpi_dram_labels_map_to": "spot",
+    "primary_series_for_existing_family": "spot",
+    "contract_should_be": "separate_family_or_subseries",
+    "do_not_mix_on_one_axis": true,
+    "spot_is_not_silent_proxy_for_ai_server_contract": true,
+    "ai_hbm_market": "lta_invisible_except_issuer_commentary"
+  },
+  "units": {
+    "dram": {
+      "current": "USD / part",
+      "verdict": "keep_as_USD_per_die",
+      "eligibility": "generation + density_Gb + organization + speed_bin + grade"
+    },
+    "hbm": {
+      "current": "USD / GB",
+      "verdict": "keep_only_as_derived_display_if_stack_price_or_licensed_asp_exists",
+      "preferred_stored_native": "USD_per_stack_or_licensed_ASP_per_Gb"
+    },
+    "public_proxies": "index_points_base_100_or_native_customs_unit"
+  },
+  "cadence_and_ui": {
+    "replace_today": true,
+    "dram_spot": {
+      "change_label": "1D_or_session",
+      "intraday_v1": false,
+      "range_1d": true,
+      "ranges_1w_1m_3m_1y": true
+    },
+    "dram_contract": {
+      "change_label": "MoM_or_since_previous_print",
+      "intraday": false,
+      "range_1d": false
+    },
+    "hbm": {
+      "change_label": "since_previous_observation_or_latest_change",
+      "intraday": false,
+      "range_1d": false,
+      "interpolate_daily_line": false
+    },
+    "keep_last_updated_timestamp": true,
+    "compare_inside_family_and_market_only": true
+  },
+  "architectures": [
+    {
+      "id": "A",
+      "name": "licensed_dram_spot_hbm_withheld_or_research_preview",
+      "recommended_default": true,
+      "publish": ["UMPI-DRAM Spot six instruments USD/die 1D/session"],
+      "withhold": ["HBM prices"],
+      "optional_public_validation_rail": true
+    },
+    {
+      "id": "B",
+      "name": "three_family_after_additional_licences",
+      "recommended_default": false,
+      "requires": ["Architecture A licence", "contract licence", "HBM ASP derived-publication licence"],
+      "publish": ["UMPI-DRAM Spot", "UMPI-DRAM Contract", "UMPI-HBM survey estimate"]
+    },
+    {
+      "id": "C",
+      "name": "public_only_relative_indices",
+      "buildable_now": true,
+      "preserves_current_taxonomy": false,
+      "do_not_ship_under_current_instrument_picker": true
+    }
+  ],
+  "blockers": [
+    "TrendForce/DRAMeXchange written derived-index and public-display grant",
+    "Same grant from CFM if used",
+    "TrendForce HBM Package derived-publication grant if Architecture B",
+    "Official 2026 HSK descriptions from UNIPASS",
+    "National 10-digit quantity queries after 2026-09 municipal HS6 collapse",
+    "KOGL mark on Customs/KITA tables to be used",
+    "Taiwan ITA/MOF commercial derived-publication terms",
+    "Micron FQ3 prepared-remarks PDF first-hand extract",
+    "WSTS distribution-licence quote",
+    "Silicon Data DDR/HBM coverage (currently none)",
+    "Product decision: hero is spot conventional DRAM or HBM"
+  ],
+  "outreach": [
+    {
+      "who": "TrendForce Semiconductor Research",
+      "email": "SR_MI@trendforce.com",
+      "dataset": "DRAM spot session averages for seven board lines; optional contract; Excel history",
+      "rights": ["automated_retrieval", "store_and_post_termination_retention", "derived_index_public_display", "raw_usd_die_display", "section_5h_carveout", "attribution_form"]
+    },
+    {
+      "who": "TrendForce HBM Package",
+      "email": "SR_MI@trendforce.com",
+      "dataset": "HBM ASP per Gb and generation/layer split",
+      "rights": ["derived_publication", "label_as_survey_estimate"]
+    },
+    {
+      "who": "CFM",
+      "email": "Service@ChinaFlashMarket.com",
+      "dataset": "DDR Major/eTT quotes, history, feed",
+      "rights": ["derived_index_publication", "raw_quote_republication", "commercial_use", "post_termination_retention"]
+    },
+    {
+      "who": "WSTS",
+      "email": "tp@wsts.org",
+      "dataset": "Memory shipment value/units/ASP",
+      "rights": ["distribution_licence_external_derivative_public_index", "post_termination_retention"]
+    },
+    {
+      "who": "Silicon Data",
+      "email": "support@silicondata.com",
+      "dataset": "whether DDR/HBM will exist",
+      "rights": "redistribution_irrelevant_until_coverage_exists"
+    },
+    {
+      "who": "Korea Customs / KITA stats",
+      "dataset": "10-digit export value, quantity in pieces, weight, 10/20-day and final",
+      "rights": ["KOGL_type_or_commercial_derived_publication_confirmation"]
+    },
+    {
+      "who": "Taiwan ITA / MOF statistics",
+      "dataset": "HS 854232 unit and per-kg averages",
+      "rights": ["commercial_derived_publication"]
+    }
+  ],
+  "engineering_gate": [
+    {
+      "id": "R1",
+      "question": "Written rights to calculate and publicly display a derived UMPI-DRAM value from DRAM spot prints?",
+      "must_be": "yes_or_dram_prices_stay_withheld"
+    },
+    {
+      "id": "R2",
+      "question": "Grant includes historical retention after termination?",
+      "must_be": "yes_or_reproducibility_rule_fails"
+    },
+    {
+      "id": "R3",
+      "question": "Six DRAM instruments locked to board definition in a methodology?",
+      "must_be": "yes"
+    },
+    {
+      "id": "R4",
+      "question": "Spot versus contract written as separate series?",
+      "must_be": "yes"
+    },
+    {
+      "id": "R5",
+      "question": "HBM priced, withheld, or research-preview — chosen in writing?",
+      "must_be": "yes"
+    },
+    {
+      "id": "R6",
+      "question": "If HBM is shown, every number classified and daily interpolation forbidden?",
+      "must_be": "yes"
+    },
+    {
+      "id": "R7",
+      "question": "HBM4 is not a production price until an observation or licensed ASP exists?",
+      "must_be": "yes"
+    },
+    {
+      "id": "R8",
+      "question": "Header word today replaced per series?",
+      "must_be": "yes"
+    },
+    {
+      "id": "R9",
+      "question": "Korea/Taiwan unit values are not mapped onto UMPI instrument IDs?",
+      "must_be": "yes"
+    },
+    {
+      "id": "R10",
+      "question": "Aggregators on the do-not-ingest list?",
+      "must_be": "yes"
+    },
+    {
+      "id": "R11",
+      "question": "SK hynix Newsroom is not an automated source?",
+      "must_be": "yes"
+    },
+    {
+      "id": "R12",
+      "question": "Counsel or recorded legal review accepts Micron/Nanya citation as facts-from-filings?",
+      "must_be": "yes"
+    }
+  ]
+}
