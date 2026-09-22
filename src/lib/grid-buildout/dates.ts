@@ -29,6 +29,10 @@ export type ParsedDate = {
 const EXCEL_EPOCH_UTC = Date.UTC(1899, 11, 30);
 const MS_PER_DAY = 86_400_000;
 
+/** A bare number in this span is a year a publisher typed, not a serial. */
+const EARLIEST_YEAR = 1900;
+const LATEST_YEAR = 2200;
+
 const NOT_REPORTED: ParsedDate = { date: null, quality: "not_reported", precision: "none", native: null };
 
 function unparseable(native: string): ParsedDate {
@@ -69,6 +73,20 @@ export function parseSpreadsheetDate(
   if (Number.isFinite(serial)) {
     // A serial at or below zero predates the epoch and is not a date any publisher here means.
     if (serial <= 0) return unparseable(native);
+
+    // The placeholder, written bare. Checked before anything else: as a serial 9999 becomes
+    // 18 May 1927, which is a date the publisher never wrote.
+    if (serial === (options.sentinelYear ?? SENTINEL_YEAR)) return sentinel(native);
+
+    // A bare year, not a serial. CAISO writes 2035 into a date column for a target it only knows
+    // to the year, and 69 of its 233 approval targets are written that way. Read as a serial that
+    // becomes 1905-07-27, which is not merely imprecise but false -- and it produced schedule
+    // slips of 130 years before this case existed. The overlap with genuine serials is dates in
+    // 1905-1906, which no transmission project in either source has.
+    if (serial >= EARLIEST_YEAR && serial <= LATEST_YEAR && Number.isInteger(serial)) {
+      return { date: iso(serial, 1, 1), quality: "reported", precision: "year", native };
+    }
+
     const { year, month, day } = serialToUtc(serial);
     if (year === (options.sentinelYear ?? SENTINEL_YEAR)) return sentinel(native);
     if (year < 1900 || year > 2200) return unparseable(native);
