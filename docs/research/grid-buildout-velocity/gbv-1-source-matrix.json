@@ -1,0 +1,602 @@
+{
+  "title": "Urdais Grid Buildout Velocity — GBV-1 external research",
+  "as_of": "2026-09-22",
+  "status": "internal research; establishes no legal right; does not write code, ingest data, or compute a velocity metric",
+  "companion_markdown": "docs/research/grid-buildout-velocity/gbv-1-external-research.md",
+  "evidence_classes": ["verified", "retrieved", "inferred", "proposed"],
+  "rights_classes": [
+    "clearly_reusable",
+    "reusable_with_attribution_or_conditions",
+    "ambiguous_requires_legal_review",
+    "unsuitable_without_permission"
+  ],
+  "product_policy_note": "ambiguous_requires_legal_review may be publicly displayed under founder-accepted legal risk while preserving classification. unsuitable_without_permission remains blocked without explicit permission. That overlay does not change classifications in this file.",
+  "intended_concept": "How fast the physical transmission system is being built or completed. Not generation waiting in queue, operational transfer margin, or whether future demand exceeds approved capacity.",
+  "adjacent_product_exclusions": {
+    "interconnection_queue": "queue MW, GIS Report, PlanningQueues, GIP/LGIA-triggered network upgrades, SPP GI NTCs, ISO-NE Part 2, ERCOT generator-tie Tier 4 rows",
+    "transmission_headroom": "ATC/TTC, binding-constraint shadows, EIA-930 flows, CETL/CIL",
+    "power_delivery_gap": "CDR/PRMR/ICR/NQC stacks, EIA-930 load, planning peaks"
+  },
+  "executive_conclusion": {
+    "seven_market_headline_defensible": false,
+    "use_market_specific_native_metrics": true,
+    "recommended_public_markets": ["ERCOT", "CAISO"],
+    "recommended_internal_or_founder_risk_markets": ["ISO-NE", "PJM"],
+    "blocked_from_public_without_permission": ["MISO", "SPP"],
+    "nyiso_role": "named_backbone_watchlist_only_not_portfolio_velocity",
+    "federal_sources_replace_iso_trackers": false,
+    "exclude_generator_interconnection_upgrades": true,
+    "preferred_v1_unit": "native_project_or_upgrade_counts",
+    "do_not_invent_common_unit": true
+  },
+  "markets": [
+    {
+      "market": "ERCOT",
+      "eia_ba_code": "ERCO",
+      "best_source": "Transmission Project and Information Tracking (TPIT)",
+      "publisher": "ERCOT",
+      "urls": [
+        "https://www.ercot.com/gridinfo/planning",
+        "https://www.ercot.com/gridinfo/sysplan",
+        "https://www.ercot.com/files/docs/2026/05/29/June-1-2026-Plannng-Guide.pdf"
+      ],
+      "latest_vintage_seen": "2026-07-17 XLSX 547.1 KB plus archive ZIP 18.8 MB",
+      "access_method": "public download",
+      "format": ["xlsx", "zip"],
+      "update_frequency": "triannual",
+      "historical_availability": "archive ZIP posted 2026-07-17; depth not inventoried file-by-file in this pass",
+      "machine_readable": true,
+      "xlsx_cells_parsed_this_pass": false,
+      "authentication_requirement": "none for public TPIT; SSWG TPIT procedures are MIS Secure",
+      "supporting_sources": ["Regional Transmission Plan", "RPG decks", "PUCT CCN", "TAMU/NRI GIS mirror"],
+      "native_lifecycle_states": ["Conceptual", "Planned", "Under Construction", "future", "completed", "cancelled", "RTP-approved"],
+      "lifecycle_notes": "Conceptual/Planned/Under Construction from older Planning Guide and GIS coded values. 2026 Planning Guide mandates future/completed/cancelled/RTP sections and a field dictionary; field enums now point at SSWG Procedure Manual (not retrieved).",
+      "date_fields": {
+        "announcement_date": "tpit_number_assignment_when_entered_future",
+        "approval_date": "not_a_mandated_tpit_column_in_2026_pg_text; RPG completion and PUCT CCN live in other dockets",
+        "construction_start_date": "not_in_planning_guide_6_4_5_list",
+        "target_in_service_date": "projected_isd",
+        "revised_target_in_service_date": "next_tpit_projected_isd",
+        "actual_in_service_date": "required_in_older_planning_guide; completed_section_exists; current_xlsx_not_parsed"
+      },
+      "quantity_fields": {
+        "line_miles": "gis_miles_and_rpg_narrative; xlsx_not_confirmed",
+        "mw_transfer": false,
+        "voltage": true,
+        "substations_transformers": "in_names",
+        "project_cost": "summary_section_required; project_level_not_confirmed",
+        "circuit_count": "not_confirmed"
+      },
+      "identity": {
+        "native_id": "TPIT number",
+        "secondary_id": "RPG number",
+        "stable_ids": true,
+        "longitudinal_possible": true,
+        "requires_snapshot_archive": true,
+        "known_identity_risks": ["renames", "RPG projects excluded until review completes"]
+      },
+      "inclusion_threshold": "60 kV+ Tier 1-4; may exclude incomplete RPG, beyond-SSWG-horizon, RAS-only, in-kind replacement, minor impedance-only",
+      "gi_overlap_risk": "Tier 4 generator-tie rows must be excluded from GBV",
+      "rights_classification": "reusable_with_attribution_or_conditions",
+      "terms_url": "https://www.ercot.com/help/terms",
+      "public_status": "publish_with_attribution",
+      "v1_role": "primary_public",
+      "evidence": "verified"
+    },
+    {
+      "market": "PJM",
+      "eia_ba_code": "PJM",
+      "best_source": "Project Status & Cost Allocation page plus TEAC Board white papers and FERC Schedule 12 filings",
+      "publisher": "PJM",
+      "urls": [
+        "https://www.pjm.com/planning/project-construction",
+        "https://pjm.com/planning",
+        "https://www.pjm.com/-/media/DotCom/committees-groups/committees/teac/2026/20260707/20260707-pjm-board-whitepaper.pdf"
+      ],
+      "latest_vintage_seen": "TEAC 2026-07-07 white paper; planning page stale-data banner on 2026-09-22",
+      "access_method": "public JS page; PDF filings",
+      "format": ["html_js", "pdf"],
+      "update_frequency": "continuous_page; TEAC/Board cycles; FERC within 30 days of Board approval",
+      "historical_availability": "TEAC/FERC PDF vintages; retired construct-status page; 2020 roadmap mentioned XLS",
+      "machine_readable": "not_confirmed_this_pass",
+      "xlsx_cells_parsed_this_pass": false,
+      "authentication_requirement": "none for public page; Planning Center tools are member",
+      "do_not_ingest_via": "PJM Data Miner 2",
+      "native_lifecycle_states": ["TEAC recommended", "Board-approved baseline", "supplemental", "Immediate-Need", "Transmission Under Construction", "scope/cost change", "cancellation"],
+      "date_fields": {
+        "announcement_date": "initial_teac_roadmap_only",
+        "approval_date": "Board_approval_via_teac_ferc",
+        "construction_start_date": "not_confirmed",
+        "target_in_service_date": "required_upgrade_in_service_date_in_teac_ferc",
+        "revised_target_in_service_date": "revised_or_projected_in_service_in_2020_roadmap_not_confirmed_2026",
+        "actual_in_service_date": "not_confirmed_on_live_page"
+      },
+      "quantity_fields": {
+        "line_miles": "narrative_in_some_teac_items",
+        "mw_transfer": "expected_rating_listed_as_missing_in_2020_roadmap",
+        "voltage": "page_filter_retrieved",
+        "substations_transformers": "in_descriptions",
+        "project_cost": "estimated_upgrade_cost",
+        "circuit_count": "not_confirmed"
+      },
+      "identity": {
+        "native_id": "upgrade ID e.g. b4089.1",
+        "stable_ids": true,
+        "longitudinal_possible": "partial",
+        "requires_snapshot_archive": true,
+        "known_identity_risks": ["baseline_vs_supplemental", "split_suffixes", "stale_public_chart"]
+      },
+      "inclusion_threshold": "RTEP baseline Board-approved; supplemental not Board-approved; Immediate-Need now on the same page",
+      "gi_overlap_risk": "queue/cycle interconnection upgrades are a separate PJM product",
+      "rights_classification": "ambiguous_requires_legal_review",
+      "data_miner_rights_classification": "unsuitable_without_permission",
+      "public_status": "internal_ingest; public only under founder-risk overlay; never via Data Miner",
+      "v1_role": "internal_until_export_confirmed",
+      "evidence": "retrieved"
+    },
+    {
+      "market": "MISO",
+      "eia_ba_code": "MISO",
+      "best_source": "MTEP Portal Appendix A Status Report and In-Service Projects; annual MTEP Appendix A",
+      "publisher": "MISO",
+      "urls": [
+        "https://www.misoenergy.org/planning/transmission-planning/mtep/",
+        "https://help.misoenergy.org/knowledgebase/article/KA-01366/en-us"
+      ],
+      "latest_vintage_seen": "MTEP25 report ZIP on public page; Prior MTEP Status Report 2025-12-09",
+      "access_method": "Help Center login for Portal; public ZIP/PDF for annual MTEP",
+      "format": ["portal", "zip", "pdf", "xls"],
+      "update_frequency": "annual Board December; quarterly TO updates in Portal",
+      "historical_availability": "MTEP cycles since 2003; Portal claims historical and current",
+      "machine_readable": "portal_yes_login; public_appendix_historically_xls",
+      "portal_opened_this_pass": false,
+      "authentication_requirement": "MISO Help Center account for Portal; CEII/NDA for maps/FTP",
+      "native_lifecycle_states": ["under evaluation", "Appendix B", "Appendix A", "in service", "variance analysis"],
+      "date_fields": {
+        "announcement_date": "mtep_cycle_year",
+        "approval_date": "Board_December_or_out_of_cycle_EPR",
+        "construction_start_date": "not_named_on_public_mtep_page",
+        "target_in_service_date": "estimated_in_service",
+        "revised_target_in_service_date": "quarterly_estimated_isd",
+        "actual_in_service_date": "in_service_projects_list"
+      },
+      "quantity_fields": {
+        "line_miles": "mtep25_1901_transmission_miles; report circuit-miles",
+        "mw_transfer": false,
+        "voltage": true,
+        "substations_transformers": "appendix_a_facility_rows",
+        "project_cost": "estimated_cost_until_in_service",
+        "circuit_count": "not_confirmed"
+      },
+      "identity": {
+        "native_id": "MTEP project number",
+        "stable_ids": true,
+        "longitudinal_possible": true,
+        "requires_snapshot_archive": true,
+        "known_identity_risks": ["GIP_rows", "LRTP_vs_local_BRP_scale"]
+      },
+      "inclusion_threshold": "Appendix A: BRP, GIP, MEP, MPFP, MVP, Other, TMEP, TDSP, EPR",
+      "gi_overlap_risk": "GIP is a first-class MTEP type and must be excluded from GBV",
+      "verified_figures": {
+        "mtep25_projects": 432,
+        "mtep25_transmission_miles": 1901
+      },
+      "rights_classification": "unsuitable_without_permission",
+      "public_status": "blocked_public",
+      "v1_role": "internal_only_if_permission_or_legal_allows",
+      "evidence": "verified"
+    },
+    {
+      "market": "SPP",
+      "eia_ba_code": "SWPP",
+      "best_source": "Quarterly Project Tracking plus Notification to Construct letters",
+      "publisher": "SPP",
+      "urls": [
+        "https://www.spp.org/engineering/project-tracking-ntcs/",
+        "https://www.spp.org/spp-documents-filings/?id=18641",
+        "https://www.spp.org/engineering/transmission-planning/integrated-transmission-planning/"
+      ],
+      "latest_vintage_seen": "3Q 2026 Quarterly Project Tracking Report Appendix 1&2 posted 2026-08-05",
+      "access_method": "public document library",
+      "format": ["pdf", "xlsx_or_pdf_appendices"],
+      "update_frequency": "quarterly",
+      "historical_availability": "QPT library from 2010 through 3Q 2026",
+      "machine_readable": "appendices_are_downloads; cells_not_parsed_this_pass",
+      "authentication_requirement": "none observed for public QPT",
+      "native_lifecycle_states": [
+        "Identified",
+        "RFP Issued",
+        "NTC Commitment Window",
+        "NTC-C Project Estimate Window",
+        "On Schedule < 4",
+        "On Schedule > 4",
+        "Delay - Mitigation",
+        "Re-evaluation",
+        "Suspended",
+        "In Service",
+        "Complete",
+        "Closed Out"
+      ],
+      "date_fields": {
+        "announcement_date": "identified_or_ntc_issue",
+        "approval_date": "NTC_issue_date",
+        "construction_start_date": "not_on_definitions_list",
+        "target_in_service_date": "RTO_determined_need_date",
+        "revised_target_in_service_date": "project_owner_indicated_in_service_date",
+        "actual_in_service_date": "Complete_or_In_Service_or_Closed_Out"
+      },
+      "quantity_fields": {
+        "line_miles": "not_on_definitions_list",
+        "mw_transfer": false,
+        "voltage": "in_descriptions_not_parsed",
+        "substations_transformers": "upgrade_level_UID",
+        "project_cost": "cost_estimate_and_final_cost",
+        "circuit_count": "UID_is_upgrade_grain",
+        "other_native": ["project_lead_time", "status_comments"]
+      },
+      "identity": {
+        "native_id": "PID",
+        "secondary_ids": ["UID", "NTC_ID"],
+        "stable_ids": true,
+        "longitudinal_possible": true,
+        "requires_snapshot_archive": true,
+        "known_identity_risks": ["Closed Out removed after one quarter", "GI NTCs in the same program", "ATP vs NTC"]
+      },
+      "inclusion_threshold": "STEP, Aggregate Study, TO-planned; NTC folders include GI, ITP, AQ, sponsored, priority, HPILS, balanced portfolio",
+      "gi_overlap_risk": "Notification to Construct (Generation Interconnection) folder is in-scope for SPP tracking and out-of-scope for GBV",
+      "spp_term_collision": "Need Date is an RTO need, not Urdais product language for completion velocity",
+      "rights_classification": "unsuitable_without_permission",
+      "public_status": "blocked_public",
+      "v1_role": "internal_only_if_permission; structurally strongest tracker",
+      "evidence": "verified"
+    },
+    {
+      "market": "CAISO",
+      "eia_ba_code": "CISO",
+      "best_source": "Transmission Development Forum Approved Projects TPP workbook",
+      "publisher": "CAISO with CPUC",
+      "urls": [
+        "https://www.caiso.com/library/transmission-development-forum",
+        "https://www.caiso.com/library/transmission-development-forum-jul-29-2026-900-am",
+        "https://www.caiso.com/documents/agenda-overview-transmission-development-forum-jul-29-2026.pdf",
+        "https://www.caiso.com/documents/board-approved-2025-2026-transmission-plan.pdf",
+        "https://www.cpuc.ca.gov/industries-and-topics/electrical-energy/electric-costs/transmission-project-review-process"
+      ],
+      "latest_vintage_seen": "TPP and GIP workbooks posted 2026-08-03 for 2026-07-29 forum",
+      "access_method": "public download",
+      "format": ["xlsx", "pdf"],
+      "update_frequency": "semiannual January and July; next forum 2027-01-27",
+      "historical_availability": "TDF library events back to 2022",
+      "machine_readable": true,
+      "xlsx_cells_parsed_this_pass": false,
+      "pto_pdfs_read_this_pass": true,
+      "authentication_requirement": "none for TDF; CPUC TPR has public plus NDA sets",
+      "exclude_from_gbv": ["Network Upgrades - Generation Interconnection workbook"],
+      "native_lifecycle_states_observed": [
+        "Initiation",
+        "Design",
+        "Engineering",
+        "Construction",
+        "Construction Complete",
+        "Closeout",
+        "On Hold",
+        "In-service",
+        "Cancelled",
+        "Exempt"
+      ],
+      "date_fields": {
+        "announcement_date": "transmission_plan_approved_cycle",
+        "approval_date": "Transmission Plan Approved",
+        "construction_start_date": "yes_on_SCE_tables",
+        "target_in_service_date": "ISD at Approval in Transmission Plan",
+        "revised_target_in_service_date": "previous_TDF_ISD_and_current_expected_ISD",
+        "actual_in_service_date": "PTO_in_service_comments_with_calendar_dates"
+      },
+      "quantity_fields": {
+        "line_miles": "occasional_in_comments_not_workbook_wide_in_slides",
+        "mw_transfer": false,
+        "voltage": "in_project_names",
+        "substations_transformers": "in_names",
+        "project_cost": false,
+        "cost_explicitly_excluded": true,
+        "circuit_count": "not_confirmed"
+      },
+      "identity": {
+        "native_id": "TPP Project No. e.g. 2223-R-08",
+        "stable_ids": true,
+        "longitudinal_possible": true,
+        "requires_snapshot_archive": true,
+        "known_identity_risks": ["rescope_resets_original_ISD", "Part_G_holds", "replacing_document_workbooks"]
+      },
+      "inclusion_threshold": "Previously approved TPP projects. GIP workbook is executed-LGIA network upgrades only.",
+      "gi_overlap_risk": "GIP workbook is IQ; do not mix",
+      "rights_classification": "reusable_with_attribution_or_conditions",
+      "cpuc_tpr_rights_classification": "ambiguous_requires_legal_review",
+      "public_status": "TPP workbook publishable with credit; do not republish TPR NDA",
+      "v1_role": "primary_public",
+      "evidence": "verified"
+    },
+    {
+      "market": "NYISO",
+      "eia_ba_code": "NYIS",
+      "best_source": "No portfolio tracker. Closest: CRP Planned Transmission, ATR tables, Local Transmission Plans, Public Policy selection reports",
+      "publisher": "NYISO; NYPSC; TOs",
+      "urls": [
+        "https://www.nyiso.com/documents/20142/2248481/2025-2034-Comprehensive-Reliability-Plan.pdf",
+        "https://www.nyiso.com/documents/20142/12590492/6%20PPTPP_Manual_Clean.pdf/3b82cbea-a275-2396-bbc5-3329b3510e35"
+      ],
+      "latest_vintage_seen": "2025-2034 CRP; 2026 STAR/planning-status decks",
+      "access_method": "public PDFs",
+      "format": ["pdf"],
+      "update_frequency": "CRP periodic; STAR quarterly; LTP annual; PPTP quarterly internal",
+      "historical_availability": "CRP/RNA/STAR PDF series; not a project census",
+      "machine_readable": false,
+      "authentication_requirement": "none for PDFs",
+      "native_lifecycle_states": ["planned transmission in CRP", "Y/In-Service in ATR", "Board selected", "Article VII", "Development Agreement"],
+      "date_fields": {
+        "announcement_date": "Board_or_PSC_order",
+        "approval_date": "Board_selection_Article_VII_Dev_Agreement",
+        "construction_start_date": "not_a_portfolio_field",
+        "target_in_service_date": "Required_Project_In_Service_Date_for_PPTP",
+        "revised_target_in_service_date": "STAR_or_CRP_date_changes_for_named_projects",
+        "actual_in_service_date": "ATR_Y_In_Service_or_press_for_named_projects"
+      },
+      "quantity_fields": {
+        "line_miles": "named_project_narratives",
+        "mw_transfer": "facility_ratings_for_named_hvdc_only",
+        "voltage": "in_text",
+        "substations_transformers": "LTP_lists",
+        "project_cost": "selected_project_reports_not_portfolio",
+        "circuit_count": false
+      },
+      "identity": {
+        "native_id": "queue number or PPTP code for named projects only",
+        "stable_ids": "named_projects_only",
+        "longitudinal_possible": false,
+        "requires_snapshot_archive": false,
+        "known_identity_risks": ["no_public_portfolio_id_space", "quarterly_PPTP_reports_submitted_to_NYISO_not_shown_as_public_workbook"]
+      },
+      "named_projects_verified": [
+        {"name": "Smart Path Connect", "planned_isd": "2025-12", "note": "CRP planned Dec 2025; later press reported completion"},
+        {"name": "CHPE", "planned_isd": "2026-05", "mw": 1250},
+        {"name": "Propel NY T051", "planned_isd": "2030-05"}
+      ],
+      "inclusion_threshold": "public set is major CRP/LTP/PPTP projects, not a census",
+      "gi_overlap_risk": "do not use NYISO interconnection queue as a transmission buildout census",
+      "rights_classification": "ambiguous_requires_legal_review",
+      "public_status": "named_project_watchlist_only",
+      "v1_role": "defer_portfolio_velocity",
+      "evidence": "verified"
+    },
+    {
+      "market": "ISO-NE",
+      "eia_ba_code": "ISNE",
+      "best_source": "RSP Project List; Asset Condition List is a separate replacement series",
+      "publisher": "ISO New England",
+      "urls": [
+        "https://www.iso-ne.com/system-planning/system-plans-studies/rsp/rsp-project-list-and-the-asset-condition-list",
+        "https://www.iso-ne.com/static-assets/documents/100037/final_project_list_presentation_jun_2026.pdf"
+      ],
+      "latest_vintage_seen": "2026-06-23 PAC update",
+      "access_method": "public XLS plus presentation",
+      "format": ["xlsx", "pdf"],
+      "update_frequency": "three_times_per_year typically March June October",
+      "historical_availability": "lists retained on the RSP page; first year of Asset Condition List is March 2016; depth of XLS archive not counted this pass",
+      "machine_readable": true,
+      "xlsx_cells_parsed_this_pass": false,
+      "authentication_requirement": "none",
+      "native_lifecycle_states": ["Proposed", "Planned", "Under Construction", "In Service", "Cancelled"],
+      "removed_state": "Concept removed after FERC accepted Tariff changes 2019-12-10",
+      "date_fields": {
+        "announcement_date": "first_appearance_on_dated_list",
+        "approval_date": "PPA_I.3.9_date_or_no_or_NR; TCA_date",
+        "construction_start_date": "not_a_list_column",
+        "target_in_service_date": "projected_month_year",
+        "revised_target_in_service_date": "updated_projected_month_year",
+        "actual_in_service_date": "status_In_Service; highlight_tables_cover_since_last_update_only"
+      },
+      "quantity_fields": {
+        "line_miles": false,
+        "mw_transfer": false,
+        "voltage": "in_names",
+        "substations_transformers": "in_descriptions",
+        "project_cost": "estimated_PTF_with_accuracy_bands; in_service_dollars_in_highlights",
+        "circuit_count": "Major Project versus component"
+      },
+      "identity": {
+        "native_id": "Project ID generated by ISO-NE System Planning",
+        "stable_ids": true,
+        "longitudinal_possible": true,
+        "requires_snapshot_archive": true,
+        "known_identity_risks": ["Part numbers do not change when IS or Cancelled", "In Service highlight is incremental not a forever IS tab"]
+      },
+      "inclusion_threshold": "RSP Parts 1 reliability, 3 market efficiency, 4 elective, public policy. Part 2 is GI. Asset Condition is TO-identified replacement.",
+      "gi_overlap_risk": "Part 2 Generator Interconnection Upgrades must be excluded",
+      "june_2026_verified_highlights": {
+        "rsp_in_service_since_march": 1,
+        "rsp_new": 0,
+        "rsp_cancelled": 0,
+        "acl_in_service_since_march": 7,
+        "acl_in_service_cost_million_usd": 362.1,
+        "acl_new": 9,
+        "acl_new_cost_million_usd": 303.3
+      },
+      "rights_classification": "ambiguous_requires_legal_review",
+      "public_status": "internal_ingest; public only under founder-risk overlay",
+      "v1_role": "internal_or_founder_risk; exclude_part_2; do_not_mix_asset_condition_into_new_build",
+      "evidence": "verified"
+    }
+  ],
+  "federal_and_other_sources": [
+    {
+      "source": "FERC-730 Report of Transmission Investment Activity",
+      "url": "https://www.ferc.gov/industries-data/electric/resources/industry-forms/ferc-730-report-transmission-investment-activity",
+      "coverage": "Only public utilities granted incentive rates; project detail excludes projects under $20 million",
+      "fields": ["actual investment last year", "five-year projected investment", "expected completion date", "percent complete", "reasons for delay"],
+      "cadence": "annual due April 18",
+      "v1_role": "not_a_seven_market_census",
+      "rights_classification": "reusable_with_attribution_or_conditions",
+      "evidence": "retrieved"
+    },
+    {
+      "source": "EIA-411 proposed transmission additions",
+      "url": "https://www.eia.gov/electricity/data/eia411/",
+      "coverage": "Discontinued; last useful public tables around 2016-2017",
+      "v1_role": "historical_diagnostic_only",
+      "rights_classification": "clearly_reusable",
+      "evidence": "retrieved"
+    },
+    {
+      "source": "EIA-860 / 860M",
+      "url": "https://www.eia.gov/electricity/data/eia860/",
+      "coverage": "Generators, not transmission projects",
+      "v1_role": "out_of_scope",
+      "rights_classification": "clearly_reusable",
+      "evidence": "verified"
+    },
+    {
+      "source": "NERC Electricity Supply & Demand 2025 Transmission Projects",
+      "url": "https://www.nerc.com/programs/reliability-assessment--performance-analysis/electricity-supply--demand",
+      "fields_retrieved": [
+        "NERC Project ID",
+        "Project Status",
+        "Line Length (Circuit Miles)",
+        "In-Service Month-Year – Original",
+        "In-Service Month-Year – Expected",
+        "Cause of Delay / Other Comments"
+      ],
+      "v1_role": "rights_blocked_cross_check_only",
+      "rights_classification": "unsuitable_without_permission",
+      "evidence": "retrieved"
+    }
+  ],
+  "lifecycle_state_matrix_notes": "Store native terms. Do not collapse Planned, Appendix A, NTC Commitment Window, or TPP Approved into one enum in the raw layer.",
+  "date_quality_summary": {
+    "completion_velocity_approval_to_actual_possible": ["CAISO TPP", "ISO-NE RSP PPA to In Service", "SPP NTC issue to Complete if archives retained"],
+    "construction_start_published": ["CAISO SCE TDF tables"],
+    "actual_vs_forecast_vs_year_only": {
+      "day_level_examples": ["CAISO PG&E planned in-service dates", "some PJM FERC required ISD"],
+      "month_year": ["ISO-NE", "ERCOT RPG ISD"],
+      "season_or_year": ["NYISO CRP/ATR", "some MISO LRTP dashboards"]
+    }
+  },
+  "quantity_comparability": {
+    "cross_market_common_unit_defensible": false,
+    "reason": "Project grain, inclusion thresholds, rebuild vs greenfield, and published scale fields differ. CAISO TDF has no cost. ISO-NE list has no miles. Transfer MW is not a tracker field."
+  },
+  "candidate_metrics": [
+    {
+      "metric": "projects_entering_service_per_year",
+      "feasibility": "defensible",
+      "where": ["ERCOT", "ISO-NE", "CAISO TPP", "SPP internal", "MISO internal"],
+      "why": "Native completed/in-service events exist. Counts are not cross-market comparable.",
+      "exclude": ["GI upgrades", "NYISO as a portfolio"]
+    },
+    {
+      "metric": "line_miles_entering_service_per_year",
+      "feasibility": "partially_defensible",
+      "where": ["MISO reports", "ERCOT if TPIT/GIS miles complete"],
+      "why": "CAISO TDF and ISO-NE lists lack a complete mile column. Rebuild vs new corridor often mixed."
+    },
+    {
+      "metric": "project_cost_entering_service_per_year",
+      "feasibility": "partially_defensible",
+      "where": ["ISO-NE", "SPP final cost", "MISO", "PJM estimated"],
+      "why": "CAISO TDF explicitly excludes cost. Nominal dollars are not physical velocity."
+    },
+    {
+      "metric": "median_approval_to_service_time",
+      "feasibility": "partially_defensible",
+      "where": ["CAISO TPP", "ISO-NE PPA", "SPP NTC if archived"],
+      "why": "ERCOT has no mandated approval-date column. PJM actual ISD not confirmed. NYISO n is too small."
+    },
+    {
+      "metric": "median_construction_to_service_time",
+      "feasibility": "partially_defensible",
+      "where": ["CAISO only"],
+      "why": "Construction start is not a published portfolio field in the other six."
+    },
+    {
+      "metric": "share_planned_completed_on_time",
+      "feasibility": "partially_defensible",
+      "where": ["CAISO ISD-at-approval vs current/actual", "SPP Need Date vs owner ISD"],
+      "why": "Need Date is not original expected ISD. ISO-NE appendix has no frozen original ISD."
+    },
+    {
+      "metric": "delay_distribution",
+      "feasibility": "partially_defensible",
+      "where": ["CAISO reason codes", "SPP Delay statuses", "any market if vintages snapshotted"]
+    },
+    {
+      "metric": "completion_rate_by_cohort",
+      "feasibility": "partially_defensible",
+      "why": "Requires frozen entry-year rules plus archives. SPP Closed Out drop and ERCOT RPG exclusion bias denominators."
+    },
+    {
+      "metric": "active_construction_backlog",
+      "feasibility": "partially_defensible",
+      "why": "Native Under Construction / Construction counts only. PJM public chart was stale. Not a MW backlog."
+    },
+    {
+      "metric": "annual_net_additions_by_voltage_class",
+      "feasibility": "not_defensible",
+      "why": "No seven-market voltage+quantity census. Voltage often lives in names. Net vs gross unpublished."
+    }
+  ],
+  "cross_market_comparability": {
+    "headline_seven_market_metric_defensible": false,
+    "tests": {
+      "lifecycle_definitions": "fail",
+      "inclusion_thresholds": "fail",
+      "project_scale": "fail",
+      "timing_conventions": "fail",
+      "publication_cadence": "fail",
+      "project_granularity": "fail"
+    },
+    "safer_approach": "market_specific_native_series_common_semantic_interface"
+  },
+  "recommended_v1": {
+    "public_markets": ["ERCOT", "CAISO"],
+    "internal_or_founder_risk_markets": ["ISO-NE", "PJM"],
+    "blocked_public": ["MISO", "SPP"],
+    "deferred": ["NYISO portfolio velocity"],
+    "metrics_to_publish": [
+      "count newly in service or completed per vintage",
+      "count active planned plus under construction",
+      "CAISO ISD slip vs ISD at TPP approval plus on-hold and cancelled counts",
+      "ISO-NE reliability in-service dollars only if that market is published, labeled as cost not physical velocity"
+    ],
+    "metrics_to_defer": [
+      "seven_market_index",
+      "miles_weighted_us_total",
+      "cost_weighted_us_total",
+      "construction_start_medians_outside_caiso",
+      "on_time_rate_mixing_need_date_and_original_isd",
+      "mw_transfer_additions",
+      "FERC-730",
+      "NERC ESD",
+      "CPUC TPR NDA",
+      "EIA-860",
+      "queue_driven_upgrades"
+    ],
+    "unit_policy": "project_or_upgrade_counts_first; miles_and_dollars_only_as_optional_same_file_overlays",
+    "expose_market_specific_metrics_only": true,
+    "historical_depth": "snapshot every official vintage going forward; backfill ERCOT archive, CAISO TDF from 2022, ISO-NE retained lists, SPP QPT internally to 2010",
+    "update_cadence": "native_only",
+    "architecture": "option_2_market_specific_native_mapped_to_common_semantic_interface",
+    "publication_discipline": "empty_cell_is_not_zero"
+  },
+  "open_questions": [
+    "Parse 2026-07-17 ERCOT TPIT XLSX for actual ISD, miles, project-level cost, and status enum",
+    "Retrieve ERCOT SSWG Procedure Manual TPIT field dictionary",
+    "Confirm PJM Project Status export and 2026 columns",
+    "Inventory MISO Appendix A construction-status enums from Portal or public quarterly files",
+    "Parse SPP 3Q 2026 QPT appendices for miles, voltage, GI flag, Closed Out retention",
+    "Parse CAISO Jul 2026 TPP XLSX for full status enum and mile/voltage columns",
+    "Legal split of spp.org QPT versus SPP Portal ToU; MISO Appendix A ZIP display",
+    "Whether NYISO posts public PPTP quarterly workbooks",
+    "ISO-NE RSP XLS retention depth",
+    "State siting ID join (PUCT CCN, Article VII, CPUC CPCN) back to ISO IDs",
+    "Whether ISO-NE Asset Condition / MISO age-and-condition should be a separate replacement-velocity series"
+  ]
+}
