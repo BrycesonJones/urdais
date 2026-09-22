@@ -10,6 +10,7 @@ import {
   applyDigitalRealtyReviewDecisions,
   canonicalDigitalRealtyFacility,
   classifyProviderPrecision,
+  demoteSharedBuildingPrecision,
   materializeDigitalRealtyQueue,
   projectDigitalRealtyFacilities,
   simplifiedAddressQuery,
@@ -156,5 +157,68 @@ describe("Digital Realty manual tranche", () => {
     const second = projectDigitalRealtyFacilities(first.facilities, queue, [ready, unresolved]);
     expect(second).toMatchObject({ inserted: 0, updated: 1, excluded: 1, unchangedOutsideTranche: 1 });
     expect(second.facilities).toEqual(first.facilities);
+  });
+});
+
+describe("demoteSharedBuildingPrecision", () => {
+  it("lowers building precision where two facilities resolved to one point", () => {
+    // The London blocks are geocoded from "11 Hanbury Street" with the block
+    // dropped, so one point stands for all three. It locates the property, not
+    // Block B.
+    const shared = { latitude: 51.5217361, longitude: -0.0730612 };
+    const results = [
+      result("digital-realty-lon1", { ...shared, coordinatePrecision: "building", precisionClass: "exact_or_rooftop" }),
+      result("digital-realty-lon2", { ...shared, coordinatePrecision: "building", precisionClass: "exact_or_rooftop" }),
+      result("digital-realty-lon3", { ...shared, coordinatePrecision: "building", precisionClass: "exact_or_rooftop" }),
+    ];
+    const { results: next, demoted } = demoteSharedBuildingPrecision(results);
+    expect(demoted).toEqual(["digital-realty-lon1", "digital-realty-lon2", "digital-realty-lon3"]);
+    for (const entry of next) {
+      expect(entry.coordinatePrecision).toBe("street");
+      expect(entry.precisionClass).toBe("interpolated_or_street");
+      expect(entry.outcomeReason).toContain("shared with another facility");
+    }
+  });
+
+  it("keeps the coordinates exactly where they were", () => {
+    // Co-located facilities are a truthful shape for this dataset. Nudging the
+    // dots apart to make them visually distinct would invent positions.
+    const shared = { latitude: 48.2689496, longitude: 16.4103665 };
+    const results = [
+      result("digital-realty-vie1", { ...shared, coordinatePrecision: "building", precisionClass: "exact_or_rooftop" }),
+      result("digital-realty-vie2", { ...shared, coordinatePrecision: "building", precisionClass: "exact_or_rooftop" }),
+    ];
+    const { results: next } = demoteSharedBuildingPrecision(results);
+    expect(next.map((entry) => [entry.latitude, entry.longitude])).toEqual([
+      [shared.latitude, shared.longitude],
+      [shared.latitude, shared.longitude],
+    ]);
+  });
+
+  it("leaves a facility alone when its point is its own", () => {
+    const results = [
+      result("digital-realty-mex01", { latitude: 20.593235, longitude: -100.164375, coordinatePrecision: "building", precisionClass: "exact_or_rooftop" }),
+      result("digital-realty-mex03", { latitude: 20.5866613, longitude: -100.1417386, coordinatePrecision: "campus", precisionClass: "exact_or_rooftop" }),
+    ];
+    const { results: next, demoted } = demoteSharedBuildingPrecision(results);
+    expect(demoted).toEqual([]);
+    expect(next).toEqual(results);
+  });
+
+  it("does not touch a shared point that never claimed building precision", () => {
+    const shared = { latitude: -22.895225, longitude: -47.176933 };
+    const results = [
+      result("digital-realty-htl01", { ...shared, coordinatePrecision: "street", precisionClass: "interpolated_or_street" }),
+      result("digital-realty-htl02", { ...shared, coordinatePrecision: "street", precisionClass: "interpolated_or_street" }),
+    ];
+    expect(demoteSharedBuildingPrecision(results).demoted).toEqual([]);
+  });
+
+  it("ignores records with no coordinate at all", () => {
+    const results = [
+      result("digital-realty-lon1", { latitude: null, longitude: null, coordinatePrecision: "building", precisionClass: "unresolved" }),
+      result("digital-realty-lon2", { latitude: null, longitude: null, coordinatePrecision: "building", precisionClass: "unresolved" }),
+    ];
+    expect(demoteSharedBuildingPrecision(results).demoted).toEqual([]);
   });
 });

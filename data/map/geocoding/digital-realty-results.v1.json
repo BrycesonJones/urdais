@@ -5683,7 +5683,7 @@
           "url": "https://www.digitalrealty.com/data-centers/emea/london"
         }
       ],
-      "coordinatePrecision": "building",
+      "coordinatePrecision": "street",
       "geocodedAt": "2026-09-21T22:17:20.961Z",
       "returnedFormattedAddress": "Digital Realty London LON3, 11, Hanbury Street, Spitalfields, Whitechapel, London Borough of Tower Hamlets, Greater London, England, E1 6QR, United Kingdom",
       "latitude": 51.5217361,
@@ -5728,8 +5728,8 @@
         ]
       },
       "outcome": "geocoded_ready",
-      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality.",
-      "precisionClass": "exact_or_rooftop",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building.",
+      "precisionClass": "interpolated_or_street",
       "parentLocationId": "digital-realty-london",
       "facilityCode": "LON1",
       "market": "London",
@@ -5750,7 +5750,7 @@
           "url": "https://www.digitalrealty.com/data-centers/emea/london"
         }
       ],
-      "coordinatePrecision": "building",
+      "coordinatePrecision": "street",
       "geocodedAt": "2026-09-21T22:17:20.961Z",
       "returnedFormattedAddress": "Digital Realty London LON3, 11, Hanbury Street, Spitalfields, Whitechapel, London Borough of Tower Hamlets, Greater London, England, E1 6QR, United Kingdom",
       "latitude": 51.5217361,
@@ -5795,8 +5795,8 @@
         ]
       },
       "outcome": "geocoded_ready",
-      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality.",
-      "precisionClass": "exact_or_rooftop",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building.",
+      "precisionClass": "interpolated_or_street",
       "parentLocationId": "digital-realty-london",
       "facilityCode": "LON2",
       "market": "London",
@@ -5817,7 +5817,7 @@
           "url": "https://www.digitalrealty.com/data-centers/emea/london"
         }
       ],
-      "coordinatePrecision": "building",
+      "coordinatePrecision": "street",
       "geocodedAt": "2026-09-21T22:17:20.961Z",
       "returnedFormattedAddress": "Digital Realty London LON3, 11, Hanbury Street, Spitalfields, Whitechapel, London Borough of Tower Hamlets, Greater London, England, E1 6QR, United Kingdom",
       "latitude": 51.5217361,
@@ -5862,8 +5862,8 @@
         ]
       },
       "outcome": "geocoded_ready",
-      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality.",
-      "precisionClass": "exact_or_rooftop",
+      "outcomeReason": "Top result is a valid non-centroid match in the expected country, region, and locality. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building.",
+      "precisionClass": "interpolated_or_street",
       "parentLocationId": "digital-realty-london",
       "facilityCode": "LON3",
       "market": "London",
@@ -6429,18 +6429,18 @@
           "url": "https://www.digitalrealty.com/data-centers/americas/queretaro"
         }
       ],
-      "coordinatePrecision": "building",
+      "coordinatePrecision": "street",
       "geocodedAt": "2026-09-21T23:30:00.000Z",
-      "returnedFormattedAddress": "Ascenty QRO02, Carretera Estatal 100 km 17.5, Municipio Colón, Querétaro 76270, Mexico",
-      "latitude": 20.587478,
-      "longitude": -100.418636,
+      "returnedFormattedAddress": "Arkansas State University, Carretera El Colorado - Higuerillas (Carretera Estatal 100), El Gallo, Colón, Querétaro, Mexico",
+      "latitude": 20.6633861,
+      "longitude": -100.1087331,
       "providerCategory": "facility_registry",
       "providerType": "facility",
       "providerImportance": null,
       "outcome": "geocoded_ready",
-      "outcomeReason": "PeeringDB facility 11685 identifies Ascenty QRO02 at Carretera Estatal 100 km 17.5, independently confirmed by Digital Realty. Coordinate evidence: https://www.peeringdb.com/fac/11685",
+      "outcomeReason": "Re-verified 2026-09-21 after production QA found the previous point 44 km from Colón. Digital Realty publishes MEX02 as Carretera Estatal 100, Colon, Querétaro, 76270 and Ascenty publishes km 17.5, Municipio Colón — the address is confirmed first-party and unchanged. PeeringDB facility 11685 carries that same address but publishes a coordinate (20.587478, -100.418636) that sits 3 km from Querétaro city and 44 km from Colón, contradicting its own address fields; the directories repeating it copy PeeringDB rather than corroborate it, so it is rejected. The km 17.5 locale on Carretera Estatal 100 in Colón 76270 is independently placed by OpenStreetMap (Arkansas State University Campus Querétaro, 20.6633861 -100.1087331) and by Google Maps (20.6651639 -100.1101585), 247 m apart. The point adopted is the OpenStreetMap one for that locale. Precision is street, not building: the km marker locates the stretch of road the facility is addressed to, and no source independently locates the Ascenty building itself. Coordinate evidence: https://www.digitalrealty.com/data-centers/americas/queretaro",
       "rawResult": null,
-      "precisionClass": "exact_or_rooftop",
+      "precisionClass": "interpolated_or_street",
       "parentLocationId": "digital-realty-queretaro",
       "facilityCode": "MEX02",
       "market": "Querétaro",
@@ -9315,7 +9315,7 @@
           "url": "https://www.digitalrealty.com/data-centers/emea/vienna"
         }
       ],
-      "coordinatePrecision": "building",
+      "coordinatePrecision": "street",
       "geocodedAt": "2026-09-21T22:19:15.408Z",
       "returnedFormattedAddress": "Digital Realty VIE1 & VIE2, 10, Louis-Häfliger-Gasse, Neujedlersdorf, Katastralgemeinde Großjedlersdorf II, Floridsdorf, Wien, 1210, Österreich",
       "latitude": 48.2689496,
@@ -9358,8 +9358,8 @@
         ]
       },
       "outcome": "geocoded_ready",
-      "outcomeReason": "Manual QA accepted the named Digital Realty VIE1/VIE2 building; Wien is the local-language equivalent of Vienna.",
-      "precisionClass": "exact_or_rooftop",
+      "outcomeReason": "Manual QA accepted the named Digital Realty VIE1/VIE2 building; Wien is the local-language equivalent of Vienna. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building.",
+      "precisionClass": "interpolated_or_street",
       "parentLocationId": "digital-realty-vienna",
       "facilityCode": "VIE1",
       "market": "Vienna",
@@ -9443,7 +9443,7 @@
           "url": "https://www.digitalrealty.com/data-centers/emea/vienna"
         }
       ],
-      "coordinatePrecision": "building",
+      "coordinatePrecision": "street",
       "geocodedAt": "2026-09-21T22:19:15.408Z",
       "returnedFormattedAddress": "Digital Realty VIE1 & VIE2, 10, Louis-Häfliger-Gasse, Neujedlersdorf, Katastralgemeinde Großjedlersdorf II, Floridsdorf, Wien, 1210, Österreich",
       "latitude": 48.2689496,
@@ -9486,8 +9486,8 @@
         ]
       },
       "outcome": "geocoded_ready",
-      "outcomeReason": "Manual QA accepted the named Digital Realty VIE1/VIE2 building; Wien is the local-language equivalent of Vienna.",
-      "precisionClass": "exact_or_rooftop",
+      "outcomeReason": "Manual QA accepted the named Digital Realty VIE1/VIE2 building; Wien is the local-language equivalent of Vienna. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building.",
+      "precisionClass": "interpolated_or_street",
       "parentLocationId": "digital-realty-vienna",
       "facilityCode": "VIE2",
       "market": "Vienna",

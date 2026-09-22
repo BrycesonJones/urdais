@@ -135,6 +135,48 @@ describe("loadFacilityReadModel", () => {
     expect(loaded.facilities.map((facility) => facility.id)).toEqual(["csc-kajaani-lumi-host"]);
   });
 
+  it("composes an address that does not repeat what the street already says", async () => {
+    // The street field frequently holds a complete postal address. Appending
+    // the locality, admin area and country to that put "Colón, Querétaro,
+    // Mexico" on the public map twice for 145 of 271 facilities.
+    const sql = executor([
+      row({
+        id: "digital-realty-mex01",
+        street_address: "Camino a Nativitas 800, Colon, Querétaro, Mexico",
+        locality: "Colón",
+        admin_area: "Querétaro",
+        country_name: "Mexico",
+        country_code: "MX",
+      }),
+    ]);
+    const loaded = await loadFacilityReadModel(sql);
+    expect(loaded.facilities[0]?.address).toBe("Camino a Nativitas 800, Colon, Querétaro, Mexico");
+  });
+
+  it("still completes a partial street address", async () => {
+    const sql = executor([
+      row({ id: "xai-colossus-1", street_address: "3231 Paul R. Lowry Road", locality: "Memphis", admin_area: "TN", country_name: "United States" }),
+    ]);
+    const loaded = await loadFacilityReadModel(sql);
+    expect(loaded.facilities[0]?.address).toBe("3231 Paul R. Lowry Road, Memphis, TN, United States");
+  });
+
+  it("changes nothing about the response contract while doing so", async () => {
+    // Address formatting is presentation. It must not alter which facilities
+    // are served, the coverage numbers, or the shape of a facility.
+    const sql = executor([
+      row({ id: "a", street_address: "Somewhere Street, Townville, Country", locality: "Townville", admin_area: null, country_name: "Country" }),
+      row({ id: "b", street_address: "Another Road", locality: "Townville", admin_area: null, country_name: "Country" }),
+    ]);
+    const loaded = await loadFacilityReadModel(sql);
+    expect(loaded.facilities).toHaveLength(2);
+    expect(loaded.coverage.served).toBe(2);
+    expect(Object.keys(loaded.facilities[0] ?? {}).sort()).toEqual(
+      ["address", "category", "coordinatePrecision", "id", "lastVerifiedDate", "latitude", "lifecycleStatus", "longitude", "name", "operatorName", "ownerName", "sources", "verificationStatus"],
+    );
+    expect(validatePublicFacilities(JSON.parse(JSON.stringify(loaded)), new Date("2026-09-21T00:00:00Z"))).toEqual([]);
+  });
+
   it("reports an empty database as an absence with a reason, keeping the coverage it measured", async () => {
     const sql = executor([], 0);
     const loaded = await loadFacilityReadModel(sql);

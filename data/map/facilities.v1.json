@@ -23566,9 +23566,9 @@
         "countryCode": "GB",
         "latitude": 51.5217361,
         "longitude": -0.0730612,
-        "coordinatePrecision": "building",
+        "coordinatePrecision": "street",
         "coordinateMethod": "documented_address_geocode",
-        "coordinateNotes": "Nominatim geocode of the manually verified Digital Realty address; query: 11 Hanbury Street, London E1 6QR, United Kingdom; returned: Digital Realty London LON3, 11, Hanbury Street, Spitalfields, Whitechapel, London Borough of Tower Hamlets, Greater London, England, E1 6QR, United Kingdom; reviewed 2026-09-21. A deterministic building/unit-stripped fallback query was used after the full address did not produce a safe result. Top result is a valid non-centroid match in the expected country, region, and locality. The supplied address remains authoritative."
+        "coordinateNotes": "Nominatim geocode of the manually verified Digital Realty address; query: 11 Hanbury Street, London E1 6QR, United Kingdom; returned: Digital Realty London LON3, 11, Hanbury Street, Spitalfields, Whitechapel, London Borough of Tower Hamlets, Greater London, England, E1 6QR, United Kingdom; reviewed 2026-09-21. A deterministic building/unit-stripped fallback query was used after the full address did not produce a safe result. Top result is a valid non-centroid match in the expected country, region, and locality. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building. The supplied address remains authoritative."
       },
       "lifecycle": {
         "status": null,
@@ -23604,7 +23604,7 @@
         "lastVerifiedDate": "2026-09-21",
         "reviewNotes": [
           "Materialized from parent market digital-realty-london; the parent is not itself a physical facility record.",
-          "Geocoder precision classification: exact_or_rooftop."
+          "Geocoder precision classification: interpolated_or_street."
         ]
       },
       "aiRelevance": "unknown",
@@ -23636,9 +23636,9 @@
         "countryCode": "GB",
         "latitude": 51.5217361,
         "longitude": -0.0730612,
-        "coordinatePrecision": "building",
+        "coordinatePrecision": "street",
         "coordinateMethod": "documented_address_geocode",
-        "coordinateNotes": "Nominatim geocode of the manually verified Digital Realty address; query: 11 Hanbury Street, London E1 6QR, United Kingdom; returned: Digital Realty London LON3, 11, Hanbury Street, Spitalfields, Whitechapel, London Borough of Tower Hamlets, Greater London, England, E1 6QR, United Kingdom; reviewed 2026-09-21. A deterministic building/unit-stripped fallback query was used after the full address did not produce a safe result. Top result is a valid non-centroid match in the expected country, region, and locality. The supplied address remains authoritative."
+        "coordinateNotes": "Nominatim geocode of the manually verified Digital Realty address; query: 11 Hanbury Street, London E1 6QR, United Kingdom; returned: Digital Realty London LON3, 11, Hanbury Street, Spitalfields, Whitechapel, London Borough of Tower Hamlets, Greater London, England, E1 6QR, United Kingdom; reviewed 2026-09-21. A deterministic building/unit-stripped fallback query was used after the full address did not produce a safe result. Top result is a valid non-centroid match in the expected country, region, and locality. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building. The supplied address remains authoritative."
       },
       "lifecycle": {
         "status": null,
@@ -23674,7 +23674,7 @@
         "lastVerifiedDate": "2026-09-21",
         "reviewNotes": [
           "Materialized from parent market digital-realty-london; the parent is not itself a physical facility record.",
-          "Geocoder precision classification: exact_or_rooftop."
+          "Geocoder precision classification: interpolated_or_street."
         ]
       },
       "aiRelevance": "unknown",
@@ -23706,9 +23706,9 @@
         "countryCode": "GB",
         "latitude": 51.5217361,
         "longitude": -0.0730612,
-        "coordinatePrecision": "building",
+        "coordinatePrecision": "street",
         "coordinateMethod": "documented_address_geocode",
-        "coordinateNotes": "Nominatim geocode of the manually verified Digital Realty address; query: 11 Hanbury Street, London E1 6QR, United Kingdom; returned: Digital Realty London LON3, 11, Hanbury Street, Spitalfields, Whitechapel, London Borough of Tower Hamlets, Greater London, England, E1 6QR, United Kingdom; reviewed 2026-09-21. A deterministic building/unit-stripped fallback query was used after the full address did not produce a safe result. Top result is a valid non-centroid match in the expected country, region, and locality. The supplied address remains authoritative."
+        "coordinateNotes": "Nominatim geocode of the manually verified Digital Realty address; query: 11 Hanbury Street, London E1 6QR, United Kingdom; returned: Digital Realty London LON3, 11, Hanbury Street, Spitalfields, Whitechapel, London Borough of Tower Hamlets, Greater London, England, E1 6QR, United Kingdom; reviewed 2026-09-21. A deterministic building/unit-stripped fallback query was used after the full address did not produce a safe result. Top result is a valid non-centroid match in the expected country, region, and locality. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building. The supplied address remains authoritative."
       },
       "lifecycle": {
         "status": null,
@@ -23744,7 +23744,7 @@
         "lastVerifiedDate": "2026-09-21",
         "reviewNotes": [
           "Materialized from parent market digital-realty-london; the parent is not itself a physical facility record.",
-          "Geocoder precision classification: exact_or_rooftop."
+          "Geocoder precision classification: interpolated_or_street."
         ]
       },
       "aiRelevance": "unknown",
@@ -24334,11 +24334,11 @@
         "adminArea": "Querétaro",
         "countryName": "Mexico",
         "countryCode": "MX",
-        "latitude": 20.587478,
-        "longitude": -100.418636,
-        "coordinatePrecision": "building",
+        "latitude": 20.6633861,
+        "longitude": -100.1087331,
+        "coordinatePrecision": "street",
         "coordinateMethod": "documented_address_geocode",
-        "coordinateNotes": "Manually reviewed facility-registry coordinate of the manually verified Digital Realty address; query: Carretera Estatal 100, Colón, Querétaro, 76270, Mexico; returned: Ascenty QRO02, Carretera Estatal 100 km 17.5, Municipio Colón, Querétaro 76270, Mexico; reviewed 2026-09-21. PeeringDB facility 11685 identifies Ascenty QRO02 at Carretera Estatal 100 km 17.5, independently confirmed by Digital Realty. Coordinate evidence: https://www.peeringdb.com/fac/11685 The supplied address remains authoritative."
+        "coordinateNotes": "Manually reviewed facility-registry coordinate of the manually verified Digital Realty address; query: Carretera Estatal 100, Colón, Querétaro, 76270, Mexico; returned: Arkansas State University, Carretera El Colorado - Higuerillas (Carretera Estatal 100), El Gallo, Colón, Querétaro, Mexico; reviewed 2026-09-21. Re-verified 2026-09-21 after production QA found the previous point 44 km from Colón. Digital Realty publishes MEX02 as Carretera Estatal 100, Colon, Querétaro, 76270 and Ascenty publishes km 17.5, Municipio Colón — the address is confirmed first-party and unchanged. PeeringDB facility 11685 carries that same address but publishes a coordinate (20.587478, -100.418636) that sits 3 km from Querétaro city and 44 km from Colón, contradicting its own address fields; the directories repeating it copy PeeringDB rather than corroborate it, so it is rejected. The km 17.5 locale on Carretera Estatal 100 in Colón 76270 is independently placed by OpenStreetMap (Arkansas State University Campus Querétaro, 20.6633861 -100.1087331) and by Google Maps (20.6651639 -100.1101585), 247 m apart. The point adopted is the OpenStreetMap one for that locale. Precision is street, not building: the km marker locates the stretch of road the facility is addressed to, and no source independently locates the Ascenty building itself. Coordinate evidence: https://www.digitalrealty.com/data-centers/americas/queretaro The supplied address remains authoritative."
       },
       "lifecycle": {
         "status": null,
@@ -24374,7 +24374,7 @@
         "lastVerifiedDate": "2026-09-21",
         "reviewNotes": [
           "Materialized from parent market digital-realty-queretaro; the parent is not itself a physical facility record.",
-          "Geocoder precision classification: exact_or_rooftop."
+          "Geocoder precision classification: interpolated_or_street."
         ]
       },
       "aiRelevance": "unknown",
@@ -26996,9 +26996,9 @@
         "countryCode": "AT",
         "latitude": 48.2689496,
         "longitude": 16.4103665,
-        "coordinatePrecision": "building",
+        "coordinatePrecision": "street",
         "coordinateMethod": "documented_address_geocode",
-        "coordinateNotes": "Nominatim geocode of the manually verified Digital Realty address; query: Louis-Häfliger-Gasse 10, Vienna 1210, Austria; returned: Digital Realty VIE1 & VIE2, 10, Louis-Häfliger-Gasse, Neujedlersdorf, Katastralgemeinde Großjedlersdorf II, Floridsdorf, Wien, 1210, Österreich; reviewed 2026-09-21. A deterministic building/unit-stripped fallback query was used after the full address did not produce a safe result. Manual QA accepted the named Digital Realty VIE1/VIE2 building; Wien is the local-language equivalent of Vienna. The supplied address remains authoritative."
+        "coordinateNotes": "Nominatim geocode of the manually verified Digital Realty address; query: Louis-Häfliger-Gasse 10, Vienna 1210, Austria; returned: Digital Realty VIE1 & VIE2, 10, Louis-Häfliger-Gasse, Neujedlersdorf, Katastralgemeinde Großjedlersdorf II, Floridsdorf, Wien, 1210, Österreich; reviewed 2026-09-21. A deterministic building/unit-stripped fallback query was used after the full address did not produce a safe result. Manual QA accepted the named Digital Realty VIE1/VIE2 building; Wien is the local-language equivalent of Vienna. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building. The supplied address remains authoritative."
       },
       "lifecycle": {
         "status": null,
@@ -27034,7 +27034,7 @@
         "lastVerifiedDate": "2026-09-21",
         "reviewNotes": [
           "Materialized from parent market digital-realty-vienna; the parent is not itself a physical facility record.",
-          "Geocoder precision classification: exact_or_rooftop."
+          "Geocoder precision classification: interpolated_or_street."
         ]
       },
       "aiRelevance": "unknown",
@@ -27136,9 +27136,9 @@
         "countryCode": "AT",
         "latitude": 48.2689496,
         "longitude": 16.4103665,
-        "coordinatePrecision": "building",
+        "coordinatePrecision": "street",
         "coordinateMethod": "documented_address_geocode",
-        "coordinateNotes": "Nominatim geocode of the manually verified Digital Realty address; query: Louis-Häfliger-Gasse 10, Vienna 1210, Austria; returned: Digital Realty VIE1 & VIE2, 10, Louis-Häfliger-Gasse, Neujedlersdorf, Katastralgemeinde Großjedlersdorf II, Floridsdorf, Wien, 1210, Österreich; reviewed 2026-09-21. A deterministic building/unit-stripped fallback query was used after the full address did not produce a safe result. Manual QA accepted the named Digital Realty VIE1/VIE2 building; Wien is the local-language equivalent of Vienna. The supplied address remains authoritative."
+        "coordinateNotes": "Nominatim geocode of the manually verified Digital Realty address; query: Louis-Häfliger-Gasse 10, Vienna 1210, Austria; returned: Digital Realty VIE1 & VIE2, 10, Louis-Häfliger-Gasse, Neujedlersdorf, Katastralgemeinde Großjedlersdorf II, Floridsdorf, Wien, 1210, Österreich; reviewed 2026-09-21. A deterministic building/unit-stripped fallback query was used after the full address did not produce a safe result. Manual QA accepted the named Digital Realty VIE1/VIE2 building; Wien is the local-language equivalent of Vienna. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building. The supplied address remains authoritative."
       },
       "lifecycle": {
         "status": null,
@@ -27174,7 +27174,7 @@
         "lastVerifiedDate": "2026-09-21",
         "reviewNotes": [
           "Materialized from parent market digital-realty-vienna; the parent is not itself a physical facility record.",
-          "Geocoder precision classification: exact_or_rooftop."
+          "Geocoder precision classification: interpolated_or_street."
         ]
       },
       "aiRelevance": "unknown",

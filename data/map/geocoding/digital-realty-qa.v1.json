@@ -7,8 +7,8 @@
   "unresolved": 31,
   "excludedFromCanonicalWrite": 31,
   "precision": {
-    "exactOrRooftop": 71,
-    "interpolatedOrStreet": 64,
+    "exactOrRooftop": 65,
+    "interpolatedOrStreet": 70,
     "lowerPrecision": 7,
     "unresolved": 21
   },
@@ -759,5 +759,12 @@
       "outcome": "geocode_no_match",
       "reason": "Provider returned no result."
     }
+  ],
+  "sharedPointPrecisionDemotions": [
+    "digital-realty-lon1",
+    "digital-realty-lon2",
+    "digital-realty-lon3",
+    "digital-realty-vie1",
+    "digital-realty-vie2"
   ]
 }

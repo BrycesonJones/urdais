@@ -299,6 +299,94 @@ describe("the complete projected dataset", () => {
     expect(current).not.toBe(declared);
   });
 
+  describe("the Querétaro corrections", () => {
+    const at = (key: string) => byKey.get(key)!.location;
+
+    it("keeps MEX02 in Colón, where its first-party address says it is", () => {
+      // Production QA found the imported point 3 km from Querétaro city and
+      // 44 km from Colón, on a record whose address and locality both say
+      // Colón. The coordinate came from PeeringDB, which contradicts its own
+      // address fields; the address itself is confirmed by Digital Realty.
+      const mex02 = at("digital-realty-mex02");
+      expect(mex02.latitude).toBe(20.6633861);
+      expect(mex02.longitude).toBe(-100.1087331);
+      expect(mex02.streetAddress).toBe("Carretera Estatal 100, Colón, Querétaro, 76270, Mexico");
+      expect(mex02.locality).toBe("Colón");
+      expect(mex02.adminArea).toBe("Querétaro");
+      expect(mex02.countryName).toBe("Mexico");
+      expect(mex02.coordinateNotes).toContain("PeeringDB");
+    });
+
+    it("claims only street precision for MEX02, because a km marker is not a building", () => {
+      expect(at("digital-realty-mex02").coordinatePrecision).toBe("street");
+    });
+
+    it("puts MEX02 near its neighbours rather than near Querétaro city", () => {
+      const km = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) => {
+        const toRad = (d: number) => (d * Math.PI) / 180;
+        const dLat = toRad(b.lat - a.lat);
+        const dLon = toRad(b.lon - a.lon);
+        const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2;
+        return 2 * 6371.0088 * Math.asin(Math.sqrt(h));
+      };
+      const point = (key: string) => ({ lat: at(key).latitude!, lon: at(key).longitude! });
+      const mex02 = point("digital-realty-mex02");
+      expect(km(mex02, point("digital-realty-mex01"))).toBeLessThan(15);
+      expect(km(mex02, point("digital-realty-mex03"))).toBeLessThan(15);
+      // Querétaro city, which the rejected coordinate sat beside.
+      expect(km(mex02, { lat: 20.5888, lon: -100.3899 })).toBeGreaterThan(20);
+    });
+
+    it("leaves MEX01 and MEX03 exactly as they were", () => {
+      const mex01 = at("digital-realty-mex01");
+      expect([mex01.latitude, mex01.longitude]).toEqual([20.593235, -100.164375]);
+      expect(mex01.coordinatePrecision).toBe("building");
+      const mex03 = at("digital-realty-mex03");
+      expect([mex03.latitude, mex03.longitude]).toEqual([20.5866613, -100.1417386]);
+      expect(mex03.coordinatePrecision).toBe("campus");
+    });
+  });
+
+  describe("shared-point precision", () => {
+    it("claims street, not building, where separate halls share one geocoded point", () => {
+      for (const key of ["digital-realty-lon1", "digital-realty-lon2", "digital-realty-lon3", "digital-realty-vie1", "digital-realty-vie2"]) {
+        expect(byKey.get(key)!.location.coordinatePrecision, key).toBe("street");
+      }
+    });
+
+    it("leaves the shared coordinates themselves untouched", () => {
+      const london = ["digital-realty-lon1", "digital-realty-lon2", "digital-realty-lon3"].map((key) => byKey.get(key)!.location);
+      for (const location of london) {
+        expect(location.latitude).toBe(51.5217361);
+        expect(location.longitude).toBe(-0.0730612);
+      }
+    });
+
+    it("never claims building precision at a point another Digital Realty facility also occupies", () => {
+      // Narrower than "no shared point may be building precision", because some
+      // shared points are two entities genuinely inside one identified
+      // building — LUMI inside CSC Kajaani, JUPITER inside Jülich. What this
+      // guards is the other case: separately named halls carrying one geocode
+      // of the street address they share.
+      const atPoint = new Map<string, string[]>();
+      for (const facility of document!.facilities) {
+        const { latitude, longitude } = facility.location;
+        if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) continue;
+        const key = `${latitude},${longitude}`;
+        atPoint.set(key, [...(atPoint.get(key) ?? []), facility.researchKey]);
+      }
+      const offenders: string[] = [];
+      for (const [, keys] of atPoint) {
+        if (keys.length < 2) continue;
+        for (const key of keys) {
+          if (!key.startsWith("digital-realty-")) continue;
+          if (byKey.get(key)!.location.coordinatePrecision === "building") offenders.push(key);
+        }
+      }
+      expect(offenders.sort()).toEqual([]);
+    });
+  });
+
   it("holds every category to the four public ones", () => {
     for (const facility of document!.facilities) {
       expect(FACILITY_CATEGORIES, facility.researchKey).toContain(facility.category);
