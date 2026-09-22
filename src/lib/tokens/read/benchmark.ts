@@ -59,10 +59,17 @@ export const TOKEN_PRICE_METHODOLOGY_VERSIONS: readonly TokenPriceMethodologyVer
   // base region the eligible legs are exactly those 1.1 selected, so no value
   // computed under 1.1 changes under 1.2.
   { version: "1.2", effectiveFrom: "2026-09-14", inputTokens: 500_000, outputTokens: 500_000, inputWeight: 0.5, outputWeight: 0.5 },
+  // 1.3 redesignates xAI to Grok 4.7. A constituent change is a methodology
+  // change under the document's own rule, so it gets a version rather than a
+  // quiet edit. The workload and the weights are unchanged and no other
+  // designation moves, so every value computed under 1.2 stands exactly as it
+  // was -- including xAI's own Grok 4.6 history, which this version succeeds
+  // rather than replaces.
+  { version: "1.3", effectiveFrom: "2026-09-22", inputTokens: 500_000, outputTokens: 500_000, inputWeight: 0.5, outputWeight: 0.5 },
 ];
 
 /** The current version, for labelling a new calculation and for reports. */
-export const TOKEN_PRICE_METHODOLOGY_VERSION = "1.2" as const;
+export const TOKEN_PRICE_METHODOLOGY_VERSION = "1.3" as const;
 
 /** The version in force on a date, or undefined before the first one. */
 export function methodologyInForce(onDate: string): TokenPriceMethodologyVersion | undefined {
@@ -137,6 +144,16 @@ export const TOKEN_BENCHMARK_CONSTITUENTS: readonly TokenBenchmarkConstituent[] 
     methodologyVersion: "1.1",
     rationale:
       "Highest current general-purpose Grok in the qualified roster. Grok Build 0.1 is coding-specific, the 4.20 multi-agent build is agent-specific, and the 4.20 reasoning and non-reasoning entries are mode variants of an earlier version.",
+  },
+  {
+    providerSlug: "xai",
+    providerModelId: "grok-4.7",
+    baseContextTier: "prompt_lt_200k",
+    baseRegion: null,
+    effectiveFrom: "2026-09-22",
+    methodologyVersion: "1.3",
+    rationale:
+      "xAI's current general-purpose Grok. The operator's manual review of docs.x.ai/docs/models on 2026-09-22 found Grok 4.7 published as the model a general-purpose user should choose, at $2 input / $6 output under 200k prompt tokens -- the same pair Grok 4.6 carries, which still appears on the page. The designation therefore moves for the reason designations exist, the provider's frontier having shifted, and not because a price did: the calculated benchmark stays at $4.00 across the boundary. Percentage change is withheld across it all the same, because the two points measure different economic objects. Grok 4.6's observations, frozen value and lineage are untouched.",
   },
   {
     providerSlug: "google",

@@ -64,9 +64,19 @@ function readOnlySql(options: { tables?: string[]; columns?: string[]; ledger?: 
  * is what the readiness check now resolves. `benchmarkPoints` is the same
  * function the freeze uses, so the lineage here is the lineage in the table.
  */
+/**
+ * The day this suite reasons about.
+ *
+ * It has to be the same day the retained artifacts describe. xAI's artifact carries the
+ * Grok 4.7 row attested on 22 September, so a catalog derived from the fixtures is a
+ * 22 September catalog; asking readiness about the 14th would report the provider as
+ * missing a benchmark it simply does not have yet on that date.
+ */
+const ON_DATE = "2026-09-22";
+
 function frozenRowsFrom(store: InMemoryTokenPricingStore, mode: "production" | "research_preview", providers: readonly Wave1Provider[] = DESIGNATED) {
   const catalog = tokenReadCatalogFromStore(store);
-  const points = benchmarkPoints(listVisibleTokenSeries(catalog, mode), "2026-09-14", legObservationIndex(catalog, mode));
+  const points = benchmarkPoints(listVisibleTokenSeries(catalog, mode), ON_DATE, legObservationIndex(catalog, mode));
   return points
     .filter((point) => (providers as readonly string[]).includes(point.providerSlug))
     .map((point, index) => ({
@@ -99,7 +109,7 @@ describe("production readiness", () => {
       sql: readOnlySql({ frozen: frozenRowsFor(store) }),
       migrationFiles: MIGRATIONS,
       loadCatalog: async () => tokenReadCatalogFromStore(store),
-      onDate: "2026-09-14",
+      onDate: ON_DATE,
     });
     expect(report.ready).toBe(true);
     expect(report.findings).toEqual([]);
@@ -120,7 +130,7 @@ describe("production readiness", () => {
       sql: readOnlySql({ frozen: frozenRowsFor(store, present) }),
       migrationFiles: MIGRATIONS,
       loadCatalog: async () => tokenReadCatalogFromStore(store),
-      onDate: "2026-09-14",
+      onDate: ON_DATE,
     });
     expect(report.ready).toBe(false);
     const missing = report.findings.filter((row) => row.code === "BENCHMARK_MISSING");
@@ -137,7 +147,7 @@ describe("production readiness", () => {
       sql: readOnlySql({ frozen }),
       migrationFiles: MIGRATIONS,
       loadCatalog: async () => tokenReadCatalogFromStore(store),
-      onDate: "2026-09-14",
+      onDate: ON_DATE,
     });
     expect(report.ready).toBe(false);
     expect(report.findings.every((row) => row.code === "BENCHMARK_NOT_PRODUCTION")).toBe(true);
@@ -150,7 +160,7 @@ describe("production readiness", () => {
       sql: readOnlySql({ tables: ["pipeline.token_price_observations"] }),
       migrationFiles: MIGRATIONS,
       loadCatalog: async () => tokenReadCatalogFromStore(store),
-      onDate: "2026-09-14",
+      onDate: ON_DATE,
     });
     expect(report.ready).toBe(false);
     expect(report.findings.some((row) => row.code === "SCHEMA_MISSING" && row.detail.includes("token_price_benchmarks"))).toBe(true);
@@ -162,7 +172,7 @@ describe("production readiness", () => {
       sql: readOnlySql({ columns: ["acquisition_mode"], frozen: frozenRowsFor(store) }),
       migrationFiles: MIGRATIONS,
       loadCatalog: async () => tokenReadCatalogFromStore(store),
-      onDate: "2026-09-14",
+      onDate: ON_DATE,
     });
     expect(report.findings.some((row) => row.code === "SCHEMA_MISSING" && row.detail.includes("verification_evidence"))).toBe(true);
   });
@@ -173,7 +183,7 @@ describe("production readiness", () => {
       sql: readOnlySql({ frozen: frozenRowsFor(store), ledger: ["20260914030000"] }),
       migrationFiles: MIGRATIONS,
       loadCatalog: async () => tokenReadCatalogFromStore(store),
-      onDate: "2026-09-14",
+      onDate: ON_DATE,
     });
     expect(report.ready).toBe(false);
     expect(report.pendingMigrations).toEqual(["20260914040000"]);
@@ -185,7 +195,7 @@ describe("production readiness", () => {
   it("writes nothing: every statement it issues is a read", async () => {
     const store = verifiedStore();
     const sql = readOnlySql({ frozen: frozenRowsFor(store) });
-    await checkTokenProductionReadiness({ sql, migrationFiles: MIGRATIONS, loadCatalog: async () => tokenReadCatalogFromStore(store), onDate: "2026-09-14" });
+    await checkTokenProductionReadiness({ sql, migrationFiles: MIGRATIONS, loadCatalog: async () => tokenReadCatalogFromStore(store), onDate: ON_DATE });
     expect(sql.statements.length).toBeGreaterThan(0);
     for (const statement of sql.statements) {
       expect(statement).toMatch(/^\s*select/i);
@@ -200,7 +210,7 @@ describe("production readiness", () => {
       sql,
       migrationFiles: MIGRATIONS,
       loadCatalog: async () => tokenReadCatalogFromStore(empty),
-      onDate: "2026-09-14",
+      onDate: ON_DATE,
     });
     expect(report.ready).toBe(false);
     expect(report.providers.every((row) => !row.frozen)).toBe(true);
@@ -214,7 +224,7 @@ describe("production readiness", () => {
       sql: readOnlySql({ frozen: frozenRowsFor(store) }),
       migrationFiles: MIGRATIONS,
       loadCatalog: async () => tokenReadCatalogFromStore(store),
-      onDate: "2026-09-14",
+      onDate: ON_DATE,
     });
     expect(WAVE1_PROVIDERS.map((provider) => WAVE1_SOURCE_INTERFACES[provider].registry)).toEqual(before);
   });
@@ -263,7 +273,7 @@ describe("frozen lineage is proved, not inferred", () => {
       sql: readOnlySql({ frozen: researchFrozen }),
       migrationFiles: MIGRATIONS,
       loadCatalog: async () => catalog,
-      onDate: "2026-09-14",
+      onDate: ON_DATE,
     });
 
     expect(report.ready).toBe(false);
@@ -280,7 +290,7 @@ describe("frozen lineage is proved, not inferred", () => {
       sql: readOnlySql({ frozen: frozenRowsFrom(productionStore, "production", ["anthropic"]) }),
       migrationFiles: MIGRATIONS,
       loadCatalog: async () => catalog,
-      onDate: "2026-09-14",
+      onDate: ON_DATE,
     });
     expect(report.findings.some((row) => row.code === "BENCHMARK_NOT_PRODUCTION")).toBe(false);
     expect(report.providers.find((row) => row.providerSlug === "anthropic")).toMatchObject({ frozen: true, productionVisible: true });
@@ -293,7 +303,7 @@ describe("frozen lineage is proved, not inferred", () => {
       sql: readOnlySql({ frozen: rows }),
       migrationFiles: MIGRATIONS,
       loadCatalog: async () => tokenReadCatalogFromStore(store),
-      onDate: "2026-09-14",
+      onDate: ON_DATE,
     });
     expect(report.ready).toBe(false);
     expect(report.findings.some((row) => row.code === "BENCHMARK_NOT_PRODUCTION")).toBe(true);
@@ -306,7 +316,7 @@ describe("frozen lineage is proved, not inferred", () => {
       sql: readOnlySql({ frozen: [...researchFrozen, ...productionFrozen] }),
       migrationFiles: MIGRATIONS,
       loadCatalog: async () => catalog,
-      onDate: "2026-09-14",
+      onDate: ON_DATE,
     });
     const anthropic = report.providers.find((row) => row.providerSlug === "anthropic")!;
     // Production filters the research-derived row out, so it is a note and not a blocker.
@@ -325,7 +335,7 @@ describe("frozen lineage is proved, not inferred", () => {
       sql,
       migrationFiles: MIGRATIONS,
       loadCatalog: async () => tokenReadCatalogFromStore(store),
-      onDate: "2026-09-14",
+      onDate: ON_DATE,
     });
     expect(JSON.stringify(rows)).toBe(before);
     expect(sql.statements.every((statement) => /^\s*select/i.test(statement))).toBe(true);
@@ -343,7 +353,7 @@ describe("schema checks run before the schema-dependent catalog load", () => {
         loaded += 1;
         throw new Error(`column "acquisition_mode" does not exist`);
       },
-      onDate: "2026-09-14",
+      onDate: ON_DATE,
     });
     expect(loaded).toBe(0);
     expect(report.ready).toBe(false);
@@ -365,7 +375,7 @@ describe("schema checks run before the schema-dependent catalog load", () => {
         loaded += 1;
         throw new Error("relation pipeline.token_price_benchmarks does not exist");
       },
-      onDate: "2026-09-14",
+      onDate: ON_DATE,
     });
     expect(loaded).toBe(0);
     expect(report.findings.some((row) => row.code === "SCHEMA_MISSING" && row.detail.includes("token_price_benchmarks"))).toBe(true);

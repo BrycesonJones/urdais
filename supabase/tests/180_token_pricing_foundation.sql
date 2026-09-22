@@ -33,8 +33,10 @@ begin
   -- the open-weight phase adds publisher checkpoints that carry no price -- and a bare
   -- count(*) would turn every one of those into a failure here while no longer checking the
   -- thing it was written to check: that all thirty-eight priced identities are still present.
+  -- Thirty-nine since 2026-09-22, when xAI's designation moved to Grok 4.7 and its identity
+  -- was seeded alongside Grok 4.6 rather than replacing it.
   select count(*) into n from reference.models where id::text like '99999999-%';
-  if n <> 38 then raise exception 'expected 38 wave-seeded models across all waves, found %', n; end if;
+  if n <> 39 then raise exception 'expected 39 wave-seeded models across all waves, found %', n; end if;
   select count(*) into n from pipeline.token_price_observations;
   if n <> 0 then raise exception 'token prices were seeded'; end if;
 

@@ -270,12 +270,20 @@ export async function persistProviderBenchmarks(
     // tell "reviewed and withheld" from "never processed" -- the two states the methodology
     // exists to keep apart.
     for (const withholding of persistableWithholdings(catalog, onDate)) {
+      // Matched on provider and reason, deliberately not on methodology version.
+      //
+      // The version is in the row and in the unique index, so including it here
+      // would let a new methodology version stack a second active withholding
+      // for the same provider and the same reason -- two decisions on the record
+      // where one was made. A withholding is a decision about what the provider
+      // publishes, not about which edition of the rulebook was open at the time,
+      // so re-versioning must no more add a withholding than it adds a point to
+      // a published series. A genuinely different decision is a supersession.
       const seen = frozen.find(
         (row) =>
           row.calculationStatus === "withheld" &&
           row.providerSlug === withholding.providerSlug &&
-          row.withheldReason === withholding.reason &&
-          row.methodologyVersion === withholding.methodologyVersion,
+          row.withheldReason === withholding.reason,
       );
       if (seen) continue;
       const result = await sql.query(INSERT_WITHHOLDING_SQL, [

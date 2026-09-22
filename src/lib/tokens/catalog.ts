@@ -54,6 +54,16 @@ export const WAVE1_MODELS: readonly Wave1ModelSeed[] = [
     identityKind: "stable",
   },
   {
+    id: "99999999-a004-4000-8000-000000000008",
+    providerSlug: "xai",
+    providerModelId: "grok-4.7",
+    displayName: "Grok 4.7",
+    modelFamily: "Grok",
+    version: "4.7",
+    lifecycleStatus: "current",
+    identityKind: "stable",
+  },
+  {
     id: "99999999-a004-4000-8000-000000000001",
     providerSlug: "xai",
     providerModelId: "grok-4.6",

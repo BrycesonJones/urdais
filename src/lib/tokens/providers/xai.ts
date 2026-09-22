@@ -16,6 +16,7 @@ import {
   extractHtmlTables,
   headerIndex,
   parseUsdTokenPrice,
+  tryUsdTokenPrice,
   type HtmlTable,
 } from "@/lib/tokens/html-tables";
 import { assertStableModelIdentity, looksLikeLatestPointer, type ModelIdentity } from "@/lib/tokens/identity";
@@ -84,24 +85,33 @@ export function parseXaiPricing(html: string, retrievedAt: string): ProviderPars
 
   const quotes: TokenPriceQuote[] = [];
   const identities = new Map<string, ModelIdentity>();
+  const unpricedCache: string[] = [];
   for (const row of text.rows) {
     const { identity, contextTier } = parseContextModel(cellAt(row, modelI, "model"));
     identities.set(identity.providerModelId, identity);
-    const dims: Array<[SourcePricingDimension, number]> = [
-      ["input", inputI],
-      ["cached_input", cachedI],
-      ["output", outputI],
+
+    // Input and output are required: they are the eligible legs, and a row that
+    // publishes neither is a malformed source rather than a partial one.
+    const dims: Array<[SourcePricingDimension, number, number | null]> = [
+      ["input", inputI, parseUsdTokenPrice(cellAt(row, inputI, "input"))],
+      // Cached input is optional. It is a cache dimension, excluded from the
+      // benchmark entirely, so a row that states no cached rate is a row with
+      // one fewer economically distinct quote -- not a broken table. Refusing
+      // the whole artifact over it would make a provider's cache disclosures
+      // a precondition for publishing its list prices, which they are not.
+      ["cached_input", cachedI, tryUsdTokenPrice(cellAt(row, cachedI, "cached_input"))],
+      ["output", outputI, parseUsdTokenPrice(cellAt(row, outputI, "output"))],
     ];
-    for (const [dimension, index] of dims) {
+    for (const [dimension, , price] of dims) {
+      if (price === null) {
+        unpricedCache.push(`${identity.providerModelId} (${contextTier})`);
+        continue;
+      }
       quotes.push(
         createSourceQuote({
           identity,
           dimension,
-          native: {
-            price: parseUsdTokenPrice(cellAt(row, index, dimension)),
-            currency: "USD",
-            denominatorTokens: 1_000_000,
-          },
+          native: { price, currency: "USD", denominatorTokens: 1_000_000 },
           serviceTier: "standard",
           contextTier,
           region: null,
@@ -123,6 +133,13 @@ export function parseXaiPricing(html: string, retrievedAt: string): ProviderPars
         "Requests whose prompt reaches the listed token threshold are billed at the higher rate for all tokens in the request.",
     },
   ];
+
+  if (unpricedCache.length > 0) {
+    diagnostics.push({
+      code: "CACHED_INPUT_UNPRICED",
+      detail: `no cached-input rate is published for ${unpricedCache.join(", ")}; the row's input and output rates are recorded and no cached rate is inferred from another row`,
+    });
+  }
 
   if (/batch api/i.test(html)) {
     diagnostics.push({

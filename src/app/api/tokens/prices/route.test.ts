@@ -29,7 +29,9 @@ describe("GET /api/tokens/prices", () => {
   it("would expose only allowlisted benchmark fields once rights permit publication", () => {
     const store = new InMemoryTokenPricingStore();
     seedWave1ResearchPreview(store);
-    const rows = publishableBenchmarks(listVisibleTokenSeries(tokenReadCatalogFromStore(store), "research_preview"), "2026-09-14");
+    // The retained xAI artifact carries the Grok 4.7 row attested on 22 September, so a
+    // catalog derived from the fixtures is a 22 September catalog.
+    const rows = publishableBenchmarks(listVisibleTokenSeries(tokenReadCatalogFromStore(store), "research_preview"), "2026-09-22");
     expect(rows).toHaveLength(6);  // six providers ingested, DeepSeek withheld
     for (const row of rows) {
       expect(validatePublicTokenBenchmark(JSON.parse(JSON.stringify(row)))).toEqual([]);

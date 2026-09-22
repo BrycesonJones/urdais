@@ -13,7 +13,7 @@ import {
   constituentInForce,
   isEligibleLeg,
   methodologyInForce,
-  TOKEN_PRICE_METHODOLOGY_VERSION,
+  TOKEN_PRICE_METHODOLOGY_VERSIONS,
   tokenBenchmarkPrice,
   withholdingFor,
 } from "@/lib/tokens/read/benchmark";
@@ -93,7 +93,11 @@ describe("Moonshot is designated under the methodology as it already stands", ()
 
   it("needs no new methodology version: 1.2 already carries a declared base region", () => {
     expect(moonshot.methodologyVersion).toBe("1.2");
-    expect(TOKEN_PRICE_METHODOLOGY_VERSION).toBe("1.2");
+    // The claim is that adding Moonshot introduced no version of its own, not that 1.2 is
+    // the newest version forever: 1.3 exists, and it was introduced for xAI's constituent
+    // change on 2026-09-22, which is a different question from this designation.
+    expect(methodologyInForce(moonshot.effectiveFrom)?.version).toBe("1.2");
+    expect(TOKEN_PRICE_METHODOLOGY_VERSIONS.filter((row) => row.effectiveFrom === moonshot.effectiveFrom).at(-1)?.version).toBe("1.2");
     expect(moonshot.baseRegion).toBe("international");
     expect(moonshot.baseContextTier).toBeNull();
   });

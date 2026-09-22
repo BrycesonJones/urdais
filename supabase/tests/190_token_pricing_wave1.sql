@@ -16,7 +16,9 @@ begin
   select count(*) into n from reference.models m
     join reference.providers p on p.id = m.provider_id
     where p.slug = 'xai';
-  if n <> 7 then raise exception 'expected 7 xAI models, found %', n; end if;
+  -- Eight: Grok 4.7 was added on 2026-09-22 and Grok 4.6 was kept, because a designation
+  -- change never removes the identity the previous values were computed from.
+  if n <> 8 then raise exception 'expected 8 xAI models, found %', n; end if;
   select count(*) into n from reference.models m
     join reference.providers p on p.id = m.provider_id
     where p.slug = 'openai';

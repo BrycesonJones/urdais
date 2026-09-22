@@ -20,9 +20,11 @@ Reads each Wave-1 provider's retained first-party artifact, parses it through th
 
 It refuses to run without `--verified-by` and `--evidence`, because an unattributed verification is not one. It refuses to guess its target: either `DATABASE_URL` (or `URDAIS_DATABASE_URL`) is set, or `--local` is passed for the development database, and passing both is an error rather than a silent preference. It prints the resolved target with the password masked before it writes anything.
 
-It is idempotent. Re-running it against the same artifacts inserts nothing and says so.
+It also writes the one thing a review always produces: an **attestation**, one row per provider in `pipeline.token_price_verifications`, naming the person, the instant, what they checked and the frozen value or recorded withholding they checked it against. Price data is written only when a price actually changed; the attestation is written either way, because "a person looked and nothing had moved" is a fact about Urdais's operating discipline and it has to live somewhere. It is the source of truth for verification freshness. Before it existed, freshness was read from the newest frozen calculation, which moves only when a price moves, so an unchanged review was indistinguishable from no review at all.
 
-Run it once against the deployed database. Run it again only when a provider's published prices change, or when a designation changes, which is an explicit operator action and never a consequence of shipping code.
+It is idempotent, on both halves. Re-running it against the same artifacts inserts no price data, and replaying the same attestation -- same provider, instant, verifier and statement -- inserts no event. A genuinely later review does insert a new event, which is the whole point.
+
+Run it once against the deployed database, and then on the review cadence in `docs/operations/token-price-verification.md`. Run it outside that cadence when a provider's published prices change, or when a designation changes, which is an explicit operator action and never a consequence of shipping code.
 
 ## Checking, which a deployment does
 

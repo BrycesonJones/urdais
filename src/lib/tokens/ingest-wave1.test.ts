@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { detectObservationChanges } from "@/lib/tokens/change-detection";
-import { loadPricingFixture } from "@/lib/tokens/fixtures";
+import { fixtureMeta, loadPricingFixture } from "@/lib/tokens/fixtures";
 import { sha256Hex } from "@/lib/tokens/hash";
 import { ingestTokenPricing } from "@/lib/tokens/ingest";
 import { parseAnthropicPricing } from "@/lib/tokens/providers/anthropic";
@@ -67,12 +67,23 @@ describe("fixture provenance", () => {
     for (const provider of ["anthropic", "xai", "openai"] as const) {
       const fixture = loadPricingFixture(provider);
       expect(fixture.sourceUrl).toMatch(/^https:\/\//);
-      expect(fixture.retrievedAt).toBe(RETRIEVED);
+      expect(fixture.retrievedAt).toBe(fixtureMeta(provider).retrievedAt);
+      expect(Number.isNaN(Date.parse(fixture.retrievedAt))).toBe(false);
       expect(fixture.sha256).toBe(sha256Hex(fixture.body));
       expect(fixture.sha256).toMatch(/^[0-9a-f]{64}$/);
       expect(fixture.provenance.length).toBeGreaterThan(20);
       expect(readFileSync(path.join(FIXTURE_DIR, fixture.bodyFile), "utf8")).toBe(fixture.body);
     }
+  });
+
+  it("names each artifact's own capture date, including the one that has since been superseded", () => {
+    // The three Wave-1 artifacts were captured together on 14 September. xAI's has since been
+    // superseded by the 22 September excerpt carrying the attested Grok 4.7 row, and its
+    // provenance says which artifact it replaces rather than quietly reusing the old date.
+    expect(loadPricingFixture("anthropic").retrievedAt).toBe(RETRIEVED);
+    expect(loadPricingFixture("openai").retrievedAt).toBe(RETRIEVED);
+    expect(loadPricingFixture("xai").retrievedAt).toBe("2026-09-22T00:00:00Z");
+    expect(loadPricingFixture("xai").provenance).toContain("7f13f36394f39b9aef4b9e52218d22633ce94ab33aa0f8483d87dcad72e42a5b");
   });
 });
 

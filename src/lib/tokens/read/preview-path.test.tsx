@@ -335,7 +335,7 @@ describe("source registry is unchanged", () => {
 
 describe("Token Price benchmark on the product surfaces", () => {
   function benchmarkInstruments() {
-    return benchmarkInstrumentsFromSeries(publishableBenchmarks(listVisibleTokenSeries(previewCatalog(), "research_preview"), "2026-09-14"));
+    return benchmarkInstrumentsFromSeries(publishableBenchmarks(listVisibleTokenSeries(previewCatalog(), "research_preview"), "2026-09-22"));
   }
 
   it("shows one provider benchmark market with no model, dimension, cache, tier or region control", () => {
