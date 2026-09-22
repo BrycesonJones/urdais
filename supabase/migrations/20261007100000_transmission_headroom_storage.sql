@@ -3,11 +3,17 @@
 -- The NYISO backfill stopped in production against a full disk. The measurements behind this
 -- migration, taken locally on one real month (89,661 source rows, 88,835 margins):
 --
---   current    3,156 bytes per margin   131 MB heap + 136 MB index
---   this       1,544 bytes per margin    70 MB heap +  60 MB index      -51%
+--   before     3,156 bytes per margin   131 MB heap + 136 MB index
+--   after      1,719 bytes per margin    72 MB heap +  74 MB index      -46%
 --
--- Over the full twenty-year series that is roughly 80 GB rather than 163 GB. It does not make the
--- backfill free, but it halves it without giving up a single guarantee.
+-- 1,719 is the number to size a backfill against: it is what a fresh ingest through the real
+-- pipeline produces. Migrating existing rows in place measures 1,609 (-49%), because a bulk copy
+-- packs pages more tightly than incremental inserts do; that figure describes the migration, not
+-- the steady state, and planning off it would undercount.
+--
+-- Over the full twenty-year series 1,719 is roughly 74 GB, or 89 GB with 20% headroom, against
+-- 163 GB before. It does not make the backfill free, and 89 GB is still beyond the current
+-- production tier -- but it halves the bill without giving up a single guarantee.
 --
 -- Where the bytes were going, measured rather than guessed:
 --
