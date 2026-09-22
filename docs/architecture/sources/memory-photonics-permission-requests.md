@@ -2,7 +2,9 @@
 
 **Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Prepared 14 September 2026.
 
-**Requests 1–5 have been sent:** WSTS, TrendForce / DRAMeXchange, Silicon Data, Omdia and LightCounting. Their exact send dates and times are not present in the repository and are not inferred here. No response is recorded. Requests 6–9 remain drafts and must not be sent without separate human approval. The operational record for each lives in `memory-photonics-outreach-tracker.md`.
+**Corrected 22 September 2026 by UMPI Phase 2B.** This document said requests 1–5 had been sent with no response recorded. The mailbox says otherwise: **TrendForce replied**, **Omdia and LightCounting replied**, the **Silicon Data message bounced and was never delivered**, and **no WSTS message can be found**. Send dates are now known for the delivered ones. See `memory-photonics-outreach-tracker.md` for the reconciled record and `trendforce-licensing-response.md` for TrendForce's reply verbatim.
+
+**Requests 6–9 remain drafts.** **Requests 10 and 11 are new Phase 2B drafts and are the ones that matter now.** Nothing below may be sent without separate human approval.
 
 ## Before sending any remaining draft
 
@@ -348,6 +350,116 @@ In short: may an automated client read your news listing and search pages at a m
 We will not retrieve anything before you tell us it is permitted. If the answer is no, that is a complete answer and we will record it and stop.
 
 顺颂商祺。
+
+[Sender name]
+Urdais · https://urdais.com
+[Reply address — must match the sending account]
+
+---
+
+## UMPI Phase 2B — the two requests that matter now
+
+Both are **unsent** and await approval. They exist because Phase 2B established that the first TrendForce ask was too broad to be priced sensibly, and that CFM has never been asked anything at all.
+
+---
+
+### 10. TrendForce / DRAMeXchange — re-open, narrow scope, six lines
+
+**To:** `yhlin@trendforce.com` (Deric Lin, Sales Division) · **cc:** `SR_MI@trendforce.com` · **VERIFIED** — he replied from this address on 15 September 2026
+**Why this recipient:** he answered the first enquiry and invited a future approach. Reply into the existing thread `1a0a1136783e37cd` so the history travels with it.
+
+**Why re-open at all.** The first ask covered DRAM and NAND spot, monthly contract, GDDR, LPDDR and HBM, and described the output as an index. It was answered against that scope and Urdais withdrew on price. The scope below is roughly one-twentieth of it, and the two questions Urdais actually needs answered — public display of a value, and publication of a percentage Urdais computes — were never separated in the first message.
+
+**Before sending:** resolve the sender block; the signature must carry the address the message is sent from.
+
+**Subject:** Re: Licensing enquiry — a much smaller scope: six DRAM spot lines
+
+Hi Deric,
+
+Thank you again for the reply in September, and for being clear about commercial use. I would like to come back with a far smaller request than the one I first sent, because I think I asked for twenty times more than we need and it made the conversation about the wrong thing.
+
+**What we actually need.** Six DRAM spot lines, one session value per line per business day:
+
+- DDR5 16Gb (2Gx8) 4800/5600, branded/Major
+- DDR4 16Gb (2Gx8) 3200, branded/Major
+- DDR4 8Gb (1Gx8) 3200, branded/Major
+- DDR4 16Gb (2Gx8) eTT
+- DDR4 8Gb (1Gx8) eTT
+- DDR3 4Gb 512Mx8 1600/1866, branded/Major
+
+**What we do not need**, so that it is not priced in: NAND, contract prices, HBM, LPDDR, GDDR, server or PC modules, DXI, research reports, forecasts, analyst calls, and any seat beyond one.
+
+**What we would publish.** Two things, and they are different, so I am asking about them separately rather than as one question:
+
+- **A. The price itself.** One of your values, displayed publicly on our website as, for example, `DDR5 16Gb — $56.93 / chip`, with attribution to DRAMeXchange. This is direct display of your number and I am not going to describe it as anything else.
+- **B. A percentage we calculate.** The change between two of your closes, displayed as, for example, `+2.4% 1D`. We compute this; the input is yours.
+
+A yes to B is not a yes to A, and I will not read it as one.
+
+**The questions.**
+
+1. Can one package carry exactly those six lines, and are the eTT lines at the same tier as the branded ones? Is DDR5 16Gb (2Gx8) eTT available under the same terms?
+2. In what form would those six lines be delivered, and how often?
+3. May we retrieve the delivered file on a schedule and parse it automatically, or must retrieval be manual?
+4. May we store each session's value as a dated observation in our own database, indefinitely?
+5. If the licence later ends, may we retain the observations already collected during the term, solely to reproduce and continue displaying the values we published while licensed? This one matters more to us than any other: our methodology requires that a published figure stays reproducible years later, and we cannot launch without it.
+6. May we publicly display one of your values commercially, as in A above, with attribution?
+7. Separately from 6: may we calculate and publish a percentage change from two of your closes, as in B above?
+8. Is commercial use permitted under such a licence, on a subscription-funded public website?
+9. May we publish a historical chart of those six lines over the licensed history?
+10. What exact attribution wording and placement would you require?
+11. Does §5.h — betting, wagering, prediction markets, or other speculative activity — apply to a published informational benchmark that we do not use to settle anything and do not offer for trading? We operate no prediction market and settle no wagers. I am asking for confirmation rather than assuming.
+12. What licence type and price applies to this scope, and would a written agreement be required rather than an email?
+
+If the answer to 6 is no, please say so plainly — it decides the product, and a clear no now is worth more to us than an open question for another six months.
+
+Thank you,
+
+[Sender name]
+Urdais · https://urdais.com
+[Reply address — must match the sending account]
+
+---
+
+### 11. CFM 闪存市场 — first contact, DRAM chip quotes
+
+**To:** `Service@ChinaFlashMarket.com` · **VERIFIED** 2026-09-22 on chinaflashmarket.com
+**Why this recipient:** the only address the site publishes. Company: 深圳市闪存市场资讯有限公司.
+
+**Why contact them.** CFM is the only recurring DRAM chip quote found that is not TrendForce, and its disclaimer contemplates a written permit (未经书面许可) rather than a flat bar. Its board does **not** quote DDR3 4Gb and its cycle is presented as weekly, so it is unlikely to be a primary source for the product as currently defined — question 1 and 2 below are there to settle that before anything else.
+
+**Before sending:** resolve the sender block. Consider sending in both languages; the English below is the primary text and the Chinese terms are given where they are the operative words in CFM's own disclaimer.
+
+**Subject:** Licensing enquiry — DRAM chip quotes in a published price index / 关于在价格指数中使用贵司DRAM报价的授权咨询
+
+Hello,
+
+Urdais is a market-data platform covering compute, AI model economics, memory, photonics and energy, with the methodology behind every published figure openly documented.
+
+We are building a DRAM spot price product and would like to ask whether CFM data can be licensed for it. Your disclaimer prohibits 复制、转载、传播、改编、汇编、展示、发行 without written permission, so we are asking for that permission rather than assuming it, and we will not retrieve or use anything until you tell us it is permitted.
+
+**Coverage, first — because it may end the conversation quickly.**
+
+1. Does the 报价中心 quote these lines, and at what organization and speed: DDR5 16Gb Major, DDR4 16Gb 3200, DDR4 8Gb 3200, DDR4 16Gb eTT, DDR4 8Gb eTT? Is **DDR3 4Gb** quoted anywhere, in any product?
+2. What is the actual update cadence for the DRAM chip board — daily on business days, or weekly? Is there a defined session or publication time?
+3. How far back does the history for those lines go, and can it be licensed?
+
+**Delivery and use.**
+
+4. Is there an API, CSV or scheduled data delivery (数据接口 / 数据导出)?
+5. May we retrieve the quotes automatically on a schedule (自动采集)?
+6. May we store each quote as a dated observation in our own database (存储、保留)?
+7. May we publicly display a CFM price commercially, for example `DDR5 16Gb — $45.00 / chip`, with the attribution 来源：CFM闪存市场? This is 转载 and 展示 of your value, which is why we are asking specifically.
+8. Separately from 7: may we publish a percentage change that we calculate from two CFM quotes (我们自行计算的涨跌幅)? A yes to one is not a yes to the other, and we will not treat it as one.
+9. Is commercial use permitted (商业用途)?
+10. May we publish historical charts of those lines?
+11. What attribution wording and placement do you require?
+12. If the licence later ends, may we retain the quotes already collected during the term, solely to reproduce values we published while licensed (解约后历史保留)?
+13. What licence type and price applies, and is a written agreement (书面协议) required?
+
+If the answer is no, that is a complete answer and we will record it and stop.
+
+Thank you for your time.
 
 [Sender name]
 Urdais · https://urdais.com
