@@ -1,10 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { useMemo, useState } from "react";
 
 import { UcpiChart } from "@/components/market/ucpi-chart";
 import { movementClass } from "@/components/market/movement";
 import { formatNumber, formatPercent, formatTimestamp } from "@/lib/format";
 import { marketIndexHref } from "@/lib/routes";
-import type { IndexSeries, MarketIndex, MarketSnapshot } from "@/types/market";
+import type { IndexSeries, MarketIndex, MarketSnapshot, TimeRange } from "@/types/market";
 
 type UcpiSummaryProps = {
   index: MarketIndex;
@@ -19,8 +22,19 @@ type UcpiSummaryProps = {
   provenance?: "production" | "demo";
 };
 
+const DEFAULT_RANGE: TimeRange = "1M";
+
+function periodChangePercent(series: IndexSeries, range: TimeRange): number | null {
+  const points = series[range];
+  const first = points[0];
+  const last = points[points.length - 1];
+  if (!first || !last || points.length < 2 || first.value === 0) return null;
+  return ((last.value - first.value) / first.value) * 100;
+}
+
 /**
- * Primary Information Markets panel: UCPI value, change, and snapshot chart.
+ * Primary Information Markets panel: UCPI value, selected-period change, and
+ * snapshot chart. One shared range state drives both the chart and headline.
  *
  * The title and the chart preview link to the UCPI detail page. The panel
  * itself is not a link because it contains the timeframe buttons; nesting
@@ -28,6 +42,9 @@ type UcpiSummaryProps = {
  * border respond when any part of the panel is hovered or focused.
  */
 export function UcpiSummary({ index, snapshot, series, provenance = "demo" }: UcpiSummaryProps) {
+  const [range, setRange] = useState<TimeRange>(DEFAULT_RANGE);
+  const changePercent = useMemo(() => periodChangePercent(series, range), [series, range]);
+
   return (
     <article
       aria-labelledby="ucpi-heading"
@@ -62,18 +79,24 @@ export function UcpiSummary({ index, snapshot, series, provenance = "demo" }: Uc
             {formatNumber(snapshot.value)}
           </span>{" "}
           <span className="text-sm text-neutral-400">{index.unit}</span>{" "}
-          {snapshot.changePercent !== null && (
-            <span className={`text-sm font-medium ${movementClass(snapshot.changePercent)}`}>
-              {formatPercent(snapshot.changePercent)}
+          {changePercent !== null && (
+            <span className={`text-sm font-medium ${movementClass(changePercent)}`}>
+              {formatPercent(changePercent)}
             </span>
           )}{" "}
           <span className="text-xs text-neutral-400">
-            1D · as of {formatTimestamp(snapshot.asOf, true)}
+            {range} · as of {formatTimestamp(snapshot.asOf, true)}
           </span>
         </p>
       </header>
 
-      <UcpiChart symbol={index.symbol} unit={index.unit} series={series} />
+      <UcpiChart
+        symbol={index.symbol}
+        unit={index.unit}
+        series={series}
+        range={range}
+        onRangeChange={setRange}
+      />
     </article>
   );
 }
