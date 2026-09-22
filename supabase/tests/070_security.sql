@@ -159,7 +159,11 @@ declare
     'pipeline.buildout_projects', 'pipeline.buildout_project_observations',
     'pipeline.buildout_lifecycle_observations', 'pipeline.buildout_milestones',
     'pipeline.buildout_quantities', 'pipeline.buildout_relationships',
-    'pipeline.buildout_deferrals'
+    'pipeline.buildout_deferrals',
+    -- Grid Buildout Velocity (GBV-3): methodology 1.0.0 outputs and resolution provenance
+    'reference.buildout_metric_definitions',
+    'pipeline.buildout_analytics_runs', 'pipeline.buildout_metric_results',
+    'pipeline.buildout_project_resolutions'
   ];
   n integer;
 begin

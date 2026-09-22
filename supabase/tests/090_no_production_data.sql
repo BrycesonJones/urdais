@@ -82,15 +82,18 @@ begin
   -- 1.0.0. Both approve a methodology and seed no metric result: the analytics tables stay empty
   -- until a calculation is run deliberately. UMPI 1.0.0 joins them on the same footing: approval
   -- makes a value publishable once derived, and seeds no observation and no publication, which
-  -- the empty-table assertions below and in 600/620/630 keep checking.
+  -- the empty-table assertions below and in 600/620/630 keep checking. GBV-3 approves Grid
+  -- Buildout Velocity 1.0.0 the same way: the approval is what authorises a calculation, and it
+  -- seeds no metric result.
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id
    where mv.status <> 'draft'
      and m.slug not in ('ubwi', 'ucpi-listed-gpu', 'utvi', 'model-frontier', 'open-weight-proprietary',
                         'map-facilities', 'deliverable-capacity', 'power-delivery-gap',
-                        'interconnection-queue-analytics', 'transmission-headroom', 'umpi-kr-dram');
+                        'interconnection-queue-analytics', 'transmission-headroom', 'umpi-kr-dram',
+                        'grid-buildout-velocity');
   if n <> 0 then
-    raise exception 'a non-draft methodology version exists outside UBWI, UCPI-LISTED-GPU, UTVI, Model Frontier, Open-weight vs Proprietary, Map Facilities, Deliverable Capacity, Power Delivery Gap, Interconnection Queue Analytics, Transmission Headroom and UMPI-KR DRAM';
+    raise exception 'a non-draft methodology version exists outside UBWI, UCPI-LISTED-GPU, UTVI, Model Frontier, Open-weight vs Proprietary, Map Facilities, Deliverable Capacity, Power Delivery Gap, Interconnection Queue Analytics, Transmission Headroom, UMPI-KR DRAM and Grid Buildout Velocity';
   end if;
 
   -- And a bootstrapped database holds no facility, published or otherwise.
