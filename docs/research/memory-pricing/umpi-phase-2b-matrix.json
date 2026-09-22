@@ -1,0 +1,256 @@
+{
+  "title": "UMPI Phase 2B — licensing closure rights matrix",
+  "as_of": "2026-09-22",
+  "status": "internal research; establishes no legal right; no source approved; no observation collected",
+  "companion_markdown": "docs/research/memory-pricing/umpi-phase-2b-licensing-closure.md",
+  "prior_work": [
+    "docs/research/memory-pricing/source-shortlist.md",
+    "docs/research/memory-pricing/umpi-phase-1b.md"
+  ],
+  "product_under_test": {
+    "methodology": "docs/methodology/umpi.md",
+    "version": "0.1.0-draft",
+    "published_value": "the selected source close, unchanged, in USD per chip",
+    "derived_value": "Urdais 1D close-to-close change",
+    "instruments": [
+      "DDR5 16Gb 2Gx8 4800/5600 branded",
+      "DDR4 16Gb 2Gx8 3200 branded",
+      "DDR4 8Gb 1Gx8 3200 branded",
+      "DDR4 16Gb 2Gx8 eTT",
+      "DDR4 8Gb 1Gx8 eTT",
+      "DDR3 4Gb 512Mx8 1600/1866 branded"
+    ]
+  },
+  "right_states": [
+    "permitted",
+    "restricted",
+    "ambiguous_requires_written_confirmation",
+    "denied",
+    "custom_license_required",
+    "not_applicable"
+  ],
+  "source_classifications": [
+    "fully_cleared_for_umpi_v1",
+    "cleared_except_raw_republication",
+    "cleared_except_post_termination_retention",
+    "cleared_except_automation",
+    "partially_cleared_other",
+    "commercial_terms_required",
+    "denied",
+    "ambiguous_requires_followup",
+    "coverage_inadequate",
+    "no_response"
+  ],
+  "sources": [
+    {
+      "id": "trendforce-dramexchange",
+      "legal_entity": "TrendForce Corp. (DRAMeXchange division), Taipei, Taiwan",
+      "priority": 1,
+      "classification": "commercial_terms_required",
+      "contacted": true,
+      "responded": true,
+      "response": {
+        "date": "2026-09-15T08:08:56Z",
+        "person": "Deric Lin, Sales, Sales Division",
+        "address": "yhlin@trendforce.com",
+        "channel": "email",
+        "thread": "1a0a1136783e37cd",
+        "message": "1a0a41d3fe2098c7",
+        "binding": false,
+        "binding_note": "sales guidance from a named salesperson; no licence document, term sheet or draft agreement received",
+        "formal_agreement_still_required": true,
+        "evidence_doc": "docs/architecture/sources/trendforce-licensing-response.md"
+      },
+      "conversation_state": "closed by Urdais on budget grounds 2026-09-15; vendor invited a future approach 2026-09-17; not a refusal",
+      "terms_document": {
+        "url": "https://www.dramexchange.com/About/TermsOfUse",
+        "last_updated": "2020-01-01",
+        "retrieved": "2026-09-22"
+      },
+      "rights": {
+        "g1_access": {
+          "status": "restricted",
+          "evidence": "vendor reply 2026-09-15",
+          "clause": "We only provide Excel files, and no other APIs are currently available.",
+          "notes": "paid membership delivers Excel files; no machine interface exists"
+        },
+        "g2_storage": {
+          "status": "ambiguous_requires_written_confirmation",
+          "evidence": "terms silent; vendor did not answer",
+          "clause": null,
+          "notes": "retaining parsed observations as a canonical database is not addressed in any text read"
+        },
+        "g3_calculation": {
+          "status": "ambiguous_requires_written_confirmation",
+          "evidence": "ToU 6.2",
+          "clause": "YOU MAY NOT REPRODUCE, MODIFY, CREATE DERIVATIVE WORKS FROM, DISPLAY, PERFORM, PUBLISH, DISTRIBUTE, DISSEMINATE, BROADCAST OR CIRCULATE TO ANY THIRD PARTY",
+          "notes": "derivative-works bar reaches a calculated output; vendor's re-analysis sentence implies internal calculation is not the objection"
+        },
+        "g4_derived_publication": {
+          "status": "custom_license_required",
+          "evidence": "vendor reply 2026-09-15",
+          "clause": "if the data is to be published only after a complete re-analysis, we can open a separate discussion regarding the license",
+          "notes": "a discussion, not a grant; conditioned on re-analysis that UMPI V1 does not perform"
+        },
+        "g5_post_termination_retention": {
+          "status": "ambiguous_requires_written_confirmation",
+          "evidence": "no termination-data clause in ToU; asked and not answered",
+          "clause": null,
+          "notes": "silence is not permission; Phase 2A makes this a launch gate"
+        },
+        "raw_price_republication": {
+          "status": "denied",
+          "negotiation_status": "custom_license_required",
+          "evidence": "ToU 6.2; vendor reply 2026-09-15",
+          "clause": "DISPLAY... PUBLISH... CIRCULATE TO ANY THIRD PARTY / We do not permit the commercial use of our data.",
+          "notes": "THE BLOCKING RIGHT. UMPI V1 publishes the close unchanged, which is outside the complete-re-analysis opening"
+        },
+        "commercial_use": {
+          "status": "denied",
+          "evidence": "vendor reply 2026-09-15",
+          "clause": "We do not permit the commercial use of our data.",
+          "notes": "unqualified as written under standard membership"
+        },
+        "attribution": {
+          "status": "ambiguous_requires_written_confirmation",
+          "evidence": "ToU 6.3",
+          "clause": "USERS ARE REQUIRED TO INCLUDE A NOTICE INDICATING THAT THE WEBSITE IS THE SOURCE OF THE MATERIAL",
+          "notes": "form exists but applies only once a use is authorized; wording and placement for a price surface unconfirmed"
+        },
+        "automation_rate_limits": {
+          "status": "ambiguous_requires_written_confirmation",
+          "evidence": "no automation clause in ToU; vendor did not answer",
+          "clause": null,
+          "notes": "practical question is whether scheduled parsing of a licensed Excel file is permitted"
+        },
+        "post_termination_deletion_obligation": {
+          "status": "ambiguous_requires_written_confirmation",
+          "evidence": "no clause found",
+          "clause": null,
+          "notes": "neither imposed nor waived"
+        }
+      },
+      "speculative_use_clause": {
+        "section": "5.h",
+        "text": "YOU ARE PROHIBITED FROM USING, REFERENCING, INCORPORATING, OR RELYING UPON ANY PRICES, DATA, FORECASTS, RESEARCH, OR OTHER CONTENT PROVIDED THROUGH THE WEBSITE IN CONNECTION WITH ANY BETTING, WAGERING, PREDICTION MARKET, OR OTHER SPECULATIVE ACTIVITY",
+        "assessment": "binds the user of the website; an informational benchmark is not on its face within it; 'or other speculative activity' is undefined",
+        "action": "request explicit written carve-out confirmation; do not conclude either way from the text"
+      },
+      "instrument_coverage": "all six canonical instruments covered exactly, with organizations and speed bins",
+      "commercial_terms": {
+        "list_pricing_usd_annual": {
+          "Silver": 5000,
+          "Gold": 11000,
+          "DRAM Platinum": 18000,
+          "DRAM Diamond": 30000,
+          "Memory Platinum": 30000,
+          "Memory Diamond": 55000
+        },
+        "pricing_retrieved": "2026-09-22",
+        "quoted_for_urdais_scope": null,
+        "display_or_redistribution_licence_fee": null,
+        "display_or_redistribution_licence_exists": "unconfirmed",
+        "introduction_kit": "attached to the vendor reply; held in the mailbox; not extracted and not committed"
+      },
+      "unmet_rights": [
+        "raw_price_republication",
+        "commercial_use",
+        "g5_post_termination_retention",
+        "g2_storage",
+        "g3_calculation"
+      ]
+    },
+    {
+      "id": "cfm-china-flash-market",
+      "legal_entity": "深圳市闪存市场资讯有限公司 (Shenzhen CFM Memory Market Information Co., Ltd.)",
+      "priority": 2,
+      "classification": "coverage_inadequate",
+      "contacted": false,
+      "responded": false,
+      "contact": "Service@ChinaFlashMarket.com",
+      "coverage_finding": {
+        "retrieved": "2026-09-22",
+        "url": "https://www.chinaflashmarket.com/price",
+        "quoted_dram_chip_lines": [
+          "DDR5 24Gb Major",
+          "DDR5 16Gb Major",
+          "DDR5 16Gb eTT",
+          "DDR4 16Gb 3200",
+          "DDR4 16Gb eTT",
+          "DDR4 8Gb 3200",
+          "DDR4 8Gb eTT",
+          "DDR4 4Gb eTT"
+        ],
+        "ddr3_4gb_quoted": false,
+        "cadence_presented": "weekly",
+        "organization_and_speed_qualifiers_shown": false,
+        "blocking_gaps": [
+          "DDR3 4Gb is not quoted in any product found",
+          "weekly cycle does not satisfy the Phase 2A business-day session cadence",
+          "2Gx8 / 1Gx8 organization correspondence unconfirmed"
+        ]
+      },
+      "rights": {
+        "g1_access": { "status": "ambiguous_requires_written_confirmation", "evidence": "price board publicly readable, no API found", "clause": null, "notes": "readable is not licensed" },
+        "g2_storage": { "status": "ambiguous_requires_written_confirmation", "evidence": "site disclaimer", "clause": "forbids 复制、转载、传播、改编、汇编、展示、发行 of any content including 数据、图表 without written permission", "notes": "compilation and display both named" },
+        "g3_calculation": { "status": "ambiguous_requires_written_confirmation", "evidence": "site disclaimer", "clause": "改编", "notes": "not separately addressed" },
+        "g4_derived_publication": { "status": "custom_license_required", "evidence": "site disclaimer", "clause": "licensed reuse must attribute 来源：CFM闪存市场 and stay inside the permit", "notes": "a permit regime is contemplated; nobody has requested one" },
+        "g5_post_termination_retention": { "status": "ambiguous_requires_written_confirmation", "evidence": "nothing found", "clause": null, "notes": "unaddressed" },
+        "raw_price_republication": { "status": "custom_license_required", "evidence": "site disclaimer", "clause": "转载 and 展示 barred without written permission", "notes": "barred by default, licensable in principle, untested" },
+        "commercial_use": { "status": "custom_license_required", "evidence": "paid 报价中心 exists", "clause": null, "notes": "untested" },
+        "attribution": { "status": "permitted", "evidence": "site disclaimer", "clause": "来源：CFM闪存市场", "notes": "the only right whose form is already documented" },
+        "automation_rate_limits": { "status": "ambiguous_requires_written_confirmation", "evidence": "no API found", "clause": null, "notes": "unknown" },
+        "post_termination_deletion_obligation": { "status": "ambiguous_requires_written_confirmation", "evidence": "nothing found", "clause": null, "notes": "unaddressed" }
+      },
+      "viable_role": "validation second desk, or primary for a differently-scoped future version; not a V1 primary or drop-in backup",
+      "commercial_terms": { "public_pricing": null }
+    },
+    {
+      "id": "wsts",
+      "legal_entity": "WSTS Inc.",
+      "priority": 3,
+      "classification": "coverage_inadequate",
+      "contacted": "unverified",
+      "contacted_note": "tracker recorded 'sent'; no message found in the searched mailbox, sent or received",
+      "responded": false,
+      "coverage_finding": "monthly Memory-category ASP; cannot print any canonical UMPI instrument",
+      "viable_role": "validation or weighting input only; not on the V1 critical path",
+      "rights_note": "reproduction without written permission prohibited; distribution licences held by regional semiconductor associations"
+    },
+    {
+      "id": "silicon-data",
+      "legal_entity": "Silicon Data",
+      "priority": 4,
+      "classification": "coverage_inadequate",
+      "contacted": false,
+      "contacted_note": "message to support@silicondata.com bounced 2 seconds after sending; Google Group rejected the post; never delivered",
+      "bounce_evidence": "1a0a113955c48dfc",
+      "responded": false,
+      "coverage_finding": "RAM Index remains GDDR6 only; no intersection with the six canonical instruments",
+      "action": "stop, per phase brief"
+    }
+  ],
+  "instrument_binding": {
+    "state": "none bound",
+    "reason": "binding requires a cleared source and no source is cleared",
+    "bindings": []
+  },
+  "phase_2b_outcome": {
+    "any_source_fully_cleared": false,
+    "custom_licence_required": true,
+    "written_vendor_response_still_the_blocker": "for CFM yes; for TrendForce no, a response exists and does not permit what V1 publishes",
+    "messages_sent_this_phase": 0,
+    "drafts_prepared_awaiting_approval": 2,
+    "data_collected": "none",
+    "subscriptions_purchased": "none"
+  },
+  "phase_3_gate": {
+    "decision": "PHASE_3_BLOCKED",
+    "unmet_rights_in_blocking_order": [
+      "raw price republication / public display",
+      "G5 post-termination retention",
+      "G2 storage and G3 calculation",
+      "G1 automation"
+    ]
+  }
+}
