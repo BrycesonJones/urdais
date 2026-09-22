@@ -185,11 +185,16 @@ begin
   select count(*) into n from pipeline.umpi_publications;
   if n <> 0 then raise exception 'migrations created % publication(s)', n; end if;
 
-  -- Phase 5 writes internal records under a draft. It does not approve the methodology, and the
-  -- draft is what keeps public exposure gated.
-  select mv.status into s from reference.methodology_versions mv
-    join reference.methodologies m on m.id = mv.methodology_id where m.slug = 'umpi-kr-dram';
-  if s <> 'draft' then raise exception 'the UMPI methodology is %, expected draft', s; end if;
+  -- Phase 5 wrote internal records under a draft, and the draft's status was the gate. Phase 6
+  -- approved 1.0.0, so the gate moved onto the row: derivation decides publication_state, and a
+  -- row it marks internal_only stays invisible no matter what the methodology says. Derivation
+  -- must never approve a methodology itself.
+  select count(*) into n from reference.methodology_versions mv
+    join reference.methodologies m on m.id = mv.methodology_id
+   where m.slug = 'umpi-kr-dram' and mv.status = 'approved' and mv.version = '1.0.0';
+  if n <> 1 then raise exception 'the approved UMPI methodology 1.0.0 is missing'; end if;
+  select count(*) into n from pipeline.umpi_publications where publication_state not in ('internal_only', 'published');
+  if n <> 0 then raise exception '% publication(s) carry an unknown publication_state', n; end if;
 
   raise notice 'umpi derivation state: ok';
 end $$;

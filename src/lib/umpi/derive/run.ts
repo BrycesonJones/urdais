@@ -58,6 +58,7 @@ export async function deriveSeries(sql: UmpiSqlExecutor, seriesCode: UmpiSeriesC
       base,
       baseLabel: context.baseLabel,
       indexBaseId: base?.indexBaseId ?? null,
+      publicationMethodologyVersionId: context.methodologyVersionId,
     });
 
     const written = await publishPoints(

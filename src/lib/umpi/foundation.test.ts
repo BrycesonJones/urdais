@@ -32,7 +32,7 @@ describe("canonical series definitions", () => {
     expect(uv.levelIsUrdaisDerived).toBe(true);
     expect(uv.baseOwner).toBe("urdais");
     expect(uv.mixWarningRequired).toBe(true);
-    expect(UMPI_EXPORT_UV_MIX_WARNING).toMatch(/not a price index/);
+    expect(UMPI_EXPORT_UV_MIX_WARNING).toMatch(/not a pure price index/);
   });
 
   it("carry the attribution each agency's terms require", () => {
@@ -119,7 +119,8 @@ describe("the demo surface and the production foundation are separate", () => {
         entry.isDirectory() ? walk(path.join(rel, entry.name)) : [path.join(rel, entry.name)],
       );
     for (const file of walk(".")) {
-      if (file.endsWith("foundation.test.ts")) continue;
+      // Two tests import the demo data deliberately, to assert it cannot reach production.
+      if (file.endsWith("foundation.test.ts") || file.endsWith("read/read-model.test.ts")) continue;
       const source = readFileSync(path.join(dir, file), "utf8");
       expect(source, file).not.toContain("data/mock");
     }

@@ -44,7 +44,14 @@ const base: StoredBase = {
 };
 
 const deriveA = (observations: CurrentObservation[]) =>
-  derivePoints({ seriesCode: "UMPI-KR-DRAM-PPI", observations, base: null, baseLabel: "2020=100", indexBaseId: null });
+  derivePoints({
+    seriesCode: "UMPI-KR-DRAM-PPI",
+    observations,
+    base: null,
+    baseLabel: "2020=100",
+    indexBaseId: null,
+    publicationMethodologyVersionId: "mv-1",
+  });
 
 const deriveB = (observations: CurrentObservation[], withBase: StoredBase | null = base) =>
   derivePoints({
@@ -53,6 +60,7 @@ const deriveB = (observations: CurrentObservation[], withBase: StoredBase | null
     base: withBase,
     baseLabel: UMPI_BASE_LABEL,
     indexBaseId: withBase?.indexBaseId ?? null,
+    publicationMethodologyVersionId: "mv-1",
   });
 
 describe("Series A passes the official level through", () => {
@@ -125,9 +133,29 @@ describe("month over month", () => {
     expect(august.previousObservationId).toBeNull();
   });
 
-  it("is withheld across a methodology boundary", () => {
+  it("is withheld across a methodology boundary between the two observations", () => {
+    // The boundary that matters for a change is whether the two months were *measured* under
+    // the same rules, which is the observation's methodology, not the one the publication is
+    // governed by today.
     const points = deriveA([bok("2026-06", 100, { methodologyVersionId: "mv-0" }), bok("2026-07", 110)]);
     expect(points[1]!.momWithheldReason).toBe("methodology_boundary");
+  });
+
+  it("publishes every point under the series' current methodology, whatever the observations carried", () => {
+    // Approval regenerates rather than relabels: the publication methodology enters the digest,
+    // so pointing the series at a new version changes every point's identity.
+    const points = deriveA([bok("2026-06", 100, { methodologyVersionId: "mv-0" })]);
+    expect(points[0]!.methodologyVersionId).toBe("mv-1");
+
+    const underNewVersion = derivePoints({
+      seriesCode: "UMPI-KR-DRAM-PPI",
+      observations: [bok("2026-06", 100, { methodologyVersionId: "mv-0" })],
+      base: null,
+      baseLabel: "2020=100",
+      indexBaseId: null,
+      publicationMethodologyVersionId: "mv-2",
+    });
+    expect(underNewVersion[0]!.inputsDigest).not.toBe(points[0]!.inputsDigest);
   });
 
   it("is withheld across a source boundary", () => {
