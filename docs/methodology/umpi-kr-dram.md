@@ -1,6 +1,10 @@
 # UMPI-KR DRAM Methodology
 
-**Status: proposed, version 0.1.0-draft. No effective date.** Prepared 22 September 2026. This document defines the Urdais Memory Price Index V1 as a family of **two monthly official-data DRAM indexes** built entirely from Korean government statistics. It creates no observation, schedules no job, and approves no publication. Every memory value currently visible in the Urdais product is demo data and is published under no methodology version.
+**Status: approved, version 1.0.0, effective 22 September 2026.** This document defines the Urdais Memory Price Index V1 as a family of **two monthly official-data DRAM indexes** built entirely from Korean government statistics.
+
+The two series are published independently and are never combined. **There is no UMPI headline number and no composite between them**: one is a quality-adjusted price index produced by a statistical agency, the other a unit-value index Urdais computes from customs value and weight, and a blend of the two would be a number with no referent.
+
+The demo memory values still visible in the product are not published under this or any methodology version, and the production read path cannot serve them.
 
 This document follows the principles of the [Urdais methodology framework](/docs/methodology).
 
@@ -21,9 +25,10 @@ This document follows the principles of the [Urdais methodology framework](/docs
 | Unit, both | Index points |
 | Cadence, both | Monthly |
 | Canonical change, both | **MoM** |
-| Methodology version | 0.1.0-draft |
-| Publication state | Not published. Review and Phase 3 implementation required |
-| Effective date | None. A draft carries no production effective date |
+| Methodology version | 1.0.0 |
+| Status | Approved |
+| Effective date | 22 September 2026 |
+| Publication state | Publishable. Each series publishes only while its own rights gate holds |
 
 **There is no composite UMPI headline, and this version does not create one.** The two series measure different economic objects by different methods, and a weighted blend of them would be a number with no referent. They are never averaged, never summed, never chained, and neither is ever used to fill a gap in the other.
 
@@ -293,7 +298,7 @@ The following are **barred from production ingestion for V1**, and none may be a
 
 ## Ingestion Contract
 
-This section specifies what Phase 3 may build. **It is not an authorization to collect anything today.**
+This section specifies the contract every retrieval obeys. It is not itself an authorization to collect: a source may be collected from only while its own rights gate holds, and approval of this methodology does not grant, widen or cure any source's terms.
 
 | # | Requirement |
 | --- | --- |
@@ -304,7 +309,7 @@ This section specifies what Phase 3 may build. **It is not an authorization to c
 | I5 | **Native fidelity.** Source value, precision, unit and base are stored as published |
 | I6 | **Export side only** for Series B, `expDlr` over `expWgt`. Import fields are never used in the ratio |
 | I7 | **Series separation.** Series A and Series B are stored as distinct series and are never merged, averaged or used to impute one another |
-| I8 | **Credentials are configuration.** API keys are required by both agencies and are never committed |
+| I8 | **Credentials are configuration, and neither series requires one.** Both agencies expose the declared identifiers over an official unauthenticated transport, so collection depends on no personal or national identity credential. A registered key, where one is held, is environment configuration that raises the page size only: it is never committed, never recorded in a retrieval, and never changes a published value |
 
 ## Stored Outputs
 
@@ -375,12 +380,22 @@ Both series are **independently reproducible by a third party**: the identifiers
 
 ## Methodology Version
 
-**0.1.0-draft.** Status `draft`. **No effective date**, by the framework's rule that a draft carries none and that publication under a draft is prohibited.
+**1.0.0.** Status `approved`, effective **22 September 2026**.
+
+Approval permits publication of the two series defined here, and nothing else. It does **not** approve the deferred six-instrument spot architecture, DDR5/DDR4/eTT chip quotes, USD per chip, HBM prices, a composite between the two series, the Bank of Korea export price index, or any proprietary vendor data. Each of those remains outside V1 and would require its own version.
+
+**Approval changes the methodology's standing, not the sources' rights.** The Bank of Korea determination stays `ambiguous_requires_legal_review` with its founder-accepted-risk marker: an approved methodology says Urdais may publish this measurement, not that a question about a source credential has been answered.
+
+**0.1.0-draft** is retained as the superseded predecessor rather than deleted. Values calculated under it were internal-only and were never published; they are regenerated under 1.0.0 rather than relabelled, because the methodology version is part of a calculation's identity.
+
+**Why approval did not relabel the draft's calculations.** A published value must be able to say which public methodology governs it. The draft's records carried the draft's identity, so promoting them by changing a column would have made the lineage assert something that was not true when the number was produced. They are superseded by deterministic recalculation under 1.0.0 from the same inputs, and the draft rows remain for audit.
 
 **Why a new lineage rather than a version bump of the spot methodology.** This product changes the economic object, the sources, the unit, the cadence, the instrument universe, the change calculation and the publication semantics. Nothing of the spot specification survives into it except the family name. Bumping `umpi.md` to `0.2.0-draft` would assert a continuity that does not exist and would destroy a specification that is still correct for its own product. The spot document therefore keeps its version and its content and is marked deferred; this document starts its own lineage at `0.1.0-draft`.
 
-Approval to `1.0.0` requires review of this document and a Phase 3 implementation whose output reproduces from the stated identifiers. Approval of this methodology would not by itself publish anything.
+An approved version is never edited in place. A change is made by superseding this version with a successor, so that published values stay attributable to the rules that produced them.
 
 ## Version History
+
+**1.0.0, 22 September 2026 — approved, effective 22 September 2026.** First approved version, and the first that permits publication. The economic objects, units, cadence, change definition, rights gates and refusals are exactly those frozen at `0.1.0-draft`: nothing about what is measured changed at approval, which is why the version step is a promotion rather than a redefinition. What it adds is standing — the two series may be published, independently and with their attribution, and Series B carries its trade-unit-value warning wherever it appears. Records calculated under the draft are superseded by recalculation under this version rather than relabelled. Supersedes 0.1.0-draft.
 
 **0.1.0-draft, 22 September 2026.** First definition of the UMPI-KR DRAM family. Pivots UMPI V1 from six proprietary-source daily USD-per-chip spot instruments to two monthly official-data indexes, and defers rather than deletes the spot specification. Defines Series A as the Bank of Korea DRAM Producer Price Index published as a cited series, and Series B as a Urdais-calculated export unit-value index from Korea Customs value and weight under HSK 8542321010, rebased to the 2020 calendar-year aggregate = 100. Freezes the price-index versus unit-value distinction and forbids averaging, blending or mutual imputation; freezes monthly cadence, the MoM change and the ban on interpolation; freezes the append-only vintage and supersession rules and the per-series backfill boundaries; records the attribution and modification-disclosure obligations of both agencies; and bars every proprietary and commercial-lineage source from V1. Records the live verification of all identifiers on 22 September 2026, including the discovery that a DRAM export price index exists on `402Y016` and that an item code alone does not identify a BOK series. No source is ingested, no observation is created, and no production effective date is established.

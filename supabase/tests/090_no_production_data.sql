@@ -80,15 +80,17 @@ begin
   -- PD-5A approved Power Delivery Gap 1.0.0 on the same footing: it seeds no gap either, and
   -- IQ-6 approved Interconnection Queue Analytics 1.0.0 and TH-3 approved Transmission Headroom
   -- 1.0.0. Both approve a methodology and seed no metric result: the analytics tables stay empty
-  -- until a calculation is run deliberately.
+  -- until a calculation is run deliberately. UMPI 1.0.0 joins them on the same footing: approval
+  -- makes a value publishable once derived, and seeds no observation and no publication, which
+  -- the empty-table assertions below and in 600/620/630 keep checking.
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id
    where mv.status <> 'draft'
      and m.slug not in ('ubwi', 'ucpi-listed-gpu', 'utvi', 'model-frontier', 'open-weight-proprietary',
                         'map-facilities', 'deliverable-capacity', 'power-delivery-gap',
-                        'interconnection-queue-analytics', 'transmission-headroom');
+                        'interconnection-queue-analytics', 'transmission-headroom', 'umpi-kr-dram');
   if n <> 0 then
-    raise exception 'a non-draft methodology version exists outside UBWI, UCPI-LISTED-GPU, UTVI, Model Frontier, Open-weight vs Proprietary, Map Facilities, Deliverable Capacity, Power Delivery Gap, Interconnection Queue Analytics and Transmission Headroom';
+    raise exception 'a non-draft methodology version exists outside UBWI, UCPI-LISTED-GPU, UTVI, Model Frontier, Open-weight vs Proprietary, Map Facilities, Deliverable Capacity, Power Delivery Gap, Interconnection Queue Analytics, Transmission Headroom and UMPI-KR DRAM';
   end if;
 
   -- And a bootstrapped database holds no facility, published or otherwise.
