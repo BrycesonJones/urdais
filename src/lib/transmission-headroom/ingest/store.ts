@@ -30,7 +30,8 @@ import {
 import type {
   ParsedObservation, ParseResult, TransmissionAdapter, TransmissionArtifactRef,
 } from "@/lib/transmission-headroom/ingest/types";
-import { EXTRACTION_VERSION, IMPLAUSIBLE_LIMIT_MW } from "@/lib/transmission-headroom/types";
+import { IMPLAUSIBLE_LIMIT_MW } from "@/lib/transmission-headroom/types";
+import * as code from "@/lib/transmission-headroom/codes";
 
 /** PostgreSQL binds at most 65,535 parameters per statement; the row cap keeps well inside it. */
 export const WRITE_BATCH_ROWS = 1_000;
@@ -278,22 +279,22 @@ export async function persistTransmissionExtraction(
       observation, hash: recordHash(observation),
     }));
     const rawIds = new Map<string, string>();
-    for (const batch of chunkFor(rawRows, 11)) {
+    for (const batch of chunkFor(rawRows, 7)) {
       const params: unknown[] = [];
       for (const { observation, hash } of batch) {
-        params.push(snapshotId, retrievalId, artifact.sha256, hash, observation.nativeEntityKey,
-          observation.nativeTimestamp, observation.rowOrdinal,
-          JSON.stringify({ artifact: ref.nativeKey, rowOrdinal: observation.rowOrdinal }),
-          JSON.stringify(observation.payload), EXTRACTION_VERSION, artifact.retrievedAt);
+        // The artifact digest and extraction version are properties of the snapshot above, and
+        // the hash is 32 raw bytes rather than 64 hex characters.
+        params.push(snapshotId, retrievalId, Buffer.from(hash, "hex"),
+          observation.nativeEntityKey, observation.rowOrdinal,
+          JSON.stringify(observation.payload), artifact.retrievedAt);
       }
       count();
       const written = await sql.query(
         `insert into pipeline.raw_transmission_records
-           (snapshot_id, retrieval_id, artifact_sha256, record_hash, native_entity_key,
-            native_timestamp, row_ordinal, locator, payload, extraction_version, created_at)
-         values ${placeholders(batch.length, 11, { 7: "jsonb", 8: "jsonb" })}
+           (snapshot_id, retrieval_id, record_hash, native_entity_key, row_ordinal, payload, created_at)
+         values ${placeholders(batch.length, 7, { 5: "jsonb" })}
          on conflict (snapshot_id, record_hash) do nothing
-         returning id, record_hash`,
+         returning id, encode(record_hash, 'hex') as record_hash`,
         params,
       );
       result.rawRecordsInserted += written.rows.length;
@@ -305,9 +306,10 @@ export async function persistTransmissionExtraction(
       for (const batch of chunkFor(missing, 1)) {
         count();
         const found = await sql.query(
-          `select id, record_hash from pipeline.raw_transmission_records
-            where snapshot_id = $1 and record_hash = any($2::text[])`,
-          [snapshotId, batch.map(({ hash }) => hash)],
+          `select id, encode(record_hash, 'hex') as record_hash
+             from pipeline.raw_transmission_records
+            where snapshot_id = $1 and record_hash = any($2::bytea[])`,
+          [snapshotId, batch.map(({ hash }) => Buffer.from(hash, "hex"))],
         );
         for (const row of found.rows) rawIds.set(String(row.record_hash), String(row.id));
         break;
@@ -465,27 +467,26 @@ async function insertFlows(
   const rows = rawRows.filter(({ observation, hash }) =>
     entityIds.has(observation.nativeEntityKey) && rawIds.has(hash));
 
-  for (const batch of chunkFor(rows, 16)) {
+  for (const batch of chunkFor(rows, 12)) {
     const params: unknown[] = [];
     for (const { observation, hash } of batch) {
       const entityId = entityIds.get(observation.nativeEntityKey)!;
       params.push(
-        lineage.sourceInterfaceId, snapshotId, rawIds.get(hash)!, adapter.entityKind,
-        adapter.entityKind === "interface" ? entityId : null,
-        adapter.entityKind === "element" ? entityId : null,
-        entityId, observation.contingencyKind, observation.observedAt.toISOString(),
-        observation.nativeTimestamp, observation.timestampZoneStatus, observation.flowMw,
-        flowDirection(observation.flowMw, adapter.entityKind), observation.flowNativeField,
-        observation.unitAsPublished, observation.rowOrdinal);
+        snapshotId, rawIds.get(hash)!, entityId, code.entityKind.to(adapter.entityKind),
+        code.contingencyKind.to(observation.contingencyKind),
+        observation.observedAt.toISOString(),
+        code.zoneStatus.to(observation.timestampZoneStatus), observation.flowMw,
+        code.flowDirection.to(flowDirection(observation.flowMw, adapter.entityKind) as never),
+        code.nativeField.to(observation.flowNativeField as never),
+        code.unitAsPublished.to(observation.unitAsPublished as never), observation.rowOrdinal);
     }
     count();
     const written = await sql.query(
       `insert into pipeline.transmission_flow_observations
-         (source_interface_id, snapshot_id, raw_record_id, entity_kind, interface_id, element_id,
-          entity_id, contingency_kind, observed_at, native_timestamp, timestamp_zone_status,
-          flow_mw, flow_direction, native_field, unit_as_published, row_ordinal)
-       values ${placeholders(batch.length, 16)}
-       on conflict (source_interface_id, entity_id, observed_at, contingency_kind) do nothing
+         (snapshot_id, raw_record_id, entity_id, entity_kind, contingency_kind, observed_at,
+          timestamp_zone_status, flow_mw, flow_direction, native_field, unit_as_published, row_ordinal)
+       values ${placeholders(batch.length, 12)}
+       on conflict (entity_id, observed_at, contingency_kind) do nothing
        returning id, entity_id, observed_at`,
       params,
     );
@@ -522,31 +523,31 @@ async function insertLimits(
     }
   }
 
-  for (const batch of chunkFor(rows, 16)) {
+  for (const batch of chunkFor(rows, 12)) {
     const params: unknown[] = [];
     for (const { observation, hash, limit, state } of batch) {
       const entityId = entityIds.get(observation.nativeEntityKey)!;
       params.push(
-        lineage.sourceInterfaceId, snapshotId, rawIds.get(hash)!, adapter.entityKind,
-        adapter.entityKind === "interface" ? entityId : null,
-        adapter.entityKind === "element" ? entityId : null,
-        entityId, observation.contingencyKind, observation.observedAt.toISOString(),
-        observation.nativeTimestamp, limit.nativeField, limit.direction, limit.limitMw, state,
-        observation.unitAsPublished, observation.rowOrdinal);
+        snapshotId, rawIds.get(hash)!, entityId, code.entityKind.to(adapter.entityKind),
+        code.contingencyKind.to(observation.contingencyKind),
+        observation.observedAt.toISOString(),
+        code.nativeField.to(limit.nativeField as never),
+        code.limitDirection.to(limit.direction), limit.limitMw,
+        code.limitState.to(state as never),
+        code.unitAsPublished.to(observation.unitAsPublished as never), observation.rowOrdinal);
     }
     count();
     const written = await sql.query(
       `insert into pipeline.transmission_limit_observations
-         (source_interface_id, snapshot_id, raw_record_id, entity_kind, interface_id, element_id,
-          entity_id, contingency_kind, observed_at, native_timestamp, native_field, direction,
-          limit_mw, limit_state, unit_as_published, row_ordinal)
-       values ${placeholders(batch.length, 16)}
-       on conflict (source_interface_id, entity_id, observed_at, contingency_kind, direction) do nothing
+         (snapshot_id, raw_record_id, entity_id, entity_kind, contingency_kind, observed_at,
+          native_field, direction, limit_mw, limit_state, unit_as_published, row_ordinal)
+       values ${placeholders(batch.length, 12)}
+       on conflict (entity_id, observed_at, contingency_kind, direction) do nothing
        returning id, entity_id, observed_at, direction`,
       params,
     );
     for (const row of written.rows) {
-      ids.set(limitKey(String(row.entity_id), String(row.observed_at), String(row.direction)),
+      ids.set(limitKey(String(row.entity_id), String(row.observed_at), code.limitDirection.from(Number(row.direction))),
         String(row.id));
     }
     result.limitObservations += written.rows.length;
@@ -605,12 +606,15 @@ async function insertMargins(
     const params: unknown[] = [];
     for (const { entityId, observation, flowId, outcome, limitId } of batch) {
       params.push(
-        lineage.sourceInterfaceId, lineage.calculationVersionId, adapter.entityKind, entityId,
-        observation.contingencyKind, observation.observedAt.toISOString(), flowId,
+        lineage.sourceInterfaceId, lineage.calculationVersionId,
+        code.entityKind.to(adapter.entityKind), entityId,
+        code.contingencyKind.to(observation.contingencyKind),
+        observation.observedAt.toISOString(), flowId,
         outcome.state === "zero_flow_direction_undetermined" ? null : limitId,
-        outcome.selectedDirection,
-        outcome.selectedLimit === null ? null : outcome.selectedLimit.nativeField,
-        outcome.state, outcome.headroomMw);
+        code.selectedDirection.to(outcome.selectedDirection),
+        outcome.selectedLimit === null ? null
+          : code.nativeField.to(outcome.selectedLimit.nativeField as never),
+        code.marginState.to(outcome.state), outcome.headroomMw);
     }
     count();
     const written = await sql.query(
@@ -626,7 +630,7 @@ async function insertMargins(
     );
     result.marginsInserted += written.rows.length;
     for (const row of written.rows) {
-      const state = String(row.state);
+      const state = code.marginState.from(Number(row.state));
       result.marginsByState[state] = (result.marginsByState[state] ?? 0) + 1;
     }
   }

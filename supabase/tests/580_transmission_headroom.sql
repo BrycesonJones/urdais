@@ -9,9 +9,9 @@ do $$
 declare
   n integer;
   ny_iface uuid; er_iface uuid; ny_area uuid; er_area uuid;
-  retrieval uuid; snap uuid; raw1 uuid; raw2 uuid;
+  retrieval uuid; snap uuid; raw1 bigint; raw2 bigint;
   iface_a uuid; iface_b uuid; elem uuid; calc uuid;
-  flow_a uuid; flow_b uuid; lim_pos uuid; lim_neg uuid; lim_sent uuid;
+  flow_a bigint; flow_b bigint; lim_pos bigint; lim_neg bigint; lim_sent bigint;
 begin
   -- ------------------------------------------------------------------ registration
   select id into ny_iface from reference.source_interfaces where slug = 'nyiso-external-limits-flows';
@@ -67,16 +67,12 @@ begin
   returning id into snap;
 
   insert into pipeline.raw_transmission_records
-    (snapshot_id, retrieval_id, artifact_sha256, record_hash, native_entity_key, native_timestamp,
-     row_ordinal, locator, payload, extraction_version)
-  values (snap, retrieval, repeat('a', 64), repeat('b', 64), '23314', '09/20/2026 00:00', 1,
-          '{}'::jsonb, '{}'::jsonb, 'test')
+    (snapshot_id, retrieval_id, record_hash, native_entity_key, row_ordinal, payload)
+  values (snap, retrieval, decode(repeat('bb', 32), 'hex'), '23314', 1, '{}'::jsonb)
   returning id into raw1;
   insert into pipeline.raw_transmission_records
-    (snapshot_id, retrieval_id, artifact_sha256, record_hash, native_entity_key, native_timestamp,
-     row_ordinal, locator, payload, extraction_version)
-  values (snap, retrieval, repeat('a', 64), repeat('c', 64), '23312', '09/20/2026 00:00', 2,
-          '{}'::jsonb, '{}'::jsonb, 'test')
+    (snapshot_id, retrieval_id, record_hash, native_entity_key, row_ordinal, payload)
+  values (snap, retrieval, decode(repeat('cc', 32), 'hex'), '23312', 2, '{}'::jsonb)
   returning id into raw2;
 
   insert into pipeline.transmission_interfaces
@@ -94,82 +90,69 @@ begin
   end;
 
   insert into pipeline.transmission_flow_observations
-    (source_interface_id, snapshot_id, raw_record_id, entity_kind, interface_id, entity_id,
-     contingency_kind, observed_at, native_timestamp, timestamp_zone_status, flow_mw,
-     flow_direction, native_field, unit_as_published, row_ordinal)
-  values (ny_iface, snap, raw1, 'interface', iface_a, iface_a, 'not_applicable',
-          timestamptz '2026-09-20T04:00:00Z', '09/20/2026 00:00', 'assumed_market_local',
-          100, 'positive', 'Flow (MWH)', 'MWH', 1)
+      (snapshot_id, raw_record_id, entity_id, entity_kind, contingency_kind, observed_at,
+       timestamp_zone_status, flow_mw, flow_direction, native_field, unit_as_published, row_ordinal)
+  values (snap, raw1, iface_a, 1, 0,
+            timestamptz '2026-09-20T04:00:00Z', 1,
+            100, 1, 1, 1, 1)
   returning id into flow_a;
   insert into pipeline.transmission_flow_observations
-    (source_interface_id, snapshot_id, raw_record_id, entity_kind, interface_id, entity_id,
-     contingency_kind, observed_at, native_timestamp, timestamp_zone_status, flow_mw,
-     flow_direction, native_field, unit_as_published, row_ordinal)
-  values (ny_iface, snap, raw2, 'interface', iface_b, iface_b, 'not_applicable',
-          timestamptz '2026-09-20T04:00:00Z', '09/20/2026 00:00', 'assumed_market_local',
-          50, 'positive', 'Flow (MWH)', 'MWH', 2)
+      (snapshot_id, raw_record_id, entity_id, entity_kind, contingency_kind, observed_at,
+       timestamp_zone_status, flow_mw, flow_direction, native_field, unit_as_published, row_ordinal)
+  values (snap, raw2, iface_b, 1, 0,
+            timestamptz '2026-09-20T04:00:00Z', 1,
+            50, 1, 1, 1, 2)
   returning id into flow_b;
 
   -- A flow whose sign contradicts its label is refused: a reader must be able to trust either one.
   begin
     insert into pipeline.transmission_flow_observations
-      (source_interface_id, snapshot_id, raw_record_id, entity_kind, interface_id, entity_id,
-       contingency_kind, observed_at, native_timestamp, timestamp_zone_status, flow_mw,
-       flow_direction, native_field, unit_as_published, row_ordinal)
-    values (ny_iface, snap, raw1, 'interface', iface_a, iface_a, 'not_applicable',
-            timestamptz '2026-09-20T05:00:00Z', 'x', 'assumed_market_local',
-            -100, 'positive', 'Flow (MWH)', 'MWH', 3);
+      (snapshot_id, raw_record_id, entity_id, entity_kind, contingency_kind, observed_at,
+       timestamp_zone_status, flow_mw, flow_direction, native_field, unit_as_published, row_ordinal)
+    values (snap, raw1, iface_a, 1, 0,
+            timestamptz '2026-09-20T05:00:00Z', 1,
+            -100, 1, 1, 1, 3);
     raise exception 'a negative flow was stored as a positive direction';
   exception when check_violation then null;
   end;
 
   insert into pipeline.transmission_limit_observations
-    (source_interface_id, snapshot_id, raw_record_id, entity_kind, interface_id, entity_id,
-     contingency_kind, observed_at, native_timestamp, native_field, direction, limit_mw,
-     limit_state, unit_as_published, row_ordinal)
-  values (ny_iface, snap, raw1, 'interface', iface_a, iface_a, 'not_applicable',
-          timestamptz '2026-09-20T04:00:00Z', '09/20/2026 00:00', 'Positive Limit (MWH)',
-          'positive', 500, 'real', 'MWH', 1)
+      (snapshot_id, raw_record_id, entity_id, entity_kind, contingency_kind, observed_at,
+       native_field, direction, limit_mw, limit_state, unit_as_published, row_ordinal)
+  values (snap, raw1, iface_a, 1, 0,
+            timestamptz '2026-09-20T04:00:00Z', 2, 1, 500, 1, 1, 1)
   returning id into lim_pos;
   insert into pipeline.transmission_limit_observations
-    (source_interface_id, snapshot_id, raw_record_id, entity_kind, interface_id, entity_id,
-     contingency_kind, observed_at, native_timestamp, native_field, direction, limit_mw,
-     limit_state, unit_as_published, row_ordinal)
-  values (ny_iface, snap, raw2, 'interface', iface_b, iface_b, 'not_applicable',
-          timestamptz '2026-09-20T04:00:00Z', '09/20/2026 00:00', 'Positive Limit (MWH)',
-          'positive', 400, 'real', 'MWH', 2)
+      (snapshot_id, raw_record_id, entity_id, entity_kind, contingency_kind, observed_at,
+       native_field, direction, limit_mw, limit_state, unit_as_published, row_ordinal)
+  values (snap, raw2, iface_b, 1, 0,
+            timestamptz '2026-09-20T04:00:00Z', 2, 1, 400, 1, 1, 2)
   returning id into lim_neg;
 
   -- ------------------------------------------------------------------ the sentinel rule
   -- Exact magnitude. This is the constraint that protects the 4,074 real -9899 observations in the
   -- NYISO archive from a threshold rule that would have erased them.
   insert into pipeline.transmission_limit_observations
-    (source_interface_id, snapshot_id, raw_record_id, entity_kind, interface_id, entity_id,
-     contingency_kind, observed_at, native_timestamp, native_field, direction, limit_mw,
-     limit_state, unit_as_published, row_ordinal)
-  values (ny_iface, snap, raw1, 'interface', iface_a, iface_a, 'not_applicable',
-          timestamptz '2026-09-20T04:00:00Z', '09/20/2026 00:00', 'Negative Limit (MWH)',
-          'negative', -9999, 'sentinel', 'MWH', 1)
+      (snapshot_id, raw_record_id, entity_id, entity_kind, contingency_kind, observed_at,
+       native_field, direction, limit_mw, limit_state, unit_as_published, row_ordinal)
+  values (snap, raw1, iface_a, 1, 0,
+            timestamptz '2026-09-20T04:00:00Z', 3, 2, -9999, 3, 1, 1)
   returning id into lim_sent;
 
   -- -9899 is a real limit and must be storable as one.
   insert into pipeline.transmission_limit_observations
-    (source_interface_id, snapshot_id, raw_record_id, entity_kind, interface_id, entity_id,
-     contingency_kind, observed_at, native_timestamp, native_field, direction, limit_mw,
-     limit_state, unit_as_published, row_ordinal)
-  values (ny_iface, snap, raw2, 'interface', iface_b, iface_b, 'not_applicable',
-          timestamptz '2026-09-20T04:00:00Z', 'x', 'Negative Limit (MWH)',
-          'negative', -9899, 'real', 'MWH', 2);
+      (snapshot_id, raw_record_id, entity_id, entity_kind, contingency_kind, observed_at,
+       native_field, direction, limit_mw, limit_state, unit_as_published, row_ordinal)
+  values (snap, raw2, iface_b, 1, 0,
+            timestamptz '2026-09-20T04:00:00Z', 3, 2, -9899, 1, 1, 2);
 
   -- Calling -9899 a sentinel is refused.
   begin
     insert into pipeline.transmission_limit_observations
-      (source_interface_id, snapshot_id, raw_record_id, entity_kind, interface_id, entity_id,
-       contingency_kind, observed_at, native_timestamp, native_field, direction, limit_mw,
-       limit_state, unit_as_published, row_ordinal)
-    values (ny_iface, snap, raw1, 'interface', iface_a, iface_a, 'not_applicable',
-            timestamptz '2026-09-20T06:00:00Z', 'x', 'Negative Limit (MWH)',
-            'negative', -9899, 'sentinel', 'MWH', 9);
+      (snapshot_id, raw_record_id, entity_id, entity_kind, contingency_kind, observed_at,
+       native_field, direction, limit_mw, limit_state, unit_as_published, row_ordinal)
+    values (snap, raw1, iface_a, 1, 0,
+            timestamptz '2026-09-20T06:00:00Z', 3, 2, -9899, 3, 1, 9);
     raise exception 'a real -9899 limit was accepted as a sentinel';
   exception when check_violation then null;
   end;
@@ -177,12 +160,10 @@ begin
   -- And calling an exact -9999 real is refused in the other direction.
   begin
     insert into pipeline.transmission_limit_observations
-      (source_interface_id, snapshot_id, raw_record_id, entity_kind, interface_id, entity_id,
-       contingency_kind, observed_at, native_timestamp, native_field, direction, limit_mw,
-       limit_state, unit_as_published, row_ordinal)
-    values (ny_iface, snap, raw1, 'interface', iface_a, iface_a, 'not_applicable',
-            timestamptz '2026-09-20T07:00:00Z', 'x', 'Negative Limit (MWH)',
-            'negative', -9999, 'real', 'MWH', 10);
+      (snapshot_id, raw_record_id, entity_id, entity_kind, contingency_kind, observed_at,
+       native_field, direction, limit_mw, limit_state, unit_as_published, row_ordinal)
+    values (snap, raw1, iface_a, 1, 0,
+            timestamptz '2026-09-20T07:00:00Z', 3, 2, -9999, 1, 1, 10);
     raise exception 'an exact sentinel was accepted as a real limit';
   exception when check_violation then null;
   end;
@@ -192,9 +173,9 @@ begin
     (source_interface_id, calculation_version_id, entity_kind, entity_id, contingency_kind,
      observed_at, flow_observation_id, limit_observation_id, selected_direction, limit_field_used,
      state, headroom_mw)
-  values (ny_iface, calc, 'interface', iface_a, 'not_applicable',
-          timestamptz '2026-09-20T04:00:00Z', flow_a, lim_pos, 'positive',
-          'Positive Limit (MWH)', 'ok', 400);
+  values (ny_iface, calc, 1, iface_a, 0,
+          timestamptz '2026-09-20T04:00:00Z', flow_a, lim_pos, 1,
+          2, 1, 400);
 
   -- An absence may not carry a number.
   begin
@@ -202,9 +183,9 @@ begin
       (source_interface_id, calculation_version_id, entity_kind, entity_id, contingency_kind,
        observed_at, flow_observation_id, limit_observation_id, selected_direction, limit_field_used,
        state, headroom_mw)
-    values (ny_iface, calc, 'interface', iface_b, 'not_applicable',
-            timestamptz '2026-09-20T04:00:00Z', flow_b, lim_neg, 'positive',
-            'Positive Limit (MWH)', 'unmonitored_direction', 0);
+    values (ny_iface, calc, 1, iface_b, 0,
+            timestamptz '2026-09-20T04:00:00Z', flow_b, lim_neg, 1,
+            2, 2, 0);
     raise exception 'an unmonitored direction was stored with a headroom of zero';
   exception when check_violation then null;
   end;
@@ -215,9 +196,9 @@ begin
       (source_interface_id, calculation_version_id, entity_kind, entity_id, contingency_kind,
        observed_at, flow_observation_id, limit_observation_id, selected_direction, limit_field_used,
        state, headroom_mw)
-    values (ny_iface, calc, 'interface', iface_b, 'not_applicable',
-            timestamptz '2026-09-20T04:00:00Z', flow_b, lim_neg, 'positive',
-            'Positive Limit (MWH)', 'ok', null);
+    values (ny_iface, calc, 1, iface_b, 0,
+            timestamptz '2026-09-20T04:00:00Z', flow_b, lim_neg, 1,
+            2, 1, null);
     raise exception 'an ok margin was stored without a value';
   exception when check_violation then null;
   end;
@@ -229,11 +210,14 @@ begin
       (source_interface_id, calculation_version_id, entity_kind, entity_id, contingency_kind,
        observed_at, flow_observation_id, limit_observation_id, selected_direction, limit_field_used,
        state, headroom_mw)
-    values (ny_iface, calc, 'interface', iface_b, 'not_applicable',
-            timestamptz '2026-09-20T04:00:00Z', flow_a, lim_neg, 'positive',
-            'Positive Limit (MWH)', 'ok', 300);
-    raise exception 'a margin borrowed a flow observation belonging to another entity';
-  exception when foreign_key_violation then null;
+    values (ny_iface, calc, 1, iface_b, 0,
+            timestamptz '2026-09-20T04:00:00Z', flow_a, lim_neg, 1,
+            2, 1, 300);
+    raise exception 'a margin borrowed a flow observation belonging to another entity'
+      using errcode = 'assert_failure';
+  -- TH-5A: the two five-column unique indexes that used to reject this were replaced by a
+  -- trigger, so the rejection now arrives as a check_violation rather than a foreign-key one.
+  exception when check_violation then null;
   end;
 
   -- Nor another instant.
@@ -242,11 +226,12 @@ begin
       (source_interface_id, calculation_version_id, entity_kind, entity_id, contingency_kind,
        observed_at, flow_observation_id, limit_observation_id, selected_direction, limit_field_used,
        state, headroom_mw)
-    values (ny_iface, calc, 'interface', iface_a, 'not_applicable',
-            timestamptz '2026-09-20T09:00:00Z', flow_a, lim_pos, 'positive',
-            'Positive Limit (MWH)', 'ok', 400);
-    raise exception 'a margin was stored against an instant its flow does not belong to';
-  exception when foreign_key_violation then null;
+    values (ny_iface, calc, 1, iface_a, 0,
+            timestamptz '2026-09-20T09:00:00Z', flow_a, lim_pos, 1,
+            2, 1, 400);
+    raise exception 'a margin was stored against an instant its flow does not belong to'
+      using errcode = 'assert_failure';
+  exception when check_violation then null;
   end;
 
   -- Zero flow determines no direction, so it may hold no limit.
@@ -255,9 +240,9 @@ begin
       (source_interface_id, calculation_version_id, entity_kind, entity_id, contingency_kind,
        observed_at, flow_observation_id, limit_observation_id, selected_direction, limit_field_used,
        state, headroom_mw)
-    values (ny_iface, calc, 'interface', iface_b, 'not_applicable',
-            timestamptz '2026-09-20T04:00:00Z', flow_b, lim_neg, 'undetermined',
-            'Positive Limit (MWH)', 'zero_flow_direction_undetermined', null);
+    values (ny_iface, calc, 1, iface_b, 0,
+            timestamptz '2026-09-20T04:00:00Z', flow_b, lim_neg, 0,
+            2, 3, null);
     raise exception 'a zero-flow margin was stored holding a limit it could not have selected';
   exception when check_violation then null;
   end;
@@ -267,9 +252,9 @@ begin
     (source_interface_id, calculation_version_id, entity_kind, entity_id, contingency_kind,
      observed_at, flow_observation_id, limit_observation_id, selected_direction, limit_field_used,
      state, headroom_mw)
-  values (ny_iface, calc, 'interface', iface_b, 'not_applicable',
-          timestamptz '2026-09-20T04:00:00Z', flow_b, lim_neg, 'positive',
-          'Positive Limit (MWH)', 'ok', -25);
+  values (ny_iface, calc, 1, iface_b, 0,
+          timestamptz '2026-09-20T04:00:00Z', flow_b, lim_neg, 1,
+          2, 1, -25);
   select count(*) into n from pipeline.transmission_margins
    where entity_id = iface_b and headroom_mw < 0;
   if n <> 1 then raise exception 'a negative margin did not survive storage'; end if;

@@ -41,7 +41,8 @@ export async function loadEntityHistory(
 ): Promise<EntityHistory> {
   const rows = await sql.query(
     `select m.observed_at::text as observed_at, m.headroom_mw::text as headroom_mw,
-            f.flow_mw::text as flow_mw, l.limit_mw::text as limit_mw, m.state,
+            f.flow_mw::text as flow_mw, l.limit_mw::text as limit_mw,
+            reference.transmission_code('margin_state', m.state) as state,
             coalesce(i.native_name,
                      e.native_constraint_name || ' / ' || e.native_contingency_name) as name
        from pipeline.transmission_margins m

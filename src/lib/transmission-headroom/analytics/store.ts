@@ -50,9 +50,12 @@ export async function loadLatestMargins(
             m.entity_id,
             coalesce(i.native_name,
                      e.native_constraint_name || ' / ' || e.native_contingency_name) as label,
-            m.contingency_kind, m.observed_at::text as observed_at, m.state,
+            reference.transmission_code('contingency_kind', m.contingency_kind) as contingency_kind,
+            m.observed_at::text as observed_at,
+            reference.transmission_code('margin_state', m.state) as state,
             m.headroom_mw::text as headroom_mw, f.flow_mw::text as flow_mw,
-            l.limit_mw::text as limit_mw, l.limit_state,
+            l.limit_mw::text as limit_mw,
+            reference.transmission_code('limit_state', l.limit_state) as limit_state,
             nullif(r.payload->>'ShadowPrice', '')::numeric as shadow_price
        from pipeline.transmission_margins m
        join reference.source_interfaces si on si.id = m.source_interface_id
@@ -103,7 +106,10 @@ export async function loadSourceStatus(
             extract(epoch from (now() - max(f.observed_at))) / 3600 as age_hours
        from reference.transmission_source_monitors m
        join reference.source_interfaces si on si.id = m.source_interface_id
-       left join pipeline.transmission_flow_observations f on f.source_interface_id = si.id
+       left join pipeline.transmission_interfaces ti on ti.source_interface_id = si.id
+       left join pipeline.transmission_elements te on te.source_interface_id = si.id
+       left join pipeline.transmission_flow_observations f
+              on f.entity_id = coalesce(ti.id, te.id)
       where si.slug = $1
       group by m.stale_after_hours`,
     [sourceSlug],
