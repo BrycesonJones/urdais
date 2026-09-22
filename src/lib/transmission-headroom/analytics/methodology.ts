@@ -50,11 +50,64 @@ export class MethodologyDriftError extends Error {
   }
 }
 
-/** Refuses to proceed if the approved document has moved. */
-export async function assertMethodologyDocument(path = METHODOLOGY_DOCUMENT_PATH): Promise<void> {
-  const body = await readFile(path);
+/**
+ * Refuses to proceed if the approved document has moved.
+ *
+ * Only meaningful where the document exists. A serverless bundle ships code, not the repository,
+ * so a missing file is not drift and must not be reported as it -- see `assertMethodologyApproved`
+ * for the check that actually guards a running calculation.
+ */
+export async function assertMethodologyDocument(
+  path = METHODOLOGY_DOCUMENT_PATH,
+): Promise<"checked" | "document_unavailable"> {
+  let body: Buffer;
+  try {
+    body = await readFile(path);
+  } catch {
+    return "document_unavailable";
+  }
   const actual = createHash("sha256").update(body).digest("hex");
   if (actual !== METHODOLOGY_DOCUMENT_SHA256) throw new MethodologyDriftError(actual);
+  return "checked";
+}
+
+export class MethodologyRegistrationError extends Error {
+  constructor(detail: string) {
+    super(`the approved transmission headroom methodology does not match this code: ${detail}. `
+      + `Calculating would publish numbers under a version that describes different rules.`);
+    this.name = "MethodologyRegistrationError";
+  }
+}
+
+/**
+ * The guard that actually protects a running calculation.
+ *
+ * Compares the digest recorded against the approved methodology row with the digest this code was
+ * written for. It needs no filesystem, so it holds in a serverless function where the repository
+ * is not present -- which is exactly where the file check silently could not run, and where the
+ * first production cron failed on a missing `docs/` directory.
+ */
+export async function assertMethodologyApproved(
+  sql: { query: (text: string, params: unknown[]) => Promise<{ rows: Record<string, unknown>[] }> },
+): Promise<void> {
+  const rows = await sql.query(
+    `select mv.version, mv.status, mv.content_hash
+       from reference.methodology_versions mv
+       join reference.methodologies m on m.id = mv.methodology_id
+      where m.slug = $1 and mv.version = $2`,
+    [METHODOLOGY_SLUG, METHODOLOGY_VERSION],
+  );
+  const row = rows.rows[0];
+  if (row === undefined) {
+    throw new MethodologyRegistrationError(`${METHODOLOGY_VERSION} is not registered`);
+  }
+  if (String(row.status) !== "approved") {
+    throw new MethodologyRegistrationError(`${METHODOLOGY_VERSION} is ${String(row.status)}, not approved`);
+  }
+  if (String(row.content_hash) !== METHODOLOGY_DOCUMENT_SHA256) {
+    throw new MethodologyRegistrationError(
+      `registered digest ${String(row.content_hash)} but this code expects ${METHODOLOGY_DOCUMENT_SHA256}`);
+  }
 }
 
 /** Markets this methodology approves, and the interface each draws from. */

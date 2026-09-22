@@ -9,7 +9,7 @@
 import {
   calculateAll, deferredResults, type MetricResult,
 } from "@/lib/transmission-headroom/analytics/calculate";
-import { assertMethodologyDocument, METHODOLOGY_VERSION }
+import { assertMethodologyApproved, assertMethodologyDocument, METHODOLOGY_VERSION }
   from "@/lib/transmission-headroom/analytics/methodology";
 import {
   buildMarketInputs, inputDigest, loadMetricDefinitions, persistRun,
@@ -35,6 +35,9 @@ export async function runTransmissionAnalytics(
   sql: CapacitySqlExecutor, options: { dryRun?: boolean } = {},
 ): Promise<AnalyticsOutcome> {
   try {
+    // The registry check is the one that must hold wherever this runs; the document check adds
+    // the stronger guarantee wherever the repository is actually present.
+    await assertMethodologyApproved(sql);
     await assertMethodologyDocument();
 
     const startedAt = Date.now();

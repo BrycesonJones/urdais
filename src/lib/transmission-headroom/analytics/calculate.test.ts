@@ -16,7 +16,7 @@ import {
 import {
   ERCOT_IMPLAUSIBLE_LIMIT_MW, MEDIAN_MINIMUM_ENTITIES, METHODOLOGY_DOCUMENT_SHA256,
   METHODOLOGY_VERSION, MethodologyDriftError, NYISO_SENTINEL_MW, PERCENTILE_MINIMUM_ENTITIES,
-  assertMethodologyDocument, meetsFloor,
+  MethodologyRegistrationError, assertMethodologyApproved, assertMethodologyDocument, meetsFloor,
 } from "@/lib/transmission-headroom/analytics/methodology";
 import { inputDigest } from "@/lib/transmission-headroom/analytics/store";
 
@@ -336,12 +336,46 @@ describe("19. methodology drift stops calculation", () => {
   it("the approved hash is pinned and the real document matches it", async () => {
     expect(METHODOLOGY_VERSION).toBe("1.0.0");
     expect(METHODOLOGY_DOCUMENT_SHA256).toMatch(/^[0-9a-f]{64}$/);
-    await expect(assertMethodologyDocument()).resolves.toBeUndefined();
+    await expect(assertMethodologyDocument()).resolves.toBe("checked");
   });
 
   it("a changed document is refused", async () => {
     await expect(assertMethodologyDocument("package.json"))
       .rejects.toBeInstanceOf(MethodologyDriftError);
+  });
+
+  it("an absent document is reported, not mistaken for drift", async () => {
+    // A serverless bundle ships code, not the repository. Treating that as drift is what made the
+    // first production cron fail on a missing docs/ directory.
+    await expect(assertMethodologyDocument("docs/methodology/does-not-exist.md"))
+      .resolves.toBe("document_unavailable");
+  });
+
+  it("the registry guard needs no filesystem and accepts the approved row", async () => {
+    const sql = {
+      query: async () => ({ rows: [{
+        version: METHODOLOGY_VERSION, status: "approved",
+        content_hash: METHODOLOGY_DOCUMENT_SHA256,
+      }] }),
+    };
+    await expect(assertMethodologyApproved(sql)).resolves.toBeUndefined();
+  });
+
+  it("the registry guard refuses a digest the code was not written for", async () => {
+    const sql = {
+      query: async () => ({ rows: [{
+        version: METHODOLOGY_VERSION, status: "approved", content_hash: "f".repeat(64),
+      }] }),
+    };
+    await expect(assertMethodologyApproved(sql)).rejects.toBeInstanceOf(MethodologyRegistrationError);
+  });
+
+  it("the registry guard refuses an unapproved or missing version", async () => {
+    const draft = { query: async () => ({ rows: [{
+      version: METHODOLOGY_VERSION, status: "draft", content_hash: METHODOLOGY_DOCUMENT_SHA256 }] }) };
+    await expect(assertMethodologyApproved(draft)).rejects.toBeInstanceOf(MethodologyRegistrationError);
+    const missing = { query: async () => ({ rows: [] }) };
+    await expect(assertMethodologyApproved(missing)).rejects.toBeInstanceOf(MethodologyRegistrationError);
   });
 });
 
