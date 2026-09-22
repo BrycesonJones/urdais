@@ -24,8 +24,6 @@ import type {
   BuildoutMetricId,
   FlexibilityAssumption,
   FlexibilityScenario,
-  HeadroomRow,
-  HeadroomState,
   InfrastructureObservation,
   InterconnectionObservation,
   LoadObservation,
@@ -240,31 +238,6 @@ export function queueRanking(mode: QueueMode): QueueRow[] {
     }))
     .sort((a, b) => b.queuedGw - a.queuedGw);
 }
-
-/* ---------- Transmission headroom ---------- */
-
-/** Headroom % thresholds: below TIGHT is tight, below MODERATE is moderate, otherwise available. */
-export const HEADROOM_TIGHT_PERCENT = 6;
-export const HEADROOM_MODERATE_PERCENT = 12;
-
-function headroomState(percent: number): HeadroomState {
-  if (percent < HEADROOM_TIGHT_PERCENT) return "tight";
-  if (percent < HEADROOM_MODERATE_PERCENT) return "moderate";
-  return "available";
-}
-
-/**
- * Headroom = deliverable capacity − peak load at the latest observed
- * quarter, and headroom % = headroom ÷ deliverable capacity. This is room
- * on the wires, not unused generation. Ranked by headroom %, tightest first.
- */
-export const HEADROOM_ROWS: HeadroomRow[] = POWER_MARKETS.map((market) => {
-  const latest = LOAD_OBSERVATIONS.filter((row) => row.marketId === market.id && row.time === DEMO_AS_OF_TIME)[0]!;
-  const loadGw = latest.actualLoadGw!;
-  const headroomGw = round1(latest.deliverableCapacityGw - loadGw);
-  const headroomPercent = (headroomGw / latest.deliverableCapacityGw) * 100;
-  return { market, loadGw, deliverableCapacityGw: latest.deliverableCapacityGw, headroomGw, headroomPercent, state: headroomState(headroomPercent) };
-}).sort((a, b) => a.headroomPercent - b.headroomPercent);
 
 /* ---------- Grid buildout ---------- */
 

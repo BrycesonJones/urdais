@@ -66,17 +66,6 @@ export type QueueRow = {
   medianWaitMonths: number;
 };
 
-export type HeadroomState = "tight" | "moderate" | "available";
-
-export type HeadroomRow = {
-  market: PowerMarket;
-  loadGw: number;
-  deliverableCapacityGw: number;
-  headroomGw: number;
-  headroomPercent: number;
-  state: HeadroomState;
-};
-
 export type BuildoutMetricId = "transfer-capacity" | "circuit-miles" | "substations" | "transformer-lead-time";
 
 export type BuildoutMetric = {

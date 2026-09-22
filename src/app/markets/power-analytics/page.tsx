@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { PowerAnalyticsPage } from "@/components/power-analytics/power-analytics-page";
 import { loadQueueAnalytics, unavailableQueueAnalytics } from "@/lib/interconnection-queue/analytics/read";
 import { loadDeliveryGapReadModel, unconfiguredDeliveryGapReadModel } from "@/lib/power-delivery/gap/read";
+import { loadTransmissionAnalytics, unavailableTransmissionModel } from "@/lib/transmission-headroom/analytics/read";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export default async function PowerAnalyticsRoute() {
   const databaseUrl = (process.env.DATABASE_URL ?? process.env.URDAIS_DATABASE_URL ?? "").trim();
   let gap = unconfiguredDeliveryGapReadModel();
   let queue = unavailableQueueAnalytics();
+  let headroom = unavailableTransmissionModel();
   if (databaseUrl) {
     const sql = await createTokenSqlExecutor(databaseUrl);
     try {
@@ -37,6 +39,13 @@ export default async function PowerAnalyticsRoute() {
       queue = await loadQueueAnalytics(sql);
     } catch (error) {
       console.error(`power analytics: interconnection queue read failed (${error instanceof Error ? error.message : String(error)})`);
+    }
+    try {
+      // Same discipline: the rights gate and the publication filter are in SQL, so a blocked or
+      // deferred result cannot reach a rendered prop.
+      headroom = await loadTransmissionAnalytics(sql);
+    } catch (error) {
+      console.error(`power analytics: transmission headroom read failed (${error instanceof Error ? error.message : String(error)})`);
     } finally {
       await sql.end();
     }
@@ -45,7 +54,7 @@ export default async function PowerAnalyticsRoute() {
   return (
     <>
       <SiteHeader />
-      <PowerAnalyticsPage gap={gap} queue={queue} />
+      <PowerAnalyticsPage gap={gap} queue={queue} headroom={headroom} />
       <SiteFooter />
     </>
   );
