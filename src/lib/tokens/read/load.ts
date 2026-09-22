@@ -7,8 +7,8 @@
  */
 
 import { WAVE1_MODELS, WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
-import { publishableBenchmarks } from "@/lib/tokens/read/benchmark-series";
-import { persistedBenchmarks, type PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
+import { benchmarkLineageFromPoints, benchmarkPoints, publishableBenchmarks } from "@/lib/tokens/read/benchmark-series";
+import { benchmarkLineageFromPersisted, persistedBenchmarks, type PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
 import { productionFrozenRows } from "@/lib/tokens/read/lineage";
 import type { PublicTokenBenchmarkSeries } from "@/lib/tokens/read/api-contract";
 import { benchmarkInstrumentsFromSeries, withTokenInstruments } from "@/lib/tokens/read/instruments";
@@ -65,7 +65,8 @@ export function visibleTokenPricesResponse(
  * missing either leg is withheld rather than approximated.
  */
 export async function loadVisibleTokenInstruments(env: ProcessEnvLike = process.env): Promise<MarketInstrumentDetail[]> {
-  return benchmarkInstrumentsFromSeries(await loadVisibleTokenBenchmarks(env));
+  const { benchmarks, lineage } = await loadVisibleTokenBenchmarks(env);
+  return benchmarkInstrumentsFromSeries(benchmarks, lineage);
 }
 
 /**
@@ -77,7 +78,21 @@ export async function loadVisibleTokenInstruments(env: ProcessEnvLike = process.
  * nothing has been frozen yet, which is the case in a research preview
  * running without a database.
  */
-export async function loadVisibleTokenBenchmarks(env: ProcessEnvLike = process.env): Promise<PublicTokenBenchmarkSeries[]> {
+export type VisibleTokenBenchmarks = {
+  benchmarks: PublicTokenBenchmarkSeries[];
+  /**
+   * Per-point lineage for the rows above, `seriesId|isoTime` to a
+   * designated-model-and-version key.
+   *
+   * Built here because this is the one place that knows which of the two
+   * sources produced the series. The published shape names only the current
+   * designated model, and a range change spanning a constituent boundary has to
+   * know what produced each end of its window.
+   */
+  lineage: ReadonlyMap<string, string>;
+};
+
+export async function loadVisibleTokenBenchmarks(env: ProcessEnvLike = process.env): Promise<VisibleTokenBenchmarks> {
   const mode = tokenVisibilityMode(env);
   const frozen = await loadFrozenBenchmarks(env);
 
@@ -90,16 +105,24 @@ export async function loadVisibleTokenBenchmarks(env: ProcessEnvLike = process.e
     if (frozen.length > 0) {
       const catalog = await loadTokenReadCatalog(env);
       const serveable = productionFrozenRows(catalog, frozen);
-      if (serveable.length > 0) return persistedBenchmarks(serveable);
+      if (serveable.length > 0) {
+        return { benchmarks: persistedBenchmarks(serveable), lineage: benchmarkLineageFromPersisted(serveable) };
+      }
     }
     // Nothing eligible has been frozen yet: fall back to the calculator, which
     // is itself restricted to production-publicable observations.
-    return visibleTokenBenchmarks(await loadTokenReadCatalog(env), env);
+    return calculatedBenchmarks(await loadTokenReadCatalog(env), env);
   }
 
   // Research preview may serve research-derived frozen rows as well.
-  if (frozen.length > 0) return persistedBenchmarks(frozen);
-  return visibleTokenBenchmarks(await loadTokenReadCatalog(env), env);
+  if (frozen.length > 0) return { benchmarks: persistedBenchmarks(frozen), lineage: benchmarkLineageFromPersisted(frozen) };
+  return calculatedBenchmarks(await loadTokenReadCatalog(env), env);
+}
+
+/** The calculator's benchmarks and the lineage of the very points it calculated. */
+function calculatedBenchmarks(catalog: TokenReadCatalog, env: ProcessEnvLike): VisibleTokenBenchmarks {
+  const series = listVisibleTokenSeries(catalog, tokenVisibilityMode(env));
+  return { benchmarks: publishableBenchmarks(series), lineage: benchmarkLineageFromPoints(benchmarkPoints(series)) };
 }
 
 async function loadFrozenBenchmarks(env: ProcessEnvLike): Promise<PersistedBenchmarkRow[]> {
@@ -132,7 +155,7 @@ export async function hydrateMarketWithTokenPrices(
  */
 export async function tokenResearchPreviewActive(env: ProcessEnvLike = process.env): Promise<boolean> {
   if (tokenVisibilityMode(env) === "production") return false;
-  const visible = await loadVisibleTokenBenchmarks(env);
+  const { benchmarks: visible } = await loadVisibleTokenBenchmarks(env);
   if (visible.length === 0) return false;
   const productionProviders = await productionPublishableProviders(env);
   return visible.some((row) => !productionProviders.has(row.providerSlug));

@@ -16,7 +16,7 @@ import type { CacheTtl, ServiceTier, SourcePricingDimension } from "@/lib/tokens
 import { pickDefaultTokenSeries } from "@/lib/tokens/read/default-selection";
 import { TOKEN_CHART_UNIT, pricingDimensionLabel, tokenFacetLabel, tokenSeriesLabel, tokenUnitCaption } from "@/lib/tokens/read/labels";
 import type { PublicTokenSeries } from "@/lib/tokens/read/api-contract";
-import { TOKEN_PRICE_DEFAULT_PROVIDER, TOKEN_PRICE_UNIT_CAPTION } from "@/lib/tokens/read/benchmark";
+import { benchmarkPointKey, TOKEN_PRICE_DEFAULT_PROVIDER, TOKEN_PRICE_UNIT_CAPTION } from "@/lib/tokens/read/benchmark";
 import type { PublicTokenBenchmarkSeries } from "@/lib/tokens/read/api-contract";
 import type { MarketDetail, MarketInstrumentDetail, TokenInstrumentIdentity } from "@/types/market";
 
@@ -75,10 +75,25 @@ function toInstrument(series: PublicTokenSeries, comparisons: MarketInstrumentDe
  * designated model is named in the subtitle because it is methodology, not a
  * control; there is no model, dimension, cache, tier or region selector.
  */
-export function benchmarkInstrumentsFromSeries(benchmarks: readonly PublicTokenBenchmarkSeries[]): MarketInstrumentDetail[] {
+export function benchmarkInstrumentsFromSeries(
+  benchmarks: readonly PublicTokenBenchmarkSeries[],
+  /**
+   * Per-point lineage, `seriesId|isoTime` to a designated-model-and-version key.
+   *
+   * Passed in rather than read off the series because the published benchmark
+   * shape names only the *current* designated model, and a range change needs
+   * to know which model produced each end of its window. Optional: a caller
+   * without it gets exactly the previous behaviour, which is what every
+   * non-production and test caller relies on.
+   */
+  lineage?: ReadonlyMap<string, string>,
+): MarketInstrumentDetail[] {
   const label = (row: PublicTokenBenchmarkSeries) => row.providerName;
   return benchmarks.map((row) => {
-    const daily = row.history.map((point) => ({ time: toUnix(point.time), value: point.priceUsdPer1m }));
+    const daily = row.history.map((point) => {
+      const key = lineage?.get(benchmarkPointKey(row.seriesId, point.time));
+      return { time: toUnix(point.time), value: point.priceUsdPer1m, ...(key === undefined ? {} : { lineage: key }) };
+    });
     const latest = daily[daily.length - 1]!;
     const detailed = { daily, intraday: [] };
     return {

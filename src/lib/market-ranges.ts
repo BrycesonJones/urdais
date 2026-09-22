@@ -174,6 +174,31 @@ export function availableRanges(series: DetailedSeries, asOf: number): DetailRan
   return DETAIL_RANGES.filter((range) => isRangeAvailable(series, range, asOf));
 }
 
+/**
+ * Whether a window's two endpoints measure the same thing.
+ *
+ * A percentage change is a statement about one economic object moving. Where a
+ * product can redesignate what it measures -- Urdais Token Price redesignates a
+ * provider's benchmark model -- the points either side of that boundary are
+ * computed from different objects, and the difference between them is not a
+ * change in anything. docs/methodology/token-price.md is explicit: percentage
+ * change is withheld across a constituent boundary, and "is never shown as zero
+ * to fill the space".
+ *
+ * Zero is exactly what the naive subtraction produced on 22 September 2026,
+ * when xAI moved from Grok 4.6 to Grok 4.7 and both models happened to be
+ * published at the same price. The value was right and the label was a claim
+ * nobody had checked.
+ *
+ * Points that carry no lineage are comparable, because every series that has
+ * only ever measured one thing leaves the field unset. Only a genuine,
+ * stated disagreement withholds.
+ */
+function sameLineage(first: TimeSeriesPoint, last: TimeSeriesPoint): boolean {
+  if (first.lineage === undefined || last.lineage === undefined) return true;
+  return first.lineage === last.lineage;
+}
+
 /** Percentage change from the window's base observation to the latest one. */
 export function periodReturn(series: DetailedSeries, range: DetailRange, asOf: number): number | null {
   if (!isRangeAvailable(series, range, asOf)) return null;
@@ -181,6 +206,7 @@ export function periodReturn(series: DetailedSeries, range: DetailRange, asOf: n
   const first = points[0];
   const last = points[points.length - 1];
   if (!first || !last || first.value === 0) return null;
+  if (!sameLineage(first, last)) return null;
   return ((last.value - first.value) / first.value) * 100;
 }
 
@@ -263,6 +289,7 @@ export function lowFrequencyPeriodReturn(
   const first = window[0];
   const last = window[window.length - 1];
   if (!first || !last || first.value === 0) return null;
+  if (!sameLineage(first, last)) return null;
   return ((last.value - first.value) / first.value) * 100;
 }
 

@@ -18,6 +18,21 @@ export type TimeRange = (typeof TIME_RANGES)[number];
 export type TimeSeriesPoint = {
   time: number;
   value: number;
+  /**
+   * Which lineage this point belongs to, where the product has one.
+   *
+   * A percentage change is only meaningful between two points that measure the
+   * same economic object. Most series have exactly one lineage forever, and
+   * leave this undefined; a benchmark whose constituent can be redesignated
+   * does not. Urdais Token Price is the case: when a provider's designated
+   * model changes, the points either side of the boundary are computed from
+   * different models, and a change between them is not a change in anything.
+   *
+   * Undefined on both sides means "no lineage information", which is treated
+   * as comparable -- that is what every existing series relies on, and it
+   * keeps this additive.
+   */
+  lineage?: string;
 };
 
 /** Historical data for each selectable time range. */

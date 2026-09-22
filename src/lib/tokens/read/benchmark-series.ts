@@ -29,6 +29,8 @@ import type { PublicTokenBenchmarkSeries, PublicTokenSeries } from "@/lib/tokens
 import {
   TOKEN_PRICE_BENCHMARK_NAME,
   TOKEN_PRICE_UNIT,
+  benchmarkLineageKey,
+  benchmarkPointKey,
   benchmarkProviders,
   constituentInForce,
   constituentSegments,
@@ -275,6 +277,18 @@ export function benchmarkPoints(
 }
 
 /** Providers with a value to show, which is the last successfully calculated one. */
+/** Per-point lineage for calculated points, addressed the way the chart addresses points. */
+export function benchmarkLineageFromPoints(points: readonly BenchmarkPoint[]): Map<string, string> {
+  const lineage = new Map<string, string>();
+  for (const point of points) {
+    lineage.set(
+      benchmarkPointKey(`token-price:${point.providerSlug}`, point.time),
+      benchmarkLineageKey(point.providerModelId, point.methodologyVersion),
+    );
+  }
+  return lineage;
+}
+
 export function publishableBenchmarks(series: readonly PublicTokenSeries[], onDate?: string): PublicTokenBenchmarkSeries[] {
   return providerBenchmarks(series, onDate).flatMap((row) => (row.series ? [row.series] : []));
 }
