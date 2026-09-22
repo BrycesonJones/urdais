@@ -32,7 +32,7 @@
 
 import { WAVE1_PROVIDERS, type Wave1Provider } from "@/lib/tokens/types";
 import type { PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
-import type { TokenVerificationEvent } from "@/lib/tokens/read/verification-events";
+import { latestVerificationByProvider, type TokenVerificationEvent } from "@/lib/tokens/read/verification-events";
 
 /**
  * How long a provider may go unverified before the run reports it as due.
@@ -115,27 +115,6 @@ function newestByProvider(rows: readonly PersistedBenchmarkRow[]): Map<string, P
 }
 
 /**
- * The newest attestation per provider, by verification instant.
- *
- * An event that names no benchmark is skipped. That is the fail-closed rule in
- * its narrowest form: an attestation is a statement *about* a provider's valid
- * state, so one that points at no state is not evidence that the state is
- * sound. Without this, writing a verification row would be enough to make any
- * provider look healthy, and the watchdog would be reporting on its own inputs.
- */
-function newestVerificationByProvider(events: readonly TokenVerificationEvent[]): Map<string, TokenVerificationEvent> {
-  const newest = new Map<string, TokenVerificationEvent>();
-  for (const event of events) {
-    if (event.benchmarkId === null) continue;
-    const held = newest.get(event.providerSlug);
-    if (held === undefined || Date.parse(event.verifiedAt) > Date.parse(held.verifiedAt)) {
-      newest.set(event.providerSlug, event);
-    }
-  }
-  return newest;
-}
-
-/**
  * The freshness report for every Wave-1 provider.
  *
  * Every provider appears, including ones with no verification standing: a provider missing
@@ -153,7 +132,7 @@ export function verificationFreshness(
   reviewIntervalDays: number = VERIFICATION_REVIEW_INTERVAL_DAYS,
 ): VerificationFreshnessReport {
   const newest = newestByProvider(rows);
-  const newestVerification = newestVerificationByProvider(events);
+  const newestVerification = latestVerificationByProvider(events);
   const counts = new Map<string, number>();
   for (const row of rows) counts.set(row.providerSlug, (counts.get(row.providerSlug) ?? 0) + 1);
   const eventCounts = new Map<string, number>();

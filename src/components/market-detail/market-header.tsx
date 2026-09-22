@@ -70,7 +70,21 @@ export function MarketHeader({ market, instrument, emptyFamilyLabel, emptyNote, 
       {isHeadlineInstrument(market, instrument) && market.question && (
         <p className="mt-1 text-sm italic text-neutral-500">{market.question}</p>
       )}
-      <p className="mt-1 text-xs text-neutral-500 md:text-sm">Updated {formatUpdatedAt(snapshot.asOf)}</p>
+      {/*
+        "Verified" and "Updated" are different claims, and the instrument says
+        which one it can support. `verifiedAt` means a person confirmed this
+        value is still what the source publishes; `snapshot.asOf` means the
+        value entered the series then. For a product that records an observation
+        only when a price moves -- Urdais Token Price -- those dates diverge the
+        moment a re-check finds nothing changed, and printing only the second
+        one said nobody had looked. An instrument with no verification concept
+        carries no `verifiedAt` and reads exactly as it always has.
+      */}
+      <p className="mt-1 text-xs text-neutral-500 md:text-sm">
+        {instrument.verifiedAt === undefined
+          ? `Updated ${formatUpdatedAt(snapshot.asOf)}`
+          : `Verified ${formatUpdatedAt(instrument.verifiedAt)}`}
+      </p>
 
       {/* Explicit spaces keep the text readable when announced or copied. */}
       <p className="mt-6 flex flex-wrap items-baseline gap-x-3 tabular-nums">

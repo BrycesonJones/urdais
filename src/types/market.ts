@@ -194,6 +194,29 @@ export type MarketInstrumentDetail = MarketIndex & {
    */
   regionLabel?: string;
   /**
+   * When a person last verified that this instrument's published value is what
+   * the source still says, as a unix second.
+   *
+   * Deliberately not `snapshot.asOf`, and deliberately not a rename of it.
+   * They answer different questions and routinely differ:
+   *
+   *   snapshot.asOf   when this value entered the series
+   *   verifiedAt      when a human last confirmed it is still the value
+   *
+   * Urdais Token Price is why this exists. Its methodology records an
+   * observation only when a price changes, so a provider re-read on
+   * 22 September whose price had not moved keeps a 14 September benchmark
+   * timestamp -- correctly. Printing that as the only date told a reader
+   * nobody had looked in eight days, which was false: the record of the
+   * looking lives in `pipeline.token_price_verifications`.
+   *
+   * Optional, and absent on every product that has no human-verification
+   * concept. Absent means the header says "Updated" exactly as before; it must
+   * never be filled in from a calculation instant, because that would relabel
+   * a benchmark timestamp as a human attestation.
+   */
+  verifiedAt?: number;
+  /**
    * Present on canonical token facet instruments, which are internal. The
    * product market carries `benchmarkIdentity` instead.
    */

@@ -9,6 +9,7 @@
 import { WAVE1_MODELS, WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
 import { benchmarkLineageFromPoints, benchmarkPoints, publishableBenchmarks } from "@/lib/tokens/read/benchmark-series";
 import { benchmarkLineageFromPersisted, persistedBenchmarks, type PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
+import { latestVerificationByProvider, type TokenVerificationEvent } from "@/lib/tokens/read/verification-events";
 import { productionFrozenRows } from "@/lib/tokens/read/lineage";
 import type { PublicTokenBenchmarkSeries } from "@/lib/tokens/read/api-contract";
 import { benchmarkInstrumentsFromSeries, withTokenInstruments } from "@/lib/tokens/read/instruments";
@@ -66,7 +67,32 @@ export function visibleTokenPricesResponse(
  */
 export async function loadVisibleTokenInstruments(env: ProcessEnvLike = process.env): Promise<MarketInstrumentDetail[]> {
   const { benchmarks, lineage } = await loadVisibleTokenBenchmarks(env);
-  return benchmarkInstrumentsFromSeries(benchmarks, lineage);
+  return benchmarkInstrumentsFromSeries(benchmarks, lineage, await loadVerifiedAt(env));
+}
+
+/**
+ * When a person last verified each provider, by slug.
+ *
+ * Read from `pipeline.token_price_verifications`, which is the record of people
+ * checking, and never derived from a benchmark instant. A provider with no
+ * attestation is simply absent from the map: the header then says "Updated"
+ * against the calculation time, which is true, instead of "Verified" against a
+ * date nobody attested to. An unreachable database produces an empty map for
+ * the same reason.
+ */
+async function loadVerifiedAt(env: ProcessEnvLike): Promise<Map<string, string>> {
+  const events = await loadVerificationEvents(env);
+  if (events === null) return new Map();
+  return new Map([...latestVerificationByProvider(events)].map(([slug, event]) => [slug, event.verifiedAt]));
+}
+
+async function loadVerificationEvents(env: ProcessEnvLike): Promise<TokenVerificationEvent[] | null> {
+  try {
+    const { loadVerificationEventsFromDatabase } = await import("@/lib/tokens/read/database");
+    return await loadVerificationEventsFromDatabase(env);
+  } catch {
+    return null;
+  }
 }
 
 /**
