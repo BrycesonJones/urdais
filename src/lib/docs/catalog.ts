@@ -187,14 +187,6 @@ export const docPages: readonly DocPage[] = [
     file: "methodology/power-delivery-gap.md",
   },
   {
-    slug: "methodology/transmission-headroom",
-    title: "Transmission Headroom",
-    description:
-      "Production methodology for operational transmission margin: NYISO interface headroom and ERCOT constraint margin as two separate market-specific measurements, why they are never combined, the exact sentinel and plausibility rules that decide when a published limit is a number at all, and the populations each source actually observes.",
-    section: "Methodology",
-    file: "methodology/transmission-headroom.md",
-  },
-  {
     slug: "methodology/interconnection-queue-analytics",
     title: "Interconnection Queue Analytics",
     description:
@@ -204,11 +196,19 @@ export const docPages: readonly DocPage[] = [
   },
   {
     slug: "methodology/umpi",
-    title: "UMPI-DRAM Spot",
+    title: "UMPI-DRAM Spot (deferred)",
     description:
-      "Draft methodology for the Urdais Memory Price Index V1: the spot-market price of six defined DRAM chips in USD per chip, with branded and eTT held apart as separate instruments, spot separated from contract, HBM withheld for want of an observed price, and publication blocked until a source's rights are resolved in writing.",
+      "Deferred draft for the proprietary-source spot architecture: the spot-market price of six defined DRAM chips in USD per chip, with branded and eTT held apart. Not the UMPI V1 launch methodology — publication is blocked until a source's rights are resolved in writing.",
     section: "Methodology",
     file: "methodology/umpi.md",
+  },
+  {
+    slug: "methodology/umpi-kr-dram",
+    title: "UMPI-KR DRAM",
+    description:
+      "Draft methodology for UMPI V1: two monthly official-data DRAM indexes — the Bank of Korea DRAM producer price index published as a cited series, and a Urdais-calculated export unit-value index from Korea Customs value and weight under HSK 8542321010 — held apart as a price index and a unit-value index, in index points, with MoM change.",
+    section: "Methodology",
+    file: "methodology/umpi-kr-dram.md",
   },
 ];
 
