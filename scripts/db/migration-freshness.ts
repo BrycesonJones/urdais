@@ -103,7 +103,7 @@ async function main(): Promise<void> {
     // same reasoning the ledger check uses: a repository with no production configured is not a
     // repository with a stale one.
     console.log("no production database is configured; migration freshness cannot be evaluated.");
-    console.log("set URDAIS_PRODUCTION_DATABASE_URL to enforce it.");
+    console.log("set URDAIS_MIGRATION_AUDIT_DATABASE_URL to enforce it.");
     return;
   }
 
