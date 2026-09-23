@@ -270,10 +270,12 @@ describe("18. no mock fallback", () => {
     expect(source).not.toMatch(/HEADROOM_ROWS|DEMO_AS_OF_TIME/);
   });
 
-  it("the retired mock is gone from the shared fixtures", async () => {
-    const source = await import("node:fs/promises").then((fs) =>
-      fs.readFile("src/data/mock/power-analytics.ts", "utf8"));
-    expect(source).not.toMatch(/HEADROOM_ROWS|HEADROOM_TIGHT_PERCENT|headroomState/);
+  it("the shared Power Analytics mock is gone entirely", async () => {
+    // TH-4 asserted the headroom mock had been removed from this module. FC-4A removed the module:
+    // Flexible Capacity was its last consumer, so the whole file went with it.
+    const { access } = await import("node:fs/promises");
+    await expect(access("src/data/mock/power-analytics.ts")).rejects.toThrow();
+    await expect(access("src/types/power-analytics.ts")).rejects.toThrow();
   });
 });
 
