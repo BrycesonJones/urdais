@@ -16,11 +16,14 @@
  * series; they are no longer quoted as though the index published them.
  */
 
+import { isPubliclyListed } from "@/data/market-catalog";
 import { MARKETS } from "@/data/mock/market-detail";
 import type { IndexSnapshot } from "@/types/market";
 
 export const INDEX_SNAPSHOTS: IndexSnapshot[] = MARKETS.filter(
-  (market) => market.symbol !== "UCPI",
+  // A deferred index keeps its market definition and its illustrative series; what it loses is
+  // the rail row, because the rail is where a reader is told what Urdais currently publishes.
+  (market) => market.symbol !== "UCPI" && isPubliclyListed(market.symbol),
 )
   .map((market) => {
     const instrument = market.families

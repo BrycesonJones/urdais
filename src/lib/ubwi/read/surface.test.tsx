@@ -8,7 +8,7 @@ import { UbwiSection } from "@/components/ubwi/ubwi-section";
 import { INDEX_SNAPSHOTS } from "@/data/mock/indices";
 import { findMarket } from "@/data/mock/market-detail";
 import { UrdaisIndices } from "@/components/market/urdais-indices";
-import { MARKET_CATALOG } from "@/data/market-catalog";
+import { PUBLIC_MARKET_CATALOG } from "@/data/market-catalog";
 import { UBWI_EXPLANATION, UBWI_VALUE_FRACTION_DIGITS, ubwiIndexSnapshot, ubwiSurface } from "./surface";
 import { assembleIndexRail } from "@/lib/market/index-rail";
 import { UAVI_WATCHLIST_ROW } from "@/lib/uavi/read/watchlist";
@@ -248,11 +248,15 @@ describe("the UBWI homepage watchlist row", () => {
   });
 
   it("appears in market-catalog order, after the other indices, and changes none of them", () => {
-    const expected = MARKET_CATALOG.map((market) => market.symbol).filter((symbol) => symbol !== "UCPI");
+    // The public catalog, not the full registry: a deferred index keeps its catalog entry and
+    // never reaches the rail, so ordering is checked against what a reader is actually shown.
+    const expected = PUBLIC_MARKET_CATALOG.map((market) => market.symbol).filter(
+      (symbol) => symbol !== "UCPI",
+    );
     expect(homepageRows().map((row) => row.symbol)).toEqual(expected);
     // The mock rows keep their existing values untouched by this wiring, and none of UGAI, UAVI
     // or UMPI is among them: each joins the rail from its own module, carrying no number.
-    expect(INDEX_SNAPSHOTS.map((row) => row.symbol)).toEqual(["UPPI", "UEPI", "UACI"]);
+    expect(INDEX_SNAPSHOTS.map((row) => row.symbol)).toEqual(["UEPI", "UACI"]);
   });
 });
 
