@@ -1,4 +1,6 @@
 import { FlexibleCapacityChart } from "@/components/power-analytics/flexible-capacity-chart";
+import { unavailableFlexibleCapacityModel, type FlexibleCapacityReadModel }
+  from "@/lib/flexible-capacity/analytics/read";
 import { unconfiguredDeliveryGapReadModel, type DeliveryGapReadModel } from "@/lib/power-delivery/gap/read";
 import { GridBuildoutChart } from "@/components/power-analytics/grid-buildout-chart";
 import { unavailableGridBuildoutModel, type GridBuildoutReadModel }
@@ -27,18 +29,24 @@ const SECTIONS = [
  * this page is its delivery counterpart, and it is not an index.
  */
 /**
- * The page is presentational. Its one real section takes an already-loaded read model, so the
- * database work lives in the route and this stays renderable without one — which is also what
- * lets it be tested for its heading structure without a connection.
+ * The page is presentational. Every section takes an already-loaded read model, so the database
+ * work lives in the route and this stays renderable without one — which is also what lets it be
+ * tested for its heading structure without a connection.
+ *
+ * The demo-data badge is gone because there is no demo data left: Flexible Capacity was the last
+ * mock section, and FC-4A replaced it with the same read model the public API serves. A section
+ * with nothing published says so itself rather than being excused by a page-level label.
  */
 export function PowerAnalyticsPage({
   gap = unconfiguredDeliveryGapReadModel(),
   queue = unavailableQueueAnalytics(),
   headroom = unavailableTransmissionModel(),
   buildout = unavailableGridBuildoutModel(),
+  flexibility = unavailableFlexibleCapacityModel("no_database_configured"),
 }: {
   gap?: DeliveryGapReadModel; queue?: QueueAnalyticsReadModel;
   headroom?: TransmissionReadModel; buildout?: GridBuildoutReadModel;
+  flexibility?: FlexibleCapacityReadModel;
 } = {}) {
   return (
     <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-6 text-neutral-50 sm:px-6 lg:px-8">
@@ -46,9 +54,6 @@ export function PowerAnalyticsPage({
         <header>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="text-3xl font-semibold tracking-tight text-neutral-50 md:text-4xl">Power Analytics</h1>
-            <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
-              Demo data except Delivery, Interconnection, Transmission and Buildout
-            </span>
           </div>
           <p className="mt-2 text-base text-neutral-300 md:text-lg">The infrastructure delivering power to the Information Age.</p>
           <p className="mt-1 text-sm text-neutral-500">Load, interconnection, transmission capacity, grid buildout, and flexibility.</p>
@@ -74,7 +79,7 @@ export function PowerAnalyticsPage({
           <InterconnectionQueue analytics={queue} />
           <TransmissionHeadroom analytics={headroom} />
           <GridBuildoutChart analytics={buildout} />
-          <FlexibleCapacityChart />
+          <FlexibleCapacityChart analytics={flexibility} />
         </div>
       </div>
     </main>

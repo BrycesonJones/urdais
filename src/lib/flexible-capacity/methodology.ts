@@ -305,7 +305,7 @@ export const STANDING_LIMITATIONS: readonly string[] = [
   "Generation adequacy only: no transmission, distribution, interconnection or local deliverability limit is represented.",
   "Assumes the new load is flat and that its curtailment is dispatched in exactly the hours required.",
   "Curtailed energy is forgone, not deferred; no rebound is modelled.",
-  "Storage contributes nothing in 1.0.0, and is not additive with curtailable load.",
+  "Storage contributes nothing, and is not additive with curtailable load.",
   "Demand response is not an input. Some publishers already net demand response out of demand, so adding an inventory later without accounting for that would double count it.",
   "Published per balancing authority. Markets are not summed and no national figure exists.",
   "A single missing hour outside the peak day can overstate headroom by up to 3.19% at the smallest published curtailment allowance.",

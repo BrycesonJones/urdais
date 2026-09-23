@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { PowerAnalyticsPage } from "@/components/power-analytics/power-analytics-page";
 import { loadQueueAnalytics, unavailableQueueAnalytics } from "@/lib/interconnection-queue/analytics/read";
+import { loadFlexibleCapacityReadModel, unavailableFlexibleCapacityModel } from "@/lib/flexible-capacity/analytics/read";
 import { loadGridBuildoutReadModel, unavailableGridBuildoutModel } from "@/lib/grid-buildout/analytics/read";
 import { loadDeliveryGapReadModel, unconfiguredDeliveryGapReadModel } from "@/lib/power-delivery/gap/read";
 import { loadTransmissionAnalytics, unavailableTransmissionModel } from "@/lib/transmission-headroom/analytics/read";
@@ -28,6 +29,7 @@ export default async function PowerAnalyticsRoute() {
   let queue = unavailableQueueAnalytics();
   let headroom = unavailableTransmissionModel();
   let buildout = unavailableGridBuildoutModel();
+  let flexibility = unavailableFlexibleCapacityModel("no_database_configured");
   if (databaseUrl) {
     const sql = await createTokenSqlExecutor(databaseUrl);
     try {
@@ -55,6 +57,13 @@ export default async function PowerAnalyticsRoute() {
       buildout = await loadGridBuildoutReadModel(sql);
     } catch (error) {
       console.error(`power analytics: grid buildout read failed (${error instanceof Error ? error.message : String(error)})`);
+    }
+    try {
+      // The same read model the public API serves, so a figure cannot be assembled one way here
+      // and another way there. Refused market-years arrive with their reasons and no numbers.
+      flexibility = await loadFlexibleCapacityReadModel(sql);
+    } catch (error) {
+      console.error(`power analytics: flexible capacity read failed (${error instanceof Error ? error.message : String(error)})`);
     } finally {
       await sql.end();
     }
@@ -63,7 +72,7 @@ export default async function PowerAnalyticsRoute() {
   return (
     <>
       <SiteHeader />
-      <PowerAnalyticsPage gap={gap} queue={queue} headroom={headroom} buildout={buildout} />
+      <PowerAnalyticsPage gap={gap} queue={queue} headroom={headroom} buildout={buildout} flexibility={flexibility} />
       <SiteFooter />
     </>
   );
