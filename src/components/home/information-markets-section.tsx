@@ -4,6 +4,7 @@ import { UcpiSummary } from "@/components/market/ucpi-summary";
 import { UrdaisIndices } from "@/components/market/urdais-indices";
 import { ChromeRevealText } from "@/components/ui/chrome-reveal-text";
 import { INDEX_SNAPSHOTS } from "@/data/mock/indices";
+import { assembleIndexRail } from "@/lib/market/index-rail";
 import type { IndexSnapshot } from "@/types/market";
 import { UCPI_INDEX, UCPI_SERIES, UCPI_SNAPSHOT } from "@/data/mock/ucpi";
 import type { UcpiHeadline } from "@/lib/ucpi/read/load";
@@ -52,14 +53,15 @@ function UcpiUnavailable() {
  * The surface is explicitly dark regardless of colour scheme.
  */
 export function InformationMarketsSection({
-  indices = INDEX_SNAPSHOTS,
+  indices = assembleIndexRail(INDEX_SNAPSHOTS),
   ucpi = null,
   fixturesPermitted = true,
 }: {
   /**
    * The watchlist rows. Defaults to the mock snapshots alone, so a render with no
    * props never implies a published production value; the page passes the real UBWI
-   * row in when one is frozen.
+   * row in when one is frozen. The default is assembled rather than handed over raw, so
+   * it cannot present an index the public catalog withholds.
    */
   indices?: IndexSnapshot[];
   /** The released production UCPI headline, or null when production has none. */

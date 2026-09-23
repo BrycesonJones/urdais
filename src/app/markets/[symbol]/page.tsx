@@ -37,6 +37,9 @@ type PageProps = { params: Promise<{ symbol: string }> };
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  // The same gate as the page, so metadata cannot announce a product the route will not serve.
+  // Titling the tab "UACI · Urdais Chip & Accelerator Index" and then 404ing would put the
+  // product in front of a reader, a link preview and a crawler anyway.
   const market = publicMarket((await params).symbol);
   return market ? { title: `${market.symbol} · ${market.name}` } : { title: "Not found" };
 }
@@ -44,18 +47,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 /**
  * The market behind a public route, or undefined.
  *
- * Two ways to be absent, one answer. An unknown symbol has never existed; a deferred one exists
- * in the registry but is not presented as a current Urdais product -- UPPI, whose production is
- * DEFERRED_PENDING_DATA_RIGHTS per `docs/research/photonics/ph-3-closeout.md`. A reader arriving
- * at either URL gets this route's established behaviour for an unavailable product, which is a
- * 404, rather than a placeholder page describing a product Urdais does not publish.
+ * Two ways to be absent, one answer. An unknown symbol has never existed. A withheld one exists
+ * in the registry but is not presented as a current Urdais product: UPPI, whose production is
+ * DEFERRED_PENDING_DATA_RIGHTS per `docs/research/photonics/ph-3-closeout.md`; UGAI and UAVI,
+ * which have never published an observation; UACI, which has only ever shown a demo walk. Their
+ * backends, datasets and methodology documents are untouched -- they are simply not on sale, and
+ * a public page saying "not yet live" is a product page all the same. A reader arriving at any of
+ * those URLs gets this route's established behaviour for an unavailable product, a 404, rather
+ * than a placeholder describing a product Urdais does not publish.
+ *
+ * The gate asks the catalog entry's own publication state, so hiding or restoring an index is one
+ * flag in one place and no symbol is named here.
  */
 function publicMarket(symbol: string) {
   const market = findMarket(symbol);
   return market && isPubliclyListed(market.symbol) ? market : undefined;
 }
 
-/** Detail page for one routed Urdais market; unknown symbols are a 404. */
+/** Detail page for one routed Urdais market; unknown and withheld symbols alike are a 404. */
 export default async function MarketIndexPage({ params }: PageProps) {
   const found = publicMarket((await params).symbol);
   if (!found) notFound();
@@ -72,6 +81,11 @@ export default async function MarketIndexPage({ params }: PageProps) {
   // day. It gets its own surface instead -- the value where one is published, the reason
   // plus the full observed/modelled disclosure where none is, and its own chart drawn
   // only from frozen production publications.
+  // The UGAI and UAVI branches below are currently unreachable: neither index is publicly
+  // presented, so the guard above has already 404'd. They are kept rather than deleted because
+  // the surfaces themselves are finished work, and restoring either product is then a single
+  // `publiclyPresented` flag rather than a rebuild.
+  //
   // UGAI does not use the generic market chart page either, and for a stronger reason than
   // UBWI's: it has never published an observation, so the generic page's snapshot, movement and
   // chart would all have to come from somewhere, and the only somewhere available is invention.
