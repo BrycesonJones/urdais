@@ -168,7 +168,10 @@ declare
     'reference.umpi_source_monitors',
     'pipeline.umpi_operational_runs', 'pipeline.umpi_source_checks',
     -- Grid Buildout Velocity (GBV-5): the operational run ledger
-    'pipeline.buildout_job_runs'
+    'pipeline.buildout_job_runs',
+    -- Flexible Capacity (FC-3): the analytical layer. The results table is append-only; the run
+    -- table is a lifecycle and may be updated.
+    'pipeline.flexible_capacity_analytics_runs', 'pipeline.flexible_capacity_scenario_results'
   ];
   n integer;
 begin

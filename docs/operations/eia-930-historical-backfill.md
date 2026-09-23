@@ -76,7 +76,28 @@ Per market-local year, all seven markets, both metrics:
 | Measured wall time | **16m 15s** for one year, local database |
 | Measured throughput | ~125 canonical rows/second |
 
-Three years is roughly 368,000 observations and about 50 minutes. The dominant cost is not row writes but `pipeline.source_retrievals.response_body`, which stores each page's full JSON: roughly 0.7 MB per chunk, so ~37 MB per year and ~110 MB for three. That is the price of being able to reproduce any figure from the bytes the publisher served, and it is worth paying, but it should be expected rather than discovered.
+### Three years, measured
+
+FC-3 ran the full three-year range and the FC-2 projection turned out to be wrong in both size and attribution. The measured figures:
+
+| | Projected in FC-2 | **Measured in FC-3** |
+| --- | --- | --- |
+| Range | — | `2023-01-01T05` → `2026-01-01T07`, 26,307 hours |
+| Chunks / requests | 157 | **157, all succeeded** |
+| Raw rows | ~368,000 | **367,934** |
+| Observations inserted | — | **367,834** (100 rows carried no value) |
+| Wall time | ~50 min | **41 min 18 s** |
+| Storage | ~110 MB, dominated by response bodies | **442 MB, dominated by raw records** |
+
+The storage breakdown is the correction worth keeping:
+
+| Table | Three years |
+| --- | ---: |
+| `pipeline.raw_power_records` | 262 MB |
+| `pipeline.power_observations` | 176 MB |
+| `pipeline.source_retrievals` | **4.4 MB** |
+
+Response bodies were expected to dominate and do not: EIA's JSON compresses roughly a hundredfold under TOAST. What actually costs is the per-row canonical evidence — 368,000 raw records and the observations derived from them, with their indexes. Budget **~150 MB per year**, not the ~37 MB FC-2 projected.
 
 ---
 
