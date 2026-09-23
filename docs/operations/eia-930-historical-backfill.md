@@ -86,7 +86,7 @@ FC-3 ran the full three-year range and the FC-2 projection turned out to be wron
 | Chunks / requests | 157 | **157, all succeeded** |
 | Raw rows | ~368,000 | **367,934** |
 | Observations inserted | — | **367,834** (100 rows carried no value) |
-| Wall time | ~50 min | **41 min 18 s** |
+| Wall time | ~50 min | **41 min 18 s**, local database — see *Where you run it* |
 | Storage | ~110 MB, dominated by response bodies | **442 MB, dominated by raw records** |
 
 The storage breakdown is the correction worth keeping:
@@ -98,6 +98,40 @@ The storage breakdown is the correction worth keeping:
 | `pipeline.source_retrievals` | **4.4 MB** |
 
 Response bodies were expected to dominate and do not: EIA's JSON compresses roughly a hundredfold under TOAST. What actually costs is the per-row canonical evidence — 368,000 raw records and the observations derived from them, with their indexes. Budget **~150 MB per year**, not the ~37 MB FC-2 projected.
+
+---
+
+## Where you run it
+
+**Every wall-clock figure above was measured against a local database, and that turns out to be the load-bearing detail.** The ingestion is semantically correct wherever it runs and is *locality-sensitive*: it is bound by network round trips, not by CPU, disk or the publisher.
+
+`persistEiaPage` issues roughly four sequential statements per source row — insert the raw record, take an advisory lock, select the current observation, insert or supersede it — inside one transaction per chunk. A 7-day chunk holds 2,352 rows, so a chunk is about **10,000 sequential round trips**. That is a deliberate design: the lock and the select are what make supersession correct under concurrency, and each is cheap when the database is a millisecond away.
+
+Measured during the FC-4B activation attempt on 2026-09-23:
+
+| | Local socket | Production pooler, from a laptop |
+| --- | --- | --- |
+| Sequential round trip | ~0.05 ms | **58.2 ms** |
+| Per chunk (2,352 rows) | ~16 s | **~9 min** |
+| 157 chunks (three years) | **41 min** | **~24 hours** |
+
+The prediction from the measured round trip matched the observed rate exactly, which is what identifies latency as the whole cause: not the source, not the database, not the data.
+
+> **Run a historical backfill from inside the database's region.** At an in-region round trip of about a millisecond the same code should finish three years in an hour or two, with no change to any data semantics.
+
+Check before you start, rather than discovering it at chunk three:
+
+```bash
+npm run power-delivery:eia-backfill -- --local-year 2025 --market ercot --estimate
+```
+
+then time a hundred sequential round trips against the target. Anything above a few milliseconds means the run belongs somewhere else.
+
+**Do not solve this by letting it run overnight.** The problem is not only elapsed time; it is supervising day-long transactions through a connection pooler with nobody watching. Stop and move the execution instead.
+
+**Stopping is safe, and resuming is cheap.** An interrupted chunk rolls back whole — the FC-4B attempt left zero duplicate active rows and no stuck transactions — and a chunk already held matches its retrieval idempotency key and returns after one or two round trips without touching a single row. A partial backfill is a valid partial history, and re-running the same range picks up where it stopped.
+
+**A batched write path is possible and is not required.** Multi-row inserts, or `COPY` into a staging table followed by one set-based merge, would make latency nearly irrelevant. It is worth engineering if Urdais starts doing large historical reloads regularly. It is not worth doing to unblock one backfill: `persistEiaPage` is shared with the scheduled Power Delivery cron, so changing it trades a straightforward operational workaround for risk in a path that runs every day.
 
 ---
 
@@ -149,6 +183,7 @@ All seven pass the 99.5% floor with room to spare. Every peak falls on a summer 
 - **A missing hour anywhere else.** Methodology 1.0.0 excludes it and never interpolates. The scenario is decided by the top of the load distribution and the peak reference is a single observed hour, so an invented value near the top would change the answer while being indistinguishable from evidence. Absence is reported, not repaired.
 - **A superseded observation.** EIA revises. The old row stays, superseded; it is not deleted and not overwritten.
 - **A chunk boundary.** Chunks tile the range exactly, and the tiling is tested. Shifting one by hand to "catch" a missing hour creates an overlapping retrieval key for no benefit — the hour is missing because EIA did not serve it.
+- **A slow run, by raising the chunk size.** Chunking is not what makes a remote run slow; the per-row round trips are, and a bigger chunk has proportionally more of them while also breaking the one-page arithmetic. Move where it runs instead.
 - **The 14-day chunk ceiling.** It is `EIA_PAGE_LENGTH / (24 × 14)`. Raising it silently introduces a second page per chunk and the memory problem chunking exists to avoid.
 
 ---
