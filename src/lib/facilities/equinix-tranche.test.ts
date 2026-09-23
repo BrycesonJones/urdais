@@ -7,7 +7,9 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import {
+  campusKey,
   classifyEquinixPrecision,
+  classifyReviewIssue,
   namedFacilityCodes,
   resolveByNamedIdentity,
   materializeEquinixQueue,
@@ -185,5 +187,48 @@ describe("resolveByNamedIdentity", () => {
   it("leaves a result that was never ambiguous alone", () => {
     const ready = { ...ambiguous("ME1", "Equinix ME1"), outcome: "geocoded_ready" as const };
     expect(resolveByNamedIdentity(ready as never).outcomeReason).toBe("Provider returned multiple similarly ranked candidates.");
+  });
+});
+
+describe("the review queue", () => {
+  it("treats two floors of one building as one campus", () => {
+    const ch1 = campusKey("350 E Cermak Rd, 5th Floor, Chicago, IL 60616, USA", "US");
+    const ch2 = campusKey("350 E Cermak Rd, 6th Floor, Chicago, IL 60616, USA", "US");
+    const da1 = campusKey("1950 North Stemmons Freeway, Suite 1034, Dallas, TX 75207, USA", "US");
+    const da2 = campusKey("1950 North Stemmons Freeway, Suite 2027, Dallas, TX 75207, USA", "US");
+    expect(ch1).toBe(ch2);
+    expect(da1).toBe(da2);
+    expect(ch1).not.toBe(da1);
+  });
+
+  it("does not merge two different streets, or one street across countries", () => {
+    expect(campusKey("11 Great Oaks Boulevard, San Jose, CA 95119, USA", "US"))
+      .not.toBe(campusKey("9 Great Oaks Boulevard, San Jose, CA 95119, USA", "US"));
+    expect(campusKey("1 High Street, Somewhere", "US")).not.toBe(campusKey("1 High Street, Somewhere", "GB"));
+  });
+
+  const result = (overrides: Record<string, unknown>) => ({
+    facilityCode: "ME2",
+    latitude: -37.8,
+    longitude: 144.9,
+    returnedFormattedAddress: null,
+    ...overrides,
+  }) as never;
+
+  it("separates the three kinds of work a reviewer has to do", () => {
+    expect(classifyReviewIssue(result({ latitude: null, longitude: null }), false).issueType).toBe("no_candidate");
+    expect(classifyReviewIssue(result({ returnedFormattedAddress: "Equinix ME1, Lorimer Street" }), true).issueType).toBe("neighbor_facility_match");
+    expect(classifyReviewIssue(result({ returnedFormattedAddress: "Carrer de l'Acer, Barcelona" }), true).issueType).toBe("ambiguous_shared_location");
+  });
+
+  it("names the neighbour it actually matched, so the reviewer can check it", () => {
+    const { issueSummary } = classifyReviewIssue(result({ returnedFormattedAddress: "Equinix ME1, Lorimer Street" }), true);
+    expect(issueSummary).toContain("ME1");
+    expect(issueSummary).toContain("not ME2");
+  });
+
+  it("says whether an ambiguous case is a shared address or simply unranked", () => {
+    expect(classifyReviewIssue(result({ returnedFormattedAddress: "somewhere" }), true).issueSummary).toContain("share this address or campus");
+    expect(classifyReviewIssue(result({ returnedFormattedAddress: "somewhere" }), false).issueSummary).toContain("multiple similarly ranked");
   });
 });

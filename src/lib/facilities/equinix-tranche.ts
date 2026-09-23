@@ -281,6 +281,81 @@ export function resolveByNamedIdentity(result: EquinixGeocodeResult): EquinixGeo
   };
 }
 
+export type EquinixReviewIssue = "no_candidate" | "ambiguous_shared_location" | "neighbor_facility_match";
+
+export type EquinixReviewCandidate = {
+  lat: number;
+  lng: number;
+  source: string;
+  providerType: string | null;
+  returnedAddress: string | null;
+  reasonRejected: string;
+};
+
+export type EquinixReviewRecord = {
+  researchKey: string;
+  facilityCode: string;
+  parentLocationId: string;
+  address: string;
+  locality: string | null;
+  adminArea: string | null;
+  countryName: string;
+  countryCode: string;
+  sourceUrl: string;
+  issueType: EquinixReviewIssue;
+  issueSummary: string;
+  queriesAttempted: string[];
+  sharesCampusWith: string[];
+  candidateCoordinates: EquinixReviewCandidate[];
+  decision: null;
+};
+
+/**
+ * The address with its interior detail and postcode removed — what two halls
+ * in one building genuinely share. "350 E Cermak Rd, 5th Floor" and
+ * "350 E Cermak Rd, 6th Floor" share a campus; the full strings do not match.
+ */
+export function campusKey(address: string, countryCode: string): string {
+  const first = address.split(",", 1)[0] ?? "";
+  return `${normalizedAddress(first.replace(INTERIOR, ""))}|${countryCode}`;
+}
+
+/**
+ * Why a facility could not be placed, in the terms a reviewer needs.
+ *
+ * The three categories are not cosmetic: they call for different work.
+ * `no_candidate` needs a source Nominatim does not have. `neighbor_facility_match`
+ * has a coordinate that is real but belongs to a different hall, so the reviewer
+ * is choosing between "close enough at street precision" and finding the
+ * specific building. `ambiguous_shared_location` has candidates the provider
+ * could not rank, usually because several facilities occupy one address.
+ */
+export function classifyReviewIssue(
+  result: EquinixGeocodeResult,
+  sharesCampus: boolean,
+): { issueType: EquinixReviewIssue; issueSummary: string } {
+  if (result.latitude === null || result.longitude === null) {
+    return {
+      issueType: "no_candidate",
+      issueSummary: "No acceptable coordinate source returned a result for any query tried.",
+    };
+  }
+  const codes = namedFacilityCodes(result.returnedFormattedAddress);
+  const code = result.facilityCode.toUpperCase();
+  if (codes.size > 0 && !codes.has(code)) {
+    return {
+      issueType: "neighbor_facility_match",
+      issueSummary: `The returned coordinate belongs to another Equinix facility (${[...codes].sort().join(", ")}), not ${code}.`,
+    };
+  }
+  return {
+    issueType: "ambiguous_shared_location",
+    issueSummary: sharesCampus
+      ? "Evidence exists, but several facilities share this address or campus and the source cannot distinguish them."
+      : "The provider returned multiple similarly ranked candidates and none could be preferred on the evidence.",
+  };
+}
+
 export function canonicalEquinixFacility(item: EquinixQueueItem, result: EquinixGeocodeResult): ContractFacility {
   if (result.outcome !== "geocoded_ready" || result.latitude === null || result.longitude === null) {
     throw new Error(`${item.researchKey} is not ready for canonical projection`);

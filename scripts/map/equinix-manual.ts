@@ -9,16 +9,20 @@
  * Production persistence remains the existing `npm run map:import` workflow.
  * This script never writes to a database.
  */
+import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { parseFacilityImportDocument, type ContractFacility } from "@/lib/facilities/contract";
 import {
+  campusKey,
+  classifyReviewIssue,
   enrichEquinixResult,
   materializeEquinixQueue,
   normalizedAddress,
   projectEquinixFacilities,
   resolveByNamedIdentity,
+  type EquinixReviewRecord,
   validateEquinixTranche,
   type EquinixGeocodeResult,
   type EquinixQueueItem,
@@ -32,6 +36,7 @@ const PATHS = {
   cache: "data/map/geocoding/equinix-cache.v1.json",
   results: "data/map/geocoding/equinix-results.v1.json",
   qa: "data/map/geocoding/equinix-qa.v1.json",
+  review: "data/map/geocoding/equinix-review-required.v1.json",
   report: "docs/operations/map-equinix-manual-tranche.md",
   dataset: "data/map/facilities.v1.json",
 } as const;
@@ -49,6 +54,19 @@ const readOptional = <T>(path: string, fallback: T): T => {
 };
 const writeJson = (path: string, value: unknown): void => writeFileSync(resolve(ROOT, path), `${JSON.stringify(value, null, 2)}\n`, "utf8");
 const sleep = (milliseconds: number) => new Promise((done) => setTimeout(done, milliseconds));
+
+/**
+ * The digest the frozen artifact is identified by: keys sorted, no whitespace,
+ * so a reformat of the file does not read as a change to its content.
+ */
+function canonicalJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`).join(",")}}`;
+  }
+  return JSON.stringify(value) ?? "null";
+}
 
 function asQueueItem(item: EquinixQueueItem, query: string): GeocodeQueueItem {
   return {
@@ -242,9 +260,89 @@ function markdownReport(qa: ReturnType<typeof qaReport>, digest: string | null):
   return lines.join("\n");
 }
 
+/**
+ * The unresolved facilities, written out as work a person can actually do.
+ *
+ * Every candidate the provider returned for every query tried is listed, with
+ * the coordinate and why it was not taken — because the reviewer's question is
+ * "is one of these right?", and answering it from a bare rejection count is
+ * impossible. The `decision` field is null on every record: this file poses the
+ * questions and nothing here answers them.
+ */
+function reviewFile(
+  queue: EquinixQueueItem[],
+  results: EquinixGeocodeResult[],
+  cache: RequestCache,
+  sourceArtifactDigest: string,
+): { tranche: string; status: string; generatedAt: string; sourceArtifactDigest: string; counts: Record<string, number>; records: EquinixReviewRecord[] } {
+  const byKey = new Map(queue.map((item) => [item.researchKey, item]));
+  const held = results.filter((result) => !(result.outcome === "geocoded_ready" && result.precisionClass !== "lower_precision"));
+
+  const campuses = new Map<string, string[]>();
+  for (const item of queue) {
+    const key = campusKey(item.address, item.countryCode);
+    campuses.set(key, [...(campuses.get(key) ?? []), item.researchKey]);
+  }
+
+  const records: EquinixReviewRecord[] = held.map((result) => {
+    const item = byKey.get(result.researchKey)!;
+    const cohort = (campuses.get(campusKey(item.address, item.countryCode)) ?? []).filter((key) => key !== result.researchKey);
+    const { issueType, issueSummary } = classifyReviewIssue(result, cohort.length > 0);
+    const queries = [item.query, item.fallbackQuery, item.streetFallbackQuery]
+      .filter((value, index, all): value is string => value !== null && all.indexOf(value) === index);
+
+    const candidates = queries.flatMap((query) => {
+      const entry = cache.requests[cacheKey(query, item.countryCode)];
+      return (entry?.results ?? []).map((candidate) => ({
+        lat: Number(candidate.lat),
+        lng: Number(candidate.lon),
+        source: `Nominatim: ${query}`,
+        providerType: candidate.addresstype ?? candidate.type ?? null,
+        returnedAddress: candidate.display_name ?? null,
+        reasonRejected: issueType === "neighbor_facility_match"
+          ? issueSummary
+          : queries.length > 1 && entry?.results?.length !== 1
+            ? "One of several similarly ranked candidates; the provider could not be preferred over the others."
+            : "Did not satisfy the locality or country check for this facility.",
+      }));
+    });
+
+    return {
+      researchKey: result.researchKey,
+      facilityCode: item.facilityCode,
+      parentLocationId: item.parentLocationId,
+      address: item.address,
+      locality: item.locality,
+      adminArea: item.adminArea,
+      countryName: item.countryName,
+      countryCode: item.countryCode,
+      sourceUrl: item.sourceUrl,
+      issueType,
+      issueSummary,
+      queriesAttempted: queries,
+      sharesCampusWith: cohort.sort(),
+      candidateCoordinates: candidates,
+      decision: null,
+    };
+  });
+
+  records.sort((a, b) => a.researchKey.localeCompare(b.researchKey));
+  const counts: Record<string, number> = { total: records.length };
+  for (const record of records) counts[record.issueType] = (counts[record.issueType] ?? 0) + 1;
+  return {
+    tranche: "equinix-manual-tranche.v1",
+    status: "review_required",
+    generatedAt: GENERATED_AT,
+    sourceArtifactDigest,
+    counts,
+    records,
+  };
+}
+
 async function main(): Promise<void> {
   const fetchEnabled = process.argv.includes("--fetch");
   const applyEnabled = process.argv.includes("--apply");
+  const reviewEnabled = process.argv.includes("--review");
 
   const { tranche, issues } = validateEquinixTranche(readJson(PATHS.source));
   if (issues.length > 0) throw new Error(`frozen artifact failed validation: ${JSON.stringify(issues, null, 2)}`);
@@ -280,6 +378,16 @@ async function main(): Promise<void> {
   const qa = qaReport(queue, results, demotion.groups);
   writeJson(PATHS.results, { resultVersion: "urdais.map.equinix-geocode-results/1", generatedAt: GENERATED_AT, provider: "Nominatim", results });
   writeJson(PATHS.qa, { qaVersion: "urdais.map.equinix-geocode-qa/1", ...qa, sharedPointPrecisionDemotions: demotion.demoted });
+
+  let reviewCounts: Record<string, number> | null = null;
+  if (reviewEnabled) {
+    const sourceArtifactDigest = createHash("sha256")
+      .update(canonicalJson(readJson(PATHS.source)))
+      .digest("hex");
+    const review = reviewFile(queue, results, cache, sourceArtifactDigest);
+    reviewCounts = review.counts;
+    writeJson(PATHS.review, review);
+  }
 
   let projectedDigest: string | null = null;
   let canonicalBefore: number | null = null;
@@ -319,6 +427,7 @@ async function main(): Promise<void> {
       hardErrors: qa.hardErrors.length,
     },
     canonical: { before: canonicalBefore, after: canonicalAfter, ...projection, digest: projectedDigest },
+    review: reviewCounts,
     cachedRequests: Object.keys(cache.requests).length,
   }, null, 2));
 }
