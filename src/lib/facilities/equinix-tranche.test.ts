@@ -8,6 +8,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   campusKey,
+  campusNameQuery,
+  candidatesAgree,
+  cityFromAddress,
+  geocodeCountryCode,
+  metresBetween,
+  precisionForTier,
+  stripInterior,
   classifyEquinixPrecision,
   applyEquinixReviewDecisions,
   classifyReviewIssue,
@@ -314,5 +321,62 @@ describe("applyEquinixReviewDecisions", () => {
     const demoted = demoteSharedBuildingPrecision(results);
     expect(demoted.demoted).toEqual(["equinix-a", "equinix-b"]);
     expect(demoted.results.every((row) => row.coordinatePrecision === "street")).toBe(true);
+  });
+});
+
+describe("the resolution ladder", () => {
+  it("measures distance well enough to tell one place from several", () => {
+    expect(Math.round(metresBetween(51.5217361, -0.0730612, 51.5217361, -0.0730612))).toBe(0);
+    // 200 Bourke Road to 47 Bourke Road, Sydney — about 900 m apart.
+    expect(metresBetween(-33.919347, 151.1899815, -33.9215514, 151.1881363)).toBeGreaterThan(200);
+  });
+
+  it("calls candidates one place only when they sit within a block", () => {
+    const here = { lat: 40.7, lon: -74.0 };
+    expect(candidatesAgree([here])).toBe(true);
+    expect(candidatesAgree([here, { lat: 40.7008, lon: -74.0 }])).toBe(true);
+    expect(candidatesAgree([here, { lat: 40.75, lon: -74.0 }])).toBe(false);
+    expect(candidatesAgree([])).toBe(false);
+  });
+
+  it("gives each rung a coordinate method its provenance supports", () => {
+    expect(precisionForTier("provider_building")).toEqual({ coordinatePrecision: "building", coordinateMethod: "documented_address_geocode" });
+    expect(precisionForTier("street")).toEqual({ coordinatePrecision: "street", coordinateMethod: "documented_address_geocode" });
+    expect(precisionForTier("campus")).toEqual({ coordinatePrecision: "campus", coordinateMethod: "campus_centroid" });
+    expect(precisionForTier("city")).toEqual({ coordinatePrecision: "city", coordinateMethod: "city_centroid" });
+  });
+
+  it("reads the town off an address, skipping state codes and postcodes", () => {
+    expect(cityFromAddress("578 Lorimer Street, Port Melbourne, Melbourne, VIC 3207, Australia")).toBe("Melbourne");
+    expect(cityFromAddress("50 NE 9th Street, Miami, FL 33132, USA")).toBe("Miami");
+    // "N.T." is the New Territories, a region rather than a town.
+    expect(cityFromAddress("Unit 2702, 27/F, 168 Yeung Uk Road, Tsuen Wan, N.T., Hong Kong")).toBe("Tsuen Wan");
+  });
+
+  it("finds the named estate in an address, where there is one", () => {
+    expect(campusNameQuery({
+      facilityCode: "DB1", researchKey: "equinix-db1",
+      address: "Unit 4027 Kingswood Road, Citywest Business Campus, D24 AX06 Dublin, Ireland",
+      locality: null, adminArea: null, countryName: "Ireland",
+    })).toContain("Citywest Business Campus");
+    expect(campusNameQuery({
+      facilityCode: "LA4", researchKey: "equinix-la4",
+      address: "445 N Douglas St, El Segundo, CA 90245, USA",
+      locality: "El Segundo", adminArea: "California", countryName: "United States",
+    })).toBeNull();
+  });
+
+  it("filters the geocoder by the country OpenStreetMap files a place under", () => {
+    // OSM files Hong Kong under China, so countrycodes=hk matches nothing.
+    // The stored countryCode stays HK; only the provider filter changes.
+    expect(geocodeCountryCode("HK")).toBe("cn");
+    expect(geocodeCountryCode("US")).toBe("us");
+    expect(geocodeCountryCode("GB")).toBe("gb");
+  });
+
+  it("strips a component that is nothing but interior detail", () => {
+    expect(stripInterior("Unit B")).toBe("");
+    expect(stripInterior("200 Bourke Road")).toBe("200 Bourke Road");
+    expect(stripInterior("5th Floor")).toBe("");
   });
 });

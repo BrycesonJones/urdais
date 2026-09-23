@@ -69,10 +69,18 @@ export type EquinixQueueItem = EquinixSourceFacility & {
   query: string;
   fallbackQuery: string | null;
   streetFallbackQuery: string | null;
+  campusQuery: string | null;
+  cityQuery: string | null;
 };
 
-export type EquinixGeocodeResult = Omit<GeocodeResult, "provider"> & {
+export type EquinixGeocodeResult = Omit<GeocodeResult, "provider" | "coordinatePrecision"> & {
   provider: "nominatim" | "manual_review";
+  /**
+   * Widened past the geocoder's own union to include `city`. A city centroid is
+   * a location and not a position, so it is stored and is not map-eligible —
+   * reference.facility_is_map_eligible admits building, campus and street only.
+   */
+  coordinatePrecision: "building" | "campus" | "street" | "city";
   parentLocationId: string;
   facilityCode: string;
   market: string;
@@ -179,6 +187,79 @@ export function streetLevelFallbackQuery(item: EquinixSourceFacility & { country
   return normalizedAddress(query) === normalizedAddress(item.address) ? null : query;
 }
 
+/**
+ * A named estate, park or zone inside an address. These geocode far better
+ * than the street line does in places where OpenStreetMap has the estate
+ * mapped but not the house number: "Citywest Business Campus",
+ * "Manchester Science Park", "Parque Industrial Nexxus Aeropuerto",
+ * "International Media Production Zone", "Masdar City".
+ */
+const CAMPUS_WORDS =
+  /\b(?:business (?:park|campus)|science park|technology park|tecnologico|tecnológico|industrial (?:park|estate)|corporate park|free trade zone|production zone|parque (?:industrial|tecnologico|tecnológico)|polígono|organize sanayi|osb|impz|masdar city|innovation|campus|park|estate|zone)\b/iu;
+
+export function campusNameQuery(item: EquinixSourceFacility & { countryName: string }): string | null {
+  const parts = item.address.split(",").map((part) => part.trim()).filter(Boolean);
+  const named = parts.find((part) => CAMPUS_WORDS.test(part) && !/^\d/u.test(part));
+  if (!named) return null;
+  const cleaned = named.replace(INTERIOR, "").replace(/\s*\(.*?\)\s*/gu, " ").trim();
+  if (cleaned === "") return null;
+  const town = item.locality ?? cityFromAddress(item.address);
+  return [cleaned, town, item.countryName].filter(Boolean).join(", ");
+}
+
+/**
+ * The town an address is in, read off the component before the country.
+ * Postcodes are attached to the town in most of the world, so they are stripped
+ * rather than searched for.
+ */
+export function cityFromAddress(address: string): string | null {
+  const parts = address.split(",").map((part) => part.trim()).filter(Boolean);
+  // Walk back from the country, because the component before it is often only
+  // a state and a postcode ("VIC 3207", "NSW 2020") and the town is the one
+  // before that. A component that is nothing but codes is skipped, not used.
+  for (let index = parts.length - 2; index >= 1; index -= 1) {
+    const town = (parts[index] ?? "")
+      .replace(/\b[A-Z]{1,3}[-\s]?\d{3,6}(?:-\d{3,4})?\b/gu, "")
+      .replace(/\b\d{3,6}(?:-\d{3,4})?\b/gu, "")
+      .replace(/\b[A-Z]{1,2}\d{1,2}[A-Z]?\s+\d[A-Z]{2}\b/gu, "")
+      .replace(/\s{2,}/gu, " ")
+      .replace(/^[\s,.-]+|[\s,.-]+$/gu, "")
+      .trim();
+    // A bare state, province or territory code is a region, not a town —
+    // "VIC", "NSW", and Hong Kong's "N.T." for the New Territories.
+    if (town === "" || /^[A-Z]{1,3}$/u.test(town.replace(/[.\s]/gu, ""))) continue;
+    if (STREET_WORDS.test(town)) continue;
+    return town;
+  }
+  return null;
+}
+
+/** The last resort: the town itself, which is a location and never a position. */
+export function cityQuery(item: EquinixSourceFacility & { countryName: string }): string | null {
+  const town = item.locality ?? cityFromAddress(item.address);
+  return town ? `${town}, ${item.countryName}` : null;
+}
+
+/** An address component with its interior detail removed. Empty when the component was nothing but interior. */
+export function stripInterior(component: string): string {
+  return component.replace(INTERIOR, "").replace(/\s{2,}/gu, " ").trim();
+}
+
+/**
+ * The country code to filter the *geocoder* by, which is not always the
+ * facility's country code.
+ *
+ * OpenStreetMap files Hong Kong under China, so countrycodes=hk matches
+ * nothing and every Hong Kong query comes back empty. The stored countryCode
+ * stays HK, which is correct ISO 3166-1 and what the map serves; only the
+ * provider filter changes.
+ */
+const GEOCODE_COUNTRY_OVERRIDES: Record<string, string> = { HK: "cn", MO: "cn" };
+
+export function geocodeCountryCode(countryCode: string): string {
+  return (GEOCODE_COUNTRY_OVERRIDES[countryCode.toUpperCase()] ?? countryCode).toLowerCase();
+}
+
 export function materializeEquinixQueue(tranche: EquinixTranche): EquinixQueueItem[] {
   return tranche.markets.flatMap((market) =>
     market.facilities.map((facility) => ({
@@ -191,6 +272,10 @@ export function materializeEquinixQueue(tranche: EquinixTranche): EquinixQueueIt
       query: facility.address,
       fallbackQuery: simplifiedEquinixQuery(facility.address),
       streetFallbackQuery: streetLevelFallbackQuery({ ...facility, countryName: market.countryName }),
+      campusQuery: campusNameQuery({ ...facility, countryName: market.countryName }),
+      // The operator's own market name is the last fallback: an address like
+      // "6/F, 1 Wang Wo Tsai Street, Hong Kong" carries no town component.
+      cityQuery: cityQuery({ ...facility, countryName: market.countryName }) ?? `${market.market}, ${market.countryName}`,
     })),
   );
 }
@@ -279,6 +364,59 @@ export function resolveByNamedIdentity(result: EquinixGeocodeResult): EquinixGeo
       `${result.outcomeReason} Resolved: the provider returned a feature named for this facility (${result.returnedFormattedAddress}), ` +
       `which identifies it rather than a neighbour at the same address.`,
   };
+}
+
+export type EquinixResolutionTier = "provider_building" | "street" | "campus" | "city" | "unresolved";
+
+/**
+ * How far apart two coordinates are, in metres. Equirectangular is ample at the
+ * scale this is used for — deciding whether a handful of candidates describe
+ * one place or several.
+ */
+export function metresBetween(aLat: number, aLon: number, bLat: number, bLon: number): number {
+  const R = 6_371_000;
+  const toRad = (value: number) => (value * Math.PI) / 180;
+  const x = toRad(bLon - aLon) * Math.cos(toRad((aLat + bLat) / 2));
+  const y = toRad(bLat - aLat);
+  return Math.sqrt(x * x + y * y) * R;
+}
+
+/**
+ * Whether a set of candidates describes one place. Used to rescue a result the
+ * assessor called ambiguous: if every candidate it could not choose between
+ * sits within a block of the others, the street is established even though the
+ * building is not, and `street` is the honest precision for that.
+ */
+export function candidatesAgree(candidates: readonly { lat: number; lon: number }[], toleranceMetres = 150): boolean {
+  if (candidates.length < 2) return candidates.length === 1;
+  const [first, ...rest] = candidates;
+  return rest.every((candidate) => metresBetween(first!.lat, first!.lon, candidate.lat, candidate.lon) <= toleranceMetres);
+}
+
+/**
+ * The precision a provider feature type can carry when it is being used as a
+ * campus or city answer rather than as a building one.
+ *
+ * A city centroid is stored as `city` and is deliberately not map-eligible:
+ * reference.facility_is_map_eligible admits building, campus and street only.
+ * So a facility resolved this way is a complete, honest canonical record that
+ * the map does not draw — which is the intended behaviour, not a failure. The
+ * alternative is drawing a dot in the middle of a town and calling it a data
+ * centre.
+ */
+export function precisionForTier(tier: EquinixResolutionTier): { coordinatePrecision: "building" | "campus" | "street" | "city"; coordinateMethod: "documented_address_geocode" | "campus_centroid" | "city_centroid" } {
+  switch (tier) {
+    case "provider_building":
+      return { coordinatePrecision: "building", coordinateMethod: "documented_address_geocode" };
+    case "street":
+      return { coordinatePrecision: "street", coordinateMethod: "documented_address_geocode" };
+    case "campus":
+      return { coordinatePrecision: "campus", coordinateMethod: "campus_centroid" };
+    case "city":
+      return { coordinatePrecision: "city", coordinateMethod: "city_centroid" };
+    default:
+      return { coordinatePrecision: "street", coordinateMethod: "documented_address_geocode" };
+  }
 }
 
 export type EquinixReviewIssue = "no_candidate" | "ambiguous_shared_location" | "neighbor_facility_match";
@@ -458,7 +596,12 @@ export function canonicalEquinixFacility(item: EquinixQueueItem, result: Equinix
       latitude: result.latitude,
       longitude: result.longitude,
       coordinatePrecision: result.coordinatePrecision,
-      coordinateMethod: "documented_address_geocode",
+      // The method has to match the rung the coordinate came from, or the
+      // record claims a precision its provenance does not support.
+      coordinateMethod:
+        result.coordinatePrecision === "city" ? "city_centroid"
+        : result.coordinatePrecision === "campus" ? "campus_centroid"
+        : "documented_address_geocode",
       coordinateNotes: result.outcomeReason,
     },
     lifecycle: { status: "operational" },
@@ -481,7 +624,9 @@ export function canonicalEquinixFacility(item: EquinixQueueItem, result: Equinix
     quality: {
       confidence: "medium",
       lastVerifiedDate: EQUINIX_VERIFIED_DATE,
-      reviewNotes: [`Geocoder precision classification: ${result.precisionClass}.`],
+      reviewNotes: result.coordinatePrecision === "city"
+        ? [`Geocoder precision classification: ${result.precisionClass}.`, "City precision: stored as a canonical record and deliberately not map-eligible."]
+        : [`Geocoder precision classification: ${result.precisionClass}.`],
     },
     requestedPublicationState: "research",
   };
@@ -499,7 +644,7 @@ export function projectEquinixFacilities(
   let excluded = 0;
 
   for (const result of results) {
-    if (result.outcome !== "geocoded_ready" || result.precisionClass === "lower_precision" || result.latitude === null || result.longitude === null) {
+    if (result.outcome !== "geocoded_ready" || result.latitude === null || result.longitude === null) {
       excluded += 1;
       continue;
     }

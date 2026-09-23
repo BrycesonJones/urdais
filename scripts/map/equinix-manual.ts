@@ -16,12 +16,17 @@ import { resolve } from "node:path";
 import { parseFacilityImportDocument, type ContractFacility } from "@/lib/facilities/contract";
 import {
   campusKey,
+  candidatesAgree,
   classifyReviewIssue,
   enrichEquinixResult,
   materializeEquinixQueue,
+  geocodeCountryCode,
+  stripInterior,
   normalizedAddress,
   projectEquinixFacilities,
+  precisionForTier,
   resolveByNamedIdentity,
+  type EquinixResolutionTier,
   type EquinixReviewRecord,
   validateEquinixTranche,
   type EquinixGeocodeResult,
@@ -35,6 +40,7 @@ const PATHS = {
   source: "data/map/equinix-manual-tranche.v1.json",
   cache: "data/map/geocoding/equinix-cache.v1.json",
   results: "data/map/geocoding/equinix-results.v1.json",
+  resultsV2: "data/map/geocoding/equinix-results.v2.json",
   qa: "data/map/geocoding/equinix-qa.v1.json",
   review: "data/map/geocoding/equinix-review-required.v1.json",
   report: "docs/operations/map-equinix-manual-tranche.md",
@@ -127,7 +133,7 @@ function missing(item: EquinixQueueItem): GeocodeResult {
 }
 
 function assess(item: EquinixQueueItem, query: string, cache: RequestCache): GeocodeResult | null {
-  const entry = cache.requests[cacheKey(query, item.countryCode)];
+  const entry = cache.requests[cacheKey(query, geocodeCountryCode(item.countryCode))];
   return entry ? assessGeocode(asQueueItem(item, query), entry) : null;
 }
 
@@ -140,6 +146,87 @@ function chooseResult(item: EquinixQueueItem, cache: RequestCache): EquinixGeoco
     ?? attempts.find((attempt) => attempt.result.latitude !== null && attempt.result.longitude !== null)
     ?? attempts[0];
   return resolveByNamedIdentity(enrichEquinixResult(item, selected?.result ?? missing(item), selected?.query ?? null));
+}
+
+/**
+ * The resolution ladder, walked once per facility the assessor would not place.
+ *
+ * Each rung answers a narrower question than the one above it, and the rung
+ * reached becomes the precision. Nothing here invents a coordinate: every rung
+ * takes a point the provider actually returned, and a facility that reaches the
+ * bottom without one stays unresolved.
+ *
+ *   street  - the candidates the assessor could not choose between all sit
+ *             within a block of each other, so the address is established even
+ *             though the building is not. Also where a neighbour match lands:
+ *             the coordinate is right for the address and wrong for the hall.
+ *   campus  - a named estate, park or zone in the address geocoded, so the site
+ *             is established and the address within it is not.
+ *   city    - only the town resolved. Stored, and deliberately not drawn.
+ */
+function resolveByLadder(item: EquinixQueueItem, result: EquinixGeocodeResult, cache: RequestCache): { result: EquinixGeocodeResult; tier: EquinixResolutionTier } {
+  if (result.outcome === "geocoded_ready" && result.precisionClass !== "lower_precision") {
+    return { result, tier: result.coordinatePrecision === "building" ? "provider_building" : "street" };
+  }
+
+  const candidatesFor = (query: string | null) => {
+    if (!query) return [];
+    const entry = cache.requests[cacheKey(query, geocodeCountryCode(item.countryCode))];
+    return (entry?.results ?? [])
+      .map((candidate) => ({ lat: Number(candidate.lat), lon: Number(candidate.lon), raw: candidate }))
+      .filter((candidate) => Number.isFinite(candidate.lat) && Number.isFinite(candidate.lon));
+  };
+
+  const take = (
+    tier: EquinixResolutionTier,
+    candidate: { lat: number; lon: number; raw: NominatimResult },
+    query: string,
+    why: string,
+  ): { result: EquinixGeocodeResult; tier: EquinixResolutionTier } => {
+    const { coordinatePrecision } = precisionForTier(tier);
+    return {
+      tier,
+      result: {
+        ...result,
+        latitude: candidate.lat,
+        longitude: candidate.lon,
+        returnedFormattedAddress: candidate.raw.display_name ?? result.returnedFormattedAddress,
+        providerType: candidate.raw.addresstype ?? candidate.raw.type ?? result.providerType,
+        selectedQuery: query,
+        outcome: "geocoded_ready",
+        coordinatePrecision,
+        precisionClass: tier === "provider_building" ? "exact_or_rooftop" : "interpolated_or_street",
+        outcomeReason: why,
+      },
+    };
+  };
+
+  // Rung 1 - the street. Every candidate the assessor could not rank, from the
+  // address-level queries, describing one place.
+  for (const query of [item.query, item.fallbackQuery, item.streetFallbackQuery]) {
+    const candidates = candidatesFor(query);
+    if (candidates.length === 0) continue;
+    if (!candidatesAgree(candidates.map((candidate) => ({ lat: candidate.lat, lon: candidate.lon })))) continue;
+    const spread = candidates.length > 1 ? " the candidates returned all describe one place within a block" : " a single candidate was returned";
+    return take("street", candidates[0]!, query!,
+      `Resolved to street precision:${spread}, so the published address is established while the building within it is not.`);
+  }
+
+  // Rung 2 - a named estate, park or zone.
+  const campus = candidatesFor(item.campusQuery);
+  if (campus.length > 0 && candidatesAgree(campus.map((candidate) => ({ lat: candidate.lat, lon: candidate.lon })), 1_500)) {
+    return take("campus", campus[0]!, item.campusQuery!,
+      `Resolved to campus precision from the named site in the address (${item.campusQuery}); the site is established and the building within it is not.`);
+  }
+
+  // Rung 3 - the town. A location, never a position, and not drawn on the map.
+  const city = candidatesFor(item.cityQuery);
+  if (city.length > 0) {
+    return take("city", city[0]!, item.cityQuery!,
+      `Resolved to city precision only (${item.cityQuery}); no street, estate or building could be established, so this record is stored and is not placed on the map.`);
+  }
+
+  return { result, tier: "unresolved" };
 }
 
 function coordinateKey(result: EquinixGeocodeResult): string | null {
@@ -155,9 +242,18 @@ function groupBy<T>(values: readonly T[], key: (value: T) => string | null): Arr
   return [...groups.entries()].filter(([, items]) => items.length > 1).map(([group, items]) => ({ key: group, items }));
 }
 
-/** The address with its interior detail removed — what two co-located halls share. */
+/**
+ * The address with its interior detail removed — what two co-located halls
+ * share. The interior is not always last: "Unit B, 200 Bourke Road" leads with
+ * it, so comparing first components alone would call that a different street
+ * from "200 Bourke Road".
+ */
 function streetBasis(address: string): string {
-  return normalizedAddress(address.split(",", 1)[0] ?? "");
+  const parts = address.split(",").map((part) => part.trim()).filter(Boolean);
+  // A component that is *entirely* interior ("Unit B") strips to nothing; the
+  // street is the first one that survives stripping unchanged.
+  const street = parts.find((part) => stripInterior(part) === part && part !== "") ?? parts[0] ?? "";
+  return normalizedAddress(street);
 }
 
 function qaReport(queue: EquinixQueueItem[], results: EquinixGeocodeResult[], demotedGroups: ReturnType<typeof demoteSharedBuildingPrecision>["groups"]) {
@@ -173,12 +269,17 @@ function qaReport(queue: EquinixQueueItem[], results: EquinixGeocodeResult[], de
     // should still be claiming a building. `campus` is fine and is not raised
     // to street: it never claimed a building in the first place.
     const claimsBuilding = group.items.some((result) => result.coordinatePrecision === "building");
+    // Sharing is inherent to the campus and city rungs: a campus centroid is
+    // one point for the whole site, and a city centroid is one point for every
+    // facility in the town. Neither claims a building, so neither is suspicious.
+    const inherentlyShared = group.items.every((result) => result.coordinatePrecision === "campus" || result.coordinatePrecision === "city");
     return {
       coordinates: group.key,
       researchKeys: group.items.map((item) => item.researchKey),
       // A shared point is expected when the facilities share a street address
-      // and none of them claims to have located a building on it.
-      expectedSharedAddress: streetBases.size === 1 && !claimsBuilding,
+      // and none of them claims to have located a building on it, or when the
+      // rung they were resolved at shares a point by construction.
+      expectedSharedAddress: (streetBases.size === 1 && !claimsBuilding) || inherentlyShared,
       addresses: group.items.map((result) => byKey.get(result.researchKey)!.address),
     };
   });
@@ -200,7 +301,10 @@ function qaReport(queue: EquinixQueueItem[], results: EquinixGeocodeResult[], de
     building: accepted.filter((result) => result.coordinatePrecision === "building").length,
     street: accepted.filter((result) => result.coordinatePrecision === "street").length,
     campus: accepted.filter((result) => result.coordinatePrecision === "campus").length,
+    // Stored, and not drawn: facility_is_map_eligible admits the three above only.
+    city: accepted.filter((result) => result.coordinatePrecision === "city").length,
   };
+  const mapEligible = precision.building + precision.street + precision.campus;
   const precisionClass = {
     exactOrRooftop: accepted.filter((result) => result.precisionClass === "exact_or_rooftop").length,
     interpolatedOrStreet: accepted.filter((result) => result.precisionClass === "interpolated_or_street").length,
@@ -216,6 +320,8 @@ function qaReport(queue: EquinixQueueItem[], results: EquinixGeocodeResult[], de
     unresolved: unresolved.length,
     excludedFromCanonicalWrite: unresolved.length,
     coordinateCoverage: `${accepted.length}/${queue.length}`,
+    mapEligible,
+    notMapEligibleCityPrecision: accepted.filter((result) => result.coordinatePrecision === "city").length,
     sourceCoverage: `${accepted.filter((result) => Boolean(result.sourceUrl)).length}/${accepted.length}`,
     precision,
     precisionClass,
@@ -292,7 +398,7 @@ function reviewFile(
       .filter((value, index, all): value is string => value !== null && all.indexOf(value) === index);
 
     const candidates = queries.flatMap((query) => {
-      const entry = cache.requests[cacheKey(query, item.countryCode)];
+      const entry = cache.requests[cacheKey(query, geocodeCountryCode(item.countryCode))];
       return (entry?.results ?? []).map((candidate) => ({
         lat: Number(candidate.lat),
         lng: Number(candidate.lon),
@@ -343,6 +449,7 @@ async function main(): Promise<void> {
   const fetchEnabled = process.argv.includes("--fetch");
   const applyEnabled = process.argv.includes("--apply");
   const reviewEnabled = process.argv.includes("--review");
+  const resolveEnabled = process.argv.includes("--resolve");
 
   const { tranche, issues } = validateEquinixTranche(readJson(PATHS.source));
   if (issues.length > 0) throw new Error(`frozen artifact failed validation: ${JSON.stringify(issues, null, 2)}`);
@@ -354,16 +461,19 @@ async function main(): Promise<void> {
   let lastRequestAt = 0;
   if (fetchEnabled) {
     for (const [index, item] of queue.entries()) {
-      for (const query of [item.query, item.fallbackQuery, item.streetFallbackQuery].filter((value, queryIndex, all): value is string => value !== null && all.indexOf(value) === queryIndex)) {
-        const key = cacheKey(query, item.countryCode);
+      for (const query of [item.query, item.fallbackQuery, item.streetFallbackQuery, item.campusQuery, item.cityQuery].filter((value, queryIndex, all): value is string => value !== null && all.indexOf(value) === queryIndex)) {
+        const key = cacheKey(query, geocodeCountryCode(item.countryCode));
         if (cache.requests[key]) continue;
         const wait = Math.max(0, 1_100 - (Date.now() - lastRequestAt));
         if (wait > 0) await sleep(wait);
-        const raw = await request(query, item.countryCode);
+        const raw = await request(query, geocodeCountryCode(item.countryCode));
         lastRequestAt = Date.now();
-        cache.requests[key] = { provider: "nominatim", query, countryCode: item.countryCode, fetchedAt: new Date().toISOString(), results: raw };
+        cache.requests[key] = { provider: "nominatim", query, countryCode: geocodeCountryCode(item.countryCode), fetchedAt: new Date().toISOString(), results: raw };
         writeJson(PATHS.cache, cache);
-        const queryKind = query === item.query ? "full" : query === item.fallbackQuery ? "interior-stripped fallback" : "street fallback";
+        const queryKind = query === item.query ? "full"
+          : query === item.fallbackQuery ? "interior-stripped"
+          : query === item.streetFallbackQuery ? "street"
+          : query === item.campusQuery ? "campus" : "city";
         console.error(`[${index + 1}/${queue.length}] ${item.researchKey}: ${raw.length} candidate(s) for ${queryKind} query`);
         const current = assess(item, query, cache);
         if (current?.outcome === "geocoded_ready") break;
@@ -373,10 +483,33 @@ async function main(): Promise<void> {
 
   // A point shared by two facilities locates the address they share, not either
   // building. The rule is the shared one, applied to every tranche identically.
-  const demotion = demoteSharedBuildingPrecision(queue.map((item) => chooseResult(item, cache)));
+  const chosen = queue.map((item) => chooseResult(item, cache));
+  const tiers = new Map<string, EquinixResolutionTier>();
+  const laddered = resolveEnabled
+    ? chosen.map((result) => {
+        const item = queue.find((candidate) => candidate.researchKey === result.researchKey)!;
+        const resolved = resolveByLadder(item, result, cache);
+        tiers.set(result.researchKey, resolved.tier);
+        return resolved.result;
+      })
+    : chosen;
+  const demotion = demoteSharedBuildingPrecision(laddered);
   const results = demotion.results;
   const qa = qaReport(queue, results, demotion.groups);
-  writeJson(PATHS.results, { resultVersion: "urdais.map.equinix-geocode-results/1", generatedAt: GENERATED_AT, provider: "Nominatim", results });
+  // The v1 artifact is the automated-only pass and is frozen at its digest.
+  // The resolution ladder writes v2 so the two stages stay separately auditable.
+  if (resolveEnabled) {
+    writeJson(PATHS.resultsV2, {
+      resultVersion: "urdais.map.equinix-geocode-results/2",
+      generatedAt: GENERATED_AT,
+      provider: "Nominatim",
+      basis: "Automated pass (v1) plus the resolution ladder: street, campus, city.",
+      resolutionTiers: Object.fromEntries([...tiers.entries()].sort()),
+      results,
+    });
+  } else {
+    writeJson(PATHS.results, { resultVersion: "urdais.map.equinix-geocode-results/1", generatedAt: GENERATED_AT, provider: "Nominatim", results });
+  }
   writeJson(PATHS.qa, { qaVersion: "urdais.map.equinix-geocode-qa/1", ...qa, sharedPointPrecisionDemotions: demotion.demoted });
 
   let reviewCounts: Record<string, number> | null = null;
@@ -428,6 +561,7 @@ async function main(): Promise<void> {
     },
     canonical: { before: canonicalBefore, after: canonicalAfter, ...projection, digest: projectedDigest },
     review: reviewCounts,
+    resolution: resolveEnabled ? Object.fromEntries(Object.entries([...tiers.values()].reduce<Record<string, number>>((acc, tier) => ({ ...acc, [tier]: (acc[tier] ?? 0) + 1 }), {}))) : null,
     cachedRequests: Object.keys(cache.requests).length,
   }, null, 2));
 }
