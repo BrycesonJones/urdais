@@ -52,6 +52,8 @@
     "utvi:settlement-study:report": "tsx scripts/research/utvi-settlement-study/run.ts --report-only",
     "ugai:prices": "tsx scripts/ugai/prices/ingest.ts",
     "power-delivery:ingest": "tsx scripts/power-delivery/ingest.ts",
+    "power-delivery:eia-backfill": "tsx scripts/power-delivery/eia-backfill.ts",
+    "power-delivery:eia-backfill-verify": "tsx scripts/power-delivery/eia-backfill-verify.ts",
     "power-delivery:planning-ingest": "tsx scripts/power-delivery/planning-ingest.ts",
     "power-delivery:planning-verify": "tsx scripts/power-delivery/planning-verify.ts",
     "power-delivery:capacity-ingest": "tsx scripts/power-delivery/capacity-ingest.ts",
