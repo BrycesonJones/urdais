@@ -1,0 +1,882 @@
+{
+  "qaVersion": "urdais.map.equinix-geocode-qa/1",
+  "generatedAt": "2026-09-22",
+  "markets": 48,
+  "physicalFacilities": 187,
+  "successfullyGeolocated": 83,
+  "unresolved": 104,
+  "excludedFromCanonicalWrite": 104,
+  "coordinateCoverage": "83/187",
+  "sourceCoverage": "83/83",
+  "precision": {
+    "building": 48,
+    "street": 17,
+    "campus": 18
+  },
+  "precisionClass": {
+    "exactOrRooftop": 66,
+    "interpolatedOrStreet": 17,
+    "lowerPrecision": 0,
+    "unresolved": 51
+  },
+  "sharedAddressGroups": [
+    {
+      "normalizedAddress": "578 lorimer street port melbourne melbourne vic 3207 australia",
+      "researchKeys": [
+        "equinix-me1",
+        "equinix-me2"
+      ]
+    },
+    {
+      "normalizedAddress": "37 lemnos st shenton park wa 6008 australia",
+      "researchKeys": [
+        "equinix-pe2",
+        "equinix-pe3"
+      ]
+    },
+    {
+      "normalizedAddress": "114 rue ambroise croizat 93200 saint denis france",
+      "researchKeys": [
+        "equinix-pa2",
+        "equinix-pa3",
+        "equinix-pa9x"
+      ]
+    },
+    {
+      "normalizedAddress": "chief chuks ikokwu street lekki lagos 10604 nigeria",
+      "researchKeys": [
+        "equinix-lg1",
+        "equinix-lg2"
+      ]
+    },
+    {
+      "normalizedAddress": "calle pedriza 12 alcobendas 28108 madrid spain",
+      "researchKeys": [
+        "equinix-md6",
+        "equinix-md3x"
+      ]
+    },
+    {
+      "normalizedAddress": "josefstrasse 225 8005 zurich switzerland",
+      "researchKeys": [
+        "equinix-zh2",
+        "equinix-zh4"
+      ]
+    }
+  ],
+  "duplicateCoordinateGroups": [
+    {
+      "coordinates": "-31.9531380,115.7977067",
+      "researchKeys": [
+        "equinix-pe2",
+        "equinix-pe3"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "37 Lemnos St, Shenton Park, WA 6008, Australia",
+        "37 Lemnos St, Shenton Park, WA 6008, Australia"
+      ]
+    },
+    {
+      "coordinates": "-33.4480572,-70.8485141",
+      "researchKeys": [
+        "equinix-st1",
+        "equinix-st2"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Avenida los Vientos, 20239, Pudahuel, 9061673 Santiago de Chile, Chile",
+        "Avenida los Vientos, 20239, Pudahuel, Región Metropolitana, 9061673 Santiago de Chile, Chile"
+      ]
+    },
+    {
+      "coordinates": "53.4032258,-6.3674344",
+      "researchKeys": [
+        "equinix-db5x",
+        "equinix-db6x"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "IDA Business & Technology Park, Snugborough, 15 Dublin, Ireland",
+        "IDA Business & Technology Park, Snugborough, 22 Dublin, Ireland"
+      ]
+    },
+    {
+      "coordinates": "40.5346682,-3.6619575",
+      "researchKeys": [
+        "equinix-md6",
+        "equinix-md3x"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Calle Pedriza, 12, Alcobendas, 28108 Madrid, Spain",
+        "Calle Pedriza, 12, Alcobendas, 28108 Madrid, Spain"
+      ]
+    },
+    {
+      "coordinates": "47.3879264,8.5201721",
+      "researchKeys": [
+        "equinix-zh2",
+        "equinix-zh4"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Josefstrasse 225, 8005 Zurich, Switzerland",
+        "Josefstrasse 225, 8005 Zurich, Switzerland"
+      ]
+    },
+    {
+      "coordinates": "38.4551359,-77.9780171",
+      "researchKeys": [
+        "equinix-cu1",
+        "equinix-cu2",
+        "equinix-cu3",
+        "equinix-cu4"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "18155 Technology Drive, Building A, Culpeper, VA 22701, USA",
+        "18155 Technology Drive, Building B, Culpeper, VA 22701, USA",
+        "18155 Technology Drive, Building C, Culpeper, VA 22701, USA",
+        "18155 Technology Drive, Building D, Culpeper, VA 22701, USA"
+      ]
+    }
+  ],
+  "suspiciousDuplicateCoordinateGroups": [],
+  "sharedPointGroups": [
+    {
+      "latitude": 41.8537537,
+      "longitude": -87.6183798,
+      "researchKeys": [
+        "equinix-ch1",
+        "equinix-ch2",
+        "equinix-ch4"
+      ],
+      "demoted": [
+        "equinix-ch1",
+        "equinix-ch2",
+        "equinix-ch4"
+      ]
+    },
+    {
+      "latitude": 38.4551359,
+      "longitude": -77.9780171,
+      "researchKeys": [
+        "equinix-cu1",
+        "equinix-cu2",
+        "equinix-cu3",
+        "equinix-cu4"
+      ],
+      "demoted": [
+        "equinix-cu1",
+        "equinix-cu2",
+        "equinix-cu3",
+        "equinix-cu4"
+      ]
+    },
+    {
+      "latitude": 32.7990816,
+      "longitude": -96.8206903,
+      "researchKeys": [
+        "equinix-da1",
+        "equinix-da2",
+        "equinix-da6"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 53.4032258,
+      "longitude": -6.3674344,
+      "researchKeys": [
+        "equinix-db5x",
+        "equinix-db6x"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 19.1140734,
+      "longitude": 72.8918377,
+      "researchKeys": [
+        "equinix-mb2",
+        "equinix-mb3"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 40.5346682,
+      "longitude": -3.6619575,
+      "researchKeys": [
+        "equinix-md3x",
+        "equinix-md6"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": -37.823209,
+      "longitude": 144.9155089,
+      "researchKeys": [
+        "equinix-me1",
+        "equinix-me2"
+      ],
+      "demoted": [
+        "equinix-me1",
+        "equinix-me2"
+      ]
+    },
+    {
+      "latitude": 48.1426813,
+      "longitude": 11.5559887,
+      "researchKeys": [
+        "equinix-mu1",
+        "equinix-mu3"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 48.9271296,
+      "longitude": 2.3503464,
+      "researchKeys": [
+        "equinix-pa10",
+        "equinix-pa2",
+        "equinix-pa3",
+        "equinix-pa9x"
+      ],
+      "demoted": [
+        "equinix-pa10",
+        "equinix-pa2",
+        "equinix-pa3",
+        "equinix-pa9x"
+      ]
+    },
+    {
+      "latitude": 48.9002599,
+      "longitude": 2.4232646,
+      "researchKeys": [
+        "equinix-pa4",
+        "equinix-pa8"
+      ],
+      "demoted": [
+        "equinix-pa4",
+        "equinix-pa8"
+      ]
+    },
+    {
+      "latitude": -31.953138,
+      "longitude": 115.7977067,
+      "researchKeys": [
+        "equinix-pe2",
+        "equinix-pe3"
+      ],
+      "demoted": [
+        "equinix-pe2",
+        "equinix-pe3"
+      ]
+    },
+    {
+      "latitude": 37.6053205,
+      "longitude": 126.8920402,
+      "researchKeys": [
+        "equinix-sl2x",
+        "equinix-sl4"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": -23.4651328,
+      "longitude": -46.8549595,
+      "researchKeys": [
+        "equinix-sp5x",
+        "equinix-sp6"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": -33.4480572,
+      "longitude": -70.8485141,
+      "researchKeys": [
+        "equinix-st1",
+        "equinix-st2"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": -33.9215514,
+      "longitude": 151.1881363,
+      "researchKeys": [
+        "equinix-sy1",
+        "equinix-sy2"
+      ],
+      "demoted": [
+        "equinix-sy1",
+        "equinix-sy2"
+      ]
+    },
+    {
+      "latitude": -33.919347,
+      "longitude": 151.1899815,
+      "researchKeys": [
+        "equinix-sy4",
+        "equinix-sy5"
+      ],
+      "demoted": [
+        "equinix-sy4",
+        "equinix-sy5"
+      ]
+    },
+    {
+      "latitude": 47.3879264,
+      "longitude": 8.5201721,
+      "researchKeys": [
+        "equinix-zh2",
+        "equinix-zh4"
+      ],
+      "demoted": []
+    }
+  ],
+  "unresolvedFacilities": [
+    {
+      "researchKey": "equinix-me2",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
+    },
+    {
+      "researchKey": "equinix-sy1",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
+    },
+    {
+      "researchKey": "equinix-sy2",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
+    },
+    {
+      "researchKey": "equinix-sy4",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
+    },
+    {
+      "researchKey": "equinix-rj2",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-rj3",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-sp1",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-sp2",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-sp4",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-sp5x",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-sp6",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-so1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-so2",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-cl1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-mt1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-mt2",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-tr1",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-tr4",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-st4",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-sh1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-sh2",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-sh3",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-sh5",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-bg1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-bg2",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-he3",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-he7",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-pa2",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
+    },
+    {
+      "researchKey": "equinix-pa4",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
+    },
+    {
+      "researchKey": "equinix-pa5",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-pa6",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-pa7",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-pa8",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
+    },
+    {
+      "researchKey": "equinix-pa9x",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
+    },
+    {
+      "researchKey": "equinix-pa10",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
+    },
+    {
+      "researchKey": "equinix-mu1",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-mu3",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-hk1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-hk2",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-hk3",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-hk4",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-hk5",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-hk6",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-mb1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-mb2",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-mb3",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-mb4",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-db1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-db2",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-db3",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-db4",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-os1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-os2x",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-os3",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-mo1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-mo2",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-mx1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-mx2",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-lg1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-lg2",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-mn2",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-wa2",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-ls2",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-sg1",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-sg2",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-sg4",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-sl1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-sl2x",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-sl4",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-ba1",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-ba2",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-md1",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-md2",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-sk1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-sk3",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-gv1",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-il2",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-il4",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-dx1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-dx2",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-dx3",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-ma1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-ma4",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-ma5",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-ny4",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-ny9",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-ny13",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-ch1",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
+    },
+    {
+      "researchKey": "equinix-ch2",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
+    },
+    {
+      "researchKey": "equinix-ch4",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
+    },
+    {
+      "researchKey": "equinix-da1",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-da2",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-da3",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-da6",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-da11",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-de2",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-la1",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-la7",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-mi3",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-se2",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-se3",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    },
+    {
+      "researchKey": "equinix-sv12x",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-sv14",
+      "outcome": "geocoded_review",
+      "reason": "Provider returned multiple similarly ranked candidates."
+    },
+    {
+      "researchKey": "equinix-ad1",
+      "outcome": "geocode_no_match",
+      "reason": "Provider returned no result."
+    }
+  ],
+  "hardErrors": [],
+  "sharedPointPrecisionDemotions": [
+    "equinix-ch1",
+    "equinix-ch2",
+    "equinix-ch4",
+    "equinix-cu1",
+    "equinix-cu2",
+    "equinix-cu3",
+    "equinix-cu4",
+    "equinix-me1",
+    "equinix-me2",
+    "equinix-pa10",
+    "equinix-pa2",
+    "equinix-pa3",
+    "equinix-pa4",
+    "equinix-pa8",
+    "equinix-pa9x",
+    "equinix-pe2",
+    "equinix-pe3",
+    "equinix-sy1",
+    "equinix-sy2",
+    "equinix-sy4",
+    "equinix-sy5"
+  ]
+}
