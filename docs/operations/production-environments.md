@@ -364,10 +364,23 @@ compared against `select string_agg(version, ',' order by version) from supabase
 
 The `production migration ledger` job on `main` compares the production ledger against the
 repository on every push. It skips silently unless the repository holds a
-`URDAIS_PRODUCTION_DATABASE_URL` secret, and it skipped from the job's creation until
-23 September 2026 — which is how production came to sit eight migrations behind `main` unnoticed,
-with `/api/umpi` returning 500 because the deployed read model queried tables the database did not
-have.
+`URDAIS_PRODUCTION_DATABASE_URL` secret.
+
+**That secret has been set since 14 September 2026, and the job has been running.** It is worth
+being precise about this, because the obvious reading of the 23 September 2026 incident — in which
+production sat eight migrations behind `main` and `/api/umpi` returned 500 against tables the
+database did not have — is that nothing was watching. Something was. On the merge that deployed
+that read model the job connected, compared the ledger, and printed:
+
+```
+production      116 ledger row(s); 116 applied, 7 pending, 0 drifted, 0 production-only
+  [note / MIGRATION_PENDING] 7 repository migration(s) not yet applied to production: ...
+migration integrity: ok
+```
+
+It named every missing migration and passed. The gap was in the CI log the whole time; nobody read
+it, because the check was green and green checks are not read. Connectivity was never the problem,
+so connecting something is not the fix — see *What the job does and does not catch* below.
 
 The secret is the UrdaisProd session-pooler connection string, and it pins the CA rather than
 trusting the chain:
@@ -376,7 +389,8 @@ trusting the chain:
 postgresql://postgres.<ref>:<password>@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=verify-full&sslrootcert=.github/supabase-prod-ca-2021.crt
 ```
 
-`.github/supabase-prod-ca-2021.crt` is committed for exactly this. It is a public root
+`.github/supabase-prod-ca-2021.crt` was committed on 23 September 2026 to allow that pinning; the
+connection previously worked without verifying the chain. It is a public root
 certificate, not a credential, and the runner has no other copy of it — `pg` resolves
 `sslmode=require` as `verify-full`, which fails against Supabase's private CA, so without the file
 the only alternatives are `no-verify` or libpq compatibility mode. Both send the production
@@ -390,6 +404,13 @@ passes: that is the ordinary state of a pull request that adds one, and a guard 
 would be switched off within a week. So the job reports "N pending" in its log and stays green.
 Read that number after a merge that adds a migration; it is the signal that production still needs
 `supabase db push`.
+
+That is also the limit of this job, and the reason the September incident is not fixed by it: a
+number in a passing log is a fact nobody encounters. Catching "the application is deployed and the
+database is behind" needs a guard that eventually **fails** — one that tolerates the normal window
+between a merge and a `db push`, and stops tolerating it after some hours. That is a separate
+guard, deliberately not this one: making this job fail on pending would fire on every legitimate
+migration pull request and be switched off within a week.
 
 ### Checking migration integrity
 
