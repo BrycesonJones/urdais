@@ -427,8 +427,14 @@ function headlineInstrumentId(symbol: string): string {
  * resolve to -- and picking either series as the family's headline would manufacture exactly the
  * composite the methodology refuses. It is comparable when something is built that can compare
  * two monthly index series honestly.
+ *
+ * UTVI is here for UMPI's reason rather than UGAI's: it publishes a real daily series, and it
+ * publishes it through the production read model the Model Economics Volume section renders,
+ * not through this dataset. There is no `utvi` instrument for a comparison to resolve to, so
+ * offering the option would put a dead entry in the menu -- the exact failure this set exists
+ * to prevent.
  */
-const MARKETS_WITHOUT_SERIES = new Set(["UBWI", "UGAI", "UAVI", "UMPI"]);
+const MARKETS_WITHOUT_SERIES = new Set(["UBWI", "UGAI", "UAVI", "UMPI", "UTVI"]);
 
 /**
  * The comparison menu is a public discovery surface -- an index named there is an index a reader

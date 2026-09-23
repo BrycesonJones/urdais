@@ -6,11 +6,28 @@
  * and routes are defined once.
  */
 
-import { COMPUTE_ANALYTICS_HREF, marketIndexHref, MODEL_ECONOMICS_HREF, POWER_ANALYTICS_HREF } from "@/lib/routes";
+import {
+  COMPUTE_ANALYTICS_HREF,
+  marketIndexHref,
+  MODEL_ECONOMICS_HREF,
+  POWER_ANALYTICS_HREF,
+  UTVI_HREF,
+} from "@/lib/routes";
 
 export type MarketCatalogEntry = {
   symbol: string;
   name: string;
+  /**
+   * Where this index lives. Defaults to its own `/markets/{symbol}` page, which is where most
+   * of them live, and an entry may name somewhere else instead.
+   *
+   * Being publicly presented as an index and having a standalone market page are two different
+   * facts. UTVI is the case: it is a first-class Urdais index, and its canonical presentation --
+   * chart, universe, settlement state, methodology -- is the Volume section of Model Economics.
+   * A `/markets/utvi` page could only duplicate that. So the catalog carries the destination and
+   * every discovery surface follows it, rather than each one rebuilding `/markets/{symbol}` from
+   * the symbol and then needing an exception for the index that does not live there.
+   */
   href: string;
   /** One-sentence definition shown on the detail page, where the product has settled one. */
   description?: string;
@@ -34,7 +51,7 @@ export type MarketCatalogEntry = {
 function entry(
   symbol: string,
   name: string,
-  detail?: Partial<Pick<MarketCatalogEntry, "description" | "question" | "publiclyPresented">>,
+  detail?: Partial<Pick<MarketCatalogEntry, "description" | "question" | "publiclyPresented" | "href">>,
 ): MarketCatalogEntry {
   return { symbol, name, href: marketIndexHref(symbol), publiclyPresented: true, ...detail };
 }
@@ -50,6 +67,17 @@ export const CHIP_ACCELERATOR_INDEX = {
 /** Every routed market in display order, withheld ones included; the first is the default for /markets. */
 export const MARKET_CATALOG: MarketCatalogEntry[] = [
   entry("UCPI", "Urdais Compute Price Index"),
+  // UTVI has no market route of its own: its canonical presentation is the Volume section of
+  // Model Economics, and `UTVI_HREF` deep-links to it. The entry exists so the index is
+  // discoverable -- rail, search -- without a second implementation of the chart, the universe
+  // statement and the methodology that page already carries. Listed here, directly after UCPI,
+  // because catalog order is the product's order and UCPI owns the panel above the rail.
+  entry("UTVI", "Observed Token Volume Index", {
+    description:
+      "Observed model token consumption per day, as the approved source's dataset exposes it.",
+    question: "How much model consumption is actually happening?",
+    href: UTVI_HREF,
+  }),
   // UGAI and UAVI are not productized: neither has ever published an observation, and each is
   // blocked on data rights Urdais does not hold. They stay in the catalog so their identity and
   // route survive, and are withheld from every public surface.
@@ -121,7 +149,11 @@ export const MARKET_PAGES: MarketPageEntry[] = [
       "proprietary",
       "capability",
       "frontier",
-      "utvi",
+      // "utvi" is deliberately not a keyword here. The ticker now resolves to UTVI's own catalog
+      // entry, which deep-links to the Volume section; leaving it on the page entry too would
+      // put the page -- which sorts above indices, and is what Enter selects -- ahead of the
+      // index for its own ticker, landing a reader at the top of the page instead. The page
+      // still answers every subject term it covers, "token volume" among them.
       "labs",
       "xai",
       "x.ai",
@@ -226,6 +258,20 @@ export const PUBLIC_MARKET_CATALOG: MarketCatalogEntry[] = MARKET_CATALOG.filter
 export function isPubliclyListed(symbol: string): boolean {
   const wanted = symbol.trim().toLowerCase();
   return PUBLIC_MARKET_CATALOG.some((market) => market.symbol.toLowerCase() === wanted);
+}
+
+/**
+ * Where a symbol's index lives, for callers that hold a symbol rather than an entry.
+ *
+ * Falls back to `/markets/{symbol}` for a symbol the catalog does not know, which keeps a row
+ * built outside the catalog linking exactly where it used to.
+ */
+export function marketHref(symbol: string): string {
+  const wanted = symbol.trim().toLowerCase();
+  return (
+    MARKET_CATALOG.find((market) => market.symbol.toLowerCase() === wanted)?.href ??
+    marketIndexHref(symbol)
+  );
 }
 
 /** Identity lookup across the whole catalog, presented publicly or not. */

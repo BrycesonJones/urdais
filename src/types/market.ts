@@ -130,6 +130,11 @@ export type DataProvenance = "production" | "demo" | "unpublished" | "multi_seri
  * 0.29 %, so the default two decimals would collapse every plausible value to the
  * same 0.27 % and the row would look static while the index moved.
  *
+ * `valueFormat` picks the row's notation for an index whose unit runs to many digits. UTVI is
+ * quoted in tokens per day, in the trillions, and the default grouped notation would render
+ * fourteen characters of digits in a rail sized for four. Compact notation is what its own
+ * section already uses, so the two surfaces read alike.
+ *
  * `provenance` is **required**, unlike the optional field on `MarketInstrumentDetail`.
  * A watchlist row sits in a rail beside rows built from other sources, and an omitted
  * provenance is exactly how six synthetic index levels came to render indistinguishably
@@ -139,6 +144,8 @@ export type DataProvenance = "production" | "demo" | "unpublished" | "multi_seri
 export type IndexSnapshot = MarketIndex &
   MarketSnapshot & {
     valueFractionDigits?: number;
+    /** Notation for the row's value. Grouped digits by default; "compact" for large-magnitude units. */
+    valueFormat?: "compact";
     provenance: DataProvenance;
   };
 

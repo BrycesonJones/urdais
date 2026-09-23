@@ -24,7 +24,7 @@ describe("market catalog: chip and accelerator consolidation", () => {
   });
 
   it("no longer carries the old AI Chip Index or Accelerator Index entries", () => {
-    expect(MARKET_CATALOG.map((market) => market.symbol)).toEqual(["UCPI", "UGAI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI", "UBWI"]);
+    expect(MARKET_CATALOG.map((market) => market.symbol)).toEqual(["UCPI", "UTVI", "UGAI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI", "UBWI"]);
     expect(MARKET_CATALOG.map((market) => market.name)).not.toContain("Urdais AI Chip Index");
     expect(MARKET_CATALOG.map((market) => market.name)).not.toContain("Urdais Accelerator Index");
     expect(MARKET_CATALOG.some((market) => market.symbol === "UAXI")).toBe(false);
@@ -56,7 +56,7 @@ describe("public presentation", () => {
   // UGAI, UAVI and UACI are not productized; UPPI's production is deferred pending data rights
   // per the Photonics close-out. Four reasons, one mechanism.
   const WITHHELD = ["UGAI", "UAVI", "UACI", "UPPI"];
-  const PRESENTED = ["UCPI", "UMPI", "UEPI", "UBWI"];
+  const PRESENTED = ["UCPI", "UTVI", "UMPI", "UEPI", "UBWI"];
 
   it("withholds UGAI, UAVI, UACI and UPPI from the public catalog", () => {
     expect(PUBLIC_MARKET_CATALOG.map((market) => market.symbol)).toEqual(PRESENTED);
@@ -91,7 +91,7 @@ describe("public presentation", () => {
 
   it("keeps the withheld indices' identity and route in the canonical catalog", () => {
     expect(MARKET_CATALOG.map((market) => market.symbol)).toEqual([
-      "UCPI", "UGAI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI", "UBWI",
+      "UCPI", "UTVI", "UGAI", "UAVI", "UMPI", "UPPI", "UEPI", "UACI", "UBWI",
     ]);
     expect(catalogEntry("UGAI")).toMatchObject({ name: "Urdais Global AI Index", href: "/markets/ugai" });
     expect(catalogEntry("UAVI")).toMatchObject({ name: "Urdais AI Volatility Index", href: "/markets/uavi" });
