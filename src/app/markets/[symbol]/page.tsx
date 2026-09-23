@@ -10,6 +10,8 @@ import { hydrateMarketWithListedCompute } from "@/lib/ucpi/read/load";
 import { UbwiSection } from "@/components/ubwi/ubwi-section";
 import { UaviSection } from "@/components/uavi/uavi-section";
 import { UgaiSection } from "@/components/ugai/ugai-section";
+import { UmpiSection } from "@/components/umpi/umpi-section";
+import { loadUmpiSurface } from "@/lib/umpi/read/surface";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
 import { loadUgaiReadModel, loadUgaiSeries } from "@/lib/ugai/read/load";
 import { unconfiguredUgaiReadModel, type UgaiSeriesPoint } from "@/lib/ugai/read/read-model";
@@ -124,6 +126,30 @@ export default async function MarketIndexPage({ params }: PageProps) {
         <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-10 text-neutral-50 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-screen-2xl">
             <UaviSection model={model} series={series} />
+          </div>
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
+
+  // UMPI does not use the generic market chart page either, and for two reasons at once. It is
+  // monthly, so the page's daily vocabulary -- a "today" change, 1D and 1W ranges, a day-stamped
+  // axis -- would describe it wrongly at every turn. And it has no composite: V1 is two series
+  // measuring different economic objects, and the generic page is built around one headline
+  // instrument, which is precisely the number UMPI must not invent. Its own surface shows both
+  // series separately, each with its own base, source and caveat.
+  if (market.symbol === "UMPI") {
+    // Fails closed inside the loader: no database, an unreachable one, or a payload that fails
+    // its own contract all return a model with no points and a stated reason. The demo memory
+    // market this replaced is not reachable from here.
+    const model = await loadUmpiSurface();
+    return (
+      <>
+        <SiteHeader />
+        <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-10 text-neutral-50 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-screen-2xl">
+            <UmpiSection model={model} />
           </div>
         </main>
         <SiteFooter />
