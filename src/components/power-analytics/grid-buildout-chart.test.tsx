@@ -20,6 +20,11 @@ function model(): GridBuildoutReadModel {
     methodology: { ...base.methodology, approved: true },
     calculatedAt: "2026-09-23T00:00:00.000Z",
     inputDigest: "a".repeat(64),
+    freshness: {
+      status: "current", lastPublishedAt: "2026-09-23T00:00:00.000Z",
+      lastAttemptedAt: "2026-09-23T00:00:00.000Z", lastAttemptStatus: "succeeded",
+      ageHours: 1, staleAfterHours: 72, publishedRunId: "run-1", reason: null,
+    },
     markets: {
       ercot: {
         marketSlug: "ercot", marketName: "ERCOT", role: "Completion throughput and backlog",

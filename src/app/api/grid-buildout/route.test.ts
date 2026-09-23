@@ -40,7 +40,7 @@ describe("the payload a client receives", () => {
     // no table names.
     const serialised = JSON.stringify(model);
     expect(Object.keys(model).sort()).toEqual(
-      ["calculatedAt", "coverage", "generatedAt", "inputDigest", "markets", "methodology", "metrics", "notes", "product"]);
+      ["calculatedAt", "coverage", "freshness", "generatedAt", "inputDigest", "markets", "methodology", "metrics", "notes", "product"]);
     expect(serialised).not.toMatch(/pipeline\.|buildout_analytics_runs|raw_record_id|run_id/);
   });
 

@@ -44,6 +44,10 @@
     {
       "path": "/api/cron/umpi",
       "schedule": "30 23 * * *"
+    },
+    {
+      "path": "/api/cron/grid-buildout",
+      "schedule": "15 11 * * *"
     }
   ]
 }
