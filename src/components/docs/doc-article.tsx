@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ComponentPropsWithoutRef } from "react";
 import Markdown, { type Components } from "react-markdown";
 
-import { docHref, docPages, type DocPage } from "@/lib/docs/catalog";
+import { docHref, isPublicDocHref, publicDocPages, type DocPage } from "@/lib/docs/catalog";
 import { getHeadings, remarkTables } from "@/lib/docs/markdown";
 
 type HeadingProps = ComponentPropsWithoutRef<"h2"> & {
@@ -36,18 +36,27 @@ export function DocArticle({ page }: { page: DocPage & { markdown: string } }) {
     h4: Heading,
     h5: Heading,
     h6: Heading,
-    a: ({ href, children }) => href?.startsWith("/") && !href.startsWith("//")
-      ? <Link href={href}>{children}</Link>
-      : <a href={href}>{children}</a>,
+    // A link to a withheld document renders as plain text. The documents that link to one are
+    // themselves public and cannot be edited to drop the link -- their bytes are the
+    // `content_hash` of an approved methodology version -- so the link is neutralized where it is
+    // rendered rather than where it is written. The surrounding sentence is untouched: this
+    // removes a route into withheld documentation, not a mention of it.
+    a: ({ href, children }) => {
+      if (href && !isPublicDocHref(href)) return <>{children}</>;
+      return href?.startsWith("/") && !href.startsWith("//")
+        ? <Link href={href}>{children}</Link>
+        : <a href={href}>{children}</a>;
+    },
     // A coverage matrix is wider than a phone. Scroll the table rather than the page,
     // and keep the table element itself intact so it stays a table to a screen reader.
     table: ({ children, ...props }) => (
       <div className="docs-table-scroll"><table {...props}>{children}</table></div>
     ),
   };
-  const index = docPages.findIndex((item) => item.slug === page.slug);
-  const previous = docPages[index - 1];
-  const next = docPages[index + 1];
+  // The pager walks the public pages, so previous/next can never step onto a withheld document.
+  const index = publicDocPages.findIndex((item) => item.slug === page.slug);
+  const previous = publicDocPages[index - 1];
+  const next = publicDocPages[index + 1];
   const contents = (
     <nav aria-label="On this page">
       <ul>

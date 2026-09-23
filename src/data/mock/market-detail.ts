@@ -12,7 +12,7 @@
  * not economic forecasts. Replace at the data boundary when the API lands.
  */
 
-import { catalogEntry, isPubliclyListed, MARKET_CATALOG } from "@/data/market-catalog";
+import { catalogEntry, PUBLIC_MARKET_CATALOG } from "@/data/market-catalog";
 import { buildDailySeries, buildIntradaySeries } from "@/data/mock/series-generator";
 import type { DailySeriesConfig, IntradaySeriesConfig } from "@/data/mock/series-generator";
 import { MOCK_AS_OF, UCPI_DAILY_CONFIG, UCPI_INDEX, UCPI_INTRADAY_CONFIG } from "@/data/mock/ucpi";
@@ -430,14 +430,14 @@ function headlineInstrumentId(symbol: string): string {
  */
 const MARKETS_WITHOUT_SERIES = new Set(["UBWI", "UGAI", "UAVI", "UMPI"]);
 
+/**
+ * The comparison menu is a public discovery surface -- an index named there is an index a reader
+ * can find -- so it is built from the public catalog, not the whole one. A reader who found a
+ * withheld index here could not then open it.
+ */
 function indexComparisons(symbol: string): ComparisonOption[] {
-  return MARKET_CATALOG.filter(
-    (market) =>
-      market.symbol !== symbol &&
-      !MARKETS_WITHOUT_SERIES.has(market.symbol) &&
-      // A deferred index is not offered as a comparison either: the picker is a discovery
-      // surface, and a reader who found UPPI there could not then open it.
-      isPubliclyListed(market.symbol),
+  return PUBLIC_MARKET_CATALOG.filter(
+    (market) => market.symbol !== symbol && !MARKETS_WITHOUT_SERIES.has(market.symbol),
   ).map((market) => ({
     instrumentId: headlineInstrumentId(market.symbol),
     label: market.symbol,

@@ -5,13 +5,13 @@ import { describe, expect, it } from "vitest";
 
 import {
   catalogEntry,
-  DEFERRED_MARKET_SYMBOLS,
   isPubliclyListed,
   MARKET_CATALOG,
   PUBLIC_MARKET_CATALOG,
   searchMarketCatalog,
 } from "@/data/market-catalog";
 import { INDEX_SNAPSHOTS } from "@/data/mock/indices";
+import { assembleIndexRail } from "@/lib/market/index-rail";
 import { findInstrumentById, findMarket, MARKETS } from "@/data/mock/market-detail";
 
 /*
@@ -30,11 +30,16 @@ describe("UPPI is deferred, not deleted", () => {
   it("is absent from the public index catalog a reader browses", () => {
     expect(PUBLIC_MARKET_CATALOG.map((market) => market.symbol)).not.toContain("UPPI");
     expect(isPubliclyListed("UPPI")).toBe(false);
-    expect(DEFERRED_MARKET_SYMBOLS.has("UPPI")).toBe(true);
+    // The deferral is recorded on the entry itself, which is the only place any market's
+    // publication state lives. There is no second list of withheld symbols to fall out of step.
+    expect(catalogEntry("UPPI").publiclyPresented).toBe(false);
   });
 
-  it("is absent from the homepage indices rail", () => {
-    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).not.toContain("UPPI");
+  it("is absent from the homepage indices rail, though the demo dataset still offers a row", () => {
+    // The row is still built -- UPPI keeps its market definition and illustrative series -- and
+    // the rail refuses it. Asserting the source were empty would prove the wrong thing.
+    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).toContain("UPPI");
+    expect(assembleIndexRail(INDEX_SNAPSHOTS).map((row) => row.symbol)).not.toContain("UPPI");
   });
 
   it("is unfindable by symbol or by name in site search", () => {
@@ -71,11 +76,13 @@ describe("UPPI is deferred, not deleted", () => {
     expect(findInstrumentById("optics-800g")).toBeDefined();
   });
 
-  it("leaves every other index publicly listed", () => {
+  it("leaves every index that is a current product publicly listed", () => {
+    // UGAI, UAVI and UACI are withheld too, for their own reasons and not the Photonics one --
+    // see src/app/markets/hidden-indices.test.tsx. The deferral took UPPI and nothing else.
     const publicSymbols = PUBLIC_MARKET_CATALOG.map((market) => market.symbol);
-    for (const symbol of ["UCPI", "UGAI", "UAVI", "UMPI", "UEPI", "UACI", "UBWI"]) {
-      expect(publicSymbols).toContain(symbol);
-      expect(isPubliclyListed(symbol)).toBe(true);
+    for (const symbol of ["UCPI", "UMPI", "UEPI", "UBWI"]) {
+      expect(publicSymbols, symbol).toContain(symbol);
+      expect(isPubliclyListed(symbol), symbol).toBe(true);
     }
   });
 });

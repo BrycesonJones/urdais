@@ -1,14 +1,17 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
+
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { DocArticle } from "@/components/docs/doc-article";
-import { docPages } from "@/lib/docs/catalog";
+import { docPages, publicDocPages } from "@/lib/docs/catalog";
 import { readDoc } from "@/lib/docs/content";
 import { getHeadings } from "@/lib/docs/markdown";
 
 describe("repository-backed documentation", () => {
-  it("renders each registered source with working contents links and one page heading", async () => {
-    for (const entry of docPages) {
+  it("renders each publicly listed source with working contents links and one page heading", async () => {
+    for (const entry of publicDocPages) {
       const page = await readDoc(entry.slug);
       expect(page).toBeDefined();
       const { container, unmount } = render(<DocArticle page={page!} />);
@@ -26,6 +29,17 @@ describe("repository-backed documentation", () => {
     expect(await readDoc("FRONTEND_PRD")).toBeUndefined();
     expect(await readDoc("../../package.json")).toBeUndefined();
     expect(await readDoc("methodology/indices")).toBeUndefined();
+  });
+
+  it("does not publish a withheld document, which stays registered and on disk", async () => {
+    for (const slug of ["methodology/ugai", "methodology/uavi"]) {
+      expect(await readDoc(slug), slug).toBeUndefined();
+      // Registered, and pointing at a file that is still there: the loader refuses it, and
+      // nothing about the document was removed.
+      const entry = docPages.find((page) => page.slug === slug);
+      expect(entry, slug).toBeDefined();
+      expect(existsSync(path.join(process.cwd(), "docs", entry!.file)), entry!.file).toBe(true);
+    }
   });
 
   it("keeps repeated formatted heading anchors unique and ignores fenced headings", () => {

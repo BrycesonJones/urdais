@@ -53,7 +53,9 @@ describe("/markets/uppi after the Photonics close-out", () => {
   });
 
   it("still serves the indices that do publish", async () => {
-    for (const symbol of ["ucpi", "uepi", "uaci"]) {
+    // Not UACI: it is withheld too now, for its own reason rather than the Photonics one.
+    // See src/app/markets/hidden-indices.test.tsx.
+    for (const symbol of ["ucpi", "uepi"]) {
       await expect(
         MarketIndexPage({ params: Promise.resolve({ symbol }) }),
       ).resolves.toBeTruthy();

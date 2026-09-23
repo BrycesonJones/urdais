@@ -16,14 +16,16 @@
  * series; they are no longer quoted as though the index published them.
  */
 
-import { isPubliclyListed } from "@/data/market-catalog";
 import { MARKETS } from "@/data/mock/market-detail";
 import type { IndexSnapshot } from "@/types/market";
 
 export const INDEX_SNAPSHOTS: IndexSnapshot[] = MARKETS.filter(
-  // A deferred index keeps its market definition and its illustrative series; what it loses is
-  // the rail row, because the rail is where a reader is told what Urdais currently publishes.
-  (market) => market.symbol !== "UCPI" && isPubliclyListed(market.symbol),
+  // A withheld index keeps its market definition and its illustrative series, and still produces
+  // a row here; what it loses is the *rail* row. That is decided once, in `assembleIndexRail`,
+  // which sees every source the rail draws from rather than only this one. Filtering here as
+  // well would apply the same publication state twice and leave the rail's own filter looking
+  // dead to whoever reads it next.
+  (market) => market.symbol !== "UCPI",
 )
   .map((market) => {
     const instrument = market.families

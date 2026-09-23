@@ -11,8 +11,6 @@ import { UrdaisIndices } from "@/components/market/urdais-indices";
 import { PUBLIC_MARKET_CATALOG } from "@/data/market-catalog";
 import { UBWI_EXPLANATION, UBWI_VALUE_FRACTION_DIGITS, ubwiIndexSnapshot, ubwiSurface } from "./surface";
 import { assembleIndexRail } from "@/lib/market/index-rail";
-import { UAVI_WATCHLIST_ROW } from "@/lib/uavi/read/watchlist";
-import { UGAI_WATCHLIST_ROW } from "@/lib/ugai/read/watchlist";
 import { UMPI_WATCHLIST_ROW } from "@/lib/umpi/read/watchlist";
 
 const NOW = "2026-09-15T03:10:39Z";
@@ -195,10 +193,10 @@ const PUBLICATION = {
   changePercent: null,
 };
 
-/** The homepage joins the mock rows, the two unpublished rows and UBWI's, exactly as the page does. */
+/** The homepage joins the mock rows, UMPI's row and UBWI's, exactly as the page does. */
 function homepageRows() {
   const row = ubwiIndexSnapshot(PUBLICATION);
-  const base = [...INDEX_SNAPSHOTS, UGAI_WATCHLIST_ROW, UAVI_WATCHLIST_ROW, UMPI_WATCHLIST_ROW];
+  const base = [...INDEX_SNAPSHOTS, UMPI_WATCHLIST_ROW];
   return assembleIndexRail(row === null ? base : [...base, row]);
 }
 
@@ -248,20 +246,26 @@ describe("the UBWI homepage watchlist row", () => {
   });
 
   it("appears in market-catalog order, after the other indices, and changes none of them", () => {
-    // The public catalog, not the full registry: a deferred index keeps its catalog entry and
-    // never reaches the rail, so ordering is checked against what a reader is actually shown.
+    // The *public* catalog, not the full registry: the rail's order and its membership are the
+    // same list, so an index Urdais does not present as a product is neither ordered nor
+    // included here, and ordering is checked against what a reader is actually shown.
     const expected = PUBLIC_MARKET_CATALOG.map((market) => market.symbol).filter(
       (symbol) => symbol !== "UCPI",
     );
     expect(homepageRows().map((row) => row.symbol)).toEqual(expected);
     // The mock rows keep their existing values untouched by this wiring, and none of UGAI, UAVI
-    // or UMPI is among them: each joins the rail from its own module, carrying no number.
-    expect(INDEX_SNAPSHOTS.map((row) => row.symbol)).toEqual(["UEPI", "UACI"]);
+    // or UMPI is among them: each joins the rail from its own module, carrying no number. UPPI
+    // and UACI are still built here and still dropped by the rail, which is the withholding
+    // mechanism working rather than an empty source.
+    expect(INDEX_SNAPSHOTS.map((row) => row.symbol)).toEqual(["UPPI", "UEPI", "UACI"]);
+    for (const withheld of ["UPPI", "UACI"]) {
+      expect(homepageRows().map((row) => row.symbol), withheld).not.toContain(withheld);
+    }
   });
 });
 
 function homepageRowsWithout() {
   const row = ubwiIndexSnapshot(null);
-  const base = [...INDEX_SNAPSHOTS, UGAI_WATCHLIST_ROW, UAVI_WATCHLIST_ROW, UMPI_WATCHLIST_ROW];
+  const base = [...INDEX_SNAPSHOTS, UMPI_WATCHLIST_ROW];
   return assembleIndexRail(row === null ? base : [...base, row]);
 }

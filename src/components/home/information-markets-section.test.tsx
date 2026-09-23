@@ -4,6 +4,9 @@ import { describe, expect, it } from "vitest";
 import { InformationMarketsSection } from "@/components/home/information-markets-section";
 import { MOCK_AS_OF } from "@/data/mock/ucpi";
 import { LISTED_GPU_UNIT_CAPTION, type UcpiHeadline } from "@/lib/ucpi/read/load";
+import { INDEX_SNAPSHOTS } from "@/data/mock/indices";
+import { assembleIndexRail } from "@/lib/market/index-rail";
+import { UAVI_WATCHLIST_ROW } from "@/lib/uavi/read/watchlist";
 import { UGAI_WATCHLIST_ROW } from "@/lib/ugai/read/watchlist";
 import { UMPI_WATCHLIST_ROW } from "@/lib/umpi/read/watchlist";
 
@@ -110,11 +113,10 @@ describe("the fixtures remain available where they are intentionally supported",
  */
 describe("the indices rail never quotes a demo index", () => {
   // UGAI is no longer among them: its seeded walk was removed rather than relabelled, so it has
-  // no mock row at all. Its unpublished row is covered separately below. UMPI left for the same
-  // reason -- nine seeded chip-price walks removed in Phase 7 -- and its row is covered below too.
-  // UPPI left at the Photonics close-out: production is deferred pending data rights, so it is
-  // no longer presented as a current product and has no rail row to label.
-  const MOCK_SYMBOLS = ["UEPI", "UACI"];
+  // no mock row at all. UMPI left for the same reason -- nine seeded chip-price walks removed in
+  // Phase 7 -- and its row is covered below. UPPI and UACI still have mock rows in the dataset,
+  // but neither is presented as a product, so the rail drops both; that is covered below too.
+  const MOCK_SYMBOLS = ["UEPI"];
 
   it("labels every mock row demo and gives it no level and no movement", () => {
     render(<InformationMarketsSection />);
@@ -138,28 +140,72 @@ describe("the indices rail never quotes a demo index", () => {
 });
 
 /*
- * UGAI's row after its synthetic market was removed. "Demo data" would now promise an
- * illustrative series its detail page no longer has, so the row says what is actually true: the
- * index is not yet live and has published nothing.
+ * UGAI, UAVI and UACI are not productized, so the public rail does not list them. They
+ * previously sat here stating "Not yet live" and "Demo data" -- which is a product page for a
+ * product Urdais has decided not to sell. The rows are withheld rather than relabelled again.
+ *
+ * Each test hands the rail a row for the withheld index on purpose: the sources that build these
+ * rows still exist and still offer them, and the point is that the rail refuses them anyway.
  */
-describe("the UGAI rail row", () => {
-  it("states that it is not yet live and carries no digit at all", () => {
-    render(<InformationMarketsSection indices={[UGAI_WATCHLIST_ROW]} />);
+describe("the public indices rail withholds non-production indices", () => {
+  const WITHHELD = [
+    ["UGAI", UGAI_WATCHLIST_ROW],
+    ["UAVI", UAVI_WATCHLIST_ROW],
+  ] as const;
+
+  it.each(WITHHELD)("drops the %s row even when one is offered", (symbol, row) => {
+    render(<InformationMarketsSection indices={assembleIndexRail([row])} />);
     const rail = screen.getByRole("complementary", { name: "Urdais Indices" });
-    const row = within(rail).getByRole("link", { name: /^UGAI\b/ });
-    expect(row).toHaveTextContent("Not yet live");
-    expect(row).toHaveTextContent("No published observations");
-    // The strongest form of the rule. The row's structurally required value and asOf are inert,
-    // and this is what guarantees a future change cannot start rendering them.
-    expect(row.textContent).not.toMatch(/\d/);
-    expect(row).not.toHaveTextContent("Demo data");
+    expect(within(rail).queryByRole("link", { name: new RegExp(`^${symbol}\\b`) })).toBeNull();
+    expect(within(rail).queryAllByRole("link")).toHaveLength(0);
   });
 
-  it("keeps UGAI in the family rather than dropping it for being unpublished", () => {
-    render(<InformationMarketsSection indices={[UGAI_WATCHLIST_ROW]} />);
+  it("drops UACI, which the mock dataset still builds a demo row for", () => {
+    // The row exists upstream; only the rail refuses it. If this first expectation ever fails,
+    // the test below is passing for the wrong reason.
+    expect(INDEX_SNAPSHOTS.map((row) => row.symbol)).toContain("UACI");
+    render(<InformationMarketsSection />);
     const rail = screen.getByRole("complementary", { name: "Urdais Indices" });
-    // Silence would answer "is Urdais building this?" with nothing. The row is the answer.
-    expect(within(rail).getByRole("link", { name: /^UGAI\b/ })).toBeInTheDocument();
+    expect(within(rail).queryByRole("link", { name: /^UACI\b/ })).toBeNull();
+  });
+
+  it("shows none of their names, tickers or unavailable-state wording anywhere in the rail", () => {
+    render(
+      <InformationMarketsSection
+        indices={assembleIndexRail([...INDEX_SNAPSHOTS, UGAI_WATCHLIST_ROW, UAVI_WATCHLIST_ROW, UMPI_WATCHLIST_ROW])}
+      />,
+    );
+    const rail = screen.getByRole("complementary", { name: "Urdais Indices" });
+    const text = rail.textContent ?? "";
+    for (const term of [
+      "UGAI",
+      "UAVI",
+      "UACI",
+      "Urdais Global AI Index",
+      "Urdais AI Volatility Index",
+      "Urdais Chip & Accelerator Index",
+      "Urdais Photonics Price Index",
+      "Not yet live",
+      "No published observations",
+      "Coming soon",
+    ]) {
+      expect(text, term).not.toContain(term);
+    }
+  });
+
+  it("leaves the indices that are productized on the rail", () => {
+    render(
+      <InformationMarketsSection
+        indices={assembleIndexRail([...INDEX_SNAPSHOTS, UGAI_WATCHLIST_ROW, UAVI_WATCHLIST_ROW, UMPI_WATCHLIST_ROW])}
+      />,
+    );
+    const rail = screen.getByRole("complementary", { name: "Urdais Indices" });
+    // Catalog order, and every presented index the mock dataset and the watchlist modules supply.
+    // UPPI is not among them: its production is deferred pending data rights.
+    expect(within(rail).getAllByRole("link").map((link) => link.textContent?.slice(0, 4))).toEqual([
+      "UMPI",
+      "UEPI",
+    ]);
   });
 });
 
