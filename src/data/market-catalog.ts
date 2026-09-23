@@ -30,7 +30,31 @@ export const CHIP_ACCELERATOR_INDEX = {
   question: "What does advanced compute hardware cost?",
 } as const;
 
-/** Routed markets in display order; the first is the default for /markets. */
+/**
+ * Indices whose research is complete but whose production is deferred, so they exist in the
+ * registry without being presented to readers as a current Urdais product.
+ *
+ * UPPI is here because the Photonics close-out (`docs/research/photonics/ph-3-closeout.md`)
+ * concluded DEFERRED_PENDING_DATA_RIGHTS: the research located pricing sources at usable grain
+ * and settled a methodology, but every source that carries the data prohibits, or has not
+ * granted, the right to publish something derived from it. Until one of that document's
+ * reopening triggers fires there is no Urdais photonics price, and a demo product standing
+ * beside the indices that do publish lends them its uncertainty rather than borrowing theirs.
+ *
+ * The entry itself is deliberately left in `MARKET_CATALOG` below. Deleting it would take the
+ * canonical identifier, name and route with it, and the distinction this set exists to draw is
+ * that an index can exist without being publicly presented. Anything user-facing reads
+ * `PUBLIC_MARKET_CATALOG` or asks `isPubliclyListed`; anything resolving an identity — the demo
+ * dataset, internal tooling — keeps reading `MARKET_CATALOG` and `catalogEntry` unchanged.
+ */
+export const DEFERRED_MARKET_SYMBOLS: ReadonlySet<string> = new Set(["UPPI"]);
+
+/** Whether an index is presented to readers as a current Urdais product. */
+export function isPubliclyListed(symbol: string): boolean {
+  return !DEFERRED_MARKET_SYMBOLS.has(symbol);
+}
+
+/** Every routed market in display order, deferred ones included; the first is the default for /markets. */
 export const MARKET_CATALOG: MarketCatalogEntry[] = [
   entry("UCPI", "Urdais Compute Price Index"),
   entry("UGAI", "Urdais Global AI Index"),
@@ -53,6 +77,11 @@ export const MARKET_CATALOG: MarketCatalogEntry[] = [
     question: "What share of all presently existing global wealth is represented by Bitcoin?",
   }),
 ];
+
+/** The markets a reader is shown, in display order. Deferred indices are absent. */
+export const PUBLIC_MARKET_CATALOG: MarketCatalogEntry[] = MARKET_CATALOG.filter((market) =>
+  isPubliclyListed(market.symbol),
+);
 
 /** An analytical market page that is not an index: discoverable in search under "Markets". */
 export type MarketPageEntry = {
@@ -181,8 +210,10 @@ export function catalogEntry(symbol: string): MarketCatalogEntry {
  */
 export function searchMarketCatalog(query: string): MarketCatalogEntry[] {
   const needle = query.trim().toLowerCase();
-  if (!needle) return MARKET_CATALOG;
-  return MARKET_CATALOG.filter(
+  // Search is a reader-facing surface, so it searches what a reader can open. A deferred index
+  // is not findable by symbol or by name; `catalogEntry` still resolves it for internal callers.
+  if (!needle) return PUBLIC_MARKET_CATALOG;
+  return PUBLIC_MARKET_CATALOG.filter(
     (market) =>
       market.symbol.toLowerCase().includes(needle) || ` ${market.name.toLowerCase()}`.includes(` ${needle}`),
   );

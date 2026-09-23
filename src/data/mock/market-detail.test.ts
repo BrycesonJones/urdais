@@ -51,7 +51,12 @@ describe("market detail dataset: chip and accelerator consolidation", () => {
     expect(rows[0]).toMatchObject({ symbol: "UACI", name: "Urdais Chip & Accelerator Index", unit: "pts" });
     // UBWI is deliberately absent: it publishes no value, so it gets no watchlist row
     // rather than a fabricated one. Its detail page carries the withheld state instead.
-    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).toEqual(["UPPI", "UEPI", "UACI"]);
+    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).toEqual(["UEPI", "UACI"]);
+    // UPPI left this list at the Photonics close-out. Its market, instruments and illustrative
+    // series are all still here -- the PH-3 decision was DEFERRED_PENDING_DATA_RIGHTS, not
+    // deletion -- but a deferred index is not presented to readers as a current Urdais product,
+    // so it gets no rail row. See docs/research/photonics/ph-3-closeout.md.
+    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).not.toContain("UPPI");
     // UMPI left this list in Phase 7, when its nine demo chip-price instruments were removed. It
     // publishes two monthly series and no composite, so it has no single level for a rail row;
     // the homepage joins its own row from @/lib/umpi/read/watchlist, carrying no number.

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MarketDetailPage } from "@/components/market-detail/market-detail-page";
+import { isPubliclyListed } from "@/data/market-catalog";
 import { findMarket } from "@/data/mock/market-detail";
 import { hydrateMarketWithTokenPrices, tokenResearchPreviewActive } from "@/lib/tokens/read/load";
 import { hydrateMarketWithListedCompute } from "@/lib/ucpi/read/load";
@@ -36,13 +37,27 @@ type PageProps = { params: Promise<{ symbol: string }> };
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const market = findMarket((await params).symbol);
+  const market = publicMarket((await params).symbol);
   return market ? { title: `${market.symbol} · ${market.name}` } : { title: "Not found" };
+}
+
+/**
+ * The market behind a public route, or undefined.
+ *
+ * Two ways to be absent, one answer. An unknown symbol has never existed; a deferred one exists
+ * in the registry but is not presented as a current Urdais product -- UPPI, whose production is
+ * DEFERRED_PENDING_DATA_RIGHTS per `docs/research/photonics/ph-3-closeout.md`. A reader arriving
+ * at either URL gets this route's established behaviour for an unavailable product, which is a
+ * 404, rather than a placeholder page describing a product Urdais does not publish.
+ */
+function publicMarket(symbol: string) {
+  const market = findMarket(symbol);
+  return market && isPubliclyListed(market.symbol) ? market : undefined;
 }
 
 /** Detail page for one routed Urdais market; unknown symbols are a 404. */
 export default async function MarketIndexPage({ params }: PageProps) {
-  const found = findMarket((await params).symbol);
+  const found = publicMarket((await params).symbol);
   if (!found) notFound();
   // The same two hydrations /markets performs, in the same order. This route used to run
   // only the token one, so /markets served the live listed-GPU children while

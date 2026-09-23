@@ -1,0 +1,764 @@
+{
+  "title": "Urdais Photonics — PH-2 data feasibility audit matrix",
+  "as_of": "2026-09-23",
+  "status": "internal research; establishes no legal right; selects no methodology; writes no code, migration, schema or ingestion",
+  "companion_markdown": "docs/research/photonics/ph-2-feasibility-audit.md",
+  "prior_art": [
+    "docs/research/photonics/ph-1-external-research.md",
+    "docs/research/photonics/ph-1-source-matrix.json",
+    "docs/research/photonics/ph-2-source-rights-research.md",
+    "docs/research/photonics/ph-2-source-rights-matrix.json",
+    "docs/research/photonics-pricing/source-shortlist.md",
+    "docs/research/photonics-pricing/iccsz-tender-pricing.md"
+  ],
+  "feasibility_states": {
+    "VIABLE": "evidence indicates Urdais could build and maintain this path under currently known conditions",
+    "CONDITIONALLY_VIABLE": "technically plausible; one or more explicit unresolved conditions must be satisfied",
+    "BLOCKED_RIGHTS": "data exists but Urdais lacks demonstrated rights for the intended product",
+    "BLOCKED_DATA": "required observations do not appear obtainable at adequate grain, history or cadence",
+    "BLOCKED_ECONOMICS": "a real path exists but demonstrated cost makes it unsuitable under current Urdais constraints",
+    "FALSIFIED": "evidence shows the data path does not measure the claimed economic object",
+    "UNKNOWN": "evidence insufficient; not converted to BLOCKED merely because information is private"
+  },
+  "evidence_classes": [
+    "VERIFIED_FACT",
+    "INFERENCE",
+    "UNKNOWN",
+    "RIGHT_REQUIRING_WRITTEN_PERMISSION"
+  ],
+  "settled_ph1_constraints": [
+    "nominal data rate alone is not a sufficient product identity",
+    "no daily or weekly professional optical-transceiver pricing found; quarterly must not be interpolated to synthetic daily",
+    "client/datacom optics and coherent DCI are separate economic markets",
+    "product ontology and economic observation are separate layers",
+    "public government datasets cannot set a transceiver ASP level"
+  ],
+  "specification_key": {
+    "principle": "smallest field set that prevents non-substitutes from entering one stratum; minimality matters because thin strata are the merchant panel's main failure mode",
+    "required_comparability_fields": [
+      {
+        "field": "application_class",
+        "vocabulary": [
+          "client_datacom",
+          "coherent_dci",
+          "access_transport"
+        ],
+        "separates_example": "800ZR"
+      },
+      {
+        "field": "module_aggregate_rate",
+        "vocabulary": [
+          "100G",
+          "200G",
+          "400G",
+          "800G",
+          "1.6T",
+          "3.2T"
+        ],
+        "note": "necessary, insufficient alone"
+      },
+      {
+        "field": "pmd_designation",
+        "vocabulary_source": "exact IEEE PMD / OIF IA / MSA designation",
+        "note": "composite field: encodes reach, fiber type, wavelength plan and lane count in one canonical token",
+        "separates_example": "800G DR8 vs 800G 2xFR4"
+      },
+      {
+        "field": "retiming_architecture",
+        "vocabulary": [
+          "retimed",
+          "lro",
+          "lpo",
+          "cpo_npo"
+        ],
+        "separates_example": "800G DR8 retimed vs 800G DR8 LPO"
+      },
+      {
+        "field": "form_factor_family",
+        "vocabulary": [
+          "QSFP-DD",
+          "QSFP-DD800",
+          "QSFP-DD1600",
+          "OSFP",
+          "OSFP1600",
+          "OSFP-XD",
+          "QSFP112"
+        ]
+      },
+      {
+        "field": "commercial_coding",
+        "vocabulary": [
+          "merchant_generic",
+          "oem_coded",
+          "infiniband_coded"
+        ],
+        "separates_example": "NVIDIA-coded optic"
+      }
+    ],
+    "required_disambiguators": [
+      {
+        "field": "port_multiplicity",
+        "vocabulary": [
+          "single_port",
+          "twin_port"
+        ],
+        "reason": "an 800 Gb/s twin-port OSFP presents 2x400 Gb/s; module rate, endpoint rate and port count diverge"
+      },
+      {
+        "field": "standard_status",
+        "vocabulary": [
+          "ratified",
+          "draft",
+          "msa",
+          "vendor_defined"
+        ],
+        "reason": "P802.3dj still in ballot in 2026; 1.6T designations can change under a stable marketing name"
+      }
+    ],
+    "not_key_fields": {
+      "UNNECESSARY_as_key_REQUIRED_as_ontology_attribute": [
+        "reach",
+        "fiber_type",
+        "wavelength_configuration",
+        "lane_count",
+        "coherent_or_direct_detect",
+        "protocol_ecosystem"
+      ],
+      "DESIRABLE": [
+        "connector",
+        "manufacturer",
+        "standard_version",
+        "lifecycle_state"
+      ],
+      "REQUIRED_as_observation_identifier": [
+        "manufacturer_part_number"
+      ]
+    },
+    "tested_examples": [
+      {
+        "example": "800G DR8 retimed OSFP",
+        "result": "baseline stratum"
+      },
+      {
+        "example": "800G DR8 LPO",
+        "separated_by": "retiming_architecture"
+      },
+      {
+        "example": "800G 2xFR4",
+        "separated_by": "pmd_designation"
+      },
+      {
+        "example": "800ZR",
+        "separated_by": "application_class"
+      },
+      {
+        "example": "NVIDIA-coded twin-port optic",
+        "separated_by": [
+          "commercial_coding",
+          "port_multiplicity"
+        ]
+      },
+      {
+        "example": "1.6T DR-class module",
+        "separated_by": "module_aggregate_rate",
+        "flagged_by": "standard_status=draft"
+      }
+    ],
+    "finding": "each of the six examples is separated by a different field, which is evidence that no field is redundant"
+  },
+  "candidates": [
+    {
+      "id": "A",
+      "name": "Specification-matched merchant price index",
+      "state": "CONDITIONALLY_VIABLE",
+      "economic_validity": "constant-quality price of a defined capability",
+      "product_specificity": "full control; determined by Urdais's own key",
+      "data_availability": "prices ARE fetchable (CDW, Vitex verified by direct fetch). The blocker is the licence, not availability",
+      "historical_depth": "none; prospective only",
+      "frequency": "monthly feasible if collectible",
+      "rights": "BLOCKED_RIGHTS at both merchants whose terms were read (FS.com, DigiKey — both forbid collection AND publication); UNKNOWN at the price-publishing merchants whose terms are unread",
+      "reproducibility": "highest",
+      "source_independence": "diversifiable in principle; single-merchant concentration today",
+      "cost": "low access, high recurring engineering",
+      "operational_burden": "highest",
+      "conditions": [
+        "A-1 written collection and derivative-publication consent from a barred merchant, OR a terms review establishing an unbarred one",
+        "A-2 SKU census",
+        "A-3 minimum constituents per stratum derived from A-2/A-5",
+        "A-4 repeat-observation pilot >=12 weeks",
+        "A-5 cross-merchant dispersion",
+        "A-6 SKU-to-key mapping test — ALREADY FAILED ONCE: retiming architecture routinely absent from listing text, so the gate additionally requires a demonstrated method for resolving key field 4 when the listing is silent",
+        "A-7 SKU identity stability test"
+      ],
+      "downgrade_if": "A-1 fails on BOTH routes -> BLOCKED_RIGHTS, taking B, B2 and D with it"
+    },
+    {
+      "id": "B",
+      "name": "Client-optics cost index (weight-bearing as briefed)",
+      "state": "CONDITIONALLY_VIABLE",
+      "economic_validity": "cost of client optical bandwidth; mixes price and mix by design, which must be disclosed",
+      "data_availability": "inherits A plus licensed weights",
+      "historical_depth": "bounded by A",
+      "frequency": "quarterly",
+      "rights": "inherits A and C",
+      "reproducibility": "high if weights published",
+      "source_independence": "inherits both legs",
+      "cost": "inherits both",
+      "operational_burden": "high",
+      "conditions": [
+        "A-1..A-7",
+        "B-2 weights at key grain with documented vintage",
+        "B-4 published rule for topology/weight version change"
+      ]
+    },
+    {
+      "id": "B2",
+      "name": "Topology-weighted client-optics cost index (weight-free variant)",
+      "state": "CONDITIONALLY_VIABLE",
+      "note": "quantities come from a published versioned reference fabric rather than a provider; no licensed input at all",
+      "rights": "inherits A only",
+      "source_independence": "no provider dependency beyond A",
+      "conditions": [
+        "A-1..A-7",
+        "B-3 reference topology derivable from citable public engineering documents, not invented"
+      ]
+    },
+    {
+      "id": "C",
+      "name": "Licensed specification-level ASP",
+      "state_by_provider": {
+        "LightCounting": "BLOCKED_RIGHTS",
+        "Cignal AI": "BLOCKED_RIGHTS for derivative publication; BLOCKED_DATA for price until revenue is shown at unit grain",
+        "Omdia": "UNKNOWN",
+        "Dell'Oro (client optics)": "FALSIFIED"
+      },
+      "economic_validity": "shipment-weighted market ASP",
+      "product_specificity": "LightCounting documents grain at or near the key; Omdia UNKNOWN; Cignal units-only; Dell'Oro transport-level",
+      "historical_depth": "best of all candidates — LightCounting actuals 2022-2025; Cignal units from 2019",
+      "frequency": "semi-annual (LightCounting) / quarterly (Cignal, Dell'Oro)",
+      "reproducibility": "lowest — a modelled ASP cannot be audited by a third party",
+      "source_independence": "provider-specific categories; switching requires re-mapping",
+      "cost": "$5,995 per LightCounting report KNOWN; everything else QUOTE_REQUIRED",
+      "operational_burden": "low ingestion, high category mapping",
+      "conditions": [
+        "C-1 sample schema",
+        "C-2 category definitions tested against the six key examples",
+        "C-3 actual/forecast boundary at row level",
+        "C-4 revision policy in writing",
+        "C-5 written derivative-publication permission incl. levels, changes, rebased values, API, MCP",
+        "C-6 quote separating access/history/update/publication",
+        "C-7 termination survival of published history"
+      ],
+      "decisive_gate": "C-2 — whether the provider prices below the rate"
+    },
+    {
+      "id": "D",
+      "name": "Hybrid public price + licensed weights",
+      "state": "CONDITIONALLY_VIABLE",
+      "economic_validity": "channel prices weighted by market structure; must not be named 'market price'",
+      "mathematical_validity": "valid and unremarkable — a Laspeyres/Lowe construction; externally sourced weights against internally observed relatives",
+      "minimum_weight_granularity": "application_class x module_aggregate_rate x pmd_designation; rate-only weights are insufficient",
+      "weight_lag": {
+        "can_weights_lag_prices": true,
+        "annual_weights_on_monthly_prices": "standard construction (Lowe/Young index)",
+        "tolerable_lag_here": "UNKNOWN — required empirical test; optics rotates generations on ~2-year cycle so lag error is larger than in a CPI",
+        "rebalance": "annual chain link; a mid-chain weight swap is a methodology version event"
+      },
+      "missing_cells": {
+        "price_without_weight": "exclude and disclose excluded share, or assign parent weight pro rata; never impute zero silently",
+        "weight_without_price": "redistribute within parent; publish covered-weight share every period; suspend aggregate below a stated floor"
+      },
+      "reconstruction_risk": {
+        "exists": true,
+        "mechanism": "each published aggregate is one linear equation in N unknown weights with known coefficients (the published sub-index relatives); over T periods within a fixed-weight window, T >= N makes the weight vector exactly solvable",
+        "worked_example": "monthly cadence with 8 strata -> annual weight vector recoverable within 8 months",
+        "mitigations_ranked": [
+          "license the weights for publication",
+          "publish aggregate only (loses transparency)",
+          "publish sub-indices only",
+          "publish deliberately coarsened weights"
+        ]
+      },
+      "rights_contamination": "an index computed from licensed weights is a derivative work of those weights; RIGHT_REQUIRING_WRITTEN_PERMISSION",
+      "conditions": [
+        "A-1..A-7",
+        "D-2 weights at key grain",
+        "D-3 explicit derivative-publication rights for weights",
+        "D-4 weight-lag sensitivity test (empirical; no threshold settable in advance)",
+        "D-5 reconstruction mitigation agreed in writing"
+      ]
+    },
+    {
+      "id": "E",
+      "name": "Coherent DCI family (400ZR / 800ZR / ZR+)",
+      "state": "CONDITIONALLY_VIABLE",
+      "economic_validity": "cleanest economic object in the audit",
+      "best_documented_source": "Dell'Oro Optical Transport — ASP by speed for ZR/ZR+ plugs",
+      "cross_check": "Cignal AI coherent unit shipments and OEM coherent port share",
+      "frequency": "quarterly — best of the price candidates",
+      "historical_depth": "400ZR era onward; do NOT back-cast 800ZR into the 1998 optical-transport programme history",
+      "rights": "UNKNOWN — subscription contract not read; site ToU silent on derivatives, robots allow-all",
+      "source_independence": "weakest — effectively single-provider",
+      "cost": "QUOTE_REQUIRED",
+      "specification_hazards": [
+        "embedded sleds vs pluggables",
+        "telecom long-haul vs campus DCI",
+        "ZR+ is a family of reaches not one link budget",
+        "host coherent-software licence may sit outside module ASP"
+      ],
+      "conditions": [
+        "E-1 contract terms read",
+        "E-2 ZR/ZR+ split by speed confirmed",
+        "E-3 pluggable/embedded separation",
+        "E-4 client Ethernet excluded by construction",
+        "E-5 quote",
+        "E-6 documented position on single-provider dependency"
+      ]
+    },
+    {
+      "id": "F",
+      "name": "Public validation layer",
+      "state_as_validation_layer": "VIABLE",
+      "state_as_uppi_candidate": "FALSIFIED",
+      "series": [
+        {
+          "id": "PCU33423342",
+          "publisher": "BLS",
+          "what_it_is": "communications equipment manufacturing output price index, monthly, Dec 1985 = 100",
+          "why_not_uppi": "whole-industry; moved in the third decimal place across Apr-Jun 2026"
+        },
+        {
+          "id": "HTS 8517.62.00.90",
+          "publisher": "US Census / USITC",
+          "what_it_is": "import unit value, customs value divided by quantity in 'No.'",
+          "why_not_uppi": "residual 'Other' line; siblings .10 modems and .20 switching/routing are broken out, leaving everything else; mixes rates, reaches, related-party transfers"
+        },
+        {
+          "id": "PCU3359213359210",
+          "publisher": "BLS",
+          "what_it_is": "fiber optic cable manufacturing PPI",
+          "why_not_uppi": "discontinued August 2025, and cable is the medium not the module"
+        }
+      ],
+      "permitted_roles": [
+        "negative control against a future licensed ASP",
+        "coverage/context panel on a methodology page",
+        "cycle-direction corroborator"
+      ],
+      "mandatory_display_constraints": [
+        "index points only, never a dollar level",
+        "basket definition carried in the display name not a footnote",
+        "never routed under the UPPI identifier",
+        "methodology text must forbid multiplication by an assumed base dollar"
+      ],
+      "rights": "clean, attribution-only, for these series as themselves — not for a derived optics price",
+      "conditions": [
+        "F-1 attribution strings recorded",
+        "F-2 display rule",
+        "F-3 written non-UPPI statement carried on the surface"
+      ]
+    }
+  ],
+  "ontology": {
+    "state": "VIABLE",
+    "reason": "IEEE 802 standards free via the IEEE GET Program; OSFP/QSFP-DD/LPO MSAs and OIF publish openly; vendor datasheets publish characteristics and no prices",
+    "copyright_boundary": "specification facts are not copyrightable; IEEE's expression of them is. Record facts and cite designations; never reproduce standard text or tables",
+    "urdais_owns_canonically": [
+      "application_class",
+      "pmd_designation and its derived attributes",
+      "retiming_architecture",
+      "form_factor_family",
+      "standard_status",
+      "part-number registry"
+    ],
+    "provider_specific": "the mapping from each provider's category labels onto pmd_designation, modelled as a versioned per-provider concordance",
+    "provider_independence": "complete; survives every price-source change",
+    "conditions": [
+      "O-1 canonical vocabularies sourced to standards/MSA/OIF",
+      "O-2 written copyright boundary rule",
+      "O-3 versioned per-provider concordance model",
+      "O-4 maintenance owner and standards-event review trigger (P802.3dj ratification first)"
+    ]
+  },
+  "merchant_probe": {
+    "date": "2026-09-23",
+    "method": "two evidence sets, both 2026-09-23. Set 1 (this pass): transport-layer probes, robots.txt first, one request per URL, browser UA or curl, no retries against bot managers, NO PRICE COLLECTED. Set 2 (parallel PH-2A pass): terms pages read in full and selected product pages fetched including prices. Set 2 supersedes Set 1 on conflict — reading a contract beats failing to fetch one.",
+    "limit": "a negative result is evidence about this access path on this date, not proof that no access path exists",
+    "results": [
+      {
+        "merchant": "FS.com",
+        "robots_txt": "HTTP 202, zero bytes to this pass",
+        "claude_class_named": "cannot be determined from robots",
+        "public_price_in_server_html": true,
+        "terms_readable": "YES — read in full by PH-2A; last updated 2022-12-09",
+        "terms_content": [
+          "forbids 'any data mining, scraper, spider robots, or similar data gathering or extraction methods'",
+          "forbids reproduction, distribution and derivatives without express written consent"
+        ],
+        "state": "BLOCKED_RIGHTS",
+        "assessment": "supersedes PH-1's 'unreadable' finding — the terms exist, were read, and say no; express written consent is the named route through"
+      },
+      {
+        "merchant": "DigiKey",
+        "robots_txt": "allows several named AI crawlers",
+        "claude_class_named": false,
+        "public_price_in_server_html": "Product Information API v4 exists",
+        "terms_readable": "YES — read by PH-2A",
+        "terms_content": [
+          "forbids 'any robot, scraper, spider, or other automated means'",
+          "content storable only for internal business or personal non-commercial use; may not be published, distributed or displayed"
+        ],
+        "state": "BLOCKED_RIGHTS",
+        "assessment": "robots allow-line does not override terms; TERMS GOVERN"
+      },
+      {
+        "merchant": "Flexoptix",
+        "robots_txt": "HTTP 200, permissive; Disallow /*?, /catalog/, /checkout/; sitemaps published",
+        "claude_class_named": false,
+        "public_price_in_server_html": false,
+        "terms_readable": "GTC readable, status 18.08.2026, but it is a sales contract with no website-use, data-use or automated-access clause",
+        "assessment": "permissive crawl, no public price, commercial-customers-only, no governing terms for collection"
+      },
+      {
+        "merchant": "Optcore",
+        "robots_txt": "HTTP 200",
+        "claude_class_named": true,
+        "detail": "ClaudeBot, Claude-Web, AnthropicAI under Disallow: /",
+        "assessment": "BLOCKED_RIGHTS — barred by the operator; do not collect"
+      },
+      {
+        "merchant": "ProLabs",
+        "robots_txt": "CloudFront 403",
+        "claude_class_named": "unknown",
+        "assessment": "bot-walled; /terms-of-use 404 per PH-1"
+      },
+      {
+        "merchant": "NADDOD",
+        "robots_txt": "HTTP 200, permissive; disallows facet query strings (?brand=, ?wavelength=, ?connector=)",
+        "claude_class_named": false,
+        "public_price_in_server_html": "403 on product page",
+        "assessment": "robots permits what the server refuses; facet enumeration — the access pattern an index needs — is explicitly disallowed"
+      },
+      {
+        "merchant": "FiberMall",
+        "robots_txt": "HTTP 200, minimal (Disallow: /bin/)",
+        "claude_class_named": false,
+        "assessment": "best observed specification labelling of any merchant (separates LPO/non-LPO, OSFP/QSFP-DD, DR8/SR8/FR4/2FR2); no terms exist to read",
+        "public_price_in_server_html": true,
+        "terms_readable": "/terms-conditions.html returns 404; no substitute found",
+        "state": "UNKNOWN"
+      },
+      {
+        "merchant": "ColfaxDirect",
+        "robots_txt": "404 — none",
+        "assessment": "absence of terms is a risk, not a permission"
+      },
+      {
+        "merchant": "AscentOptics",
+        "robots_txt": "redirect to apex host",
+        "assessment": "under-assessed"
+      },
+      {
+        "merchant": "CDW (Cisco OEM)",
+        "public_price_in_server_html": true,
+        "observed": "Cisco OSFP-800G-DR8=, list USD 10791.78, advertised USD 7464.99, lower sign-in price exists",
+        "terms_readable": false,
+        "state": "UNKNOWN",
+        "assessment": "a real public OEM price surface with unread terms"
+      },
+      {
+        "merchant": "Vitex Direct",
+        "public_price_in_server_html": true,
+        "observed": "VD-8CDR8CM-AA, 800G QSFP-DD DR8, USD 1100, in stock",
+        "terms_readable": false,
+        "state": "UNKNOWN",
+        "assessment": "page states neither LPO nor retimed — key field 4 unresolvable from the listing"
+      },
+      {
+        "merchant": "LINK-PP",
+        "public_price_in_server_html": "retrieved claim",
+        "observed": "Cisco-compatible OSFP DR8, USD 1030",
+        "terms_readable": false,
+        "state": "UNKNOWN"
+      }
+    ],
+    "finding": "prices are available; the licence to use them is not. Both merchants whose terms have been read (FS.com, DigiKey) prohibit BOTH the collection method AND publication of the result, each naming written consent as the route through. A substantial set of price-publishing merchants (CDW, Vitex, FiberMall, LINK-PP, Mouser, Arrow, Avnet) have UNREAD terms — UNKNOWN, not blocked, and the only direction in which Candidate A advances without a negotiation.",
+    "specification_fidelity_finding": "PH-2A manual SKU pilot: merchant listings frequently omit retiming architecture (Vitex 800G DR8 page says neither LPO nor retimed) and the merchant label 'FR' is not one cell. Key field 4 is NOT reliably derivable from public listing text — gate A-6 failing on first contact with real data."
+  },
+  "rights_register": {
+    "documented_prohibition_on_derivative_publication": [
+      {
+        "source": "LightCounting",
+        "basis": "report confidentiality and redistribution clause",
+        "escape_hatch": "expressed permission, named in the clause"
+      },
+      {
+        "source": "Cignal AI",
+        "basis": "subscription agreement — internal use only, no derivative works",
+        "escape_hatch": "Citation Policy and written consent, named in the agreement"
+      },
+      {
+        "source": "FS.com",
+        "basis": "Terms of Use 2022-12-09 — no reproduction, distribution or derivatives",
+        "escape_hatch": "express written consent"
+      },
+      {
+        "source": "DigiKey",
+        "basis": "terms — content may not be published, distributed or displayed",
+        "escape_hatch": "not stated"
+      }
+    ],
+    "crawler_class_barred_by_name_at_root": [
+      "LightCounting",
+      "Omdia",
+      "Optcore"
+    ],
+    "terms_unreadable_from_outside": [
+      "FS.com robots.txt and ToU URL return HTTP 202 zero-byte to a direct client — yet the terms were obtained and read by PH-2A. A failed fetch is not evidence that no terms exist"
+    ],
+    "no_governing_terms_found": [
+      "Flexoptix (website/data use)",
+      "FiberMall (/terms-conditions.html 404)",
+      "ProLabs",
+      "ColfaxDirect"
+    ],
+    "silent_neither_granting_nor_prohibiting": [
+      "Omdia",
+      "Dell'Oro"
+    ],
+    "clean_attribution_only": [
+      "BLS",
+      "US Census",
+      "FRED"
+    ],
+    "facts_not_expression": [
+      "IEEE PMD characteristics",
+      "MSA and OIF designations",
+      "vendor datasheet specifications"
+    ],
+    "documented_prohibition_on_automated_collection": [
+      {
+        "source": "FS.com",
+        "clause": "no data mining, scraper, spider robots, or similar data gathering or extraction methods"
+      },
+      {
+        "source": "DigiKey",
+        "clause": "no robot, scraper, spider, or other automated means",
+        "note": "robots.txt allows several named AI crawlers; TERMS GOVERN"
+      }
+    ],
+    "terms_simply_unread_UNKNOWN_not_blocked": [
+      "CDW",
+      "Vitex Direct",
+      "LINK-PP",
+      "Mouser",
+      "Arrow",
+      "Avnet",
+      "Approved Networks"
+    ]
+  },
+  "cost_axes": {
+    "legend": [
+      "KNOWN",
+      "UNKNOWN",
+      "QUOTE_REQUIRED",
+      "ZERO"
+    ],
+    "known_figures": [
+      {
+        "item": "LightCounting report sticker",
+        "value": "USD 5995 per report",
+        "caveat": "a report sticker, NOT an ongoing data licence, historical-file price, or publication licence"
+      }
+    ],
+    "finding": "no candidate is BLOCKED_ECONOMICS today; every commercial figure except the LightCounting sticker is QUOTE_REQUIRED. A source that proves technically excellent and unaffordable must be recorded as a budget constraint, never disguised as a methodological defect"
+  },
+  "failure_modes": [
+    {
+      "mode": "mixes incomparable PMDs",
+      "exposed": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "guard": "key field pmd_designation; a rate-only source fails specification fidelity"
+    },
+    {
+      "mode": "treats a rate as a product",
+      "exposed": [
+        "existing prototype"
+      ],
+      "guard": "the six-field key"
+    },
+    {
+      "mode": "mixes client optics and coherent DCI",
+      "exposed": [
+        "any single-family design",
+        "Dell'Oro transport ASP read as client ASP"
+      ],
+      "guard": "application_class evaluated first"
+    },
+    {
+      "mode": "creates daily observations from quarterly data",
+      "exposed": [
+        "any candidate on the existing surface"
+      ],
+      "guard": "store and publish at observation cadence; no interpolated values in the stored series; no 1D/1W display element"
+    },
+    {
+      "mode": "uses forecast data as actual",
+      "exposed": [
+        "C",
+        "D",
+        "E"
+      ],
+      "guard": "REQUIRED actual_vs_forecast flag; hard cut at last actual period"
+    },
+    {
+      "mode": "mismatched units and revenue",
+      "exposed": [
+        "C",
+        "D"
+      ],
+      "guard": "revenue and units on the same row at the same grain"
+    },
+    {
+      "mode": "relies on inaccessible weights without disclosure",
+      "exposed": [
+        "B",
+        "D"
+      ],
+      "guard": "publish weight grain, vintage and covered-weight share every period"
+    },
+    {
+      "mode": "uses merchant prices contrary to terms",
+      "exposed": [
+        "A",
+        "B",
+        "B2",
+        "D"
+      ],
+      "guard": "no collection where terms bar it or cannot be read"
+    },
+    {
+      "mode": "republishes licensed data without permission",
+      "exposed": [
+        "C",
+        "D",
+        "E"
+      ],
+      "guard": "written derivative-publication permission before any value is published, including percentage changes"
+    },
+    {
+      "mode": "treats customs unit values as transceiver ASP",
+      "exposed": [
+        "F if promoted"
+      ],
+      "guard": "index points only, basket in the name, no dollar level"
+    },
+    {
+      "mode": "treats broad equipment PPI as UPPI",
+      "exposed": [
+        "F if promoted"
+      ],
+      "guard": "same"
+    },
+    {
+      "mode": "silently changes the economic object during a technology transition",
+      "exposed": [
+        "all"
+      ],
+      "guard": "benchmark migration, topology re-spec, provider recategorisation and weight replacement are each a methodology version event with an overlap link"
+    },
+    {
+      "mode": "leaks a provider's confidential weights through published outputs",
+      "exposed": [
+        "D"
+      ],
+      "guard": "license the weights for publication, or restrict what is published"
+    },
+    {
+      "mode": "splices two price concepts into one series to manufacture history",
+      "exposed": [
+        "any backfilled design"
+      ],
+      "guard": "start at first observation; context series beside, never behind"
+    }
+  ],
+  "rejected_paths": [
+    {
+      "path": "broad communications-equipment PPI as UPPI",
+      "state": "FALSIFIED"
+    },
+    {
+      "path": "HTS 8517.62.00.90 unit value as transceiver ASP",
+      "state": "FALSIFIED"
+    },
+    {
+      "path": "fiber-optic-cable PPI as photonics proxy",
+      "state": "FALSIFIED"
+    },
+    {
+      "path": "Dell'Oro optical-transport ASP as client-optics price",
+      "state": "FALSIFIED"
+    },
+    {
+      "path": "Chinese carrier tender pricing as index constituent",
+      "state": "FALSIFIED"
+    },
+    {
+      "path": "collection from Optcore",
+      "state": "BLOCKED_RIGHTS"
+    },
+    {
+      "path": "collection from FS.com",
+      "state": "BLOCKED_RIGHTS",
+      "reason": "Terms of Use read by PH-2A: forbid scrapers and data-extraction methods, and forbid reproduction, distribution and derivatives without express written consent [VERIFIED FACT]"
+    },
+    {
+      "path": "defeating any bot manager to reach a price",
+      "state": "REJECTED"
+    },
+    {
+      "path": "daily or weekly UPPI values from quarterly or semi-annual sources",
+      "state": "FALSIFIED"
+    },
+    {
+      "path": "secondary-market / broker prices",
+      "state": "REJECTED"
+    },
+    {
+      "path": "USAC E-Rate line-item awards",
+      "state": "REJECTED",
+      "reason": "open and redistributable but the population is K-12/library campus networking, not AI-fabric optics"
+    },
+    {
+      "path": "GSA CALC",
+      "state": "REJECTED",
+      "reason": "awarded labour rates on professional-services schedules, not product prices"
+    },
+    {
+      "path": "public issuer disclosure as a substitute for licensed weights",
+      "state": "BLOCKED_DATA",
+      "reason": "company-level not specification-level; unit and unit-price cells redacted in at least one key filing; no open substitute for licensed weights at the required grain"
+    },
+    {
+      "path": "photonics equity wrapper as a price proxy",
+      "state": "REJECTED"
+    },
+    {
+      "path": "collection from DigiKey",
+      "state": "BLOCKED_RIGHTS",
+      "reason": "terms forbid automated access and forbid publishing or distributing content; permissive robots.txt does not override"
+    }
+  ],
+  "what_ph2_changed": [
+    "the merchant blocker moved from unknown to documented, and its shape changed: FS.com's and DigiKey's terms forbid scraping AND derivative publication without written consent. The blocker is a contract, not availability — prices are fetchable — and it is therefore negotiable. The surviving route is the price-publishing merchants whose terms nobody has read yet.",
+    "the comparison key is shorter than the field list suggests: reach, fiber, wavelength plan and lane count are already inside the PMD designation — eight fields, not sixteen",
+    "the hybrid architecture has a specific arithmetic disclosure risk (weight reconstruction) that must be raised with a provider rather than discovered by one",
+    "merchant listings do not reliably state retiming architecture, so key field 4 cannot be populated from public listing text alone"
+  ],
+  "compliance_disclosure": "One automated request in this pass fetched a PDF under omdia.tech.informa.com/-/media/. Omdia's robots.txt, re-read the same day, places ClaudeBot and Claude-User under Disallow: /. That request was contrary to Omdia's stated policy. No content was extracted and nothing from it is used. No further automated request to that domain beyond robots.txt should be made; the correct route is citations@omdia.com.",
+  "stop_condition": "PH-2 ends with feasibility states and entry gates. No methodology selected, no candidate ranked, no version assigned, no production code, migration, schema or ingestion, UPPI demo untouched, nothing committed."
+}

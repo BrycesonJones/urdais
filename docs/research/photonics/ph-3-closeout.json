@@ -1,0 +1,429 @@
+{
+  "title": "Urdais Photonics — PH-3 research close-out",
+  "as_of": "2026-09-23",
+  "status": "formal close-out record; internal research artifact; not routed publicly; not registered in the docs catalog",
+  "companion_markdown": "docs/research/photonics/ph-3-closeout.md",
+  "implements_nothing": "no production code, migration, ingestion, schema, frontend change or ontology build; no price data fabricated; nothing committed",
+
+  "final_status": {
+    "photonics_research_status": "COMPLETE",
+    "uppi_production_status": "DEFERRED_PENDING_DATA_RIGHTS",
+    "ontology_status": "APPROVED_CONCEPTUALLY_BUILD_DEFERRED",
+    "client_optics_status": "DEFERRED — intended home of UPPI; economic object defined, comparison key frozen, no source cleared",
+    "coherent_dci_status": "DEFERRED — separate family; cleanest object and best cadence; Dell'Oro documented but terms unread; single-provider dependency",
+    "merchant_price_path": "BLOCKED_RIGHTS",
+    "commercial_asp_path": "BLOCKED_RIGHTS",
+    "public_proxy_path": "CONTEXT_ONLY_AVAILABLE_NOW",
+    "mvp_requirement": "NO",
+    "next_action": "NONE FOR PHOTONICS — proceed to the Power Index. One open recommendation requiring separate authorisation: remove the UPPI demo from the public frontend.",
+    "ph4_should_begin": false,
+    "primary_blocker": "a written derived-publication right, not data availability, not methodology, not cost",
+    "secondary_blocker": "merchant path only: no legitimate historical backfill at 12/24/36 months, and retiming_architecture frequently absent from listing text"
+  },
+
+  "artifacts_closed_out": [
+    "docs/research/photonics/ph-1-uppi-benchmark-methodology.md",
+    "docs/research/photonics/ph-1-external-research.md",
+    "docs/research/photonics/ph-1-source-matrix.json",
+    "docs/research/photonics/ph-2-source-rights-research.md",
+    "docs/research/photonics/ph-2-source-rights-matrix.json",
+    "docs/research/photonics/ph-2-feasibility-audit.md",
+    "docs/research/photonics/ph-2-feasibility-matrix.json"
+  ],
+  "preservation_note": "ph-1-uppi-benchmark-methodology.md existed only in a session scratchpad and was copied into docs/research/photonics/ during this close-out; it would otherwise have been lost",
+
+  "artifact_disagreements_resolved": [
+    {"id": 1, "topic": "FS.com terms", "positions": {"PH-1 and PH-2B draft": "unreadable (HTTP 202 zero bytes)", "PH-2A": "read in full; prohibit scraping and derivative publication"}, "governs": "PH-2A", "principle": "a failed fetch is not evidence that no terms exist"},
+    {"id": 2, "topic": "merchant price visibility", "positions": {"PH-2B probe": "no merchant served a public price to a non-browser client", "PH-2A": "fetched real prices from CDW and Vitex"}, "governs": "PH-2A", "principle": "the blocker is the licence, not availability"},
+    {"id": 3, "topic": "ontology rights", "positions": {"PH-2B": "VIABLE — specification facts are not copyrightable", "PH-2A": "AMBIGUOUS_REQUIRES_LEGAL_REVIEW for a commercial database of IEEE-extracted facts"}, "governs": "PH-2A", "principle": "the more conservative and better-evidenced position; neither pass read IEEE GET Terms and Conditions"},
+    {"id": 4, "topic": "candidate lettering", "resolution": "PH-3 lettering is canonical; crosswalk recorded"},
+    {"id": 5, "topic": "LightCounting $5,995", "resolution": "a single-report sticker price; not an access licence, not a historical-file price, and not a publication right"}
+  ],
+
+  "settled_findings": [
+    "rate alone is not a product identity — eight distinct optical PMDs exist at 800 Gb/s in one IEEE standard",
+    "no daily or weekly optical-transceiver price market exists; interpolation into daily values is prohibited",
+    "client/datacom optics and coherent DCI are different economic markets",
+    "product ontology and economic observation are separate layers; replacing a price provider must not change what a product is",
+    "public macro proxies (communications-equipment PPI, residual customs unit values) are context, never UPPI",
+    "merchant pricing is not cleared: terms read at FS.com and DigiKey prohibit the required behaviour; other merchants unread (UNKNOWN, not blocked); no merchant history exists",
+    "commercial ASP data exists at adequate grain but publication rights do not",
+    "licensed weights do not route around the rights problem; no weights-only licence is documented anywhere"
+  ],
+
+  "economic_object": {
+    "uppi_is_intended_to_measure": "the change over time in the price of a precisely specified optical connectivity capability, holding that capability constant",
+    "uppi_is_not_intended_to_measure": [
+      "shipment-weighted industry average selling price",
+      "what any hyperscaler pays",
+      "the total cost of building a network",
+      "the cost of optical bandwidth per bit",
+      "vendor revenue or margin",
+      "the price of 'optics' as an undifferentiated category"
+    ],
+    "chosen_object": "constant-quality price change",
+    "rejected_objects_and_why": {
+      "shipment_weighted_ASP": "a market statistic, not a price index; PH-1 stress tests showed it printing +11% and +20% while every constituent price fell, and -19.7% on a pure reach-mix shift with no price change; also the least reproducible",
+      "cost_per_optical_bandwidth": "a hedonic with the bandwidth coefficient silently forced to 1.0; mechanically manufactures a ~50% decline at each generational doubling",
+      "reference_cluster_cost": "a valid but different object — a cost index that deliberately mixes price and architecture; preserved separately as candidate G",
+      "channel_acquisition_pricing": "the likely observation basis, not the economic object"
+    },
+    "naming_discipline": "if built on channel or listed prices, the published identifier must say so, mirroring the existing UCPI-H100-SXM-LISTED precedent; never presented or named as industry ASP or market price"
+  },
+
+  "product_family": {
+    "conceptual_only": true,
+    "no_identifiers_reserved": true,
+    "structure": {
+      "Photonics": {
+        "client_datacom_optics": "intended home of UPPI; leaves are specification-aware series, never nominal rates",
+        "coherent_dci": "SEPARATE family, never a sub-series of client optics"
+      },
+      "candidate_G": "reference-fabric BOM is a cost index and sits beside both families, never inside either"
+    },
+    "structural_rules": [
+      "the client/DCI split is at the top of the tree and is the first field evaluated; it must not be possible to place an 800ZR series under the client family by configuration",
+      "the leaf is a specification-aware series; '800G' is a navigation label at most, never an instrument",
+      "a cost index is never blended with or presented as a price index"
+    ]
+  },
+
+  "comparison_key": {
+    "purpose": "prevent a future engineer from returning to rate=800G, price=X as the whole product definition",
+    "REQUIRED_FOR_PRICE_IDENTITY": [
+      {"field": "application_class", "observability": "reliable", "note": "evaluated first; gates every other comparison"},
+      {"field": "pmd_designation", "observability": "reliable", "note": "composite field — encodes reach, fiber type, wavelength plan and lane count in one canonical token"},
+      {"field": "module_aggregate_rate", "observability": "reliable", "note": "partly implied by PMD; retained because draft/vendor-defined names do not reliably encode it and twin-port modules break the implication. RULE: where rate and PMD conflict, PMD wins"},
+      {"field": "retiming_architecture", "observability": "UNRESOLVED", "note": "genuinely separates products, but listings frequently state neither LPO nor retimed; must be resolved from the manufacturer part number, never inferred from absence of a label"},
+      {"field": "form_factor_family", "observability": "reliable"},
+      {"field": "commercial_coding", "observability": "usually stated", "note": "6-8x observed price spread on the same PMD"},
+      {"field": "port_multiplicity", "observability": "reliable", "note": "twin-port OSFP presents 2x400 Gb/s; module rate, endpoint rate and port count are three different numbers"}
+    ],
+    "ATTRIBUTE_ONLY": [
+      {"field": "standard_status", "note": "REFINED from PH-2B, which called it a required disambiguator. Two modules differing only in ratification status are the same product with different provenance. Mandatory to record"},
+      {"field": "connector", "note": "MPO-12 vs MPO-16 APC varies within one PMD; split on it only if observed prices separate"},
+      {"field": "manufacturer"},
+      {"field": "manufacturer_part_number", "note": "the observation identifier for matched-model linking"},
+      {"field": "lifecycle_state", "note": "EOL clearance is a known outlier source"},
+      {"field": "standard_version"},
+      {"field": "cmis_revision", "note": "a revision mismatch is not a different PMD"}
+    ],
+    "REDUNDANT": [
+      {"field": "reach", "encoded_by": "pmd_designation"},
+      {"field": "fiber_type", "encoded_by": "pmd_designation"},
+      {"field": "wavelength_configuration", "encoded_by": "pmd_designation"},
+      {"field": "lane_count", "encoded_by": "pmd_designation"},
+      {"field": "coherent_or_direct_detect", "encoded_by": "application_class + pmd_designation"},
+      {"field": "protocol_ecosystem", "encoded_by": "commercial_coding"}
+    ],
+    "UNRESOLVED": [
+      {"field": "retiming_architecture", "issue": "required for identity but not reliably observable from public listing text; a resolution method is a reopening gate"}
+    ]
+  },
+
+  "oem_vs_compatible_policy": {
+    "evidence": {
+      "date": "2026-09-23",
+      "same_specification": "800G DR8, 500 m, single-mode",
+      "oem": "Cisco OSFP-800G-DR8= at CDW — USD 10791.78 list / USD 7464.99 advertised; a lower sign-in price exists",
+      "compatible": "approximately USD 900-1250; Vitex 800G QSFP-DD DR8 at USD 1100 in stock",
+      "spread": "roughly six- to eight-fold on the same PMD"
+    },
+    "policy": [
+      "commercial_coding is a price-identity field, not an attribute",
+      "OEM and compatible are separate strata and are NEVER averaged, under any weighting, for any reason",
+      "they are different goods, not different prices for one good — warranty, qualified firmware, support entitlement and switch-vendor lock-in differ; the spread is not a discount",
+      "neither universe is preferred by this close-out; the choice requires the SKU census",
+      "whichever is chosen, the published series must name it",
+      "an observation whose coding cannot be determined is dropped, not defaulted"
+    ]
+  },
+
+  "candidate_crosswalk": [
+    {"ph3": "A", "name": "Specification-matched merchant price index", "ph2b": "A", "ph2a": "A", "ph1_methodology": "A (UPPI-LISTED)"},
+    {"ph3": "B", "name": "Licensed specification-level professional ASP", "ph2b": "C", "ph2a": "B", "ph1_methodology": "C (UPPI-ASP)"},
+    {"ph3": "C", "name": "Client-optics cost / bandwidth index", "ph2b": "B", "ph2a": null, "ph1_methodology": null},
+    {"ph3": "D", "name": "Hybrid permitted prices + licensed weights", "ph2b": "D", "ph2a": "C", "ph1_methodology": null},
+    {"ph3": "E", "name": "Coherent DCI pricing", "ph2b": "E", "ph2a": "D", "ph1_methodology": null},
+    {"ph3": "F", "name": "Public government validation / context series", "ph2b": "F", "ph2a": "E", "ph1_methodology": "D (trade unit value)"},
+    {"ph3": "G", "name": "Reference-fabric optical BOM / UPPI-CONNECT", "ph2b": "B2", "ph2a": null, "ph1_methodology": "B (UPPI-CONNECT)"}
+  ],
+
+  "candidate_dispositions": [
+    {
+      "id": "A", "name": "Specification-matched merchant price index",
+      "economic_object": "constant-quality price change of a specified optical capability, observed from channel offers",
+      "design_disposition": "PRESERVE_FOR_FUTURE", "current_status": "BLOCKED",
+      "reason": "methodologically sound and maximally reproducible; blocked by contract at both catalogues whose terms were read (FS.com, DigiKey), each prohibiting the collection method AND derivative publication; Optcore bars Urdais's crawler class by name",
+      "unresolved_blockers": ["publication rights", "no legitimate historical backfill at 12/24/36 months", "retiming_architecture not derivable from listing text", "terms unread at CDW, Vitex, FiberMall, LINK-PP, Mouser, Arrow, Avnet — UNKNOWN, not blocked"],
+      "reopening_evidence": "written consent from one merchant, OR a terms review establishing an unbarred one; plus SKU census, repeat-observation pilot, cross-merchant dispersion, and a demonstrated retiming-resolution method"
+    },
+    {
+      "id": "B", "name": "Licensed specification-level professional ASP",
+      "economic_object": "shipment-weighted industry ASP within a specification category",
+      "design_disposition": "PRESERVE_FOR_FUTURE", "current_status": "BLOCKED",
+      "reason": "LightCounting is the only source whose public abstract puts pricing on a rate x reach x form-factor x architecture grid, and forbids redistribution without expressed permission; Cignal forbids derivative works and documents no ASP field; Omdia grain and rights unresolved; Dell'Oro measures optical transport",
+      "unresolved_blockers": ["derived-publication rights at every provider", "Omdia pricing grain", "whether any provider separates DR8 from 2xFR4 from LPO", "revision policy", "publication-licence cost"],
+      "reopening_evidence": "the seventeen Omdia answers, or equivalents from another provider, critically including written derived-publication rights",
+      "note": "best historical depth of any candidate (LightCounting actuals 2022-2025) and worst reproducibility (a modelled ASP cannot be audited by a third party)"
+    },
+    {
+      "id": "C", "name": "Client-optics cost / bandwidth index",
+      "economic_object": "the cost of client optical bandwidth inside the data centre, in index form",
+      "design_disposition": "PRESERVE_FOR_FUTURE", "current_status": "BLOCKED",
+      "reason": "weight-bearing by construction; inherits BOTH A's collection blocker and B's licensing blocker",
+      "unresolved_blockers": ["everything in A and B", "a frozen nameplate-bandwidth rule", "a published treatment of breakout double-counting"],
+      "reopening_evidence": "A unblocked AND weights at key grain — or a decision to build G instead"
+    },
+    {
+      "id": "D", "name": "Hybrid permitted prices + licensed weights",
+      "economic_object": "self-observed specification-level prices aggregated with provider shipment weights",
+      "design_disposition": "PRESERVE_FOR_FUTURE", "current_status": "BLOCKED",
+      "reason": "mathematically ordinary (a Lowe/Laspeyres construction) and asks a provider for less than B does, but does NOT escape the rights problem: no weights-only licence is documented, and an index whose weights come from a provider's unit file is a derivative of that data even if no provider number is displayed",
+      "unresolved_blockers": ["A's collection consent", "a weights-only licence that does not publicly exist", "explicit publication/API/MCP language", "weight reconstruction: published sub-indices plus a published aggregate make the weight vector algebraically solvable — with monthly cadence and eight strata, within roughly eight months"],
+      "reopening_evidence": "a contract granting, in substance, publication of an index whose weights are computed from the provider's unit file without displaying units, shares or ASP, including via API, for the life of the index, including after termination, with stated attribution; plus an agreed reconstruction mitigation; plus a weight-lag sensitivity test"
+    },
+    {
+      "id": "E", "name": "Coherent DCI pricing",
+      "economic_object": "price of pluggable coherent optics for data-centre interconnect (400ZR, 400ZR+, 800ZR, 800ZR+)",
+      "design_disposition": "PRESERVE_FOR_FUTURE", "current_status": "BLOCKED",
+      "reason": "cleanest economic object and best cadence in the investigation, with the clearest provider fit (Dell'Oro ASP by speed for ZR/ZR+ plugs); blocked on unread contract terms and an unresolved ZR-vs-ZR+ split",
+      "unresolved_blockers": ["Dell'Oro contract and publication terms", "ZR vs ZR+ as separate ASP rows", "pluggable vs embedded separation", "whether host coherent-software licences sit inside or outside the module ASP", "effective single-provider dependency"],
+      "reopening_evidence": "Dell'Oro terms read; grain confirmed; documented position on single-source risk; a quote",
+      "note": "most likely to be unblocked by a single conversation, and least source-redundant if it is"
+    },
+    {
+      "id": "F", "name": "Public government validation / context series",
+      "economic_object": "none relevant to transceivers",
+      "design_disposition": "CONTEXT_ONLY", "current_status": "AVAILABLE_NOW",
+      "reason": "BLS PCU33423342 and HTS 8517.62.00.90 have the cleanest rights in the vertical — free, attribution-only — and measure an industry and a residual customs basket respectively; useful as a negative control and context panel",
+      "unresolved_blockers": [],
+      "binding_display_constraints": ["index points only, never a dollar level", "basket definition carried in the series name, not a footnote", "never routed under a UPPI identifier", "methodology text must forbid multiplication by an assumed base dollar"]
+    },
+    {
+      "id": "G", "name": "Reference-fabric optical BOM / UPPI-CONNECT",
+      "economic_object": "cost of the optical bill of materials for one published, versioned reference AI fabric, in $ per GPU and $ per delivered Tbps",
+      "design_disposition": "PRESERVE_FOR_FUTURE", "current_status": "BLOCKED",
+      "reason": "most differentiated idea produced by the investigation and the ONLY candidate with no licensed-data dependency (the reference topology supplies the quantities every other design must license as weights); blocked because it consumes candidate A's price observations",
+      "unresolved_blockers": ["A's collection consent", "a reference topology derivable from citable public engineering documents rather than invented — an unproven condition"],
+      "reopening_evidence": "A unblocked, plus a defensible published topology",
+      "note": "a COST index that deliberately mixes price and architecture; must never be blended with or presented as a constant-quality price index; a topology version change is a methodology event, never a silent edit"
+    }
+  ],
+
+  "do_not_reintroduce_without_new_evidence": [
+    {"n": 1, "approach": "generic rate-only price series", "why": "names a family, not a product; eight optical PMDs exist at 800 Gb/s in one standard"},
+    {"n": 2, "approach": "uncontrolled '800G average price'", "why": "one merchant category page spans an SR8 at $650 to a 200G-per-lane FR4 at $3,500; the average measures which cards were on the page"},
+    {"n": 3, "approach": "mixing DR8, FR variants, LPO and retimed in one series", "why": "different fiber plant, optical multiplexing and DSP content; not substitutes on any link"},
+    {"n": 4, "approach": "mixing client optics and coherent DCI", "why": "different silicon, suppliers, buyers and reach class; one carries a host coherent-software licence"},
+    {"n": 5, "approach": "daily or weekly synthetic pricing", "why": "no daily optical price market exists at any level"},
+    {"n": 6, "approach": "interpolating quarterly or semi-annual observations into daily values", "why": "fabricates observations; falsifies user-computed volatility and correlation; destroys the revision audit trail"},
+    {"n": 7, "approach": "customs unit values labelled as transceiver ASP", "why": "HTS 8517.62.00.90 is the residual 'Other' line after modems and switching/routing are broken out"},
+    {"n": 8, "approach": "communications-equipment PPI labelled as UPPI", "why": "whole-industry index; moved in the third decimal place across three consecutive 2026 months"},
+    {"n": 9, "approach": "scraping FS.com or DigiKey, or using the DigiKey API to fill a public series", "why": "both sets of terms forbid the collection method and the publication; a permissive robots.txt does not override terms — TERMS GOVERN"},
+    {"n": 10, "approach": "Internet Archive copies of those catalogues as history or workaround", "why": "routing around a prohibition is still the prohibited use"},
+    {"n": 11, "approach": "commercial analyst data republished, rebased or exposed via API without written derived-publication rights", "why": "no provider grants it publicly; Cignal forbids derivative works expressly"},
+    {"n": 12, "approach": "revenue / unit pseudo-ASP using mismatched categories", "why": "numerator and denominator do not share a denominator; the result has no economic referent"},
+    {"n": 13, "approach": "forecast columns presented as observations", "why": "every major provider file mixes history and forecast; a hard cut at the last actual period is mandatory"},
+    {"n": 14, "approach": "OEM and compatible optics silently averaged", "why": "six- to eight-fold observed spread on the same PMD; they are different goods"},
+    {"n": 15, "approach": "inferring LPO from the absence of 'retimed', or the reverse", "why": "listings frequently state neither; absence of a label is not a value"},
+    {"n": 16, "approach": "Dell'Oro optical-transport ASP or AI back-end switch-port ASP used as a client module price", "why": "wrong economic object in both cases"},
+    {"n": 17, "approach": "assuming a weights-only licence exists because it would be convenient", "why": "none is documented anywhere; designing around the rights problem is not permitted"},
+    {"n": 18, "approach": "publishing a channel/listed price index under a name implying market or industry ASP", "why": "the observation basis must survive into the identifier"},
+    {"n": 19, "approach": "splicing two different price concepts to manufacture a longer history", "why": "two objects with a structural break, not one series"},
+    {"n": 20, "approach": "treating absence of terms as permission", "why": "FiberMall's 404 terms page, ProLabs and ColfaxDirect publish nothing; absence of terms is a risk, not a grant"}
+  ],
+
+  "ontology": {
+    "status": "APPROVED_CONCEPTUALLY_BUILD_DEFERRED",
+    "build_now": false,
+    "reason_not_to_build": "its only consumer is a deferred product; no compelling reason independent of UPPI",
+    "rights_by_document_family": [
+      {"family": "OIF implementation agreements", "position": "EXPRESS_GRANT", "detail": "copying permitted, and derivative works that comment on or explain the IA may be prepared, published and distributed, if the copyright notice is kept and the document is not modified"},
+      {"family": "QSFP-DD Hardware Rev 7.1", "position": "EXPRESS_GRANT", "detail": "authorized to download, reproduce and distribute; all other rights reserved; no patent licence"},
+      {"family": "OSFP Module Specification Rev 5.1", "position": "EXPRESS_GRANT", "detail": "licence to download, reproduce and distribute under the OSFP MSA Agreement; no other IP licence"},
+      {"family": "IEEE 802.3 standards via GET Program", "position": "AMBIGUOUS_REQUIRES_LEGAL_REVIEW", "detail": "GET provides the standard at no cost — a right to OBTAIN it. Whether a commercial database of extracted facts is permitted was not established; GET Terms and Conditions were not read. Verbatim clause text is IEEE copyright and must never be copied into Urdais"},
+      {"family": "LPO MSA specification", "position": "UNKNOWN", "detail": "announcement is public; the specification's own reuse notice was not read. Do not assume the QSFP-DD sentence applies"},
+      {"family": "Manufacturer datasheets", "position": "NOT_CLEARED_FOR_DATABASE", "detail": "use as evidence of what is sold; the ontology key must be the standard name, never the vendor part number"}
+    ],
+    "future_implementation_owns": [
+      "canonical product identity — the seven price-identity fields with closed vocabularies",
+      "standards references — body, document identifier, revision, PMD name as the body spells it",
+      "revision/version — document revision stored, never collapsed; earlier revisions remain valid keys",
+      "draft/final status — recorded as provenance; a draft-referenced key is marked, never promoted silently",
+      "provider mappings — a versioned per-provider concordance onto pmd_designation, never by renaming Urdais's canonical terms; where a provider's category is only '800G' the mapping fails and that provider cannot feed that instrument, which is a data defect and not a reason to coarsen the key",
+      "manufacturer/SKU mappings — MPN to canonical key as an attribute layer",
+      "provenance — source document, revision, retrieval date and evidence class for every fact"
+    ]
+  },
+
+  "rights_package_required": {
+    "governing_distinction": "an ACCESS LICENCE lets Urdais read the data; a DERIVED PUBLICATION / REDISTRIBUTION LICENCE lets Urdais publish something computed from it. These are two separate purchases. Every provider examined sells the first; none publicly offers the second. Internal viewing must never be upgraded by assumption into storage, display, an index, an API, or retention.",
+    "required_grants": [
+      {"n": 1, "right": "ingest licensed observations by machine", "layer": "access"},
+      {"n": 2, "right": "store them internally, indefinitely", "layer": "access"},
+      {"n": 3, "right": "calculate proprietary Urdais derived indices", "layer": "derived"},
+      {"n": 4, "right": "publish derived index levels", "layer": "derived"},
+      {"n": 5, "right": "publish percentage changes", "layer": "derived", "note": "often assumed covered by (4); it is not — ask separately"},
+      {"n": 6, "right": "publish historical derived series", "layer": "derived"},
+      {"n": 7, "right": "distribute via the Urdais website", "layer": "derived"},
+      {"n": 8, "right": "distribute via API", "layer": "derived"},
+      {"n": 9, "right": "distribute via MCP / agent interfaces", "layer": "derived", "note": "not contemplated by any standard media clause; must be named explicitly"},
+      {"n": 10, "right": "maintain historical continuity after termination", "layer": "derived", "note": "determines whether a lapsed contract forces withdrawal of published history"},
+      {"n": 11, "right": "disclose methodology and attribution", "layer": "both"},
+      {"n": 12, "right": "process provider revisions", "layer": "both"}
+    ],
+    "additional_terms": [
+      "whether weights alone can be licensed without licensing or displaying ASP",
+      "what happens to the derived index on a provider category restatement — chain link, series break, or withdrawal",
+      "whether the grant is perpetual for already-published values or coterminous with the subscription",
+      "the price of the publication licence separately from access",
+      "whether a licensed relationship unblocks Urdais's crawler class, currently barred at / by LightCounting and Omdia"
+    ]
+  },
+
+  "omdia_reopening_questions": {
+    "gating_question": 2,
+    "gating_note": "if the atomic priced category is nominal rate, the dataset cannot support a specification-aware index and questions 9-17 do not matter. Ask it first.",
+    "questions": [
+      {"n": 1, "q": "exact pricing grain — what is the atomic priced category?", "reopening_answer": "finer than nominal rate"},
+      {"n": 2, "q": "are PMD, reach, form factor and retiming architecture distinguishable? Are 800GBASE-DR8, 2x400GBASE-FR4, 800GBASE-VR8 and 800G-DR8-LPO separate ASP rows?", "reopening_answer": "yes, as separate rows"},
+      {"n": 3, "q": "definition of ASP — vendor revenue divided by units, a modelled price, or a blend? What share is estimated?", "reopening_answer": "a stated construction with a stated estimated share"},
+      {"n": 4, "q": "historical actual coverage — first period Omdia will stand behind per AI-relevant row", "reopening_answer": "a specific year"},
+      {"n": 5, "q": "actual vs forecast flags — how is the boundary marked in the file?", "reopening_answer": "row-level flag"},
+      {"n": 6, "q": "update cadence of the price (not the PDF) and lag after period end", "reopening_answer": "a stated cadence"},
+      {"n": 7, "q": "revision policy — what the November 2024 telecom pricing correction did to previously delivered history", "reopening_answer": "a written policy"},
+      {"n": 8, "q": "units / revenue / ASP alignment on the same row at the same grain", "reopening_answer": "yes"},
+      {"n": 9, "q": "derived-index publication rights", "reopening_answer": "granted in writing"},
+      {"n": 10, "q": "normalized-index publication rights (rebased to 100)", "reopening_answer": "granted"},
+      {"n": 11, "q": "percentage-change publication rights", "reopening_answer": "granted separately from 9"},
+      {"n": 12, "q": "API rights", "reopening_answer": "granted"},
+      {"n": 13, "q": "MCP / agent distribution rights", "reopening_answer": "granted, named explicitly"},
+      {"n": 14, "q": "retention rights after termination", "reopening_answer": "published history may remain published"},
+      {"n": 15, "q": "access price", "reopening_answer": "a quote"},
+      {"n": 16, "q": "separate publication licence price", "reopening_answer": "a quote distinct from 15"},
+      {"n": 17, "q": "whether weights-only licensing exists", "reopening_answer": "yes, with a grain"}
+    ],
+    "parallel_targets": {
+      "LightCounting": "same questions substituting their 'pricing' field; plus the process for obtaining the expressed permission their own clause names",
+      "Cignal AI": "first ask whether a price field exists at all, and what the Citation Policy permits",
+      "Dell'Oro": "rights questions for ZR/ZR+ only; plus whether client Ethernet modules are excluded by construction"
+    },
+    "good_faith_item": "Urdais's crawler class is barred at / in both LightCounting's and Omdia's robots.txt; Urdais has honoured that and collected nothing. Say so unprompted."
+  },
+
+  "frequency_and_history_policy": {
+    "no_synthetic_frequency": true,
+    "natural_source_cadence": {"merchant_offers": "monthly at best, irregular and sticky", "professional_asp": "quarterly (Cignal, Dell'Oro) or semi-annual (LightCounting)", "public_statistics": "monthly"},
+    "rules": [
+      "the index publishes at its source's cadence and no faster",
+      "three distinct dates: observation, period described, publication — never conflated",
+      "stale series are marked stale; holding the last value flat is permitted only if labelled 'last observed' and the API returns the real observation date",
+      "inception date published prominently; a series begins when observation began",
+      "missing periods are represented as missing — never interpolated, never forward-filled into the stored series",
+      "raw observations are append-only; a correction supersedes rather than edits; index releases carry a release vintage",
+      "different inception dates across technologies are expected and correct — a 1.6T series does not need fake history to align visually with 400G; charts must tolerate ragged left edges",
+      "the surface exposes only change windows the observations support; a quarterly series has no 1D or 1W change and those elements must be ABSENT, not rendered as 'N/A'",
+      "hard cut at the last actual period; forecast rows must be structurally incapable of entering a published index"
+    ]
+  },
+
+  "prototype_disposition": {
+    "recommendation": "REMOVE_FROM_PUBLIC_FRONTEND",
+    "actioned": false,
+    "requires": "separate authorisation and its own change; PH-3 does not modify the frontend",
+    "current_state": "UPPI with five rate-only instruments (100G/200G/400G/800G/1.6T), unit $/transceiver, 800G headline, entirely synthetic demo data, 1D/1W changes and a 7-day intraday series generated from seeds",
+    "reasoning": [
+      "the taxonomy is known to be wrong, not merely provisional — rate-only instruments are settled finding 1's exact failure",
+      "the most prominent numbers (today's change) are the least defensible — generator artefacts for a market with no daily price",
+      "UPPI is not required for the MVP; there is no product cost to removal",
+      "the credibility risk is to the live products — a demo sitting beside UCPI, UTVI, UMPI, GBV and Power Delivery, distinguishable only by a label, transfers doubt onto the real ones",
+      "a research label mitigates uncertainty, not known incorrectness"
+    ],
+    "acceptable_second_choice": "KEEP_AS_INTERNAL_DEMO_ONLY, if there is a UI-development reason to retain a multi-instrument market for layout work, provided it is unreachable from public routes",
+    "if_removal_proceeds": "also retire the rate-only instrument definitions rather than leave them dormant, so a future engineer starts from the comparison key rather than from the prototype's five rates"
+  },
+
+  "reopen_triggers": [
+    {
+      "id": "A", "name": "Commercial dataset with written derived-publication rights at acceptable cost",
+      "fires_when": "a provider supplies, in writing, the required rights package (or a sufficient defined subset) at a quoted price Urdais accepts",
+      "verify_before_reopening": [
+        "pricing grain finer than nominal rate, separating PMD / reach / form factor / retiming architecture",
+        "rights 3-10 granted in writing, with API and MCP named explicitly",
+        "post-termination retention of published history granted",
+        "actual/forecast boundary flagged at row level",
+        "revision policy documented",
+        "units, revenue and ASP aligned on the same row at the same grain",
+        "access price and publication-licence price quoted separately"
+      ]
+    },
+    {
+      "id": "B", "name": "Rights-cleared merchant or API source with adequate specification grain",
+      "fires_when": "a merchant or catalogue grants, in writing, automated collection plus derived publication — OR a terms review establishes a price-publishing merchant whose terms bar neither",
+      "verify_before_reopening": [
+        "written consent, or a terms page read in full permitting both behaviours",
+        "SKU census demonstrating the strata can be populated",
+        "a demonstrated method for resolving retiming_architecture where listings are silent",
+        "cross-merchant dispersion measured on identical specifications",
+        "SKU identifier stability confirmed across at least one pilot window",
+        "explicit OEM/compatible separation available in the source data"
+      ]
+    },
+    {
+      "id": "C", "name": "New public or open dataset directly measuring optical pricing",
+      "fires_when": "a statistical agency, standards body, exchange or open-data programme publishes a series whose OBJECT is optical transceiver prices at specification grain",
+      "verify_before_reopening": [
+        "the series measures transceivers, not an industry aggregate or a residual customs basket",
+        "grain reaches at least PMD level",
+        "licence permits derived publication",
+        "cadence and revision policy documented"
+      ],
+      "does_not_fire_on": "a new communications-equipment PPI, a new customs code, or a broader HS breakout, unless it isolates pluggable optical modules by PMD"
+    },
+    {
+      "id": "D", "name": "Sufficient prospective rights-cleared observations accumulate",
+      "fires_when": "a rights-cleared collection from trigger B has run long enough to support a matched-model index",
+      "verify_before_reopening": [
+        "minimum observation count per stratum met, with the floor derived from measured dispersion rather than asserted",
+        "repeat observations across at least two chain-link candidate periods",
+        "outlier and lifecycle policy defined and tested against real data",
+        "measured list-price volatility supports the intended publication cadence"
+      ]
+    },
+    {
+      "id": "E", "name": "Commercial partnership supplying both data and publication rights",
+      "fires_when": "a provider proposes a co-branded, attributed or partnership structure covering data and publication together",
+      "verify_before_reopening": [
+        "all of trigger A's verification list",
+        "whether attribution or co-branding constrains Urdais's methodological independence",
+        "whether the structure creates a single-provider dependency (acute for candidate E)",
+        "what happens to the index if the partnership ends"
+      ]
+    }
+  ],
+  "anti_triggers": [
+    "a new prototype, mockup or design asking for a photonics chart",
+    "competitor launch of a photonics index",
+    "a conference announcement, vendor roadmap or press claim about optical pricing",
+    "availability of a dataset whose rights are 'probably fine' or 'not explicitly prohibited'",
+    "a desire to increase the number of Urdais products"
+  ],
+
+  "what_happens_next": [
+    {"work": "UPPI production implementation", "classification": "NO_ACTION"},
+    {"work": "photonics ontology build", "classification": "NO_ACTION"},
+    {"work": "frontend prototype disposition", "classification": "OPEN_RECOMMENDATION", "note": "requires separate authorisation; not a Photonics research task"},
+    {"work": "vendor outreach — Omdia, LightCounting, Cignal, Dell'Oro", "classification": "MONITOR", "note": "send the questions if a conversation opens; not a scheduled workstream and not a blocker"},
+    {"work": "merchant terms review (CDW, Vitex, FiberMall, LINK-PP, Mouser, Arrow, Avnet)", "classification": "REOPEN_ONLY_ON_TRIGGER_B"},
+    {"work": "public context series (candidate F)", "classification": "NO_ACTION", "note": "available if a methodology page ever wants a labelled context panel"},
+    {"work": "P802.3dj ratification", "classification": "MONITOR", "note": "passively; it changes ontology keys, not the rights position"}
+  ],
+
+  "ph4": {
+    "should_begin": false,
+    "statement": "PH-4 SHOULD NOT BEGIN. Price implementation is deferred. There is no PH-4 implementation phase and one must not be created because earlier planning assumed a phase count. The next Photonics work item is whichever reopen trigger fires first, and its first step is that trigger's verification list — not a new research phase."
+  },
+
+  "stop_condition": "PH-3 ends here, and with it the Photonics investigation for MVP purposes. No methodology selected, no production code, migration, ingestion, schema or frontend change, no ontology built, no price data fabricated, no PH-4 plan, nothing committed."
+}

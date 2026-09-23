@@ -112,7 +112,9 @@ describe("the indices rail never quotes a demo index", () => {
   // UGAI is no longer among them: its seeded walk was removed rather than relabelled, so it has
   // no mock row at all. Its unpublished row is covered separately below. UMPI left for the same
   // reason -- nine seeded chip-price walks removed in Phase 7 -- and its row is covered below too.
-  const MOCK_SYMBOLS = ["UPPI", "UEPI", "UACI"];
+  // UPPI left at the Photonics close-out: production is deferred pending data rights, so it is
+  // no longer presented as a current product and has no rail row to label.
+  const MOCK_SYMBOLS = ["UEPI", "UACI"];
 
   it("labels every mock row demo and gives it no level and no movement", () => {
     render(<InformationMarketsSection />);
