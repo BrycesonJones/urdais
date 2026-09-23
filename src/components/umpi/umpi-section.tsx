@@ -148,6 +148,8 @@ function UmpiSeriesPanel({ series }: { series: UmpiSeriesView }) {
         </p>
       ) : null}
 
+      <UmpiFreshnessNotice series={series} />
+
       <UmpiHeadline series={series} />
 
       {series.points.length === 0 ? (
@@ -181,6 +183,72 @@ function UmpiSeriesPanel({ series }: { series: UmpiSeriesView }) {
       )}
 
       <UmpiProvenance series={series} />
+    </div>
+  );
+}
+
+/**
+ * How current this series is, where that is not simply "current".
+ *
+ * A `fresh` series says nothing: a badge on every page that reads "up to date" is furniture, and
+ * a reader stops seeing it long before the day it changes. The states that matter are the ones a
+ * reader would otherwise have to infer from a reference month and a calendar — and the whole
+ * point of this notice is that they should not have to.
+ *
+ * Waiting and being late are kept apart. An agency that has not published yet is Urdais working
+ * correctly, and saying "delayed" then would be crying wolf; an agency that is past its grace
+ * window is a real problem with the number above. Neither hides the chart: the history is good
+ * data, and withholding it to signal a problem with its newest row would destroy the evidence a
+ * reader needs to judge the gap for themselves.
+ */
+function UmpiFreshnessNotice({ series }: { series: UmpiSeriesView }) {
+  const freshness = series.freshness;
+  if (freshness === null || freshness.state === "fresh") return null;
+
+  const copy: Record<string, { title: string; body: string; tone: "wait" | "fault" }> = {
+    awaiting_release: {
+      title: "Awaiting the next monthly release",
+      body: `The figure for ${formatReferenceMonth(freshness.expectedReferenceMonth)} has not been published by the source yet. The value below is the most recent month Urdais holds.`,
+      tone: "wait",
+    },
+    stale: {
+      title: "This series is behind",
+      body: `${formatReferenceMonth(freshness.expectedReferenceMonth)} was due and has not been published by Urdais. The value below is ${freshness.latestReferenceMonth === null ? "older than it should be" : `for ${formatReferenceMonth(freshness.latestReferenceMonth)}`} and is not current.`,
+      tone: "fault",
+    },
+    source_unavailable: {
+      title: "The source could not be reached",
+      body: "Urdais could not confirm the latest figure with the agency on its last check. Earlier published months are unaffected and are shown below.",
+      tone: "fault",
+    },
+    derivation_failed: {
+      title: "A published month is missing",
+      body: "The source holds a month Urdais has not published. The value below is the most recent month that completed publication.",
+      tone: "fault",
+    },
+    unknown: {
+      title: "Currentness cannot be confirmed",
+      body: "Urdais has no recent operational check for this series, so it cannot say whether the figure below is the latest one. Nothing here is withheld; it simply cannot be vouched for.",
+      tone: "fault",
+    },
+  };
+  const notice = copy[freshness.state];
+  if (notice === undefined) return null;
+
+  return (
+    <div
+      className={`max-w-3xl rounded-lg border p-4 ${
+        notice.tone === "wait"
+          ? "border-neutral-700 bg-neutral-950/60"
+          : "border-amber-700/50 bg-amber-950/20"
+      }`}
+    >
+      <p className={`text-sm font-medium ${notice.tone === "wait" ? "text-neutral-200" : "text-amber-200"}`}>
+        {notice.title}
+      </p>
+      <p className={`mt-1 text-sm leading-relaxed ${notice.tone === "wait" ? "text-neutral-400" : "text-amber-200/80"}`}>
+        {notice.body}
+      </p>
     </div>
   );
 }

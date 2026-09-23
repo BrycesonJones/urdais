@@ -8,6 +8,7 @@
  * a value that may be shown.
  */
 
+import { loadUmpiFreshness } from "@/lib/umpi/ops/read";
 import type { UmpiSqlExecutor } from "../ingest/store";
 import type { UmpiSeriesCode } from "../types";
 import { buildUmpiReadModel, type PublicationRow, type UmpiReadModel } from "./read-model";
@@ -57,8 +58,28 @@ export async function loadUmpiPublications(sql: UmpiSqlExecutor): Promise<Public
   return rows.map(toRow);
 }
 
-export async function loadUmpiReadModel(sql: UmpiSqlExecutor): Promise<UmpiReadModel> {
-  return buildUmpiReadModel(await loadUmpiPublications(sql));
+/**
+ * The public model, with freshness attached from the operational record.
+ *
+ * Freshness is evaluated against the months this model actually carries, rather than re-queried,
+ * so the verdict a surface renders always describes the points beside it. Re-reading the
+ * published month separately would let the two disagree across a concurrent publication, which
+ * is exactly the window in which a wrong freshness claim does the most damage.
+ */
+export async function loadUmpiReadModel(sql: UmpiSqlExecutor, asOf: Date = new Date()): Promise<UmpiReadModel> {
+  const model = buildUmpiReadModel(await loadUmpiPublications(sql));
+  const publishedMonths = Object.fromEntries(
+    model.series.map((series) => [series.seriesCode, series.latest?.referenceMonth ?? null]),
+  );
+  const freshness = await loadUmpiFreshness(sql, publishedMonths, asOf);
+  return {
+    ...model,
+    freshness: freshness.family,
+    series: model.series.map((series) => ({
+      ...series,
+      freshness: freshness.series[series.seriesCode] ?? null,
+    })),
+  };
 }
 
 /**

@@ -14,7 +14,7 @@ import { isReferenceMonth } from "../reference-month";
 import type { ReferenceMonth, UmpiSeriesCode } from "../types";
 import { assertBokIdentity, createBokAdapter, ecosCredential } from "./bok";
 import { assertCustomsIdentity, createCustomsAdapter } from "./customs";
-import { UmpiConfigurationError, UmpiIngestError } from "./errors";
+import { UmpiConfigurationError, UmpiIngestError, UmpiProviderError } from "./errors";
 import type { HttpOptions } from "./http";
 import { persistUmpiFetch, resolveUmpiLineage, type UmpiSqlExecutor, type UmpiWriteResult } from "./store";
 import type { UmpiSourceAdapter } from "./types";
@@ -59,7 +59,20 @@ export type UmpiRunOutcome =
       payloadDigest: string;
       wrote: "nothing";
     }
-  | { status: "failed"; source: UmpiSourceKey; kind: string; error: string };
+  | {
+      status: "failed";
+      source: UmpiSourceKey;
+      kind: string;
+      error: string;
+      /**
+       * The agency's own machine code where it gave one. ECOS answers a month it has not
+       * published yet with `INFO-200`, which is a well-formed reply meaning "not out yet" rather
+       * than a fault -- and the scheduled check has to tell those apart, because one is a wait on
+       * the agency and the other is an outage. Carried as a field rather than left for a caller
+       * to find by matching on the message text.
+       */
+      providerCode: string | null;
+    };
 
 function validateRange(fromMonth: string, toMonth: string): void {
   if (!isReferenceMonth(fromMonth)) throw new UmpiConfigurationError(`--from ${JSON.stringify(fromMonth)} is not YYYY-MM`);
@@ -117,6 +130,7 @@ export async function runUmpiSource(
       source,
       kind: error instanceof UmpiIngestError ? error.kind : "unknown",
       error: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+      providerCode: error instanceof UmpiProviderError ? error.providerCode : null,
     };
   }
 }
