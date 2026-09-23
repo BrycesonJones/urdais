@@ -40,17 +40,6 @@ export type InterconnectionObservation = {
   medianGenerationWaitMonths: number;
 };
 
-/** Yearly grid buildout: what was added to the physical network. */
-export type InfrastructureObservation = {
-  year: number;
-  marketId: string;
-  transmissionCapacityAddedGw: number;
-  transmissionMilesAdded: number;
-  substationCapacityAddedGva: number;
-  /** Modelled lead time for major grid transformers; lower is better. */
-  transformerLeadTimeMonths: number;
-};
-
 /** Flexibility potential per market: load that could step aside during constrained hours. */
 export type FlexibilityAssumption = {
   marketId: string;
@@ -64,19 +53,6 @@ export type QueueRow = {
   market: PowerMarket;
   queuedGw: number;
   medianWaitMonths: number;
-};
-
-export type BuildoutMetricId = "transfer-capacity" | "circuit-miles" | "substations" | "transformer-lead-time";
-
-export type BuildoutMetric = {
-  id: BuildoutMetricId;
-  label: string;
-  unit: string;
-  description: string;
-  /** True when a smaller value is the better outcome. */
-  lowerIsBetter: boolean;
-  /** Aggregate across the market universe, by year. */
-  points: { year: number; value: number }[];
 };
 
 export type FlexibilityScenario = {

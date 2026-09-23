@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { PowerAnalyticsPage } from "@/components/power-analytics/power-analytics-page";
 import { loadQueueAnalytics, unavailableQueueAnalytics } from "@/lib/interconnection-queue/analytics/read";
+import { loadGridBuildoutReadModel, unavailableGridBuildoutModel } from "@/lib/grid-buildout/analytics/read";
 import { loadDeliveryGapReadModel, unconfiguredDeliveryGapReadModel } from "@/lib/power-delivery/gap/read";
 import { loadTransmissionAnalytics, unavailableTransmissionModel } from "@/lib/transmission-headroom/analytics/read";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
@@ -26,6 +27,7 @@ export default async function PowerAnalyticsRoute() {
   let gap = unconfiguredDeliveryGapReadModel();
   let queue = unavailableQueueAnalytics();
   let headroom = unavailableTransmissionModel();
+  let buildout = unavailableGridBuildoutModel();
   if (databaseUrl) {
     const sql = await createTokenSqlExecutor(databaseUrl);
     try {
@@ -46,6 +48,13 @@ export default async function PowerAnalyticsRoute() {
       headroom = await loadTransmissionAnalytics(sql);
     } catch (error) {
       console.error(`power analytics: transmission headroom read failed (${error instanceof Error ? error.message : String(error)})`);
+    }
+    try {
+      // Fails closed on an unapproved methodology, and degrades to the unavailable model rather
+      // than to a placeholder figure: there is no mock left to fall back to.
+      buildout = await loadGridBuildoutReadModel(sql);
+    } catch (error) {
+      console.error(`power analytics: grid buildout read failed (${error instanceof Error ? error.message : String(error)})`);
     } finally {
       await sql.end();
     }
@@ -54,7 +63,7 @@ export default async function PowerAnalyticsRoute() {
   return (
     <>
       <SiteHeader />
-      <PowerAnalyticsPage gap={gap} queue={queue} headroom={headroom} />
+      <PowerAnalyticsPage gap={gap} queue={queue} headroom={headroom} buildout={buildout} />
       <SiteFooter />
     </>
   );
