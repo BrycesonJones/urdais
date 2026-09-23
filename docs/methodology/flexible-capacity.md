@@ -1,6 +1,6 @@
 # Flexible Capacity
 
-**Version 1.0.0.** Urdais Flexible Capacity states, for one balancing authority and one calendar year, how much additional flat electrical load that system could have carried below a stated peak reference if the new load accepted a stated annual curtailment energy allowance.
+**Version 1.1.0.** Urdais Flexible Capacity states, for one balancing authority and one calendar year, how much additional flat electrical load that system could have carried below a stated peak reference if the new load accepted a stated annual curtailment energy allowance.
 
 **This is a scenario model over observed balancing-authority demand. It does not measure firm interconnection capacity, transmission headroom, distribution headroom, or compute capacity.**
 
@@ -90,6 +90,8 @@ Nothing else is observed. In particular, no demand-response inventory, no storag
 | `annual_curtailment_energy_fraction_maximum` | 0.05 |
 | `peak_reference_rule` | `modeled_period_observed_peak` |
 | `peak_region_coverage_rule` | `local_calendar_day_of_observed_peak` |
+| `peak_plausibility_max_over_p999` | 1.5 |
+| `maximum_contiguous_gap_hours` | 1 |
 | `modeled_load_shape` | `flat` |
 | `rebound_model` | `no_rebound` |
 | `curtailment_dispatch_foresight` | `perfect_within_period` |
@@ -101,7 +103,7 @@ Nothing else is observed. In particular, no demand-response inventory, no storag
 | `solver_tolerance_mw` | 0.000001 |
 | `validation_market` | `ercot` |
 
-Each is registered in `reference.methodology_parameters` against this version, with its rationale, and is approved individually. Three further parameters are registered as **unresolved drafts** because they have an identity but no defensible value: `demand_response_inventory`, `deployed_storage_inventory` and `maximum_contiguous_gap_hours`.
+Each is registered in `reference.methodology_parameters` against this version, with its rationale, and is approved individually. **Nothing is unresolved.** Version 1.0.0 registered three parameters as unresolved drafts; §16 records how each was settled.
 
 ## 6. The modelled period, and local time
 
@@ -139,11 +141,33 @@ So 1.0.0 adds a second, topological condition:
 
 It is deterministic from the observed series and invents no threshold, which is why it can be adopted now. The day is counted in instants, so a spring-forward peak day legitimately expects 23 hours and a fall-back day 25; nothing assumes 24. Every result reports the peak day, its expected hours and its present hours, so the check is visible rather than implicit.
 
-**This is a necessary condition, not a sufficient one.** A complete peak day cannot prove that a gap elsewhere in the year did not contain a higher value. Bounding that residual needs a maximum contiguous gap, and there is no defensible number for it yet — inventing one would be worse than admitting the gap. So `maximum_contiguous_gap_hours` is registered as **unresolved**, and:
+**This is a necessary condition, not a sufficient one.** A complete peak day cannot prove that a gap elsewhere in the year did not contain a higher value. Bounding that residual is what the third condition does.
 
-> **While any parameter of the approved version remains unresolved, the product may calculate but may not publish.**
+### No contiguous gap longer than one hour
 
-The publication gate is separate from the methodology guard and fails closed: `assertPublicationAuthorized` refuses while any registered parameter is unapproved or still carries the `unresolved` sentinel. Three parameters are in that state at 1.0.0, so Flexible Capacity ships **unable to publish** until a founder decision resolves them. Calculation remains available, because sensitivity work is exactly how those parameters will be settled. The alternative — an engine that reads "nobody has decided this yet" as "proceed" — is the failure this arrangement exists to make impossible.
+> **A market-year containing a run of two or more consecutive absent hours is ineligible, wherever that run falls.**
+
+Measured, not chosen. The full design and results are in `docs/research/flexible-capacity/fc3-gap-sensitivity.md`; two findings decide it.
+
+**Observed gaps are bimodal.** Across fourteen complete market-years spanning 2023 and 2024, a gap is either a single isolated hour or a publisher outage of 22 to 25 hours. No gap between 2 and 21 hours was ever observed, so every threshold in that whole interval admits exactly the same market-years.
+
+**Distortion grows steeply with length.** Deleting a contiguous block adversarially — at the worst position outside the peak day — overstates headroom by up to:
+
+| Gap | α = 0.25% | α = 0.50% | α = 1.00% |
+| ---: | ---: | ---: | ---: |
+| 1 h | 3.19% | 1.58% | 0.77% |
+| 2 h | 6.20% | 3.11% | 1.50% |
+| 6 h | 13.01% | 7.72% | 3.68% |
+| 24 h | 14.11% | 10.19% | 5.81% |
+| 96 h | 30.35% | 21.12% | 13.80% |
+
+Since the entire interval [1, 21] admits the same market-years, the choice costs nothing in coverage and the tightest bound wins. One hour it is.
+
+The distortion is **one-sided**: it always overstates. Deleting a low-load hour only removes budget and lowers the answer; deleting an hour that was carrying curtailment removes a constraint and raises it. Only the second direction is dangerous, and it is the one bounded here.
+
+Worst-case distortion is **not monotone in gap length**. A long gap cannot be aimed — twenty-four hours necessarily swallows a nightly trough, while six hours can sit entirely on one afternoon — so a threshold of N promises that no gap of *any* length up to N distorts by more than the stated bound, never a single measurement taken at N.
+
+**The residual limitation.** At one hour the bound is 3.19%, at the smallest published allowance. That is real and is reported on every result rather than hidden. For scale, the smallest year-over-year movement measured in D\* itself across these markets is 20.8%, so the measurement distortion is about a sixth of the smallest genuine signal it could be confused with.
 
 ## 8. The calculation
 
@@ -158,6 +182,16 @@ The **modelled period's own maximum observed hourly actual demand**, with ties r
 Three properties recommend it. It is entirely observed, requiring no forecast and no planning document, so the scenario rests on one source. It is within-period, so modelling year Y needs only year Y — a rule referencing the prior year would need two complete years before it could state anything, and would mix two periods in one figure. And it makes every gap non-negative, so the counterfactual is exactly "without raising the peak this system actually reached".
 
 The alternatives considered and **not** adopted are named in the code so the choice is on the record: `prior_period_observed_peak`, `seasonal_observed_peak`, `percentile_of_observed_load`. Adopting any of them is a methodology version change, not a code change.
+
+### Is the maximum a peak at all
+
+> **A market-year whose maximum exceeds the 99.9th percentile of its own hourly loads by more than 1.5× is ineligible.**
+
+This rule exists because FC-3 found a case no coverage rule could catch. SPP published **3,621,097 MW** for the hour beginning 2023-06-12T22:00Z — sixty-five times that market's real annual peak of about 56 GW. The year is 100% complete, contains no gaps at all, and satisfies every other condition. Taken at face value it produces 3,597 GW of headroom, which is not a number about anything.
+
+The canonical observation is evidence and is never repaired, so the value stays exactly as the publisher sent it and the **market-year** is refused instead.
+
+The factor is measured. Across the twenty genuine market-years examined, the maximum sits between **1.008 and 1.063** times the 99.9th percentile, because a real annual peak is by definition near the top of its own distribution. A factor of 1.5 is seven times the widest genuine separation and forty-four times below the defect: it cannot plausibly reject a real peak, and it cannot plausibly admit that one.
 
 ### Required curtailment
 
@@ -260,7 +294,7 @@ Each balancing authority sets its own peak reference from its own demand, and th
 
 A result is published only if all of the following hold.
 
-**Inputs.** Every load value finite and non-negative; every timestamp an exact UTC hour inside the period; no duplicate hour after supersession is resolved; `0 <= alpha <= 0.05`; coverage at or above the floor; **the local calendar day holding the peak reference complete**; the series market equal to the period market.
+**Inputs.** Every load value finite and non-negative; every timestamp an exact UTC hour inside the period; no duplicate hour after supersession is resolved; `0 <= alpha <= 0.05`; coverage at or above the floor; **the local calendar day holding the peak reference complete**; **no contiguous gap longer than one hour**; **the maximum within 1.5× the 99.9th percentile**; the series market equal to the period market.
 
 **Output.** `D*` finite and non-negative; curtailed energy finite; curtailed energy no greater than the reported budget; `R_t <= D*` in every hour; no NaN or infinity anywhere; no negative clock-hour or event count; the result reproducible exactly from the same inputs.
 
@@ -280,10 +314,27 @@ Attached to every result, not only recorded here:
 6. Storage contributes nothing, and is not additive with curtailable load.
 7. Demand response is not an input, and some publishers already net it out of demand.
 8. Published per balancing authority. Markets are not summed and no national figure exists.
-9. The peak day must be complete, but a gap elsewhere in the year cannot be ruled out as having held a higher value; that residual is unresolved, and it blocks publication.
+9. A single missing hour outside the peak day can overstate headroom by up to 3.19% at the smallest published allowance. Longer gaps make a market-year ineligible rather than distorting it.
+10. A market-year whose maximum is implausibly far above its own distribution is refused, not corrected. The canonical value stays as the publisher sent it.
 
 ## 15. Versioning
 
-Version 1.0.0 is registered in `reference.methodologies` and `reference.methodology_versions` with the SHA-256 of this document. Authorisation is a registry read: the calculation checks that the version is registered, approved, and carries the digest the code was written against. The presence of this file on disk authorises nothing.
+Version 1.1.0 is registered in `reference.methodologies` and `reference.methodology_versions` with the SHA-256 of this document. Authorisation is a registry read: the calculation checks that the version is registered, approved, and carries the digest the code was written against. The presence of this file on disk authorises nothing.
 
-An approved version is never edited in place. Changing any rule here means a new version and a new digest.
+An approved version is never edited in place. Version 1.0.0 remains registered as `superseded` with its own digest and its own parameter set, so what was believed at the time stays readable. 1.0.0 published nothing during its life — it was blocked by its own unresolved parameters — so superseding it costs no published figure.
+
+## 16. What 1.1.0 resolved
+
+Version 1.0.0 registered three parameters as unresolved drafts, and a publication gate that fails closed while any parameter is unresolved. All three are now settled, and the gate opens.
+
+| Parameter | 1.0.0 | 1.1.0 | How |
+| --- | --- | --- | --- |
+| `maximum_contiguous_gap_hours` | unresolved | **1** | Measured, §7 |
+| `demand_response_inventory` | unresolved | **not used in 1.1.0** | Scope, below |
+| `deployed_storage_inventory` | unresolved | **not used in 1.1.0** | Scope, below |
+
+**The two inventories were the wrong kind of unresolved.** Neither is consumed anywhere in this methodology's calculation. The model adds a hypothetical flat load to an observed demand series and asks what curtailment budget keeps it below the observed peak; no term reads a demand-response inventory, and `battery_enabled` is false so no term reads a storage inventory. Leaving them unresolved blocked publication on the absence of something the model never asked for. They are now approved as explicitly out of scope, which is a resolution; a fabricated number would not have been.
+
+Nothing they warned about is weakened. §9 still refuses to model storage and still gives the three reasons. §10 still records that some publishers already net demand response out of the demand they report, and that any future version introducing a demand-response term must establish per publisher whether the series it is added to already excludes it. Both parameters remain candidates for a future version, and a version that enables either must register it as an input rather than re-approving it as out of scope.
+
+One rule was **added** rather than resolved: `peak_plausibility_max_over_p999`, §8. FC-3 found a market-year that passed every existing condition and produced a meaningless figure, which is a defect in 1.0.0 discovered by running it against three years of real data.

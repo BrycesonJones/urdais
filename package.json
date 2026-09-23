@@ -54,6 +54,8 @@
     "power-delivery:ingest": "tsx scripts/power-delivery/ingest.ts",
     "power-delivery:eia-backfill": "tsx scripts/power-delivery/eia-backfill.ts",
     "power-delivery:eia-backfill-verify": "tsx scripts/power-delivery/eia-backfill-verify.ts",
+    "flexible-capacity:gap-study": "tsx scripts/flexible-capacity/gap-sensitivity.ts",
+    "flexible-capacity:analytics": "tsx scripts/flexible-capacity/analytics.ts",
     "power-delivery:planning-ingest": "tsx scripts/power-delivery/planning-ingest.ts",
     "power-delivery:planning-verify": "tsx scripts/power-delivery/planning-verify.ts",
     "power-delivery:capacity-ingest": "tsx scripts/power-delivery/capacity-ingest.ts",

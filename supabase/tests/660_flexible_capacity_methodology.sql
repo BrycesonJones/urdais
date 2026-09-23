@@ -31,14 +31,15 @@ begin
     raise exception 'flexible capacity 1.0.0 has no real document digest: %', digest;
   end if;
 
+  -- 1.0.0 was approved when FC-2 registered it and is superseded now that 1.1.0 exists. What this
+  -- file checks is that the historical record was not rewritten: the row is still here, still has
+  -- its own digest, and still carries the three parameters that were unresolved at the time. An
+  -- approved version is never edited in place, and "we resolved it later" is not a licence to go
+  -- back and make the earlier version look as though it had known.
   select count(*) into n from reference.methodology_versions
-   where methodology_id = method and methodology_versions.version = '1.0.0' and status = 'approved';
-  if n <> 1 then raise exception 'flexible capacity 1.0.0 is not approved'; end if;
-
-  -- One version only. A second one registered in the same migration would make "the approved
-  -- methodology" ambiguous at exactly the moment the guard needs it to be singular.
-  select count(*) into n from reference.methodology_versions where methodology_id = method;
-  if n <> 1 then raise exception 'flexible capacity has % registered versions, expected 1', n; end if;
+   where methodology_id = method and methodology_versions.version = '1.0.0'
+     and status in ('approved', 'superseded');
+  if n <> 1 then raise exception 'flexible capacity 1.0.0 is missing or in an unexpected state'; end if;
 
   -- -------------------------------------------------------------- the parameters
   select count(*) into n from reference.methodology_parameters where methodology_version_id = version_id;
@@ -112,10 +113,11 @@ begin
      and effective_from is null and btrim(coalesce(rationale, '')) <> '';
   if n <> 3 then raise exception 'the three unresolved inputs are not registered as unresolved drafts'; end if;
 
-  -- And nothing else is draft: an approved calculation may not rest on an unsettled parameter.
+  -- And nothing else was draft in 1.0.0: an approved calculation may not rest on an unsettled
+  -- parameter, and exactly three were unsettled.
   select count(*) into n from reference.methodology_parameters
    where methodology_version_id = version_id and status <> 'approved';
-  if n <> 3 then raise exception '% parameters are not approved, expected exactly the 3 unresolved', n; end if;
+  if n <> 3 then raise exception '% parameters of 1.0.0 are not approved, expected exactly the 3 unresolved', n; end if;
 
   -- A draft parameter carries no effective date, which the table also enforces; asserted here so
   -- that a future edit promoting one of these has to think about attribution.
@@ -125,37 +127,26 @@ begin
   if n <> 0 then raise exception '% approved parameters are unattributed', n; end if;
 end $$;
 
--- FC-2 stores no analytical output. If a later phase adds tables, this assertion is the place
--- that will notice they arrived without their own tests.
+-- FC-2 stored no analytical output at all, and this file asserted that. FC-3 added the analytical
+-- layer, which is what that assertion existed to make deliberate; it now checks the shape instead,
+-- so a third table appearing without its own tests still has to come past a failing test here.
 do $$
 declare
   n integer;
 begin
   select count(*) into n from information_schema.tables
    where table_schema = 'pipeline' and table_name like 'flexible_capacity%';
-  if n <> 0 then
-    raise exception 'FC-2 registers methodology only, but % pipeline.flexible_capacity* tables exist', n;
+  if n <> 2 then
+    raise exception 'expected exactly the two FC-3 analytical tables, found %', n;
   end if;
-end $$;
 
-
--- The publication gate assertPublicationAuthorized() enforces fails closed while any parameter is
--- unresolved. That is a code path, but its precondition is data: assert here that 1.0.0 as
--- registered genuinely cannot satisfy it, so a future migration quietly promoting the three drafts
--- has to come past this test.
-do $$
-declare
-  n integer;
-begin
-  select count(*) into n
-    from reference.methodology_parameters p
-    join reference.methodology_versions mv on mv.id = p.methodology_version_id
-    join reference.methodologies m on m.id = mv.methodology_id
-   where m.slug = 'flexible-capacity' and mv.version = '1.0.0'
-     and (p.status <> 'approved' or lower(btrim(coalesce(p.text_value, ''))) = 'unresolved');
-  if n <> 3 then
-    raise exception 'flexible capacity 1.0.0 has % publication-blocking parameters, expected exactly 3', n;
-  end if;
+  -- And still no second copy of hourly demand: Flexible Capacity reads Power Delivery's
+  -- observations, and a table of its own holding load would be a second thing to keep correct.
+  select count(*) into n from information_schema.columns
+   where table_schema = 'pipeline' and table_name like 'flexible_capacity%'
+     and column_name in ('period_start', 'value_mw')
+     and table_name <> 'flexible_capacity_scenario_results';
+  if n <> 0 then raise exception 'a flexible capacity table appears to hold hourly load'; end if;
 end $$;
 
 rollback;

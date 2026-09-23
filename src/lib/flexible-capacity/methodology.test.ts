@@ -12,7 +12,12 @@ import {
   assertMethodologyApproved, assertPublicationAuthorized,
 } from "@/lib/flexible-capacity/methodology";
 
-const MIGRATION = "supabase/migrations/20261019100000_flexible_capacity_methodology.sql";
+/**
+ * 1.1.0 is registered by the FC-3 migration; the FC-2 one registered 1.0.0 and is left exactly as
+ * it was, because an approved version is never edited in place.
+ */
+const MIGRATION = "supabase/migrations/20261020100000_flexible_capacity_analytics.sql";
+const FC2_MIGRATION = "supabase/migrations/20261019100000_flexible_capacity_methodology.sql";
 
 /** A stand-in registry. The guard only ever issues one query, and only ever reads it. */
 function registry(row: Record<string, unknown> | undefined): {
@@ -107,26 +112,28 @@ describe("3. the parameter mirror agrees with the migration", () => {
     }
   });
 
-  it("names the inputs a future phase needs, as unresolved rather than as numbers", () => {
+  it("resolves the two inventories as out of scope rather than as values", () => {
+    // FC-3's finding: methodology 1.1.0 reads neither of them anywhere in its calculation, so
+    // leaving them unresolved blocked publication on the absence of something the model never
+    // asked for. Out of scope is a resolution; a fabricated number would not be.
     expect(METHODOLOGY_PARAMETERS.demand_response_inventory).toEqual({
-      numericValue: null, textValue: "unresolved", status: "draft",
+      numericValue: null, textValue: "not_used_in_methodology_1_1_0", status: "approved",
     });
     expect(METHODOLOGY_PARAMETERS.deployed_storage_inventory).toEqual({
-      numericValue: null, textValue: "unresolved", status: "draft",
-    });
-    // The coverage floor bounds how many hours are absent, not where. That is a real gap in the
-    // rule, and it is registered as one rather than left to a reader to notice.
-    expect(METHODOLOGY_PARAMETERS.maximum_contiguous_gap_hours).toEqual({
-      numericValue: null, textValue: "unresolved", status: "draft",
+      numericValue: null, textValue: "not_used_in_methodology_1_1_0", status: "approved",
     });
   });
 
-  it("keeps every other parameter approved, because a draft cannot gate a published figure", () => {
-    const drafts = Object.entries(METHODOLOGY_PARAMETERS)
-      .filter(([, value]) => value.status === "draft").map(([key]) => key).sort();
-    expect(drafts).toEqual([
-      "demand_response_inventory", "deployed_storage_inventory", "maximum_contiguous_gap_hours",
-    ]);
+  it("resolves the contiguous-gap threshold from measurement", () => {
+    expect(METHODOLOGY_PARAMETERS.maximum_contiguous_gap_hours).toEqual({
+      numericValue: 1, textValue: null, status: "approved",
+    });
+  });
+
+  it("registers the peak-plausibility factor FC-3 had to add", () => {
+    expect(METHODOLOGY_PARAMETERS.peak_plausibility_max_over_p999).toEqual({
+      numericValue: 1.5, textValue: null, status: "approved",
+    });
   });
 
   it("keeps the code constants and the registered parameters in step", () => {
@@ -212,6 +219,15 @@ describe("6. identity", () => {
     expect(migration).toContain(`'${METHODOLOGY_SLUG}'`);
     expect(migration).toContain(`'${METHODOLOGY_VERSION}'`);
   });
+
+  it("leaves the superseded 1.0.0 registration untouched in the FC-2 migration", async () => {
+    const fc2 = await readFile(FC2_MIGRATION, "utf8");
+    expect(fc2).toContain("'1.0.0'");
+    // The earlier migration still carries the earlier digest. Editing it to match the current
+    // document would rewrite what the earlier version is recorded as having said.
+    expect(fc2).toContain("6d0ab68b314b073b96413d5728ef67d8b1b3dfdfed279c5d300e5198620283b2");
+    expect(fc2).not.toContain(METHODOLOGY_DOCUMENT_SHA256);
+  });
 });
 
 describe("7. publication fails closed while any parameter is unresolved", () => {
@@ -286,12 +302,12 @@ describe("7. publication fails closed while any parameter is unresolved", () => 
     await expect(assertPublicationAuthorized(sql)).rejects.toThrow(MethodologyRegistrationError);
   });
 
-  it("means 1.0.0 as registered cannot publish, which is the intended posture", () => {
-    // Three parameters ship unresolved on purpose. Anything that publishes must therefore fail
-    // until a founder decision resolves them; this asserts the shipped state, not a hypothetical.
+  it("means 1.1.0 as registered can publish, because FC-3 resolved all three blockers", () => {
+    // The mirror image of the FC-2 assertion. Nothing here is unresolved, so the gate no longer
+    // blocks -- and it blocks again the moment any parameter is demoted or emptied.
     const blocking = Object.entries(METHODOLOGY_PARAMETERS)
       .filter(([, value]) => value.status !== "approved" || value.textValue === UNRESOLVED);
-    expect(blocking).toHaveLength(3);
+    expect(blocking).toEqual([]);
   });
 });
 

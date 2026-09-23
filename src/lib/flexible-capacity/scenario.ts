@@ -118,10 +118,22 @@ export function headroomUpperBoundMw(gapsMw: readonly number[], alpha: number): 
   return positiveGapSum / ((1 - alpha) * gapsMw.length);
 }
 
+/**
+ * How closely a curtailed-energy figure must sit inside its budget.
+ *
+ * Relative, not absolute, and exported so that the solver, the stored-result validator and the
+ * database constraint all apply the same rule. Summing thousands of megawatt-hour terms leaves
+ * float residue proportional to the total -- for a market spending 1.6 million MWh that is a
+ * fraction of a megawatt-hour -- and an absolute tolerance tight enough for a small fixture would
+ * reject an arithmetically correct answer for a large market.
+ */
+export function energyToleranceMwh(budgetMwh: number): number {
+  return 1e-9 * (Math.abs(budgetMwh) + 1);
+}
+
 function feasible(gapsMw: readonly number[], alpha: number, deltaMw: number): boolean {
   const budget = alpha * deltaMw * gapsMw.length;
-  // A tolerance proportional to the budget, so the comparison behaves the same at any market size.
-  return curtailedEnergyMwh(gapsMw, deltaMw) <= budget + 1e-9 * (budget + 1);
+  return curtailedEnergyMwh(gapsMw, deltaMw) <= budget + energyToleranceMwh(budget);
 }
 
 /**

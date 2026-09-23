@@ -25,7 +25,7 @@
 import type { FlexibleCapacityMarket, PeakReferenceRule } from "@/lib/flexible-capacity/types";
 
 export const METHODOLOGY_SLUG = "flexible-capacity";
-export const METHODOLOGY_VERSION = "1.0.0";
+export const METHODOLOGY_VERSION = "1.1.0";
 export const METHODOLOGY_DOCUMENT_PATH = "docs/methodology/flexible-capacity.md";
 
 /**
@@ -33,7 +33,7 @@ export const METHODOLOGY_DOCUMENT_PATH = "docs/methodology/flexible-capacity.md"
  * silent edit to the rules cannot pass as the version the figures claim.
  */
 export const METHODOLOGY_DOCUMENT_SHA256 =
-  "6d0ab68b314b073b96413d5728ef67d8b1b3dfdfed279c5d300e5198620283b2";
+  "6b902ec56f1314d64cb2130d4475c13e7dd45e93c887067cca9c2cd79420b21e";
 
 /** The published metric. The only quantity 1.0.0 authorises this product to state. */
 export const METRIC_CODE = "curtailment_enabled_headroom_gw";
@@ -117,6 +117,47 @@ export const UNRESOLVED = "unresolved";
  */
 export const PEAK_REGION_RULE = "local_calendar_day_of_observed_peak";
 
+/**
+ * The longest run of consecutive absent hours a market-year may contain and still be modelled.
+ *
+ * Resolved by FC-3's controlled-deletion study over three years and seven markets, not chosen.
+ * Full design and results: `docs/research/flexible-capacity/fc3-gap-sensitivity.md`.
+ *
+ * Two measurements decide it.
+ *
+ * **The observed gaps are bimodal.** Across fourteen complete market-years, a gap is either a
+ * single isolated hour or a publisher outage of 22 to 25 hours. Nothing between 2 and 21 hours
+ * was ever observed. So every threshold in [1, 21] admits exactly the same market-years.
+ *
+ * **Distortion grows steeply with length.** Worst-case overstatement of D*, adversarially placed
+ * outside the peak day, is 3.19% at one hour and 13.40% at twelve. Since the whole interval
+ * [1, 21] admits the same years, the choice is free in product terms and the tightest bound wins.
+ *
+ * At one hour the bound is 3.19% at alpha = 0.25%, 1.58% at 0.50% and 0.77% at 1.00% -- one-sided,
+ * always in the direction of overstating headroom, and roughly a sixth of the smallest
+ * year-over-year movement measured in D* itself (20.8%). It is a real limitation, reported rather
+ * than hidden.
+ */
+export const MAXIMUM_CONTIGUOUS_GAP_HOURS: number | null = 1;
+
+/**
+ * How far a market-year's maximum may exceed the 99.9th percentile of its own hourly loads.
+ *
+ * This rule exists because FC-3 found a case no coverage rule could catch. SPP published
+ * 3,621,097 MW for the hour beginning 2023-06-12T22:00 -- sixty-five times the market's real
+ * annual peak of about 56 GW. The year is 100% complete, has no gaps at all, and passes every
+ * other condition; taken at face value it produces 3,597 GW of headroom, which is not a number
+ * about anything.
+ *
+ * Canonical evidence is never repaired, so the value stays exactly as the publisher sent it and
+ * the *market-year* is refused instead. The factor is measured rather than assumed: across the
+ * twenty genuine market-years the maximum sits between 1.008 and 1.063 times the 99.9th
+ * percentile, because a real annual peak is by definition near the top of its own distribution.
+ * A factor of 1.5 is seven times the widest genuine separation and forty-four times below the
+ * defect, so it cannot plausibly reject a real peak and cannot plausibly admit that one.
+ */
+export const PEAK_PLAUSIBILITY_MAX_OVER_P999 = 1.5;
+
 /** The market FC-3 validates against first, because its history is deepest and its peak sharpest. */
 export const VALIDATION_MARKET: FlexibleCapacityMarket = "ercot";
 
@@ -139,14 +180,15 @@ export const METHODOLOGY_PARAMETERS = {
   annual_curtailment_energy_fraction_scenarios: { numericValue: null, textValue: "0.0025,0.0050,0.0100", status: "approved" },
   battery_enabled: { numericValue: null, textValue: "false", status: "approved" },
   curtailment_dispatch_foresight: { numericValue: null, textValue: "perfect_within_period", status: "approved" },
-  demand_response_inventory: { numericValue: null, textValue: "unresolved", status: "draft" },
-  deployed_storage_inventory: { numericValue: null, textValue: "unresolved", status: "draft" },
+  demand_response_inventory: { numericValue: null, textValue: "not_used_in_methodology_1_1_0", status: "approved" },
+  deployed_storage_inventory: { numericValue: null, textValue: "not_used_in_methodology_1_1_0", status: "approved" },
   market_scope: { numericValue: null, textValue: MARKET_SCOPE, status: "approved" },
-  maximum_contiguous_gap_hours: { numericValue: null, textValue: "unresolved", status: "draft" },
+  maximum_contiguous_gap_hours: { numericValue: MAXIMUM_CONTIGUOUS_GAP_HOURS, textValue: null, status: "approved" },
   minimum_annual_coverage: { numericValue: MINIMUM_ANNUAL_COVERAGE, textValue: null, status: "approved" },
   missing_hour_treatment: { numericValue: null, textValue: "excluded_no_interpolation", status: "approved" },
   modeled_load_shape: { numericValue: null, textValue: MODELED_LOAD_SHAPE, status: "approved" },
   peak_reference_rule: { numericValue: null, textValue: PEAK_REFERENCE_RULE, status: "approved" },
+  peak_plausibility_max_over_p999: { numericValue: PEAK_PLAUSIBILITY_MAX_OVER_P999, textValue: null, status: "approved" },
   peak_region_coverage_rule: { numericValue: null, textValue: PEAK_REGION_RULE, status: "approved" },
   rebound_model: { numericValue: null, textValue: REBOUND_MODEL, status: "approved" },
   solver_method: { numericValue: null, textValue: "bisection_on_feasible_interval", status: "approved" },
@@ -266,4 +308,6 @@ export const STANDING_LIMITATIONS: readonly string[] = [
   "Storage contributes nothing in 1.0.0, and is not additive with curtailable load.",
   "Demand response is not an input. Some publishers already net demand response out of demand, so adding an inventory later without accounting for that would double count it.",
   "Published per balancing authority. Markets are not summed and no national figure exists.",
+  "A single missing hour outside the peak day can overstate headroom by up to 3.19% at the smallest published curtailment allowance.",
+  "A market-year whose maximum is implausibly far above its own distribution is refused, not corrected; the published value stays as the publisher sent it.",
 ];
