@@ -35,7 +35,13 @@ export const MARKET_CATALOG: MarketCatalogEntry[] = [
   entry("UCPI", "Urdais Compute Price Index"),
   entry("UGAI", "Urdais Global AI Index"),
   entry("UAVI", "Urdais AI Volatility Index"),
-  entry("UMPI", "Urdais Memory Price Index"),
+  entry("UMPI", "Urdais Memory Price Index", {
+    // Taken from the approved methodology, /docs/methodology/umpi-kr-dram. UMPI V1 is two
+    // monthly series and has no composite level, so the description says "indicators" rather
+    // than naming a single number the product does not publish.
+    description: "Two monthly DRAM pricing indicators built from Korean official statistics: the Bank of Korea's producer price index for DRAM, and a Urdais export unit-value index from Korea Customs trade data.",
+    question: "What is happening to DRAM prices?",
+  }),
   entry("UPPI", "Urdais Photonics Price Index"),
   entry("UEPI", "Urdais Energy & Power Index"),
   entry(CHIP_ACCELERATOR_INDEX.symbol, CHIP_ACCELERATOR_INDEX.name, { description: CHIP_ACCELERATOR_INDEX.description, question: CHIP_ACCELERATOR_INDEX.question }),

@@ -92,11 +92,15 @@ describe("the TypeScript constants and the migration agree", () => {
 describe("the demo surface and the production foundation are separate", () => {
   const memory = MARKETS.find((market) => market.symbol === "UMPI");
 
-  it("the demo market still exists and is still demo data", () => {
-    // Phase 3 does not touch the frontend. The demo surface is left exactly as it was.
+  it("the demo market is gone: the memory market carries no instrument and no currency unit", () => {
+    // Phase 3 left the demo surface alone and Phase 7 removed it. What remains is a catalog
+    // identity with an empty family, so there is no instrument anywhere to read a price off and
+    // no `$/part` or `$/GB` unit left in the market at all.
     expect(memory).toBeDefined();
-    const units = new Set(memory!.families?.flatMap((f) => f.instruments.map((i) => i.unit)) ?? []);
-    expect(units.has("$/part")).toBe(true);
+    const instruments = memory!.families?.flatMap((family) => family.instruments) ?? [];
+    expect(instruments).toHaveLength(0);
+    expect(JSON.stringify(memory)).not.toContain("$/part");
+    expect(JSON.stringify(memory)).not.toContain("$/GB");
   });
 
   it("shares no identifier with the canonical series, so a demo point cannot be read as production", () => {
@@ -104,7 +108,7 @@ describe("the demo surface and the production foundation are separate", () => {
     for (const code of UMPI_SERIES_CODES) {
       expect(demoIds.has(code)).toBe(false);
     }
-    // And no canonical series carries the demo unit.
+    // And no canonical series carries a currency unit.
     for (const code of UMPI_SERIES_CODES) {
       expect(UMPI_PUBLISHED_UNIT).not.toBe("$/part");
       expect(UMPI_SERIES[code].baseLabel).not.toContain("$");

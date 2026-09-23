@@ -111,7 +111,16 @@ export type TokenInstrumentIdentity = {
  * synthetic series on the detail page, and UGAI's detail page shows an empty state instead --
  * and from "production", which promises a real value.
  */
-export type DataProvenance = "production" | "demo" | "unpublished";
+/**
+ * Where a displayed figure came from.
+ *
+ * `multi_series` is the odd one and exists for a real case: an index that publishes production
+ * data but has no single headline level, because it is more than one series and combining them
+ * would invent a number. A rail row is one level per symbol, so such an index must render no
+ * digits — `production` would make the rail show a zero, and `unpublished` would say it has never
+ * published, which is false. UMPI is the case.
+ */
+export type DataProvenance = "production" | "demo" | "unpublished" | "multi_series";
 
 /**
  * A watchlist row.

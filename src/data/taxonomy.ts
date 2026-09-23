@@ -25,8 +25,12 @@ export const MEASUREMENT_DOMAINS: MeasurementDomain[] = [
   },
   {
     domain: "Memory",
-    description: "Price of high-performance memory",
-    examples: ["$/GB", "$/GB/s", "HBM3E · HBM4"],
+    // "High-performance memory" reads as HBM, which Urdais does not price. UMPI measures DRAM.
+    description: "Price of DRAM memory",
+    // The examples name what Urdais measures, not what it might. UMPI V1 publishes two monthly
+    // DRAM index series in index points; the previous "$/GB · HBM3E · HBM4" described the demo
+    // memory market that Phase 7 removed, and Urdais prices no HBM part.
+    examples: ["Index points", "DRAM PPI", "Export unit value"],
   },
   {
     domain: "Photonics",
