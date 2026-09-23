@@ -249,8 +249,10 @@ describe("the UBWI homepage watchlist row", () => {
     // The *public* catalog, not the full registry: the rail's order and its membership are the
     // same list, so an index Urdais does not present as a product is neither ordered nor
     // included here, and ordering is checked against what a reader is actually shown.
+    // UCPI owns the panel beside the rail rather than a row in it, and UTVI's row is built from
+    // a production read this test does not perform, so neither is expected here.
     const expected = PUBLIC_MARKET_CATALOG.map((market) => market.symbol).filter(
-      (symbol) => symbol !== "UCPI",
+      (symbol) => symbol !== "UCPI" && symbol !== "UTVI",
     );
     expect(homepageRows().map((row) => row.symbol)).toEqual(expected);
     // The mock rows keep their existing values untouched by this wiring, and none of UGAI, UAVI

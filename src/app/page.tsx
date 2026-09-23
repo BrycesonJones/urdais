@@ -10,6 +10,8 @@ import { UMPI_WATCHLIST_ROW } from "@/lib/umpi/read/watchlist";
 import { loadFrozenUbwiPublication } from "@/lib/ubwi/read/publication-store";
 import { ubwiIndexSnapshot } from "@/lib/ubwi/read/surface";
 import { loadUcpiHeadline } from "@/lib/ucpi/read/load";
+import { loadUtviInstrumentView } from "@/lib/utvi/read/surface";
+import { utviIndexSnapshot } from "@/lib/utvi/read/watchlist";
 import { isProductionRuntime } from "@/lib/tokens/read/publication";
 
 /**
@@ -25,6 +27,13 @@ export default async function HomePage() {
   // published there is simply no UBWI row, which is why this is a concat and not a
   // placeholder. The other indices remain mock data for now.
   const ubwiRow = ubwiIndexSnapshot(await loadFrozenUbwiPublication());
+  // UTVI is the second index here with a real published value, and the only one whose row links
+  // somewhere other than a `/markets/{symbol}` page: its canonical presentation is the Volume
+  // section of Model Economics, and the rail follows the destination on its catalog entry. Read
+  // sequentially for the reason the others are -- these share the process-wide pooled executor,
+  // and running them concurrently lets whichever finishes first tear the pool out from under the
+  // rest. No publication, or a failed read, means no row rather than an invented token count.
+  const utviRow = utviIndexSnapshot(await loadUtviInstrumentView());
   // UMPI joins from its own module: it publishes, but as two series with no composite, so it has
   // no single level for a rail row. Its old row took the HBM3E demo walk's value and unit; that
   // instrument is gone, and no number replaces it.
@@ -32,7 +41,7 @@ export default async function HomePage() {
   // as products, so `assembleIndexRail` drops any row offered for them. See the
   // `publiclyPresented` flag in @/data/market-catalog.
   const base = [...INDEX_SNAPSHOTS, UMPI_WATCHLIST_ROW];
-  const indices = assembleIndexRail(ubwiRow === null ? base : [...base, ubwiRow]);
+  const indices = assembleIndexRail([...base, utviRow, ubwiRow].filter((row) => row !== null));
 
   // The UCPI panel now reads the same released listed-GPU children the UCPI market page
   // shows, so the two surfaces cannot disagree. Sequential for the reason the UBWI

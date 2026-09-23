@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { movementClass } from "@/components/market/movement";
-import { formatNumber, formatPercent } from "@/lib/format";
-import { marketIndexHref } from "@/lib/routes";
+import { formatCompact, formatNumber, formatPercent } from "@/lib/format";
+import { marketHref } from "@/data/market-catalog";
 import type { IndexSnapshot } from "@/types/market";
 
 /**
@@ -26,6 +26,10 @@ import type { IndexSnapshot } from "@/types/market";
  * The row still links to the detail page, where the illustrative series lives under its
  * own `Demo data` badge.
  *
+ * **Where the row links is the catalog's decision, not this component's.** Most indices have a
+ * `/markets/{symbol}` page; UTVI's canonical presentation is a section of Model Economics, and
+ * asking `marketHref` is what lets one rail row type serve both without a symbol test here.
+ *
  * An `unpublished` row is narrower still: no level, no movement, and no illustrative series
  * behind it either. UGAI is the case -- its seeded walk was removed rather than relabelled, so
  * "Demo data" would now promise a chart its detail page does not have.
@@ -42,7 +46,7 @@ export function IndexRow({ index }: { index: IndexSnapshot }) {
   return (
     <li>
       <Link
-        href={marketIndexHref(index.symbol)}
+        href={marketHref(index.symbol)}
         className="-mx-2 flex items-center justify-between gap-4 rounded-md px-2 py-3 transition-colors hover:bg-white/[0.03] focus-visible:outline-2 focus-visible:outline-neutral-400"
       >
       <div className="min-w-0">
@@ -79,7 +83,9 @@ export function IndexRow({ index }: { index: IndexSnapshot }) {
       ) : (
         <div className="shrink-0 text-right tabular-nums">
           <p className="text-sm font-medium text-neutral-50">
-            {formatNumber(index.value, index.valueFractionDigits ?? 2)}{" "}
+            {index.valueFormat === "compact"
+              ? formatCompact(index.value)
+              : formatNumber(index.value, index.valueFractionDigits ?? 2)}{" "}
             <span className="text-xs font-normal text-neutral-400">{index.unit}</span>
           </p>
           {index.changePercent !== null && (
