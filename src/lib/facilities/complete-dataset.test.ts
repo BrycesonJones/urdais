@@ -208,19 +208,20 @@ describe("the complete projected dataset", () => {
         });
         if (eligible) placeable += 1;
       }
-      // 352 of the 454 research records can be drawn. The gap is deliberate:
+      // 417 of the 454 research records can be drawn. The gap is deliberate:
       // a record whose address resolves only to a town carries city precision,
       // which is a location rather than a position, so it is stored in full and
-      // refused by the map. 71 of the Equinix tranche's 181 are in that state.
-      expect(placeable).toBe(352);
+      // refused by the map. Precision recovery leaves six Equinix records in
+      // that state rather than inventing facility coordinates for them.
+      expect(placeable).toBe(417);
     });
   });
 
   describe("provenance", () => {
     it("cites every source the research cites, and classifies each one", () => {
-      expect(plan.counts.evidence).toBe(732);
-      expect(plan.counts.claims).toBe(1778);
-      expect(plan.counts.sourceUrls).toBe(417);
+      expect(plan.counts.evidence).toBe(790);
+      expect(plan.counts.claims).toBe(1837);
+      expect(plan.counts.sourceUrls).toBe(471);
       const classified = Object.values(plan.counts.byCitationClass).reduce((a, b) => a + b, 0);
       expect(classified).toBe(plan.counts.evidence);
       for (const facility of document!.facilities) {
@@ -262,10 +263,10 @@ describe("the complete projected dataset", () => {
       // Co-located infrastructure remains one row per physical entity. The
       // Digital Realty and Equinix tranches add intentionally shared points:
       // Equinix in particular is mostly suites and floors inside other
-      // buildings, and 71 of its records resolve only to a city centroid,
-      // which every facility in that town shares by construction.
+      // buildings. Precision recovery separates many earlier city-centroid
+      // collisions while preserving genuine shared sites.
       const shared = plan.reviewCandidates.filter((entry) => entry.code === "shared_coordinates");
-      expect(shared.length).toBe(143);
+      expect(shared.length).toBe(110);
       for (const entry of shared) expect(entry.message).toContain("not merged");
     });
 
@@ -274,7 +275,7 @@ describe("the complete projected dataset", () => {
       // Dense IBX and numbered-campus markets legitimately produce nearby
       // records. They are surfaced for review and never merged automatically.
       for (const entry of near) expect(entry.message).toContain("not merged on that");
-      expect(near.length).toBe(394);
+      expect(near.length).toBe(410);
     });
 
     it("carries the research's own duplicate questions into the review queue", () => {

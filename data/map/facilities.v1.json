@@ -2,7 +2,7 @@
   "contractVersion": "urdais.map.facility-import/2",
   "datasetName": "Urdais canonical facilities through Map Phase 4B",
   "researchDocument": "docs/operations/map-phase-4b-ready-facilities.md",
-  "generatedAt": "2026-09-22",
+  "generatedAt": "2026-09-23",
   "facilities": [
     {
       "researchKey": "aligned-dfw-04-plano",
@@ -12659,11 +12659,11 @@
         "adminArea": null,
         "countryName": "Spain",
         "countryCode": "ES",
-        "latitude": 41.3825802,
-        "longitude": 2.177073,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Barcelona, Spain); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 41.351557,
+        "longitude": 2.137457,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms BA1 at Carrer de l'Acer 30-32, 08038 Barcelona, Spain. PeeringDB facility 122 identifies BA1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -12688,14 +12688,31 @@
               "statement": "Carrer de l'Acer 30-32, 08038 Barcelona, Spain"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "BA1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/122",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "41.351557, 2.137457 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms BA1 at Carrer de l'Acer 30-32, 08038 Barcelona, Spain. PeeringDB facility 122 identifies BA1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -12724,11 +12741,11 @@
         "adminArea": null,
         "countryName": "Spain",
         "countryCode": "ES",
-        "latitude": 41.3825802,
-        "longitude": 2.177073,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Barcelona, Spain); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 41.351324,
+        "longitude": 2.09898,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms BA2 at Carretera del Mig 219, L'Hospitalet de Llobregat, 8907 Barcelona, Spain. PeeringDB facility 15419 identifies BA2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -12753,14 +12770,31 @@
               "statement": "Carretera del Mig 219, L'Hospitalet de Llobregat, 8907 Barcelona, Spain"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "BA2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/15419",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "41.351324, 2.09898 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms BA2 at Carretera del Mig 219, L'Hospitalet de Llobregat, 8907 Barcelona, Spain. PeeringDB facility 15419 identifies BA2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -12789,11 +12823,11 @@
         "adminArea": null,
         "countryName": "Colombia",
         "countryCode": "CO",
-        "latitude": 4.6533817,
-        "longitude": -74.0836331,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Bogota, Colombia); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 4.671384,
+        "longitude": -74.156026,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms BG1 at Avenida Carrera 106 No. 15A-25, Manzana 6, Lote 27, 110921 Bogota, Colombia. PeeringDB facility 1354 identifies BG1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -12818,14 +12852,31 @@
               "statement": "Avenida Carrera 106 No. 15A-25, Manzana 6, Lote 27, 110921 Bogota, Colombia"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "BG1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/1354",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "4.671384, -74.156026 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms BG1 at Avenida Carrera 106 No. 15A-25, Manzana 6, Lote 27, 110921 Bogota, Colombia. PeeringDB facility 1354 identifies BG1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -12854,11 +12905,11 @@
         "adminArea": null,
         "countryName": "Colombia",
         "countryCode": "CO",
-        "latitude": 4.6533817,
-        "longitude": -74.0836331,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Bogota, Colombia); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 4.671921,
+        "longitude": -74.155782,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms BG2 at Carrera 106 No 15 A25, Manzana 18, 110921 Bogota, Colombia. PeeringDB facility 13903 identifies BG2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -12883,14 +12934,31 @@
               "statement": "Carrera 106 No 15 A25, Manzana 18, 110921 Bogota, Colombia"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "BG2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/13903",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "4.671921, -74.155782 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms BG2 at Carrera 106 No 15 A25, Manzana 18, 110921 Bogota, Colombia. PeeringDB facility 13903 identifies BG2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -13703,11 +13771,11 @@
         "adminArea": null,
         "countryName": "Canada",
         "countryCode": "CA",
-        "latitude": 51.0631292,
-        "longitude": -114.0878809,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Alberta T2P 4K1, Canada); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 51.045517,
+        "longitude": -114.069297,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms CL1 at 315 8th Avenue SW, Suite 401, Calgary, Alberta T2P 4K1, Canada. PeeringDB facility 9553 identifies CL1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -13732,14 +13800,31 @@
               "statement": "315 8th Avenue SW, Suite 401, Calgary, Alberta T2P 4K1, Canada"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "CL1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/9553",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "51.045517, -114.069297 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms CL1 at 315 8th Avenue SW, Suite 401, Calgary, Alberta T2P 4K1, Canada. PeeringDB facility 9553 identifies CL1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -14152,11 +14237,11 @@
         "adminArea": "Texas",
         "countryName": "United States",
         "countryCode": "US",
-        "latitude": 32.7762719,
-        "longitude": -96.7968559,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Dallas, United States); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 32.800955,
+        "longitude": -96.81955,
+        "coordinatePrecision": "street",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms DA1 at 1950 North Stemmons Freeway, Suite 1034, Dallas, TX 75207, USA. PeeringDB facility 4 identifies DA1 and supplies a coordinate consistent with that address. The proposal is limited to building precision. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
       },
       "lifecycle": {
         "status": "operational"
@@ -14181,14 +14266,31 @@
               "statement": "1950 North Stemmons Freeway, Suite 1034, Dallas, TX 75207, USA"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "DA1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/4",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "32.800955, -96.81955 at street precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
           "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms DA1 at 1950 North Stemmons Freeway, Suite 1034, Dallas, TX 75207, USA. PeeringDB facility 4 identifies DA1 and supplies a coordinate consistent with that address. The proposal is limited to building precision. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
         ]
       },
       "requestedPublicationState": "research"
@@ -14217,11 +14319,11 @@
         "adminArea": "Texas",
         "countryName": "United States",
         "countryCode": "US",
-        "latitude": 32.7762719,
-        "longitude": -96.7968559,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Dallas, United States); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 32.801347,
+        "longitude": -96.821074,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms DA11 at 1990 North Stemmons Freeway, Dallas, TX 75207, USA. PeeringDB facility 11762 identifies DA11 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -14246,14 +14348,31 @@
               "statement": "1990 North Stemmons Freeway, Dallas, TX 75207, USA"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "DA11 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/11762",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "32.801347, -96.821074 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms DA11 at 1990 North Stemmons Freeway, Dallas, TX 75207, USA. PeeringDB facility 11762 identifies DA11 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -14282,11 +14401,11 @@
         "adminArea": "Texas",
         "countryName": "United States",
         "countryCode": "US",
-        "latitude": 32.7762719,
-        "longitude": -96.7968559,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Dallas, United States); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 32.800955,
+        "longitude": -96.81955,
+        "coordinatePrecision": "street",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms DA2 at 1950 North Stemmons Freeway, Suite 2027, Dallas, TX 75207, USA. PeeringDB facility 2578 identifies DA2 and supplies a coordinate consistent with that address. The proposal is limited to building precision. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
       },
       "lifecycle": {
         "status": "operational"
@@ -14311,14 +14430,31 @@
               "statement": "1950 North Stemmons Freeway, Suite 2027, Dallas, TX 75207, USA"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "DA2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/2578",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "32.800955, -96.81955 at street precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
           "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms DA2 at 1950 North Stemmons Freeway, Suite 2027, Dallas, TX 75207, USA. PeeringDB facility 2578 identifies DA2 and supplies a coordinate consistent with that address. The proposal is limited to building precision. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
         ]
       },
       "requestedPublicationState": "research"
@@ -14347,11 +14483,11 @@
         "adminArea": "Texas",
         "countryName": "United States",
         "countryCode": "US",
-        "latitude": 32.7762719,
-        "longitude": -96.7968559,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Dallas, United States); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 32.800955,
+        "longitude": -96.81955,
+        "coordinatePrecision": "street",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms DA3 at 1950 North Stemmons Freeway, Suites 1039A & 2048, Dallas, TX 75207, USA. PeeringDB facility 69 identifies DA3 and supplies a coordinate consistent with that address. The proposal is limited to building precision. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
       },
       "lifecycle": {
         "status": "operational"
@@ -14376,14 +14512,31 @@
               "statement": "1950 North Stemmons Freeway, Suites 1039A & 2048, Dallas, TX 75207, USA"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "DA3 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/69",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "32.800955, -96.81955 at street precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
           "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms DA3 at 1950 North Stemmons Freeway, Suites 1039A & 2048, Dallas, TX 75207, USA. PeeringDB facility 69 identifies DA3 and supplies a coordinate consistent with that address. The proposal is limited to building precision. Precision lowered to street: this coordinate is shared with another facility at the same published address, so it locates the property rather than this named building."
         ]
       },
       "requestedPublicationState": "research"
@@ -14476,11 +14629,11 @@
         "adminArea": "Texas",
         "countryName": "United States",
         "countryCode": "US",
-        "latitude": 32.7762719,
-        "longitude": -96.7968559,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Dallas, United States); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 32.800748,
+        "longitude": -96.819412,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms DA6 at 1950 North Stemmons Freeway, Suite 3050, Dallas, TX 75207, USA. PeeringDB facility 2261 identifies DA6 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -14505,14 +14658,31 @@
               "statement": "1950 North Stemmons Freeway, Suite 3050, Dallas, TX 75207, USA"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "DA6 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/2261",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "32.800748, -96.819412 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms DA6 at 1950 North Stemmons Freeway, Suite 3050, Dallas, TX 75207, USA. PeeringDB facility 2261 identifies DA6 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -14733,11 +14903,11 @@
         "adminArea": null,
         "countryName": "Ireland",
         "countryCode": "IE",
-        "latitude": 53.3411249,
-        "longitude": -6.2545,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (D22 FV12 Dublin, Ireland); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 53.318647,
+        "longitude": -6.439957,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms DB2 at Unit 7 Kilcarbery Business Park, New Nangor Road, Clondalkin, D22 FV12 Dublin, Ireland. PeeringDB facility 178 identifies DB2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -14762,14 +14932,31 @@
               "statement": "Unit 7 Kilcarbery Business Park, New Nangor Road, Clondalkin, D22 FV12 Dublin, Ireland"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "DB2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/178",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "53.318647, -6.439957 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms DB2 at Unit 7 Kilcarbery Business Park, New Nangor Road, Clondalkin, D22 FV12 Dublin, Ireland. PeeringDB facility 178 identifies DB2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -15477,11 +15664,11 @@
         "adminArea": "Colorado",
         "countryName": "United States",
         "countryCode": "US",
-        "latitude": 40.8929329,
-        "longitude": -73.9726508,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Englewood, United States); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 39.560317,
+        "longitude": -104.857528,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms DE2 at 335 Inverness Drive South, Inverness Business Park, Englewood, CO 80112, USA. PeeringDB facility 696 identifies DE2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -15506,14 +15693,31 @@
               "statement": "335 Inverness Drive South, Inverness Business Park, Englewood, CO 80112, USA"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "DE2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/696",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "39.560317, -104.857528 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms DE2 at 335 Inverness Drive South, Inverness Business Park, Englewood, CO 80112, USA. PeeringDB facility 696 identifies DE2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -15626,11 +15830,11 @@
         "adminArea": null,
         "countryName": "United Arab Emirates",
         "countryCode": "AE",
-        "latitude": 25.0742823,
-        "longitude": 55.1885624,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Dubai, United Arab Emirates); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 25.02618,
+        "longitude": 55.18695,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms DX1 at International Media Production Zone (IMPZ), Units F90, F91 & F92, Dubai, Dubai, United Arab Emirates. PeeringDB facility 1355 identifies DX1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -15655,14 +15859,31 @@
               "statement": "International Media Production Zone (IMPZ), Units F90, F91 & F92, Dubai, Dubai, United Arab Emirates"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "DX1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/1355",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "25.02618, 55.18695 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms DX1 at International Media Production Zone (IMPZ), Units F90, F91 & F92, Dubai, Dubai, United Arab Emirates. PeeringDB facility 1355 identifies DX1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -15691,11 +15912,11 @@
         "adminArea": null,
         "countryName": "United Arab Emirates",
         "countryCode": "AE",
-        "latitude": 25.0742823,
-        "longitude": 55.1885624,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Dubai, United Arab Emirates); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 25.030113,
+        "longitude": 55.186405,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Human review favors the Meydan/Nad Al Sheba building location despite the conflicting directory address."
       },
       "lifecycle": {
         "status": "operational"
@@ -15724,10 +15945,11 @@
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: human-reviewed by Bryceson on 2026-09-23.",
+          "Human review favors the Meydan/Nad Al Sheba building location despite the conflicting directory address."
         ]
       },
       "requestedPublicationState": "research"
@@ -15756,11 +15978,11 @@
         "adminArea": null,
         "countryName": "United Arab Emirates",
         "countryCode": "AE",
-        "latitude": 25.0742823,
-        "longitude": 55.1885624,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Dubai, United Arab Emirates); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 25.0265,
+        "longitude": 55.1867,
+        "coordinatePrecision": "campus",
+        "coordinateMethod": "campus_centroid",
+        "coordinateNotes": "The code-specific Equinix page confirms DX3 at Units F88-F92, International Media Production Zone (IMPZ / Dubai Production City), Dubai 500389, United Arab Emirates. PeeringDB facility 14653 identifies a shared site containing DX3 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site."
       },
       "lifecycle": {
         "status": "operational"
@@ -15785,14 +16007,31 @@
               "statement": "Units F88-F92, International Media Production Zone (IMPZ / Dubai Production City), Dubai 500389, United Arab Emirates"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "DX3 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/14653",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "25.0265, 55.1867 at campus precision."
+            }
+          ]
         }
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
           "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms DX3 at Units F88-F92, International Media Production Zone (IMPZ / Dubai Production City), Dubai 500389, United Arab Emirates. PeeringDB facility 14653 identifies a shared site containing DX3 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site."
         ]
       },
       "requestedPublicationState": "research"
@@ -16545,11 +16784,11 @@
         "adminArea": null,
         "countryName": "Hong Kong",
         "countryCode": "HK",
-        "latitude": 22.3716605,
-        "longitude": 114.1134699,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Tsuen Wan, Hong Kong); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 22.365581,
+        "longitude": 114.11932,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms HK1 at Unit 2702, 27/F, Goodman Global Gateway, 168 Yeung Uk Road, Tsuen Wan, N.T., Hong Kong. PeeringDB facility 170 identifies HK1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -16574,14 +16813,31 @@
               "statement": "Unit 2702, 27/F, Goodman Global Gateway, 168 Yeung Uk Road, Tsuen Wan, N.T., Hong Kong"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "HK1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/170",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "22.365581, 114.11932 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms HK1 at Unit 2702, 27/F, Goodman Global Gateway, 168 Yeung Uk Road, Tsuen Wan, N.T., Hong Kong. PeeringDB facility 170 identifies HK1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -16738,11 +16994,11 @@
         "adminArea": null,
         "countryName": "Hong Kong",
         "countryCode": "HK",
-        "latitude": 22.3818388,
-        "longitude": 114.2165218,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Siu Lek Yuen, Hong Kong); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 22.389451,
+        "longitude": 114.206078,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms HK4 at Ever Gain Building No. 3, 22 On Sum Street, Siu Lek Yuen, Hong Kong. PeeringDB facility 8417 identifies HK4 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -16767,14 +17023,31 @@
               "statement": "Ever Gain Building No. 3, 22 On Sum Street, Siu Lek Yuen, Hong Kong"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "HK4 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/8417",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "22.389451, 114.206078 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms HK4 at Ever Gain Building No. 3, 22 On Sum Street, Siu Lek Yuen, Hong Kong. PeeringDB facility 8417 identifies HK4 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -16803,11 +17076,11 @@
         "adminArea": null,
         "countryName": "Hong Kong",
         "countryCode": "HK",
-        "latitude": 22.2818333,
-        "longitude": 114.1582831,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Hong Kong SAR, Hong Kong); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 22.293004,
+        "longitude": 114.274638,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms HK5 at Tower 2, No. 299 Wan Po Road, Tseung Kwan O, Hong Kong SAR, Hong Kong. PeeringDB facility 8415 identifies HK5 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -16832,14 +17105,31 @@
               "statement": "Tower 2, No. 299 Wan Po Road, Tseung Kwan O, Hong Kong SAR, Hong Kong"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "HK5 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/8415",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "22.293004, 114.274638 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms HK5 at Tower 2, No. 299 Wan Po Road, Tseung Kwan O, Hong Kong SAR, Hong Kong. PeeringDB facility 8415 identifies HK5 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -16868,11 +17158,11 @@
         "adminArea": null,
         "countryName": "Hong Kong",
         "countryCode": "HK",
-        "latitude": 22.3716605,
-        "longitude": 114.1134699,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Tsuen Wan, Hong Kong); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 22.374022,
+        "longitude": 114.1079,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms HK6 at 18 Sha Tsui Road, Tsuen Wan, Hong Kong. PeeringDB facility 17023 identifies HK6 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -16897,14 +17187,31 @@
               "statement": "18 Sha Tsui Road, Tsuen Wan, Hong Kong"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "HK6 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/17023",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "22.374022, 114.1079 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms HK6 at 18 Sha Tsui Road, Tsuen Wan, Hong Kong. PeeringDB facility 17023 identifies HK6 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -17017,11 +17324,11 @@
         "adminArea": null,
         "countryName": "Türkiye",
         "countryCode": "TR",
-        "latitude": 41.006381,
-        "longitude": 28.9758715,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Istanbul, Türkiye); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 40.993767,
+        "longitude": 29.175849,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms IL2 at 3. Cd. No:4 Yukari Dudullu Organize Sanayi Bolgesi (OSB), Umraniye, 34775 Istanbul, Turkey. PeeringDB facility 4148 identifies IL2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -17046,14 +17353,31 @@
               "statement": "3. Cd. No:4 Yukari Dudullu Organize Sanayi Bolgesi (OSB), Umraniye, 34775 Istanbul, Turkey"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "IL2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/4148",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "40.993767, 29.175849 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms IL2 at 3. Cd. No:4 Yukari Dudullu Organize Sanayi Bolgesi (OSB), Umraniye, 34775 Istanbul, Turkey. PeeringDB facility 4148 identifies IL2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -17250,11 +17574,11 @@
         "adminArea": "California",
         "countryName": "United States",
         "countryCode": "US",
-        "latitude": 34.0536909,
-        "longitude": -118.242766,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Los Angeles, United States); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 34.047501,
+        "longitude": -118.2573,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms LA1 at 600 W 7th Street, 6th & 7th Floors, Los Angeles, CA 90017, USA. PeeringDB facility 8 identifies LA1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -17279,14 +17603,31 @@
               "statement": "600 W 7th Street, 6th & 7th Floors, Los Angeles, CA 90017, USA"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "LA1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/8",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "34.047501, -118.2573 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms LA1 at 600 W 7th Street, 6th & 7th Floors, Los Angeles, CA 90017, USA. PeeringDB facility 8 identifies LA1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -17780,11 +18121,11 @@
         "adminArea": null,
         "countryName": "Nigeria",
         "countryCode": "NG",
-        "latitude": 6.4550575,
-        "longitude": 3.3941795,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Lagos, Nigeria); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 6.449602,
+        "longitude": 3.588328,
+        "coordinatePrecision": "campus",
+        "coordinateMethod": "campus_centroid",
+        "coordinateNotes": "The code-specific Equinix page confirms LG1 at Chief Chuks Ikokwu Street, Lekki, Lagos 10604, Nigeria. PeeringDB facility 5094 identifies a shared site containing LG1 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site."
       },
       "lifecycle": {
         "status": "operational"
@@ -17809,14 +18150,31 @@
               "statement": "Chief Chuks Ikokwu Street, Lekki, Lagos 10604, Nigeria"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "LG1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/5094",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "6.449602, 3.588328 at campus precision."
+            }
+          ]
         }
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
           "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms LG1 at Chief Chuks Ikokwu Street, Lekki, Lagos 10604, Nigeria. PeeringDB facility 5094 identifies a shared site containing LG1 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site."
         ]
       },
       "requestedPublicationState": "research"
@@ -17845,11 +18203,11 @@
         "adminArea": null,
         "countryName": "Nigeria",
         "countryCode": "NG",
-        "latitude": 6.4550575,
-        "longitude": 3.3941795,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Lagos, Nigeria); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 6.449602,
+        "longitude": 3.588328,
+        "coordinatePrecision": "campus",
+        "coordinateMethod": "campus_centroid",
+        "coordinateNotes": "The code-specific Equinix page confirms LG2 at Chief Chuks Ikokwu Street, Lekki, Lagos 10604, Nigeria. PeeringDB facility 5094 identifies a shared site containing LG2 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site."
       },
       "lifecycle": {
         "status": "operational"
@@ -17874,14 +18232,31 @@
               "statement": "Chief Chuks Ikokwu Street, Lekki, Lagos 10604, Nigeria"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "LG2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/5094",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "6.449602, 3.588328 at campus precision."
+            }
+          ]
         }
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
           "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms LG2 at Chief Chuks Ikokwu Street, Lekki, Lagos 10604, Nigeria. PeeringDB facility 5094 identifies a shared site containing LG2 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site."
         ]
       },
       "requestedPublicationState": "research"
@@ -18058,11 +18433,11 @@
         "adminArea": null,
         "countryName": "Portugal",
         "countryCode": "PT",
-        "latitude": 38.7077507,
-        "longitude": -9.1365919,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Lisbon, Portugal); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 38.78746,
+        "longitude": -9.123351,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms LS2 at Avenida Severiano Falcao, 12 Prior Velho, 2685-378 Lisbon, Portugal. PeeringDB facility 16863 identifies LS2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -18087,14 +18462,31 @@
               "statement": "Avenida Severiano Falcao, 12 Prior Velho, 2685-378 Lisbon, Portugal"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "LS2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/16863",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "38.78746, -9.123351 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms LS2 at Avenida Severiano Falcao, 12 Prior Velho, 2685-378 Lisbon, Portugal. PeeringDB facility 16863 identifies LS2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -18379,11 +18771,11 @@
         "adminArea": null,
         "countryName": "India",
         "countryCode": "IN",
-        "latitude": 19.5670323,
-        "longitude": 76.4164557,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Maharashtra, India); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 19.113908,
+        "longitude": 72.892742,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms MB1 at A-001, Boomerang, Chandivali Farm Road, Near Chandivali Studio, Andheri East, Mumbai, Maharashtra MH 400072, India. PeeringDB facility 2310 identifies MB1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -18408,14 +18800,31 @@
               "statement": "A-001, Boomerang, Chandivali Farm Road, Near Chandivali Studio, Andheri East, Mumbai, Maharashtra MH 400072, India"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "MB1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/2310",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "19.113908, 72.892742 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms MB1 at A-001, Boomerang, Chandivali Farm Road, Near Chandivali Studio, Andheri East, Mumbai, Maharashtra MH 400072, India. PeeringDB facility 2310 identifies MB1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -18444,11 +18853,11 @@
         "adminArea": null,
         "countryName": "India",
         "countryCode": "IN",
-        "latitude": 19.5670323,
-        "longitude": 76.4164557,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Maharashtra, India); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 19.109353,
+        "longitude": 72.901441,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms MB2 at Plot No. 37, Chandivali Farm Road, Chandivali, Andheri East, Mumbai, Maharashtra 400072, India. PeeringDB facility 7377 identifies MB2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -18473,14 +18882,31 @@
               "statement": "Plot No. 37, Chandivali Farm Road, Chandivali, Andheri East, Mumbai, Maharashtra 400072, India"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "MB2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/7377",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "19.109353, 72.901441 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms MB2 at Plot No. 37, Chandivali Farm Road, Chandivali, Andheri East, Mumbai, Maharashtra 400072, India. PeeringDB facility 7377 identifies MB2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -18509,11 +18935,11 @@
         "adminArea": null,
         "countryName": "India",
         "countryCode": "IN",
-        "latitude": 19.5670323,
-        "longitude": 76.4164557,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Maharashtra, India); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 19.114404,
+        "longitude": 72.896533,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms MB3 at Plot 15 B, Chandivali Farm Road, Chandivali, Andheri East, Mumbai, Maharashtra 400072, India. PeeringDB facility 16886 identifies MB3 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -18538,14 +18964,31 @@
               "statement": "Plot 15 B, Chandivali Farm Road, Chandivali, Andheri East, Mumbai, Maharashtra 400072, India"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "MB3 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/16886",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "19.114404, 72.896533 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms MB3 at Plot 15 B, Chandivali Farm Road, Chandivali, Andheri East, Mumbai, Maharashtra 400072, India. PeeringDB facility 16886 identifies MB3 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -18574,11 +19017,11 @@
         "adminArea": null,
         "countryName": "India",
         "countryCode": "IN",
-        "latitude": 19.5670323,
-        "longitude": 76.4164557,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Maharashtra, India); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 19.180426,
+        "longitude": 72.996005,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms MB4 at Plot 5, Thane Airoli Road, Mumbai, Maharashtra 400708, India. PeeringDB facility 15050 identifies MB4 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -18603,14 +19046,31 @@
               "statement": "Plot 5, Thane Airoli Road, Mumbai, Maharashtra 400708, India"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "MB4 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/15050",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "19.180426, 72.996005 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms MB4 at Plot 5, Thane Airoli Road, Mumbai, Maharashtra 400708, India. PeeringDB facility 15050 identifies MB4 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -18639,11 +19099,11 @@
         "adminArea": null,
         "countryName": "Spain",
         "countryCode": "ES",
-        "latitude": 40.416782,
-        "longitude": -3.703507,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Madrid, Spain); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 40.513497,
+        "longitude": -3.671891,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms MD1 at Calle Isabel Colbrand, 6-8, 1st floor, 28050 Madrid, Spain. PeeringDB facility 179 identifies MD1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -18668,14 +19128,31 @@
               "statement": "Calle Isabel Colbrand, 6-8, 1st floor, 28050 Madrid, Spain"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "MD1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/179",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "40.513497, -3.671891 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms MD1 at Calle Isabel Colbrand, 6-8, 1st floor, 28050 Madrid, Spain. PeeringDB facility 179 identifies MD1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -18704,11 +19181,11 @@
         "adminArea": null,
         "countryName": "Spain",
         "countryCode": "ES",
-        "latitude": 40.416782,
-        "longitude": -3.703507,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Madrid, Spain); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 40.536855,
+        "longitude": -3.648584,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms MD2 at Calle Valgrande 6, Alcobendas, 28108 Madrid, Spain. PeeringDB facility 127 identifies MD2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -18733,14 +19210,31 @@
               "statement": "Calle Valgrande 6, Alcobendas, 28108 Madrid, Spain"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "MD2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/127",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "40.536855, -3.648584 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms MD2 at Calle Valgrande 6, Alcobendas, 28108 Madrid, Spain. PeeringDB facility 127 identifies MD2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -18961,11 +19455,11 @@
         "adminArea": null,
         "countryName": "Australia",
         "countryCode": "AU",
-        "latitude": -37.8142454,
-        "longitude": 144.9631732,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Melbourne, Australia); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": -37.821681,
+        "longitude": 144.915458,
+        "coordinatePrecision": "campus",
+        "coordinateMethod": "campus_centroid",
+        "coordinateNotes": "The code-specific Equinix page confirms ME2 at 578 Lorimer Street, Port Melbourne, Melbourne, VIC 3207, Australia. PeeringDB facility 1988 identifies a shared site containing ME2 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site."
       },
       "lifecycle": {
         "status": "operational"
@@ -18990,14 +19484,31 @@
               "statement": "578 Lorimer Street, Port Melbourne, Melbourne, VIC 3207, Australia"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "ME2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/1988",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "-37.821681, 144.915458 at campus precision."
+            }
+          ]
         }
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
           "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms ME2 at 578 Lorimer Street, Port Melbourne, Melbourne, VIC 3207, Australia. PeeringDB facility 1988 identifies a shared site containing ME2 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site."
         ]
       },
       "requestedPublicationState": "research"
@@ -19282,11 +19793,11 @@
         "adminArea": "Florida",
         "countryName": "United States",
         "countryCode": "US",
-        "latitude": 26.3586885,
-        "longitude": -80.0830984,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Boca Raton, United States); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 26.387989,
+        "longitude": -80.108267,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms MI3 at 4680 Conference Way South, Suite 150, Boca Raton, FL 33431, USA. PeeringDB facility 1271 identifies MI3 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -19311,14 +19822,31 @@
               "statement": "4680 Conference Way South, Suite 150, Boca Raton, FL 33431, USA"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "MI3 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/1271",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "26.387989, -80.108267 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms MI3 at 4680 Conference Way South, Suite 150, Boca Raton, FL 33431, USA. PeeringDB facility 1271 identifies MI3 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -19732,11 +20260,11 @@
         "adminArea": null,
         "countryName": "Mexico",
         "countryCode": "MX",
-        "latitude": 26.2384363,
-        "longitude": -99.8873,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Nuevo León, Mexico); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 25.738175,
+        "longitude": -100.203438,
+        "coordinatePrecision": "street",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Multiple registries disagree; the reviewed primary coordinate is accepted conservatively at street precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -19765,10 +20293,11 @@
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
           "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Coordinate provenance: human-reviewed by Bryceson on 2026-09-23.",
+          "Multiple registries disagree; the reviewed primary coordinate is accepted conservatively at street precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -19797,11 +20326,11 @@
         "adminArea": null,
         "countryName": "Mexico",
         "countryCode": "MX",
-        "latitude": 26.2384363,
-        "longitude": -99.8873,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Nuevo León, Mexico); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 25.72546,
+        "longitude": -100.132852,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Human-reviewed building coordinate accepted despite the address disagreement."
       },
       "lifecycle": {
         "status": "operational"
@@ -19830,10 +20359,11 @@
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: human-reviewed by Bryceson on 2026-09-23.",
+          "Human-reviewed building coordinate accepted despite the address disagreement."
         ]
       },
       "requestedPublicationState": "research"
@@ -19862,11 +20392,11 @@
         "adminArea": null,
         "countryName": "Canada",
         "countryCode": "CA",
-        "latitude": 46.8137431,
-        "longitude": -71.2084061,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Quebec H4S 1S1, Canada); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 45.488966,
+        "longitude": -73.745578,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms MT1 at 6205 Vanden Abeele Street, Saint Laurent, Quebec H4S 1S1, Canada. PeeringDB facility 9546 identifies MT1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -19891,14 +20421,31 @@
               "statement": "6205 Vanden Abeele Street, Saint Laurent, Quebec H4S 1S1, Canada"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "MT1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/9546",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "45.488966, -73.745578 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms MT1 at 6205 Vanden Abeele Street, Saint Laurent, Quebec H4S 1S1, Canada. PeeringDB facility 9546 identifies MT1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -19927,11 +20474,11 @@
         "adminArea": null,
         "countryName": "Canada",
         "countryCode": "CA",
-        "latitude": 46.8137431,
-        "longitude": -71.2084061,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Quebec J7V5V5, Canada); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 45.411764,
+        "longitude": -74.050381,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms MT2 at 3500 Rue F.-X.-Tessier, Vaudreuil-Dorion, Quebec J7V5V5, Canada. PeeringDB facility 14122 identifies MT2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -19956,14 +20503,31 @@
               "statement": "3500 Rue F.-X.-Tessier, Vaudreuil-Dorion, Quebec J7V5V5, Canada"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "MT2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/14122",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "45.411764, -74.050381 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms MT2 at 3500 Rue F.-X.-Tessier, Vaudreuil-Dorion, Quebec J7V5V5, Canada. PeeringDB facility 14122 identifies MT2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -20184,11 +20748,11 @@
         "adminArea": null,
         "countryName": "Mexico",
         "countryCode": "MX",
-        "latitude": 20.8052225,
-        "longitude": -99.8837376,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Querétaro, Mexico); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 20.556925,
+        "longitude": -100.277833,
+        "coordinatePrecision": "campus",
+        "coordinateMethod": "campus_centroid",
+        "coordinateNotes": "The code-specific Equinix page confirms MX1 at Parque Tecnologico Innovacion - Lte 79, Carretera Estatal 431 Km 2.2, Querétaro 76246, Mexico. PeeringDB facility 8434 identifies a shared site containing MX1 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site."
       },
       "lifecycle": {
         "status": "operational"
@@ -20213,14 +20777,31 @@
               "statement": "Parque Tecnologico Innovacion - Lte 79, Carretera Estatal 431 Km 2.2, Querétaro 76246, Mexico"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "MX1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/8434",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "20.556925, -100.277833 at campus precision."
+            }
+          ]
         }
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
           "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms MX1 at Parque Tecnologico Innovacion - Lte 79, Carretera Estatal 431 Km 2.2, Querétaro 76246, Mexico. PeeringDB facility 8434 identifies a shared site containing MX1 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site."
         ]
       },
       "requestedPublicationState": "research"
@@ -20249,11 +20830,11 @@
         "adminArea": null,
         "countryName": "Mexico",
         "countryCode": "MX",
-        "latitude": 20.8052225,
-        "longitude": -99.8837376,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Querétaro, Mexico); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 20.556925,
+        "longitude": -100.277833,
+        "coordinatePrecision": "campus",
+        "coordinateMethod": "campus_centroid",
+        "coordinateNotes": "The code-specific Equinix page confirms MX2 at Parque Tecnologico Innovacion - Lte 80, Querétaro 76246, Mexico. PeeringDB facility 8434 identifies a shared site containing MX2 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site."
       },
       "lifecycle": {
         "status": "operational"
@@ -20278,14 +20859,31 @@
               "statement": "Parque Tecnologico Innovacion - Lte 80, Querétaro 76246, Mexico"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "MX2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/8434",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "20.556925, -100.277833 at campus precision."
+            }
+          ]
         }
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
           "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms MX2 at Parque Tecnologico Innovacion - Lte 80, Querétaro 76246, Mexico. PeeringDB facility 8434 identifies a shared site containing MX2 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site."
         ]
       },
       "requestedPublicationState": "research"
@@ -20975,18 +21573,29 @@
       "category": "data_center",
       "ownerName": null,
       "operatorName": "Equinix",
-      "aliases": [],
+      "aliases": [
+        {
+          "alias": "NY9",
+          "kind": "source_identifier",
+          "authority": "Equinix"
+        },
+        {
+          "alias": "equinix-new-york",
+          "kind": "source_identifier",
+          "authority": "Urdais manual-verification parent market"
+        }
+      ],
       "location": {
         "streetAddress": "111 8th Avenue, New York, NY 10011",
         "locality": "New York",
         "adminArea": "NY",
         "countryName": "United States",
         "countryCode": "US",
-        "latitude": 40.7417176,
-        "longitude": -74.0041592,
-        "coordinatePrecision": "street",
+        "latitude": 40.741469,
+        "longitude": -74.003387,
+        "coordinatePrecision": "building",
         "coordinateMethod": "documented_address_geocode",
-        "coordinateNotes": "Authoritative Phase 4B workbook outcome: resolved_map_ready. Ready from the original 60-record geocoding queue."
+        "coordinateNotes": "The code-specific Equinix page confirms NY9 at 111 8th Ave, New York, NY 10011, USA. PeeringDB facility 38 identifies NY9 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -21016,17 +21625,56 @@
               "statement": "Equinix NY9"
             }
           ]
+        },
+        {
+          "publisher": "Equinix",
+          "title": "Equinix New York data centers",
+          "url": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers",
+          "documentType": "company_facility_page",
+          "publishedOn": null,
+          "verificationState": "human_verified",
+          "verifiedAt": "2026-09-22T00:00:00.000Z",
+          "verificationNotes": "Bryceson manually verified NY9 and its address during the 2026-09-22 tranche review.",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "Equinix facility code NY9 belongs to the New York market listing."
+            },
+            {
+              "field": "location",
+              "statement": "111 8th Ave, New York, NY 10011, USA"
+            }
+          ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "NY9 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/38",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "40.741469, -74.003387 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-18",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
           "Canonicalized from URDAIS_GLOBAL_DATA_CENTER_EXPANSION.md; geocoding classification: geocoded_ready.",
           "The result resolves the supported 111 8th Avenue carrier-hotel address. Street precision is retained; the geocoder's Google label is not treated as facility identity evidence.",
           "Normalized from Phase 4A geocoding.",
           "Workbook evidence tier: Phase 4A validated.",
-          "Ready from the original 60-record geocoding queue."
+          "Ready from the original 60-record geocoding queue.",
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms NY9 at 111 8th Ave, New York, NY 10011, USA. PeeringDB facility 38 identifies NY9 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "aiRelevance": "no_documented_ai",
@@ -21056,11 +21704,11 @@
         "adminArea": null,
         "countryName": "Japan",
         "countryCode": "JP",
-        "latitude": 34.6937569,
-        "longitude": 135.5014539,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Osaka, Japan); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 34.675774,
+        "longitude": 135.495551,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms OS1 at 1-26-1, Shinmachi, Nishi-ku, Nishi Shinsaibashi Building, Osaka 550-0013, Japan. PeeringDB facility 1791 identifies OS1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -21085,14 +21733,31 @@
               "statement": "1-26-1, Shinmachi, Nishi-ku, Nishi Shinsaibashi Building, Osaka 550-0013, Japan"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "OS1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/1791",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "34.675774, 135.495551 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms OS1 at 1-26-1, Shinmachi, Nishi-ku, Nishi Shinsaibashi Building, Osaka 550-0013, Japan. PeeringDB facility 1791 identifies OS1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -21186,11 +21851,11 @@
         "adminArea": null,
         "countryName": "Japan",
         "countryCode": "JP",
-        "latitude": 34.6656393,
-        "longitude": 135.4324527,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Osaka 5400001, Japan); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 34.669801,
+        "longitude": 135.510335,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms OS3 at 2-2-82 Shiromi, Chuo-ku, Osaka City, Keihanshin OBP Building, Osaka 5400001, Japan. PeeringDB facility 11324 identifies OS3 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -21215,14 +21880,31 @@
               "statement": "2-2-82 Shiromi, Chuo-ku, Osaka City, Keihanshin OBP Building, Osaka 5400001, Japan"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "OS3 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/11324",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "34.669801, 135.510335 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms OS3 at 2-2-82 Shiromi, Chuo-ku, Osaka City, Keihanshin OBP Building, Osaka 5400001, Japan. PeeringDB facility 11324 identifies OS3 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -21591,11 +22273,11 @@
         "adminArea": null,
         "countryName": "France",
         "countryCode": "FR",
-        "latitude": 48.8965023,
-        "longitude": 2.4019804,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Pantin, France); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 48.901133,
+        "longitude": 2.412643,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Human review resolves the PA4/PA8x address ambiguity in favor of this PA4 building coordinate."
       },
       "lifecycle": {
         "status": "operational"
@@ -21624,10 +22306,11 @@
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: human-reviewed by Bryceson on 2026-09-23.",
+          "Human review resolves the PA4/PA8x address ambiguity in favor of this PA4 building coordinate."
         ]
       },
       "requestedPublicationState": "research"
@@ -21656,11 +22339,11 @@
         "adminArea": null,
         "countryName": "France",
         "countryCode": "FR",
-        "latitude": 48.9146078,
-        "longitude": 2.3821895,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Aubervilliers, France); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 48.90407,
+        "longitude": 2.369221,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms PA5 at 45 avenue Victor Hugo Bat 254, Building 254, 93300 Aubervilliers, France. PeeringDB facility 73 identifies PA5 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -21685,14 +22368,31 @@
               "statement": "45 avenue Victor Hugo Bat 254, Building 254, 93300 Aubervilliers, France"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "PA5 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/73",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "48.90407, 2.369221 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms PA5 at 45 avenue Victor Hugo Bat 254, Building 254, 93300 Aubervilliers, France. PeeringDB facility 73 identifies PA5 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -21721,11 +22421,11 @@
         "adminArea": null,
         "countryName": "France",
         "countryCode": "FR",
-        "latitude": 48.9146078,
-        "longitude": 2.3821895,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Aubervilliers, France); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 48.910255,
+        "longitude": 2.368248,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms PA6 at 10 rue Waldeck Rochet Bat 520, Building 520, 93300 Aubervilliers, France. PeeringDB facility 842 identifies PA6 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -21750,14 +22450,31 @@
               "statement": "10 rue Waldeck Rochet Bat 520, Building 520, 93300 Aubervilliers, France"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "PA6 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/842",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "48.910255, 2.368248 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms PA6 at 10 rue Waldeck Rochet Bat 520, Building 520, 93300 Aubervilliers, France. PeeringDB facility 842 identifies PA6 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -21786,11 +22503,11 @@
         "adminArea": null,
         "countryName": "France",
         "countryCode": "FR",
-        "latitude": 48.8953328,
-        "longitude": 2.2561602,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Courbevoie, France); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 48.904891,
+        "longitude": 2.259202,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms PA7 at 130-136 boulevard de Verdun Bat 9, Energy Park, Building 9, 92400 Courbevoie, France. PeeringDB facility 72 identifies PA7 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -21815,14 +22532,31 @@
               "statement": "130-136 boulevard de Verdun Bat 9, Energy Park, Building 9, 92400 Courbevoie, France"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "PA7 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/72",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "48.904891, 2.259202 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms PA7 at 130-136 boulevard de Verdun Bat 9, Energy Park, Building 9, 92400 Courbevoie, France. PeeringDB facility 72 identifies PA7 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -21851,11 +22585,11 @@
         "adminArea": null,
         "countryName": "France",
         "countryCode": "FR",
-        "latitude": 48.8965023,
-        "longitude": 2.4019804,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Pantin, France); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 48.9002599,
+        "longitude": 2.4232646,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Equinix confirms PA8x at 110 bis Avenue du Général Leclerc; OSM relation 1224120 is a named Equinix building at that exact numbered address."
       },
       "lifecycle": {
         "status": "operational"
@@ -21880,14 +22614,31 @@
               "statement": "110 Bis avenue du General Leclerc, Building 19, 93300 Pantin, France"
             }
           ]
+        },
+        {
+          "publisher": "OpenStreetMap",
+          "title": "PA8 coordinate evidence",
+          "url": "https://www.openstreetmap.org/relation/1224120",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "48.9002599, 2.4232646 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "Equinix confirms PA8x at 110 bis Avenue du Général Leclerc; OSM relation 1224120 is a named Equinix building at that exact numbered address."
         ]
       },
       "requestedPublicationState": "research"
@@ -22320,11 +23071,11 @@
         "adminArea": null,
         "countryName": "Brazil",
         "countryCode": "BR",
-        "latitude": -22.9110137,
-        "longitude": -43.2093727,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Rio de Janeiro, Brazil); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": -22.871261,
+        "longitude": -43.272742,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms RJ2 at Estrada Adhemar Bebiano, 1380, Del Castilho, 21051-070 Rio de Janeiro, Brazil. PeeringDB facility 1899 identifies RJ2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -22349,14 +23100,31 @@
               "statement": "Estrada Adhemar Bebiano, 1380, Del Castilho, 21051-070 Rio de Janeiro, Brazil"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "RJ2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/1899",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "-22.871261, -43.272742 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms RJ2 at Estrada Adhemar Bebiano, 1380, Del Castilho, 21051-070 Rio de Janeiro, Brazil. PeeringDB facility 1899 identifies RJ2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -22534,11 +23302,11 @@
         "adminArea": "Washington",
         "countryName": "United States",
         "countryCode": "US",
-        "latitude": 47.6038321,
-        "longitude": -122.330062,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Seattle, United States); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 47.614358,
+        "longitude": -122.338864,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms SE2 at 2001 Sixth Ave, #350, Seattle, WA 98121, USA. PeeringDB facility 86 identifies SE2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -22563,14 +23331,31 @@
               "statement": "2001 Sixth Ave, #350, Seattle, WA 98121, USA"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "SE2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/86",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "47.614358, -122.338864 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms SE2 at 2001 Sixth Ave, #350, Seattle, WA 98121, USA. PeeringDB facility 86 identifies SE2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -22599,11 +23384,11 @@
         "adminArea": "Washington",
         "countryName": "United States",
         "countryCode": "US",
-        "latitude": 47.6038321,
-        "longitude": -122.330062,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Seattle, United States); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 47.6141,
+        "longitude": -122.3381,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Human-reviewed building coordinate corresponding to 2020 Fifth Avenue."
       },
       "lifecycle": {
         "status": "operational"
@@ -22632,10 +23417,11 @@
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: human-reviewed by Bryceson on 2026-09-23.",
+          "Human-reviewed building coordinate corresponding to 2020 Fifth Avenue."
         ]
       },
       "requestedPublicationState": "research"
@@ -23178,11 +23964,11 @@
         "adminArea": null,
         "countryName": "China",
         "countryCode": "CN",
-        "latitude": 31.2312707,
-        "longitude": 121.4700152,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Shanghai, China); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 31.248494,
+        "longitude": 121.619756,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms SH3 at Building No. 3, 700 Jinyu Road, Pudong New Area, Shanghai 201206, China. PeeringDB facility 14362 identifies SH3 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -23207,14 +23993,31 @@
               "statement": "Building No. 3, 700 Jinyu Road, Pudong New Area, Shanghai 201206, China"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "SH3 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/14362",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "31.248494, 121.619756 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms SH3 at Building No. 3, 700 Jinyu Road, Pudong New Area, Shanghai 201206, China. PeeringDB facility 14362 identifies SH3 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -23243,11 +24046,11 @@
         "adminArea": null,
         "countryName": "China",
         "countryCode": "CN",
-        "latitude": 31.2312707,
-        "longitude": 121.4700152,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Shanghai, China); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 31.276786,
+        "longitude": 121.541634,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Human-selected building coordinate after reviewing the PeeringDB address conflict."
       },
       "lifecycle": {
         "status": "operational"
@@ -23276,10 +24079,11 @@
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: human-reviewed by Bryceson on 2026-09-23.",
+          "Human-selected building coordinate after reviewing the PeeringDB address conflict."
         ]
       },
       "requestedPublicationState": "research"
@@ -23372,11 +24176,11 @@
         "adminArea": null,
         "countryName": "Sweden",
         "countryCode": "SE",
-        "latitude": 59.339769,
-        "longitude": 17.9395411,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (65 Bromma, Sweden); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 59.362574,
+        "longitude": 17.955657,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms SK1 at Mariehallsvagen 36 Box 20165 S-161 02 Bromma Sweden, 168 65 Bromma, Sweden. PeeringDB facility 156 identifies SK1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -23401,14 +24205,31 @@
               "statement": "Mariehallsvagen 36 Box 20165 S-161 02 Bromma Sweden, 168 65 Bromma, Sweden"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "SK1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/156",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "59.362574, 17.955657 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms SK1 at Mariehallsvagen 36 Box 20165 S-161 02 Bromma Sweden, 168 65 Bromma, Sweden. PeeringDB facility 156 identifies SK1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -23501,11 +24322,11 @@
         "adminArea": null,
         "countryName": "Sweden",
         "countryCode": "SE",
-        "latitude": 59.3891166,
-        "longitude": 17.924999,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (53 Spanga, Sweden); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 59.390932,
+        "longitude": 17.875185,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms SK3 at Finspangsgatan 48, 16353 Spanga, 163 53 Spanga, Sweden. PeeringDB facility 3193 identifies SK3 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -23530,14 +24351,31 @@
               "statement": "Finspangsgatan 48, 16353 Spanga, 163 53 Spanga, Sweden"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "SK3 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/3193",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "59.390932, 17.875185 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms SK3 at Finspangsgatan 48, 16353 Spanga, 163 53 Spanga, Sweden. PeeringDB facility 3193 identifies SK3 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -23566,11 +24404,11 @@
         "adminArea": null,
         "countryName": "South Korea",
         "countryCode": "KR",
-        "latitude": 37.5666791,
-        "longitude": 126.9782914,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Seoul, South Korea); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 37.580228,
+        "longitude": 126.8907,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms SL1 at 3F, 24, Worldcupbukro 60-gil, Mapo-gu, Samsung SDS SangAm IT Center, Seoul, Seoul 3922, Republic of Korea. PeeringDB facility 7354 identifies SL1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -23595,14 +24433,31 @@
               "statement": "3F, 24, Worldcupbukro 60-gil, Mapo-gu, Samsung SDS SangAm IT Center, Seoul, Seoul 3922, Republic of Korea"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "SL1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/7354",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "37.580228, 126.8907 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms SL1 at 3F, 24, Worldcupbukro 60-gil, Mapo-gu, Samsung SDS SangAm IT Center, Seoul, Seoul 3922, Republic of Korea. PeeringDB facility 7354 identifies SL1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -23631,11 +24486,11 @@
         "adminArea": null,
         "countryName": "South Korea",
         "countryCode": "KR",
-        "latitude": 37.2884675,
-        "longitude": 127.0535231,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Gyeonggi-do, South Korea); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 37.599421,
+        "longitude": 126.893997,
+        "coordinatePrecision": "campus",
+        "coordinateMethod": "campus_centroid",
+        "coordinateNotes": "Equinix documentation places SL2x and SL4 together at the 69 Hyangdong-ro site; the shared point is therefore retained only at campus precision, using the coordinate-bearing SL4 record for the documented shared campus and not as a building inference."
       },
       "lifecycle": {
         "status": "operational"
@@ -23660,14 +24515,31 @@
               "statement": "69, Hyangdong-ro, Deogyang-gu, Goyang-si, Gyeonggi-do 10545, Republic of Korea"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "SL2x coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/15854",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "37.599421, 126.893997 at campus precision."
+            }
+          ]
         }
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
           "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "Equinix documentation places SL2x and SL4 together at the 69 Hyangdong-ro site; the shared point is therefore retained only at campus precision, using the coordinate-bearing SL4 record for the documented shared campus and not as a building inference."
         ]
       },
       "requestedPublicationState": "research"
@@ -23696,11 +24568,11 @@
         "adminArea": null,
         "countryName": "South Korea",
         "countryCode": "KR",
-        "latitude": 37.2884675,
-        "longitude": 127.0535231,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Gyeonggi, South Korea); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 37.599421,
+        "longitude": 126.893997,
+        "coordinatePrecision": "campus",
+        "coordinateMethod": "campus_centroid",
+        "coordinateNotes": "The code-specific Equinix page confirms SL4 at 69 Hyangdong-ro, and Equinix documentation places SL2x at the same site. PeeringDB facility 15854 supplies the shared coordinate, so the proposal is limited to campus precision rather than assigning one building point to both facilities."
       },
       "lifecycle": {
         "status": "operational"
@@ -23725,14 +24597,31 @@
               "statement": "69, Hyangdong-ro, Deogyang-gu, Goyang-si, Gyeonggi 10545, Republic of Korea"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "SL4 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/15854",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "37.599421, 126.893997 at campus precision."
+            }
+          ]
         }
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
           "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms SL4 at 69 Hyangdong-ro, and Equinix documentation places SL2x at the same site. PeeringDB facility 15854 supplies the shared coordinate, so the proposal is limited to campus precision rather than assigning one building point to both facilities."
         ]
       },
       "requestedPublicationState": "research"
@@ -23761,11 +24650,11 @@
         "adminArea": null,
         "countryName": "Bulgaria",
         "countryCode": "BG",
-        "latitude": 42.6474955,
-        "longitude": 23.382051,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Mladost, Bulgaria); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 42.668521,
+        "longitude": 23.395329,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Human-reviewed building coordinate; the coordinate source address differs from the frozen address and the discrepancy remains recorded."
       },
       "lifecycle": {
         "status": "operational"
@@ -23794,10 +24683,11 @@
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: human-reviewed by Bryceson on 2026-09-23.",
+          "Human-reviewed building coordinate; the coordinate source address differs from the frozen address and the discrepancy remains recorded."
         ]
       },
       "requestedPublicationState": "research"
@@ -23826,11 +24716,11 @@
         "adminArea": null,
         "countryName": "Bulgaria",
         "countryCode": "BG",
-        "latitude": 42.6977028,
-        "longitude": 23.3217359,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Sofia, Bulgaria); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 42.67572,
+        "longitude": 23.401498,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms SO2 at 33 Nedelcho Bonchev str, 1528 Sofia, Bulgaria. PeeringDB facility 7097 identifies SO2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -23855,14 +24745,31 @@
               "statement": "33 Nedelcho Bonchev str, 1528 Sofia, Bulgaria"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "SO2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/7097",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "42.67572, 23.401498 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms SO2 at 33 Nedelcho Bonchev str, 1528 Sofia, Bulgaria. PeeringDB facility 7097 identifies SO2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -23891,11 +24798,11 @@
         "adminArea": null,
         "countryName": "Brazil",
         "countryCode": "BR",
-        "latitude": -23.5506507,
-        "longitude": -46.6333824,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Sao Paulo, Brazil); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": -23.545988,
+        "longitude": -46.635836,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms SP1 at Rua Doutor Miguel Couto, 58, Centro, 01008-010 Sao Paulo, Brazil. PeeringDB facility 1585 identifies SP1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -23920,14 +24827,31 @@
               "statement": "Rua Doutor Miguel Couto, 58, Centro, 01008-010 Sao Paulo, Brazil"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "SP1 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/1585",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "-23.545988, -46.635836 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms SP1 at Rua Doutor Miguel Couto, 58, Centro, 01008-010 Sao Paulo, Brazil. PeeringDB facility 1585 identifies SP1 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -23956,11 +24880,11 @@
         "adminArea": null,
         "countryName": "Brazil",
         "countryCode": "BR",
-        "latitude": -23.5112184,
-        "longitude": -46.8764612,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Barueri, Brazil); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": -23.5027,
+        "longitude": -46.827255,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms SP2 at Alameda Araguaia, 3641, Alphaville, 06455-000 Barueri, Brazil. PeeringDB facility 1283 identifies SP2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -23985,14 +24909,31 @@
               "statement": "Alameda Araguaia, 3641, Alphaville, 06455-000 Barueri, Brazil"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "SP2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/1283",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "-23.5027, -46.827255 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms SP2 at Alameda Araguaia, 3641, Alphaville, 06455-000 Barueri, Brazil. PeeringDB facility 1283 identifies SP2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -24085,11 +25026,11 @@
         "adminArea": null,
         "countryName": "Brazil",
         "countryCode": "BR",
-        "latitude": -23.5112184,
-        "longitude": -46.8764612,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Barueri, Brazil); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": -23.497589,
+        "longitude": -46.814577,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms SP4 at Avenida Ceci, 1900 - Conjunto A, Tambore, 06460-120 Barueri, Brazil. PeeringDB facility 165 identifies SP4 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -24114,14 +25055,31 @@
               "statement": "Avenida Ceci, 1900 - Conjunto A, Tambore, 06460-120 Barueri, Brazil"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "SP4 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/165",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "-23.497589, -46.814577 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms SP4 at Avenida Ceci, 1900 - Conjunto A, Tambore, 06460-120 Barueri, Brazil. PeeringDB facility 165 identifies SP4 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -24150,11 +25108,11 @@
         "adminArea": null,
         "countryName": "Brazil",
         "countryCode": "BR",
-        "latitude": -23.4446715,
-        "longitude": -46.9167722,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Santana de Parnaiba, Brazil); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": -23.472,
+        "longitude": -46.685,
+        "coordinatePrecision": "street",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Human-reviewed coordinate. Exact address confirmed; coordinate is approximate and weakly sourced, so precision is limited to street."
       },
       "lifecycle": {
         "status": "operational"
@@ -24183,10 +25141,11 @@
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
           "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Coordinate provenance: human-reviewed by Bryceson on 2026-09-23.",
+          "Human-reviewed coordinate. Exact address confirmed; coordinate is approximate and weakly sourced, so precision is limited to street."
         ]
       },
       "requestedPublicationState": "research"
@@ -24215,11 +25174,11 @@
         "adminArea": null,
         "countryName": "Brazil",
         "countryCode": "BR",
-        "latitude": -23.5506507,
-        "longitude": -46.6333824,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Sao Paulo, Brazil); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": -23.460369,
+        "longitude": -46.859912,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Human-selected building coordinate after reviewing the PeeringDB address conflict."
       },
       "lifecycle": {
         "status": "operational"
@@ -24248,10 +25207,11 @@
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: human-reviewed by Bryceson on 2026-09-23.",
+          "Human-selected building coordinate after reviewing the PeeringDB address conflict."
         ]
       },
       "requestedPublicationState": "research"
@@ -24472,11 +25432,11 @@
         "adminArea": null,
         "countryName": "Chile",
         "countryCode": "CL",
-        "latitude": -33.4376995,
-        "longitude": -70.6510671,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Santiago, Chile); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": -34.429019,
+        "longitude": -71.083703,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms ST4 at Ruta 66, Camino de la Fruta, S/N, San Pedro, Región Metropolitana, Santiago, Chile. PeeringDB facility 12706 identifies ST4 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -24501,14 +25461,31 @@
               "statement": "Ruta 66, Camino de la Fruta, S/N, San Pedro, Región Metropolitana, Santiago, Chile"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "ST4 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/12706",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "-34.429019, -71.083703 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms ST4 at Ruta 66, Camino de la Fruta, S/N, San Pedro, Región Metropolitana, Santiago, Chile. PeeringDB facility 12706 identifies ST4 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"
@@ -24793,11 +25770,11 @@
         "adminArea": "California",
         "countryName": "United States",
         "countryCode": "US",
-        "latitude": 37.2333253,
-        "longitude": -121.6846349,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Santa Clara, United States); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 37.3749462,
+        "longitude": -121.988474,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Equinix confirms SV14 at 2960 Corvin Drive, Pod D; OSM way 205823980 is the separately named Equinix SV14 data-center building at that address."
       },
       "lifecycle": {
         "status": "operational"
@@ -24822,14 +25799,31 @@
               "statement": "2960 Corvin Drive, Pod D, Santa Clara, CA 95051, USA"
             }
           ]
+        },
+        {
+          "publisher": "OpenStreetMap",
+          "title": "SV14 coordinate evidence",
+          "url": "https://www.openstreetmap.org/way/205823980",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "37.3749462, -121.988474 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "Equinix confirms SV14 at 2960 Corvin Drive, Pod D; OSM way 205823980 is the separately named Equinix SV14 data-center building at that address."
         ]
       },
       "requestedPublicationState": "research"
@@ -26826,11 +27820,11 @@
         "adminArea": null,
         "countryName": "Poland",
         "countryCode": "PL",
-        "latitude": 52.2319581,
-        "longitude": 21.0067249,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (02- Warsaw, Poland); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 52.15476,
+        "longitude": 21.002384,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "The code-specific Equinix page confirms WA2 at Poleczki 23 Street, 02-822 Warsaw, Poland. PeeringDB facility 2908 identifies WA2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
       },
       "lifecycle": {
         "status": "operational"
@@ -26855,14 +27849,31 @@
               "statement": "Poleczki 23 Street, 02-822 Warsaw, Poland"
             }
           ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "title": "WA2 coordinate evidence",
+          "url": "https://www.peeringdb.com/fac/2908",
+          "documentType": "facility_directory",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Used during the Equinix precision-recovery evidence pass.",
+          "claims": [
+            {
+              "field": "coordinates",
+              "statement": "52.15476, 21.002384 at building precision."
+            }
+          ]
         }
       ],
       "quality": {
-        "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "confidence": "high",
+        "lastVerifiedDate": "2026-09-23",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Geocoder precision classification: exact_or_rooftop.",
+          "Coordinate provenance: Equinix precision-recovery evidence pass.",
+          "The code-specific Equinix page confirms WA2 at Poleczki 23 Street, 02-822 Warsaw, Poland. PeeringDB facility 2908 identifies WA2 and supplies a coordinate consistent with that address. The proposal is limited to building precision."
         ]
       },
       "requestedPublicationState": "research"

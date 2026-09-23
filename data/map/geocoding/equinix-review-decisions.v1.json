@@ -1,0 +1,107 @@
+{
+  "decisionVersion": "urdais.map.equinix-review-decisions/1",
+  "reviewedAt": "2026-09-23T00:00:00.000Z",
+  "reviewer": "Bryceson",
+  "decisions": [
+    {
+      "researchKey": "equinix-sp5x",
+      "action": "use_reviewed_coordinate",
+      "latitude": -23.472,
+      "longitude": -46.685,
+      "coordinatePrecision": "street",
+      "precisionClass": "interpolated_or_street",
+      "reason": "Human-reviewed coordinate. Exact address confirmed; coordinate is approximate and weakly sourced, so precision is limited to street.",
+      "evidenceUrl": "https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/sao-paulo-data-centers/sp5x"
+    },
+    {
+      "researchKey": "equinix-sp6",
+      "action": "use_reviewed_coordinate",
+      "latitude": -23.460369,
+      "longitude": -46.859912,
+      "coordinatePrecision": "building",
+      "precisionClass": "exact_or_rooftop",
+      "reason": "Human-selected building coordinate after reviewing the PeeringDB address conflict.",
+      "evidenceUrl": "https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/sao-paulo-data-centers/sp6"
+    },
+    {
+      "researchKey": "equinix-so1",
+      "action": "use_reviewed_coordinate",
+      "latitude": 42.668521,
+      "longitude": 23.395329,
+      "coordinatePrecision": "building",
+      "precisionClass": "exact_or_rooftop",
+      "reason": "Human-reviewed building coordinate; the coordinate source address differs from the frozen address and the discrepancy remains recorded.",
+      "evidenceUrl": "https://www.equinix.com/data-centers/europe-colocation/bulgaria-colocation/sofia-data-centers/so1"
+    },
+    {
+      "researchKey": "equinix-sh5",
+      "action": "use_reviewed_coordinate",
+      "latitude": 31.276786,
+      "longitude": 121.541634,
+      "coordinatePrecision": "building",
+      "precisionClass": "exact_or_rooftop",
+      "reason": "Human-selected building coordinate after reviewing the PeeringDB address conflict.",
+      "evidenceUrl": "https://www.equinix.com/data-centers/asia-pacific-colocation/china-colocation/shanghai-data-centers/sh5"
+    },
+    {
+      "researchKey": "equinix-pa4",
+      "action": "use_reviewed_coordinate",
+      "latitude": 48.901133,
+      "longitude": 2.412643,
+      "coordinatePrecision": "building",
+      "precisionClass": "exact_or_rooftop",
+      "reason": "Human review resolves the PA4/PA8x address ambiguity in favor of this PA4 building coordinate.",
+      "evidenceUrl": "https://www.equinix.com/data-centers/europe-colocation/france-colocation/paris-data-centers/pa4"
+    },
+    {
+      "researchKey": "equinix-mo1",
+      "action": "use_reviewed_coordinate",
+      "latitude": 25.738175,
+      "longitude": -100.203438,
+      "coordinatePrecision": "street",
+      "precisionClass": "interpolated_or_street",
+      "reason": "Multiple registries disagree; the reviewed primary coordinate is accepted conservatively at street precision.",
+      "evidenceUrl": "https://www.equinix.com/data-centers/americas-colocation/mexico-colocation/monterrey-data-centers/mo1"
+    },
+    {
+      "researchKey": "equinix-mo2",
+      "action": "use_reviewed_coordinate",
+      "latitude": 25.72546,
+      "longitude": -100.132852,
+      "coordinatePrecision": "building",
+      "precisionClass": "exact_or_rooftop",
+      "reason": "Human-reviewed building coordinate accepted despite the address disagreement.",
+      "evidenceUrl": "https://www.equinix.com/data-centers/americas-colocation/mexico-colocation/monterrey-data-centers/mo2"
+    },
+    {
+      "researchKey": "equinix-dx2",
+      "action": "use_reviewed_coordinate",
+      "latitude": 25.030113,
+      "longitude": 55.186405,
+      "coordinatePrecision": "building",
+      "precisionClass": "exact_or_rooftop",
+      "reason": "Human review favors the Meydan/Nad Al Sheba building location despite the conflicting directory address.",
+      "evidenceUrl": "https://www.equinix.com/data-centers/europe-colocation/united-arab-emirates-colocation/dubai-data-centers/dx2"
+    },
+    {
+      "researchKey": "equinix-ny4",
+      "action": "use_reviewed_coordinate",
+      "latitude": 40.778534,
+      "longitude": -74.072237,
+      "coordinatePrecision": "building",
+      "precisionClass": "exact_or_rooftop",
+      "reason": "Human review records that this coordinate aligns with the 755 Secaucus Road facility.",
+      "evidenceUrl": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers/ny4"
+    },
+    {
+      "researchKey": "equinix-se3",
+      "action": "use_reviewed_coordinate",
+      "latitude": 47.6141,
+      "longitude": -122.3381,
+      "coordinatePrecision": "building",
+      "precisionClass": "exact_or_rooftop",
+      "reason": "Human-reviewed building coordinate corresponding to 2020 Fifth Avenue.",
+      "evidenceUrl": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/seattle-data-centers/se3"
+    }
+  ]
+}

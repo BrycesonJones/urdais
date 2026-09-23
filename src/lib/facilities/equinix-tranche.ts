@@ -74,7 +74,7 @@ export type EquinixQueueItem = EquinixSourceFacility & {
 };
 
 export type EquinixGeocodeResult = Omit<GeocodeResult, "provider" | "coordinatePrecision"> & {
-  provider: "nominatim" | "manual_review";
+  provider: "nominatim" | "precision_recovery" | "manual_review";
   /**
    * Widened past the geocoder's own union to include `city`. A city centroid is
    * a location and not a position, so it is stored and is not map-eligible —
@@ -90,6 +90,15 @@ export type EquinixGeocodeResult = Omit<GeocodeResult, "provider" | "coordinateP
   selectedQuery: string | null;
   fallbackUsed: boolean;
   precisionClass: "exact_or_rooftop" | "interpolated_or_street" | "lower_precision" | "unresolved";
+  /** Coordinate-specific evidence added after the original Nominatim pass. */
+  coordinateEvidenceUrls?: readonly string[];
+  /** Sources inspected during recovery, including sources rejected as conflicting. */
+  researchEvidenceUrls?: readonly string[];
+  evidenceTier?: string;
+  recoveryConfidence?: "high" | "medium" | "low";
+  recoveryDisposition?: "upgrade" | "retain_city" | "needs_human_review";
+  reviewedAt?: string;
+  reviewer?: string;
 };
 
 export function normalizedAddress(value: string | null): string {
@@ -567,6 +576,12 @@ export function applyEquinixReviewDecisions(
       precisionClass: decision.precisionClass,
       outcome: "geocoded_ready" as const,
       outcomeReason: decision.reason,
+      coordinateEvidenceUrls: decision.evidenceUrl
+        ? [...new Set([...(result.coordinateEvidenceUrls ?? []), decision.evidenceUrl])]
+        : result.coordinateEvidenceUrls,
+      recoveryDisposition: "needs_human_review" as const,
+      reviewedAt: decisions.reviewedAt,
+      reviewer: decisions.reviewer,
     };
   });
 
@@ -681,4 +696,3 @@ export function projectEquinixFacilities(
   const facilities = [...byKey.values()].sort((a, b) => a.researchKey.localeCompare(b.researchKey));
   return { facilities, inserted, preserved: preserved.sort(), unchangedOutsideTranche, excluded };
 }
-
