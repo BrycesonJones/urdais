@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import {
   campusKey,
   classifyEquinixPrecision,
+  applyEquinixReviewDecisions,
   classifyReviewIssue,
   namedFacilityCodes,
   resolveByNamedIdentity,
@@ -16,8 +17,10 @@ import {
   simplifiedEquinixQuery,
   streetLevelFallbackQuery,
   validateEquinixTranche,
+  type EquinixGeocodeResult,
   type EquinixTranche,
 } from "@/lib/facilities/equinix-tranche";
+import { demoteSharedBuildingPrecision } from "@/lib/map/precision/demoteSharedBuildingPrecision";
 
 const tranche = JSON.parse(readFileSync("data/map/equinix-manual-tranche.v1.json", "utf8")) as EquinixTranche;
 
@@ -230,5 +233,86 @@ describe("the review queue", () => {
   it("says whether an ambiguous case is a shared address or simply unranked", () => {
     expect(classifyReviewIssue(result({ returnedFormattedAddress: "somewhere" }), true).issueSummary).toContain("share this address or campus");
     expect(classifyReviewIssue(result({ returnedFormattedAddress: "somewhere" }), false).issueSummary).toContain("multiple similarly ranked");
+  });
+});
+
+describe("applyEquinixReviewDecisions", () => {
+  const base: EquinixGeocodeResult = {
+    researchKey: "equinix-me2",
+    provider: "nominatim" as const,
+    facilityCode: "ME2",
+    latitude: -37.823209,
+    longitude: 144.9155089,
+    coordinatePrecision: "building",
+    precisionClass: "exact_or_rooftop",
+    outcome: "geocoded_review",
+    outcomeReason: "Provider returned multiple similarly ranked candidates.",
+    returnedFormattedAddress: "Equinix ME1, Lorimer Street",
+    sourceUrl: "https://www.equinix.com/x",
+  } as unknown as EquinixGeocodeResult;
+
+  const decisions = (rows: unknown[]) => ({
+    decisionVersion: "urdais.map.equinix-review-decisions/1",
+    reviewedAt: "2026-09-22T00:00:00.000Z",
+    reviewer: "Bryceson",
+    decisions: rows,
+  }) as never;
+
+  it("takes the reviewer's coordinate and records why", () => {
+    const { results, applied, issues } = applyEquinixReviewDecisions([base], decisions([{
+      researchKey: "equinix-me2", action: "use_reviewed_coordinate",
+      coordinatePrecision: "street", precisionClass: "interpolated_or_street",
+      latitude: -37.8222, longitude: 144.9154, reason: "Located from the operator floor plan; ME2 shares the ME1 building.",
+    }]));
+    expect(issues).toEqual([]);
+    expect(applied).toEqual(["equinix-me2"]);
+    expect(results[0]!.latitude).toBe(-37.8222);
+    expect(results[0]!.provider).toBe("manual_review");
+    expect(results[0]!.outcome).toBe("geocoded_ready");
+    expect(results[0]!.outcomeReason).toContain("shares the ME1 building");
+  });
+
+  it("keeps the provider coordinate when the reviewer only confirms it", () => {
+    const { results } = applyEquinixReviewDecisions([base], decisions([{
+      researchKey: "equinix-me2", action: "accept_provider_result",
+      coordinatePrecision: "street", precisionClass: "interpolated_or_street", reason: "Correct address, wrong hall; street precision is what this supports.",
+    }]));
+    expect(results[0]!.latitude).toBe(base.latitude);
+    expect(results[0]!.coordinatePrecision).toBe("street");
+  });
+
+  it("refuses a reviewed coordinate that was never supplied", () => {
+    const { issues } = applyEquinixReviewDecisions([base], decisions([{
+      researchKey: "equinix-me2", action: "use_reviewed_coordinate",
+      coordinatePrecision: "street", precisionClass: "interpolated_or_street", reason: "x",
+    }]));
+    expect(issues.join(" ")).toContain("supplies none");
+  });
+
+  it("refuses a decision with no reason, and one for a facility not in the tranche", () => {
+    expect(applyEquinixReviewDecisions([base], decisions([{
+      researchKey: "equinix-me2", action: "accept_provider_result",
+      coordinatePrecision: "street", precisionClass: "interpolated_or_street", reason: "  ",
+    }])).issues.join(" ")).toContain("no reason recorded");
+    expect(applyEquinixReviewDecisions([base], decisions([{
+      researchKey: "equinix-zz9", action: "accept_provider_result",
+      coordinatePrecision: "street", precisionClass: "interpolated_or_street", reason: "x",
+    }])).issues.join(" ")).toContain("not in this tranche");
+  });
+
+  it("still lets the shared-point rule overrule a reviewer's building claim", () => {
+    // Being looked at by a person establishes where the address is, not which
+    // hall inside it. Two reviewed facilities on one point are still one point.
+    const pair: EquinixGeocodeResult[] = [
+      { ...base, researchKey: "equinix-a" },
+      { ...base, researchKey: "equinix-b" },
+    ];
+    const { results } = applyEquinixReviewDecisions(pair, decisions([
+      { researchKey: "equinix-a", action: "accept_provider_result", coordinatePrecision: "building", precisionClass: "exact_or_rooftop", reason: "x" },
+      { researchKey: "equinix-b", action: "accept_provider_result", coordinatePrecision: "building", precisionClass: "exact_or_rooftop", reason: "x" },
+    ]));
+    const demoted = demoteSharedBuildingPrecision(results);
+    expect(demoted.demoted).toEqual(["equinix-a", "equinix-b"]);
+    expect(demoted.results.every((row) => row.coordinatePrecision === "street")).toBe(true);
   });
 });

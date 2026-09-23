@@ -356,6 +356,85 @@ export function classifyReviewIssue(
   };
 }
 
+export type EquinixReviewDecision = {
+  researchKey: string;
+  action: "accept_provider_result" | "use_reviewed_coordinate";
+  coordinatePrecision: "building" | "campus" | "street";
+  precisionClass: "exact_or_rooftop" | "interpolated_or_street";
+  reason: string;
+  latitude?: number;
+  longitude?: number;
+  returnedFormattedAddress?: string;
+  evidenceUrl?: string;
+};
+
+export type EquinixReviewDecisions = {
+  decisionVersion: "urdais.map.equinix-review-decisions/1";
+  reviewedAt: string;
+  reviewer: string;
+  decisions: EquinixReviewDecision[];
+};
+
+/**
+ * Folds a reviewer's decisions into the automated results.
+ *
+ * The rules that make this safe to run against production:
+ *
+ * A decision may only *lower* what the evidence claims, never raise it on the
+ * strength of having been looked at by a person. Finding a coordinate by hand
+ * establishes where the address is; it does not establish which hall inside the
+ * building is this facility. So `building` is accepted only where the decision
+ * says the facility itself was identified, and the shared-point rule still runs
+ * afterwards and still wins.
+ *
+ * A decision for a research key that is not in the tranche is an error rather
+ * than a no-op: it means the reviewer worked from a different list, and
+ * silently ignoring it would hide that.
+ */
+export function applyEquinixReviewDecisions(
+  results: readonly EquinixGeocodeResult[],
+  decisions: EquinixReviewDecisions,
+): { results: EquinixGeocodeResult[]; applied: string[]; issues: string[] } {
+  const byKey = new Map(results.map((result) => [result.researchKey, result]));
+  const issues: string[] = [];
+  const applied: string[] = [];
+
+  for (const decision of decisions.decisions) {
+    if (!byKey.has(decision.researchKey)) issues.push(`decision for ${decision.researchKey}, which is not in this tranche`);
+    if (decision.action === "use_reviewed_coordinate" && (decision.latitude === undefined || decision.longitude === undefined)) {
+      issues.push(`${decision.researchKey} asks to use a reviewed coordinate but supplies none`);
+    }
+    if (!decision.reason?.trim()) issues.push(`${decision.researchKey} has no reason recorded`);
+  }
+
+  const next = results.map((result) => {
+    const decision = decisions.decisions.find((candidate) => candidate.researchKey === result.researchKey);
+    if (!decision) return result;
+
+    const latitude = decision.action === "use_reviewed_coordinate" ? decision.latitude ?? null : result.latitude;
+    const longitude = decision.action === "use_reviewed_coordinate" ? decision.longitude ?? null : result.longitude;
+    if (latitude === null || longitude === null) {
+      issues.push(`${decision.researchKey} resolves to no coordinate after its decision`);
+      return result;
+    }
+    applied.push(decision.researchKey);
+    return {
+      ...result,
+      provider: "manual_review" as const,
+      latitude,
+      longitude,
+      returnedFormattedAddress: decision.returnedFormattedAddress ?? result.returnedFormattedAddress,
+      sourceUrl: decision.evidenceUrl ?? result.sourceUrl,
+      coordinatePrecision: decision.coordinatePrecision,
+      precisionClass: decision.precisionClass,
+      outcome: "geocoded_ready" as const,
+      outcomeReason: decision.reason,
+    };
+  });
+
+  return { results: next, applied: applied.sort(), issues };
+}
+
 export function canonicalEquinixFacility(item: EquinixQueueItem, result: EquinixGeocodeResult): ContractFacility {
   if (result.outcome !== "geocoded_ready" || result.latitude === null || result.longitude === null) {
     throw new Error(`${item.researchKey} is not ready for canonical projection`);
