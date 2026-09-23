@@ -6,6 +6,20 @@ export type DocPage = {
   description: string;
   section: DocSection;
   file: string;
+  /**
+   * Whether the page is offered as current public documentation. Omitted means yes; only a
+   * withheld page says otherwise, so registering a page stays a single unadorned entry.
+   *
+   * A withheld page keeps everything else: its registration here, its slug, its title, and above
+   * all its file, whose bytes are frozen -- a methodology document's SHA-256 is the
+   * `content_hash` of an approved methodology version. Withholding is a presentation decision and
+   * must never reach the document.
+   *
+   * This is the docs half of `publiclyPresented` in @/data/market-catalog: a methodology document
+   * for an index Urdais no longer presents as a product is not current public documentation
+   * either. The two are set independently, because a document can outlive its product.
+   */
+  publiclyListed?: false;
 };
 
 /** Order controls navigation and previous/next. Register only published pages.
@@ -33,8 +47,12 @@ export const docPages: readonly DocPage[] = [
     section: "Methodology",
     file: "methodology/ai-equity-universe.md",
   },
+  // UGAI and UAVI are not publicly presented products, so their methodology documents are not
+  // current public documentation. Both entries stay: the documents, their versions and their
+  // cross-links are preserved exactly, and restoring either page is removing one line.
   {
     slug: "methodology/ugai",
+    publiclyListed: false,
     title: "UGAI",
     description: "Proposed methodology for the Urdais Global AI Index: calculation, index shares, divisor, currency, corporate actions, and publication on top of the AI Equity Universe.",
     section: "Methodology",
@@ -42,6 +60,7 @@ export const docPages: readonly DocPage[] = [
   },
   {
     slug: "methodology/uavi",
+    publiclyListed: false,
     title: "UAVI",
     description: "Proposed methodology for the Urdais AI Volatility Index: options reference securities, 30-day VIX-style implied constituent variance, and aggregation over the AI Equity Universe.",
     section: "Methodology",
@@ -238,10 +257,39 @@ export const docPages: readonly DocPage[] = [
 
 export const docSections: readonly DocSection[] = ["Overview", "Methodology", "Developers", "Resources"];
 
+/**
+ * The pages offered as current public documentation: the navigation, the route's static params,
+ * the previous/next pager and the file loader all read this, never `docPages`.
+ *
+ * `docPages` stays the canonical registry so a withheld document keeps its identity and its file
+ * mapping, and so the order the registry declares is still the order the public pager walks.
+ */
+export const publicDocPages: readonly DocPage[] = docPages.filter((page) => page.publiclyListed !== false);
+
 export function docHref(slug: string) {
   return slug ? `/docs/${slug}` : "/docs";
 }
 
+/** Registry lookup across every page, listed publicly or not. */
 export function findDoc(slug: string) {
   return docPages.find((page) => page.slug === slug);
+}
+
+/** Lookup restricted to current public documentation. A withheld slug resolves to nothing. */
+export function findPublicDoc(slug: string) {
+  return publicDocPages.find((page) => page.slug === slug);
+}
+
+/**
+ * Whether a `/docs/...` href points at a page the public documentation offers.
+ *
+ * Used by the renderer: the withheld documents are still linked to from documents that remain
+ * public, and those documents cannot be edited to remove the links. The link is rendered as plain
+ * text instead, so browsing the public docs never leads to a 404.
+ */
+export function isPublicDocHref(href: string): boolean {
+  if (!href.startsWith("/docs")) return true;
+  const slug = (href.replace(/^\/docs\/?/, "").split(/[#?]/)[0] ?? "").replace(/\/$/, "");
+  if (!slug) return true;
+  return findDoc(slug) === undefined || findPublicDoc(slug) !== undefined;
 }

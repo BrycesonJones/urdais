@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { docHref, docPages, docSections } from "@/lib/docs/catalog";
+import { docHref, docSections, publicDocPages } from "@/lib/docs/catalog";
 
 function NavigationLinks() {
   const pathname = usePathname().replace(/\/$/, "");
   return (
     <nav aria-label="Documentation">
       {docSections.map((section) => {
-        const pages = docPages.filter((page) => page.section === section);
+        const pages = publicDocPages.filter((page) => page.section === section);
         if (!pages.length) return null;
         return (
           <div key={section} className="docs-nav-section">
