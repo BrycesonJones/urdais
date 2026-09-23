@@ -20487,321 +20487,422 @@
       "researchKey": "equinix-ny2",
       "canonicalName": "Equinix NY2",
       "category": "data_center",
-      "ownerName": "Equinix",
+      "ownerName": null,
       "operatorName": "Equinix",
-      "aliases": [
-        {
-          "alias": "NY2",
-          "kind": "source_identifier",
-          "authority": "Equinix"
-        },
-        {
-          "alias": "equinix-new-york",
-          "kind": "source_identifier",
-          "authority": "Urdais manual-verification parent market"
-        }
-      ],
+      "aliases": [],
       "location": {
-        "streetAddress": "275 Hartz Way, Secaucus, NJ 07094, USA",
-        "locality": "Secaucus",
-        "adminArea": "New Jersey",
+        "streetAddress": "275 Hartz Way, Secaucus, NJ 07094",
+        "locality": null,
+        "adminArea": null,
         "countryName": "United States",
         "countryCode": "US",
         "latitude": 40.7775822,
         "longitude": -74.0759403,
         "coordinatePrecision": "building",
         "coordinateMethod": "documented_address_geocode",
-        "coordinateNotes": "Top result is a valid non-centroid match in the expected country, region, and locality."
+        "coordinateNotes": "Authoritative Phase 4B workbook outcome: resolved_map_ready. Prior location label: Secaucus, NJ. Reject PeeringDB fac 36 bundle at 800 Secaucus Rd (NY5)."
       },
       "lifecycle": {
-        "status": "operational"
+        "status": null,
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": null
       },
+      "facts": [],
       "evidence": [
         {
           "publisher": "Equinix",
-          "title": "Equinix New York data centers",
-          "url": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers",
           "documentType": "company_facility_page",
+          "title": "equinix.com/ny2",
+          "url": "https://equinix.com/ny2",
           "publishedOn": null,
-          "verificationState": "human_verified",
-          "verifiedAt": "2026-09-22T00:00:00.000Z",
-          "verificationNotes": "Bryceson manually verified NY2 and its address during the 2026-09-22 tranche review.",
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Source reference preserved from Directory Pass — Workstream B; workbook evidence tier T1+OSM.",
           "claims": [
             {
               "field": "identity",
-              "statement": "Equinix facility code NY2 belongs to the New York market listing."
+              "statement": "Equinix NY2"
             },
             {
               "field": "location",
-              "statement": "275 Hartz Way, Secaucus, NJ 07094, USA"
+              "statement": "275 Hartz Way, Secaucus, NJ 07094"
+            }
+          ]
+        },
+        {
+          "publisher": "OpenStreetMap",
+          "documentType": "facility_directory",
+          "title": "OSM “Equinix New York Secaucus NY2”",
+          "url": "https://www.openstreetmap.org/search?query=Equinix%20NY2",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Source reference preserved from Directory Pass — Workstream B; workbook evidence tier T1+OSM.",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "Equinix NY2"
+            },
+            {
+              "field": "location",
+              "statement": "275 Hartz Way, Secaucus, NJ 07094"
+            },
+            {
+              "field": "coordinates",
+              "statement": "40.7775822, -74.0759403"
             }
           ]
         }
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-18",
         "reviewNotes": [
-          "Geocoder precision classification: exact_or_rooftop."
+          "Normalized from Directory Pass — Workstream B.",
+          "Workbook evidence tier: T1+OSM.",
+          "Reject PeeringDB fac 36 bundle at 800 Secaucus Rd (NY5)."
         ]
       },
+      "aiRelevance": "unknown",
       "requestedPublicationState": "research"
     },
     {
       "researchKey": "equinix-ny3",
       "canonicalName": "Equinix NY3",
       "category": "data_center",
-      "ownerName": "Equinix",
+      "ownerName": null,
       "operatorName": "Equinix",
-      "aliases": [
-        {
-          "alias": "NY3",
-          "kind": "source_identifier",
-          "authority": "Equinix"
-        },
-        {
-          "alias": "equinix-new-york",
-          "kind": "source_identifier",
-          "authority": "Urdais manual-verification parent market"
-        }
-      ],
+      "aliases": [],
       "location": {
-        "streetAddress": "600 Jefferson Avenue, Secaucus, NJ 07094, USA",
-        "locality": "Secaucus",
-        "adminArea": "New Jersey",
+        "streetAddress": "600 Jefferson Avenue, Secaucus, NJ 07094",
+        "locality": null,
+        "adminArea": null,
         "countryName": "United States",
         "countryCode": "US",
         "latitude": 40.7746352,
         "longitude": -74.0689686,
         "coordinatePrecision": "building",
         "coordinateMethod": "documented_address_geocode",
-        "coordinateNotes": "Top result is a valid non-centroid match in the expected country, region, and locality."
+        "coordinateNotes": "Authoritative Phase 4B workbook outcome: resolved_map_ready. Prior location label: Secaucus, NJ. PDB 40.775204,-74.068019 agrees with OSM/Equinix street."
       },
       "lifecycle": {
-        "status": "operational"
+        "status": null,
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": null
       },
+      "facts": [],
       "evidence": [
         {
           "publisher": "Equinix",
-          "title": "Equinix New York data centers",
-          "url": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers",
           "documentType": "company_facility_page",
+          "title": "equinix.com/ny3",
+          "url": "https://equinix.com/ny3",
           "publishedOn": null,
-          "verificationState": "human_verified",
-          "verifiedAt": "2026-09-22T00:00:00.000Z",
-          "verificationNotes": "Bryceson manually verified NY3 and its address during the 2026-09-22 tranche review.",
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Source reference preserved from Directory Pass — Workstream B; workbook evidence tier T1+OSM+T3.",
           "claims": [
             {
               "field": "identity",
-              "statement": "Equinix facility code NY3 belongs to the New York market listing."
+              "statement": "Equinix NY3"
             },
             {
               "field": "location",
-              "statement": "600 Jefferson Avenue, Secaucus, NJ 07094, USA"
+              "statement": "600 Jefferson Avenue, Secaucus, NJ 07094"
+            }
+          ]
+        },
+        {
+          "publisher": "OpenStreetMap",
+          "documentType": "facility_directory",
+          "title": "OSM “Equinix NY3”",
+          "url": "https://www.openstreetmap.org/search?query=Equinix%20NY3",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Source reference preserved from Directory Pass — Workstream B; workbook evidence tier T1+OSM+T3.",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "Equinix NY3"
+            },
+            {
+              "field": "location",
+              "statement": "600 Jefferson Avenue, Secaucus, NJ 07094"
+            },
+            {
+              "field": "coordinates",
+              "statement": "40.7746352, -74.0689686"
+            }
+          ]
+        },
+        {
+          "publisher": "PeeringDB",
+          "documentType": "facility_directory",
+          "title": "PeeringDB fac 16827",
+          "url": "https://www.peeringdb.com/fac/16827",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Source reference preserved from Directory Pass — Workstream B; workbook evidence tier T1+OSM+T3.",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "Equinix NY3"
+            },
+            {
+              "field": "location",
+              "statement": "600 Jefferson Avenue, Secaucus, NJ 07094"
+            },
+            {
+              "field": "coordinates",
+              "statement": "40.7746352, -74.0689686"
             }
           ]
         }
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-18",
         "reviewNotes": [
-          "Geocoder precision classification: exact_or_rooftop."
+          "Normalized from Directory Pass — Workstream B.",
+          "Workbook evidence tier: T1+OSM+T3.",
+          "PDB 40.775204,-74.068019 agrees with OSM/Equinix street."
         ]
       },
+      "aiRelevance": "unknown",
       "requestedPublicationState": "research"
     },
     {
       "researchKey": "equinix-ny4",
       "canonicalName": "Equinix NY4",
       "category": "data_center",
-      "ownerName": "Equinix",
+      "ownerName": null,
       "operatorName": "Equinix",
-      "aliases": [
-        {
-          "alias": "NY4",
-          "kind": "source_identifier",
-          "authority": "Equinix"
-        },
-        {
-          "alias": "equinix-new-york",
-          "kind": "source_identifier",
-          "authority": "Urdais manual-verification parent market"
-        }
-      ],
+      "aliases": [],
       "location": {
-        "streetAddress": "755 Secaucus Rd, Secaucus, NJ 07094, USA",
+        "streetAddress": "755 Secaucus Road, Secaucus, NJ 07094",
         "locality": "Secaucus",
-        "adminArea": "New Jersey",
+        "adminArea": "NJ",
         "countryName": "United States",
         "countryCode": "US",
-        "latitude": 40.7899291,
-        "longitude": -74.0566735,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (Secaucus, United States); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 40.7764281,
+        "longitude": -74.0697759,
+        "coordinatePrecision": "street",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Authoritative Phase 4B workbook outcome: resolved_map_ready. Ready from the original 60-record geocoding queue."
       },
       "lifecycle": {
         "status": "operational"
       },
+      "facts": [],
       "evidence": [
         {
           "publisher": "Equinix",
-          "title": "Equinix New York data centers",
-          "url": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers",
+          "title": "Equinix NY4; https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers/ny4",
+          "url": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers/ny4",
           "documentType": "company_facility_page",
           "publishedOn": null,
-          "verificationState": "human_verified",
-          "verifiedAt": "2026-09-22T00:00:00.000Z",
-          "verificationNotes": "Bryceson manually verified NY4 and its address during the 2026-09-22 tranche review.",
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Cited by the approved global data-center expansion artifact; primary-page contents require a later evidence-verification pass. Source reference preserved from Phase 4A geocoding; workbook evidence tier Phase 4A validated.",
           "claims": [
             {
               "field": "identity",
-              "statement": "Equinix facility code NY4 belongs to the New York market listing."
+              "statement": "Equinix NY4 is listed in the approved global data-center expansion research."
             },
             {
               "field": "location",
-              "statement": "755 Secaucus Rd, Secaucus, NJ 07094, USA"
+              "statement": "755 Secaucus Road, Secaucus, NJ 07094"
+            },
+            {
+              "field": "identity",
+              "statement": "Equinix NY4"
             }
           ]
         }
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-18",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Canonicalized from URDAIS_GLOBAL_DATA_CENTER_EXPANSION.md; geocoding classification: geocoded_ready.",
+          "The result names Equinix NY4 and exactly matches the operator-published street address.",
+          "Normalized from Phase 4A geocoding.",
+          "Workbook evidence tier: Phase 4A validated.",
+          "Ready from the original 60-record geocoding queue."
         ]
       },
+      "aiRelevance": "no_documented_ai",
       "requestedPublicationState": "research"
     },
     {
       "researchKey": "equinix-ny5",
       "canonicalName": "Equinix NY5",
       "category": "data_center",
-      "ownerName": "Equinix",
+      "ownerName": null,
       "operatorName": "Equinix",
-      "aliases": [
-        {
-          "alias": "NY5",
-          "kind": "source_identifier",
-          "authority": "Equinix"
-        },
-        {
-          "alias": "equinix-new-york",
-          "kind": "source_identifier",
-          "authority": "Urdais manual-verification parent market"
-        }
-      ],
+      "aliases": [],
       "location": {
-        "streetAddress": "800 Secaucus Rd, Secaucus, NJ 07094, USA",
-        "locality": "Secaucus",
-        "adminArea": "New Jersey",
+        "streetAddress": "800 Secaucus Rd, Secaucus, NJ 07094",
+        "locality": null,
+        "adminArea": null,
         "countryName": "United States",
         "countryCode": "US",
         "latitude": 40.7786296,
         "longitude": -74.0722997,
         "coordinatePrecision": "building",
         "coordinateMethod": "documented_address_geocode",
-        "coordinateNotes": "Top result is a valid non-centroid match in the expected country, region, and locality."
+        "coordinateNotes": "Authoritative Phase 4B workbook outcome: resolved_map_ready. Prior location label: Secaucus, NJ."
       },
       "lifecycle": {
-        "status": "operational"
+        "status": null,
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": null
       },
+      "facts": [],
       "evidence": [
         {
           "publisher": "Equinix",
-          "title": "Equinix New York data centers",
-          "url": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers",
           "documentType": "company_facility_page",
+          "title": "equinix.com/ny5",
+          "url": "https://equinix.com/ny5",
           "publishedOn": null,
-          "verificationState": "human_verified",
-          "verifiedAt": "2026-09-22T00:00:00.000Z",
-          "verificationNotes": "Bryceson manually verified NY5 and its address during the 2026-09-22 tranche review.",
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Source reference preserved from Directory Pass — Workstream B; workbook evidence tier T1+OSM.",
           "claims": [
             {
               "field": "identity",
-              "statement": "Equinix facility code NY5 belongs to the New York market listing."
+              "statement": "Equinix NY5"
             },
             {
               "field": "location",
-              "statement": "800 Secaucus Rd, Secaucus, NJ 07094, USA"
+              "statement": "800 Secaucus Rd, Secaucus, NJ 07094"
+            }
+          ]
+        },
+        {
+          "publisher": "OpenStreetMap",
+          "documentType": "facility_directory",
+          "title": "OSM “Equinix New York Secaucus NY5”",
+          "url": "https://www.openstreetmap.org/search?query=Equinix%20NY5",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Source reference preserved from Directory Pass — Workstream B; workbook evidence tier T1+OSM.",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "Equinix NY5"
+            },
+            {
+              "field": "location",
+              "statement": "800 Secaucus Rd, Secaucus, NJ 07094"
+            },
+            {
+              "field": "coordinates",
+              "statement": "40.7786296, -74.0722997"
             }
           ]
         }
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-18",
         "reviewNotes": [
-          "Geocoder precision classification: exact_or_rooftop."
+          "Normalized from Directory Pass — Workstream B.",
+          "Workbook evidence tier: T1+OSM."
         ]
       },
+      "aiRelevance": "unknown",
       "requestedPublicationState": "research"
     },
     {
       "researchKey": "equinix-ny6",
       "canonicalName": "Equinix NY6",
       "category": "data_center",
-      "ownerName": "Equinix",
+      "ownerName": null,
       "operatorName": "Equinix",
-      "aliases": [
-        {
-          "alias": "NY6",
-          "kind": "source_identifier",
-          "authority": "Equinix"
-        },
-        {
-          "alias": "equinix-new-york",
-          "kind": "source_identifier",
-          "authority": "Urdais manual-verification parent market"
-        }
-      ],
+      "aliases": [],
       "location": {
-        "streetAddress": "105 Enterprise Avenue South, Secaucus, NJ 07094, USA",
-        "locality": "Secaucus",
-        "adminArea": "New Jersey",
+        "streetAddress": "105 Enterprise Avenue South, Secaucus, NJ 07094",
+        "locality": null,
+        "adminArea": null,
         "countryName": "United States",
         "countryCode": "US",
-        "latitude": 40.7763898,
-        "longitude": -74.0718595,
-        "coordinatePrecision": "campus",
-        "coordinateMethod": "campus_centroid",
-        "coordinateNotes": "Top result is a valid non-centroid match in the expected country, region, and locality."
+        "latitude": 40.7774913,
+        "longitude": -74.0726876,
+        "coordinatePrecision": "building",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Authoritative Phase 4B workbook outcome: resolved_map_ready. Prior location label: Secaucus, NJ. OSM names building on Enterprise Avenue South; Equinix supplies number 105."
       },
       "lifecycle": {
-        "status": "operational"
+        "status": null,
+        "announcedDate": null,
+        "constructionStartDate": null,
+        "operationalDate": null
       },
+      "facts": [],
       "evidence": [
         {
           "publisher": "Equinix",
-          "title": "Equinix New York data centers",
-          "url": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers",
           "documentType": "company_facility_page",
+          "title": "equinix.com/ny6",
+          "url": "https://equinix.com/ny6",
           "publishedOn": null,
-          "verificationState": "human_verified",
-          "verifiedAt": "2026-09-22T00:00:00.000Z",
-          "verificationNotes": "Bryceson manually verified NY6 and its address during the 2026-09-22 tranche review.",
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Source reference preserved from Directory Pass — Workstream B; workbook evidence tier T1+OSM.",
           "claims": [
             {
               "field": "identity",
-              "statement": "Equinix facility code NY6 belongs to the New York market listing."
+              "statement": "Equinix NY6"
             },
             {
               "field": "location",
-              "statement": "105 Enterprise Avenue South, Secaucus, NJ 07094, USA"
+              "statement": "105 Enterprise Avenue South, Secaucus, NJ 07094"
+            }
+          ]
+        },
+        {
+          "publisher": "OpenStreetMap",
+          "documentType": "facility_directory",
+          "title": "OSM “Equinix Secaucus NY6”",
+          "url": "https://www.openstreetmap.org/search?query=Equinix%20NY6",
+          "publishedOn": null,
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Source reference preserved from Directory Pass — Workstream B; workbook evidence tier T1+OSM.",
+          "claims": [
+            {
+              "field": "identity",
+              "statement": "Equinix NY6"
+            },
+            {
+              "field": "location",
+              "statement": "105 Enterprise Avenue South, Secaucus, NJ 07094"
+            },
+            {
+              "field": "coordinates",
+              "statement": "40.7774913, -74.0726876"
             }
           ]
         }
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-18",
         "reviewNotes": [
-          "Geocoder precision classification: exact_or_rooftop."
+          "Normalized from Directory Pass — Workstream B.",
+          "Workbook evidence tier: T1+OSM.",
+          "OSM names building on Enterprise Avenue South; Equinix supplies number 105."
         ]
       },
+      "aiRelevance": "unknown",
       "requestedPublicationState": "research"
     },
     {
@@ -20872,65 +20973,63 @@
       "researchKey": "equinix-ny9",
       "canonicalName": "Equinix NY9",
       "category": "data_center",
-      "ownerName": "Equinix",
+      "ownerName": null,
       "operatorName": "Equinix",
-      "aliases": [
-        {
-          "alias": "NY9",
-          "kind": "source_identifier",
-          "authority": "Equinix"
-        },
-        {
-          "alias": "equinix-new-york",
-          "kind": "source_identifier",
-          "authority": "Urdais manual-verification parent market"
-        }
-      ],
+      "aliases": [],
       "location": {
-        "streetAddress": "111 8th Ave, New York, NY 10011, USA",
+        "streetAddress": "111 8th Avenue, New York, NY 10011",
         "locality": "New York",
-        "adminArea": "New York",
+        "adminArea": "NY",
         "countryName": "United States",
         "countryCode": "US",
-        "latitude": 40.7127281,
-        "longitude": -74.0060152,
-        "coordinatePrecision": "city",
-        "coordinateMethod": "city_centroid",
-        "coordinateNotes": "Resolved to city precision only (New York, United States); no street, estate or building could be established, so this record is stored and is not placed on the map."
+        "latitude": 40.7417176,
+        "longitude": -74.0041592,
+        "coordinatePrecision": "street",
+        "coordinateMethod": "documented_address_geocode",
+        "coordinateNotes": "Authoritative Phase 4B workbook outcome: resolved_map_ready. Ready from the original 60-record geocoding queue."
       },
       "lifecycle": {
         "status": "operational"
       },
+      "facts": [],
       "evidence": [
         {
           "publisher": "Equinix",
-          "title": "Equinix New York data centers",
-          "url": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers",
+          "title": "Equinix NY9; https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers/ny9",
+          "url": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers/ny9",
           "documentType": "company_facility_page",
           "publishedOn": null,
-          "verificationState": "human_verified",
-          "verifiedAt": "2026-09-22T00:00:00.000Z",
-          "verificationNotes": "Bryceson manually verified NY9 and its address during the 2026-09-22 tranche review.",
+          "verificationState": "unverified",
+          "verifiedAt": null,
+          "verificationNotes": "Cited by the approved global data-center expansion artifact; primary-page contents require a later evidence-verification pass. Source reference preserved from Phase 4A geocoding; workbook evidence tier Phase 4A validated.",
           "claims": [
             {
               "field": "identity",
-              "statement": "Equinix facility code NY9 belongs to the New York market listing."
+              "statement": "Equinix NY9 is listed in the approved global data-center expansion research."
             },
             {
               "field": "location",
-              "statement": "111 8th Ave, New York, NY 10011, USA"
+              "statement": "111 8th Avenue, New York, NY 10011"
+            },
+            {
+              "field": "identity",
+              "statement": "Equinix NY9"
             }
           ]
         }
       ],
       "quality": {
         "confidence": "medium",
-        "lastVerifiedDate": "2026-09-22",
+        "lastVerifiedDate": "2026-09-18",
         "reviewNotes": [
-          "Geocoder precision classification: interpolated_or_street.",
-          "City precision: stored as a canonical record and deliberately not map-eligible."
+          "Canonicalized from URDAIS_GLOBAL_DATA_CENTER_EXPANSION.md; geocoding classification: geocoded_ready.",
+          "The result resolves the supported 111 8th Avenue carrier-hotel address. Street precision is retained; the geocoder's Google label is not treated as facility identity evidence.",
+          "Normalized from Phase 4A geocoding.",
+          "Workbook evidence tier: Phase 4A validated.",
+          "Ready from the original 60-record geocoding queue."
         ]
       },
+      "aiRelevance": "no_documented_ai",
       "requestedPublicationState": "research"
     },
     {

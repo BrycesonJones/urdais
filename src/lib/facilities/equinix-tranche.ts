@@ -632,31 +632,53 @@ export function canonicalEquinixFacility(item: EquinixQueueItem, result: Equinix
   };
 }
 
+/**
+ * Adds this tranche to the canonical dataset without ever overwriting a record
+ * already in it.
+ *
+ * The first version of this replaced a colliding record wholesale, and doing so
+ * was actively destructive. equinix-ny4 already existed at street precision
+ * with a per-facility coordinate and its own evidence page; this tranche
+ * resolved it only to a Secaucus city centroid, so the overwrite downgraded a
+ * facility the map was drawing into one it would refuse to draw, and replaced
+ * its evidence with a metro-level page. equinix-ny2 likewise lost a specific
+ * equinix.com/ny2 citation and an OpenStreetMap corroboration.
+ *
+ * A tranche exists to add what the dataset is missing. Where the dataset
+ * already knows a facility, what it knows came from a source that looked at
+ * that facility rather than at its metro, and this tranche has nothing better
+ * to offer it. So an existing key is preserved untouched and reported, not
+ * merged and not overwritten.
+ */
 export function projectEquinixFacilities(
   existing: readonly ContractFacility[],
   queue: readonly EquinixQueueItem[],
   results: readonly EquinixGeocodeResult[],
-): { facilities: ContractFacility[]; inserted: number; updated: number; unchangedOutsideTranche: number; excluded: number } {
+): { facilities: ContractFacility[]; inserted: number; preserved: string[]; unchangedOutsideTranche: number; excluded: number } {
   const byKey = new Map(existing.map((facility) => [facility.researchKey, facility]));
   const queueByKey = new Map(queue.map((item) => [item.researchKey, item]));
   let inserted = 0;
-  let updated = 0;
   let excluded = 0;
+  const preserved: string[] = [];
 
   for (const result of results) {
     if (result.outcome !== "geocoded_ready" || result.latitude === null || result.longitude === null) {
       excluded += 1;
       continue;
     }
+    if (byKey.has(result.researchKey)) {
+      preserved.push(result.researchKey);
+      continue;
+    }
     const item = queueByKey.get(result.researchKey);
     if (!item) throw new Error(`geocode result is absent from the tranche queue: ${result.researchKey}`);
-    if (byKey.has(result.researchKey)) updated += 1;
-    else inserted += 1;
+    inserted += 1;
     byKey.set(result.researchKey, canonicalEquinixFacility(item, result));
   }
 
   const trancheKeys = new Set(queue.map((item) => item.researchKey));
   const unchangedOutsideTranche = existing.filter((facility) => !trancheKeys.has(facility.researchKey)).length;
   const facilities = [...byKey.values()].sort((a, b) => a.researchKey.localeCompare(b.researchKey));
-  return { facilities, inserted, updated, unchangedOutsideTranche, excluded };
+  return { facilities, inserted, preserved: preserved.sort(), unchangedOutsideTranche, excluded };
 }
+

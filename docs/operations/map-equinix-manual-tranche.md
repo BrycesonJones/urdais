@@ -15,4 +15,4 @@ Generated 2026-09-22 from the frozen manual artifact. 48 markets, 187 facilities
 - Co-located coordinate groups: 31
 - Unexplained: 0
 
-Canonical dataset digest: `d36b293db0646ed0ce6024aebef36fb29ab4e2f8b621e1e0bcb5a43b3031986d`
+Canonical dataset digest: `5238adfdd133707443ce73990b7b35b536fd821c61f2ebaecbc184cec91dc744`

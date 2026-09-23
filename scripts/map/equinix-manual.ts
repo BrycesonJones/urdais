@@ -525,7 +525,7 @@ async function main(): Promise<void> {
   let projectedDigest: string | null = null;
   let canonicalBefore: number | null = null;
   let canonicalAfter: number | null = null;
-  let projection: { inserted: number; updated: number; unchangedOutsideTranche: number; excluded: number } = { inserted: 0, updated: 0, unchangedOutsideTranche: 0, excluded: 0 };
+  let projection: { inserted: number; preserved: string[]; unchangedOutsideTranche: number; excluded: number } = { inserted: 0, preserved: [], unchangedOutsideTranche: 0, excluded: 0 };
   if (applyEnabled) {
     if (qa.hardErrors.length > 0) throw new Error(`QA has ${qa.hardErrors.length} hard error(s); canonical projection refused`);
     if (qa.suspiciousDuplicateCoordinateGroups.length > 0) throw new Error(`QA has ${qa.suspiciousDuplicateCoordinateGroups.length} unexplained duplicate-coordinate group(s); canonical projection refused`);
@@ -534,7 +534,7 @@ async function main(): Promise<void> {
     if (!parsed.document) throw new Error(`canonical dataset is invalid: ${JSON.stringify(parsed.issues)}`);
     canonicalBefore = parsed.document.facilities.length;
     const applied = projectEquinixFacilities(rawDataset.facilities, queue, results);
-    projection = { inserted: applied.inserted, updated: applied.updated, unchangedOutsideTranche: applied.unchangedOutsideTranche, excluded: applied.excluded };
+    projection = { inserted: applied.inserted, preserved: applied.preserved, unchangedOutsideTranche: applied.unchangedOutsideTranche, excluded: applied.excluded };
     canonicalAfter = applied.facilities.length;
     const output = { ...rawDataset, contractVersion: "urdais.map.facility-import/2", generatedAt: GENERATED_AT, facilities: applied.facilities };
     writeJson(PATHS.dataset, output);
