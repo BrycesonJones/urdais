@@ -64,6 +64,8 @@
     "transmission-headroom:analytics": "tsx scripts/transmission-headroom/analytics.ts",
     "umpi:ingest": "tsx scripts/umpi/ingest.ts",
     "umpi:derive": "tsx scripts/umpi/derive.ts",
+    "umpi:ops": "tsx scripts/umpi/ops.ts",
+    "umpi:production:check": "tsx scripts/umpi/production-check.ts",
     "grid-buildout:ingest": "tsx scripts/grid-buildout/ingest.ts"
   },
   "dependencies": {

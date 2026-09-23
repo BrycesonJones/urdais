@@ -163,7 +163,10 @@ declare
     -- Grid Buildout Velocity (GBV-3): methodology 1.0.0 outputs and resolution provenance
     'reference.buildout_metric_definitions',
     'pipeline.buildout_analytics_runs', 'pipeline.buildout_metric_results',
-    'pipeline.buildout_project_resolutions'
+    'pipeline.buildout_project_resolutions',
+    -- UMPI Phase 8: the operational record behind the freshness gate.
+    'reference.umpi_source_monitors',
+    'pipeline.umpi_operational_runs', 'pipeline.umpi_source_checks'
   ];
   n integer;
 begin
