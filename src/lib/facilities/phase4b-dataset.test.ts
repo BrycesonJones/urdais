@@ -73,7 +73,9 @@ describe("the authoritative Phase 4B workbook projection", () => {
       expect(facility.canonicalName, row.ID).toBe(row.Facility);
       expect(FACILITY_CATEGORIES, row.ID).toContain(facility.category);
       expect(facility.requestedPublicationState, row.ID).toBe("research");
-      expect(facility.quality.lastVerifiedDate, row.ID).toBe("2026-09-18");
+      // NY9 is also in the later Equinix precision-recovery target set. Its
+      // Phase 4B identity remains unchanged while its position is re-verified.
+      expect(facility.quality.lastVerifiedDate, row.ID).toBe(row.ID === "equinix-ny9" ? "2026-09-23" : "2026-09-18");
       expect(facility.evidence.length, row.ID).toBeGreaterThan(0);
     }
   });

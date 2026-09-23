@@ -1,0 +1,1348 @@
+{
+  "artifactVersion": "1.0.0",
+  "generatedAt": "2026-09-23",
+  "input": {
+    "path": "data/map/geocoding/equinix-results.v2.json",
+    "commit": "c5d30ae54eae1f9b1a301b1aaad6e086a9650f4e",
+    "filter": "coordinatePrecision == city",
+    "recordCount": 73
+  },
+  "methodology": {
+    "precisionOrder": [
+      "building",
+      "street",
+      "campus",
+      "city"
+    ],
+    "sourceTiers": {
+      "tier_1": "Equinix first-party facility pages and technical documents",
+      "tier_2": "PeeringDB, OpenStreetMap, and government facility/property sources",
+      "tier_3": "Identifiable commercial facility directories used only as review evidence"
+    },
+    "notes": [
+      "No interpolated coordinates were accepted.",
+      "No coordinate was inferred solely from a neighboring facility.",
+      "Shared-site coordinates are classified as campus unless the evidence identifies the individual building.",
+      "City coordinates are preserved unchanged for retain_city and needs_human_review dispositions."
+    ]
+  },
+  "records": [
+    {
+      "researchKey": "equinix-me2",
+      "facilityCode": "ME2",
+      "originalLatitude": -37.8142454,
+      "originalLongitude": 144.9631732,
+      "originalPrecision": "city",
+      "proposedLatitude": -37.821681,
+      "proposedLongitude": 144.915458,
+      "proposedPrecision": "campus",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/australia-colocation/melbourne-data-centers/me2",
+        "https://www.peeringdb.com/fac/1988"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms ME2 at 578 Lorimer Street, Port Melbourne, Melbourne, VIC 3207, Australia. PeeringDB facility 1988 identifies a shared site containing ME2 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site.",
+      "confidence": "medium",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-rj2",
+      "facilityCode": "RJ2",
+      "originalLatitude": -22.9110137,
+      "originalLongitude": -43.2093727,
+      "originalPrecision": "city",
+      "proposedLatitude": -22.871261,
+      "proposedLongitude": -43.272742,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/rio-de-janeiro-data-centers/rj2",
+        "https://www.peeringdb.com/fac/1899"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms RJ2 at Estrada Adhemar Bebiano, 1380, Del Castilho, 21051-070 Rio de Janeiro, Brazil. PeeringDB facility 1899 identifies RJ2 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-rj3",
+      "facilityCode": "RJ3",
+      "originalLatitude": -22.7853575,
+      "originalLongitude": -43.366715,
+      "originalPrecision": "city",
+      "proposedLatitude": -22.7853575,
+      "proposedLongitude": -43.366715,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/rio-de-janeiro-data-centers/rj3",
+        "https://www.peeringdb.com/fac/15048"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "First-party and PeeringDB records confirm the facility and address, but PeeringDB has no geocode and no authoritative non-interpolated coordinate was found.",
+      "confidence": "low",
+      "disposition": "retain_city"
+    },
+    {
+      "researchKey": "equinix-sp1",
+      "facilityCode": "SP1",
+      "originalLatitude": -23.5506507,
+      "originalLongitude": -46.6333824,
+      "originalPrecision": "city",
+      "proposedLatitude": -23.545988,
+      "proposedLongitude": -46.635836,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/sao-paulo-data-centers/sp1",
+        "https://www.peeringdb.com/fac/1585"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms SP1 at Rua Doutor Miguel Couto, 58, Centro, 01008-010 Sao Paulo, Brazil. PeeringDB facility 1585 identifies SP1 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-sp2",
+      "facilityCode": "SP2",
+      "originalLatitude": -23.5112184,
+      "originalLongitude": -46.8764612,
+      "originalPrecision": "city",
+      "proposedLatitude": -23.5027,
+      "proposedLongitude": -46.827255,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/sao-paulo-data-centers/sp2",
+        "https://www.peeringdb.com/fac/1283"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms SP2 at Alameda Araguaia, 3641, Alphaville, 06455-000 Barueri, Brazil. PeeringDB facility 1283 identifies SP2 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-sp4",
+      "facilityCode": "SP4",
+      "originalLatitude": -23.5112184,
+      "originalLongitude": -46.8764612,
+      "originalPrecision": "city",
+      "proposedLatitude": -23.497589,
+      "proposedLongitude": -46.814577,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/sao-paulo-data-centers/sp4",
+        "https://www.peeringdb.com/fac/165"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms SP4 at Avenida Ceci, 1900 - Conjunto A, Tambore, 06460-120 Barueri, Brazil. PeeringDB facility 165 identifies SP4 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-sp5x",
+      "facilityCode": "SP5x",
+      "originalLatitude": -23.4446715,
+      "originalLongitude": -46.9167722,
+      "originalPrecision": "city",
+      "proposedLatitude": -23.4446715,
+      "proposedLongitude": -46.9167722,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/sao-paulo-data-centers/sp5x",
+        "https://www.peeringdb.com/fac/14845",
+        "https://www.colocapacity.com/facilities/1316/S%C3%A3o%20Paulo%20SP5x%20Data%20Center"
+      ],
+      "evidenceTier": "tier_1+2+3",
+      "researchSummary": "First-party evidence confirms the 888 address, but PeeringDB has no coordinates and the available commercial-directory coordinate is not strong enough by itself to claim a precise facility point.",
+      "confidence": "low",
+      "disposition": "needs_human_review"
+    },
+    {
+      "researchKey": "equinix-sp6",
+      "facilityCode": "SP6",
+      "originalLatitude": -23.5506507,
+      "originalLongitude": -46.6333824,
+      "originalPrecision": "city",
+      "proposedLatitude": -23.5506507,
+      "proposedLongitude": -46.6333824,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/sao-paulo-data-centers/sp6",
+        "https://www.peeringdb.com/fac/15047"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "PeeringDB has coordinates for SP6 but lists 1229 Av. Marcos Penteado de Ulhoa Rodrigues, conflicting with the first-party 1413 address; no coordinate is proposed from the conflicting record.",
+      "confidence": "low",
+      "disposition": "needs_human_review"
+    },
+    {
+      "researchKey": "equinix-so1",
+      "facilityCode": "SO1",
+      "originalLatitude": 42.6474955,
+      "originalLongitude": 23.382051,
+      "originalPrecision": "city",
+      "proposedLatitude": 42.6474955,
+      "proposedLongitude": 23.382051,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/bulgaria-colocation/sofia-data-centers/so1",
+        "https://www.peeringdb.com/fac/1935"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "PeeringDB has coordinates for SO1 at ul. 5030-ta 10, conflicting with the first-party 3 Grigorii Gorbatenko Street, Building 2 address.",
+      "confidence": "low",
+      "disposition": "needs_human_review"
+    },
+    {
+      "researchKey": "equinix-so2",
+      "facilityCode": "SO2",
+      "originalLatitude": 42.6977028,
+      "originalLongitude": 23.3217359,
+      "originalPrecision": "city",
+      "proposedLatitude": 42.67572,
+      "proposedLongitude": 23.401498,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/bulgaria-colocation/sofia-data-centers/so2",
+        "https://www.peeringdb.com/fac/7097"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms SO2 at 33 Nedelcho Bonchev str, 1528 Sofia, Bulgaria. PeeringDB facility 7097 identifies SO2 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-cl1",
+      "facilityCode": "CL1",
+      "originalLatitude": 51.0631292,
+      "originalLongitude": -114.0878809,
+      "originalPrecision": "city",
+      "proposedLatitude": 51.045517,
+      "proposedLongitude": -114.069297,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/canada-colocation/calgary-data-centers/cl1",
+        "https://www.peeringdb.com/fac/9553"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms CL1 at 315 8th Avenue SW, Suite 401, Calgary, Alberta T2P 4K1, Canada. PeeringDB facility 9553 identifies CL1 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-mt1",
+      "facilityCode": "MT1",
+      "originalLatitude": 46.8137431,
+      "originalLongitude": -71.2084061,
+      "originalPrecision": "city",
+      "proposedLatitude": 45.488966,
+      "proposedLongitude": -73.745578,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/canada-colocation/montreal-data-centers/mt1",
+        "https://www.peeringdb.com/fac/9546"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms MT1 at 6205 Vanden Abeele Street, Saint Laurent, Quebec H4S 1S1, Canada. PeeringDB facility 9546 identifies MT1 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-mt2",
+      "facilityCode": "MT2",
+      "originalLatitude": 46.8137431,
+      "originalLongitude": -71.2084061,
+      "originalPrecision": "city",
+      "proposedLatitude": 45.411764,
+      "proposedLongitude": -74.050381,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/canada-colocation/montreal-data-centers/mt2",
+        "https://www.peeringdb.com/fac/14122"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms MT2 at 3500 Rue F.-X.-Tessier, Vaudreuil-Dorion, Quebec J7V5V5, Canada. PeeringDB facility 14122 identifies MT2 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-st4",
+      "facilityCode": "ST4",
+      "originalLatitude": -33.4376995,
+      "originalLongitude": -70.6510671,
+      "originalPrecision": "city",
+      "proposedLatitude": -34.429019,
+      "proposedLongitude": -71.083703,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/chile-colocation/santiago-data-centers/st4",
+        "https://www.peeringdb.com/fac/12706"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms ST4 at Ruta 66, Camino de la Fruta, S/N, San Pedro, Región Metropolitana, Santiago, Chile. PeeringDB facility 12706 identifies ST4 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-sh1",
+      "facilityCode": "SH1",
+      "originalLatitude": 31.2312707,
+      "originalLongitude": 121.4700152,
+      "originalPrecision": "city",
+      "proposedLatitude": 31.2312707,
+      "proposedLongitude": 121.4700152,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/china-colocation/shanghai-data-centers/sh1",
+        "https://www.peeringdb.com/fac/14369"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "First-party and PeeringDB records confirm the building address, but PeeringDB has no geocode and OSM returns multiple road segments rather than the numbered building.",
+      "confidence": "low",
+      "disposition": "retain_city"
+    },
+    {
+      "researchKey": "equinix-sh2",
+      "facilityCode": "SH2",
+      "originalLatitude": 31.2312707,
+      "originalLongitude": 121.4700152,
+      "originalPrecision": "city",
+      "proposedLatitude": 31.2312707,
+      "proposedLongitude": 121.4700152,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/china-colocation/shanghai-data-centers/sh2",
+        "https://www.peeringdb.com/fac/14370"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "First-party and PeeringDB records confirm Building 4 at 700 Jinyu Road, but PeeringDB has no geocode and OSM returns multiple road segments without distinguishing Building 4.",
+      "confidence": "low",
+      "disposition": "retain_city"
+    },
+    {
+      "researchKey": "equinix-sh3",
+      "facilityCode": "SH3",
+      "originalLatitude": 31.2312707,
+      "originalLongitude": 121.4700152,
+      "originalPrecision": "city",
+      "proposedLatitude": 31.248494,
+      "proposedLongitude": 121.619756,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/china-colocation/shanghai-data-centers/sh3",
+        "https://www.peeringdb.com/fac/14362"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms SH3 at Building No. 3, 700 Jinyu Road, Pudong New Area, Shanghai 201206, China. PeeringDB facility 14362 identifies SH3 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-sh5",
+      "facilityCode": "SH5",
+      "originalLatitude": 31.2312707,
+      "originalLongitude": 121.4700152,
+      "originalPrecision": "city",
+      "proposedLatitude": 31.2312707,
+      "proposedLongitude": 121.4700152,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/china-colocation/shanghai-data-centers/sh5",
+        "https://www.peeringdb.com/fac/8516"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "PeeringDB has coordinates for SH5 at 619 Longchang Road, conflicting with the first-party No. 976 Shunping Road address.",
+      "confidence": "low",
+      "disposition": "needs_human_review"
+    },
+    {
+      "researchKey": "equinix-bg1",
+      "facilityCode": "BG1",
+      "originalLatitude": 4.6533817,
+      "originalLongitude": -74.0836331,
+      "originalPrecision": "city",
+      "proposedLatitude": 4.671384,
+      "proposedLongitude": -74.156026,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/colombia-colocation/bogota-data-centers/bg1",
+        "https://www.peeringdb.com/fac/1354"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms BG1 at Avenida Carrera 106 No. 15A-25, Manzana 6, Lote 27, 110921 Bogota, Colombia. PeeringDB facility 1354 identifies BG1 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-bg2",
+      "facilityCode": "BG2",
+      "originalLatitude": 4.6533817,
+      "originalLongitude": -74.0836331,
+      "originalPrecision": "city",
+      "proposedLatitude": 4.671921,
+      "proposedLongitude": -74.155782,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/colombia-colocation/bogota-data-centers/bg2",
+        "https://www.peeringdb.com/fac/13903"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms BG2 at Carrera 106 No 15 A25, Manzana 18, 110921 Bogota, Colombia. PeeringDB facility 13903 identifies BG2 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-pa4",
+      "facilityCode": "PA4",
+      "originalLatitude": 48.8965023,
+      "originalLongitude": 2.4019804,
+      "originalPrecision": "city",
+      "proposedLatitude": 48.8965023,
+      "proposedLongitude": 2.4019804,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/france-colocation/paris-data-centers/pa4",
+        "https://www.peeringdb.com/fac/1244",
+        "https://www.openstreetmap.org/relation/1224120"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The frozen PA4 address is 110 bis Avenue du Général Leclerc, while PeeringDB identifies PA4 at 160 Boulevard Général Leclerc and OSM maps 110 bis as an Equinix building associated with PA8x. This is an identity/address-grain conflict.",
+      "confidence": "low",
+      "disposition": "needs_human_review"
+    },
+    {
+      "researchKey": "equinix-pa5",
+      "facilityCode": "PA5",
+      "originalLatitude": 48.9146078,
+      "originalLongitude": 2.3821895,
+      "originalPrecision": "city",
+      "proposedLatitude": 48.90407,
+      "proposedLongitude": 2.369221,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/france-colocation/paris-data-centers/pa5",
+        "https://www.peeringdb.com/fac/73"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms PA5 at 45 avenue Victor Hugo Bat 254, Building 254, 93300 Aubervilliers, France. PeeringDB facility 73 identifies PA5 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-pa6",
+      "facilityCode": "PA6",
+      "originalLatitude": 48.9146078,
+      "originalLongitude": 2.3821895,
+      "originalPrecision": "city",
+      "proposedLatitude": 48.910255,
+      "proposedLongitude": 2.368248,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/france-colocation/paris-data-centers/pa6",
+        "https://www.peeringdb.com/fac/842"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms PA6 at 10 rue Waldeck Rochet Bat 520, Building 520, 93300 Aubervilliers, France. PeeringDB facility 842 identifies PA6 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-pa7",
+      "facilityCode": "PA7",
+      "originalLatitude": 48.8953328,
+      "originalLongitude": 2.2561602,
+      "originalPrecision": "city",
+      "proposedLatitude": 48.904891,
+      "proposedLongitude": 2.259202,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/france-colocation/paris-data-centers/pa7",
+        "https://www.peeringdb.com/fac/72"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms PA7 at 130-136 boulevard de Verdun Bat 9, Energy Park, Building 9, 92400 Courbevoie, France. PeeringDB facility 72 identifies PA7 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-pa8",
+      "facilityCode": "PA8",
+      "originalLatitude": 48.8965023,
+      "originalLongitude": 2.4019804,
+      "originalPrecision": "city",
+      "proposedLatitude": 48.9002599,
+      "proposedLongitude": 2.4232646,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/france-colocation/paris-data-centers/pa8x",
+        "https://www.openstreetmap.org/relation/1224120"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "Equinix confirms PA8x at 110 bis Avenue du Général Leclerc; OSM relation 1224120 is a named Equinix building at that exact numbered address.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-hk1",
+      "facilityCode": "HK1",
+      "originalLatitude": 22.3716605,
+      "originalLongitude": 114.1134699,
+      "originalPrecision": "city",
+      "proposedLatitude": 22.365581,
+      "proposedLongitude": 114.11932,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/china-colocation/hong-kong-data-centers/hk1",
+        "https://www.peeringdb.com/fac/170"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms HK1 at Unit 2702, 27/F, Goodman Global Gateway, 168 Yeung Uk Road, Tsuen Wan, N.T., Hong Kong. PeeringDB facility 170 identifies HK1 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-hk4",
+      "facilityCode": "HK4",
+      "originalLatitude": 22.3818388,
+      "originalLongitude": 114.2165218,
+      "originalPrecision": "city",
+      "proposedLatitude": 22.389451,
+      "proposedLongitude": 114.206078,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/china-colocation/hong-kong-data-centers/hk4",
+        "https://www.peeringdb.com/fac/8417"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms HK4 at Ever Gain Building No. 3, 22 On Sum Street, Siu Lek Yuen, Hong Kong. PeeringDB facility 8417 identifies HK4 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-hk5",
+      "facilityCode": "HK5",
+      "originalLatitude": 22.2818333,
+      "originalLongitude": 114.1582831,
+      "originalPrecision": "city",
+      "proposedLatitude": 22.293004,
+      "proposedLongitude": 114.274638,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/china-colocation/hong-kong-data-centers/hk5",
+        "https://www.peeringdb.com/fac/8415"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms HK5 at Tower 2, No. 299 Wan Po Road, Tseung Kwan O, Hong Kong SAR, Hong Kong. PeeringDB facility 8415 identifies HK5 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-hk6",
+      "facilityCode": "HK6",
+      "originalLatitude": 22.3716605,
+      "originalLongitude": 114.1134699,
+      "originalPrecision": "city",
+      "proposedLatitude": 22.374022,
+      "proposedLongitude": 114.1079,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/china-colocation/hong-kong-data-centers/hk6",
+        "https://www.peeringdb.com/fac/17023"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms HK6 at 18 Sha Tsui Road, Tsuen Wan, Hong Kong. PeeringDB facility 17023 identifies HK6 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-mb1",
+      "facilityCode": "MB1",
+      "originalLatitude": 19.5670323,
+      "originalLongitude": 76.4164557,
+      "originalPrecision": "city",
+      "proposedLatitude": 19.113908,
+      "proposedLongitude": 72.892742,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/india-colocation/mumbai-data-centers/mb1",
+        "https://www.peeringdb.com/fac/2310"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms MB1 at A-001, Boomerang, Chandivali Farm Road, Near Chandivali Studio, Andheri East, Mumbai, Maharashtra MH 400072, India. PeeringDB facility 2310 identifies MB1 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-mb2",
+      "facilityCode": "MB2",
+      "originalLatitude": 19.5670323,
+      "originalLongitude": 76.4164557,
+      "originalPrecision": "city",
+      "proposedLatitude": 19.109353,
+      "proposedLongitude": 72.901441,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/india-colocation/mumbai-data-centers/mb2",
+        "https://www.peeringdb.com/fac/7377"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms MB2 at Plot No. 37, Chandivali Farm Road, Chandivali, Andheri East, Mumbai, Maharashtra 400072, India. PeeringDB facility 7377 identifies MB2 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-mb3",
+      "facilityCode": "MB3",
+      "originalLatitude": 19.5670323,
+      "originalLongitude": 76.4164557,
+      "originalPrecision": "city",
+      "proposedLatitude": 19.114404,
+      "proposedLongitude": 72.896533,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/india-colocation/mumbai-data-centers/mb3",
+        "https://www.peeringdb.com/fac/16886"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms MB3 at Plot 15 B, Chandivali Farm Road, Chandivali, Andheri East, Mumbai, Maharashtra 400072, India. PeeringDB facility 16886 identifies MB3 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-mb4",
+      "facilityCode": "MB4",
+      "originalLatitude": 19.5670323,
+      "originalLongitude": 76.4164557,
+      "originalPrecision": "city",
+      "proposedLatitude": 19.180426,
+      "proposedLongitude": 72.996005,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/india-colocation/mumbai-data-centers/mb4",
+        "https://www.peeringdb.com/fac/15050"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms MB4 at Plot 5, Thane Airoli Road, Mumbai, Maharashtra 400708, India. PeeringDB facility 15050 identifies MB4 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-db2",
+      "facilityCode": "DB2",
+      "originalLatitude": 53.3411249,
+      "originalLongitude": -6.2545,
+      "originalPrecision": "city",
+      "proposedLatitude": 53.318647,
+      "proposedLongitude": -6.439957,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/ireland-colocation/dublin-data-centers/db2",
+        "https://www.peeringdb.com/fac/178"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms DB2 at Unit 7 Kilcarbery Business Park, New Nangor Road, Clondalkin, D22 FV12 Dublin, Ireland. PeeringDB facility 178 identifies DB2 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-os1",
+      "facilityCode": "OS1",
+      "originalLatitude": 34.6937569,
+      "originalLongitude": 135.5014539,
+      "originalPrecision": "city",
+      "proposedLatitude": 34.675774,
+      "proposedLongitude": 135.495551,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/japan-colocation/osaka-data-centers/os1",
+        "https://www.peeringdb.com/fac/1791"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms OS1 at 1-26-1, Shinmachi, Nishi-ku, Nishi Shinsaibashi Building, Osaka 550-0013, Japan. PeeringDB facility 1791 identifies OS1 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-os2x",
+      "facilityCode": "OS2x",
+      "originalLatitude": 34.6937569,
+      "originalLongitude": 135.5014539,
+      "originalPrecision": "city",
+      "proposedLatitude": 34.6937569,
+      "proposedLongitude": 135.5014539,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/japan-colocation/osaka-data-centers/os2x",
+        "https://www.equinix.com.br/content/dam/eqxcorp/en_us/documents/resources/ibx-tech-specs/ibx_os2x_en.pdf"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "Equinix confirms 4-1-58 Saitoaokita and publishes a metro-scale map, but no authoritative building/street coordinate was found.",
+      "confidence": "low",
+      "disposition": "retain_city"
+    },
+    {
+      "researchKey": "equinix-os3",
+      "facilityCode": "OS3",
+      "originalLatitude": 34.6656393,
+      "originalLongitude": 135.4324527,
+      "originalPrecision": "city",
+      "proposedLatitude": 34.669801,
+      "proposedLongitude": 135.510335,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/japan-colocation/osaka-data-centers/os3",
+        "https://www.peeringdb.com/fac/11324"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms OS3 at 2-2-82 Shiromi, Chuo-ku, Osaka City, Keihanshin OBP Building, Osaka 5400001, Japan. PeeringDB facility 11324 identifies OS3 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-mo1",
+      "facilityCode": "MO1",
+      "originalLatitude": 26.2384363,
+      "originalLongitude": -99.8873,
+      "originalPrecision": "city",
+      "proposedLatitude": 26.2384363,
+      "proposedLongitude": -99.8873,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/mexico-colocation/monterrey-data-centers/mo1",
+        "https://www.peeringdb.com/fac/8435"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "PeeringDB identifies MO1 at the same industrial park but with Aristoteles 112 / km 17, conflicting with the first-party Aristoteles 119 / km 17.5 address.",
+      "confidence": "low",
+      "disposition": "needs_human_review"
+    },
+    {
+      "researchKey": "equinix-mo2",
+      "facilityCode": "MO2",
+      "originalLatitude": 26.2384363,
+      "originalLongitude": -99.8873,
+      "originalPrecision": "city",
+      "proposedLatitude": 26.2384363,
+      "proposedLongitude": -99.8873,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/mexico-colocation/monterrey-data-centers/mo2",
+        "https://www.peeringdb.com/fac/15799"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "PeeringDB identifies MO2 at Autopista al Aeropuerto 40, conflicting with the first-party Av. Mexico 260 address.",
+      "confidence": "low",
+      "disposition": "needs_human_review"
+    },
+    {
+      "researchKey": "equinix-mx1",
+      "facilityCode": "MX1",
+      "originalLatitude": 20.8052225,
+      "originalLongitude": -99.8837376,
+      "originalPrecision": "city",
+      "proposedLatitude": 20.556925,
+      "proposedLongitude": -100.277833,
+      "proposedPrecision": "campus",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/mexico-colocation/mexico-city-data-centers/mx1",
+        "https://www.peeringdb.com/fac/8434"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms MX1 at Parque Tecnologico Innovacion - Lte 79, Carretera Estatal 431 Km 2.2, Querétaro 76246, Mexico. PeeringDB facility 8434 identifies a shared site containing MX1 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site.",
+      "confidence": "medium",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-mx2",
+      "facilityCode": "MX2",
+      "originalLatitude": 20.8052225,
+      "originalLongitude": -99.8837376,
+      "originalPrecision": "city",
+      "proposedLatitude": 20.556925,
+      "proposedLongitude": -100.277833,
+      "proposedPrecision": "campus",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/mexico-colocation/mexico-city-data-centers/mx2",
+        "https://www.peeringdb.com/fac/8434"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms MX2 at Parque Tecnologico Innovacion - Lte 80, Querétaro 76246, Mexico. PeeringDB facility 8434 identifies a shared site containing MX2 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site.",
+      "confidence": "medium",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-lg1",
+      "facilityCode": "LG1",
+      "originalLatitude": 6.4550575,
+      "originalLongitude": 3.3941795,
+      "originalPrecision": "city",
+      "proposedLatitude": 6.449602,
+      "proposedLongitude": 3.588328,
+      "proposedPrecision": "campus",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/nigeria-colocation/lagos-data-centers/lg1",
+        "https://www.peeringdb.com/fac/5094"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms LG1 at Chief Chuks Ikokwu Street, Lekki, Lagos 10604, Nigeria. PeeringDB facility 5094 identifies a shared site containing LG1 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site.",
+      "confidence": "medium",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-lg2",
+      "facilityCode": "LG2",
+      "originalLatitude": 6.4550575,
+      "originalLongitude": 3.3941795,
+      "originalPrecision": "city",
+      "proposedLatitude": 6.449602,
+      "proposedLongitude": 3.588328,
+      "proposedPrecision": "campus",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/nigeria-colocation/lagos-data-centers/lg2",
+        "https://www.peeringdb.com/fac/5094"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms LG2 at Chief Chuks Ikokwu Street, Lekki, Lagos 10604, Nigeria. PeeringDB facility 5094 identifies a shared site containing LG2 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site.",
+      "confidence": "medium",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-mn2",
+      "facilityCode": "MN2",
+      "originalLatitude": 14.3134594,
+      "originalLongitude": 121.0574345,
+      "originalPrecision": "city",
+      "proposedLatitude": 14.3134594,
+      "proposedLongitude": 121.0574345,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/philippines-colocation/manila-data-centers/mn2",
+        "https://www.peeringdb.com/fac/17237"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "Equinix and PeeringDB confirm Macaria Business Centre, but PeeringDB explicitly reports that geocode data could not be obtained and no stronger coordinate was found.",
+      "confidence": "low",
+      "disposition": "retain_city"
+    },
+    {
+      "researchKey": "equinix-wa2",
+      "facilityCode": "WA2",
+      "originalLatitude": 52.2319581,
+      "originalLongitude": 21.0067249,
+      "originalPrecision": "city",
+      "proposedLatitude": 52.15476,
+      "proposedLongitude": 21.002384,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/poland-colocation/warsaw-data-centers/wa2",
+        "https://www.peeringdb.com/fac/2908"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms WA2 at Poleczki 23 Street, 02-822 Warsaw, Poland. PeeringDB facility 2908 identifies WA2 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-ls2",
+      "facilityCode": "LS2",
+      "originalLatitude": 38.7077507,
+      "originalLongitude": -9.1365919,
+      "originalPrecision": "city",
+      "proposedLatitude": 38.78746,
+      "proposedLongitude": -9.123351,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/portugal-colocation/lisbon-data-centers/ls2",
+        "https://www.peeringdb.com/fac/16863"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms LS2 at Avenida Severiano Falcao, 12 Prior Velho, 2685-378 Lisbon, Portugal. PeeringDB facility 16863 identifies LS2 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-sl1",
+      "facilityCode": "SL1",
+      "originalLatitude": 37.5666791,
+      "originalLongitude": 126.9782914,
+      "originalPrecision": "city",
+      "proposedLatitude": 37.580228,
+      "proposedLongitude": 126.8907,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/korea-colocation/seoul-data-center/sl1",
+        "https://www.peeringdb.com/fac/7354"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms SL1 at 3F, 24, Worldcupbukro 60-gil, Mapo-gu, Samsung SDS SangAm IT Center, Seoul, Seoul 3922, Republic of Korea. PeeringDB facility 7354 identifies SL1 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-sl2x",
+      "facilityCode": "SL2x",
+      "originalLatitude": 37.2884675,
+      "originalLongitude": 127.0535231,
+      "originalPrecision": "city",
+      "proposedLatitude": 37.599421,
+      "proposedLongitude": 126.893997,
+      "proposedPrecision": "campus",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/korea-colocation/seoul-data-center/sl2x",
+        "https://www.equinix.com.br/content/dam/eqxcorp/en_us/documents/resources/ibx-tech-specs/ibx_sl2x_en.pdf",
+        "https://www.peeringdb.com/fac/15854"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "Equinix documentation places SL2x and SL4 together at the 69 Hyangdong-ro site; the shared point is therefore retained only at campus precision, using the coordinate-bearing SL4 record for the documented shared campus and not as a building inference.",
+      "confidence": "medium",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-sl4",
+      "facilityCode": "SL4",
+      "originalLatitude": 37.2884675,
+      "originalLongitude": 127.0535231,
+      "originalPrecision": "city",
+      "proposedLatitude": 37.599421,
+      "proposedLongitude": 126.893997,
+      "proposedPrecision": "campus",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/asia-pacific-colocation/korea-colocation/seoul-data-center/sl4",
+        "https://www.peeringdb.com/fac/15854"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms SL4 at 69 Hyangdong-ro, and Equinix documentation places SL2x at the same site. PeeringDB facility 15854 supplies the shared coordinate, so the proposal is limited to campus precision rather than assigning one building point to both facilities.",
+      "confidence": "medium",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-ba1",
+      "facilityCode": "BA1",
+      "originalLatitude": 41.3825802,
+      "originalLongitude": 2.177073,
+      "originalPrecision": "city",
+      "proposedLatitude": 41.351557,
+      "proposedLongitude": 2.137457,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/spain-colocation/barcelona-data-centers/ba1",
+        "https://www.peeringdb.com/fac/122"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms BA1 at Carrer de l'Acer 30-32, 08038 Barcelona, Spain. PeeringDB facility 122 identifies BA1 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-ba2",
+      "facilityCode": "BA2",
+      "originalLatitude": 41.3825802,
+      "originalLongitude": 2.177073,
+      "originalPrecision": "city",
+      "proposedLatitude": 41.351324,
+      "proposedLongitude": 2.09898,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/spain-colocation/barcelona-data-centers/ba2",
+        "https://www.peeringdb.com/fac/15419"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms BA2 at Carretera del Mig 219, L'Hospitalet de Llobregat, 8907 Barcelona, Spain. PeeringDB facility 15419 identifies BA2 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-md1",
+      "facilityCode": "MD1",
+      "originalLatitude": 40.416782,
+      "originalLongitude": -3.703507,
+      "originalPrecision": "city",
+      "proposedLatitude": 40.513497,
+      "proposedLongitude": -3.671891,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/spain-colocation/madrid-data-centers/md1",
+        "https://www.peeringdb.com/fac/179"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms MD1 at Calle Isabel Colbrand, 6-8, 1st floor, 28050 Madrid, Spain. PeeringDB facility 179 identifies MD1 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-md2",
+      "facilityCode": "MD2",
+      "originalLatitude": 40.416782,
+      "originalLongitude": -3.703507,
+      "originalPrecision": "city",
+      "proposedLatitude": 40.536855,
+      "proposedLongitude": -3.648584,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/spain-colocation/madrid-data-centers/md2",
+        "https://www.peeringdb.com/fac/127"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms MD2 at Calle Valgrande 6, Alcobendas, 28108 Madrid, Spain. PeeringDB facility 127 identifies MD2 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-sk1",
+      "facilityCode": "SK1",
+      "originalLatitude": 59.339769,
+      "originalLongitude": 17.9395411,
+      "originalPrecision": "city",
+      "proposedLatitude": 59.362574,
+      "proposedLongitude": 17.955657,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/sweden-colocation/stockholm-data-centers/sk1",
+        "https://www.peeringdb.com/fac/156"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms SK1 at Mariehallsvagen 36 Box 20165 S-161 02 Bromma Sweden, 168 65 Bromma, Sweden. PeeringDB facility 156 identifies SK1 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-sk3",
+      "facilityCode": "SK3",
+      "originalLatitude": 59.3891166,
+      "originalLongitude": 17.924999,
+      "originalPrecision": "city",
+      "proposedLatitude": 59.390932,
+      "proposedLongitude": 17.875185,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/sweden-colocation/stockholm-data-centers/sk3",
+        "https://www.peeringdb.com/fac/3193"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms SK3 at Finspangsgatan 48, 16353 Spanga, 163 53 Spanga, Sweden. PeeringDB facility 3193 identifies SK3 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-il2",
+      "facilityCode": "IL2",
+      "originalLatitude": 41.006381,
+      "originalLongitude": 28.9758715,
+      "originalPrecision": "city",
+      "proposedLatitude": 40.993767,
+      "proposedLongitude": 29.175849,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/turkey-colocation/istanbul-data-centers/il2",
+        "https://www.peeringdb.com/fac/4148"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms IL2 at 3. Cd. No:4 Yukari Dudullu Organize Sanayi Bolgesi (OSB), Umraniye, 34775 Istanbul, Turkey. PeeringDB facility 4148 identifies IL2 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-dx1",
+      "facilityCode": "DX1",
+      "originalLatitude": 25.0742823,
+      "originalLongitude": 55.1885624,
+      "originalPrecision": "city",
+      "proposedLatitude": 25.02618,
+      "proposedLongitude": 55.18695,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/united-arab-emirates-colocation/dubai-data-centers/dx1",
+        "https://www.peeringdb.com/fac/1355"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms DX1 at International Media Production Zone (IMPZ), Units F90, F91 & F92, Dubai, Dubai, United Arab Emirates. PeeringDB facility 1355 identifies DX1 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-dx2",
+      "facilityCode": "DX2",
+      "originalLatitude": 25.0742823,
+      "originalLongitude": 55.1885624,
+      "originalPrecision": "city",
+      "proposedLatitude": 25.0742823,
+      "proposedLongitude": 55.1885624,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/united-arab-emirates-colocation/dubai-data-centers/dx2",
+        "https://www.peeringdb.com/fac/1356"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "PeeringDB identifies DX2 in IMPZ, conflicting with the first-party Meydan / Al Meydan Road address.",
+      "confidence": "low",
+      "disposition": "needs_human_review"
+    },
+    {
+      "researchKey": "equinix-dx3",
+      "facilityCode": "DX3",
+      "originalLatitude": 25.0742823,
+      "originalLongitude": 55.1885624,
+      "originalPrecision": "city",
+      "proposedLatitude": 25.0265,
+      "proposedLongitude": 55.1867,
+      "proposedPrecision": "campus",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/europe-colocation/united-arab-emirates-colocation/dubai-data-centers/dx3",
+        "https://www.peeringdb.com/fac/14653"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms DX3 at Units F88-F92, International Media Production Zone (IMPZ / Dubai Production City), Dubai 500389, United Arab Emirates. PeeringDB facility 14653 identifies a shared site containing DX3 and supplies a coordinate consistent with that address. The proposal is limited to campus precision because the evidence does not distinguish an individual building within the shared site.",
+      "confidence": "medium",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-ny4",
+      "facilityCode": "NY4",
+      "originalLatitude": 40.7899291,
+      "originalLongitude": -74.0566735,
+      "originalPrecision": "city",
+      "proposedLatitude": 40.7899291,
+      "proposedLongitude": -74.0566735,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers/ny4",
+        "https://www.peeringdb.com/fac/36"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "PeeringDB combines NY2/NY4/NY5/NY6 at 800 Secaucus Road, conflicting with the first-party NY4 address at 755 Secaucus Road.",
+      "confidence": "low",
+      "disposition": "needs_human_review"
+    },
+    {
+      "researchKey": "equinix-ny9",
+      "facilityCode": "NY9",
+      "originalLatitude": 40.7127281,
+      "originalLongitude": -74.0060152,
+      "originalPrecision": "city",
+      "proposedLatitude": 40.741469,
+      "proposedLongitude": -74.003387,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers/ny9",
+        "https://www.peeringdb.com/fac/38"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms NY9 at 111 8th Ave, New York, NY 10011, USA. PeeringDB facility 38 identifies NY9 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-ny13",
+      "facilityCode": "NY13",
+      "originalLatitude": 41.0550969,
+      "originalLongitude": -73.8201338,
+      "originalPrecision": "city",
+      "proposedLatitude": 41.0550969,
+      "proposedLongitude": -73.8201338,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers/ny13",
+        "https://der.nyserda.ny.gov/facilities/1879/?project=1872"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "Equinix and NYSERDA confirm 401 Fieldcrest Drive. The U.S. Census result is TIGER street interpolation, which is disallowed for this pass, and no exact building coordinate was found.",
+      "confidence": "low",
+      "disposition": "retain_city"
+    },
+    {
+      "researchKey": "equinix-da1",
+      "facilityCode": "DA1",
+      "originalLatitude": 32.7762719,
+      "originalLongitude": -96.7968559,
+      "originalPrecision": "city",
+      "proposedLatitude": 32.800955,
+      "proposedLongitude": -96.81955,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/dallas-data-centers/da1",
+        "https://www.peeringdb.com/fac/4"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms DA1 at 1950 North Stemmons Freeway, Suite 1034, Dallas, TX 75207, USA. PeeringDB facility 4 identifies DA1 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-da2",
+      "facilityCode": "DA2",
+      "originalLatitude": 32.7762719,
+      "originalLongitude": -96.7968559,
+      "originalPrecision": "city",
+      "proposedLatitude": 32.800955,
+      "proposedLongitude": -96.81955,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/dallas-data-centers/da2",
+        "https://www.peeringdb.com/fac/2578"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms DA2 at 1950 North Stemmons Freeway, Suite 2027, Dallas, TX 75207, USA. PeeringDB facility 2578 identifies DA2 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-da3",
+      "facilityCode": "DA3",
+      "originalLatitude": 32.7762719,
+      "originalLongitude": -96.7968559,
+      "originalPrecision": "city",
+      "proposedLatitude": 32.800955,
+      "proposedLongitude": -96.81955,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/dallas-data-centers/da3",
+        "https://www.peeringdb.com/fac/69"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms DA3 at 1950 North Stemmons Freeway, Suites 1039A & 2048, Dallas, TX 75207, USA. PeeringDB facility 69 identifies DA3 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-da6",
+      "facilityCode": "DA6",
+      "originalLatitude": 32.7762719,
+      "originalLongitude": -96.7968559,
+      "originalPrecision": "city",
+      "proposedLatitude": 32.800748,
+      "proposedLongitude": -96.819412,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/dallas-data-centers/da6",
+        "https://www.peeringdb.com/fac/2261"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms DA6 at 1950 North Stemmons Freeway, Suite 3050, Dallas, TX 75207, USA. PeeringDB facility 2261 identifies DA6 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-da11",
+      "facilityCode": "DA11",
+      "originalLatitude": 32.7762719,
+      "originalLongitude": -96.7968559,
+      "originalPrecision": "city",
+      "proposedLatitude": 32.801347,
+      "proposedLongitude": -96.821074,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/dallas-data-centers/da11",
+        "https://www.peeringdb.com/fac/11762"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms DA11 at 1990 North Stemmons Freeway, Dallas, TX 75207, USA. PeeringDB facility 11762 identifies DA11 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-de2",
+      "facilityCode": "DE2",
+      "originalLatitude": 40.8929329,
+      "originalLongitude": -73.9726508,
+      "originalPrecision": "city",
+      "proposedLatitude": 39.560317,
+      "proposedLongitude": -104.857528,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/denver-data-centers/de2",
+        "https://www.peeringdb.com/fac/696"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms DE2 at 335 Inverness Drive South, Inverness Business Park, Englewood, CO 80112, USA. PeeringDB facility 696 identifies DE2 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-la1",
+      "facilityCode": "LA1",
+      "originalLatitude": 34.0536909,
+      "originalLongitude": -118.242766,
+      "originalPrecision": "city",
+      "proposedLatitude": 34.047501,
+      "proposedLongitude": -118.2573,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/los-angeles-data-centers/la1",
+        "https://www.peeringdb.com/fac/8"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms LA1 at 600 W 7th Street, 6th & 7th Floors, Los Angeles, CA 90017, USA. PeeringDB facility 8 identifies LA1 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-mi3",
+      "facilityCode": "MI3",
+      "originalLatitude": 26.3586885,
+      "originalLongitude": -80.0830984,
+      "originalPrecision": "city",
+      "proposedLatitude": 26.387989,
+      "proposedLongitude": -80.108267,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/miami-data-centers/mi3",
+        "https://www.peeringdb.com/fac/1271"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms MI3 at 4680 Conference Way South, Suite 150, Boca Raton, FL 33431, USA. PeeringDB facility 1271 identifies MI3 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-se2",
+      "facilityCode": "SE2",
+      "originalLatitude": 47.6038321,
+      "originalLongitude": -122.330062,
+      "originalPrecision": "city",
+      "proposedLatitude": 47.614358,
+      "proposedLongitude": -122.338864,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/seattle-data-centers/se2",
+        "https://www.peeringdb.com/fac/86"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "The code-specific Equinix page confirms SE2 at 2001 Sixth Ave, #350, Seattle, WA 98121, USA. PeeringDB facility 86 identifies SE2 and supplies a coordinate consistent with that address. The proposal is limited to building precision.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    },
+    {
+      "researchKey": "equinix-se3",
+      "facilityCode": "SE3",
+      "originalLatitude": 47.6038321,
+      "originalLongitude": -122.330062,
+      "originalPrecision": "city",
+      "proposedLatitude": 47.6038321,
+      "proposedLongitude": -122.330062,
+      "proposedPrecision": "city",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/seattle-data-centers/se3",
+        "https://www.peeringdb.com/fac/86"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "PeeringDB combines SE2/SE3 at 2001 Sixth Avenue, but the first-party SE3 address is 2020 Fifth Avenue.",
+      "confidence": "low",
+      "disposition": "needs_human_review"
+    },
+    {
+      "researchKey": "equinix-sv14",
+      "facilityCode": "SV14",
+      "originalLatitude": 37.2333253,
+      "originalLongitude": -121.6846349,
+      "originalPrecision": "city",
+      "proposedLatitude": 37.3749462,
+      "proposedLongitude": -121.988474,
+      "proposedPrecision": "building",
+      "evidenceUrls": [
+        "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/silicon-valley-data-centers/sv14",
+        "https://www.openstreetmap.org/way/205823980"
+      ],
+      "evidenceTier": "tier_1+2",
+      "researchSummary": "Equinix confirms SV14 at 2960 Corvin Drive, Pod D; OSM way 205823980 is the separately named Equinix SV14 data-center building at that address.",
+      "confidence": "high",
+      "disposition": "upgrade"
+    }
+  ]
+}

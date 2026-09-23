@@ -44,10 +44,10 @@ describe("the complete projected dataset", () => {
     expect(document!.researchDocument).toBe("docs/operations/map-phase-4b-ready-facilities.md");
   });
 
-  it("carries the Phase 4B set plus the QA-approved Digital Realty facilities", () => {
-    expect(plan.counts.facilities).toBe(322);
+  it("carries the Phase 4B set plus the Digital Realty and Equinix tranches", () => {
+    expect(plan.counts.facilities).toBe(503);
     expect(plan.counts.byCategory).toEqual({
-      data_center: 279,
+      data_center: 460,
       gpu_compute_cluster: 18,
       semiconductor_fab: 20,
       power_infrastructure: 5,
@@ -197,7 +197,7 @@ describe("the complete projected dataset", () => {
 
     it("keeps research records public only when they have a safe position", () => {
       const research = document!.facilities.filter((facility) => facility.requestedPublicationState === "research");
-      expect(research.length).toBe(273);
+      expect(research.length).toBe(454);
       let placeable = 0;
       for (const facility of research) {
         expect(facility.evidence.length, facility.researchKey).toBeGreaterThan(0);
@@ -208,15 +208,20 @@ describe("the complete projected dataset", () => {
         });
         if (eligible) placeable += 1;
       }
-      expect(placeable).toBe(242);
+      // 417 of the 454 research records can be drawn. The gap is deliberate:
+      // a record whose address resolves only to a town carries city precision,
+      // which is a location rather than a position, so it is stored in full and
+      // refused by the map. Precision recovery leaves six Equinix records in
+      // that state rather than inventing facility coordinates for them.
+      expect(placeable).toBe(417);
     });
   });
 
   describe("provenance", () => {
     it("cites every source the research cites, and classifies each one", () => {
-      expect(plan.counts.evidence).toBe(551);
-      expect(plan.counts.claims).toBe(1416);
-      expect(plan.counts.sourceUrls).toBe(369);
+      expect(plan.counts.evidence).toBe(790);
+      expect(plan.counts.claims).toBe(1837);
+      expect(plan.counts.sourceUrls).toBe(471);
       const classified = Object.values(plan.counts.byCitationClass).reduce((a, b) => a + b, 0);
       expect(classified).toBe(plan.counts.evidence);
       for (const facility of document!.facilities) {
@@ -256,9 +261,12 @@ describe("the complete projected dataset", () => {
       const keys = document!.facilities.map((facility) => facility.researchKey);
       expect(new Set(keys).size).toBe(keys.length);
       // Co-located infrastructure remains one row per physical entity. The
-      // Digital Realty tranche adds intentionally shared campus/street points.
+      // Digital Realty and Equinix tranches add intentionally shared points:
+      // Equinix in particular is mostly suites and floors inside other
+      // buildings. Precision recovery separates many earlier city-centroid
+      // collisions while preserving genuine shared sites.
       const shared = plan.reviewCandidates.filter((entry) => entry.code === "shared_coordinates");
-      expect(shared.length).toBe(79);
+      expect(shared.length).toBe(110);
       for (const entry of shared) expect(entry.message).toContain("not merged");
     });
 
@@ -267,7 +275,7 @@ describe("the complete projected dataset", () => {
       // Dense IBX and numbered-campus markets legitimately produce nearby
       // records. They are surfaced for review and never merged automatically.
       for (const entry of near) expect(entry.message).toContain("not merged on that");
-      expect(near.length).toBe(307);
+      expect(near.length).toBe(410);
     });
 
     it("carries the research's own duplicate questions into the review queue", () => {

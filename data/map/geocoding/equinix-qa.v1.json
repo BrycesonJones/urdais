@@ -1,0 +1,789 @@
+{
+  "qaVersion": "urdais.map.equinix-geocode-qa/1",
+  "generatedAt": "2026-09-22",
+  "markets": 48,
+  "physicalFacilities": 187,
+  "successfullyGeolocated": 187,
+  "unresolved": 0,
+  "excludedFromCanonicalWrite": 0,
+  "coordinateCoverage": "187/187",
+  "mapEligible": 114,
+  "notMapEligibleCityPrecision": 73,
+  "sourceCoverage": "187/187",
+  "precision": {
+    "building": 49,
+    "street": 39,
+    "campus": 26,
+    "city": 73
+  },
+  "precisionClass": {
+    "exactOrRooftop": 67,
+    "interpolatedOrStreet": 120,
+    "lowerPrecision": 0,
+    "unresolved": 0
+  },
+  "sharedAddressGroups": [
+    {
+      "normalizedAddress": "578 lorimer street port melbourne melbourne vic 3207 australia",
+      "researchKeys": [
+        "equinix-me1",
+        "equinix-me2"
+      ]
+    },
+    {
+      "normalizedAddress": "37 lemnos st shenton park wa 6008 australia",
+      "researchKeys": [
+        "equinix-pe2",
+        "equinix-pe3"
+      ]
+    },
+    {
+      "normalizedAddress": "114 rue ambroise croizat 93200 saint denis france",
+      "researchKeys": [
+        "equinix-pa2",
+        "equinix-pa3",
+        "equinix-pa9x"
+      ]
+    },
+    {
+      "normalizedAddress": "chief chuks ikokwu street lekki lagos 10604 nigeria",
+      "researchKeys": [
+        "equinix-lg1",
+        "equinix-lg2"
+      ]
+    },
+    {
+      "normalizedAddress": "calle pedriza 12 alcobendas 28108 madrid spain",
+      "researchKeys": [
+        "equinix-md6",
+        "equinix-md3x"
+      ]
+    },
+    {
+      "normalizedAddress": "josefstrasse 225 8005 zurich switzerland",
+      "researchKeys": [
+        "equinix-zh2",
+        "equinix-zh4"
+      ]
+    }
+  ],
+  "duplicateCoordinateGroups": [
+    {
+      "coordinates": "-31.9531380,115.7977067",
+      "researchKeys": [
+        "equinix-pe2",
+        "equinix-pe3"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "37 Lemnos St, Shenton Park, WA 6008, Australia",
+        "37 Lemnos St, Shenton Park, WA 6008, Australia"
+      ]
+    },
+    {
+      "coordinates": "-33.9215514,151.1881363",
+      "researchKeys": [
+        "equinix-sy1",
+        "equinix-sy2"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "639 Gardeners Road, Unit B, Sydney, NSW 2020, Australia",
+        "639 Gardeners Road, Unit C, Sydney, NSW 2020, Australia"
+      ]
+    },
+    {
+      "coordinates": "-33.9193470,151.1899815",
+      "researchKeys": [
+        "equinix-sy4",
+        "equinix-sy5"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "200 Bourke Road, Alexandria, Sydney, NSW 2015, Australia",
+        "Unit B, 200 Bourke Road, Alexandria, Sydney, NSW 2015, Australia"
+      ]
+    },
+    {
+      "coordinates": "-23.5506507,-46.6333824",
+      "researchKeys": [
+        "equinix-sp1",
+        "equinix-sp6"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Rua Doutor Miguel Couto, 58, Centro, 01008-010 Sao Paulo, Brazil",
+        "Av. Marcos Penteado de Ulhoa Rodrigues, 1413, Santana de Parnaíba, 06543-001 Sao Paulo, Brazil"
+      ]
+    },
+    {
+      "coordinates": "-23.5112184,-46.8764612",
+      "researchKeys": [
+        "equinix-sp2",
+        "equinix-sp4"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Alameda Araguaia, 3641, Alphaville, 06455-000 Barueri, Brazil",
+        "Avenida Ceci, 1900 - Conjunto A, Tambore, 06460-120 Barueri, Brazil"
+      ]
+    },
+    {
+      "coordinates": "46.8137431,-71.2084061",
+      "researchKeys": [
+        "equinix-mt1",
+        "equinix-mt2"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "6205 Vanden Abeele Street, Saint Laurent, Quebec H4S 1S1, Canada",
+        "3500 Rue F.-X.-Tessier, Vaudreuil-Dorion, Quebec J7V5V5, Canada"
+      ]
+    },
+    {
+      "coordinates": "-33.4480572,-70.8485141",
+      "researchKeys": [
+        "equinix-st1",
+        "equinix-st2"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Avenida los Vientos, 20239, Pudahuel, 9061673 Santiago de Chile, Chile",
+        "Avenida los Vientos, 20239, Pudahuel, Región Metropolitana, 9061673 Santiago de Chile, Chile"
+      ]
+    },
+    {
+      "coordinates": "31.2312707,121.4700152",
+      "researchKeys": [
+        "equinix-sh1",
+        "equinix-sh2",
+        "equinix-sh3",
+        "equinix-sh5"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "No.4 Building, 400 Fangchun Road, Epilight Technology Park, Zhangjing Hi-tech Park, Shanghai 201210, China",
+        "Building No. 4, 700 Jinyu Road, Pudong New Area, Shanghai 201206, China",
+        "Building No. 3, 700 Jinyu Road, Pudong New Area, Shanghai 201206, China",
+        "Building No. 9, No. 976 Shunping Road, Yangpu District, Shanghai 200090, China"
+      ]
+    },
+    {
+      "coordinates": "4.6533817,-74.0836331",
+      "researchKeys": [
+        "equinix-bg1",
+        "equinix-bg2"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Avenida Carrera 106 No. 15A-25, Manzana 6, Lote 27, 110921 Bogota, Colombia",
+        "Carrera 106 No 15 A25, Manzana 18, 110921 Bogota, Colombia"
+      ]
+    },
+    {
+      "coordinates": "48.9271296,2.3503464",
+      "researchKeys": [
+        "equinix-pa2",
+        "equinix-pa3",
+        "equinix-pa9x",
+        "equinix-pa10"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "114 Rue Ambroise Croizat, 93200 Saint Denis, France",
+        "114 Rue Ambroise Croizat, 93200 Saint Denis, France",
+        "114 Rue Ambroise Croizat, 93200 Saint Denis, France",
+        "114 Rue Ambroise Croizat, Saint-Denis, 93200 Saint-Denis, France"
+      ]
+    },
+    {
+      "coordinates": "48.8965023,2.4019804",
+      "researchKeys": [
+        "equinix-pa4",
+        "equinix-pa8"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "110 Bis avenue du General Leclerc, 93500 Pantin, France",
+        "110 Bis avenue du General Leclerc, Building 19, 93300 Pantin, France"
+      ]
+    },
+    {
+      "coordinates": "48.9146078,2.3821895",
+      "researchKeys": [
+        "equinix-pa5",
+        "equinix-pa6"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "45 avenue Victor Hugo Bat 254, Building 254, 93300 Aubervilliers, France",
+        "10 rue Waldeck Rochet Bat 520, Building 520, 93300 Aubervilliers, France"
+      ]
+    },
+    {
+      "coordinates": "48.1426813,11.5559887",
+      "researchKeys": [
+        "equinix-mu1",
+        "equinix-mu3"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Seidlstrasse 3, 2nd Floor, 80335 Munich, Germany",
+        "Seidlstrasse 3, 1st Floor, 80335 Munich, Germany"
+      ]
+    },
+    {
+      "coordinates": "22.3716605,114.1134699",
+      "researchKeys": [
+        "equinix-hk1",
+        "equinix-hk6"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Unit 2702, 27/F, Goodman Global Gateway, 168 Yeung Uk Road, Tsuen Wan, N.T., Hong Kong",
+        "18 Sha Tsui Road, Tsuen Wan, Hong Kong"
+      ]
+    },
+    {
+      "coordinates": "19.5670323,76.4164557",
+      "researchKeys": [
+        "equinix-mb1",
+        "equinix-mb2",
+        "equinix-mb3",
+        "equinix-mb4"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "A-001, Boomerang, Chandivali Farm Road, Near Chandivali Studio, Andheri East, Mumbai, Maharashtra MH 400072, India",
+        "Plot No. 37, Chandivali Farm Road, Chandivali, Andheri East, Mumbai, Maharashtra 400072, India",
+        "Plot 15 B, Chandivali Farm Road, Chandivali, Andheri East, Mumbai, Maharashtra 400072, India",
+        "Plot 5, Thane Airoli Road, Mumbai, Maharashtra 400708, India"
+      ]
+    },
+    {
+      "coordinates": "53.4032258,-6.3674344",
+      "researchKeys": [
+        "equinix-db5x",
+        "equinix-db6x"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "IDA Business & Technology Park, Snugborough, 15 Dublin, Ireland",
+        "IDA Business & Technology Park, Snugborough, 22 Dublin, Ireland"
+      ]
+    },
+    {
+      "coordinates": "34.6937569,135.5014539",
+      "researchKeys": [
+        "equinix-os1",
+        "equinix-os2x"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "1-26-1, Shinmachi, Nishi-ku, Nishi Shinsaibashi Building, Osaka 550-0013, Japan",
+        "4-1-58 Saitoaokita, Minoh-shi, Osaka 562-0029, Japan"
+      ]
+    },
+    {
+      "coordinates": "26.2384363,-99.8873000",
+      "researchKeys": [
+        "equinix-mo1",
+        "equinix-mo2"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Parque Industrial Kalos de Alta Tecnología, Carretera Miguel Alemán Km 17.5, Calle Aristoteles 119 Nave 6, Apodaca, Nuevo León 66603, Mexico",
+        "Av. Mexico 260, Parque Industrial Nexxus Aeropuerto, Apodaca, Nuevo León 66643, Mexico"
+      ]
+    },
+    {
+      "coordinates": "20.8052225,-99.8837376",
+      "researchKeys": [
+        "equinix-mx1",
+        "equinix-mx2"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Parque Tecnologico Innovacion - Lte 79, Carretera Estatal 431 Km 2.2, Querétaro 76246, Mexico",
+        "Parque Tecnologico Innovacion - Lte 80, Querétaro 76246, Mexico"
+      ]
+    },
+    {
+      "coordinates": "6.4550575,3.3941795",
+      "researchKeys": [
+        "equinix-lg1",
+        "equinix-lg2"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Chief Chuks Ikokwu Street, Lekki, Lagos 10604, Nigeria",
+        "Chief Chuks Ikokwu Street, Lekki, Lagos 10604, Nigeria"
+      ]
+    },
+    {
+      "coordinates": "37.2884675,127.0535231",
+      "researchKeys": [
+        "equinix-sl2x",
+        "equinix-sl4"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "69, Hyangdong-ro, Deogyang-gu, Goyang-si, Gyeonggi-do 10545, Republic of Korea",
+        "69, Hyangdong-ro, Deogyang-gu, Goyang-si, Gyeonggi 10545, Republic of Korea"
+      ]
+    },
+    {
+      "coordinates": "41.3825802,2.1770730",
+      "researchKeys": [
+        "equinix-ba1",
+        "equinix-ba2"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Carrer de l'Acer 30-32, 08038 Barcelona, Spain",
+        "Carretera del Mig 219, L'Hospitalet de Llobregat, 8907 Barcelona, Spain"
+      ]
+    },
+    {
+      "coordinates": "40.4167820,-3.7035070",
+      "researchKeys": [
+        "equinix-md1",
+        "equinix-md2"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Calle Isabel Colbrand, 6-8, 1st floor, 28050 Madrid, Spain",
+        "Calle Valgrande 6, Alcobendas, 28108 Madrid, Spain"
+      ]
+    },
+    {
+      "coordinates": "40.5346682,-3.6619575",
+      "researchKeys": [
+        "equinix-md6",
+        "equinix-md3x"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Calle Pedriza, 12, Alcobendas, 28108 Madrid, Spain",
+        "Calle Pedriza, 12, Alcobendas, 28108 Madrid, Spain"
+      ]
+    },
+    {
+      "coordinates": "47.3879264,8.5201721",
+      "researchKeys": [
+        "equinix-zh2",
+        "equinix-zh4"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Josefstrasse 225, 8005 Zurich, Switzerland",
+        "Josefstrasse 225, 8005 Zurich, Switzerland"
+      ]
+    },
+    {
+      "coordinates": "25.0742823,55.1885624",
+      "researchKeys": [
+        "equinix-dx1",
+        "equinix-dx2",
+        "equinix-dx3"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "International Media Production Zone (IMPZ), Units F90, F91 & F92, Dubai, Dubai, United Arab Emirates",
+        "Meydan, Al Meydan Rd & Nad Al Sheba Rd 1, Dubai, Dubai, United Arab Emirates",
+        "Units F88-F92, International Media Production Zone (IMPZ / Dubai Production City), Dubai 500389, United Arab Emirates"
+      ]
+    },
+    {
+      "coordinates": "53.4626688,-2.2375950",
+      "researchKeys": [
+        "equinix-ma1",
+        "equinix-ma4"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "Unit 3 Williams House, Manchester Science Park, M15 6SE Manchester, United Kingdom",
+        "Unit 4 Synergy House, Manchester Science Park, M15 6SY Manchester, United Kingdom"
+      ]
+    },
+    {
+      "coordinates": "41.8537537,-87.6183798",
+      "researchKeys": [
+        "equinix-ch1",
+        "equinix-ch2",
+        "equinix-ch4"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "350 E Cermak Rd, 5th Floor, Chicago, IL 60616, USA",
+        "350 E Cermak Rd, 6th Floor, Chicago, IL 60616, USA",
+        "350 E Cermak Rd, 8th Floor, Chicago, IL 60616, USA"
+      ]
+    },
+    {
+      "coordinates": "38.4551359,-77.9780171",
+      "researchKeys": [
+        "equinix-cu1",
+        "equinix-cu2",
+        "equinix-cu3",
+        "equinix-cu4"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "18155 Technology Drive, Building A, Culpeper, VA 22701, USA",
+        "18155 Technology Drive, Building B, Culpeper, VA 22701, USA",
+        "18155 Technology Drive, Building C, Culpeper, VA 22701, USA",
+        "18155 Technology Drive, Building D, Culpeper, VA 22701, USA"
+      ]
+    },
+    {
+      "coordinates": "32.7762719,-96.7968559",
+      "researchKeys": [
+        "equinix-da1",
+        "equinix-da2",
+        "equinix-da3",
+        "equinix-da6",
+        "equinix-da11"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "1950 North Stemmons Freeway, Suite 1034, Dallas, TX 75207, USA",
+        "1950 North Stemmons Freeway, Suite 2027, Dallas, TX 75207, USA",
+        "1950 North Stemmons Freeway, Suites 1039A & 2048, Dallas, TX 75207, USA",
+        "1950 North Stemmons Freeway, Suite 3050, Dallas, TX 75207, USA",
+        "1990 North Stemmons Freeway, Dallas, TX 75207, USA"
+      ]
+    },
+    {
+      "coordinates": "47.6038321,-122.3300620",
+      "researchKeys": [
+        "equinix-se2",
+        "equinix-se3"
+      ],
+      "expectedSharedAddress": true,
+      "addresses": [
+        "2001 Sixth Ave, #350, Seattle, WA 98121, USA",
+        "2020 Fifth Avenue, Seattle, WA 98121, USA"
+      ]
+    }
+  ],
+  "suspiciousDuplicateCoordinateGroups": [],
+  "sharedPointGroups": [
+    {
+      "latitude": 41.3825802,
+      "longitude": 2.177073,
+      "researchKeys": [
+        "equinix-ba1",
+        "equinix-ba2"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 4.6533817,
+      "longitude": -74.0836331,
+      "researchKeys": [
+        "equinix-bg1",
+        "equinix-bg2"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 41.8537537,
+      "longitude": -87.6183798,
+      "researchKeys": [
+        "equinix-ch1",
+        "equinix-ch2",
+        "equinix-ch4"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 38.4551359,
+      "longitude": -77.9780171,
+      "researchKeys": [
+        "equinix-cu1",
+        "equinix-cu2",
+        "equinix-cu3",
+        "equinix-cu4"
+      ],
+      "demoted": [
+        "equinix-cu1",
+        "equinix-cu2",
+        "equinix-cu3",
+        "equinix-cu4"
+      ]
+    },
+    {
+      "latitude": 32.7762719,
+      "longitude": -96.7968559,
+      "researchKeys": [
+        "equinix-da1",
+        "equinix-da11",
+        "equinix-da2",
+        "equinix-da3",
+        "equinix-da6"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 53.4032258,
+      "longitude": -6.3674344,
+      "researchKeys": [
+        "equinix-db5x",
+        "equinix-db6x"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 25.0742823,
+      "longitude": 55.1885624,
+      "researchKeys": [
+        "equinix-dx1",
+        "equinix-dx2",
+        "equinix-dx3"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 22.3716605,
+      "longitude": 114.1134699,
+      "researchKeys": [
+        "equinix-hk1",
+        "equinix-hk6"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 6.4550575,
+      "longitude": 3.3941795,
+      "researchKeys": [
+        "equinix-lg1",
+        "equinix-lg2"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 53.4626688,
+      "longitude": -2.237595,
+      "researchKeys": [
+        "equinix-ma1",
+        "equinix-ma4"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 19.5670323,
+      "longitude": 76.4164557,
+      "researchKeys": [
+        "equinix-mb1",
+        "equinix-mb2",
+        "equinix-mb3",
+        "equinix-mb4"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 40.416782,
+      "longitude": -3.703507,
+      "researchKeys": [
+        "equinix-md1",
+        "equinix-md2"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 40.5346682,
+      "longitude": -3.6619575,
+      "researchKeys": [
+        "equinix-md3x",
+        "equinix-md6"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 26.2384363,
+      "longitude": -99.8873,
+      "researchKeys": [
+        "equinix-mo1",
+        "equinix-mo2"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 46.8137431,
+      "longitude": -71.2084061,
+      "researchKeys": [
+        "equinix-mt1",
+        "equinix-mt2"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 48.1426813,
+      "longitude": 11.5559887,
+      "researchKeys": [
+        "equinix-mu1",
+        "equinix-mu3"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 20.8052225,
+      "longitude": -99.8837376,
+      "researchKeys": [
+        "equinix-mx1",
+        "equinix-mx2"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 34.6937569,
+      "longitude": 135.5014539,
+      "researchKeys": [
+        "equinix-os1",
+        "equinix-os2x"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 48.9271296,
+      "longitude": 2.3503464,
+      "researchKeys": [
+        "equinix-pa10",
+        "equinix-pa2",
+        "equinix-pa3",
+        "equinix-pa9x"
+      ],
+      "demoted": [
+        "equinix-pa3"
+      ]
+    },
+    {
+      "latitude": 48.8965023,
+      "longitude": 2.4019804,
+      "researchKeys": [
+        "equinix-pa4",
+        "equinix-pa8"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 48.9146078,
+      "longitude": 2.3821895,
+      "researchKeys": [
+        "equinix-pa5",
+        "equinix-pa6"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": -31.953138,
+      "longitude": 115.7977067,
+      "researchKeys": [
+        "equinix-pe2",
+        "equinix-pe3"
+      ],
+      "demoted": [
+        "equinix-pe2",
+        "equinix-pe3"
+      ]
+    },
+    {
+      "latitude": 47.6038321,
+      "longitude": -122.330062,
+      "researchKeys": [
+        "equinix-se2",
+        "equinix-se3"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 31.2312707,
+      "longitude": 121.4700152,
+      "researchKeys": [
+        "equinix-sh1",
+        "equinix-sh2",
+        "equinix-sh3",
+        "equinix-sh5"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": 37.2884675,
+      "longitude": 127.0535231,
+      "researchKeys": [
+        "equinix-sl2x",
+        "equinix-sl4"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": -23.5506507,
+      "longitude": -46.6333824,
+      "researchKeys": [
+        "equinix-sp1",
+        "equinix-sp6"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": -23.5112184,
+      "longitude": -46.8764612,
+      "researchKeys": [
+        "equinix-sp2",
+        "equinix-sp4"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": -33.4480572,
+      "longitude": -70.8485141,
+      "researchKeys": [
+        "equinix-st1",
+        "equinix-st2"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": -33.9215514,
+      "longitude": 151.1881363,
+      "researchKeys": [
+        "equinix-sy1",
+        "equinix-sy2"
+      ],
+      "demoted": []
+    },
+    {
+      "latitude": -33.919347,
+      "longitude": 151.1899815,
+      "researchKeys": [
+        "equinix-sy4",
+        "equinix-sy5"
+      ],
+      "demoted": [
+        "equinix-sy5"
+      ]
+    },
+    {
+      "latitude": 47.3879264,
+      "longitude": 8.5201721,
+      "researchKeys": [
+        "equinix-zh2",
+        "equinix-zh4"
+      ],
+      "demoted": []
+    }
+  ],
+  "unresolvedFacilities": [],
+  "hardErrors": [],
+  "sharedPointPrecisionDemotions": [
+    "equinix-cu1",
+    "equinix-cu2",
+    "equinix-cu3",
+    "equinix-cu4",
+    "equinix-pa3",
+    "equinix-pe2",
+    "equinix-pe3",
+    "equinix-sy5"
+  ]
+}

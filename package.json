@@ -71,7 +71,9 @@
     "umpi:derive": "tsx scripts/umpi/derive.ts",
     "umpi:ops": "tsx scripts/umpi/ops.ts",
     "umpi:production:check": "tsx scripts/umpi/production-check.ts",
-    "grid-buildout:ingest": "tsx scripts/grid-buildout/ingest.ts"
+    "grid-buildout:ingest": "tsx scripts/grid-buildout/ingest.ts",
+    "map:equinix": "tsx scripts/map/equinix-manual.ts",
+    "map:equinix:recover": "tsx scripts/map/equinix-precision-recovery.ts"
   },
   "dependencies": {
     "github-slugger": "^2.0.0",
