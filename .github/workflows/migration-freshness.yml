@@ -1,0 +1,70 @@
+# Production migration freshness.
+#
+# The `production migration ledger` job in ci.yml reports truth: it compares the production ledger
+# against the repository on every push to main and fails on drift. A migration production has not
+# applied is pending, and pending passes -- deliberately, because a pull request that adds one
+# legitimately has one pending and a guard that failed on that would be switched off within a week.
+#
+# This enforces policy instead. On 23 September 2026 production sat eight migrations behind main
+# while a deployed read model queried tables the database did not have and /api/umpi returned 500.
+# The ledger job ran throughout, printed `116 applied, 7 pending`, itemised every missing migration,
+# and passed. Nothing was hidden; nothing was enforced either, and a number in a green log is a fact
+# nobody encounters.
+#
+# So this asks how *long* production has been behind, and stops tolerating an answer that keeps
+# growing: informational under a day, an annotation after one, a failure after two. It is scheduled
+# rather than push-triggered on purpose -- the condition it catches appears with the passage of
+# time, not with a commit, and no push may happen for days while production drifts.
+name: migration freshness
+
+on:
+  schedule:
+    # Every six hours. Frequent enough to catch the 48h breach within a quarter of a day, rare
+    # enough that a red run means something.
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      fail_after_hours:
+        description: "Hours before pending migrations fail the check"
+        required: false
+        default: "48"
+
+permissions:
+  contents: read
+
+jobs:
+  freshness:
+    name: production migration freshness
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # Age is measured from when a migration landed on main, so the full history is the
+          # input. A shallow clone yields no date and the check reports "unverified", which is
+          # honest but useless.
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Same least-privilege role as the ledger check: SELECT on the migration ledger, nothing
+      # else. Both jobs read the same one table.
+      - name: Measure how long production has been behind
+        env:
+          DATABASE_URL: ${{ secrets.URDAIS_MIGRATION_AUDIT_DATABASE_URL }}
+          FAIL_AFTER: ${{ github.event.inputs.fail_after_hours || '48' }}
+        run: |
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "no migration audit database configured for this repository; skipping the freshness check."
+            echo "set the URDAIS_MIGRATION_AUDIT_DATABASE_URL secret to enforce it."
+            exit 0
+          fi
+          npm run migrations:freshness -- --fail-after "${FAIL_AFTER}"

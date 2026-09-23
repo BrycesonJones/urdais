@@ -50,7 +50,8 @@ the capacity outage on 15 September 2026.
 |---|---|---|---|
 | **A. Serverless request/read** | every public page and API read | the transaction pooler, port `6543`, derived from `DATABASE_URL` | one process-wide `pg.Pool`, `max: 1`, no `end()` |
 | **B. Cron / private job** | `/api/cron/{news,ubwi,ucpi}` and the `scripts/` commands | `DATABASE_URL` verbatim | one owned `pg.Client`, closed by its caller |
-| **C. Migration / admin** | `supabase db push`, `migrations:check --production`, the `production migration ledger` CI job | `DATABASE_URL` / `URDAIS_PRODUCTION_DATABASE_URL` verbatim | session connection, as the tooling expects |
+| **C. Migration / admin** | `supabase db push`, `migrations:check --production` run by an operator | `DATABASE_URL` / `URDAIS_PRODUCTION_DATABASE_URL` verbatim | session connection, as the tooling expects |
+| **C2. Migration audit (read-only)** | the `production migration ledger` and `migration freshness` CI jobs | `URDAIS_MIGRATION_AUDIT_DATABASE_URL`, the `urdais_migration_audit` role | session connection; `select` on the ledger and nothing else |
 
 **Why class A is rewritten in code.** The session pooler at
 `…pooler.supabase.com:5432` allots roughly fifteen clients to a role/database
@@ -359,6 +360,138 @@ compared against `select string_agg(version, ',' order by version) from supabase
 > no schema object changed. `20260915150000_ubwi_daily_publication_cadence` was
 > then the only pending migration and was applied with `supabase db push`;
 > `pipeline.ubwi_publications_daily_idx` now exists in UrdaisProd.
+
+### The production migration ledger check in CI
+
+The `production migration ledger` job on `main` compares the production ledger against the
+repository on every push. It skips silently unless the repository holds a
+`URDAIS_PRODUCTION_DATABASE_URL` secret.
+
+**That secret has been set since 14 September 2026, and the job has been running.** It is worth
+being precise about this, because the obvious reading of the 23 September 2026 incident — in which
+production sat eight migrations behind `main` and `/api/umpi` returned 500 against tables the
+database did not have — is that nothing was watching. Something was. On the merge that deployed
+that read model the job connected, compared the ledger, and printed:
+
+```
+production      116 ledger row(s); 116 applied, 7 pending, 0 drifted, 0 production-only
+  [note / MIGRATION_PENDING] 7 repository migration(s) not yet applied to production: ...
+migration integrity: ok
+```
+
+It named every missing migration and passed. The gap was in the CI log the whole time; nobody read
+it, because the check was green and green checks are not read. Connectivity was never the problem,
+so connecting something is not the fix — see *What the job does and does not catch* below.
+
+### The migration audit role
+
+Both migration jobs connect as **`urdais_migration_audit`**, not as `postgres`. They read one
+query; a credential that could drop the database is more than that warrants, and a leaked runner
+secret should not be able to do more than the job it was issued for.
+
+```sql
+create role urdais_migration_audit login password '<generated>';
+grant usage  on schema supabase_migrations                 to urdais_migration_audit;
+grant select on table  supabase_migrations.schema_migrations to urdais_migration_audit;
+revoke create on schema public    from urdais_migration_audit;
+revoke all    on database postgres from urdais_migration_audit;
+grant  connect on database postgres to urdais_migration_audit;
+```
+
+Two grants, and nothing else. Verified on creation by attempting each thing it must not do:
+
+| Attempt | Result |
+|---|---|
+| `select` the ledger | **124 rows** |
+| `insert` / `update` / `delete` the ledger | permission denied for table `schema_migrations` |
+| `select` from `pipeline` / `reference` | permission denied for schema |
+| `select` from `auth.users` | permission denied for schema `auth` |
+| `create table` in `public` | permission denied for schema `public` |
+| `drop` the ledger | must be owner of table |
+| `select rolpassword from pg_authid` | permission denied for table `pg_authid` |
+
+The secret is `URDAIS_MIGRATION_AUDIT_DATABASE_URL`. Its pooler username is
+`urdais_migration_audit.<ref>` — Supavisor takes `<role>.<project_ref>`, not just the project ref.
+Re-running the creation statement rotates the password; update the secret in the same pass.
+
+**`URDAIS_PRODUCTION_DATABASE_URL` stays.** It is not only used by these checks — three other
+workflows hold it, and two of them *write* to production:
+
+| Workflow | Uses it to |
+|---|---|
+| `ci.yml` → token production readiness | read application data |
+| `map-production-import.yml` | **write** map facilities |
+| `planning-production-ingest.yml` | **write** planning observations |
+
+So this change narrows two of five consumers to least privilege; it does not retire the superuser
+credential. Narrowing the other three means a role per job with its own grants, which is worth
+doing and is not this.
+
+### The production ledger connection
+
+The secret is the UrdaisProd session-pooler connection string, and it pins the CA rather than
+trusting the chain:
+
+```
+postgresql://postgres.<ref>:<password>@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=verify-full&sslrootcert=.github/supabase-prod-ca-2021.crt
+```
+
+`.github/supabase-prod-ca-2021.crt` was committed on 23 September 2026 to allow that pinning; the
+connection previously worked without verifying the chain. It is a public root
+certificate, not a credential, and the runner has no other copy of it — `pg` resolves
+`sslmode=require` as `verify-full`, which fails against Supabase's private CA, so without the file
+the only alternatives are `no-verify` or libpq compatibility mode. Both send the production
+password over a connection whose chain was never verified, which is a poor trade for a check that
+only reads one query. Verify the file against the fingerprint above before trusting a replacement.
+
+**What the job does and does not catch.** It fails on *drift* — a ledger row carrying a repository
+migration under a different version or an ad hoc name, or a row production has that the repository
+does not. A repository migration production has not applied yet is **pending**, and pending
+passes: that is the ordinary state of a pull request that adds one, and a guard that failed on it
+would be switched off within a week. So the job reports "N pending" in its log and stays green.
+Read that number after a merge that adds a migration; it is the signal that production still needs
+`supabase db push`.
+
+That is also the limit of this job, and the reason the September incident is not fixed by it: a
+number in a passing log is a fact nobody encounters. Catching "the application is deployed and the
+database is behind" needs a guard that eventually **fails**, which is the next section.
+
+### Production migration freshness
+
+`.github/workflows/migration-freshness.yml`, every six hours and on demand. Where the ledger check
+reports truth, this enforces policy: it asks how *long* production has been behind and stops
+tolerating an answer that keeps growing.
+
+| Age of the oldest pending migration | Verdict | Result |
+|---|---|---|
+| nothing pending | `current` | passes |
+| under 24 h | `informational` | passes quietly |
+| 24 h to 48 h | `warning` | passes, with a GitHub annotation |
+| over 48 h | `overdue` | **fails** |
+
+The tolerance is the normal window between merging a migration and running `supabase db push`; the
+ceiling is the point at which that window was supposed to close. Making the *ledger* check fail on
+pending would have fired on every legitimate migration pull request and been switched off within a
+week, which is why these are two jobs and not one.
+
+It is scheduled rather than push-triggered because the condition appears with the passage of time
+rather than with a commit — no push may happen for days while production drifts.
+
+**Age is measured from when a migration landed on `main`**, not from the version in its filename.
+Those differ: the repository pre-allocates future version prefixes, so `20261017100000` was merged
+on 23 September 2026 and a filename-derived age would have been negative. That needs real history,
+so the workflow checks out with `fetch-depth: 0`; a shallow checkout reports the age as
+*unverified* and annotates rather than passing silently.
+
+```
+npm run migrations:freshness
+npm run migrations:freshness -- --json
+npm run migrations:freshness -- --fail-after 24     # a tighter window for a release day
+```
+
+Run against production on 23 September 2026 it reported `current`, and against a database held
+three migrations behind it reported the pending set with each one's age and failed once the window
+was set below it.
 
 ### Checking migration integrity
 

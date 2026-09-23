@@ -128,13 +128,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Connects as `urdais_migration_audit`, which holds exactly two grants: USAGE on
+      # supabase_migrations and SELECT on its one table. It cannot write the ledger, read any
+      # application schema, or create anything. This job reads one query; it has no business
+      # holding a credential that could do more.
       - name: Compare the production migration ledger against the repository
         env:
-          DATABASE_URL: ${{ secrets.URDAIS_PRODUCTION_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.URDAIS_MIGRATION_AUDIT_DATABASE_URL }}
         run: |
           if [ -z "${DATABASE_URL}" ]; then
-            echo "no production database configured for this repository; skipping the ledger check."
-            echo "set the URDAIS_PRODUCTION_DATABASE_URL secret to enforce it."
+            echo "no migration audit database configured for this repository; skipping the ledger check."
+            echo "set the URDAIS_MIGRATION_AUDIT_DATABASE_URL secret to enforce it."
             exit 0
           fi
           npm run migrations:check -- --production --require-database
