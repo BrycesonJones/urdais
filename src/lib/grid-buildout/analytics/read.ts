@@ -20,6 +20,9 @@ import {
   SLIP_MINIMUM_PROJECTS, assertMethodologyApproved,
 } from "@/lib/grid-buildout/analytics/methodology";
 import type { M1, M2, M3, M4, M5 } from "@/lib/grid-buildout/analytics/types";
+import {
+  gridBuildoutFreshness, unavailableFreshness, type Freshness,
+} from "@/lib/grid-buildout/operations/freshness";
 import type { CapacitySqlExecutor } from "@/lib/power-delivery/capacity/read";
 
 export const METHODOLOGY_PATH = "/docs/methodology/grid-buildout-velocity";
@@ -59,6 +62,11 @@ export type GridBuildoutReadModel = {
   /** When this payload was assembled. Never presented as the dataset's age. */
   generatedAt: string;
   markets: { ercot: MarketProvenance | null; caiso: MarketProvenance | null };
+  /**
+   * Whether the pipeline is still confirming this publication. Derived from the last successful
+   * publication, never from a request, a render, or a failed attempt.
+   */
+  freshness: Freshness;
   metrics: {
     m1: M1 | null; m2: M2 | null; m3: M3 | null; m4: M4 | null; m5: M5 | null;
   };
@@ -120,6 +128,7 @@ export function unavailableGridBuildoutModel(): GridBuildoutReadModel {
     },
     calculatedAt: null, inputDigest: null, generatedAt: new Date().toISOString(),
     markets: { ercot: null, caiso: null },
+    freshness: unavailableFreshness(),
     metrics: { m1: null, m2: null, m3: null, m4: null, m5: null },
     coverage: null,
     notes: [SEPARATION_NOTE],
@@ -163,6 +172,10 @@ export async function loadGridBuildoutReadModel(
       limit 1`,
     [METHODOLOGY_SLUG, METHODOLOGY_VERSION],
   );
+  // Asked regardless of whether a run exists: a product that has never published and one whose
+  // pipeline has been failing for a week are different conditions and must read differently.
+  model.freshness = await gridBuildoutFreshness(sql);
+
   const run = runs.rows[0];
   if (run === undefined) return model;
 
@@ -356,6 +369,13 @@ export function validateGridBuildoutModel(model: GridBuildoutReadModel): string[
       problems.push(`m5 lists ${m5.reasons.length} reasons for ${cancelled} cancellations`);
     }
     if (m5.onHoldReported !== false) problems.push("m5 reports an on-hold figure, which 1.0.0 does not publish");
+  }
+
+  // A published payload must not claim to have never published. The gate may say stale — that is
+  // an honest state and not a contract failure — but `unavailable` beside real metrics means the
+  // ledger and the analytics disagree about whether anything is live.
+  if (model.freshness.status === "unavailable") {
+    problems.push("metrics are published while freshness reports nothing has ever been published");
   }
 
   // Resolution can only ever reduce a count, never invent one.

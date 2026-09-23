@@ -166,7 +166,9 @@ declare
     'pipeline.buildout_project_resolutions',
     -- UMPI Phase 8: the operational record behind the freshness gate.
     'reference.umpi_source_monitors',
-    'pipeline.umpi_operational_runs', 'pipeline.umpi_source_checks'
+    'pipeline.umpi_operational_runs', 'pipeline.umpi_source_checks',
+    -- Grid Buildout Velocity (GBV-5): the operational run ledger
+    'pipeline.buildout_job_runs'
   ];
   n integer;
 begin

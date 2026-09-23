@@ -141,6 +141,26 @@ export function GridBuildoutChart({ analytics }: { analytics: GridBuildoutReadMo
           No Grid Buildout calculation has been published yet. Nothing is shown rather than a
           placeholder figure.
         </p>
+      ) : analytics.freshness.status === "stale" ? (
+        // Stale keeps the last valid figures on screen and says so, which is the convention the
+        // other Power Analytics products follow. Withdrawing a still-valid publication because the
+        // pipeline missed a few runs would lose more than it protects.
+        <p
+          role="status"
+          className="mt-6 rounded-[3px] border border-amber-500/30 bg-amber-500/[0.06] p-4 text-sm text-amber-200/90"
+        >
+          <span className="font-medium">These figures may be out of date.</span>{" "}
+          The last successful calculation was{" "}
+          {analytics.freshness.lastPublishedAt === null
+            ? "some time ago"
+            : stamp(analytics.freshness.lastPublishedAt)}
+          {analytics.freshness.ageHours === null
+            ? null
+            : `, ${formatNumber(Math.round(analytics.freshness.ageHours / 24), 0)} day(s) ago`}
+          , beyond the {formatNumber(analytics.freshness.staleAfterHours / 24, 0)}-day freshness
+          window. The values shown are the last validated publication and remain unchanged; nothing
+          has been substituted.
+        </p>
       ) : null}
 
       {/* ---------------------------------------------------------------- ERCOT */}
@@ -322,6 +342,7 @@ export function GridBuildoutChart({ analytics }: { analytics: GridBuildoutReadMo
             </>
           ) : null}
           {analytics.calculatedAt !== null ? <>Calculated {stamp(analytics.calculatedAt)}.</> : null}
+          {analytics.freshness.status === "current" ? " Currency confirmed by the daily refresh." : null}
         </p>
       ) : null}
     </section>

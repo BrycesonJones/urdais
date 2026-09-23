@@ -17,6 +17,7 @@ import {
   type GridBuildoutReadModel,
 } from "@/lib/grid-buildout/analytics/read";
 import type { M1, M2, M3, M4, M5 } from "@/lib/grid-buildout/analytics/types";
+import { STALE_AFTER_HOURS } from "@/lib/grid-buildout/operations/freshness";
 import type { CapacitySqlExecutor } from "@/lib/power-delivery/capacity/read";
 
 /** The approved GBV-3 output, as the production run actually produced it. */
@@ -73,6 +74,12 @@ function publishedModel(overrides: Partial<GridBuildoutReadModel> = {}): GridBui
     methodology: { ...base.methodology, approved: true },
     calculatedAt: "2026-09-23T00:00:00.000Z",
     inputDigest: "a".repeat(64),
+    // A model carrying metrics has, by definition, published.
+    freshness: {
+      status: "current", lastPublishedAt: "2026-09-23T00:00:00.000Z",
+      lastAttemptedAt: "2026-09-23T00:00:00.000Z", lastAttemptStatus: "succeeded",
+      ageHours: 1, staleAfterHours: STALE_AFTER_HOURS, publishedRunId: "run-1", reason: null,
+    },
     markets: {
       ercot: {
         marketSlug: "ercot", marketName: "ERCOT", role: "Completion throughput and backlog",
