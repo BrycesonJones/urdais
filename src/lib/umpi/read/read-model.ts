@@ -13,6 +13,8 @@
  */
 
 import { UMPI_EXPORT_UV_MIX_WARNING, type UmpiSeriesCode } from "../types";
+import type { UmpiFreshnessState } from "@/lib/umpi/ops/freshness";
+import type { UmpiSeriesFreshness } from "@/lib/umpi/ops/read";
 
 /** A published monthly point. `change` is month-over-month, or null where it was withheld. */
 export type UmpiPoint = {
@@ -65,6 +67,14 @@ export type UmpiSeriesView = {
   lastPublishedAt: string | null;
   points: UmpiPoint[];
   unavailableReason: string | null;
+  /**
+   * How current this series is, or null where the model was built without operational evidence.
+   *
+   * Carried on the series rather than only on the family because the two series are independent:
+   * the Bank of Korea missing a release says nothing about Korea Customs, and a single family
+   * verdict would let one series' staleness hide behind the other's health.
+   */
+  freshness: UmpiSeriesFreshness | null;
 };
 
 export type UmpiReadModel = {
@@ -77,6 +87,11 @@ export type UmpiReadModel = {
   };
   series: UmpiSeriesView[];
   unavailableReason: string | null;
+  /**
+   * The pessimistic summary of the two series' freshness, never a replacement for them. Null
+   * where the model was built without operational evidence.
+   */
+  freshness: UmpiFreshnessState | null;
 };
 
 /** One publishable row, as the loader reads it. Internal identifiers never reach this shape. */
@@ -96,7 +111,7 @@ export type PublicationRow = {
 
 const SERIES_DESCRIPTORS: Record<
   UmpiSeriesCode,
-  Omit<UmpiSeriesView, "methodologyVersion" | "methodologyEffectiveFrom" | "base" | "latest" | "points" | "lastPublishedAt" | "unavailableReason" | "attribution"> & {
+  Omit<UmpiSeriesView, "methodologyVersion" | "methodologyEffectiveFrom" | "base" | "latest" | "points" | "lastPublishedAt" | "unavailableReason" | "attribution" | "freshness"> & {
     attribution: Omit<UmpiAttribution, "notice">;
   }
 > = {
@@ -179,6 +194,8 @@ export function buildUmpiReadModel(rows: readonly PublicationRow[]): UmpiReadMod
         lastPublishedAt: null,
         points: [],
         unavailableReason: "no published observations",
+        // Attached by the loader from the operational record; a pure build has no evidence.
+        freshness: null,
       } satisfies UmpiSeriesView;
     }
 
@@ -195,6 +212,7 @@ export function buildUmpiReadModel(rows: readonly PublicationRow[]): UmpiReadMod
       lastPublishedAt: newest.publishedAt,
       points: own.map(pointOf),
       unavailableReason: null,
+      freshness: null,
     } satisfies UmpiSeriesView;
   });
 
@@ -202,13 +220,25 @@ export function buildUmpiReadModel(rows: readonly PublicationRow[]): UmpiReadMod
     family: UMPI_FAMILY,
     series,
     unavailableReason: series.every((s) => s.points.length === 0) ? "no published observations" : null,
+    freshness: null,
   };
 }
 
-/** The model served when no database is configured. Empty, and explicit about why. */
+/**
+ * The model served when no database is configured. Empty, and explicit about why.
+ *
+ * Its freshness is `unknown` rather than null: with no database there is no operational evidence,
+ * and "we cannot vouch for this" is a definite and correct answer where null would read as a
+ * field nobody filled in.
+ */
 export function unconfiguredUmpiReadModel(): UmpiReadModel {
   const model = buildUmpiReadModel([]);
-  return { ...model, unavailableReason: "no database is configured" };
+  return {
+    ...model,
+    unavailableReason: "no database is configured",
+    freshness: "unknown",
+    series: model.series.map((series) => ({ ...series, freshness: null })),
+  };
 }
 
 const DEMO_TERMS = [
@@ -252,6 +282,16 @@ export function validatePublicUmpi(candidate: unknown): string[] {
   }
 
   for (const series of model.series) {
+    // A freshness verdict that contradicts the data beside it is worse than none: it is the one
+    // field a reader would trust to tell them the number is current.
+    if (series.freshness !== null) {
+      if (series.freshness.state === "fresh" && series.points.length === 0) {
+        reasons.push(`${series.seriesCode} claims to be fresh with no published points`);
+      }
+      if (series.freshness.latestReferenceMonth !== (series.latest?.referenceMonth ?? null)) {
+        reasons.push(`${series.seriesCode} freshness describes a different month from its latest point`);
+      }
+    }
     if (series.unit !== "index_points") reasons.push(`${series.seriesCode} unit is ${series.unit}`);
     if (series.frequency !== "monthly") reasons.push(`${series.seriesCode} frequency is ${series.frequency}`);
     if (series.changeLabel !== "MoM") reasons.push(`${series.seriesCode} change label is ${series.changeLabel}`);

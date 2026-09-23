@@ -362,3 +362,75 @@ describe("the surface fails closed", () => {
     expect(text(container)).not.toContain("Urdais cannot reach its published data");
   });
 });
+
+describe("the surface says how current it is", () => {
+  const withFreshness = (state: string, overrides: Record<string, unknown> = {}) => {
+    const model = production();
+    return {
+      ...model,
+      freshness: state,
+      series: model.series.map((series) => ({
+        ...series,
+        freshness: {
+          state,
+          expectedReferenceMonth: "2026-09",
+          latestReferenceMonth: series.latest?.referenceMonth ?? null,
+          dueAt: "2026-10-29T00:00:00.000Z",
+          staleSince: state === "stale" ? "2026-10-29T00:00:00.000Z" : null,
+          lastCheckedAt: "2026-11-05T00:00:00.000Z",
+          reason: "test",
+          ...overrides,
+        },
+      })),
+    } as typeof model;
+  };
+
+  it("says nothing at all when the series is current", () => {
+    const { container } = render(<UmpiSection model={withFreshness("fresh")} />);
+    // A badge on every page that reads "up to date" is furniture; a reader stops seeing it long
+    // before the day it would matter.
+    expect(text(container)).not.toContain("Awaiting the next monthly release");
+    expect(text(container)).not.toContain("This series is behind");
+  });
+
+  it("distinguishes waiting for the agency from being late", () => {
+    const waiting = render(<UmpiSection model={withFreshness("awaiting_release")} />);
+    expect(text(waiting.container)).toContain("Awaiting the next monthly release");
+    expect(text(waiting.container)).toContain("Sep 2026");
+    // Waiting is not a fault and must not be worded as one.
+    expect(text(waiting.container)).not.toContain("behind");
+    waiting.unmount();
+
+    const late = render(<UmpiSection model={withFreshness("stale")} />);
+    expect(text(late.container)).toContain("This series is behind");
+    expect(text(late.container)).toContain("is not current");
+  });
+
+  it("keeps every historical point readable while the newest month is late", () => {
+    const { container } = render(<UmpiSection model={withFreshness("stale")} />);
+    // The gate withholds currentness, never history: dropping the chart to signal a problem with
+    // its newest row would destroy the evidence a reader needs to judge the gap.
+    expect(container.querySelector("svg")).not.toBeNull();
+    expect(text(container)).toContain("553.02");
+    expect(text(container)).toContain("8 published months");
+  });
+
+  it("names an unreachable source and an unverifiable one differently", () => {
+    const down = render(<UmpiSection model={withFreshness("source_unavailable")} />);
+    expect(text(down.container)).toContain("The source could not be reached");
+    down.unmount();
+
+    const unsure = render(<UmpiSection model={withFreshness("unknown")} />);
+    expect(text(unsure.container)).toContain("Currentness cannot be confirmed");
+    expect(text(unsure.container)).toContain("cannot be vouched for");
+  });
+
+  it("exposes no operational internals alongside the freshness verdict", () => {
+    const { container } = render(<UmpiSection model={withFreshness("stale")} />);
+    const rendered = text(container);
+    for (const marker of ["operational_run", "failure_stage", "umpi_source_checks", "pg_advisory", "INFO-200"]) {
+      expect(rendered, marker).not.toContain(marker);
+    }
+    expect(rendered).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+  });
+});
