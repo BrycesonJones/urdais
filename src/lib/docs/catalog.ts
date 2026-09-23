@@ -203,6 +203,14 @@ export const docPages: readonly DocPage[] = [
     file: "methodology/grid-buildout-velocity.md",
   },
   {
+    slug: "methodology/flexible-capacity",
+    title: "Flexible Capacity",
+    description:
+      "Production methodology for curtailment-enabled headroom: how much additional flat load a balancing authority could have carried below its own observed peak if that load accepted an annual curtailment energy allowance, why the control is an energy budget rather than a count of hours, why storage and demand response contribute nothing in 1.0.0, and why the result is electrical load headroom and never compute capacity.",
+    section: "Methodology",
+    file: "methodology/flexible-capacity.md",
+  },
+  {
     slug: "methodology/interconnection-queue-analytics",
     title: "Interconnection Queue Analytics",
     description:
