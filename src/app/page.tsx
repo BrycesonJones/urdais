@@ -8,6 +8,7 @@ import { INDEX_SNAPSHOTS } from "@/data/mock/indices";
 import { assembleIndexRail } from "@/lib/market/index-rail";
 import { UAVI_WATCHLIST_ROW } from "@/lib/uavi/read/watchlist";
 import { UGAI_WATCHLIST_ROW } from "@/lib/ugai/read/watchlist";
+import { UMPI_WATCHLIST_ROW } from "@/lib/umpi/read/watchlist";
 import { loadFrozenUbwiPublication } from "@/lib/ubwi/read/publication-store";
 import { ubwiIndexSnapshot } from "@/lib/ubwi/read/surface";
 import { loadUcpiHeadline } from "@/lib/ucpi/read/load";
@@ -30,7 +31,10 @@ export default async function HomePage() {
   // and both had synthetic walks that were removed rather than relabelled. The rows state
   // "Not yet live". Catalog order puts them back where the product expects them, so a reader
   // cannot tell which rows came from which source by where they sit.
-  const base = [...INDEX_SNAPSHOTS, UGAI_WATCHLIST_ROW, UAVI_WATCHLIST_ROW];
+  // UMPI joins them from its own module for a different reason: it publishes, but as two series
+  // with no composite, so it has no single level for a rail row. Its old row took the HBM3E demo
+  // walk's value and unit; that instrument is gone, and no number replaces it.
+  const base = [...INDEX_SNAPSHOTS, UGAI_WATCHLIST_ROW, UAVI_WATCHLIST_ROW, UMPI_WATCHLIST_ROW];
   const indices = assembleIndexRail(ubwiRow === null ? base : [...base, ubwiRow]);
 
   // The UCPI panel now reads the same released listed-GPU children the UCPI market page

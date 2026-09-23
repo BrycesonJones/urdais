@@ -51,7 +51,11 @@ describe("market detail dataset: chip and accelerator consolidation", () => {
     expect(rows[0]).toMatchObject({ symbol: "UACI", name: "Urdais Chip & Accelerator Index", unit: "pts" });
     // UBWI is deliberately absent: it publishes no value, so it gets no watchlist row
     // rather than a fabricated one. Its detail page carries the withheld state instead.
-    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).toEqual(["UMPI", "UPPI", "UEPI", "UACI"]);
+    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).toEqual(["UPPI", "UEPI", "UACI"]);
+    // UMPI left this list in Phase 7, when its nine demo chip-price instruments were removed. It
+    // publishes two monthly series and no composite, so it has no single level for a rail row;
+    // the homepage joins its own row from @/lib/umpi/read/watchlist, carrying no number.
+    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).not.toContain("UMPI");
     expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).not.toContain("UBWI");
     // And UGAI, for the mirror-image reason: it is joined to the rail by the homepage from
     // @/lib/ugai/read/watchlist as an unpublished row carrying no number.

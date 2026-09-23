@@ -35,6 +35,10 @@ export function IndexRow({ index }: { index: IndexSnapshot }) {
   // An index that has never published and has no illustrative series either. "Not yet live" is
   // the product state; "Demo data" would promise a synthetic series that no longer exists.
   const unpublished = index.provenance === "unpublished";
+  // Publishes, but not as one number. Falling through to the value branch would render this
+  // row's structurally-inert 0 as a quoted level, which is the failure the demo rows were
+  // stripped to avoid -- and here it would be worse, because the index behind it is real.
+  const multiSeries = index.provenance === "multi_series";
   return (
     <li>
       <Link
@@ -45,7 +49,16 @@ export function IndexRow({ index }: { index: IndexSnapshot }) {
         <p className="text-sm font-semibold text-neutral-50">{index.symbol}</p>
         <p className="truncate text-xs text-neutral-400">{index.name}</p>
       </div>
-      {unpublished ? (
+      {multiSeries ? (
+        <div className="shrink-0 text-right">
+          <p>
+            <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+              Two series
+            </span>
+          </p>
+          <p className="mt-1 text-xs text-neutral-500">No composite level</p>
+        </div>
+      ) : unpublished ? (
         <div className="shrink-0 text-right">
           <p>
             <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">

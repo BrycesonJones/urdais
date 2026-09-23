@@ -5,6 +5,7 @@ import { InformationMarketsSection } from "@/components/home/information-markets
 import { MOCK_AS_OF } from "@/data/mock/ucpi";
 import { LISTED_GPU_UNIT_CAPTION, type UcpiHeadline } from "@/lib/ucpi/read/load";
 import { UGAI_WATCHLIST_ROW } from "@/lib/ugai/read/watchlist";
+import { UMPI_WATCHLIST_ROW } from "@/lib/umpi/read/watchlist";
 
 /**
  * The regression these cover: the panel used to import the UCPI fixtures at module
@@ -109,8 +110,9 @@ describe("the fixtures remain available where they are intentionally supported",
  */
 describe("the indices rail never quotes a demo index", () => {
   // UGAI is no longer among them: its seeded walk was removed rather than relabelled, so it has
-  // no mock row at all. Its unpublished row is covered separately below.
-  const MOCK_SYMBOLS = ["UMPI", "UPPI", "UEPI", "UACI"];
+  // no mock row at all. Its unpublished row is covered separately below. UMPI left for the same
+  // reason -- nine seeded chip-price walks removed in Phase 7 -- and its row is covered below too.
+  const MOCK_SYMBOLS = ["UPPI", "UEPI", "UACI"];
 
   it("labels every mock row demo and gives it no level and no movement", () => {
     render(<InformationMarketsSection />);
@@ -156,5 +158,35 @@ describe("the UGAI rail row", () => {
     const rail = screen.getByRole("complementary", { name: "Urdais Indices" });
     // Silence would answer "is Urdais building this?" with nothing. The row is the answer.
     expect(within(rail).getByRole("link", { name: /^UGAI\b/ })).toBeInTheDocument();
+  });
+});
+
+/*
+ * UMPI's row after its demo memory market was removed. Unlike UGAI, UMPI publishes: it has two
+ * monthly series and an approved methodology. What it does not have is a single level, so the row
+ * must carry no number while still saying the index is real. "Not yet live" would be false and
+ * "Demo data" would promise a series that no longer exists.
+ */
+describe("the UMPI rail row", () => {
+  it("says it publishes two series and carries no digit at all", () => {
+    render(<InformationMarketsSection indices={[UMPI_WATCHLIST_ROW]} />);
+    const rail = screen.getByRole("complementary", { name: "Urdais Indices" });
+    const row = within(rail).getByRole("link", { name: /^UMPI\b/ });
+    expect(row).toHaveTextContent("Two series");
+    expect(row).toHaveTextContent("No composite level");
+    // The row's structurally required value and asOf are inert. If a future change let the value
+    // branch render them, UMPI would quote a 0.00 level for an index that has none.
+    expect(row.textContent).not.toMatch(/\d/);
+    expect(row).not.toHaveTextContent("Demo data");
+    expect(row).not.toHaveTextContent("Not yet live");
+  });
+
+  it("carries no trace of the demo memory market it replaced", () => {
+    render(<InformationMarketsSection indices={[UMPI_WATCHLIST_ROW]} />);
+    const rail = screen.getByRole("complementary", { name: "Urdais Indices" });
+    const row = within(rail).getByRole("link", { name: /^UMPI\b/ });
+    for (const term of ["HBM", "DDR", "$/GB", "$/part"]) {
+      expect(row.textContent, term).not.toContain(term);
+    }
   });
 });

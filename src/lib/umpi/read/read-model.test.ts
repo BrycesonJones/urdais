@@ -229,16 +229,14 @@ describe("the demo market cannot reach the public path", () => {
     expect(validatePublicUmpi(model).join()).toMatch(/demo vocabulary/);
   });
 
-  it("the demo market still exists and is untouched by this phase", () => {
-    // Phase 7 owns removing it. Phase 6 only has to be unable to serve it.
+  it("the demo market is gone, and the market that remains carries no instrument", () => {
+    // Phase 6 could only refuse to serve the demo memory market; Phase 7 removed it. UMPI keeps
+    // its place in the catalog so the route resolves and the family still lists it, but it holds
+    // no instrument at all -- there is nothing left for a surface to read a price off.
     const memory = MARKETS.find((market) => market.symbol === "UMPI");
     expect(memory).toBeDefined();
-    const demoIds = new Set(memory!.families?.flatMap((f) => f.instruments.map((i) => i.id)) ?? []);
-    expect(demoIds.size).toBeGreaterThan(0);
-
-    // And none of its instruments is a public UMPI series code.
-    const model = buildUmpiReadModel(sample());
-    for (const series of model.series) expect(demoIds.has(series.seriesCode)).toBe(false);
+    const instruments = memory!.families?.flatMap((family) => family.instruments) ?? [];
+    expect(instruments).toHaveLength(0);
   });
 
   it("the public read model never imports the demo data", () => {
