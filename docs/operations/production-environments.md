@@ -407,10 +407,44 @@ Read that number after a merge that adds a migration; it is the signal that prod
 
 That is also the limit of this job, and the reason the September incident is not fixed by it: a
 number in a passing log is a fact nobody encounters. Catching "the application is deployed and the
-database is behind" needs a guard that eventually **fails** — one that tolerates the normal window
-between a merge and a `db push`, and stops tolerating it after some hours. That is a separate
-guard, deliberately not this one: making this job fail on pending would fire on every legitimate
-migration pull request and be switched off within a week.
+database is behind" needs a guard that eventually **fails**, which is the next section.
+
+### Production migration freshness
+
+`.github/workflows/migration-freshness.yml`, every six hours and on demand. Where the ledger check
+reports truth, this enforces policy: it asks how *long* production has been behind and stops
+tolerating an answer that keeps growing.
+
+| Age of the oldest pending migration | Verdict | Result |
+|---|---|---|
+| nothing pending | `current` | passes |
+| under 24 h | `informational` | passes quietly |
+| 24 h to 48 h | `warning` | passes, with a GitHub annotation |
+| over 48 h | `overdue` | **fails** |
+
+The tolerance is the normal window between merging a migration and running `supabase db push`; the
+ceiling is the point at which that window was supposed to close. Making the *ledger* check fail on
+pending would have fired on every legitimate migration pull request and been switched off within a
+week, which is why these are two jobs and not one.
+
+It is scheduled rather than push-triggered because the condition appears with the passage of time
+rather than with a commit — no push may happen for days while production drifts.
+
+**Age is measured from when a migration landed on `main`**, not from the version in its filename.
+Those differ: the repository pre-allocates future version prefixes, so `20261017100000` was merged
+on 23 September 2026 and a filename-derived age would have been negative. That needs real history,
+so the workflow checks out with `fetch-depth: 0`; a shallow checkout reports the age as
+*unverified* and annotates rather than passing silently.
+
+```
+npm run migrations:freshness
+npm run migrations:freshness -- --json
+npm run migrations:freshness -- --fail-after 24     # a tighter window for a release day
+```
+
+Run against production on 23 September 2026 it reported `current`, and against a database held
+three migrations behind it reported the pending set with each one's age and failed once the window
+was set below it.
 
 ### Checking migration integrity
 
