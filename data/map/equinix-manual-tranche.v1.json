@@ -1,0 +1,1753 @@
+{
+  "trancheVersion": "urdais.map.equinix-manual-tranche/1",
+  "datasetName": "Equinix manual-verification tranche",
+  "generatedAt": "2026-09-22",
+  "operator": "Equinix",
+  "status": "frozen",
+  "coordinateStatus": "not_geolocated",
+  "source": "manual_verification_log",
+  "provenance": "Facility codes and addresses manually verified by Bryceson against Equinix market pages during the 2026-09-22 verification pass, supplied as chunks 1-6. Research keys are derived as equinix-<facilityCode lowercased>. countryName, countryCode, locality and adminArea are parsed from the manually verified address string itself and introduce no new source. sourceUrl is the operator first-party metro page for each location, each verified to return HTTP 200 on 2026-09-22. No coordinates are present: this artifact is the manual source layer and geolocation is a later stage.",
+  "markets": [
+    {
+      "parentLocationId": "equinix-melbourne",
+      "market": "Melbourne",
+      "countryName": "Australia",
+      "countryCode": "AU",
+      "sourceUrl": "https://www.equinix.com/data-centers/asia-pacific-colocation/australia-colocation/melbourne-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "ME1",
+          "researchKey": "equinix-me1",
+          "address": "578 Lorimer Street, Port Melbourne, Melbourne, VIC 3207, Australia",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "ME2",
+          "researchKey": "equinix-me2",
+          "address": "578 Lorimer Street, Port Melbourne, Melbourne, VIC 3207, Australia",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "ME4",
+          "researchKey": "equinix-me4",
+          "address": "2 Davis Court, Derrimut, VIC 3030, Australia",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "ME5",
+          "researchKey": "equinix-me5",
+          "address": "22-36 Walsh Street, West Melbourne, VIC 3003, Australia",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-perth",
+      "market": "Perth",
+      "countryName": "Australia",
+      "countryCode": "AU",
+      "sourceUrl": "https://www.equinix.com/data-centers/asia-pacific-colocation/australia-colocation/perth-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "PE1",
+          "researchKey": "equinix-pe1",
+          "address": "3 Tully Road, East Perth, WA 6004, Australia",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "PE2",
+          "researchKey": "equinix-pe2",
+          "address": "37 Lemnos St, Shenton Park, WA 6008, Australia",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "PE3",
+          "researchKey": "equinix-pe3",
+          "address": "37 Lemnos St, Shenton Park, WA 6008, Australia",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-sydney",
+      "market": "Sydney",
+      "countryName": "Australia",
+      "countryCode": "AU",
+      "sourceUrl": "https://www.equinix.com/data-centers/asia-pacific-colocation/australia-colocation/sydney-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "SY1",
+          "researchKey": "equinix-sy1",
+          "address": "639 Gardeners Road, Unit B, Sydney, NSW 2020, Australia",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SY2",
+          "researchKey": "equinix-sy2",
+          "address": "639 Gardeners Road, Unit C, Sydney, NSW 2020, Australia",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SY3",
+          "researchKey": "equinix-sy3",
+          "address": "47 Bourke Road, Alexandria, Sydney, NSW 2015, Australia",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SY4",
+          "researchKey": "equinix-sy4",
+          "address": "200 Bourke Road, Alexandria, Sydney, NSW 2015, Australia",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SY5",
+          "researchKey": "equinix-sy5",
+          "address": "Unit B, 200 Bourke Road, Alexandria, Sydney, NSW 2015, Australia",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SY6",
+          "researchKey": "equinix-sy6",
+          "address": "8-14 Egerton Street, Silverwater, NSW 2128, Australia",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SY7",
+          "researchKey": "equinix-sy7",
+          "address": "8 Lathe Place, Unanderra, NSW 2526, Australia",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SY9x",
+          "researchKey": "equinix-sy9x",
+          "address": "8A Grand Avenue, Rosehill, Lot 9 DP 1275083, Sydney, NSW 2142, Australia",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-rio-de-janeiro",
+      "market": "Rio De Janeiro",
+      "countryName": "Brazil",
+      "countryCode": "BR",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/rio-de-janeiro-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "RJ1",
+          "researchKey": "equinix-rj1",
+          "address": "Rua Voluntarios da Patria, 360, Botafogo, 22270-010 Rio de Janeiro, Brazil",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "RJ2",
+          "researchKey": "equinix-rj2",
+          "address": "Estrada Adhemar Bebiano, 1380, Del Castilho, 21051-070 Rio de Janeiro, Brazil",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "RJ3",
+          "researchKey": "equinix-rj3",
+          "address": "Rua Maria Soares Sendas, Area 6 B2, Parque Barreto, 25575-825 São João de Meriti, Brazil",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-sao-paulo",
+      "market": "Sao Paulo",
+      "countryName": "Brazil",
+      "countryCode": "BR",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/brazil-colocation/sao-paulo-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "SP1",
+          "researchKey": "equinix-sp1",
+          "address": "Rua Doutor Miguel Couto, 58, Centro, 01008-010 Sao Paulo, Brazil",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SP2",
+          "researchKey": "equinix-sp2",
+          "address": "Alameda Araguaia, 3641, Alphaville, 06455-000 Barueri, Brazil",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SP3",
+          "researchKey": "equinix-sp3",
+          "address": "Av. Marcos Penteado de Ulhoa Rodrigues, 249, 06543-001 Santana de Parnaiba, Brazil",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SP4",
+          "researchKey": "equinix-sp4",
+          "address": "Avenida Ceci, 1900 - Conjunto A, Tambore, 06460-120 Barueri, Brazil",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SP5x",
+          "researchKey": "equinix-sp5x",
+          "address": "Av. Marcos Penteado de Ulhoa Rodrigues, 888, 06543-001 Santana de Parnaiba, Brazil",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SP6",
+          "researchKey": "equinix-sp6",
+          "address": "Av. Marcos Penteado de Ulhoa Rodrigues, 1413, Santana de Parnaíba, 06543-001 Sao Paulo, Brazil",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-sofia",
+      "market": "Sofia",
+      "countryName": "Bulgaria",
+      "countryCode": "BG",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/bulgaria-colocation/sofia-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "SO1",
+          "researchKey": "equinix-so1",
+          "address": "3 Grigorii Gorbatenko Str, Building 2, 1784 Mladost, Bulgaria",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SO2",
+          "researchKey": "equinix-so2",
+          "address": "33 Nedelcho Bonchev str, 1528 Sofia, Bulgaria",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-calgary",
+      "market": "Calgary",
+      "countryName": "Canada",
+      "countryCode": "CA",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/canada-colocation/calgary-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "CL1",
+          "researchKey": "equinix-cl1",
+          "address": "315 8th Avenue SW, Suite 401, Calgary, Alberta T2P 4K1, Canada",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "CL2",
+          "researchKey": "equinix-cl2",
+          "address": "1930 Maynard Rd. SE, Unit 22, Calgary, Alberta T2E 6J8, Canada",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "CL3",
+          "researchKey": "equinix-cl3",
+          "address": "5300 86 Ave SE, Calgary, Alberta T2C 4L7, Canada",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-montreal",
+      "market": "Montreal",
+      "countryName": "Canada",
+      "countryCode": "CA",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/canada-colocation/montreal-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "MT1",
+          "researchKey": "equinix-mt1",
+          "address": "6205 Vanden Abeele Street, Saint Laurent, Quebec H4S 1S1, Canada",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "MT2",
+          "researchKey": "equinix-mt2",
+          "address": "3500 Rue F.-X.-Tessier, Vaudreuil-Dorion, Quebec J7V5V5, Canada",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-toronto",
+      "market": "Toronto",
+      "countryName": "Canada",
+      "countryCode": "CA",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/canada-colocation/toronto-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "TR1",
+          "researchKey": "equinix-tr1",
+          "address": "151 Front Street West, Toronto, Ontario M5J 2N1, Canada",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "TR2",
+          "researchKey": "equinix-tr2",
+          "address": "45 Parliament Street, Toronto, Ontario M5A 0G7, Canada",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "TR4",
+          "researchKey": "equinix-tr4",
+          "address": "100 Wellington Street West, Suite 1000, Toronto, Ontario M5K 1J3, Canada",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-santiago",
+      "market": "Santiago",
+      "countryName": "Chile",
+      "countryCode": "CL",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/chile-colocation/santiago-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "ST1",
+          "researchKey": "equinix-st1",
+          "address": "Avenida los Vientos, 20239, Pudahuel, 9061673 Santiago de Chile, Chile",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "ST2",
+          "researchKey": "equinix-st2",
+          "address": "Avenida los Vientos, 20239, Pudahuel, Región Metropolitana, 9061673 Santiago de Chile, Chile",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "ST3",
+          "researchKey": "equinix-st3",
+          "address": "Pasaje Nueva Amunategui 26, of 105, Santiago, Región Metropolitana, 8340519 Santiago, Chile",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "ST4",
+          "researchKey": "equinix-st4",
+          "address": "Ruta 66, Camino de la Fruta, S/N, San Pedro, Región Metropolitana, Santiago, Chile",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-shanghai",
+      "market": "Shanghai",
+      "countryName": "China",
+      "countryCode": "CN",
+      "sourceUrl": "https://www.equinix.com/data-centers/asia-pacific-colocation/china-colocation/shanghai-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "SH1",
+          "researchKey": "equinix-sh1",
+          "address": "No.4 Building, 400 Fangchun Road, Epilight Technology Park, Zhangjing Hi-tech Park, Shanghai 201210, China",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SH2",
+          "researchKey": "equinix-sh2",
+          "address": "Building No. 4, 700 Jinyu Road, Pudong New Area, Shanghai 201206, China",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SH3",
+          "researchKey": "equinix-sh3",
+          "address": "Building No. 3, 700 Jinyu Road, Pudong New Area, Shanghai 201206, China",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SH5",
+          "researchKey": "equinix-sh5",
+          "address": "Building No. 9, No. 976 Shunping Road, Yangpu District, Shanghai 200090, China",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SH6",
+          "researchKey": "equinix-sh6",
+          "address": "898 Xinling Road, Waigaoqiao Free Trade Zone, Shanghai 200131, China",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-bogota",
+      "market": "Bogota",
+      "countryName": "Colombia",
+      "countryCode": "CO",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/colombia-colocation/bogota-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "BG1",
+          "researchKey": "equinix-bg1",
+          "address": "Avenida Carrera 106 No. 15A-25, Manzana 6, Lote 27, 110921 Bogota, Colombia",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "BG2",
+          "researchKey": "equinix-bg2",
+          "address": "Carrera 106 No 15 A25, Manzana 18, 110921 Bogota, Colombia",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-helsinki",
+      "market": "Helsinki",
+      "countryName": "Finland",
+      "countryCode": "FI",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/finland-colocation/helsinki-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "HE3",
+          "researchKey": "equinix-he3",
+          "address": "Parrukatu 2, 00540 Helsinki, Finland",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "HE4",
+          "researchKey": "equinix-he4",
+          "address": "Myllynkivenkuja 4B, 01620 Vantaa, Finland",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "HE5",
+          "researchKey": "equinix-he5",
+          "address": "Sahamyllyntie 4B, 00560 Helsinki, Finland",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "HE6",
+          "researchKey": "equinix-he6",
+          "address": "Sinimaentie 12, 02630 Espoo, Finland",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "HE7",
+          "researchKey": "equinix-he7",
+          "address": "Sinimaentie 8, 02630 Espoo, Finland",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-paris",
+      "market": "Paris",
+      "countryName": "France",
+      "countryCode": "FR",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/france-colocation/paris-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "PA2",
+          "researchKey": "equinix-pa2",
+          "address": "114 Rue Ambroise Croizat, 93200 Saint Denis, France",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "PA3",
+          "researchKey": "equinix-pa3",
+          "address": "114 Rue Ambroise Croizat, 93200 Saint Denis, France",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "PA4",
+          "researchKey": "equinix-pa4",
+          "address": "110 Bis avenue du General Leclerc, 93500 Pantin, France",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "PA5",
+          "researchKey": "equinix-pa5",
+          "address": "45 avenue Victor Hugo Bat 254, Building 254, 93300 Aubervilliers, France",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "PA6",
+          "researchKey": "equinix-pa6",
+          "address": "10 rue Waldeck Rochet Bat 520, Building 520, 93300 Aubervilliers, France",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "PA7",
+          "researchKey": "equinix-pa7",
+          "address": "130-136 boulevard de Verdun Bat 9, Energy Park, Building 9, 92400 Courbevoie, France",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "PA8",
+          "researchKey": "equinix-pa8",
+          "address": "110 Bis avenue du General Leclerc, Building 19, 93300 Pantin, France",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "PA9x",
+          "researchKey": "equinix-pa9x",
+          "address": "114 Rue Ambroise Croizat, 93200 Saint Denis, France",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "PA10",
+          "researchKey": "equinix-pa10",
+          "address": "114 Rue Ambroise Croizat, Saint-Denis, 93200 Saint-Denis, France",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "PA13x",
+          "researchKey": "equinix-pa13x",
+          "address": "9 avenue du Marechal Juin, 92360 Meudon, France",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-munich",
+      "market": "Munich",
+      "countryName": "Germany",
+      "countryCode": "DE",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/germany-colocation/munich-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "MU1",
+          "researchKey": "equinix-mu1",
+          "address": "Seidlstrasse 3, 2nd Floor, 80335 Munich, Germany",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "MU3",
+          "researchKey": "equinix-mu3",
+          "address": "Seidlstrasse 3, 1st Floor, 80335 Munich, Germany",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "MU4",
+          "researchKey": "equinix-mu4",
+          "address": "Dywidagstrasse 10, 85609 Aschheim, Germany",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-hong-kong",
+      "market": "Hong Kong",
+      "countryName": "Hong Kong",
+      "countryCode": "HK",
+      "sourceUrl": "https://www.equinix.com/data-centers/asia-pacific-colocation/china-colocation/hong-kong-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "HK1",
+          "researchKey": "equinix-hk1",
+          "address": "Unit 2702, 27/F, Goodman Global Gateway, 168 Yeung Uk Road, Tsuen Wan, N.T., Hong Kong",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "HK2",
+          "researchKey": "equinix-hk2",
+          "address": "17/F Kerry Warehouse, 3 Shing Yiu Street, Kwai Chung, N.T., Hong Kong",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "HK3",
+          "researchKey": "equinix-hk3",
+          "address": "6/F, 1 Wang Wo Tsai Street, Hong Kong",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "HK4",
+          "researchKey": "equinix-hk4",
+          "address": "Ever Gain Building No. 3, 22 On Sum Street, Siu Lek Yuen, Hong Kong",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "HK5",
+          "researchKey": "equinix-hk5",
+          "address": "Tower 2, No. 299 Wan Po Road, Tseung Kwan O, Hong Kong SAR, Hong Kong",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "HK6",
+          "researchKey": "equinix-hk6",
+          "address": "18 Sha Tsui Road, Tsuen Wan, Hong Kong",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-mumbai",
+      "market": "Mumbai",
+      "countryName": "India",
+      "countryCode": "IN",
+      "sourceUrl": "https://www.equinix.com/data-centers/asia-pacific-colocation/india-colocation/mumbai-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "MB1",
+          "researchKey": "equinix-mb1",
+          "address": "A-001, Boomerang, Chandivali Farm Road, Near Chandivali Studio, Andheri East, Mumbai, Maharashtra MH 400072, India",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "MB2",
+          "researchKey": "equinix-mb2",
+          "address": "Plot No. 37, Chandivali Farm Road, Chandivali, Andheri East, Mumbai, Maharashtra 400072, India",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "MB3",
+          "researchKey": "equinix-mb3",
+          "address": "Plot 15 B, Chandivali Farm Road, Chandivali, Andheri East, Mumbai, Maharashtra 400072, India",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "MB4",
+          "researchKey": "equinix-mb4",
+          "address": "Plot 5, Thane Airoli Road, Mumbai, Maharashtra 400708, India",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-dublin",
+      "market": "Dublin",
+      "countryName": "Ireland",
+      "countryCode": "IE",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/ireland-colocation/dublin-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "DB1",
+          "researchKey": "equinix-db1",
+          "address": "Unit 4027 Kingswood Road, Citywest Business Campus, D24 AX06 Dublin, Ireland",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "DB2",
+          "researchKey": "equinix-db2",
+          "address": "Unit 7 Kilcarbery Business Park, New Nangor Road, Clondalkin, D22 FV12 Dublin, Ireland",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "DB3",
+          "researchKey": "equinix-db3",
+          "address": "Unit 2 Northwest Business Park, Ballycoolen, 15 Dublin, Ireland",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "DB4",
+          "researchKey": "equinix-db4",
+          "address": "Unit 14, Northwest Business Park, Ballycoolin, D15 E205 Dublin, Ireland",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "DB5x",
+          "researchKey": "equinix-db5x",
+          "address": "IDA Business & Technology Park, Snugborough, 15 Dublin, Ireland",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "DB6x",
+          "researchKey": "equinix-db6x",
+          "address": "IDA Business & Technology Park, Snugborough, 22 Dublin, Ireland",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-milan",
+      "market": "Milan",
+      "countryName": "Italy",
+      "countryCode": "IT",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/italy-colocation/milan-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "ML2",
+          "researchKey": "equinix-ml2",
+          "address": "Via Savona, 125, 20144 Milan, Italy",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "ML3",
+          "researchKey": "equinix-ml3",
+          "address": "V. Ennio Doris, 13, 20079 Basiglio, Italy",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "ML5",
+          "researchKey": "equinix-ml5",
+          "address": "Via Marisa Bellisario, 5, 20019 Settimo Milanese, Italy",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "ML7x",
+          "researchKey": "equinix-ml7x",
+          "address": "Via Marisa Bellisario 7, Settimo Milanese, 20019 Milan, Italy",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-osaka",
+      "market": "Osaka",
+      "countryName": "Japan",
+      "countryCode": "JP",
+      "sourceUrl": "https://www.equinix.com/data-centers/asia-pacific-colocation/japan-colocation/osaka-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "OS1",
+          "researchKey": "equinix-os1",
+          "address": "1-26-1, Shinmachi, Nishi-ku, Nishi Shinsaibashi Building, Osaka 550-0013, Japan",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "OS2x",
+          "researchKey": "equinix-os2x",
+          "address": "4-1-58 Saitoaokita, Minoh-shi, Osaka 562-0029, Japan",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "OS3",
+          "researchKey": "equinix-os3",
+          "address": "2-2-82 Shiromi, Chuo-ku, Osaka City, Keihanshin OBP Building, Osaka 5400001, Japan",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-monterrey",
+      "market": "Monterrey",
+      "countryName": "Mexico",
+      "countryCode": "MX",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/mexico-colocation/monterrey-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "MO1",
+          "researchKey": "equinix-mo1",
+          "address": "Parque Industrial Kalos de Alta Tecnología, Carretera Miguel Alemán Km 17.5, Calle Aristoteles 119 Nave 6, Apodaca, Nuevo León 66603, Mexico",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "MO2",
+          "researchKey": "equinix-mo2",
+          "address": "Av. Mexico 260, Parque Industrial Nexxus Aeropuerto, Apodaca, Nuevo León 66643, Mexico",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-queretaro",
+      "market": "Queretaro",
+      "countryName": "Mexico",
+      "countryCode": "MX",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/mexico-colocation/mexico-city-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "MX1",
+          "researchKey": "equinix-mx1",
+          "address": "Parque Tecnologico Innovacion - Lte 79, Carretera Estatal 431 Km 2.2, Querétaro 76246, Mexico",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "MX2",
+          "researchKey": "equinix-mx2",
+          "address": "Parque Tecnologico Innovacion - Lte 80, Querétaro 76246, Mexico",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-lagos",
+      "market": "Lagos",
+      "countryName": "Nigeria",
+      "countryCode": "NG",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/nigeria-colocation/lagos-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "LG1",
+          "researchKey": "equinix-lg1",
+          "address": "Chief Chuks Ikokwu Street, Lekki, Lagos 10604, Nigeria",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "LG2",
+          "researchKey": "equinix-lg2",
+          "address": "Chief Chuks Ikokwu Street, Lekki, Lagos 10604, Nigeria",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-manila",
+      "market": "Manila",
+      "countryName": "Philippines",
+      "countryCode": "PH",
+      "sourceUrl": "https://www.equinix.com/data-centers/asia-pacific-colocation/philippines-colocation/manila-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "MN2",
+          "researchKey": "equinix-mn2",
+          "address": "Macaria Business Centre, Block 10, Lot 1, Purificacion St. Mabuhay, Carmona 4116, Philippines",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-warsaw",
+      "market": "Warsaw",
+      "countryName": "Poland",
+      "countryCode": "PL",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/poland-colocation/warsaw-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "WA1",
+          "researchKey": "equinix-wa1",
+          "address": "Aleje Jerozolimskie 65/79, 00-697 Warsaw, Poland",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "WA2",
+          "researchKey": "equinix-wa2",
+          "address": "Poleczki 23 Street, 02-822 Warsaw, Poland",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "WA3",
+          "researchKey": "equinix-wa3",
+          "address": "Aleje Jerozolimskie 213, 02-222 Warsaw, Poland",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "WA4x",
+          "researchKey": "equinix-wa4x",
+          "address": "Krakowiakow 99, 02-255 Warsaw, Poland",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-lisbon",
+      "market": "Lisbon",
+      "countryName": "Portugal",
+      "countryCode": "PT",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/portugal-colocation/lisbon-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "LS1",
+          "researchKey": "equinix-ls1",
+          "address": "Avenida Severiano Falcao, 14 Prior Velho, 2685-378 Lisbon, Portugal",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "LS2",
+          "researchKey": "equinix-ls2",
+          "address": "Avenida Severiano Falcao, 12 Prior Velho, 2685-378 Lisbon, Portugal",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-singapore",
+      "market": "Singapore",
+      "countryName": "Singapore",
+      "countryCode": "SG",
+      "sourceUrl": "https://www.equinix.com/data-centers/asia-pacific-colocation/singapore-colocation/singapore-data-center",
+      "facilities": [
+        {
+          "facilityCode": "SG1",
+          "researchKey": "equinix-sg1",
+          "address": "20 Ayer Rajah Crescent, Singapore 139964, Singapore",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SG2",
+          "researchKey": "equinix-sg2",
+          "address": "15 Pioneer Walk, #04-01, Singapore 627753, Singapore",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SG3",
+          "researchKey": "equinix-sg3",
+          "address": "26A Ayer Rajah Crescent, Private Lot FX1-4a, Singapore 139963, Singapore",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SG4",
+          "researchKey": "equinix-sg4",
+          "address": "7 Tai Seng Drive, Singapore 535218, Singapore",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SG5",
+          "researchKey": "equinix-sg5",
+          "address": "6 Sunview Drive, Singapore 627488, Singapore",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-seoul",
+      "market": "Seoul",
+      "countryName": "South Korea",
+      "countryCode": "KR",
+      "sourceUrl": "https://www.equinix.com/data-centers/asia-pacific-colocation/korea-colocation/seoul-data-center",
+      "facilities": [
+        {
+          "facilityCode": "SL1",
+          "researchKey": "equinix-sl1",
+          "address": "3F, 24, Worldcupbukro 60-gil, Mapo-gu, Samsung SDS SangAm IT Center, Seoul, Seoul 3922, Republic of Korea",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SL2x",
+          "researchKey": "equinix-sl2x",
+          "address": "69, Hyangdong-ro, Deogyang-gu, Goyang-si, Gyeonggi-do 10545, Republic of Korea",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SL4",
+          "researchKey": "equinix-sl4",
+          "address": "69, Hyangdong-ro, Deogyang-gu, Goyang-si, Gyeonggi 10545, Republic of Korea",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-barcelona",
+      "market": "Barcelona",
+      "countryName": "Spain",
+      "countryCode": "ES",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/spain-colocation/barcelona-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "BA1",
+          "researchKey": "equinix-ba1",
+          "address": "Carrer de l'Acer 30-32, 08038 Barcelona, Spain",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "BA2",
+          "researchKey": "equinix-ba2",
+          "address": "Carretera del Mig 219, L'Hospitalet de Llobregat, 8907 Barcelona, Spain",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-madrid",
+      "market": "Madrid",
+      "countryName": "Spain",
+      "countryCode": "ES",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/spain-colocation/madrid-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "MD1",
+          "researchKey": "equinix-md1",
+          "address": "Calle Isabel Colbrand, 6-8, 1st floor, 28050 Madrid, Spain",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "MD2",
+          "researchKey": "equinix-md2",
+          "address": "Calle Valgrande 6, Alcobendas, 28108 Madrid, Spain",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "MD6",
+          "researchKey": "equinix-md6",
+          "address": "Calle Pedriza, 12, Alcobendas, 28108 Madrid, Spain",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "MD3x",
+          "researchKey": "equinix-md3x",
+          "address": "Calle Pedriza, 12, Alcobendas, 28108 Madrid, Spain",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-stockholm",
+      "market": "Stockholm",
+      "countryName": "Sweden",
+      "countryCode": "SE",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/sweden-colocation/stockholm-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "SK1",
+          "researchKey": "equinix-sk1",
+          "address": "Mariehallsvagen 36 Box 20165 S-161 02 Bromma Sweden, 168 65 Bromma, Sweden",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SK2",
+          "researchKey": "equinix-sk2",
+          "address": "Kvastvagen 25, Skondal, 128 62 Stockholm, Sweden",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "SK3",
+          "researchKey": "equinix-sk3",
+          "address": "Finspangsgatan 48, 16353 Spanga, 163 53 Spanga, Sweden",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-geneva",
+      "market": "Geneva",
+      "countryName": "Switzerland",
+      "countryCode": "CH",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/switzerland-colocation/geneva-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "GV1",
+          "researchKey": "equinix-gv1",
+          "address": "Rue de la Confederation 6, 1204 Geneva, Switzerland",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "GV2",
+          "researchKey": "equinix-gv2",
+          "address": "Route du Bois-des-Freres 48, 1219 Le Lignon, Switzerland",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-zurich",
+      "market": "Zurich",
+      "countryName": "Switzerland",
+      "countryCode": "CH",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/switzerland-colocation/zurich-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "ZH2",
+          "researchKey": "equinix-zh2",
+          "address": "Josefstrasse 225, 8005 Zurich, Switzerland",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "ZH4",
+          "researchKey": "equinix-zh4",
+          "address": "Josefstrasse 225, 8005 Zurich, Switzerland",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "ZH5",
+          "researchKey": "equinix-zh5",
+          "address": "Allmendstrasse 9, 8102 Oberengstringen, Switzerland",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-istanbul",
+      "market": "Istanbul",
+      "countryName": "Türkiye",
+      "countryCode": "TR",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/turkey-colocation/istanbul-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "IL2",
+          "researchKey": "equinix-il2",
+          "address": "3. Cd. No:4 Yukari Dudullu Organize Sanayi Bolgesi (OSB), Umraniye, 34775 Istanbul, Turkey",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "IL4",
+          "researchKey": "equinix-il4",
+          "address": "Dudullu OSB, 3. Cadde, No.4, Yukarı Dudullu, Ümraniye, 34776 Istanbul, Turkey",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-dubai",
+      "market": "Dubai",
+      "countryName": "United Arab Emirates",
+      "countryCode": "AE",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/united-arab-emirates-colocation/dubai-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "DX1",
+          "researchKey": "equinix-dx1",
+          "address": "International Media Production Zone (IMPZ), Units F90, F91 & F92, Dubai, Dubai, United Arab Emirates",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "DX2",
+          "researchKey": "equinix-dx2",
+          "address": "Meydan, Al Meydan Rd & Nad Al Sheba Rd 1, Dubai, Dubai, United Arab Emirates",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "DX3",
+          "researchKey": "equinix-dx3",
+          "address": "Units F88-F92, International Media Production Zone (IMPZ / Dubai Production City), Dubai 500389, United Arab Emirates",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-manchester",
+      "market": "Manchester",
+      "countryName": "United Kingdom",
+      "countryCode": "GB",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/united-kingdom-colocation/manchester-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "MA1",
+          "researchKey": "equinix-ma1",
+          "address": "Unit 3 Williams House, Manchester Science Park, M15 6SE Manchester, United Kingdom",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "MA3",
+          "researchKey": "equinix-ma3",
+          "address": "Joule House, 76 Trafford Wharf Road, M17 1HE Manchester, United Kingdom",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "MA4",
+          "researchKey": "equinix-ma4",
+          "address": "Unit 4 Synergy House, Manchester Science Park, M15 6SY Manchester, United Kingdom",
+          "locality": null,
+          "adminArea": null
+        },
+        {
+          "facilityCode": "MA5",
+          "researchKey": "equinix-ma5",
+          "address": "Unit 2 Agecroft Commerce Park, 2 and 4 Firedamp Way, Swinton, M27 8BX Manchester, United Kingdom",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-atlanta",
+      "market": "Atlanta",
+      "countryName": "United States",
+      "countryCode": "US",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/atlanta-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "AT1",
+          "researchKey": "equinix-at1",
+          "address": "180 Peachtree Street NW, 2nd, 3rd and 6th Floors, Atlanta, GA 30303, USA",
+          "locality": "Atlanta",
+          "adminArea": "Georgia"
+        },
+        {
+          "facilityCode": "AT4",
+          "researchKey": "equinix-at4",
+          "address": "450 Interstate North Parkway, Atlanta, GA 30339, USA",
+          "locality": "Atlanta",
+          "adminArea": "Georgia"
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-boston",
+      "market": "Boston",
+      "countryName": "United States",
+      "countryCode": "US",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/boston-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "BO2",
+          "researchKey": "equinix-bo2",
+          "address": "41 Alexander Road, Billerica, MA 01821, USA",
+          "locality": "Billerica",
+          "adminArea": "Massachusetts"
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-new-york",
+      "market": "New York",
+      "countryName": "United States",
+      "countryCode": "US",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/new-york-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "NY1",
+          "researchKey": "equinix-ny1",
+          "address": "165 Halsey St, 8th Floor, Newark, NJ 07102, USA",
+          "locality": "Newark",
+          "adminArea": "New Jersey"
+        },
+        {
+          "facilityCode": "NY2",
+          "researchKey": "equinix-ny2",
+          "address": "275 Hartz Way, Secaucus, NJ 07094, USA",
+          "locality": "Secaucus",
+          "adminArea": "New Jersey"
+        },
+        {
+          "facilityCode": "NY3",
+          "researchKey": "equinix-ny3",
+          "address": "600 Jefferson Avenue, Secaucus, NJ 07094, USA",
+          "locality": "Secaucus",
+          "adminArea": "New Jersey"
+        },
+        {
+          "facilityCode": "NY4",
+          "researchKey": "equinix-ny4",
+          "address": "755 Secaucus Rd, Secaucus, NJ 07094, USA",
+          "locality": "Secaucus",
+          "adminArea": "New Jersey"
+        },
+        {
+          "facilityCode": "NY5",
+          "researchKey": "equinix-ny5",
+          "address": "800 Secaucus Rd, Secaucus, NJ 07094, USA",
+          "locality": "Secaucus",
+          "adminArea": "New Jersey"
+        },
+        {
+          "facilityCode": "NY6",
+          "researchKey": "equinix-ny6",
+          "address": "105 Enterprise Avenue South, Secaucus, NJ 07094, USA",
+          "locality": "Secaucus",
+          "adminArea": "New Jersey"
+        },
+        {
+          "facilityCode": "NY7",
+          "researchKey": "equinix-ny7",
+          "address": "5851 West Side Ave, North Bergen, NJ 07047, USA",
+          "locality": "North Bergen",
+          "adminArea": "New Jersey"
+        },
+        {
+          "facilityCode": "NY9",
+          "researchKey": "equinix-ny9",
+          "address": "111 8th Ave, New York, NY 10011, USA",
+          "locality": "New York",
+          "adminArea": "New York"
+        },
+        {
+          "facilityCode": "NY11",
+          "researchKey": "equinix-ny11",
+          "address": "1400 Federal Boulevard, Carteret, NJ 07008, USA",
+          "locality": "Carteret",
+          "adminArea": "New Jersey"
+        },
+        {
+          "facilityCode": "NY13",
+          "researchKey": "equinix-ny13",
+          "address": "401 Fieldcrest Drive, Elmsford, NY 10523, USA",
+          "locality": "Elmsford",
+          "adminArea": "New York"
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-chicago",
+      "market": "Chicago",
+      "countryName": "United States",
+      "countryCode": "US",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/chicago-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "CH1",
+          "researchKey": "equinix-ch1",
+          "address": "350 E Cermak Rd, 5th Floor, Chicago, IL 60616, USA",
+          "locality": "Chicago",
+          "adminArea": "Illinois"
+        },
+        {
+          "facilityCode": "CH2",
+          "researchKey": "equinix-ch2",
+          "address": "350 E Cermak Rd, 6th Floor, Chicago, IL 60616, USA",
+          "locality": "Chicago",
+          "adminArea": "Illinois"
+        },
+        {
+          "facilityCode": "CH3",
+          "researchKey": "equinix-ch3",
+          "address": "1905 Lunt Avenue, Elk Grove Village, IL 60007, USA",
+          "locality": "Elk Grove Village",
+          "adminArea": "Illinois"
+        },
+        {
+          "facilityCode": "CH4",
+          "researchKey": "equinix-ch4",
+          "address": "350 E Cermak Rd, 8th Floor, Chicago, IL 60616, USA",
+          "locality": "Chicago",
+          "adminArea": "Illinois"
+        },
+        {
+          "facilityCode": "CH5",
+          "researchKey": "equinix-ch5",
+          "address": "2001 Lunt Ave, Elk Grove Village, IL 60007, USA",
+          "locality": "Elk Grove Village",
+          "adminArea": "Illinois"
+        },
+        {
+          "facilityCode": "CH7",
+          "researchKey": "equinix-ch7",
+          "address": "111 Plaza Drive, Westmont, IL 60559, USA",
+          "locality": "Westmont",
+          "adminArea": "Illinois"
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-culpeper",
+      "market": "Culpeper",
+      "countryName": "United States",
+      "countryCode": "US",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/culpeper-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "CU1",
+          "researchKey": "equinix-cu1",
+          "address": "18155 Technology Drive, Building A, Culpeper, VA 22701, USA",
+          "locality": "Culpeper",
+          "adminArea": "Virginia"
+        },
+        {
+          "facilityCode": "CU2",
+          "researchKey": "equinix-cu2",
+          "address": "18155 Technology Drive, Building B, Culpeper, VA 22701, USA",
+          "locality": "Culpeper",
+          "adminArea": "Virginia"
+        },
+        {
+          "facilityCode": "CU3",
+          "researchKey": "equinix-cu3",
+          "address": "18155 Technology Drive, Building C, Culpeper, VA 22701, USA",
+          "locality": "Culpeper",
+          "adminArea": "Virginia"
+        },
+        {
+          "facilityCode": "CU4",
+          "researchKey": "equinix-cu4",
+          "address": "18155 Technology Drive, Building D, Culpeper, VA 22701, USA",
+          "locality": "Culpeper",
+          "adminArea": "Virginia"
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-dallas",
+      "market": "Dallas",
+      "countryName": "United States",
+      "countryCode": "US",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/dallas-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "DA1",
+          "researchKey": "equinix-da1",
+          "address": "1950 North Stemmons Freeway, Suite 1034, Dallas, TX 75207, USA",
+          "locality": "Dallas",
+          "adminArea": "Texas"
+        },
+        {
+          "facilityCode": "DA2",
+          "researchKey": "equinix-da2",
+          "address": "1950 North Stemmons Freeway, Suite 2027, Dallas, TX 75207, USA",
+          "locality": "Dallas",
+          "adminArea": "Texas"
+        },
+        {
+          "facilityCode": "DA3",
+          "researchKey": "equinix-da3",
+          "address": "1950 North Stemmons Freeway, Suites 1039A & 2048, Dallas, TX 75207, USA",
+          "locality": "Dallas",
+          "adminArea": "Texas"
+        },
+        {
+          "facilityCode": "DA4",
+          "researchKey": "equinix-da4",
+          "address": "2323 Bryan St, Dallas, TX 75201, USA",
+          "locality": "Dallas",
+          "adminArea": "Texas"
+        },
+        {
+          "facilityCode": "DA6",
+          "researchKey": "equinix-da6",
+          "address": "1950 North Stemmons Freeway, Suite 3050, Dallas, TX 75207, USA",
+          "locality": "Dallas",
+          "adminArea": "Texas"
+        },
+        {
+          "facilityCode": "DA7",
+          "researchKey": "equinix-da7",
+          "address": "6653 Pinecrest Dr, Plano, TX 75024, USA",
+          "locality": "Plano",
+          "adminArea": "Texas"
+        },
+        {
+          "facilityCode": "DA9",
+          "researchKey": "equinix-da9",
+          "address": "2222 East Grauwyler Road, Irving, TX 75061, USA",
+          "locality": "Irving",
+          "adminArea": "Texas"
+        },
+        {
+          "facilityCode": "DA11",
+          "researchKey": "equinix-da11",
+          "address": "1990 North Stemmons Freeway, Dallas, TX 75207, USA",
+          "locality": "Dallas",
+          "adminArea": "Texas"
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-denver",
+      "market": "Denver",
+      "countryName": "United States",
+      "countryCode": "US",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/denver-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "DE1",
+          "researchKey": "equinix-de1",
+          "address": "9706 E Easter Ave, Suite #160, Centennial, CO 80112, USA",
+          "locality": "Centennial",
+          "adminArea": "Colorado"
+        },
+        {
+          "facilityCode": "DE2",
+          "researchKey": "equinix-de2",
+          "address": "335 Inverness Drive South, Inverness Business Park, Englewood, CO 80112, USA",
+          "locality": "Englewood",
+          "adminArea": "Colorado"
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-los-angeles",
+      "market": "Los Angeles",
+      "countryName": "United States",
+      "countryCode": "US",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/los-angeles-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "LA1",
+          "researchKey": "equinix-la1",
+          "address": "600 W 7th Street, 6th & 7th Floors, Los Angeles, CA 90017, USA",
+          "locality": "Los Angeles",
+          "adminArea": "California"
+        },
+        {
+          "facilityCode": "LA3",
+          "researchKey": "equinix-la3",
+          "address": "1920 E Maple Ave, First Floor, El Segundo, CA 90245, USA",
+          "locality": "El Segundo",
+          "adminArea": "California"
+        },
+        {
+          "facilityCode": "LA4",
+          "researchKey": "equinix-la4",
+          "address": "445 N Douglas St, El Segundo, CA 90245, USA",
+          "locality": "El Segundo",
+          "adminArea": "California"
+        },
+        {
+          "facilityCode": "LA7",
+          "researchKey": "equinix-la7",
+          "address": "1501 Francisco Street, Torrance, CA 90501, USA",
+          "locality": "Torrance",
+          "adminArea": "California"
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-miami",
+      "market": "Miami",
+      "countryName": "United States",
+      "countryCode": "US",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/miami-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "MI1",
+          "researchKey": "equinix-mi1",
+          "address": "50 NE 9th Street, Miami, FL 33132, USA",
+          "locality": "Miami",
+          "adminArea": "Florida"
+        },
+        {
+          "facilityCode": "MI2",
+          "researchKey": "equinix-mi2",
+          "address": "36 NE 2nd Street, Suite 550, Miami, FL 33132, USA",
+          "locality": "Miami",
+          "adminArea": "Florida"
+        },
+        {
+          "facilityCode": "MI3",
+          "researchKey": "equinix-mi3",
+          "address": "4680 Conference Way South, Suite 150, Boca Raton, FL 33431, USA",
+          "locality": "Boca Raton",
+          "adminArea": "Florida"
+        },
+        {
+          "facilityCode": "MI6",
+          "researchKey": "equinix-mi6",
+          "address": "1525 NW 98th Court, International Corporate Park, Doral, FL 33172, USA",
+          "locality": "Doral",
+          "adminArea": "Florida"
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-seattle",
+      "market": "Seattle",
+      "countryName": "United States",
+      "countryCode": "US",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/seattle-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "SE2",
+          "researchKey": "equinix-se2",
+          "address": "2001 Sixth Ave, #350, Seattle, WA 98121, USA",
+          "locality": "Seattle",
+          "adminArea": "Washington"
+        },
+        {
+          "facilityCode": "SE3",
+          "researchKey": "equinix-se3",
+          "address": "2020 Fifth Avenue, Seattle, WA 98121, USA",
+          "locality": "Seattle",
+          "adminArea": "Washington"
+        },
+        {
+          "facilityCode": "SE4",
+          "researchKey": "equinix-se4",
+          "address": "6906 South 204th Street, Kent, WA 98032, USA",
+          "locality": "Kent",
+          "adminArea": "Washington"
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-silicon-valley",
+      "market": "Silicon Valley",
+      "countryName": "United States",
+      "countryCode": "US",
+      "sourceUrl": "https://www.equinix.com/data-centers/americas-colocation/united-states-colocation/silicon-valley-data-centers",
+      "facilities": [
+        {
+          "facilityCode": "SV1",
+          "researchKey": "equinix-sv1",
+          "address": "11 Great Oaks Boulevard, San Jose, CA 95119, USA",
+          "locality": "San Jose",
+          "adminArea": "California"
+        },
+        {
+          "facilityCode": "SV2",
+          "researchKey": "equinix-sv2",
+          "address": "1350 Duane Ave, Santa Clara, CA 95054, USA",
+          "locality": "Santa Clara",
+          "adminArea": "California"
+        },
+        {
+          "facilityCode": "SV3",
+          "researchKey": "equinix-sv3",
+          "address": "1735 Lundy Ave, San Jose, CA 95131, USA",
+          "locality": "San Jose",
+          "adminArea": "California"
+        },
+        {
+          "facilityCode": "SV4",
+          "researchKey": "equinix-sv4",
+          "address": "255 Caspian Drive, Sunnyvale, CA 94089, USA",
+          "locality": "Sunnyvale",
+          "adminArea": "California"
+        },
+        {
+          "facilityCode": "SV5",
+          "researchKey": "equinix-sv5",
+          "address": "9 Great Oaks Boulevard, San Jose, CA 95119, USA",
+          "locality": "San Jose",
+          "adminArea": "California"
+        },
+        {
+          "facilityCode": "SV8",
+          "researchKey": "equinix-sv8",
+          "address": "529 Bryant Street, Palo Alto, CA 94301, USA",
+          "locality": "Palo Alto",
+          "adminArea": "California"
+        },
+        {
+          "facilityCode": "SV10",
+          "researchKey": "equinix-sv10",
+          "address": "7 Great Oaks Boulevard, N/A, San Jose, CA 95119, USA",
+          "locality": "San Jose",
+          "adminArea": "California"
+        },
+        {
+          "facilityCode": "SV11",
+          "researchKey": "equinix-sv11",
+          "address": "5 Great Oaks Blvd, San Jose, CA 95119, USA",
+          "locality": "San Jose",
+          "adminArea": "California"
+        },
+        {
+          "facilityCode": "SV12x",
+          "researchKey": "equinix-sv12x",
+          "address": "123 Great Oaks Blvd, San Jose, CA 95119, USA",
+          "locality": "San Jose",
+          "adminArea": "California"
+        },
+        {
+          "facilityCode": "SV14",
+          "researchKey": "equinix-sv14",
+          "address": "2960 Corvin Drive, Pod D, Santa Clara, CA 95051, USA",
+          "locality": "Santa Clara",
+          "adminArea": "California"
+        },
+        {
+          "facilityCode": "SV15",
+          "researchKey": "equinix-sv15",
+          "address": "2970 Corvin Drive, Pod C, Santa Clara, CA 95051, USA",
+          "locality": "Santa Clara",
+          "adminArea": "California"
+        },
+        {
+          "facilityCode": "SV16",
+          "researchKey": "equinix-sv16",
+          "address": "3000 Corvin Drive, Pod B, Santa Clara, CA 95051, USA",
+          "locality": "Santa Clara",
+          "adminArea": "California"
+        }
+      ]
+    },
+    {
+      "parentLocationId": "equinix-abu-dhabi",
+      "market": "Abu Dhabi",
+      "countryName": "United Arab Emirates",
+      "countryCode": "AE",
+      "sourceUrl": "https://www.equinix.com/data-centers/europe-colocation/united-arab-emirates-colocation/abu-dhabi-center",
+      "facilities": [
+        {
+          "facilityCode": "AD1",
+          "researchKey": "equinix-ad1",
+          "address": "Khazna Datacentre, Masdar City, Abu Dhabi 500389, United Arab Emirates",
+          "locality": null,
+          "adminArea": null
+        }
+      ]
+    }
+  ]
+}
