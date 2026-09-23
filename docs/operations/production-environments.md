@@ -360,6 +360,37 @@ compared against `select string_agg(version, ',' order by version) from supabase
 > then the only pending migration and was applied with `supabase db push`;
 > `pipeline.ubwi_publications_daily_idx` now exists in UrdaisProd.
 
+### The production migration ledger check in CI
+
+The `production migration ledger` job on `main` compares the production ledger against the
+repository on every push. It skips silently unless the repository holds a
+`URDAIS_PRODUCTION_DATABASE_URL` secret, and it skipped from the job's creation until
+23 September 2026 — which is how production came to sit eight migrations behind `main` unnoticed,
+with `/api/umpi` returning 500 because the deployed read model queried tables the database did not
+have.
+
+The secret is the UrdaisProd session-pooler connection string, and it pins the CA rather than
+trusting the chain:
+
+```
+postgresql://postgres.<ref>:<password>@aws-0-us-east-1.pooler.supabase.com:5432/postgres?sslmode=verify-full&sslrootcert=.github/supabase-prod-ca-2021.crt
+```
+
+`.github/supabase-prod-ca-2021.crt` is committed for exactly this. It is a public root
+certificate, not a credential, and the runner has no other copy of it — `pg` resolves
+`sslmode=require` as `verify-full`, which fails against Supabase's private CA, so without the file
+the only alternatives are `no-verify` or libpq compatibility mode. Both send the production
+password over a connection whose chain was never verified, which is a poor trade for a check that
+only reads one query. Verify the file against the fingerprint above before trusting a replacement.
+
+**What the job does and does not catch.** It fails on *drift* — a ledger row carrying a repository
+migration under a different version or an ad hoc name, or a row production has that the repository
+does not. A repository migration production has not applied yet is **pending**, and pending
+passes: that is the ordinary state of a pull request that adds one, and a guard that failed on it
+would be switched off within a week. So the job reports "N pending" in its log and stays green.
+Read that number after a merge that adds a migration; it is the signal that production still needs
+`supabase db push`.
+
 ### Checking migration integrity
 
 Run the version comparison after any merge that adds a migration, not only after
