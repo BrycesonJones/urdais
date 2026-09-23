@@ -20,11 +20,8 @@
 import { MARKETS } from "@/data/mock/market-detail";
 import { MOCK_AS_OF } from "@/data/mock/ucpi";
 import type {
-  BuildoutMetric,
-  BuildoutMetricId,
   FlexibilityAssumption,
   FlexibilityScenario,
-  InfrastructureObservation,
   InterconnectionObservation,
   LoadObservation,
   PowerMarket,
@@ -76,8 +73,6 @@ type MarketProfile = {
   seasonalAmplitude: number;
   peakQuarter: number;
   queue: { load: number; loadWait: number; generation: number; generationWait: number };
-  /** Latest-year buildout: GW, circuit-miles, GVA, months. */
-  buildout: { capacityGw: number; miles: number; substationGva: number; transformerMonths: number };
   flexibility: FlexibilityAssumption;
 };
 
@@ -86,49 +81,42 @@ const PROFILES: Record<string, MarketProfile> = {
     seed: 0,
     load2024: 150, capacity2024: 186, loadGrowth: 0.045, forecastGrowth: 0.085, capacityGrowth: 0.018, seasonalAmplitude: 0.06, peakQuarter: 2,
     queue: { load: 64, loadWait: 48, generation: 262, generationWait: 60 },
-    buildout: { capacityGw: 4.2, miles: 1180, substationGva: 9.6, transformerMonths: 34 },
     flexibility: { marketId: "power-pjm", interruptibleLoadGw: 9.5, batteryShiftableLoadGw: 5.2 },
   },
   "power-ercot": {
     seed: 1,
     load2024: 85, capacity2024: 106, loadGrowth: 0.07, forecastGrowth: 0.11, capacityGrowth: 0.035, seasonalAmplitude: 0.09, peakQuarter: 2,
     queue: { load: 71, loadWait: 52, generation: 190, generationWait: 30 },
-    buildout: { capacityGw: 5.1, miles: 1650, substationGva: 8.8, transformerMonths: 30 },
     flexibility: { marketId: "power-ercot", interruptibleLoadGw: 8.8, batteryShiftableLoadGw: 6.4 },
   },
   "power-caiso": {
     seed: 2,
     load2024: 47, capacity2024: 59, loadGrowth: 0.025, forecastGrowth: 0.04, capacityGrowth: 0.015, seasonalAmplitude: 0.07, peakQuarter: 2,
     queue: { load: 18, loadWait: 36, generation: 121, generationWait: 48 },
-    buildout: { capacityGw: 1.9, miles: 420, substationGva: 4.1, transformerMonths: 36 },
     flexibility: { marketId: "power-caiso", interruptibleLoadGw: 3.1, batteryShiftableLoadGw: 4.6 },
   },
   "power-miso": {
     seed: 3,
     load2024: 120, capacity2024: 139, loadGrowth: 0.03, forecastGrowth: 0.055, capacityGrowth: 0.012, seasonalAmplitude: 0.05, peakQuarter: 2,
     queue: { load: 32, loadWait: 40, generation: 142, generationWait: 44 },
-    buildout: { capacityGw: 2.8, miles: 960, substationGva: 6.3, transformerMonths: 33 },
     flexibility: { marketId: "power-miso", interruptibleLoadGw: 6.2, batteryShiftableLoadGw: 2.9 },
   },
   "power-iso-ne": {
     seed: 4,
     load2024: 24, capacity2024: 27.5, loadGrowth: 0.02, forecastGrowth: 0.035, capacityGrowth: 0.01, seasonalAmplitude: 0.05, peakQuarter: 0,
     queue: { load: 6, loadWait: 30, generation: 25, generationWait: 38 },
-    buildout: { capacityGw: 0.6, miles: 140, substationGva: 1.4, transformerMonths: 35 },
     flexibility: { marketId: "power-iso-ne", interruptibleLoadGw: 1.3, batteryShiftableLoadGw: 1.1 },
   },
   "power-nyiso": {
     seed: 5,
     load2024: 31, capacity2024: 37, loadGrowth: 0.025, forecastGrowth: 0.04, capacityGrowth: 0.012, seasonalAmplitude: 0.06, peakQuarter: 2,
     queue: { load: 9, loadWait: 34, generation: 31, generationWait: 42 },
-    buildout: { capacityGw: 0.9, miles: 210, substationGva: 2.2, transformerMonths: 35 },
     flexibility: { marketId: "power-nyiso", interruptibleLoadGw: 1.8, batteryShiftableLoadGw: 1.5 },
   },
   "power-spp": {
     seed: 6,
     load2024: 52, capacity2024: 63.5, loadGrowth: 0.04, forecastGrowth: 0.07, capacityGrowth: 0.02, seasonalAmplitude: 0.06, peakQuarter: 2,
     queue: { load: 21, loadWait: 38, generation: 92, generationWait: 40 },
-    buildout: { capacityGw: 2.1, miles: 880, substationGva: 3.9, transformerMonths: 32 },
     flexibility: { marketId: "power-spp", interruptibleLoadGw: 3.4, batteryShiftableLoadGw: 2.0 },
   },
 };
@@ -237,75 +225,6 @@ export function queueRanking(mode: QueueMode): QueueRow[] {
       medianWaitMonths: mode === "load" ? row.medianLoadWaitMonths : row.medianGenerationWaitMonths,
     }))
     .sort((a, b) => b.queuedGw - a.queuedGw);
-}
-
-/* ---------- Grid buildout ---------- */
-
-export const BUILDOUT_YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026] as const;
-
-/** Yearly buildout per market: additions ramp up towards the latest year; transformer lead times lengthen. */
-export const INFRASTRUCTURE_OBSERVATIONS: InfrastructureObservation[] = POWER_MARKETS.flatMap((market) => {
-  const { seed, buildout: b } = profile(market.id);
-  return BUILDOUT_YEARS.map((year, index) => {
-    const yearsBack = BUILDOUT_YEARS.length - 1 - index;
-    const ramp = 0.9 ** yearsBack * (1 + wobble(seed + 11, index, 0.08));
-    return {
-      year,
-      marketId: market.id,
-      transmissionCapacityAddedGw: round1(b.capacityGw * ramp),
-      transmissionMilesAdded: Math.round(b.miles * ramp),
-      substationCapacityAddedGva: round1(b.substationGva * ramp),
-      transformerLeadTimeMonths: Math.round(b.transformerMonths - 2.2 * yearsBack + wobble(seed + 23, index, 1.5)),
-    };
-  });
-});
-
-function aggregateByYear(pick: (row: InfrastructureObservation) => number, reduce: "sum" | "mean"): { year: number; value: number }[] {
-  return BUILDOUT_YEARS.map((year) => {
-    const values = INFRASTRUCTURE_OBSERVATIONS.filter((row) => row.year === year).map(pick);
-    const total = values.reduce((sum, value) => sum + value, 0);
-    return { year, value: round1(reduce === "sum" ? total : total / values.length) };
-  });
-}
-
-/** The four buildout measures, aggregated across the seven markets. Additions sum; lead time is the mean. */
-export const BUILDOUT_METRICS: BuildoutMetric[] = [
-  {
-    id: "transfer-capacity",
-    label: "Transfer capacity",
-    unit: "GW added / year",
-    description: "Transmission transfer capacity added each year: the most direct measure of network expansion.",
-    lowerIsBetter: false,
-    points: aggregateByYear((row) => row.transmissionCapacityAddedGw, "sum"),
-  },
-  {
-    id: "circuit-miles",
-    label: "Circuit miles",
-    unit: "miles added / year",
-    description: "Transmission circuit-miles energised each year.",
-    lowerIsBetter: false,
-    points: aggregateByYear((row) => row.transmissionMilesAdded, "sum"),
-  },
-  {
-    id: "substations",
-    label: "Substations",
-    unit: "GVA added / year",
-    description: "Substation transformation capacity added each year, in GVA, so facilities of different sizes are not counted as equals.",
-    lowerIsBetter: false,
-    points: aggregateByYear((row) => row.substationCapacityAddedGva, "sum"),
-  },
-  {
-    id: "transformer-lead-time",
-    label: "Transformer lead time",
-    unit: "months",
-    description: "Modelled lead time to procure major grid transformers, averaged across markets. Lower is better.",
-    lowerIsBetter: true,
-    points: aggregateByYear((row) => row.transformerLeadTimeMonths, "mean"),
-  },
-];
-
-export function findBuildoutMetric(id: BuildoutMetricId): BuildoutMetric {
-  return BUILDOUT_METRICS.find((metric) => metric.id === id)!;
 }
 
 /* ---------- Flexible capacity ---------- */

@@ -1,6 +1,8 @@
 import { FlexibleCapacityChart } from "@/components/power-analytics/flexible-capacity-chart";
 import { unconfiguredDeliveryGapReadModel, type DeliveryGapReadModel } from "@/lib/power-delivery/gap/read";
 import { GridBuildoutChart } from "@/components/power-analytics/grid-buildout-chart";
+import { unavailableGridBuildoutModel, type GridBuildoutReadModel }
+  from "@/lib/grid-buildout/analytics/read";
 import { unavailableQueueAnalytics, type QueueAnalyticsReadModel }
   from "@/lib/interconnection-queue/analytics/read";
 import { InterconnectionQueue } from "@/components/power-analytics/interconnection-queue";
@@ -33,9 +35,10 @@ export function PowerAnalyticsPage({
   gap = unconfiguredDeliveryGapReadModel(),
   queue = unavailableQueueAnalytics(),
   headroom = unavailableTransmissionModel(),
+  buildout = unavailableGridBuildoutModel(),
 }: {
   gap?: DeliveryGapReadModel; queue?: QueueAnalyticsReadModel;
-  headroom?: TransmissionReadModel;
+  headroom?: TransmissionReadModel; buildout?: GridBuildoutReadModel;
 } = {}) {
   return (
     <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-6 text-neutral-50 sm:px-6 lg:px-8">
@@ -44,7 +47,7 @@ export function PowerAnalyticsPage({
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="text-3xl font-semibold tracking-tight text-neutral-50 md:text-4xl">Power Analytics</h1>
             <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
-              Demo data except Delivery, Interconnection and Transmission
+              Demo data except Delivery, Interconnection, Transmission and Buildout
             </span>
           </div>
           <p className="mt-2 text-base text-neutral-300 md:text-lg">The infrastructure delivering power to the Information Age.</p>
@@ -70,7 +73,7 @@ export function PowerAnalyticsPage({
           <PowerDeliveryGapChart model={gap} />
           <InterconnectionQueue analytics={queue} />
           <TransmissionHeadroom analytics={headroom} />
-          <GridBuildoutChart />
+          <GridBuildoutChart analytics={buildout} />
           <FlexibleCapacityChart />
         </div>
       </div>
