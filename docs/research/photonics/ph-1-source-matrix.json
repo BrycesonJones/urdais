@@ -1,0 +1,399 @@
+{
+  "title": "Urdais Photonics — PH-1 external research",
+  "as_of": "2026-09-23",
+  "status": "internal research; establishes no legal right; does not write code, ingest data, or select a price methodology",
+  "companion_markdown": "docs/research/photonics/ph-1-external-research.md",
+  "evidence_classes": ["verified", "retrieved", "inferred"],
+  "rights_classes": [
+    "clearly_reusable",
+    "reusable_with_attribution_or_conditions",
+    "ambiguous_requires_legal_review",
+    "unsuitable_without_permission"
+  ],
+  "product_baseline": {
+    "source_file": "src/data/mock/market-detail.ts",
+    "family": "Pluggable Optics",
+    "instruments": ["100G", "200G", "400G", "800G", "1.6T"],
+    "unit": "USD/transceiver",
+    "headline": "800G",
+    "subdivided_by_reach_or_pmd": false,
+    "demo_data_only": true,
+    "daily_and_weekly_changes_are_synthetic": true
+  },
+  "verdict": {
+    "rate_only_transceiver_price_is_comparable": false,
+    "daily_or_weekly_change_has_a_market_basis": false,
+    "professional_price_construct": "analyst shipment-weighted ASP inside a specification cell",
+    "finest_recurring_professional_cadence_found": "quarterly",
+    "public_transceiver_price_index_found": false,
+    "open_data_can_set_a_transceiver_asp_level": false,
+    "methodology_selected": false
+  },
+  "candidate_designs": [
+    {
+      "id": "A",
+      "name": "Specification-specific merchant pluggable ASPs",
+      "unit": "USD per module within a named PMD cell",
+      "selected": false
+    },
+    {
+      "id": "B",
+      "name": "Shipment-weighted datacom client-optics cost index",
+      "unit": "USD per Gbps shipped, preferably as an index",
+      "selected": false
+    },
+    {
+      "id": "C",
+      "name": "Coherent DCI series kept apart from client optics",
+      "unit": "USD per ZR/ZR+ pluggable",
+      "selected": false
+    },
+    {
+      "id": "D",
+      "name": "Public validation layer with no transceiver level",
+      "unit": "official index points only",
+      "selected": false
+    }
+  ],
+  "sources": [
+    {
+      "id": "ieee-8023df-2024",
+      "publisher": "IEEE SA",
+      "title": "IEEE 802.3df-2024",
+      "url": "https://standards.ieee.org/ieee/802.3df/11107/",
+      "date": "2024-03-15",
+      "evidence": "verified",
+      "rights": "reusable_with_attribution_or_conditions",
+      "what_it_supports": "800 Gb/s Ethernet MAC and 400/800 Gb/s physical-layer specifications are a published standard. Board approval 2024-02-15. Standard text is available via the IEEE GET program.",
+      "not_a_price": true
+    },
+    {
+      "id": "ieee-p8023dj-ballot",
+      "publisher": "IEEE 802.3",
+      "title": "P802.3dj second SA recirculation ballot results",
+      "url": "https://www.ieee802.org/3/email_dialog/msg01862.html",
+      "date": "2026-08-17",
+      "evidence": "verified",
+      "rights": "reusable_with_attribution_or_conditions",
+      "what_it_supports": "P802.3dj was not a published standard as of 15 August 2026. Second recirculation closed that day at 86% approval with 185 comments still to resolve.",
+      "not_a_price": true
+    },
+    {
+      "id": "ieee-p8023dj-status",
+      "publisher": "IEEE SA",
+      "title": "IEEE P802.3dj project page",
+      "url": "https://standards.ieee.org/ieee/802.3dj/11115/",
+      "date": "inspected 2026-09-23",
+      "evidence": "verified",
+      "rights": "reusable_with_attribution_or_conditions",
+      "what_it_supports": "Draft amendment for 1.6 Tb/s MAC and 200/400/800 Gb/s and 1.6 Tb/s physical layers. Status: active project, not a standard.",
+      "not_a_price": true
+    },
+    {
+      "id": "oif-800zr-pr",
+      "publisher": "OIF",
+      "title": "OIF releases 800ZR IA",
+      "url": "https://www.oiforum.com/oif-releases-800zr-coherent-interface-implementation-agreement-ia-and-key-400zr-ia-updates-addressing-market-demands-for-scalable-interoperable-high-capacity-solutions/",
+      "date": "2024-10-30",
+      "evidence": "verified",
+      "rights": "reusable_with_attribution_or_conditions",
+      "what_it_supports": "800ZR is a coherent DCI interface for single-span amplified 80–120 km DWDM, not an intra-datacenter client PMD.",
+      "not_a_price": true
+    },
+    {
+      "id": "oif-800zr-ia",
+      "publisher": "OIF",
+      "title": "OIF-800ZR-01.0",
+      "url": "https://www.oiforum.com/wp-content/uploads/OIF-800ZR-01.0.pdf",
+      "date": "2024-10-08",
+      "evidence": "verified",
+      "rights": "ambiguous_requires_legal_review",
+      "what_it_supports": "Implementation agreement text: single-wavelength 800G coherent line interface for 80–120 km point-to-point DCI. Form factor not restricted.",
+      "not_a_price": true
+    },
+    {
+      "id": "cisco-osfp-800g-ds",
+      "publisher": "Cisco",
+      "title": "Cisco OSFP 800G Transceiver Modules Data Sheet",
+      "url": "https://www.cisco.com/c/en/us/products/collateral/interfaces-modules/transceiver-modules/osfp-800g-transceiver-modules-ds.html",
+      "date": "2026-01-05",
+      "evidence": "verified",
+      "rights": "ambiguous_requires_legal_review",
+      "what_it_supports": "One nominal 800G family already splits into 800GBASE-VR8, 800GBASE-DR8, and 2x400GBASE-FR4, with different fiber, connectors, and wavelengths. Datasheet publishes power and reach, not dollars. Cites IEEE 802.3df and OSFP MSA.",
+      "not_a_price": true
+    },
+    {
+      "id": "cisco-800zr-ds",
+      "publisher": "Cisco",
+      "title": "Cisco QSFP-DD and OSFP 800G ZR/ZR+ Coherent Optics Modules Data Sheet",
+      "url": "https://www.cisco.com/c/en/us/products/collateral/interfaces-modules/transceiver-modules/qsfp-dd-osfp-800g-zr-zr-plus-coherent-optics.html",
+      "date": "inspected 2026-09-23",
+      "evidence": "retrieved",
+      "rights": "ambiguous_requires_legal_review",
+      "what_it_supports": "800ZR positioned for amplified DCI up to about 120 km; 800ZR+ for longer metro/regional reaches. Distinct part numbers from client DR8/FR4.",
+      "not_a_price": true
+    },
+    {
+      "id": "lpo-msa-2025",
+      "publisher": "LPO MSA",
+      "title": "LPO MSA specification announcement",
+      "url": "https://www.lpo-msa.org/news/lpo-msa-announces-release-of-specification-for-linear-pluggable-optica",
+      "date": "2025-03-25",
+      "evidence": "verified",
+      "rights": "reusable_with_attribution_or_conditions",
+      "what_it_supports": "100G-per-lane linear pluggable spec covers 100/200/400/800G parallel single-mode. Linear and retimed modules are different specifications. No shipment census and no price.",
+      "not_a_price": true
+    },
+    {
+      "id": "cignal-optco-method",
+      "publisher": "Cignal AI",
+      "title": "Optical Components Report overview",
+      "url": "https://cignal.ai/optco/",
+      "date": "page inspected 2026-09-23; real-time file stamp 2026-09-17",
+      "evidence": "verified",
+      "rights": "unsuitable_without_permission",
+      "what_it_supports": "Quarterly revenue share and unit shipments. Datacom defined as <=10 km. Units by speed, material, and reach (SR/DR/FR/LR/CL). History from 2019. Excel delivery. Five-year forecast. Does not publicly list an ASP field. 2Q26 client files existed by 17 September 2026; contents not public.",
+      "price_field_publicly_documented": false,
+      "frequency": "quarterly"
+    },
+    {
+      "id": "cignal-1q26-pr",
+      "publisher": "Cignal AI",
+      "title": "Datacom optical component revenue doubles to $7.7 billion in 1Q26",
+      "url": "https://cignal.ai/2026/06/datacom-optical-component-revenue-doubles-to-7-7-billion-in-1q26/",
+      "date": "2026-06-18",
+      "evidence": "verified",
+      "rights": "unsuitable_without_permission",
+      "what_it_supports": "1Q26 observation: datacom optical-component revenue $7.7B; telecom $2.0B; ~20 million 400G+ modules; 800GbE majority of high-speed units; 1.6T +50% sequential and nearly all DR silicon photonics; 800ZR+ scale-across started at Meta. Full-year 2026 unit statements and CPO port forecasts are forecasts.",
+      "is_transaction_price": false
+    },
+    {
+      "id": "cignal-cpo-2026-04",
+      "publisher": "Cignal AI",
+      "title": "CPO and ELSFP — 1Q26 update",
+      "url": "https://cignal.ai/2026/04/cpo-and-elsfp-1q26-update/",
+      "date": "2026-04-01",
+      "evidence": "verified",
+      "rights": "unsuitable_without_permission",
+      "what_it_supports": "No CPO products shipping in volume as of that note. Scale-up still served by copper. CPO port forecast is small in 2026. Not a price.",
+      "not_a_price": true
+    },
+    {
+      "id": "cignal-800zrx-2026-01",
+      "publisher": "Cignal AI",
+      "title": "800ZRx growth to surpass all earlier coherent generations",
+      "url": "https://cignal.ai/2026/01/800zrx-growth-to-surpass-all-earlier-coherent-generations/",
+      "date": "2026-01-27",
+      "evidence": "verified",
+      "rights": "unsuitable_without_permission",
+      "what_it_supports": "400ZR/ZR+ described as established; 800ZR/ZR+ beginning large-scale rollouts in 2026 for DCI and AI interconnect. Surpassing 400ZRx is a forecast.",
+      "not_a_price": true
+    },
+    {
+      "id": "lightcounting-apr-2026",
+      "publisher": "LightCounting",
+      "title": "April 2026 Market Forecast",
+      "url": "https://www.lightcounting.com/report/april-2026-market-forecast-379",
+      "date": "2026-04",
+      "evidence": "verified",
+      "rights": "unsuitable_without_permission",
+      "what_it_supports": "Database of shipments, pricing, and sales for >200 products. History 2022-2025. Forecast 2026-2031. More than 20 vendors shared confidential sales data. Listed report price $5,995. Not an annual-licence quote.",
+      "contains_asp": true,
+      "frequency": "semiannual research cycle (October 2025 and April 2026 market forecasts)",
+      "sticker_price_usd": 5995
+    },
+    {
+      "id": "lightcounting-ethernet-2026-03",
+      "publisher": "LightCounting",
+      "title": "March 2026 Ethernet Optics",
+      "url": "https://www.lightcounting.com/report/march-2026-ethernet-optics-382",
+      "toc_url": "https://www.lightcounting.com/document/march-2026-ethernet-optics/382/toc",
+      "date": "2026-03",
+      "evidence": "verified",
+      "rights": "unsuitable_without_permission",
+      "what_it_supports": ">100 categories including 100GbE through 3.2T, retimed, LPO/LRO, CPO/NPO, sorted by reach and form factor. Units, prices, and sales for cloud, enterprise, and telecom. History 2022-2025. Redistribution without expressed permission prohibited. Listed price $5,995.",
+      "contains_asp": true,
+      "sticker_price_usd": 5995
+    },
+    {
+      "id": "lightcounting-newsletter-apr-2026",
+      "publisher": "LightCounting",
+      "title": "Demand for optical connectivity continues to surprise",
+      "url": "https://www.lightcounting.com/newsletter/en/april-2026-market-forecast-379",
+      "date": "2026-04",
+      "evidence": "verified",
+      "rights": "unsuitable_without_permission",
+      "what_it_supports": "Qualitative price mechanism: shortages stabilize pricing; later capacity brings faster price declines. Sales-growth figures for 2024-2026 are market-size estimates and forecasts, not module ASPs.",
+      "is_transaction_price": false
+    },
+    {
+      "id": "omdia-oc-brochure",
+      "publisher": "Omdia / Informa Tech",
+      "title": "Optical Components Intelligence Service product overview",
+      "url": "https://omdia.tech.informa.com/-/media/tech/omdia/brochures/service-provider-networks/omdia-product-overview---optical-components-intelligence-service.pdf",
+      "date": "brochure narrative predates the 2026 market; inspected 2026-09-23",
+      "evidence": "verified",
+      "rights": "unsuitable_without_permission",
+      "what_it_supports": "Service measures include units, revenues, and ASP for datacom transceiver/AOC, high-speed coherent, ICP data-center optics, and silicon photonics. Market-share segments: Telecom, Datacom, Access. Copyright disclaimer does not grant republication. Narrative calling 400G the fastest-growing segment is stale.",
+      "contains_asp": "described",
+      "price_disclosed": false
+    },
+    {
+      "id": "omdia-hs-forecast-2024-11",
+      "publisher": "Omdia",
+      "title": "High-Speed OC Forecast: 2023–29",
+      "url": "https://omdia.tech.informa.com/om122790/high-speed-oc-forecast-202329",
+      "date": "2024-11-15",
+      "evidence": "verified",
+      "rights": "unsuitable_without_permission",
+      "what_it_supports": "Omdia maintains a pricing model. On 22 November 2024 it corrected pricing on the Telecom tabs. Evidence of revision, not of a public series.",
+      "contains_asp": true
+    },
+    {
+      "id": "omdia-datacom-2025-10",
+      "publisher": "Omdia",
+      "title": "Datacom Transceiver, AOC, and DAC/AEC Forecast: 2024–30",
+      "url": "https://omdia.tech.informa.com/om136054/datacom-transceiver-aoc-and-dacaec-forecast-202430",
+      "date": "2025-10-31",
+      "evidence": "retrieved",
+      "rights": "unsuitable_without_permission",
+      "what_it_supports": "Current datacom forecast product exists inside the Optical Components Intelligence Service. Public abstract does not repeat the word ASP. Second fetch of the page failed. Grain of any ASP is an open question.",
+      "contains_asp": "not confirmed on the 2025 abstract"
+    },
+    {
+      "id": "delloro-optical-transport",
+      "publisher": "Dell'Oro Group",
+      "title": "Optical Transport research program",
+      "url": "https://www.delloro.com/market-research/telecommunications-infrastructure/optical-transport/",
+      "date": "inspected 2026-09-23",
+      "evidence": "verified",
+      "rights": "unsuitable_without_permission",
+      "what_it_supports": "Quarterly and 5-year forecasts. Metrics include revenue, shipments, and average selling prices. Coverage includes IPoDWDM ZR/ZR+ plugs and DCI. Program history claimed from 1998. This is optical transport, not client Ethernet DR8.",
+      "contains_asp": true,
+      "frequency": "quarterly"
+    },
+    {
+      "id": "delloro-ot-2025",
+      "publisher": "Dell'Oro Group",
+      "title": "Optical transport market grew to $16 billion in 2025",
+      "url": "https://www.delloro.com/news/optical-transport-market-grew-to-16-billion-in-2025/",
+      "date": "2026-02-18",
+      "evidence": "verified",
+      "rights": "unsuitable_without_permission",
+      "what_it_supports": "2025 observation: optical transport +10%; direct DCI WDM purchases nearly +40%; direct cloud purchases about +50%, including ZR optics. 2026 growth is a forecast. Quarterly report tables include ASP and units by speed up to 1.6 Tbps.",
+      "is_client_ethernet_module_asp": false
+    },
+    {
+      "id": "delloro-ai-backend",
+      "publisher": "Dell'Oro Group",
+      "title": "Data Center Switch – AI Back-end Networks",
+      "url": "https://www.delloro.com/market-research/data-center-infrastructure/data-center-switch-ai-back-end-networks/",
+      "date": "inspected 2026-09-23",
+      "evidence": "retrieved",
+      "rights": "unsuitable_without_permission",
+      "what_it_supports": "Switch port revenue, shipments, and ASP for scale-up and scale-out, including Ethernet and InfiniBand. A switch ASP is not a transceiver ASP.",
+      "is_transceiver_asp": false
+    },
+    {
+      "id": "group650-ai-networking",
+      "publisher": "650 Group",
+      "title": "Data Center AI Networking quarterly (press descriptions)",
+      "url": "https://650group.com/press-releases/data-center-ai-networking-to-surge-to-nearly-20b-in-2025-according-to-650-group/",
+      "date": "2024-06-04",
+      "evidence": "verified",
+      "rights": "unsuitable_without_permission",
+      "what_it_supports": "Quarterly AI networking coverage by port speed from 25G through 3.2T, including optical transceivers in the narrative. Public pages do not document an ASP-by-PMD file.",
+      "contains_asp": "not documented"
+    },
+    {
+      "id": "bls-pcu33423342",
+      "publisher": "U.S. Bureau of Labor Statistics via FRED",
+      "title": "PPI Communications Equipment Manufacturing",
+      "url": "https://fred.stlouisfed.org/series/PCU33423342",
+      "date": "2026-06 observation; updated 2026-07-15",
+      "evidence": "verified",
+      "rights": "reusable_with_attribution_or_conditions",
+      "what_it_supports": "Monthly industry PPI, December 1985=100. June 2026 level 111.532. Not an optical-transceiver price. Usable only as itself.",
+      "frequency": "monthly",
+      "is_transceiver_asp": false
+    },
+    {
+      "id": "bls-ppi-discontinuation",
+      "publisher": "U.S. Bureau of Labor Statistics",
+      "title": "BLS to discontinue selected PPIs",
+      "url": "https://www.bls.gov/ppi/notices/2025/bls-to-discontinue-selected-ppis.htm",
+      "date": "2025-08-14",
+      "evidence": "verified",
+      "rights": "clearly_reusable",
+      "what_it_supports": "Fiber optic cable manufacturing PPI (NAICS 335921) discontinued with the July 2025 release. Wrong product even before discontinuation.",
+      "is_transceiver_asp": false
+    },
+    {
+      "id": "cbp-n336394",
+      "publisher": "U.S. CBP",
+      "title": "NY N336394",
+      "url": "https://www.customsmobile.com/rulings/docview?doc_id=NY+N336394&highlight=NY+N336394",
+      "date": "ruling text inspected 2026-09-23",
+      "evidence": "verified",
+      "rights": "clearly_reusable",
+      "what_it_supports": "An optical transceiver is classified in HTSUS 8517.62.0090, the residual 'Other' provision under machines for reception, conversion, and transmission, including switching and routing apparatus.",
+      "is_transceiver_asp": false
+    },
+    {
+      "id": "cbp-n302251",
+      "publisher": "U.S. CBP",
+      "title": "NY N302251",
+      "url": "https://www.customsmobile.com/rulings/docview?doc_id=NY+N302251&highlight=NY+N302251",
+      "date": "2018-12 request",
+      "evidence": "verified",
+      "rights": "clearly_reusable",
+      "what_it_supports": "SFP transceivers of differing data rates, reaches, and wavelengths share 8517.62.0090. The tariff does not encode PMD.",
+      "is_transceiver_asp": false
+    },
+    {
+      "id": "census-trade-guide",
+      "publisher": "U.S. Census Bureau",
+      "title": "Description of the International Trade Statistical Program",
+      "url": "https://www.census.gov/foreign-trade/guide/sec2.html",
+      "date": "inspected 2026-09-23",
+      "evidence": "verified",
+      "rights": "clearly_reusable",
+      "what_it_supports": "Unit value is customs value divided by HTS quantity. Related-party assists can remain inside the value. A unit value on a residual basket is not an ASP.",
+      "is_transceiver_asp": false
+    },
+    {
+      "id": "census-hs-availability",
+      "publisher": "U.S. Census Bureau",
+      "title": "Harmonized System data availability",
+      "url": "https://www.census.gov/foreign-trade/statistics/historical/hs.html",
+      "date": "inspected 2026-09-23",
+      "evidence": "verified",
+      "rights": "clearly_reusable",
+      "what_it_supports": "Monthly 10-digit import data exist from 2003 in USA Trade Online. Availability does not create product specificity.",
+      "frequency": "monthly"
+    },
+    {
+      "id": "yole-2020-sample",
+      "publisher": "Yole",
+      "title": "Optical Transceivers for Datacom & Telecom 2020 sample",
+      "url": "https://medias.yolegroup.com/uploads/2020/06/YDR20120-Optical-Transceivers-for-Datacom-Telecom-2020-Sample.pdf",
+      "date": "2020-06",
+      "evidence": "verified",
+      "rights": "unsuitable_without_permission",
+      "what_it_supports": "Historical evidence that specialist reports model volume, ASP, and revenue. Not a 2026 source. Sample figures are forecasts from 2020 and must not be cited as current prices.",
+      "current": false
+    },
+    {
+      "id": "nvidia-linkx",
+      "publisher": "NVIDIA",
+      "title": "LinkX cables and transceivers",
+      "url": "https://www.nvidia.com/en-us/networking/interconnect/",
+      "docs_url": "https://networking-docs.nvidia.com/interconnect",
+      "date": "inspected 2026-09-23",
+      "evidence": "retrieved",
+      "rights": "ambiguous_requires_legal_review",
+      "what_it_supports": "NVIDIA sells parallel Ethernet and InfiniBand interconnects: DAC, active copper, multimode, and single-mode optics, including twin-port 800G 2xDR4 / 2xFR4 and 1600G-class twin-port DR4. Product page fetch of nvidia.com timed out; documentation extraction was used. Not a price list.",
+      "not_a_price": true
+    }
+  ]
+}
