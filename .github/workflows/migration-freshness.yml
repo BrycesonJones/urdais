@@ -55,14 +55,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Same least-privilege role as the ledger check: SELECT on the migration ledger, nothing
+      # else. Both jobs read the same one table.
       - name: Measure how long production has been behind
         env:
-          DATABASE_URL: ${{ secrets.URDAIS_PRODUCTION_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.URDAIS_MIGRATION_AUDIT_DATABASE_URL }}
           FAIL_AFTER: ${{ github.event.inputs.fail_after_hours || '48' }}
         run: |
           if [ -z "${DATABASE_URL}" ]; then
-            echo "no production database configured for this repository; skipping the freshness check."
-            echo "set the URDAIS_PRODUCTION_DATABASE_URL secret to enforce it."
+            echo "no migration audit database configured for this repository; skipping the freshness check."
+            echo "set the URDAIS_MIGRATION_AUDIT_DATABASE_URL secret to enforce it."
             exit 0
           fi
           npm run migrations:freshness -- --fail-after "${FAIL_AFTER}"

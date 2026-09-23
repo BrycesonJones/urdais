@@ -50,7 +50,8 @@ the capacity outage on 15 September 2026.
 |---|---|---|---|
 | **A. Serverless request/read** | every public page and API read | the transaction pooler, port `6543`, derived from `DATABASE_URL` | one process-wide `pg.Pool`, `max: 1`, no `end()` |
 | **B. Cron / private job** | `/api/cron/{news,ubwi,ucpi}` and the `scripts/` commands | `DATABASE_URL` verbatim | one owned `pg.Client`, closed by its caller |
-| **C. Migration / admin** | `supabase db push`, `migrations:check --production`, the `production migration ledger` CI job | `DATABASE_URL` / `URDAIS_PRODUCTION_DATABASE_URL` verbatim | session connection, as the tooling expects |
+| **C. Migration / admin** | `supabase db push`, `migrations:check --production` run by an operator | `DATABASE_URL` / `URDAIS_PRODUCTION_DATABASE_URL` verbatim | session connection, as the tooling expects |
+| **C2. Migration audit (read-only)** | the `production migration ledger` and `migration freshness` CI jobs | `URDAIS_MIGRATION_AUDIT_DATABASE_URL`, the `urdais_migration_audit` role | session connection; `select` on the ledger and nothing else |
 
 **Why class A is rewritten in code.** The session pooler at
 `…pooler.supabase.com:5432` allots roughly fifteen clients to a role/database
@@ -381,6 +382,52 @@ migration integrity: ok
 It named every missing migration and passed. The gap was in the CI log the whole time; nobody read
 it, because the check was green and green checks are not read. Connectivity was never the problem,
 so connecting something is not the fix — see *What the job does and does not catch* below.
+
+### The migration audit role
+
+Both migration jobs connect as **`urdais_migration_audit`**, not as `postgres`. They read one
+query; a credential that could drop the database is more than that warrants, and a leaked runner
+secret should not be able to do more than the job it was issued for.
+
+```sql
+create role urdais_migration_audit login password '<generated>';
+grant usage  on schema supabase_migrations                 to urdais_migration_audit;
+grant select on table  supabase_migrations.schema_migrations to urdais_migration_audit;
+revoke create on schema public    from urdais_migration_audit;
+revoke all    on database postgres from urdais_migration_audit;
+grant  connect on database postgres to urdais_migration_audit;
+```
+
+Two grants, and nothing else. Verified on creation by attempting each thing it must not do:
+
+| Attempt | Result |
+|---|---|
+| `select` the ledger | **124 rows** |
+| `insert` / `update` / `delete` the ledger | permission denied for table `schema_migrations` |
+| `select` from `pipeline` / `reference` | permission denied for schema |
+| `select` from `auth.users` | permission denied for schema `auth` |
+| `create table` in `public` | permission denied for schema `public` |
+| `drop` the ledger | must be owner of table |
+| `select rolpassword from pg_authid` | permission denied for table `pg_authid` |
+
+The secret is `URDAIS_MIGRATION_AUDIT_DATABASE_URL`. Its pooler username is
+`urdais_migration_audit.<ref>` — Supavisor takes `<role>.<project_ref>`, not just the project ref.
+Re-running the creation statement rotates the password; update the secret in the same pass.
+
+**`URDAIS_PRODUCTION_DATABASE_URL` stays.** It is not only used by these checks — three other
+workflows hold it, and two of them *write* to production:
+
+| Workflow | Uses it to |
+|---|---|
+| `ci.yml` → token production readiness | read application data |
+| `map-production-import.yml` | **write** map facilities |
+| `planning-production-ingest.yml` | **write** planning observations |
+
+So this change narrows two of five consumers to least privilege; it does not retire the superuser
+credential. Narrowing the other three means a role per job with its own grants, which is worth
+doing and is not this.
+
+### The production ledger connection
 
 The secret is the UrdaisProd session-pooler connection string, and it pins the CA rather than
 trusting the chain:
