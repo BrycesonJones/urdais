@@ -39,7 +39,10 @@ const ASOF = Date.parse("2026-09-16T01:01:18Z") / 1000;
 function dailySeries(dayOffsets: readonly number[], asOf = ASOF): DetailedSeries {
   const daily = [...dayOffsets]
     .sort((a, b) => b - a)
-    .map((back) => ({ time: asOf - back * DAY, value: 100 - back }));
+    // Strictly positive at every offset this file uses, including the 400-day case: a series
+    // whose base is negative is a different subject, tested deliberately at the end of this file
+    // rather than produced by accident here.
+    .map((back) => ({ time: asOf - back * DAY, value: 1_000 - back }));
   return { daily, intraday: [] };
 }
 
@@ -456,5 +459,35 @@ describe("the return is measured from the window's real base", () => {
       intraday: [],
     };
     expect(periodReturn(series, "1W", ASOF)).toBeNull();
+  });
+
+  /**
+   * The base-zero guard above was the whole protection until UEPI. It is not enough for a series
+   * that can go negative: a negative denominator returns a number, and the number has the wrong
+   * sign. These two cases are the ones a wholesale power series meets in ordinary weather.
+   */
+  it("returns null rather than inverting the sign on a negative base", () => {
+    const rising: DetailedSeries = {
+      daily: [
+        { time: ASOF - 7 * DAY, value: -10 },
+        { time: ASOF, value: -5 },
+      ],
+      intraday: [],
+    };
+    // The naive formula returns -50% for a series that rose by $5.
+    expect(periodReturn(rising, "1W", ASOF)).toBeNull();
+    expect(lowFrequencyPeriodReturn(rising.daily, "1W", ASOF)).toBeNull();
+  });
+
+  it("returns null rather than reporting a percentage across a zero crossing", () => {
+    const crossing: DetailedSeries = {
+      daily: [
+        { time: ASOF - 7 * DAY, value: 30 },
+        { time: ASOF, value: -5 },
+      ],
+      intraday: [],
+    };
+    expect(periodReturn(crossing, "1W", ASOF)).toBeNull();
+    expect(lowFrequencyPeriodReturn(crossing.daily, "1W", ASOF)).toBeNull();
   });
 });

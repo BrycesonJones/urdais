@@ -37,10 +37,14 @@ begin
      and not exists (select 1 from reference.planning_source_monitors m where m.source_interface_id = s.id);
   if n <> 0 then raise exception '% capacity interface(s) have no monitor', n; end if;
 
-  -- No source that needs an account was registered.
+  -- No *capacity* source that needs an account was registered. The scope is explicit because it
+  -- is now load-bearing: UEPI-1 registers PJM Data Miner as a wholesale price interface, blocked
+  -- on its data-use axis and never a capacity source. What this assertion has always been about is
+  -- that the capacity path depends on no account-gated feed, and that is what it still checks.
   select count(*) into n from reference.source_interfaces
-   where canonical_url ilike '%dataminer%' or slug ilike '%dataminer%' or name ilike '%data miner%';
-  if n <> 0 then raise exception 'a PJM Data Miner interface was registered'; end if;
+   where source_class = 'power_system_capacity_assessment'
+     and (canonical_url ilike '%dataminer%' or slug ilike '%dataminer%' or name ilike '%data miner%');
+  if n <> 0 then raise exception 'a PJM Data Miner interface was registered as a capacity source'; end if;
 end $$;
 
 -- A requirement may be stated as a proportion of forecast peak. A derived Urdais result may not:

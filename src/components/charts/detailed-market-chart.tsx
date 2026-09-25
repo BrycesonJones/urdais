@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { PointerEvent } from "react";
 
+import { resolvePlot, type PlotPoint } from "@/components/charts/plot-basis";
 import { useContainerSize } from "@/components/charts/use-container-size";
 import { useSvgId } from "@/components/charts/use-svg-id";
 import { formatAxisTime, formatAxisValue, formatCompact, formatPercent, formatTimestamp, formatValueWithUnit } from "@/lib/format";
@@ -86,11 +87,8 @@ const NARROW_CHART_WIDTH = 560;
 const X_LABEL_SPACING = 96;
 const Y_LABEL_SPACING = 64;
 
-/** A point with the value it is plotted at, which differs from `value` on a relative basis. */
-type PlotPoint = TimeSeriesPoint & { plotted: number };
-
 /** A comparison series with its plotted points and fixed colour. */
-type PlottedComparison = { series: ChartSeries; points: PlotPoint[]; color: string };
+type PlottedComparison = { series: ChartSeries; points: readonly PlotPoint[]; color: string };
 
 const NO_COMPARISONS: ChartSeries[] = [];
 
@@ -139,19 +137,29 @@ export function DetailedMarketChart({
     () => comparisons.filter((series) => series.points.length >= 2).slice(0, COMPARISON_COLORS.length),
     [comparisons],
   );
-  const relative = basis === "relative" && visibleComparisons.length > 0;
-  const axisUnit = relative ? "%" : primary.unit;
-
-  // Plotted values: raw, or percentage change from the window's first point.
-  const primaryPlot = useMemo(() => toPlotPoints(primary.points, relative), [primary.points, relative]);
+  // One decision produces the mode, the plotted values and the axis label together, so the axis
+  // can never say "%" over raw values. A rebase needs a strictly positive base in every series;
+  // where one is zero or negative the comparison is refused rather than redrawn in another unit.
+  const plot = useMemo(
+    () => resolvePlot({
+      requested: basis,
+      primaryUnit: primary.unit,
+      primary: primary.points,
+      comparisons: visibleComparisons.map((series) => series.points),
+    }),
+    [basis, primary.unit, primary.points, visibleComparisons],
+  );
+  const relative = plot.mode === "relative";
+  const axisUnit = plot.axisUnit;
+  const primaryPlot = plot.primary;
   const comparisonPlots = useMemo<PlottedComparison[]>(
     () =>
-      visibleComparisons.map((series, index) => ({
-        series,
-        points: toPlotPoints(series.points, relative),
+      plot.comparisons.map((points, index) => ({
+        series: visibleComparisons[index]!,
+        points,
         color: COMPARISON_COLORS[index]!,
       })),
-    [visibleComparisons, relative],
+    [plot, visibleComparisons],
   );
   // A single comparison earns a faint matrix field of its own.
   const fieldedComparison = comparisonPlots.length === 1 ? comparisonPlots[0]! : null;
@@ -201,14 +209,14 @@ export function DetailedMarketChart({
     const timeAt = (px: number) => tMin + ((px - plotLeft) / plotWidth) * (tMax - tMin);
     const valueAt = (py: number) => yMin + ((plotBottom - py) / plotHeight) * (yMax - yMin);
 
-    const toPath = (points: PlotPoint[]) =>
+    const toPath = (points: readonly PlotPoint[]) =>
       `M${points.map((point) => `${x(point.time).toFixed(1)},${y(point.plotted).toFixed(1)}`).join("L")}`;
-    const toArea = (points: PlotPoint[]) => {
+    const toArea = (points: readonly PlotPoint[]) => {
       const first = points[0]!;
       const last = points[points.length - 1]!;
       return `${toPath(points)}L${x(last.time).toFixed(1)},${plotBottom}L${x(first.time).toFixed(1)},${plotBottom}Z`;
     };
-    const top = (points: PlotPoint[]) => y(Math.max(...points.map((point) => point.plotted)));
+    const top = (points: readonly PlotPoint[]) => y(Math.max(...points.map((point) => point.plotted)));
 
     const xTickCount = Math.max(3, Math.floor(plotWidth / X_LABEL_SPACING));
     const xTicks = timeTicks(tMin, tMax, xTickCount, intraday).map((tick) => ({ ...tick, x: x(tick.time) }));
@@ -262,7 +270,9 @@ export function DetailedMarketChart({
     compact ? `${formatCompact(value)} ${unit}` : formatValueWithUnit(value, unit, fractionDigits);
 
   const description =
-    geometry && describeChart(primary, visibleComparisons, relative, intraday, geometry.vMin, geometry.vMax, formatPlotted, formatReading);
+    geometry && describeChart(
+      primary, plot.comparisonsVisible ? visibleComparisons : [], relative, intraday,
+      geometry.vMin, geometry.vMax, formatPlotted, formatReading);
 
   // Right-edge tags: the primary stays put and comparison tags are nudged
   // apart from it and each other so none overlap.
@@ -313,6 +323,12 @@ export function DetailedMarketChart({
             ))}
             <li className="text-neutral-500">{relative ? "% change over the selected range" : "comparison"}</li>
           </>
+        )}
+        {plot.suppression === "nonpositive_base" && (
+          <li className="text-neutral-500">
+            Comparison unavailable over this range: a series starts at zero or below, so a
+            percentage rebase would misstate its direction.
+          </li>
         )}
       </ul>
 
@@ -705,17 +721,8 @@ function TimeTag({ x, y, text }: { x: number; y: number; text: string }) {
   );
 }
 
-/** Raw values, or percentage change from the first point when rebasing. */
-function toPlotPoints(points: TimeSeriesPoint[], relative: boolean): PlotPoint[] {
-  const base = points[0]?.value ?? 0;
-  return points.map((point) => ({
-    ...point,
-    plotted: relative && base !== 0 ? (point.value / base - 1) * 100 : point.value,
-  }));
-}
-
 /** Index of the point whose time is closest to `time` in a chronological series. */
-function nearestIndex(points: TimeSeriesPoint[], time: number): number {
+function nearestIndex(points: readonly TimeSeriesPoint[], time: number): number {
   let low = 0;
   let high = points.length - 1;
   while (low < high) {

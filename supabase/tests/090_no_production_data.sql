@@ -87,16 +87,18 @@ begin
   -- seeds no metric result. FC-2 approves Flexible Capacity 1.0.0 on the narrowest footing of
   -- all: that migration creates no table whatsoever, so there is nothing it could seed. It
   -- registers a scenario contract and its parameters, and the calculation that will use them is
-  -- not built until FC-3.
+  -- not built until FC-3. UEPI-1 approves the UEPI specification 1.0.0 on that same footing: the
+  -- migration creates the price tables and seeds no price into them, and pipeline.uepi_daily_values
+  -- being empty on a bootstrapped database is asserted in 680.
   select count(*) into n from reference.methodology_versions mv
     join reference.methodologies m on m.id = mv.methodology_id
    where mv.status <> 'draft'
      and m.slug not in ('ubwi', 'ucpi-listed-gpu', 'utvi', 'model-frontier', 'open-weight-proprietary',
                         'map-facilities', 'deliverable-capacity', 'power-delivery-gap',
                         'interconnection-queue-analytics', 'transmission-headroom', 'umpi-kr-dram',
-                        'grid-buildout-velocity', 'flexible-capacity');
+                        'grid-buildout-velocity', 'flexible-capacity', 'uepi');
   if n <> 0 then
-    raise exception 'a non-draft methodology version exists outside UBWI, UCPI-LISTED-GPU, UTVI, Model Frontier, Open-weight vs Proprietary, Map Facilities, Deliverable Capacity, Power Delivery Gap, Interconnection Queue Analytics, Transmission Headroom, UMPI-KR DRAM, Grid Buildout Velocity and Flexible Capacity';
+    raise exception 'a non-draft methodology version exists outside UBWI, UCPI-LISTED-GPU, UTVI, Model Frontier, Open-weight vs Proprietary, Map Facilities, Deliverable Capacity, Power Delivery Gap, Interconnection Queue Analytics, Transmission Headroom, UMPI-KR DRAM, Grid Buildout Velocity, Flexible Capacity and UEPI';
   end if;
 
   -- And a bootstrapped database holds no facility, published or otherwise.

@@ -244,7 +244,12 @@ begin
   -- PD-3B added SPP and MISO, whose planning terms forbid commercial publication outright.
   -- PD-4E added their capacity sources on the same footing: two MISO releases and one SPP
   -- release, blocked for the same reasons and with no permission grant of any kind.
-  if n <> 23 then raise exception 'expected 23 blocked interfaces (settled prohibitions only), found %', n; end if;
+  -- UEPI-1 added three day-ahead price interfaces on the data-use axis: PJM Data Miner, whose
+  -- terms prohibit redistributing data derived from it without membership; MISO's market reports,
+  -- whose site terms forbid derivative works; and SPP's portal, which requires written officer
+  -- authorization for commercial publication. All three may still be retained and calculated from
+  -- internally, which is a different determination and is recorded separately.
+  if n <> 26 then raise exception 'expected 26 blocked interfaces (settled prohibitions only), found %', n; end if;
   select count(*) into n from reference.source_interfaces
    where terms_review_state = 'under_review' or data_use_terms_state = 'under_review';
   if n < 3 then raise exception 'expected at least 3 interfaces with an unresolved axis, found %', n; end if;
