@@ -171,7 +171,12 @@ declare
     'pipeline.buildout_job_runs',
     -- Flexible Capacity (FC-3): the analytical layer. The results table is append-only; the run
     -- table is a lifecycle and may be updated.
-    'pipeline.flexible_capacity_analytics_runs', 'pipeline.flexible_capacity_scenario_results'
+    'pipeline.flexible_capacity_analytics_runs', 'pipeline.flexible_capacity_scenario_results',
+    -- UEPI-1: the benchmark definitions and the three-layer price path, plus its run ledger.
+    -- Raw records are append-only; observations and released values supersede rather than update.
+    'reference.power_price_benchmarks',
+    'pipeline.raw_uepi_price_records', 'pipeline.uepi_price_observations',
+    'pipeline.uepi_daily_values', 'pipeline.uepi_ingestion_runs'
   ];
   n integer;
 begin

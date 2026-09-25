@@ -1,0 +1,172 @@
+{
+  "study": "UEPI phase 1 — canonical day-ahead benchmarks",
+  "research_date": "2026-09-24",
+  "national_composite": false,
+  "consistent_hourly_to_daily_method": true,
+  "consistent_price_construct": false,
+  "markets": [
+    {
+      "market": "ERCOT",
+      "benchmark_name": "UEPI-ERCOT",
+      "price_type": "Day-ahead settlement point price for the ERCOT Hub Average 345 kV Hub (HB_HUBAVG / ERCOT 345). Energy plus congestion via averaged hub shift factors. No separate marginal-loss component in the ERCOT LMP.",
+      "geographic_scope": "ERCOT-published hub defined from the North, South, Houston, and West 345 kV hubs. Panhandle and Lower Rio Grande Valley hubs are excluded.",
+      "official_source_name": "DAM Settlement Point Prices (EMIL NP4-190-CD, report type 12331)",
+      "official_source_url": "https://www.ercot.com/mp/data-products/data-product-details?id=NP4-190-CD",
+      "api_or_download_url": "https://api.ercot.com/api/public-reports/np4-190-cd/dam_stlmnt_pnt_prices",
+      "source_granularity": "Hourly settlement point price, hour-ending, one row per settlement point per hour",
+      "timezone": "Central Prevailing Time (hour ending). API metadata quoted by ERCOT includes a DSTFlag. Not re-queried with credentials in this pass.",
+      "daily_aggregation": "Arithmetic mean of published HB_HUBAVG prices for the operating day. Use the published series; do not recompute the mean of HB_NORTH, HB_SOUTH, HB_HOUSTON, and HB_WEST. Include every valid hour (23 or 25 when DST applies).",
+      "negative_prices_possible": true,
+      "historical_start": "2010-11-29 (EMIL first run). Public API activation date and whether every year back to 2010 is queryable were not confirmed.",
+      "rights_classification": "suitable with attribution",
+      "authentication_required": true,
+      "publication_lag": "Posted once per Day-Ahead Market run, for the next operating day. Exact clock time not verified.",
+      "confidence": "high",
+      "open_questions": [
+        "Confirm NP4-190-CD archive depth inside the authenticated Public API versus the seven-year historic-file rule.",
+        "Confirm DSTFlag behavior on a 23-hour and a 25-hour operating day.",
+        "Confirm whether corrected DAM prices replace the posted file in place."
+      ]
+    },
+    {
+      "market": "PJM",
+      "benchmark_name": "UEPI-PJM",
+      "price_type": "Day-ahead total LMP (energy + congestion + marginal loss) at the RTO aggregate pricing node",
+      "geographic_scope": "PJM RTO aggregate, pricing node id 1. Feed displays have shown both the names PJM-RTO and PJM for this id.",
+      "official_source_name": "Data Miner 2 Day-Ahead Hourly LMPs (da_hrl_lmps)",
+      "official_source_url": "https://dataminer2.pjm.com/feed/da_hrl_lmps/definition",
+      "api_or_download_url": "https://api.pjm.com/api/v1/da_hrl_lmps",
+      "source_granularity": "Hourly, hour-beginning",
+      "timezone": "datetime_beginning_ept (Eastern Prevailing Time) and datetime_beginning_utc",
+      "daily_aggregation": "Arithmetic mean of total_lmp_da for pnode_id 1 where row_is_current is true. Do not substitute system_energy_price_da.",
+      "negative_prices_possible": true,
+      "historical_start": "2000-06-01 (feed definition First Available). Retained indefinitely; archived after 731 days with stricter query rules.",
+      "rights_classification": "unsuitable without permission",
+      "authentication_required": true,
+      "publication_lag": "Daily between 12:00 p.m. and 1:30 p.m. Time zone of that window is not stated on the feed definition.",
+      "confidence": "high",
+      "open_questions": [
+        "Confirm in a PJM manual that pnode 1 total LMP is the load-distribution-weighted RTO price rather than a fixed-weight aggregate.",
+        "Resolve the PJM-RTO versus PJM display name for pnode id 1.",
+        "Execute Associate Membership or another redistribution licence before any public derived series.",
+        "File-verify a 23-hour and a 25-hour Eastern Prevailing Time day."
+      ]
+    },
+    {
+      "market": "CAISO",
+      "benchmark_name": "UEPI-CAISO",
+      "price_type": "Day-ahead Marginal Energy Cost (MCE / LMP_ENE_PRC). Uniform system energy component. Excludes congestion, losses, and the marginal greenhouse-gas component.",
+      "geographic_scope": "CAISO balancing authority area, at the distributed reference bus. Not NP15, SP15, or ZP26.",
+      "official_source_name": "OASIS Locational Marginal Prices, PRC_LMP, market_run_id DAM",
+      "official_source_url": "https://oasis.caiso.com/",
+      "api_or_download_url": "https://oasis.caiso.com/oasisapi/SingleZip?queryname=PRC_LMP&market_run_id=DAM&version=12&resultformat=6",
+      "source_granularity": "Hourly day-ahead interval, one row per node per component (LMP, MCC, MCE, MCL, MGHG)",
+      "timezone": "OPR_DT and OPR_HR in Pacific prevailing time, hour ending. INTERVALSTARTTIME_GMT / INTERVALENDTIME_GMT in UTC. API query window is GMT.",
+      "daily_aggregation": "Arithmetic mean of hourly MCE. Read MCE from one trading-hub row only after checking it matches the other CAISO trading hubs that hour. Do not average hub LMPs.",
+      "negative_prices_possible": true,
+      "historical_start": "OASIS online retention is the previous 39 months. Historical OASIS downloader reaches back to 2016 for expanded pricing files and requires an AWS requester-pays account. Nodal market began 2009-04-01; full pre-2016 availability of PRC_LMP was not confirmed.",
+      "rights_classification": "ambiguous / requires legal review",
+      "authentication_required": false,
+      "publication_lag": "Posted after the day-ahead market for the next trading day. Exact clock time not verified.",
+      "confidence": "medium",
+      "open_questions": [
+        "Decide whether the uniform marginal greenhouse-gas component (MGHG) belongs in the benchmark. It is part of LMP and was uniform across the three trading hubs on 2026-09-23, but the tariff sentence that makes MEC system-wide does not say the same about MGHG.",
+        "File-verify a Pacific DST 23-hour and 25-hour trading day.",
+        "Legal review of website Public Records Act language versus the API terms, which reserve ownership of CAISO Data."
+      ]
+    },
+    {
+      "market": "MISO",
+      "benchmark_name": "UEPI-MISO",
+      "price_type": "Day-ahead ex-post marginal energy component, derived as LMP minus MCC minus MLC. The 2026 daily file does not contain an MEC column. The residual was identical across sampled nodes.",
+      "geographic_scope": "MISO footprint system energy price. Not Indiana Hub and not a load-weighted MISO LMP.",
+      "official_source_name": "Day-Ahead Market ExPost LMPs",
+      "official_source_url": "https://www.misoenergy.org/markets-and-operations/real-time--market-data/market-reports/",
+      "api_or_download_url": "https://docs.misoenergy.org/marketreports/YYYYMMDD_da_expost_lmp.csv",
+      "source_granularity": "Hourly, wide file, HE 1 through HE 24, values LMP, MCC, and MLC",
+      "timezone": "Eastern Standard Time year-round. The file states hours-ending are EST. No 23- or 25-hour days.",
+      "daily_aggregation": "Arithmetic mean of the 24 hourly derived MEC values. Compute MEC from a single node. Do not average the eight trading hubs.",
+      "negative_prices_possible": true,
+      "historical_start": "UNKNOWN for this URL. Daily files verified for 2024-04-07 and several 2026 dates. 2013-04-01 returned 404. Day-ahead market began 2005-04-01.",
+      "rights_classification": "unsuitable without permission",
+      "authentication_required": false,
+      "publication_lag": "Posted after the day-ahead market. Exact clock time not verified. Settlement statements are later issued at days 7, 14, 55, and 105; whether the public CSV is replaced was not verified.",
+      "confidence": "medium",
+      "open_questions": [
+        "Confirm from the current BPM-005 that the public ex-post LMP, not the ex-ante LMP, is the DA_LMP_EN used to settle day-ahead asset energy.",
+        "Confirm how far back the daily CSV and the quarterly historical zips actually go.",
+        "Obtain written permission before publishing a derived series. Website terms prohibit derivative works."
+      ]
+    },
+    {
+      "market": "ISO-NE",
+      "benchmark_name": "UEPI-ISONE",
+      "price_type": "Final day-ahead Hub LMP (energy + congestion + loss). The Hub price is the arithmetic average of LMPs at the nodes that constitute the Hub.",
+      "geographic_scope": "ISO-NE Internal Hub, location id 4000 (.H.INTERNAL_HUB). A defined set of nodes, not a load zone and not all of New England.",
+      "official_source_name": "ISO-NE Web Services API v1.1 final day-ahead hourly LMPs",
+      "official_source_url": "https://www.iso-ne.com/participate/support/web-services-data",
+      "api_or_download_url": "https://webservices.iso-ne.com/api/v1.1/hourlylmp/da/final/day/{YYYYMMDD}/location/4000.json",
+      "source_granularity": "Hourly final day-ahead LMP",
+      "timezone": "Eastern Prevailing Time. BeginDate is an ISO-8601 timestamp in the derived schema. A transition-day file was not downloaded.",
+      "daily_aggregation": "Arithmetic mean of hourly Hub LmpTotal. The hourly value is already the ISO's node average; do not average load zones on top of it.",
+      "negative_prices_possible": true,
+      "historical_start": "ISO Express has described hourly reports as available for about the past seven years. That sentence was not re-read on an ISO Express page in this pass. Earlier history exists in retired or archived reports; the cutoff was not re-verified.",
+      "rights_classification": "ambiguous / requires legal review",
+      "authentication_required": true,
+      "publication_lag": "Day-ahead results are posted as final. Exact clock time not verified. Real-time prices have a separate preliminary and final path; day-ahead uses the final resource.",
+      "confidence": "high",
+      "open_questions": [
+        "Download one authenticated JSON document and confirm LmpTotal, EnergyComponent, CongestionComponent, and LossComponent against the live payload. Those names were taken from a derived OpenAPI that cites ns0.xsd.",
+        "File-verify 23-hour and 25-hour days.",
+        "Confirm how many years of /hourlylmp/da/final history the API actually returns.",
+        "Legal review of the copyright notice before publishing Hub prices or a derived daily mean."
+      ]
+    },
+    {
+      "market": "NYISO",
+      "benchmark_name": "UEPI-NYISO",
+      "price_type": "Day-ahead system marginal price at the Reference Bus, derived from zonal LBMP components. Not a zonal LBMP.",
+      "geographic_scope": "NYCA reference bus. The same value at every internal zone, within rounding. Not Zone J and not a statewide load-weighted LBMP.",
+      "official_source_name": "MIS report P-2A, Day-Ahead Market LBMP — Zonal",
+      "official_source_url": "http://mis.nyiso.com/public/P-2Alist.htm",
+      "api_or_download_url": "http://mis.nyiso.com/public/csv/damlbmp/YYYYMMDDdamlbmp_zone.csv",
+      "source_granularity": "Hourly hour-beginning zonal LBMP with loss and congestion components. Eleven internal zones plus four external proxy zones.",
+      "timezone": "Eastern Prevailing Time, hour beginning, formatted MM/DD/YYYY HH:MM. No DST flag column.",
+      "daily_aggregation": "For each hour, lambda = LBMP minus Marginal Cost Losses plus Marginal Cost Congestion, taken from one internal zone. Then the arithmetic mean of those hourly lambdas. On the fall-back day, keep both rows that share the 01:00 timestamp; do not key only on the timestamp string.",
+      "negative_prices_possible": true,
+      "historical_start": "1999-11-01 monthly zip is linked from the P-2A index. The 1999 file was not opened. Recent days are individual CSVs; older days are monthly zips.",
+      "rights_classification": "ambiguous / requires legal review",
+      "authentication_required": false,
+      "publication_lag": "The 25 Sep 2026 file was already listed on the index on 24 Sep 2026, so the next operating day is posted after the day-ahead market. Exact clock time not verified.",
+      "confidence": "medium",
+      "open_questions": [
+        "Re-test the lambda identity on the duplicated 01:00 hour using row order, not the timestamp string. Grouping by timestamp inflated the residual on 2025-11-02.",
+        "Confirm the published congestion sign against the current eTariff equation. The PDF glyphs for plus and minus did not survive text extraction.",
+        "Legal review. The legal notice grants no licence."
+      ]
+    },
+    {
+      "market": "SPP",
+      "benchmark_name": "UEPI-SPP",
+      "price_type": "Day-ahead Marginal Energy Component (MEC) for the SPP balancing authority. Published column. Excludes congestion and losses.",
+      "geographic_scope": "SPP Integrated Marketplace east BAA (BAA=SPP once that column exists). Not SPP North Hub, not SPP South Hub, and not the SWPW western BAA.",
+      "official_source_name": "Day-Ahead LMP By Settlement Location",
+      "official_source_url": "https://portal.spp.org/pages/da-lmp-by-settlement-location",
+      "api_or_download_url": "https://portal.spp.org/file-browser-api/download/da-lmp-by-settlement-location?path=/{YYYY}/{MM}/By_Day/DA-LMP-SL-{YYYYMMDD}0100.csv",
+      "source_granularity": "Hourly hour-ending settlement-location LMP with MLC, MCC, and MEC",
+      "timezone": "Interval is Central Prevailing Time hour-ending. GMTIntervalEnd is the unique UTC key. Fall-back repeats the local interval and is separated by GMTIntervalEnd.",
+      "daily_aggregation": "Arithmetic mean of hourly MEC for BAA=SPP. Before the BAA column existed, MEC on SPPNORTH_HUB matched the system MEC and can be used as the single row. Do not average SPPNORTH_HUB and SPPSOUTH_HUB LMPs. Mean the 23 or 25 hours actually published.",
+      "negative_prices_possible": true,
+      "historical_start": "Portal year folders are listed from 2013. Integrated Marketplace began 2014-03-01. A 2014-03-01 file at the post-2016 By_Day path returned 404. Exact archive layout before mid-2016 was not re-mapped.",
+      "rights_classification": "unsuitable without permission",
+      "authentication_required": false,
+      "publication_lag": "Updated each day after day-ahead results are posted. Exact clock time not verified. A RePrice folder exists for corrected files.",
+      "confidence": "medium",
+      "open_questions": [
+        "Retrieve the current Integrated Marketplace Protocols. The hub-weight formula was read in Revision 36 dated 24 Feb 2016.",
+        "Pin the date the BAA column and SWPW rows were added. Absent on 2026-03-08; present on 2026-04-12.",
+        "Written SPP authorization is required before commercial publication."
+      ]
+    }
+  ]
+}

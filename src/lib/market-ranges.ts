@@ -13,6 +13,7 @@
  * therefore draws the same chart all day, and a browser in any timezone draws the same one.
  */
 
+import { changeBetween, changeUnavailable, type MarketChange } from "@/lib/market-change";
 import { DETAIL_RANGES } from "@/types/market";
 import type { DetailRange, DetailedSeries, PeriodPerformance, TimeSeriesPoint } from "@/types/market";
 
@@ -199,15 +200,33 @@ function sameLineage(first: TimeSeriesPoint, last: TimeSeriesPoint): boolean {
   return first.lineage === last.lineage;
 }
 
-/** Percentage change from the window's base observation to the latest one. */
+/**
+ * Percentage change from the window's base observation to the latest one.
+ *
+ * Null wherever a percentage would not be economically meaningful, which is wider than "the base
+ * is zero": a negative base inverts the sign, so a series rising from -10 to -5 used to report
+ * -50% while it rose. The rule lives in one place, `changeBetween`, and it is the same rule for
+ * every series. Strictly positive series -- which is every Urdais series other than wholesale
+ * power -- are unaffected: their percentages are exactly what they were.
+ */
 export function periodReturn(series: DetailedSeries, range: DetailRange, asOf: number): number | null {
-  if (!isRangeAvailable(series, range, asOf)) return null;
+  const change = periodChange(series, range, asOf);
+  return change.kind === "percentage" ? change.percentage : null;
+}
+
+/**
+ * The full change over the window: a percentage where one is publishable, the absolute change and
+ * the reason the percentage was withheld where it is not, and an explicit `unavailable` -- which
+ * is a different statement again -- where the horizon has no base observation in reach.
+ */
+export function periodChange(series: DetailedSeries, range: DetailRange, asOf: number): MarketChange {
+  if (!isRangeAvailable(series, range, asOf)) return changeUnavailable("insufficient_history");
   const points = windowPoints(series, range, asOf);
   const first = points[0];
   const last = points[points.length - 1];
-  if (!first || !last || first.value === 0) return null;
-  if (!sameLineage(first, last)) return null;
-  return ((last.value - first.value) / first.value) * 100;
+  if (!first || !last) return changeUnavailable("no_base_observation");
+  if (!sameLineage(first, last)) return changeUnavailable("methodology_version_break");
+  return changeBetween(first.value, last.value, { baseTime: first.time, latestTime: last.time });
 }
 
 export function periodPerformance(series: DetailedSeries, asOf: number): PeriodPerformance[] {
@@ -276,21 +295,54 @@ export function lowFrequencyAvailableRanges(
 
 /**
  * Relative percentage return over the window, on the same convention as `periodReturn`:
- * `(last - first) / first * 100`. Null where the range is unavailable or the base is zero,
+ * `(last - first) / first * 100`. Null where the range is unavailable, where the endpoints measure
+ * different things, or where a percentage between these two values would not be meaningful --
  * never a fabricated 0 %.
+ *
+ * The base-zero guard this function used to carry was too narrow. It protected against an
+ * undefined denominator and let a *negative* base through, which returns a sign-inverted
+ * percentage: the series rises and the figure reads negative. No series published before UEPI can
+ * go non-positive, so closing it changes no published number; it closes the hole before the first
+ * series that can walks through it.
  */
 export function lowFrequencyPeriodReturn(
   points: readonly TimeSeriesPoint[],
   range: DetailRange,
   asOf: number,
 ): number | null {
-  if (!isLowFrequencyRangeAvailable(points, range, asOf)) return null;
+  const change = lowFrequencyPeriodChange(points, range, asOf);
+  return change.kind === "percentage" ? change.percentage : null;
+}
+
+/**
+ * The full change over the window for a low-frequency series.
+ *
+ * This is the shape a signed series needs, and the one a wholesale-power surface reads: a
+ * percentage where both endpoints are strictly positive, otherwise the change in the series' own
+ * unit together with the reason the percentage was withheld, and `unavailable` where no comparison
+ * exists at all. The endpoint timestamps travel with it, so a surface can state the date a
+ * "1 month" comparison actually measured from rather than leaving the label to imply it.
+ */
+export function lowFrequencyPeriodChange(
+  points: readonly TimeSeriesPoint[],
+  range: DetailRange,
+  asOf: number,
+): MarketChange {
+  if (!isLowFrequencyRangeAvailable(points, range, asOf)) return changeUnavailable("insufficient_history");
   const window = lowFrequencyWindowPoints(points, range, asOf);
   const first = window[0];
   const last = window[window.length - 1];
-  if (!first || !last || first.value === 0) return null;
-  if (!sameLineage(first, last)) return null;
-  return ((last.value - first.value) / first.value) * 100;
+  if (!first || !last) return changeUnavailable("no_base_observation");
+  if (!sameLineage(first, last)) return changeUnavailable("methodology_version_break");
+  return changeBetween(first.value, last.value, { baseTime: first.time, latestTime: last.time });
+}
+
+/** Every horizon's full change, in display order. The signed-series counterpart of the returns list. */
+export function lowFrequencyPeriodChanges(
+  points: readonly TimeSeriesPoint[],
+  asOf: number,
+): { range: DetailRange; change: MarketChange }[] {
+  return DETAIL_RANGES.map((range) => ({ range, change: lowFrequencyPeriodChange(points, range, asOf) }));
 }
 
 export function lowFrequencyPeriodPerformance(
