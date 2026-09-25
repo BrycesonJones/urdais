@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { benchmarkFor } from "@/lib/uepi/benchmarks";
+import { compareDecimal } from "@/lib/uepi/decimal";
 import { calculateDailyValue } from "@/lib/uepi/calculate";
 import { normalizeOperatingDay } from "@/lib/uepi/normalize";
 import { operatingDayWindow } from "@/lib/uepi/operating-day";
@@ -80,15 +81,16 @@ describe("2. the cross-check the specification requires", () => {
       expect(crossChecks, entry.seriesId).toHaveLength(1);
       const check = crossChecks[0]!;
       expect(check.check).toBe("system_component_uniformity");
-      expect(check.maxAbsoluteSpread, entry.seriesId).toBeLessThanOrEqual(check.tolerance);
+      expect(compareDecimal(check.maxAbsoluteSpread, check.tolerance), entry.seriesId)
+        .toBeLessThanOrEqual(0);
     }
   });
 
   it("holds CAISO and MISO to exact agreement and NYISO only to a cent", () => {
-    expect(run(DAYS[0]).crossChecks[0]!.tolerance).toBe(0.0001);
-    expect(run(DAYS[0]).crossChecks[0]!.maxAbsoluteSpread).toBe(0);
-    expect(run(DAYS[1]).crossChecks[0]!.maxAbsoluteSpread).toBe(0);
-    expect(run(DAYS[2]).crossChecks[0]!.tolerance).toBe(0.02);
+    expect(run(DAYS[0]).crossChecks[0]!.tolerance).toBe("0.0001");
+    expect(run(DAYS[0]).crossChecks[0]!.maxAbsoluteSpread).toBe("0");
+    expect(run(DAYS[1]).crossChecks[0]!.maxAbsoluteSpread).toBe("0");
+    expect(run(DAYS[2]).crossChecks[0]!.tolerance).toBe("0.02");
   });
 });
 

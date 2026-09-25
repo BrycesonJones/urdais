@@ -143,6 +143,15 @@ export async function tokenSqlExecutor(url: string): Promise<TokenSqlExecutor> {
  */
 export async function createTokenSqlExecutor(url: string): Promise<TokenSqlExecutor & { end: () => Promise<void> }> {
   const client = new pg.Client({ connectionString: url });
+  // The same hazard the pool above guards against, on the path that had no guard. A connection
+  // error arrives on the client, not on the query in flight: a pooler culling an idle session
+  // during a long source fetch emits `error`, and `pg` treats an unhandled one as an uncaught
+  // exception, which ends the process. That killed nine batches of a UEPI production backfill
+  // mid-run, each time after the data had already been fetched. Handled, the next query rejects
+  // and the caller can reconnect and retry one operating day instead of losing a month of them.
+  client.on("error", (error) => {
+    console.error(`db: client connection error (${describeDatabaseError(error)})`);
+  });
   await client.connect();
   return {
     async query(text: string, params: readonly unknown[]) {

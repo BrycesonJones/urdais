@@ -17,7 +17,7 @@
  */
 
 import { calculateDailyValue, orderHours, type DailyCalculation } from "@/lib/uepi/calculate";
-import { decimalToNumber } from "@/lib/uepi/decimal";
+import { compareDecimal, decimalToNumber } from "@/lib/uepi/decimal";
 import { PLAUSIBILITY_GUARD_USD_PER_MWH } from "@/lib/uepi/methodology";
 import {
   dstEvidenceSufficient, expectedIntervalStarts, type OperatingDayWindow,
@@ -73,13 +73,20 @@ export type ReleaseDecision =
       readonly publication: UepiPublicationDecision | null;
     };
 
-/** A cross-check the specification requires for a market, measured by the adapter layer. */
+/**
+ * A cross-check the specification requires for a market, measured by the adapter layer.
+ *
+ * Both quantities are decimal strings rather than numbers, and that is the whole point: this
+ * comparison decides whether a real operating day is released, and in binary floating point
+ * 35.67 - 35.65 exceeds a one-cent tolerance. Two production days were withheld on exactly that
+ * arithmetic before the type changed.
+ */
 export type CrossCheck = {
   readonly check: string;
-  /** The largest absolute disagreement observed across the day, in $/MWh. */
-  readonly maxAbsoluteSpread: number;
-  /** The tolerance the specification sets for this market's check. */
-  readonly tolerance: number;
+  /** The largest absolute disagreement observed across the day, in $/MWh, as an exact decimal. */
+  readonly maxAbsoluteSpread: string;
+  /** The tolerance the specification sets for this market's check, as an exact decimal. */
+  readonly tolerance: string;
   readonly detail: string;
 };
 
@@ -216,8 +223,10 @@ export function evaluateRelease(input: ReleaseInput): ReleaseDecision {
   }
 
   for (const crossCheck of input.crossChecks ?? []) {
-    const passed = crossCheck.maxAbsoluteSpread <= crossCheck.tolerance;
-    checks.push(check(crossCheck.check, passed, crossCheck.maxAbsoluteSpread, crossCheck.detail));
+    // At the tolerance is within it: the specification's figures are the rounding the publishers
+    // themselves apply, so a spread of exactly one cent is the expected case and not a failure.
+    const passed = compareDecimal(crossCheck.maxAbsoluteSpread, crossCheck.tolerance) <= 0;
+    checks.push(check(crossCheck.check, passed, decimalToNumber(crossCheck.maxAbsoluteSpread), crossCheck.detail));
     if (!passed) {
       return refuse("quality_check_failed",
         `${crossCheck.check} measured ${crossCheck.maxAbsoluteSpread} against a tolerance of ${crossCheck.tolerance}`);
