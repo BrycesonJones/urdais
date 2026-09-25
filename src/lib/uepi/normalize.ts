@@ -10,7 +10,7 @@
  * row that cannot be placed on the operating day fails the day rather than being nudged onto it.
  */
 
-import { decimalToNumber } from "@/lib/uepi/decimal";
+import { absoluteDifferenceDecimal, compareDecimal, decimalToNumber } from "@/lib/uepi/decimal";
 import { PLAUSIBILITY_GUARD_USD_PER_MWH } from "@/lib/uepi/methodology";
 import { expectedIntervalStarts, type OperatingDayWindow } from "@/lib/uepi/operating-day";
 import type { AdapterParseResult, AdapterRecord } from "@/lib/uepi/source/types";
@@ -25,11 +25,11 @@ import type { NormalizedHourlyPrice, UepiBenchmark } from "@/lib/uepi/types";
  * MCE and MISO's residual agreed exactly on every artifact examined, SPP's MEC to four decimal
  * places, and NYISO's derived lambda only to a cent because its components are published rounded.
  */
-const UNIFORMITY_TOLERANCE: Readonly<Record<string, number>> = {
-  "uepi-caiso": 0.0001,
-  "uepi-miso": 0.0001,
-  "uepi-nyiso": 0.02,
-  "uepi-spp": 0.001,
+const UNIFORMITY_TOLERANCE: Readonly<Record<string, string>> = {
+  "uepi-caiso": "0.0001",
+  "uepi-miso": "0.0001",
+  "uepi-nyiso": "0.02",
+  "uepi-spp": "0.001",
 };
 
 export type NormalizationResult = {
@@ -113,14 +113,18 @@ export function normalizeOperatingDay(
   const crossChecks: CrossCheck[] = [];
   const tolerance = UNIFORMITY_TOLERANCE[benchmark.seriesId];
   if (tolerance !== undefined && parsed.crossCheckRecords.length > 0) {
-    const byInstant = new Map(hours.map((hour) => [hour.intervalStartUtc, decimalToNumber(hour.priceUsdPerMwh)]));
-    let maxSpread = 0;
+    const byInstant = new Map(hours.map((hour) => [hour.intervalStartUtc, hour.priceUsdPerMwh]));
+    // Exact decimal throughout: the carrier and the cross-check are both decimal strings as the
+    // publisher printed them, and converting them to floats to subtract is what turned a
+    // one-cent rounding difference into a refusal to publish.
+    let maxSpread = "0";
     let compared = 0;
     for (const record of parsed.crossCheckRecords) {
       const carrier = byInstant.get(record.intervalStartUtc);
       if (carrier === undefined) continue;
       compared += 1;
-      maxSpread = Math.max(maxSpread, Math.abs(carrier - decimalToNumber(record.benchmarkPrice)));
+      const spread = absoluteDifferenceDecimal(carrier, record.benchmarkPrice);
+      if (compareDecimal(spread, maxSpread) > 0) maxSpread = spread;
     }
     crossChecks.push({
       check: "system_component_uniformity",

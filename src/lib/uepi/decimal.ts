@@ -93,6 +93,30 @@ export function sumDecimal(terms: readonly { readonly value: string; readonly si
   return formatDecimal({ units, scale });
 }
 
+/**
+ * Compare two decimal strings exactly: -1, 0 or 1.
+ *
+ * Needed because a tolerance check on wholesale prices decides whether a real day is published,
+ * and in binary floating point 35.67 - 35.65 is 0.020000000000003126, which is greater than the
+ * one-cent tolerance NYISO's rounded components are allowed. Two production days were withheld
+ * for exactly that reason -- arithmetic, not evidence. Scaled-integer comparison gives the same
+ * answer on every machine.
+ */
+export function compareDecimal(left: string, right: string): -1 | 0 | 1 {
+  const a = parseDecimal(left);
+  const b = parseDecimal(right);
+  const scale = Math.max(a.scale, b.scale);
+  const x = rescale(a, scale);
+  const y = rescale(b, scale);
+  return x < y ? -1 : x > y ? 1 : 0;
+}
+
+/** The absolute difference of two decimal strings, exactly. */
+export function absoluteDifferenceDecimal(left: string, right: string): string {
+  const difference = sumDecimal([{ value: left, sign: 1 }, { value: right, sign: -1 }]);
+  return difference.startsWith("-") ? difference.slice(1) : difference;
+}
+
 /** A decimal string as a `number`, for display and for comparisons that are not the published value. */
 export function decimalToNumber(value: string): number {
   const parsed = Number(value);

@@ -19,7 +19,7 @@ import { evaluateRelease, type ReleaseBlockReason } from "@/lib/uepi/release";
 import { retrieveArtifacts, type RetrieveOptions } from "@/lib/uepi/source/retrieve";
 import { adapterFor } from "@/lib/uepi/source/registry";
 import { UepiSourceError, type SourceFailureReason } from "@/lib/uepi/source/types";
-import { storeOperatingDay, type SqlExecutor } from "@/lib/uepi/store";
+import { isConnectionFailure, storeOperatingDay, type SqlExecutor } from "@/lib/uepi/store";
 import type { ReleaseKind, UepiSeriesId } from "@/lib/uepi/types";
 
 export type DayOutcome = {
@@ -64,6 +64,16 @@ export type BackfillOptions = {
   pauseMs?: number;
   /** Required unless `dryRun`. */
   sql?: SqlExecutor;
+  /**
+   * How to obtain a fresh connection after the current one dies.
+   *
+   * A thirteen-month backfill holds one client for hours while it waits on slow sources, and a
+   * pooler will eventually cull it. Without this the run loses everything after the drop; with it,
+   * the cost of a dropped connection is one day retried.
+   */
+  reconnect?: () => Promise<SqlExecutor>;
+  /** How many times one day's persistence may be retried after a connection failure. */
+  persistenceAttempts?: number;
   releaseKind?: ReleaseKind;
   retrieve?: RetrieveOptions;
   now?: () => Date;
@@ -100,6 +110,33 @@ export async function backfill(options: BackfillOptions): Promise<BackfillResult
   const sleep = options.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
   const pauseMs = options.pauseMs ?? 1_000;
   const releaseKind: ReleaseKind = options.releaseKind ?? "backfill";
+  const persistenceAttempts = options.persistenceAttempts ?? 3;
+  // Reassigned when a connection dies and a fresh one replaces it.
+  let sql = options.sql;
+
+  /**
+   * Persist one day, surviving a dropped connection.
+   *
+   * Safe to retry because the store is one transaction: a connection that dies mid-write leaves
+   * nothing behind, and the content-keyed identity means a day that *did* commit before the drop
+   * is recognised on the retry and written again as nothing. Only connection failures are retried.
+   */
+  const persist = async (input: Parameters<typeof storeOperatingDay>[1]) => {
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= persistenceAttempts; attempt += 1) {
+      if (sql === undefined) throw new Error("a writing backfill needs a database");
+      try {
+        return await storeOperatingDay(sql, input);
+      } catch (error) {
+        lastError = error;
+        if (!isConnectionFailure(error) || attempt === persistenceAttempts) throw error;
+        if (options.reconnect === undefined) throw error;
+        await sleep(1_000 * 2 ** (attempt - 1));
+        sql = await options.reconnect();
+      }
+    }
+    throw lastError;
+  };
 
   if (!dryRun && options.sql === undefined) {
     throw new Error("a writing backfill needs a database; pass sql, or run with dryRun");
@@ -120,7 +157,7 @@ export async function backfill(options: BackfillOptions): Promise<BackfillResult
     try {
       // Resume: a day already released is not re-fetched. `--force` is deliberately absent; a
       // deliberate re-ingestion is a narrower range, not a flag that re-reads a year.
-      if (!dryRun && options.sql !== undefined && await alreadyReleased(options.sql, seriesId, operatingDate)) {
+      if (!dryRun && sql !== undefined && await alreadyReleased(sql, seriesId, operatingDate)) {
         outcome = {
           operatingDate, status: "skipped", valueUsdPerMwh: null, observationCount: null,
           expectedObservationCount: window.expectedIntervalCount,
@@ -155,8 +192,8 @@ export async function backfill(options: BackfillOptions): Promise<BackfillResult
       } else {
         const calculation = decision.calculation;
         let wrote: DayOutcome["wrote"] = null;
-        if (!dryRun && options.sql !== undefined) {
-          const stored = await storeOperatingDay(options.sql, {
+        if (!dryRun && sql !== undefined) {
+          const stored = await persist({
             adapter, benchmark, operatingDate,
             artifacts: [...artifacts.values()],
             parsed, hours, calculation, qualityChecks: decision.checks,

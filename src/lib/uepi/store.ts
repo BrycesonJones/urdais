@@ -30,6 +30,24 @@ export type SqlExecutor = {
   query: (text: string, params: readonly unknown[]) => Promise<{ rows: Record<string, unknown>[] }>;
 };
 
+/**
+ * Whether a failure is the connection dropping rather than the write being wrong.
+ *
+ * The distinction decides whether retrying is sensible or dishonest. A pooler culling an idle
+ * session, a backend restarting, a socket reset: the same write will very likely succeed a moment
+ * later. A constraint violation, a missing benchmark, a draft specification: retrying only repeats
+ * the same refusal, and hiding it behind three attempts would turn a clear error into a slow one.
+ *
+ * Postgres class 08 is connection exception; 57P01 is the server telling us it is going away.
+ */
+export function isConnectionFailure(error: unknown): boolean {
+  const code = (error as { code?: unknown } | null)?.code;
+  if (typeof code === "string" && (code.startsWith("08") || code === "57P01")) return true;
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return /connection terminated|connection closed|socket hang up|ECONNRESET|EPIPE|ETIMEDOUT|server closed the connection|Client has encountered a connection error|terminating connection/i
+    .test(message);
+}
+
 export type StoreOutcome = {
   retrievalId: string;
   retrievalWasNew: boolean;

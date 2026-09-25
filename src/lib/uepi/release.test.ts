@@ -148,8 +148,8 @@ describe("2. every refusal names itself", () => {
     const decision = evaluateRelease(baseInput({
       crossChecks: [{
         check: "system_component_uniformity",
-        maxAbsoluteSpread: 0.35,
-        tolerance: 0.02,
+        maxAbsoluteSpread: "0.35",
+        tolerance: "0.02",
         detail: "lambda at a second internal zone",
       }],
     }));

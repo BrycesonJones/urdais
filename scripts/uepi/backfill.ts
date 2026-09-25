@@ -54,6 +54,7 @@ async function main(): Promise<void> {
   const asJson = process.argv.includes("--json");
 
   let sql: Awaited<ReturnType<typeof createTokenSqlExecutor>> | undefined;
+  let reconnect: (() => Promise<typeof sql>) | undefined;
   if (write) {
     const url = resolveTokenDatabaseUrl(process.env, { allowLocalDefault: true });
     if (!url) throw new Error("--write needs a database URL, and none is configured");
@@ -71,11 +72,19 @@ async function main(): Promise<void> {
     }
     process.stderr.write(`writing to host '${target.host}', database '${target.database}'\n`);
     sql = await createTokenSqlExecutor(url);
+    // Handed to the backfill so a culled connection costs one day rather than the rest of the run.
+    reconnect = async () => {
+      process.stderr.write("reconnecting to the database after a connection failure\n");
+      await sql?.end().catch(() => {});
+      sql = await createTokenSqlExecutor(url);
+      return sql;
+    };
   }
 
   try {
     const result = await backfill({
       seriesId, from, to, dryRun: !write, limit, pauseMs, sql,
+      ...(reconnect === undefined ? {} : { reconnect: reconnect as () => Promise<NonNullable<typeof sql>> }),
       onDay: asJson ? undefined : (day: DayOutcome) => {
         const value = day.valueUsdPerMwh === null ? "" : ` ${day.valueUsdPerMwh} $/MWh`;
         const hours = day.observationCount === null ? "" : ` (${day.observationCount}/${day.expectedObservationCount}h)`;
