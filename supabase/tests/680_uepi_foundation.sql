@@ -56,13 +56,21 @@ begin
    where slug = 'uepi-miso' and operating_timezone = 'Etc/GMT+5' and observes_dst = false;
   if n <> 1 then raise exception 'MISO must be a fixed Eastern Standard offset that does not observe DST'; end if;
 
-  -- Three publishable, three internal-only, one not built. This is the release of UEPI V1.
+  -- Three publishable and four internal-only. ISO-NE joined the internal set when its payload was
+  -- first observed (20261022100000): that migration recorded evidence, not a right, and the series
+  -- is still refused by the publication gate.
   select count(*) into n from reference.power_price_benchmarks where publication_posture = 'publishable';
   if n <> 3 then raise exception 'expected three publishable series, found %', n; end if;
   select count(*) into n from reference.power_price_benchmarks where publication_posture = 'internal_only';
-  if n <> 3 then raise exception 'expected three internal-only series, found %', n; end if;
+  if n <> 4 then raise exception 'expected four internal-only series, found %', n; end if;
   select count(*) into n from reference.power_price_benchmarks where publication_posture = 'not_built';
-  if n <> 1 then raise exception 'expected one not-built series, found %', n; end if;
+  if n <> 0 then raise exception 'expected no not-built series, found %', n; end if;
+
+  -- The three markets whose terms forbid a derived publication, plus ISO-NE whose legal review has
+  -- not run, must all be internal. A market may not become publishable by being readable.
+  select count(*) into n from reference.power_price_benchmarks
+   where slug in ('uepi-pjm', 'uepi-miso', 'uepi-spp', 'uepi-iso-ne') and publication_posture <> 'internal_only';
+  if n <> 0 then raise exception '% market(s) that must stay internal are not', n; end if;
 
   -- ------------------------------------------------------------ rights determinations
   -- Every source has both a retention and a public-display determination, and the three sources
@@ -210,17 +218,30 @@ begin
   exception when check_violation then null;
   end;
 
-  -- A series with no verified source payload cannot have a value, whatever its terms say.
+  -- ISO-NE may now hold a value, because its payload has been observed. It still may not be
+  -- displayed, which is a different gate and lives in the read path.
   select id into isone from reference.power_price_benchmarks where slug = 'uepi-iso-ne';
+  insert into pipeline.uepi_daily_values
+    (benchmark_id, operating_date, value_usd_per_mwh, observation_count, expected_observation_count,
+     hour_span_start, hour_span_end, input_digest, price_construct, methodology_version_id,
+     specification_digest, released_at, release_kind)
+  values (isone, date '2026-09-23', 33.567500, 24, 24,
+          timestamptz '2026-09-23T04:00:00Z', timestamptz '2026-09-24T04:00:00Z',
+          repeat('c', 64), 'delivered_price', version_id, digest, now(), 'scheduled');
+
+  -- The not-built refusal itself must keep working, so it is exercised against a benchmark put
+  -- into that state rather than against whichever market happens to be there.
+  update reference.power_price_benchmarks set publication_posture = 'not_built',
+         hour_convention = 'unresolved' where id = isone;
   begin
     insert into pipeline.uepi_daily_values
       (benchmark_id, operating_date, value_usd_per_mwh, observation_count, expected_observation_count,
        hour_span_start, hour_span_end, input_digest, price_construct, methodology_version_id,
        specification_digest, released_at, release_kind)
-    values (isone, date '2026-09-23', 40.0, 24, 24,
-            timestamptz '2026-09-23T04:00:00Z', timestamptz '2026-09-24T04:00:00Z',
-            repeat('c', 64), 'delivered_price', version_id, digest, now(), 'scheduled');
-    raise exception 'ISO-NE released a value although no payload has ever been observed';
+    values (isone, date '2026-09-24', 40.0, 24, 24,
+            timestamptz '2026-09-24T04:00:00Z', timestamptz '2026-09-25T04:00:00Z',
+            repeat('d', 64), 'delivered_price', version_id, digest, now(), 'scheduled');
+    raise exception 'a not-built series released a value';
   exception when check_violation then null;
   end;
 

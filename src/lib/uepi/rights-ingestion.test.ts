@@ -92,8 +92,8 @@ describe("2. the publishable markets keep the posture the specification gave the
     // Nothing in this phase writes to the rights tables, and nothing may infer a right from the
     // fact that a file downloaded successfully.
     const expected: Record<string, string> = {
-      "uepi-caiso": "publishable", "uepi-nyiso": "publishable",
-      "uepi-miso": "internal_only", "uepi-spp": "internal_only",
+      "uepi-ercot": "publishable", "uepi-caiso": "publishable", "uepi-nyiso": "publishable",
+      "uepi-miso": "internal_only", "uepi-spp": "internal_only", "uepi-iso-ne": "internal_only",
     };
     for (const seriesId of IMPLEMENTED_SERIES_IDS) {
       expect(benchmarkFor(seriesId).publicationPosture, seriesId).toBe(expected[seriesId]);

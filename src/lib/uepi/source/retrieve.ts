@@ -10,8 +10,12 @@
  * Bytes rather than text, because two of the four implemented sources ship a ZIP.
  */
 
+import { UepiCredentialError, redactUrl } from "@/lib/uepi/source/auth/credentials";
 import { artifactDigest } from "@/lib/uepi/source/artifact";
-import { UepiSourceError, type ArtifactRequest, type RetrievedArtifact } from "@/lib/uepi/source/types";
+import {
+  UepiSourceError,
+  type ArtifactRequest, type RetrievedArtifact, type SourceAuthorization,
+} from "@/lib/uepi/source/types";
 
 /** Identifies Urdais to the publisher. A market operator should be able to see who is calling. */
 export const UEPI_USER_AGENT = "Urdais/1.0 (market data research; +https://urdais.com)";
@@ -19,6 +23,8 @@ export const UEPI_USER_AGENT = "Urdais/1.0 (market data research; +https://urdai
 export type RetrieveOptions = {
   timeoutMs?: number;
   attempts?: number;
+  /** Credentials for an authenticated source. Their values never leave the request. */
+  authorization?: SourceAuthorization;
   /** Injected in tests; defaults to global fetch. */
   fetcher?: (url: string, init: { signal: AbortSignal; headers: Record<string, string> }) => Promise<Response>;
   /** Injected in tests so backoff does not actually wait. */
@@ -48,30 +54,46 @@ export async function retrieveArtifact(
   const fetcher = options.fetcher ?? ((url, init) => fetch(url, init as RequestInit));
   const sleep = options.sleep ?? defaultSleep;
   const now = options.now ?? (() => new Date());
+  // Every message that can reach an error or a log is built from this, never from the raw URL:
+  // an authenticated source's request may carry credentials a caller put in the query string.
+  const safeUrl = redactUrl(request.url);
+  let reauthenticated = false;
 
   let lastDetail = "no attempt was made";
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
+      const authHeaders = options.authorization === undefined
+        ? {}
+        : await options.authorization.headers();
       const response = await fetcher(request.url, {
         signal: controller.signal,
-        headers: { "user-agent": UEPI_USER_AGENT, accept: "*/*" },
+        headers: { "user-agent": UEPI_USER_AGENT, accept: "*/*", ...authHeaders },
       });
       if (response.status === 404 && request.optional === true) return null;
       if (response.status === 401 || response.status === 403) {
+        // One re-authentication, and only one. A token the issuer still considers live can be
+        // refused by the API; a credential that is simply wrong will be refused again, and
+        // hammering an authentication endpoint with it is how an account gets locked.
+        if (options.authorization !== undefined && !reauthenticated) {
+          reauthenticated = true;
+          options.authorization.invalidate();
+          lastDetail = `${safeUrl} returned HTTP ${response.status}; re-authenticating once`;
+          continue;
+        }
         throw new UepiSourceError(seriesId, "AUTHENTICATION_REQUIRED",
-          `${request.url} returned HTTP ${response.status}; this source needs a credential Urdais does not hold`);
+          `${safeUrl} returned HTTP ${response.status}: authentication failed`);
       }
       if (!response.ok) {
-        lastDetail = `${request.url} returned HTTP ${response.status}`;
+        lastDetail = `${safeUrl} returned HTTP ${response.status}`;
         if (!isRetryableStatus(response.status)) {
           throw new UepiSourceError(seriesId, "SOURCE_UNAVAILABLE", lastDetail);
         }
       } else {
         const body = Buffer.from(await response.arrayBuffer());
         if (body.byteLength === 0) {
-          throw new UepiSourceError(seriesId, "EMPTY_SOURCE", `${request.url} returned no bytes`);
+          throw new UepiSourceError(seriesId, "EMPTY_SOURCE", `${safeUrl} returned no bytes`);
         }
         return {
           label: request.label,
@@ -86,10 +108,15 @@ export async function retrieveArtifact(
       }
     } catch (error) {
       if (error instanceof UepiSourceError) throw error;
+      if (error instanceof UepiCredentialError) {
+        // An absent or rejected credential is not a flaky network. Reporting it as one sends an
+        // operator to look at the publisher's status page for a problem that is in .env.
+        throw new UepiSourceError(seriesId, "AUTHENTICATION_REQUIRED", error.message);
+      }
       const aborted = error instanceof Error && error.name === "AbortError";
       lastDetail = aborted
-        ? `${request.url} timed out after ${timeoutMs}ms`
-        : `${request.url} could not be reached`;
+        ? `${safeUrl} timed out after ${timeoutMs}ms`
+        : `${safeUrl} could not be reached`;
     } finally {
       clearTimeout(timer);
     }

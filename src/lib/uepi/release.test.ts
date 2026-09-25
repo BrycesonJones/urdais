@@ -167,6 +167,20 @@ describe("2. every refusal names itself", () => {
   });
 
   it("refuses a transition day for a market whose transition behaviour was never observed", () => {
+    // PJM is the one market left in that state: no adapter, so no transition file has been parsed.
+    const pjm = UEPI_BENCHMARKS["uepi-pjm"];
+    const window = operatingDayWindow(pjm, "2026-03-08");
+    const decision = evaluateRelease(baseInput({
+      benchmark: pjm,
+      window,
+      hours: completeDay(pjm, window, () => "36.40"),
+      now: new Date("2026-03-09T10:15:00Z"),
+    }));
+    expect(decision.released).toBe(false);
+    if (!decision.released) expect(decision.reason).toBe("unverified_dst_transition");
+  });
+
+  it("releases the same transition day for a market whose file was parsed", () => {
     const ercot = UEPI_BENCHMARKS["uepi-ercot"];
     const window = operatingDayWindow(ercot, "2026-03-08");
     const decision = evaluateRelease(baseInput({
@@ -175,8 +189,8 @@ describe("2. every refusal names itself", () => {
       hours: completeDay(ercot, window, () => "36.40"),
       now: new Date("2026-03-09T10:15:00Z"),
     }));
-    expect(decision.released).toBe(false);
-    if (!decision.released) expect(decision.reason).toBe("unverified_dst_transition");
+    expect(decision.released).toBe(true);
+    if (decision.released) expect(decision.calculation.observationCount).toBe(23);
   });
 
   it("refuses when the registry does not hold the specification as approved", () => {
@@ -186,10 +200,13 @@ describe("2. every refusal names itself", () => {
   });
 
   it("refuses any release at all for a series nobody may build", () => {
-    const isone = UEPI_BENCHMARKS["uepi-iso-ne"];
-    const window = operatingDayWindow(isone, "2026-09-23");
+    // No market is in that state now that ISO-NE's payload has been observed, so the gate is
+    // exercised against a benchmark constructed in that state. It is the one refusal that must
+    // keep working whether or not a market currently needs it.
+    const unbuilt = { ...UEPI_BENCHMARKS["uepi-iso-ne"], publicationPosture: "not_built" as const };
+    const window = operatingDayWindow(unbuilt, "2026-09-23");
     const decision = evaluateRelease(baseInput({
-      benchmark: isone, window, hours: completeDay(isone, window, () => "52.30"),
+      benchmark: unbuilt, window, hours: completeDay(unbuilt, window, () => "52.30"),
     }));
     expect(decision.released).toBe(false);
     if (!decision.released) expect(decision.reason).toBe("series_not_built");

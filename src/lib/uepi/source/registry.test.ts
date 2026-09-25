@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 
 import { SOURCE_FIXTURES } from "@/lib/uepi/source/fixtures/manifest";
+import { PUBLISHABLE_SERIES_IDS, benchmarkFor } from "@/lib/uepi/benchmarks";
 import {
   IMPLEMENTED_SERIES_IDS, UEPI_ADAPTERS, UNIMPLEMENTED_SERIES_IDS, adapterFor, isAvailable,
   unavailableReason,
@@ -10,10 +11,11 @@ import {
 import { UepiSourceError } from "@/lib/uepi/source/types";
 import { UEPI_SERIES_IDS } from "@/lib/uepi/types";
 
-describe("1. four markets are implemented and three are not", () => {
-  it("implements exactly the markets that could be read without a credential", () => {
-    expect([...IMPLEMENTED_SERIES_IDS]).toEqual(["uepi-caiso", "uepi-miso", "uepi-nyiso", "uepi-spp"]);
-    expect([...UNIMPLEMENTED_SERIES_IDS]).toEqual(["uepi-ercot", "uepi-pjm", "uepi-iso-ne"]);
+describe("1. six markets are implemented and one is not", () => {
+  it("implements every market whose source Urdais can actually read", () => {
+    expect([...IMPLEMENTED_SERIES_IDS])
+      .toEqual(["uepi-ercot", "uepi-caiso", "uepi-miso", "uepi-iso-ne", "uepi-nyiso", "uepi-spp"]);
+    expect([...UNIMPLEMENTED_SERIES_IDS]).toEqual(["uepi-pjm"]);
     expect(IMPLEMENTED_SERIES_IDS.length + UNIMPLEMENTED_SERIES_IDS.length).toBe(UEPI_SERIES_IDS.length);
   });
 
@@ -35,41 +37,50 @@ describe("1. four markets are implemented and three are not", () => {
   });
 });
 
-describe("2. ISO-NE cannot run, and says what would change that", () => {
-  it("refuses with an authenticated-source-evidence reason", () => {
-    const entry = UEPI_ADAPTERS["uepi-iso-ne"];
-    expect(isAvailable(entry)).toBe(false);
-    const unavailable = unavailableReason("uepi-iso-ne")!;
-    expect(unavailable.reason).toBe("AUTHENTICATED_SOURCE_EVIDENCE_REQUIRED");
-    expect(unavailable.unblockedBy.length).toBeGreaterThanOrEqual(3);
-    expect(unavailable.unblockedBy.join(" ")).toMatch(/authenticated/i);
-    expect(unavailable.unblockedBy.join(" ")).toMatch(/transition day/i);
+describe("2. the two recovered markets are now readable", () => {
+  it("returns a working adapter for ERCOT and ISO-NE", () => {
+    for (const seriesId of ["uepi-ercot", "uepi-iso-ne"] as const) {
+      const entry = UEPI_ADAPTERS[seriesId];
+      expect(isAvailable(entry), seriesId).toBe(true);
+      expect(unavailableReason(seriesId), seriesId).toBeNull();
+      expect(adapterFor(seriesId).seriesId, seriesId).toBe(seriesId);
+    }
   });
 
-  it("throws rather than returning something that could be called", () => {
-    expect(() => adapterFor("uepi-iso-ne")).toThrow(UepiSourceError);
-    expect(() => adapterFor("uepi-iso-ne")).toThrow(/AUTHENTICATED_SOURCE_EVIDENCE_REQUIRED/);
+  it("presents credentials for exactly the two authenticated sources", () => {
+    for (const seriesId of ["uepi-ercot", "uepi-iso-ne"] as const) {
+      expect(adapterFor(seriesId).authorization, seriesId).toBeDefined();
+    }
+    for (const seriesId of ["uepi-caiso", "uepi-miso", "uepi-nyiso", "uepi-spp"] as const) {
+      expect(adapterFor(seriesId).authorization, seriesId).toBeUndefined();
+    }
   });
 
-  it("has no fixture, because no first-party payload has ever been observed", () => {
-    expect(SOURCE_FIXTURES.filter((fixture) => fixture.seriesId === "uepi-iso-ne")).toHaveLength(0);
-  });
-
-  it("has no adapter file that could be wired up by accident", async () => {
-    const entries = await import("node:fs/promises").then((fs) => fs.readdir("src/lib/uepi/source/adapters"));
-    expect(entries.filter((name) => name.includes("iso-ne") || name.includes("isone"))).toHaveLength(0);
+  it("does not make ISO-NE publishable merely because its source can be read", () => {
+    // Evidence of a readable source is not a right to publish. ISO-NE moved from `not_built` to
+    // `internal_only`, which the publication gate refuses exactly as it refuses PJM, MISO and SPP.
+    expect(benchmarkFor("uepi-iso-ne").publicationPosture).toBe("internal_only");
+    expect(benchmarkFor("uepi-iso-ne").expectedRightsClassification).toBe("ambiguous_requires_legal_review");
+    expect([...PUBLISHABLE_SERIES_IDS]).toEqual(["uepi-ercot", "uepi-caiso", "uepi-nyiso"]);
   });
 });
 
-describe("3. ERCOT and PJM are credential-blocked, and the refusal records the evidence", () => {
-  it("names the probe result for each", () => {
-    const ercot = unavailableReason("uepi-ercot")!;
-    expect(ercot.reason).toBe("SOURCE_CREDENTIAL_REQUIRED");
-    expect(ercot.detail).toMatch(/HTTP 302/);
-    expect(ercot.detail).toMatch(/subscription key/);
+describe("3. PJM is still blocked, on two independent grounds", () => {
+  it("names the probe result and the membership condition", () => {
     const pjm = unavailableReason("uepi-pjm")!;
     expect(pjm.reason).toBe("SOURCE_CREDENTIAL_REQUIRED");
     expect(pjm.detail).toMatch(/HTTP 401/);
+  });
+
+  it("throws rather than returning something that could be called", () => {
+    expect(() => adapterFor("uepi-pjm")).toThrow(UepiSourceError);
+    expect(() => adapterFor("uepi-pjm")).toThrow(/SOURCE_CREDENTIAL_REQUIRED/);
+  });
+
+  it("has no fixture and no adapter file", async () => {
+    expect(SOURCE_FIXTURES.filter((fixture) => fixture.seriesId === "uepi-pjm")).toHaveLength(0);
+    const entries = await import("node:fs/promises").then((fs) => fs.readdir("src/lib/uepi/source/adapters"));
+    expect(entries.filter((name) => name.startsWith("pjm"))).toHaveLength(0);
   });
 
   it("keeps PJM's publication block separate from its credential block", () => {
@@ -78,9 +89,9 @@ describe("3. ERCOT and PJM are credential-blocked, and the refusal records the e
     expect(unavailableReason("uepi-pjm")!.detail).toMatch(/terms prohibit publishing/);
   });
 
-  it("does not fall back to a third-party mirror for either market", async () => {
+  it("does not fall back to a third-party mirror for any market", async () => {
     const sources = await Promise.all(
-      ["caiso", "miso", "nyiso", "spp"].map((name) =>
+      ["caiso", "ercot", "isone", "miso", "nyiso", "spp"].map((name) =>
         readFile(`src/lib/uepi/source/adapters/${name}.ts`, "utf8")));
     const forbidden = /gridstatus|eia\.gov|kaggle|yahoo|quandl|barchart/i;
     for (const source of sources) expect(source).not.toMatch(forbidden);
@@ -109,6 +120,7 @@ describe("4. every implemented market is pinned to a real dated artifact", () =>
     const hosts = SOURCE_FIXTURES.map((fixture) => new URL(fixture.url).hostname);
     expect(new Set(hosts)).toEqual(new Set([
       "oasis.caiso.com", "mis.nyiso.com", "docs.misoenergy.org", "portal.spp.org",
+      "api.ercot.com", "webservices.iso-ne.com",
     ]));
   });
 });

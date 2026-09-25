@@ -40,7 +40,9 @@ export const UEPI_BENCHMARKS: Readonly<Record<UepiSeriesId, UepiBenchmark>> = {
     operatingTimezone: "America/Chicago",
     observesDst: true,
     hourConvention: "hour_ending",
-    dstEvidence: "expected_unverified",
+    // Both transition days have now been parsed from the authenticated API: 23 rows with the
+    // hour-ending label omitted in spring, 25 in autumn with the repeat marked by DSTFlag.
+    dstEvidence: "verified",
     publicationPosture: "publishable",
     expectedRightsClassification: "reusable_with_attribution_or_conditions",
     benchmarkDefinition:
@@ -85,7 +87,9 @@ export const UEPI_BENCHMARKS: Readonly<Record<UepiSeriesId, UepiBenchmark>> = {
     operatingTimezone: "America/Los_Angeles",
     observesDst: true,
     hourConvention: "hour_ending",
-    dstEvidence: "expected_unverified",
+    // UEPI-2 captured and committed both transition days: 23 hours in spring with the label
+    // omitted, 25 in autumn with the repeat filed as OPR_HR 25.
+    dstEvidence: "verified",
     publicationPosture: "publishable",
     expectedRightsClassification: "ambiguous_requires_legal_review",
     benchmarkDefinition:
@@ -130,11 +134,15 @@ export const UEPI_BENCHMARKS: Readonly<Record<UepiSeriesId, UepiBenchmark>> = {
     sourceInterfaceSlug: "iso-ne-webservices-hourly-lmp-da-final",
     operatingTimezone: "America/New_York",
     observesDst: true,
-    // Unresolved, both of them. An anonymous call returned 401 and no payload has ever been
-    // observed, so hour labelling and transition-day length are unknown rather than assumed.
-    hourConvention: "unresolved",
-    dstEvidence: "unresolved",
-    publicationPosture: "not_built",
+    // Settled by observation. `BeginDate` states the hour's start with an explicit offset
+    // (`2026-09-23T00:00:00.000-04:00`), and the transition days return 23 and 25 hours with the
+    // repeated local hour separated by the offset itself.
+    hourConvention: "hour_beginning",
+    dstEvidence: "verified",
+    // Evidence, not rights. The series may now be ingested, calculated and stored; it may not be
+    // displayed, and its rights classification is untouched. Publication additionally waits on the
+    // legal review the specification names.
+    publicationPosture: "internal_only",
     expectedRightsClassification: "ambiguous_requires_legal_review",
     benchmarkDefinition:
       "Final day-ahead Hub LMP at location 4000, which Market Rule 1 defines as the arithmetic average of the Hub's nodes.",

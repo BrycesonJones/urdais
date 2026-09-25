@@ -92,8 +92,8 @@ describe("2. a dry run reads everything and writes nothing", () => {
 
   it("will not run a market that has no adapter", async () => {
     await expect(backfill({
-      seriesId: "uepi-iso-ne", from: "2026-09-23", to: "2026-09-23", dryRun: true,
-    })).rejects.toThrow(/AUTHENTICATED_SOURCE_EVIDENCE_REQUIRED/);
+      seriesId: "uepi-pjm", from: "2026-09-23", to: "2026-09-23", dryRun: true,
+    })).rejects.toThrow(/SOURCE_CREDENTIAL_REQUIRED/);
   });
 });
 

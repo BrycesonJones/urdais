@@ -82,28 +82,22 @@ describe("3. the hours of a day are contiguous instants", () => {
 describe("4. a transition day is only releasable where the behaviour was measured", () => {
   it("accepts an ordinary day for every market, measured or not", () => {
     for (const benchmark of Object.values(UEPI_BENCHMARKS)) {
-      if (benchmark.dstEvidence === "unresolved") continue;
       const window = operatingDayWindow(benchmark, "2026-09-23");
-      expect(dstEvidenceSufficient(benchmark, window)).toBe(true);
+      expect(dstEvidenceSufficient(benchmark, window), benchmark.seriesId).toBe(true);
     }
   });
 
   it("accepts a transition day only where a transition file was actually parsed", () => {
     const spring = "2026-03-08";
-    expect(dstEvidenceSufficient(
-      UEPI_BENCHMARKS["uepi-nyiso"], operatingDayWindow(UEPI_BENCHMARKS["uepi-nyiso"], spring))).toBe(true);
-    expect(dstEvidenceSufficient(
-      UEPI_BENCHMARKS["uepi-spp"], operatingDayWindow(UEPI_BENCHMARKS["uepi-spp"], spring))).toBe(true);
-    // Expected, never observed: ERCOT, PJM and CAISO stop and wait for an operator.
-    expect(dstEvidenceSufficient(
-      UEPI_BENCHMARKS["uepi-ercot"], operatingDayWindow(UEPI_BENCHMARKS["uepi-ercot"], spring))).toBe(false);
-    expect(dstEvidenceSufficient(
-      UEPI_BENCHMARKS["uepi-caiso"], operatingDayWindow(UEPI_BENCHMARKS["uepi-caiso"], spring))).toBe(false);
-  });
-
-  it("refuses every day for a market whose hour convention is unknown", () => {
-    const isone = UEPI_BENCHMARKS["uepi-iso-ne"];
-    expect(dstEvidenceSufficient(isone, operatingDayWindow(isone, "2026-09-23"))).toBe(false);
+    for (const seriesId of ["uepi-nyiso", "uepi-spp", "uepi-ercot", "uepi-caiso", "uepi-iso-ne"] as const) {
+      const benchmark = UEPI_BENCHMARKS[seriesId];
+      expect(dstEvidenceSufficient(benchmark, operatingDayWindow(benchmark, spring)), seriesId).toBe(true);
+    }
+    // PJM has no adapter and no parsed transition file, so its behaviour is still only expected
+    // and a transition day stops for an operator.
+    const pjm = UEPI_BENCHMARKS["uepi-pjm"];
+    expect(dstEvidenceSufficient(pjm, operatingDayWindow(pjm, spring))).toBe(false);
+    expect(dstEvidenceSufficient(pjm, operatingDayWindow(pjm, "2026-09-23"))).toBe(true);
   });
 });
 
