@@ -94,12 +94,22 @@ describe("2. posture is checked before the terms, and cannot be argued around", 
     }
   });
 
-  it("blocks ISO-NE as not built, although its classification would otherwise publish", () => {
+  it("blocks ISO-NE although its source is now readable and its classification would publish", () => {
+    // Authentication working is not a right. ISO-NE is stored and never displayed.
     const decision = mayPublishUepiValue({
       benchmark: UEPI_BENCHMARKS["uepi-iso-ne"],
       rights: rights(),
       publicationState: "published",
       purpose: DERIVED_VALUE_PURPOSE,
+    });
+    expect(decision.allowed).toBe(false);
+    expect(decision.reasonCode).toBe("blocked_series_internal_only");
+  });
+
+  it("still refuses a series marked not built, whichever market is in that state", () => {
+    const unbuilt = { ...UEPI_BENCHMARKS["uepi-iso-ne"], publicationPosture: "not_built" as const };
+    const decision = mayPublishUepiValue({
+      benchmark: unbuilt, rights: rights(), publicationState: "published", purpose: DERIVED_VALUE_PURPOSE,
     });
     expect(decision.allowed).toBe(false);
     expect(decision.reasonCode).toBe("blocked_series_not_built");

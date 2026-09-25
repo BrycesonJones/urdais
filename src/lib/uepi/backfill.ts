@@ -131,7 +131,12 @@ export async function backfill(options: BackfillOptions): Promise<BackfillResult
         continue;
       }
 
-      const artifacts = await retrieveArtifacts(seriesId, adapter.artifactsFor(operatingDate), options.retrieve);
+      // The adapter's own credentials, where it has any. Passing the caller's retrieve options
+      // through without them is how an authenticated source quietly answers 401 all day.
+      const artifacts = await retrieveArtifacts(seriesId, adapter.artifactsFor(operatingDate), {
+        ...options.retrieve,
+        authorization: options.retrieve?.authorization ?? adapter.authorization,
+      });
       const parsed = adapter.parse(operatingDate, artifacts);
       const { hours, crossChecks, warnings } = normalizeOperatingDay(benchmark, window, parsed);
       const decision = evaluateRelease({

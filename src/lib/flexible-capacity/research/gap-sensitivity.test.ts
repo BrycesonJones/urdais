@@ -103,6 +103,13 @@ describe("3. the direction of distortion", () => {
 describe("4. the analytic search finds the true worst case", () => {
   const series = shapedSeries();
 
+  /**
+   * Seven exhaustive sweeps of a year-long series, which is real work rather than a slow test: the
+   * whole point is to check the analytic search against brute force. It runs in a few seconds on a
+   * developer machine and has twice crossed vitest's five-second default on a loaded CI runner --
+   * once on `main` -- so it states the time it needs instead of failing as if the assertion had.
+   * Nothing about the assertion changes.
+   */
   it("agrees with an exhaustive scan over every admissible placement", () => {
     for (const gapHours of [1, 2, 3, 6, 12, 24, 48]) {
       const exhaustive = exhaustiveWorstCase(series, PERIOD, ALPHA, gapHours);
@@ -112,7 +119,7 @@ describe("4. the analytic search finds the true worst case", () => {
       // finds a placement as bad as the true worst to within a hair, not that the index matches.
       expect(analytic.relativeChange).toBeCloseTo(exhaustive.relativeChange, 9);
     }
-  });
+  }, 60_000);
 });
 
 describe("5. how distortion varies with gap length", () => {

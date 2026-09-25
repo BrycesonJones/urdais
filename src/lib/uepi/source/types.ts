@@ -121,6 +121,18 @@ export type AdapterParseResult = {
   warnings: string[];
 };
 
+/**
+ * How a source's credentials are presented, for the two markets that need them.
+ *
+ * `headers` is called once per operating day rather than once per request, and `invalidate` exists
+ * for the one case a bounded retry cannot otherwise survive: a token that the issuer still
+ * considers live but the API has stopped accepting.
+ */
+export type SourceAuthorization = {
+  headers: () => Promise<Record<string, string>>;
+  invalidate: () => void;
+};
+
 export interface UepiSourceAdapter {
   readonly seriesId: UepiSeriesId;
   readonly sourceInterfaceSlug: string;
@@ -131,6 +143,8 @@ export interface UepiSourceAdapter {
   readonly retrievalPurpose: "production" | "research";
   /** Which files this market needs for one operating day, in request order. */
   artifactsFor(operatingDate: string): ArtifactRequest[];
+  /** Present only for an authenticated source. Absent means the source is anonymous. */
+  readonly authorization?: SourceAuthorization;
   /** Pure. Bytes in, canonical rows out. No network, no clock, no database. */
   parse(operatingDate: string, artifacts: ReadonlyMap<string, RetrievedArtifact>): AdapterParseResult;
 }

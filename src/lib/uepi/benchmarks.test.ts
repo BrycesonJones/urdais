@@ -9,6 +9,7 @@ import {
 import { UEPI_SERIES_IDS, UepiDomainError, isUepiSeriesId } from "@/lib/uepi/types";
 
 const MIGRATION = "supabase/migrations/20261021100000_uepi_foundation.sql";
+const EVIDENCE_MIGRATION = "supabase/migrations/20261022100000_uepi_authenticated_market_evidence.sql";
 
 describe("1. the identifiers are stable and boring", () => {
   it("is exactly the seven organized U.S. markets", () => {
@@ -73,10 +74,12 @@ describe("2. the two constructs stay two constructs", () => {
 });
 
 describe("3. the postures are the release of UEPI V1", () => {
-  it("publishes three markets, stores three, and builds none for ISO-NE", () => {
+  it("publishes three markets and stores four", () => {
     expect([...PUBLISHABLE_SERIES_IDS]).toEqual(["uepi-ercot", "uepi-caiso", "uepi-nyiso"]);
-    expect([...INTERNAL_ONLY_SERIES_IDS]).toEqual(["uepi-pjm", "uepi-miso", "uepi-spp"]);
-    expect([...NOT_BUILT_SERIES_IDS]).toEqual(["uepi-iso-ne"]);
+    // ISO-NE joined the internal set once its payload was observed. That is an evidence change:
+    // it may now be ingested and stored, and it still may not be displayed.
+    expect([...INTERNAL_ONLY_SERIES_IDS]).toEqual(["uepi-pjm", "uepi-miso", "uepi-iso-ne", "uepi-spp"]);
+    expect([...NOT_BUILT_SERIES_IDS]).toEqual([]);
   });
 
   it("keeps every market whose terms forbid a derived publication out of the publishable set", () => {
@@ -86,12 +89,24 @@ describe("3. the postures are the release of UEPI V1", () => {
     }
   });
 
-  it("leaves an unresolved hour convention only on a series nobody may build", () => {
+  it("leaves no hour convention unresolved, and would refuse to build one that was", () => {
+    // The invariant still holds; there is simply no market left in that state. ISO-NE's convention
+    // is settled by an observed payload rather than by assumption.
     for (const benchmark of UEPI_BENCHMARK_LIST) {
       if (benchmark.hourConvention !== "unresolved") continue;
       expect(benchmark.publicationPosture, benchmark.seriesId).toBe("not_built");
     }
-    expect(UEPI_BENCHMARKS["uepi-iso-ne"].dstEvidence).toBe("unresolved");
+    expect(UEPI_BENCHMARK_LIST.filter((b) => b.hourConvention === "unresolved")).toEqual([]);
+    expect(UEPI_BENCHMARKS["uepi-iso-ne"].hourConvention).toBe("hour_beginning");
+    expect(UEPI_BENCHMARKS["uepi-iso-ne"].dstEvidence).toBe("verified");
+  });
+
+  it("claims verified transition behaviour only where a transition file was parsed", () => {
+    // PJM is the one market left with no adapter, so its behaviour is still only expected.
+    expect(UEPI_BENCHMARKS["uepi-pjm"].dstEvidence).toBe("expected_unverified");
+    for (const seriesId of ["uepi-ercot", "uepi-caiso", "uepi-nyiso", "uepi-spp", "uepi-iso-ne"] as const) {
+      expect(UEPI_BENCHMARKS[seriesId].dstEvidence, seriesId).toBe("verified");
+    }
   });
 });
 
@@ -107,10 +122,27 @@ describe("4. the mirror agrees with the registry the database holds", () => {
       expect(block, benchmark.seriesId).toContain(`'${benchmark.construct}'`);
       expect(block, benchmark.seriesId).toContain(`'${benchmark.sourceLocator}'`);
       expect(block, benchmark.seriesId).toContain(`'${benchmark.operatingTimezone}'`);
-      expect(block, benchmark.seriesId).toContain(`'${benchmark.publicationPosture}'`);
-      expect(block, benchmark.seriesId).toContain(`'${benchmark.dstEvidence}'`);
       expect(block, benchmark.seriesId).toContain(`'${benchmark.sourceInterfaceSlug}'`);
     }
+  });
+
+  it("records the evidence changes in their own migration, rather than editing the first one", async () => {
+    // The foundation migration is left exactly as it was written; what Urdais has since observed is
+    // a second, separately reviewable statement.
+    const evidence = await readFile(EVIDENCE_MIGRATION, "utf8");
+    expect(evidence).toContain("uepi-ercot");
+    expect(evidence).toContain("uepi-caiso");
+    expect(evidence).toContain("hour_convention = 'hour_beginning'");
+    expect(evidence).toContain("publication_posture = 'internal_only'");
+    // And it must not quietly grant a right. Prose may discuss rights; SQL may not touch them.
+    const statements = evidence.split("\n").filter((line) => !line.trimStart().startsWith("--")).join("\n");
+    expect(statements).not.toMatch(/source_use_permissions|source_rights_classifications/);
+    expect(statements).not.toMatch(/rights_classification\s*=|disposition\s*=/);
+    // `publishable` may be *read* by the migration's own verification block, and never assigned.
+    const assignsPublishable = statements.split("\n")
+      .filter((line) => /publication_posture\s*=\s*'publishable'/.test(line))
+      .filter((line) => !/\bwhere\b/.test(line));
+    expect(assignsPublishable).toEqual([]);
   });
 
   it("only MISO is exempt from daylight saving, in both places", async () => {
