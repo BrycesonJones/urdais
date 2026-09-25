@@ -76,6 +76,23 @@ export function meanDecimal(values: readonly string[], places: number): string {
   return formatDecimal({ units: negative ? -rounded : rounded, scale: places });
 }
 
+/**
+ * An exact signed sum of decimal terms.
+ *
+ * Needed because two markets publish no benchmark column and the specification derives one:
+ * MISO's `LMP - MCC - MLC` and NYISO's `LBMP - losses + congestion`. Those residuals are the
+ * published value for those series, so they are computed in exact decimal for the same reason the
+ * daily mean is -- a float residual of three cent-denominated numbers does not reliably reproduce.
+ */
+export function sumDecimal(terms: readonly { readonly value: string; readonly sign: 1 | -1 }[]): string {
+  if (terms.length === 0) throw new UepiDomainError("a sum of no terms is not a number");
+  const parsed = terms.map((term) => ({ decimal: parseDecimal(term.value), sign: term.sign }));
+  const scale = parsed.reduce((widest, term) => Math.max(widest, term.decimal.scale), 0);
+  const units = parsed.reduce(
+    (total, term) => total + BigInt(term.sign) * rescale(term.decimal, scale), 0n);
+  return formatDecimal({ units, scale });
+}
+
 /** A decimal string as a `number`, for display and for comparisons that are not the published value. */
 export function decimalToNumber(value: string): number {
   const parsed = Number(value);

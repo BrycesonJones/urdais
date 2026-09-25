@@ -113,6 +113,14 @@ retention is itself unresolved and is recorded that way.
 - **ISO-NE**: not before a credential exists and one authenticated day — including a transition
   day — has been parsed.
 
+## Erratum (non-normative)
+
+Specification §I.1 says the only cross-reference to fix when the demo instrument ids are renamed is a
+comment in `src/types/power-analytics.ts`. That file was deleted by FC-4A (#196) before UEPI-1 was
+built, so on current `main` the remaining `power-ercot` reference is in `src/data/mock/market-detail.ts`
+alone. The frozen specification is not edited for this: it would invalidate the registered digest, and
+the rule the sentence states is unaffected.
+
 ## Known residue
 
 `src/lib/uepi/operating-day.ts` carries its own zone-offset primitive. `src/lib/flexible-capacity/period.ts`
