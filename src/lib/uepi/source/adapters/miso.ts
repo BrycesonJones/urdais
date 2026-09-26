@@ -87,12 +87,15 @@ export const misoAdapter: UepiSourceAdapter = {
     // and a file that has quietly moved off Eastern Standard Time are different problems, and
     // neither may be discovered later by a reader wondering why a day looks odd.
     const preambleText = parsed.preamble.map((row) => row.values.join(",")).join(" | ");
-    const stated = preambleText.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    // MISO writes the report date both ways: `09/23/2026` and, on 1 December 2025, `12/1/2025`.
+    // The zero-padding is optional in the same way its prices drop a leading zero.
+    const stated = preambleText.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
     if (stated === null) {
       throw new UepiSourceError(this.seriesId, "SCHEMA_MISMATCH",
         `the report preamble states no date; it reads ${JSON.stringify(preambleText.slice(0, 120))}`);
     }
-    const statedDate = `${stated[3]}-${stated[1]}-${stated[2]}`;
+    const statedDate =
+      `${stated[3]}-${stated[1]!.padStart(2, "0")}-${stated[2]!.padStart(2, "0")}`;
     if (statedDate !== operatingDate) {
       throw new UepiSourceError(this.seriesId, "SCHEMA_MISMATCH",
         `the report states operating day ${statedDate}, not ${operatingDate}`);

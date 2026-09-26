@@ -38,13 +38,18 @@ export type SqlExecutor = {
  * later. A constraint violation, a missing benchmark, a draft specification: retrying only repeats
  * the same refusal, and hiding it behind three attempts would turn a clear error into a slow one.
  *
- * Postgres class 08 is connection exception; 57P01 is the server telling us it is going away.
+ * Postgres class 08 is connection exception; 57P01 is the server telling us it is going away;
+ * 57014 is a statement the server cancelled, which on a managed database means the statement
+ * timeout elapsed. That last one was added on evidence rather than by analogy: one day of a
+ * 397-day production backfill failed with `canceling statement due to statement timeout`, and the
+ * same write succeeded immediately on a re-run. It is transient in the same way and safe in the
+ * same way -- the cancelled statement aborts its transaction, so a retry starts from nothing.
  */
 export function isConnectionFailure(error: unknown): boolean {
   const code = (error as { code?: unknown } | null)?.code;
-  if (typeof code === "string" && (code.startsWith("08") || code === "57P01")) return true;
+  if (typeof code === "string" && (code.startsWith("08") || code === "57P01" || code === "57014")) return true;
   const message = error instanceof Error ? error.message : String(error ?? "");
-  return /connection terminated|connection closed|socket hang up|ECONNRESET|EPIPE|ETIMEDOUT|server closed the connection|Client has encountered a connection error|terminating connection/i
+  return /connection terminated|connection closed|socket hang up|ECONNRESET|EPIPE|ETIMEDOUT|server closed the connection|Client has encountered a connection error|terminating connection|canceling statement due to statement timeout/i
     .test(message);
 }
 
