@@ -92,7 +92,7 @@ describe("the released UEPI instruments", () => {
 });
 
 describe("replacing the family", () => {
-  it("fills the wholesale power family and opens the page on the flagship", async () => {
+  it("fills the wholesale power family and opens the page on the first declared series", async () => {
     const market = withWholesalePowerInstruments(findMarket("uepi")!, uepiInstrumentsFrom(await inputs()));
     const family = market.families.find((candidate) => candidate.id === WHOLESALE_POWER_FAMILY_ID)!;
     expect(family.instruments.map((row) => row.id)).toEqual(["uepi-ercot", "uepi-caiso", "uepi-nyiso"]);
@@ -130,7 +130,7 @@ describe("the static dataset after the retirement", () => {
     expect(family.explore?.href).toContain("power-analytics");
   });
 
-  it("names the flagship by its public series id, not its retired demo id", () => {
+  it("names its default instrument by its public series id, not its retired demo id", () => {
     expect(findMarket("uepi")!.defaultInstrumentId).toBe("uepi-ercot");
   });
 });

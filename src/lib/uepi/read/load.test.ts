@@ -31,11 +31,12 @@ const THREE_DAYS = [
 ];
 
 describe("which series may be shown", () => {
-  it("serves exactly the three markets production publishes, flagship first", async () => {
+  it("serves exactly the three markets production publishes, in the declared series order", async () => {
     const sql = fakeReadDatabase(ALL_BENCHMARKS, THREE_DAYS);
     const series = await loadPublishableSeries(sql);
-    // Product order, not the query's alphabetical one: ERCOT is UEPI's headline benchmark, and
-    // the page opens on whichever series comes first.
+    // The order `UEPI_SERIES_IDS` declares, not the query's alphabetical one. Which series comes
+    // first decides which instrument the page opens on; it asserts nothing about the family,
+    // which has no headline level.
     expect(series.map((row) => row.seriesId)).toEqual(["uepi-ercot", "uepi-caiso", "uepi-nyiso"]);
   });
 

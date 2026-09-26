@@ -313,8 +313,9 @@ const UPPI_MARKET: MarketDetail = {
  * number on a page that publishes right ones.
  *
  * The family shell stays so the market has a place for its instruments and its Power Analytics
- * link, and so the hydration has something to fill. `defaultInstrumentId` names the flagship
- * series id; the hydration overwrites it with whatever actually released.
+ * link, and so the hydration has something to fill. `defaultInstrumentId` names the first series
+ * of the declared order, and the hydration overwrites it with whatever actually released. It is
+ * where the page opens, not a market that stands for the family -- UEPI has no headline level.
  *
  * Instrument ids are the public series ids of specification 1.0.0 §I.1 -- `uepi-ercot`, not
  * `power-ercot` -- so the frontend id, the database slug and the API id are one identifier

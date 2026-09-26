@@ -202,11 +202,14 @@ export async function loadPublishableSeries(sql: SqlExecutor): Promise<Publishab
       rights,
     });
   }
-  // Presentation order, not the query's. `order by b.slug` is alphabetical, which would open the
-  // UEPI page on CAISO; `UEPI_SERIES_IDS` is the product's own order, flagship first. ERCOT is
-  // the headline benchmark because Urdais emphasises the Information Age power economy, where
-  // large compute loads, grid constraints and rapid market change converge most strongly. That
-  // is a product judgement and it belongs in code, which is where it already lived.
+  // Presentation order, not the query's. `order by b.slug` is alphabetical and is an artefact of
+  // the query rather than a product decision, so the served list is restored to the order
+  // `UEPI_SERIES_IDS` declares -- the same order §I.1 lists the series in.
+  //
+  // Being first is presentation only. It is **not** a claim that the first series stands for the
+  // family: UEPI publishes no composite and no headline level (§C.14), and no single market
+  // represents the others. What the order decides is which instrument the page opens on and the
+  // sequence of the selector, and it must not drift with an alphabetisation or a posture change.
   const order = new Map(UEPI_SERIES_IDS.map((id, index) => [id, index]));
   return publishable.sort((left, right) => order.get(left.seriesId)! - order.get(right.seriesId)!);
 }
