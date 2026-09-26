@@ -48,7 +48,9 @@ function reduce(market: "miso" | "spp", text: string): string {
     const isHeaderOrPreamble =
       market === "miso"
         ? !/^[A-Z0-9_.]+\.(HUB|[A-Z0-9_]+),/.test(line) && kept.length < 8
-        : line.startsWith("Interval,");
+        // Case-insensitively: SPP shipped an all-uppercase header on 4 June 2026, and a reducer
+        // that missed it would drop the one line that fixture exists to preserve.
+        : /^interval,/i.test(line);
     if (isHeaderOrPreamble) { kept.push(line); continue; }
 
     if (KEEP[market].some((location) => line.includes(`${location},`) || line.includes(`,${location},`))) {

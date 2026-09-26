@@ -43,16 +43,44 @@ const LEGACY_HEADER = [
   "Interval", "GMTIntervalEnd", "Settlement Location", "Pnode", "LMP", "MLC", "MCC", "MEC",
 ] as const;
 
+/**
+ * The column names, reduced to a form that survives SPP's own spelling of them.
+ *
+ * A thirteen-month production backfill found the same nine columns published three ways: the
+ * documented casing, and on 4 June 2026 an all-uppercase header whose fourth column reads
+ * `SETTLEMENT_LOCATION` rather than `Settlement Location`. Lowercasing and treating an underscore
+ * as a space recognises all of them while still refusing a header with different *columns* --
+ * which is the distinction that matters, because the failure this guards against is reading MEC
+ * out of the wrong field, not reading it out of a differently-spelled one.
+ */
+function canonicalColumn(name: string): string {
+  return name.trim().toLowerCase().replaceAll("_", " ").replace(/\s+/g, " ");
+}
+
+function headerShape(header: readonly string[]): string {
+  return header.map(canonicalColumn).join(",");
+}
+
 function compact(date: string): string {
   return date.replaceAll("-", "");
 }
 
-/** `MM/DD/YYYY HH:mm:ss` in GMT, as SPP prints its interval end. */
+/**
+ * SPP's GMT interval end, in the several ways SPP writes it.
+ *
+ * Measured across a thirteen-month backfill, the same field appears as `09/23/2026 06:00:00`,
+ * `4/1/2026 6:00` and `6/1/2026 06:00`: the seconds and the zero-padding are both optional, and
+ * they vary by day rather than by era. The month, day and hour are therefore accepted at one or
+ * two digits and the seconds as absent, and nothing else is loosened -- a two-digit year, a
+ * day-first ordering or a timezone suffix still fails, because each of those would change which
+ * instant the row means.
+ */
 function parseGmtIntervalEnd(value: string): number {
-  const match = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2})$/.exec(value.trim());
+  const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4}) (\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(value.trim());
   if (match === null) return Number.NaN;
   const [, month, day, year, hour, minute, second] = match;
-  return Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second));
+  return Date.UTC(Number(year), Number(month) - 1, Number(day),
+    Number(hour), Number(minute), Number(second ?? "0"));
 }
 
 export const sppAdapter: UepiSourceAdapter = {
@@ -83,17 +111,23 @@ export const sppAdapter: UepiSourceAdapter = {
 
     const header = splitCsvLine(lines[0]!).map((value) => value.trim());
     const joined = header.join(",");
-    const schemaVariant = joined === MODERN_HEADER.join(",") ? "with_baa"
-      : joined === LEGACY_HEADER.join(",") ? "without_baa"
+    const shape = headerShape(header);
+    const schemaVariant = shape === headerShape(MODERN_HEADER) ? "with_baa"
+      : shape === headerShape(LEGACY_HEADER) ? "without_baa"
         : null;
     if (schemaVariant === null) {
       // No positional fallback. A header Urdais has never seen is a schema change to look at, not
       // a shape to guess: reading MEC from the wrong column would be silent and wrong.
       throw new UepiSourceError(this.seriesId, "SCHEMA_MISMATCH",
         `unrecognised header ${JSON.stringify(joined)}; the adapter knows only `
-        + `${JSON.stringify(MODERN_HEADER.join(","))} and ${JSON.stringify(LEGACY_HEADER.join(","))}`);
+        + `${JSON.stringify(MODERN_HEADER.join(","))} and ${JSON.stringify(LEGACY_HEADER.join(","))}, `
+        + "in any casing and with either spelling of Settlement Location");
     }
-    const at = (values: string[], column: string) => (values[header.indexOf(column)] ?? "").trim();
+    // Columns are located by canonical name, so the uppercase and underscored spellings resolve
+    // to the same field rather than to -1.
+    const columnIndex = new Map(header.map((name, position) => [canonicalColumn(name), position]));
+    const at = (values: string[], column: string) =>
+      (values[columnIndex.get(canonicalColumn(column)) ?? -1] ?? "").trim();
 
     const window = operatingDayWindow(BENCHMARK, operatingDate);
     const dayStart = Date.parse(window.startUtc);
