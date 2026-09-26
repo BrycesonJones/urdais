@@ -21,7 +21,7 @@ const maplibre = vi.hoisted(() => {
     queryRenderedFeatures: ReturnType<typeof vi.fn>;
     getStyle: ReturnType<typeof vi.fn>;
     /** The one GeoJSON source stub, once added. */
-    source: () => { setData: ReturnType<typeof vi.fn>; getClusterExpansionZoom: ReturnType<typeof vi.fn> } | undefined;
+    source: () => { setData: ReturnType<typeof vi.fn>; getClusterExpansionZoom: ReturnType<typeof vi.fn>; getClusterLeaves: ReturnType<typeof vi.fn> } | undefined;
     /** Fires the handlers registered for a map event (optionally on a layer), as the real map would. */
     emit: (event: string, layer?: string, payload?: unknown) => void;
     /** Live handler count for an event / layer pair. */
@@ -30,7 +30,7 @@ const maplibre = vi.hoisted(() => {
   const instances: Instance[] = [];
   const Map = vi.fn(function (this: unknown, options: Record<string, unknown>) {
     const handlers = new globalThis.Map<string, Array<(payload?: unknown) => void>>();
-    const sources = new globalThis.Map<string, { setData: ReturnType<typeof vi.fn>; getClusterExpansionZoom: ReturnType<typeof vi.fn> }>();
+    const sources = new globalThis.Map<string, { setData: ReturnType<typeof vi.fn>; getClusterExpansionZoom: ReturnType<typeof vi.fn>; getClusterLeaves: ReturnType<typeof vi.fn> }>();
     const layers = new globalThis.Map<string, unknown>();
     const canvas = document.createElement("canvas");
     const key = (event: string, layer?: string) => (layer ? `${event}:${layer}` : event);
@@ -50,7 +50,9 @@ const maplibre = vi.hoisted(() => {
       off: vi.fn(unregister),
       getCanvas: vi.fn(() => canvas),
       getSource: vi.fn((id: string) => sources.get(id)),
-      addSource: vi.fn((id: string, source: unknown) => sources.set(id, { ...(source as object), setData: vi.fn(), getClusterExpansionZoom: vi.fn(async () => 7) })),
+      addSource: vi.fn((id: string, source: unknown) =>
+        sources.set(id, { ...(source as object), setData: vi.fn(), getClusterExpansionZoom: vi.fn(async () => 7), getClusterLeaves: vi.fn(async () => []) }),
+      ),
       getLayer: vi.fn((id: string) => layers.get(id)),
       addLayer: vi.fn((layer: { id: string }) => layers.set(layer.id, layer)),
       easeTo: vi.fn(),
