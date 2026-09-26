@@ -163,6 +163,9 @@ function LoadedMarketDetail({
           performance={chart.performance}
           selected={chart.effectiveRange}
           onSelect={chart.setRange}
+          // Needed for any horizon whose movement must be shown as a signed amount rather than
+          // a percentage; §D.2 forbids showing that amount without its unit.
+          unit={instrument.unit}
           className="mt-3 border-t border-white/10 pt-3"
         />
       </div>

@@ -51,15 +51,40 @@ export type MarketIndex = {
 };
 
 /**
- * Latest value and its percentage change versus the previous comparable
- * observation. Movement is expressed only as a percentage: it is what makes
- * markets with different units and scales comparable, so no absolute delta
- * is modelled. Null when the series has no prior observation — never a
- * fabricated 0%.
+ * Which quantity a surface must render as the movement.
+ *
+ * "percent" is what every Urdais series used until UEPI, and remains the default when a
+ * snapshot says nothing. "absolute" means a percentage would be economically deceptive between
+ * these two endpoints and the signed change in the instrument's own unit is the honest figure.
+ * See UEPI specification 1.0.0 §D and `@/lib/market-change`.
+ */
+export type ChangeBasis = "percent" | "absolute";
+
+/**
+ * Latest value and its change versus the previous comparable observation.
+ *
+ * Movement was percentage-only until wholesale power, because every Urdais series before it was
+ * strictly positive and a percentage was the whole story. It is not the whole story for a price
+ * that can sit at or below zero: a negative base inverts the sign, so -$10 to -$5 renders as
+ * "-50%" while the price rose. The additional fields carry the always-defined signed change and
+ * the reason a percentage was withheld.
+ *
+ * They are optional, and that is the compatibility contract: an instrument that carries none of
+ * them behaves exactly as it always has, with `changePercent` as its only movement. Nothing
+ * infers an absolute change from a percentage or the other way round.
  */
 export type MarketSnapshot = {
   value: number;
   changePercent: number | null;
+  /** Signed change in the instrument's own unit. Present on signed-value series. */
+  absoluteChange?: number | null;
+  /** Which quantity the surface must render as the movement. Defaults to "percent". */
+  changeBasis?: ChangeBasis;
+  /** Why a percentage is absent, from the UEPI §D.4 truth table. */
+  changeSuppressionReason?: "base_zero" | "base_negative" | "new_not_positive"
+                          | "no_base_observation" | "methodology_version_break";
+  /** The observation the change is measured from, so the label cannot outrun the data. */
+  baseTime?: number;
   /** Unix timestamp in seconds (UTC) of the observation. */
   asOf: number;
 };
@@ -146,6 +171,14 @@ export type IndexSnapshot = MarketIndex &
     valueFractionDigits?: number;
     /** Notation for the row's value. Grouped digits by default; "compact" for large-magnitude units. */
     valueFormat?: "compact";
+    /**
+     * How many series a `multi_series` row stands for. Ignored on every other provenance.
+     *
+     * The rail says "<n> series · No composite level" for an index that publishes real data
+     * with no single level. The count was the literal word "Two" while UMPI was the only such
+     * index; UEPI publishes three, so the row carries its own number.
+     */
+    seriesCount?: number;
     provenance: DataProvenance;
   };
 
@@ -272,8 +305,28 @@ export type MarketDetail = MarketIndex & {
   defaultInstrumentId: string;
 };
 
-/** Return over one selectable range; null when the history is too short. */
+/**
+ * Change over one selectable range.
+ *
+ * `returnPercent` is null in two very different situations, and until UEPI they were the same
+ * situation: the horizon has no comparison at all, or it has one whose endpoints do not admit a
+ * percentage. A surface that reads only this field disables the range button in both cases,
+ * which on a negative-price day hides a real, measurable move behind "not enough history".
+ *
+ * `changeBasis` is what separates them. Present means the horizon has a comparison: render
+ * `returnPercent` when the basis is "percent", and `absoluteChange` in the instrument's unit
+ * when it is "absolute". Absent means the series carries no signed-change information, and the
+ * old reading -- a null return is an unavailable range -- is exactly right and unchanged.
+ */
 export type PeriodPerformance = {
   range: DetailRange;
   returnPercent: number | null;
+  /** Signed change over the window, in the instrument's own unit. */
+  absoluteChange?: number | null;
+  /** Present when the horizon has a comparison, whatever form it takes. */
+  changeBasis?: ChangeBasis;
+  /** Why a percentage is absent although a comparison exists. */
+  changeSuppressionReason?: string;
+  /** Unix seconds of the observation the change is measured from (§E.3). */
+  baseTime?: number;
 };

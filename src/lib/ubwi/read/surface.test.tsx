@@ -12,6 +12,7 @@ import { PUBLIC_MARKET_CATALOG } from "@/data/market-catalog";
 import { UBWI_EXPLANATION, UBWI_VALUE_FRACTION_DIGITS, ubwiIndexSnapshot, ubwiSurface } from "./surface";
 import { assembleIndexRail } from "@/lib/market/index-rail";
 import { UMPI_WATCHLIST_ROW } from "@/lib/umpi/read/watchlist";
+import { uepiIndexSnapshot } from "@/lib/uepi/read/surface";
 
 const NOW = "2026-09-15T03:10:39Z";
 const surface = ubwiSurface({ now: NOW });
@@ -193,10 +194,19 @@ const PUBLICATION = {
   changePercent: null,
 };
 
-/** The homepage joins the mock rows, UMPI's row and UBWI's, exactly as the page does. */
+/**
+ * One released UEPI instrument, standing in for the production read the page performs. The row
+ * itself carries no number -- UEPI publishes three market benchmarks and no composite -- so what
+ * this stub decides is only whether the rail has a UEPI row at all.
+ */
+const UEPI_RELEASED = [{ id: "uepi-ercot" }] as unknown as Parameters<typeof uepiIndexSnapshot>[0];
+
+/** The homepage joins the mock rows, UMPI's row, UEPI's and UBWI's, exactly as the page does. */
 function homepageRows() {
   const row = ubwiIndexSnapshot(PUBLICATION);
-  const base = [...INDEX_SNAPSHOTS, UMPI_WATCHLIST_ROW];
+  const base = [...INDEX_SNAPSHOTS, UMPI_WATCHLIST_ROW, uepiIndexSnapshot(UEPI_RELEASED)].filter(
+    (candidate) => candidate !== null,
+  );
   return assembleIndexRail(row === null ? base : [...base, row]);
 }
 
@@ -255,11 +265,11 @@ describe("the UBWI homepage watchlist row", () => {
       (symbol) => symbol !== "UCPI" && symbol !== "UTVI",
     );
     expect(homepageRows().map((row) => row.symbol)).toEqual(expected);
-    // The mock rows keep their existing values untouched by this wiring, and none of UGAI, UAVI
-    // or UMPI is among them: each joins the rail from its own module, carrying no number. UPPI
-    // and UACI are still built here and still dropped by the rail, which is the withholding
-    // mechanism working rather than an empty source.
-    expect(INDEX_SNAPSHOTS.map((row) => row.symbol)).toEqual(["UPPI", "UEPI", "UACI"]);
+    // The mock rows keep their existing values untouched by this wiring, and none of UGAI, UAVI,
+    // UMPI or UEPI is among them: each joins the rail from its own module. UPPI and UACI are
+    // still built here and still dropped by the rail, which is the withholding mechanism working
+    // rather than an empty source.
+    expect(INDEX_SNAPSHOTS.map((row) => row.symbol)).toEqual(["UPPI", "UACI"]);
     for (const withheld of ["UPPI", "UACI"]) {
       expect(homepageRows().map((row) => row.symbol), withheld).not.toContain(withheld);
     }
@@ -268,6 +278,8 @@ describe("the UBWI homepage watchlist row", () => {
 
 function homepageRowsWithout() {
   const row = ubwiIndexSnapshot(null);
-  const base = [...INDEX_SNAPSHOTS, UMPI_WATCHLIST_ROW];
+  const base = [...INDEX_SNAPSHOTS, UMPI_WATCHLIST_ROW, uepiIndexSnapshot(UEPI_RELEASED)].filter(
+    (candidate) => candidate !== null,
+  );
   return assembleIndexRail(row === null ? base : [...base, row]);
 }

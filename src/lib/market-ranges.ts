@@ -229,8 +229,31 @@ export function periodChange(series: DetailedSeries, range: DetailRange, asOf: n
   return changeBetween(first.value, last.value, { baseTime: first.time, latestTime: last.time });
 }
 
+/**
+ * A change, as the surface's performance row.
+ *
+ * Purely additive. `returnPercent` is exactly what it was -- a percentage where one is
+ * publishable and null otherwise -- and the new fields say which of the two reasons for that
+ * null applies. A caller reading only `returnPercent` behaves identically; one reading
+ * `changeBasis` can tell "this horizon has no comparison" from "this horizon has a comparison
+ * that may not be expressed as a percentage", which is the distinction §D exists to preserve.
+ */
+export function performanceFrom(range: DetailRange, change: MarketChange): PeriodPerformance {
+  if (change.kind === "unavailable") {
+    return { range, returnPercent: null, absoluteChange: null, changeSuppressionReason: change.reason };
+  }
+  return {
+    range,
+    returnPercent: change.kind === "percentage" ? change.percentage : null,
+    absoluteChange: change.absoluteChange,
+    changeBasis: change.kind === "percentage" ? "percent" : "absolute",
+    ...(change.kind === "absolute" ? { changeSuppressionReason: change.reason } : {}),
+    ...(change.baseTime === null ? {} : { baseTime: change.baseTime }),
+  };
+}
+
 export function periodPerformance(series: DetailedSeries, asOf: number): PeriodPerformance[] {
-  return DETAIL_RANGES.map((range) => ({ range, returnPercent: periodReturn(series, range, asOf) }));
+  return DETAIL_RANGES.map((range) => performanceFrom(range, periodChange(series, range, asOf)));
 }
 
 /* ------------------------------------------------------------------ low-frequency series
@@ -349,8 +372,5 @@ export function lowFrequencyPeriodPerformance(
   points: readonly TimeSeriesPoint[],
   asOf: number,
 ): PeriodPerformance[] {
-  return DETAIL_RANGES.map((range) => ({
-    range,
-    returnPercent: lowFrequencyPeriodReturn(points, range, asOf),
-  }));
+  return DETAIL_RANGES.map((range) => performanceFrom(range, lowFrequencyPeriodChange(points, range, asOf)));
 }

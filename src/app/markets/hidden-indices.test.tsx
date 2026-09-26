@@ -142,8 +142,14 @@ describe("cross-index comparison menus", () => {
   it("still offers the presented indices, so the cross-index menu was narrowed and not emptied", () => {
     // UACI is the one market whose instrument compares across indices. Its own page is a 404
     // now, but its definition is preserved, and what it offers is what the builder produces:
-    // the presented indices that carry a series, and no withheld one.
-    expect(labelsOf("UACI")).toEqual(["UCPI", "UEPI"]);
+    // the presented indices that carry a series *in this dataset*, and no withheld one.
+    //
+    // UEPI left the menu in UEPI-3, and not because it was withheld -- it publishes, and its
+    // page is live. Its series moved behind the production read model, so a static option
+    // naming `uepi-ercot` would resolve to nothing from another market's page, which is the
+    // dead-entry failure `MARKETS_WITHOUT_SERIES` exists to prevent. UTVI and UMPI are absent
+    // for the same reason.
+    expect(labelsOf("UACI")).toEqual(["UCPI"]);
   });
 });
 

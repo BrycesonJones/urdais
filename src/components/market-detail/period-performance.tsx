@@ -1,7 +1,7 @@
 "use client";
 
 import { movementClass } from "@/components/market/movement";
-import { formatPercent } from "@/lib/format";
+import { formatPercent, formatSignedWithUnit, formatTimestamp } from "@/lib/format";
 import { RANGE_LABELS } from "@/lib/market-ranges";
 import type { DetailRange, PeriodPerformance as PeriodPerformanceValue } from "@/types/market";
 
@@ -9,8 +9,45 @@ type PeriodPerformanceProps = {
   performance: PeriodPerformanceValue[];
   selected: DetailRange;
   onSelect: (range: DetailRange) => void;
+  /**
+   * The instrument's unit, for horizons whose movement must be shown as a signed amount rather
+   * than a percentage. Required for any series that can go non-positive: §D.2 forbids a bare
+   * signed number that a reader could take for either quantity.
+   */
+  unit?: string;
   className?: string;
 };
+
+/**
+ * What one horizon shows, and whether it can be selected.
+ *
+ * `changeBasis` is the availability signal wherever the instrument provides one. Without it, a
+ * null `returnPercent` is the only evidence there is and means the horizon has no comparison --
+ * which is correct for every strictly positive series and is unchanged. With it, a horizon whose
+ * endpoints forbid a percentage is still a horizon with a real, measurable move, and disabling
+ * it would hide that move behind "not enough history".
+ */
+function readout(entry: PeriodPerformanceValue, unit: string | undefined): {
+  available: boolean;
+  text: string;
+  movement: string;
+} {
+  if (entry.changeBasis === undefined) {
+    const available = entry.returnPercent !== null;
+    return {
+      available,
+      text: available ? formatPercent(entry.returnPercent!) : "—",
+      movement: available ? movementClass(entry.returnPercent) : "text-neutral-700",
+    };
+  }
+  if (entry.changeBasis === "percent" && entry.returnPercent !== null) {
+    return { available: true, text: formatPercent(entry.returnPercent), movement: movementClass(entry.returnPercent) };
+  }
+  const amount = entry.absoluteChange ?? null;
+  if (amount === null) return { available: false, text: "—", movement: "text-neutral-700" };
+  // §D.2 rule 3: direction comes from the sign of the amount, never from the absent percentage.
+  return { available: true, text: formatSignedWithUnit(amount, unit ?? ""), movement: movementClass(amount) };
+}
 
 const focusRing =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-300";
@@ -22,23 +59,30 @@ const focusRing =
  * chart is unaffected. Ranges the history cannot support are disabled and
  * show no return. Only the selected period gets a contained surface.
  */
-export function PeriodPerformance({ performance, selected, onSelect, className }: PeriodPerformanceProps) {
+export function PeriodPerformance({ performance, selected, onSelect, unit, className }: PeriodPerformanceProps) {
   return (
     <div
       role="group"
       aria-label="Chart timeframe and period return"
       className={["grid grid-cols-3 gap-1 sm:grid-cols-6", className].filter(Boolean).join(" ")}
     >
-      {performance.map(({ range, returnPercent }) => {
+      {performance.map((entry) => {
+        const { range } = entry;
         const isSelected = range === selected;
-        const available = returnPercent !== null;
+        const { available, text, movement } = readout(entry, unit);
+        // §E.3: within the bound a base may still sit a day or two off the exact boundary, so
+        // the surface states the date it measured from rather than letting the label imply it.
+        const since =
+          available && entry.baseTime !== undefined
+            ? `Since ${formatTimestamp(entry.baseTime, false)}`
+            : undefined;
         return (
           <button
             key={range}
             type="button"
             aria-pressed={isSelected}
             disabled={!available}
-            title={available ? undefined : "Not enough history"}
+            title={available ? since : "Not enough history"}
             onClick={() => onSelect(range)}
             className={`flex flex-col items-center gap-1 rounded-md px-2 py-3 transition-colors ${
               isSelected
@@ -55,11 +99,7 @@ export function PeriodPerformance({ performance, selected, onSelect, className }
             >
               {RANGE_LABELS[range]}
             </span>
-            <span
-              className={`text-sm font-medium tabular-nums ${available ? movementClass(returnPercent) : "text-neutral-700"}`}
-            >
-              {available ? formatPercent(returnPercent) : "—"}
-            </span>
+            <span className={`text-sm font-medium tabular-nums ${movement}`}>{text}</span>
           </button>
         );
       })}

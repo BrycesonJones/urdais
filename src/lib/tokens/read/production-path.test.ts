@@ -60,10 +60,17 @@ describe("production Tokens path", () => {
     expect(tokens.defaultInstrumentId).toBe("");
   });
 
-  it("keeps compare at four series total and does not model absolute point change", () => {
+  it("keeps compare at four series total and quotes token movement as a percentage only", () => {
     expect(MAX_COMPARISONS).toBe(3);
-    const source = readSrc("src/types/market.ts") + readSrc("src/components/market-detail/market-header.tsx") + readSrc("src/components/model-economics/token-price-section.tsx");
-    expect(source).not.toMatch(/changeAbsolute|pointChange|absoluteChange/);
+    // Narrowed from `src/types/market.ts` and the shared market header when UEPI landed. Those
+    // two now carry the §D signed-change machinery a wholesale power price requires -- a
+    // percentage between two negative endpoints inverts its own sign -- and grepping them for
+    // the word would assert that no Urdais series may ever have a signed change, which is not
+    // what this test is about. Token Price's own surface is still held to it, and the assertion
+    // that actually matters is the behavioural one below: a token snapshot carries three keys.
+    expect(readSrc("src/components/model-economics/token-price-section.tsx")).not.toMatch(
+      /changeAbsolute|pointChange|absoluteChange/,
+    );
     const instruments = tokenInstrumentsFromSeries(
       listPublicTokenSeries(
         seedTokenReadCatalog([

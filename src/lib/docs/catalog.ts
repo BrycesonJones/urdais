@@ -238,6 +238,14 @@ export const docPages: readonly DocPage[] = [
     file: "methodology/interconnection-queue-analytics.md",
   },
   {
+    slug: "methodology/uepi",
+    title: "UEPI",
+    description:
+      "Approved methodology for the Urdais Energy & Power Index V1: one daily wholesale electricity price benchmark per organised U.S. market, in $/MWh, as the arithmetic mean of the valid hours of one operating day. No composite. Delivered prices and system energy components are held apart, negative prices are published as they cleared, and a percentage change is shown only between two strictly positive endpoints.",
+    section: "Methodology",
+    file: "methodology/uepi.md",
+  },
+  {
     slug: "methodology/umpi",
     title: "UMPI-DRAM Spot (deferred)",
     description:

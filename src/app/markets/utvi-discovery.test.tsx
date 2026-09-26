@@ -38,6 +38,7 @@ import { assembleIndexRail } from "@/lib/market/index-rail";
 import { UTVI_HREF } from "@/lib/routes";
 import { UMPI_WATCHLIST_ROW } from "@/lib/umpi/read/watchlist";
 import { utviIndexSnapshot } from "@/lib/utvi/read/watchlist";
+import { uepiIndexSnapshot } from "@/lib/uepi/read/surface";
 import { UTVI_DISPLAY_NAME, UTVI_SYMBOL, UTVI_UNIT } from "@/lib/utvi/types";
 import type { UtviInstrumentView } from "@/lib/utvi/read/instrument";
 
@@ -76,10 +77,19 @@ const VIEW = {
 
 const rail = () => screen.getByRole("complementary", { name: "Urdais Indices" });
 
-/** The homepage join, as `src/app/page.tsx` performs it, with production returning a UTVI view. */
+/**
+ * One released UEPI instrument, standing in for the production read the page performs. The row
+ * itself carries no number -- UEPI publishes three market benchmarks and no composite -- so what
+ * this stub decides is only whether the rail has a UEPI row at all.
+ */
+const UEPI_RELEASED = [{ id: "uepi-ercot" }] as unknown as Parameters<typeof uepiIndexSnapshot>[0];
+
+/** The homepage join, as `src/app/page.tsx` performs it, with production returning both views. */
 function homepageRail() {
   return assembleIndexRail(
-    [...INDEX_SNAPSHOTS, UMPI_WATCHLIST_ROW, utviIndexSnapshot(VIEW)].filter((row) => row !== null),
+    [...INDEX_SNAPSHOTS, UMPI_WATCHLIST_ROW, utviIndexSnapshot(VIEW), uepiIndexSnapshot(UEPI_RELEASED)].filter(
+      (row) => row !== null,
+    ),
   );
 }
 

@@ -1,8 +1,8 @@
 import { movementClass } from "@/components/market/movement";
 import { ResearchPreviewBadge } from "@/components/market-detail/research-preview-badge";
-import { formatNumber, formatPercent, formatUpdatedAt } from "@/lib/format";
+import { formatNumber, formatPercent, formatSignedWithUnit, formatTimestamp, formatUpdatedAt } from "@/lib/format";
 import { instrumentDisplaySymbol, isHeadlineInstrument } from "@/lib/market-display";
-import type { MarketDetail, MarketInstrumentDetail } from "@/types/market";
+import type { MarketDetail, MarketInstrumentDetail, MarketSnapshot } from "@/types/market";
 
 type MarketHeaderProps = {
   market: MarketDetail;
@@ -20,11 +20,11 @@ type MarketHeaderProps = {
  * (index-prefixed only for the market's headline benchmark), the name,
  * the index's definition and the question it answers when the product has
  * settled them, when it was last updated, and the current value at the largest size on
- * the page with the day's move beneath it as a percentage. The page opens
- * directly on this; the instrument itself is the context. The move is the
- * current-session change and does not follow the chart range; historical
- * returns live under the chart. Percentage change is withheld when the
- * series has no prior comparable observation.
+ * the page with the day's move beneath it. The page opens directly on this; the instrument
+ * itself is the context. The move is the current-session change and does not follow the chart
+ * range; historical returns live under the chart. It is withheld entirely when the series has no
+ * prior comparable observation, and shown as a signed amount rather than a percentage where the
+ * two endpoints are not both strictly positive -- see `headlineMovement` below.
  */
 export function MarketHeader({ market, instrument, emptyFamilyLabel, emptyNote, researchPreview = false }: MarketHeaderProps) {
   if (!instrument) {
@@ -45,7 +45,7 @@ export function MarketHeader({ market, instrument, emptyFamilyLabel, emptyNote, 
   // token check preserves the mock markets' behaviour exactly; what it no longer does
   // is label a production instrument demo merely because it is not a token benchmark.
   const showDemoBadge = instrument.provenance === undefined ? token === undefined : instrument.provenance === "demo";
-  const movement = snapshot.changePercent === null ? null : movementClass(snapshot.changePercent);
+  const today = headlineMovement(snapshot, unitCaption);
 
   return (
     <div className="min-w-0">
@@ -93,12 +93,46 @@ export function MarketHeader({ market, instrument, emptyFamilyLabel, emptyNote, 
         </span>{" "}
         <span className="text-base text-neutral-400 sm:text-lg">{unitCaption}</span>
       </p>
-      {snapshot.changePercent !== null && movement && (
-        <p className={`mt-3 flex flex-wrap items-baseline gap-x-3 text-lg font-medium tabular-nums sm:text-xl ${movement}`}>
-          <span>{formatPercent(snapshot.changePercent)}</span>{" "}
-          <span className="text-sm font-normal text-neutral-500">today</span>
+      {today && (
+        <p className={`mt-3 flex flex-wrap items-baseline gap-x-3 text-lg font-medium tabular-nums sm:text-xl ${today.movement}`}>
+          <span>{today.text}</span>{" "}
+          <span className="text-sm font-normal text-neutral-500">{today.caption}</span>
         </p>
       )}
     </div>
   );
+}
+
+/**
+ * The day's move, under UEPI specification 1.0.0 §D.
+ *
+ * Three cases, and the middle one is the reason this function exists. A percentage where both
+ * endpoints are strictly positive -- which is every Urdais series but wholesale power, and their
+ * rendering is byte-for-byte what it was. A signed amount in the instrument's own unit where a
+ * percentage would be economically deceptive: 30 -> -5 is a $35/MWh fall, and "-116.67%" is a
+ * number that describes no rate of return anyone can act on. And nothing at all where there is
+ * no comparable prior observation.
+ *
+ * Direction comes from the sign of the amount in the second case, never from the percentage,
+ * which is why -$10 -> -$5 still renders as a rise (§D.4 rows 8 and 9).
+ *
+ * The caption names the date the comparison measured from where the instrument states one
+ * (§E.3), because a released series can have holes -- ERCOT published nothing for 2026-03-07 --
+ * and "today" would then be a claim about a period nobody checked.
+ */
+function headlineMovement(
+  snapshot: MarketSnapshot,
+  unit: string,
+): { text: string; movement: string; caption: string } | null {
+  const caption = snapshot.baseTime === undefined ? "today" : `since ${formatTimestamp(snapshot.baseTime, false)}`;
+  if (snapshot.changeBasis === "absolute") {
+    if (snapshot.absoluteChange === null || snapshot.absoluteChange === undefined) return null;
+    return {
+      text: formatSignedWithUnit(snapshot.absoluteChange, unit),
+      movement: movementClass(snapshot.absoluteChange),
+      caption,
+    };
+  }
+  if (snapshot.changePercent === null) return null;
+  return { text: formatPercent(snapshot.changePercent), movement: movementClass(snapshot.changePercent), caption };
 }

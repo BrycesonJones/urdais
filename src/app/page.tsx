@@ -10,6 +10,7 @@ import { UMPI_WATCHLIST_ROW } from "@/lib/umpi/read/watchlist";
 import { loadFrozenUbwiPublication } from "@/lib/ubwi/read/publication-store";
 import { ubwiIndexSnapshot } from "@/lib/ubwi/read/surface";
 import { loadUcpiHeadline } from "@/lib/ucpi/read/load";
+import { loadUepiInstruments, uepiIndexSnapshot } from "@/lib/uepi/read/surface";
 import { loadUtviInstrumentView } from "@/lib/utvi/read/surface";
 import { utviIndexSnapshot } from "@/lib/utvi/read/watchlist";
 import { isProductionRuntime } from "@/lib/tokens/read/publication";
@@ -40,8 +41,13 @@ export default async function HomePage() {
   // UGAI, UAVI and UACI are absent by product decision, not by data state: they are not presented
   // as products, so `assembleIndexRail` drops any row offered for them. See the
   // `publiclyPresented` flag in @/data/market-catalog.
+  // UEPI publishes three market benchmarks and no composite, so its row -- like UMPI's -- names
+  // the index and carries no number. It is built from production rather than declared, so the
+  // rail has no UEPI row at all when nothing is published; the seven demo walks that used to
+  // produce one are gone.
+  const uepiRow = uepiIndexSnapshot(await loadUepiInstruments());
   const base = [...INDEX_SNAPSHOTS, UMPI_WATCHLIST_ROW];
-  const indices = assembleIndexRail([...base, utviRow, ubwiRow].filter((row) => row !== null));
+  const indices = assembleIndexRail([...base, utviRow, ubwiRow, uepiRow].filter((row) => row !== null));
 
   // The UCPI panel now reads the same released listed-GPU children the UCPI market page
   // shows, so the two surfaces cannot disagree. Sequential for the reason the UBWI
