@@ -57,7 +57,7 @@ export function IndexRow({ index }: { index: IndexSnapshot }) {
         <div className="shrink-0 text-right">
           <p>
             <span className="rounded border border-neutral-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-neutral-400">
-              Two series
+              {seriesCountWord(index.seriesCount)} series
             </span>
           </p>
           <p className="mt-1 text-xs text-neutral-500">No composite level</p>
@@ -98,4 +98,18 @@ export function IndexRow({ index }: { index: IndexSnapshot }) {
       </Link>
     </li>
   );
+}
+
+/**
+ * How many series a `multi_series` row stands for, spelled rather than written in digits.
+ *
+ * Two constraints meet here. The count must be the row's own -- it was the literal word "Two",
+ * which was right while UMPI was the only such index and became wrong the moment UEPI joined
+ * with three published market benchmarks. And a row in this rail must carry **no digit at all**,
+ * because every other row in it is a quoted level and a numeral beside an index name reads as
+ * one. Spelling the count satisfies both.
+ */
+function seriesCountWord(count: number | undefined): string {
+  const words = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
+  return words[count ?? 2] ?? "Multiple";
 }

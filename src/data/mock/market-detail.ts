@@ -292,95 +292,49 @@ const UPPI_MARKET: MarketDetail = {
 /* ---------- UEPI: wholesale power ---------- */
 
 /**
- * UEPI, the Urdais Energy & Power Index, asks what powering Information
- * Age infrastructure costs. Its first family is Wholesale Power: a
- * generalised daily wholesale electricity-price benchmark for each
- * organised U.S. market, in $/MWh. The family is market-entity-first (ERCOT,
- * PJM, …), with geography kept as instrument metadata, because wholesale
- * power is priced by the market operator. A future Data Center Power
- * family will be geography-first instead (Northern Virginia, Georgia,
- * Texas, …): the price ultimately faced by compute operators, including
- * delivered-power economics, with utilities such as Georgia Power modelled
- * as provider/source metadata beneath a geography rather than as wholesale
- * peers. The two must not be conflated; a vertically integrated utility is
- * not an ISO/RTO peer, so it never appears in this family.
+ * UEPI, the Urdais Energy & Power Index, asks what powering Information Age infrastructure
+ * costs. Its family is Wholesale Power: the day-ahead benchmark price of each organised U.S.
+ * market, in $/MWh. The family is market-entity-first (ERCOT, CAISO, NYISO, …) because wholesale
+ * power is priced by the market operator; geography is instrument metadata, not the axis.
  *
- * ERCOT is the current UEPI headline benchmark because Urdais emphasises
- * the emerging Information Age power economy: large compute/data-centre
- * loads, grid constraints, storage, flexible demand, and rapid power-market
- * change converge particularly strongly in Texas. The benchmark is metadata
- * (the market's default instrument) and may change as the Information Age
- * power market evolves; the other markets are plain instruments in the family.
+ * **UEPI carries no demo instruments and no demo series.**
  *
- * The exact hub, zone, and product (day-ahead, real-time, congestion) each
- * benchmark represents is provisional and belongs to the data phase; the
- * labels deliberately name only the market. Real wholesale observations
- * can be negative, so series values are signed; these demo histories stay
- * positive. When a second family arrives the generic family switch appears.
+ * It used to carry seven: seeded mean-reverting walks with seasonal peaks, ERCOT "at $36.40",
+ * a 2,600-point history each, honest about being a demo in a comment and indistinguishable from
+ * a wholesale price on the page. They are gone, and nothing generated replaces them. UEPI now
+ * publishes real values -- 2,380 released daily observations across six markets under frozen
+ * specification 1.0.0 -- and `hydrateMarketWithWholesalePower` fills this family from them. Where
+ * production has nothing to serve, the family renders **empty**, which is the true statement.
+ *
+ * That is a deliberate departure from the compute family's rule, which leaves its illustrative
+ * instruments in place when production is silent. The difference is what the fallback would be:
+ * an illustrative GPU price beside a label saying "Demo data" is a sketch of a product, while a
+ * fabricated $36.40/MWh sitting where ERCOT's real day-ahead hub average belongs is a wrong
+ * number on a page that publishes right ones.
+ *
+ * The family shell stays so the market has a place for its instruments and its Power Analytics
+ * link, and so the hydration has something to fill. `defaultInstrumentId` names the first series
+ * of the declared order, and the hydration overwrites it with whatever actually released. It is
+ * where the page opens, not a market that stands for the family -- UEPI has no headline level.
+ *
+ * Instrument ids are the public series ids of specification 1.0.0 §I.1 -- `uepi-ercot`, not
+ * `power-ercot` -- so the frontend id, the database slug and the API id are one identifier
+ * spelled the same way everywhere. Power Delivery's `reference.grid_areas` identities are
+ * untouched: a physical balancing-authority area is not a price series.
  */
 const UEPI_IDENTITY = catalogEntry("UEPI");
 const POWER_UNIT = "$/MWh";
 
-function powerSpec(
-  market: string,
-  slug: string,
-  regionLabel: string,
-  daily: Omit<DailySeriesConfig, "asOf">,
-  intraday: IntradaySeriesConfig,
-): InstrumentSpec {
-  return {
-    id: `power-${slug}`,
-    shortLabel: market,
-    symbol: market,
-    name: `${UEPI_IDENTITY.name} · ${market} wholesale power benchmark`,
-    unit: POWER_UNIT,
-    regionLabel,
-    daily: { ...daily, asOf: MOCK_AS_OF },
-    intraday,
-  };
-}
-
-/** Flagship first, then by market relevance. Seasonal peaks are day-of-year: mid-summer or mid-winter. */
-const POWER_SPECS: InstrumentSpec[] = [
-  // Flagship. Most volatile: abrupt weather- and constraint-driven moves with a hard summer peak.
-  powerSpec("ERCOT", "ercot", "Texas",
-    { seed: 20190102, latestValue: 36.4, latestDailyReturn: -0.0421, points: 2600, volatility: 0.075, drift: 0.0001, meanReversion: { level: 35, strength: 0.03 }, seasonality: { amplitude: 0.2, peakDayOfYear: 217 } },
-    { seed: 8_120_000, days: 7, volatility: 0.025 }),
-  // Seasonal with a summer peak, moderate/high volatility, reverting to a level.
-  powerSpec("PJM", "pjm", "Mid-Atlantic / Midwest",
-    { seed: 20190101, latestValue: 41.82, latestDailyReturn: 0.0314, points: 2600, volatility: 0.045, drift: 0.0001, meanReversion: { level: 40, strength: 0.03 }, seasonality: { amplitude: 0.12, peakDayOfYear: 201 } },
-    { seed: 8_110_000, days: 7, volatility: 0.015 }),
-  // Later summer cycle, moderate volatility, higher level.
-  powerSpec("CAISO", "caiso", "California",
-    { seed: 20190103, latestValue: 48.75, latestDailyReturn: 0.0088, points: 2600, volatility: 0.04, drift: 0.0002, meanReversion: { level: 47, strength: 0.025 }, seasonality: { amplitude: 0.14, peakDayOfYear: 237 } },
-    { seed: 8_130_000, days: 7, volatility: 0.012 }),
-  // Central: moderate volatility, milder summer cycle.
-  powerSpec("MISO", "miso", "Midwest / South",
-    { seed: 20190104, latestValue: 34.2, latestDailyReturn: 0.0157, points: 2600, volatility: 0.04, drift: 0.0001, meanReversion: { level: 33, strength: 0.03 }, seasonality: { amplitude: 0.1, peakDayOfYear: 196 } },
-    { seed: 8_140_000, days: 7, volatility: 0.012 }),
-  // Winter-sensitive: peak in January, moderate/high volatility.
-  powerSpec("ISO-NE", "iso-ne", "New England",
-    { seed: 20190105, latestValue: 52.3, latestDailyReturn: -0.0126, points: 2600, volatility: 0.05, drift: 0.0002, meanReversion: { level: 50, strength: 0.03 }, seasonality: { amplitude: 0.2, peakDayOfYear: 20 } },
-    { seed: 8_150_000, days: 7, volatility: 0.015 }),
-  powerSpec("NYISO", "nyiso", "New York",
-    { seed: 20190106, latestValue: 47.9, latestDailyReturn: 0.0203, points: 2600, volatility: 0.048, drift: 0.0002, meanReversion: { level: 46, strength: 0.03 }, seasonality: { amplitude: 0.17, peakDayOfYear: 25 } },
-    { seed: 8_160_000, days: 7, volatility: 0.015 }),
-  // Central: lowest level, its own late-summer cycle.
-  powerSpec("SPP", "spp", "Central U.S.",
-    { seed: 20190107, latestValue: 30.15, latestDailyReturn: 0.0064, points: 2600, volatility: 0.042, drift: 0.0001, meanReversion: { level: 29, strength: 0.03 }, seasonality: { amplitude: 0.11, peakDayOfYear: 211 } },
-    { seed: 8_170_000, days: 7, volatility: 0.013 }),
-];
-
 const UEPI_MARKET: MarketDetail = {
   ...UEPI_IDENTITY,
   unit: POWER_UNIT,
-  defaultInstrumentId: "power-ercot",
+  defaultInstrumentId: "uepi-ercot",
   families: [
     {
       id: "wholesale-power",
       label: "Wholesale Power",
-      instruments: buildFamilyInstruments(POWER_SPECS),
-      defaultInstrumentId: "power-ercot",
+      instruments: [],
+      defaultInstrumentId: "uepi-ercot",
       explore: { label: "Explore Power Analytics", href: POWER_ANALYTICS_HREF },
     },
   ],
@@ -433,8 +387,17 @@ function headlineInstrumentId(symbol: string): string {
  * not through this dataset. There is no `utvi` instrument for a comparison to resolve to, so
  * offering the option would put a dead entry in the menu -- the exact failure this set exists
  * to prevent.
+ *
+ * UEPI joins for UTVI's reason, and it is a change from how it behaved while it was a demo. Its
+ * seven generated walks lived in this dataset, so `findInstrumentById("power-ercot")` resolved
+ * from anywhere and every index could offer a UEPI comparison. Its real series live behind the
+ * production read model and are attached to the market only once the page has hydrated, so a
+ * static option naming `uepi-ercot` would resolve to nothing from any other market's page.
+ * Offering a comparison against real UEPI data is worth building -- specification 1.0.0 §H.2
+ * settles how to rebase one honestly -- and it needs a resolver that can reach a read model,
+ * which is not a rename.
  */
-const MARKETS_WITHOUT_SERIES = new Set(["UBWI", "UGAI", "UAVI", "UMPI", "UTVI"]);
+const MARKETS_WITHOUT_SERIES = new Set(["UBWI", "UGAI", "UAVI", "UMPI", "UTVI", "UEPI"]);
 
 /**
  * The comparison menu is a public discovery surface -- an index named there is an index a reader

@@ -52,14 +52,19 @@ describe("market detail dataset: chip and accelerator consolidation", () => {
     expect(rows[0]).toMatchObject({ symbol: "UACI", name: "Urdais Chip & Accelerator Index", unit: "pts" });
     // UBWI is deliberately absent: it publishes no value, so it gets no watchlist row
     // rather than a fabricated one. Its detail page carries the withheld state instead.
-    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).toEqual(["UPPI", "UEPI", "UACI"]);
+    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).toEqual(["UPPI", "UACI"]);
     // UPPI and UACI are in this list and not on the rail. This module builds an illustrative
     // snapshot for every market that has one -- UPPI's market, instruments and series all
     // survived the Photonics close-out, which decided DEFERRED_PENDING_DATA_RIGHTS rather than
     // deletion -- and whether a snapshot becomes a rail row is decided once, in
     // `assembleIndexRail`, from the catalog entry's publication state. See
     // docs/research/photonics/ph-3-closeout.md and src/data/photonics-closeout.test.ts.
-    expect(assembleIndexRail(INDEX_SNAPSHOTS).map((row) => row.symbol)).toEqual(["UEPI"]);
+    // No mock row now reaches the rail at all. UEPI left this list in UEPI-3, when its seven
+    // generated wholesale-power walks were removed: it publishes real values, and the homepage
+    // joins its row from @/lib/uepi/read/surface -- carrying no number, because UEPI publishes
+    // three market benchmarks and no composite.
+    expect(assembleIndexRail(INDEX_SNAPSHOTS).map((row) => row.symbol)).toEqual([]);
+    expect(INDEX_SNAPSHOTS.map((snapshot) => snapshot.symbol)).not.toContain("UEPI");
     // UMPI left this list in Phase 7, when its nine demo chip-price instruments were removed. It
     // publishes two monthly series and no composite, so it has no single level for a rail row;
     // the homepage joins its own row from @/lib/umpi/read/watchlist, carrying no number.

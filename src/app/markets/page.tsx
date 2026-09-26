@@ -6,6 +6,7 @@ import { MarketDetailPage } from "@/components/market-detail/market-detail-page"
 import { DEFAULT_MARKET_SYMBOL, findMarket } from "@/data/mock/market-detail";
 import { hydrateMarketWithTokenPrices, tokenResearchPreviewActive } from "@/lib/tokens/read/load";
 import { hydrateMarketWithListedCompute } from "@/lib/ucpi/read/load";
+import { hydrateMarketWithWholesalePower } from "@/lib/uepi/read/surface";
 
 /**
  * Rendered per request, never prerendered.
@@ -23,9 +24,13 @@ export const metadata: Metadata = { title: "Information Markets" };
 
 /** The Information Markets workspace, opened on the default market (UCPI). */
 export default async function MarketsPage() {
-  // Tokens and Compute are hydrated from production independently. Each leaves its family
-  // untouched where production has nothing released, so neither can blank the other.
-  const market = await hydrateMarketWithListedCompute(await hydrateMarketWithTokenPrices(findMarket(DEFAULT_MARKET_SYMBOL)!));
+  // Tokens, Compute and Wholesale Power are hydrated from production independently. Each touches
+  // only its own family, so none can blank another. This page opens on UCPI, which has no
+  // wholesale power family, so that hydration is a no-op here and is applied for one reason: the
+  // two market routes must not be able to drift into hydrating different things.
+  const market = await hydrateMarketWithWholesalePower(
+    await hydrateMarketWithListedCompute(await hydrateMarketWithTokenPrices(findMarket(DEFAULT_MARKET_SYMBOL)!)),
+  );
   const researchPreview =
     (await tokenResearchPreviewActive()) &&
     (market.families.find((family) => family.id === "tokens")?.instruments.length ?? 0) > 0;

@@ -112,30 +112,36 @@ describe("the fixtures remain available where they are intentionally supported",
  * separate a seeded walk from a published index.
  */
 describe("the indices rail never quotes a demo index", () => {
-  // UGAI is no longer among them: its seeded walk was removed rather than relabelled, so it has
-  // no mock row at all. UMPI left for the same reason -- nine seeded chip-price walks removed in
-  // Phase 7 -- and its row is covered below. UPPI and UACI still have mock rows in the dataset,
-  // but neither is presented as a product, so the rail drops both; that is covered below too.
-  const MOCK_SYMBOLS = ["UEPI"];
-
-  it("labels every mock row demo and gives it no level and no movement", () => {
+  /*
+   * There are none left to quote. Every seeded walk that ever reached this rail has been
+   * removed rather than relabelled: UGAI's, UMPI's nine chip-price walks in Phase 7, and in
+   * UEPI-3 the seven wholesale-power walks -- the last of them. UPPI and UACI still have mock
+   * rows in the dataset and neither is presented as a product, so the rail drops both.
+   *
+   * The rule this file exists for therefore now has a stronger form than "label the demo rows":
+   * the rail is served entirely from production, and a "Demo data" badge appearing on it at all
+   * is the regression. The defect it covers is unchanged -- the rail once rendered UGAI at
+   * "184.21 pts +1.14 %" in the same type and colours as UBWI's published percentage.
+   */
+  it("carries no demo row at all, because every seeded walk has been removed", () => {
     render(<InformationMarketsSection />);
     const rail = screen.getByRole("complementary", { name: "Urdais Indices" });
-    for (const symbol of MOCK_SYMBOLS) {
-      const row = within(rail).getByRole("link", { name: new RegExp(`^${symbol}\\b`) });
-      expect(row).toHaveTextContent("Demo data");
-      expect(row).toHaveTextContent("Not published");
-      // The strongest form of the rule: a demo row carries no digit at all, so there is
-      // no level, no movement and no timestamp to read as a quote.
-      expect(row.textContent).not.toMatch(/\d/);
+    expect(within(rail).queryAllByText("Demo data")).toHaveLength(0);
+    for (const row of within(rail).queryAllByRole("link")) {
+      expect(row).not.toHaveTextContent("Demo data");
     }
   });
 
-  it("puts a demo row for every mock index, so none is quietly dropped instead of labelled", () => {
+  it("offers no mock index a row, so none is quietly quoted instead of dropped", () => {
+    // The mock dataset still builds snapshots -- UPPI's and UACI's survive their own product
+    // decisions -- and the rail refuses every one of them.
+    expect(INDEX_SNAPSHOTS.length).toBeGreaterThan(0);
     render(<InformationMarketsSection />);
     const rail = screen.getByRole("complementary", { name: "Urdais Indices" });
-    expect(within(rail).getAllByRole("link")).toHaveLength(MOCK_SYMBOLS.length);
-    expect(within(rail).getAllByText("Demo data")).toHaveLength(MOCK_SYMBOLS.length);
+    const symbols = INDEX_SNAPSHOTS.map((row) => row.symbol);
+    for (const symbol of symbols) {
+      expect(within(rail).queryByRole("link", { name: new RegExp(`^${symbol}\\b`) }), symbol).toBeNull();
+    }
   });
 });
 
@@ -200,11 +206,13 @@ describe("the public indices rail withholds non-production indices", () => {
       />,
     );
     const rail = screen.getByRole("complementary", { name: "Urdais Indices" });
-    // Catalog order, and every presented index the mock dataset and the watchlist modules supply.
-    // UPPI is not among them: its production is deferred pending data rights.
+    // Catalog order, and every presented index these sources supply. UPPI is not among them:
+    // its production is deferred pending data rights. UEPI is not among them either, and for a
+    // different reason -- it is no longer supplied by the mock dataset at all. Its row is built
+    // from production by @/lib/uepi/read/surface and joined by the page; the rail's own
+    // ordering of it is asserted in that module's tests.
     expect(within(rail).getAllByRole("link").map((link) => link.textContent?.slice(0, 4))).toEqual([
       "UMPI",
-      "UEPI",
     ]);
   });
 });
@@ -220,6 +228,8 @@ describe("the UMPI rail row", () => {
     render(<InformationMarketsSection indices={[UMPI_WATCHLIST_ROW]} />);
     const rail = screen.getByRole("complementary", { name: "Urdais Indices" });
     const row = within(rail).getByRole("link", { name: /^UMPI\b/ });
+    // Spelled, not "2 series": a numeral in this rail reads as a quoted level, and the rule
+    // below -- no digit at all on such a row -- is what stops that.
     expect(row).toHaveTextContent("Two series");
     expect(row).toHaveTextContent("No composite level");
     // The row's structurally required value and asOf are inert. If a future change let the value

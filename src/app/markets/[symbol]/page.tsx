@@ -8,6 +8,7 @@ import { isPubliclyListed } from "@/data/market-catalog";
 import { findMarket } from "@/data/mock/market-detail";
 import { hydrateMarketWithTokenPrices, tokenResearchPreviewActive } from "@/lib/tokens/read/load";
 import { hydrateMarketWithListedCompute } from "@/lib/ucpi/read/load";
+import { hydrateMarketWithWholesalePower } from "@/lib/uepi/read/surface";
 import { UbwiSection } from "@/components/ubwi/ubwi-section";
 import { UaviSection } from "@/components/uavi/uavi-section";
 import { UgaiSection } from "@/components/ugai/ugai-section";
@@ -68,10 +69,17 @@ function publicMarket(symbol: string) {
 export default async function MarketIndexPage({ params }: PageProps) {
   const found = publicMarket((await params).symbol);
   if (!found) notFound();
-  // The same two hydrations /markets performs, in the same order. This route used to run
+  // The same hydrations /markets performs, in the same order. This route used to run
   // only the token one, so /markets served the live listed-GPU children while
   // /markets/ucpi -- the page the homepage links to -- served the mock Compute family.
-  const market = await hydrateMarketWithListedCompute(await hydrateMarketWithTokenPrices(found));
+  //
+  // Each leaves every family but its own alone, and they run sequentially rather than
+  // concurrently: they share the process-wide pooled executor, and whichever finished first
+  // would tear the pool out from under the others -- which renders as a healthy database behind
+  // a surface that says nothing is published.
+  const market = await hydrateMarketWithWholesalePower(
+    await hydrateMarketWithListedCompute(await hydrateMarketWithTokenPrices(found)),
+  );
   const researchPreview =
     (await tokenResearchPreviewActive()) &&
     (market.families.find((family) => family.id === "tokens")?.instruments.length ?? 0) > 0;

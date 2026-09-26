@@ -21,6 +21,7 @@ export const UMPI_WATCHLIST_ROW: IndexSnapshot = {
   unit: "pts",
   // Published, but as two series rather than one level. `IndexRow` renders no digits for this.
   provenance: "multi_series",
+  seriesCount: 2,
   // Structurally required by IndexSnapshot and deliberately inert, on the same footing as UAVI's:
   // no branch reads them, and a test asserts the rendered row contains no number.
   value: 0,

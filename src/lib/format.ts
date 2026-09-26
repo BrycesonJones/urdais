@@ -20,6 +20,22 @@ export function formatSigned(value: number, fractionDigits = 2): string {
   return magnitude;
 }
 
+/**
+ * Always-signed value carrying its unit, e.g. "+$3.00/MWh" or "−2.4 pts".
+ *
+ * The unit is not decoration here. UEPI specification 1.0.0 §D.2 requires that a surface never
+ * show a bare signed number that could be read either as a dollar change or as a percentage,
+ * because on a wholesale power series both are plausible and they routinely disagree in sign.
+ * A dollar unit keeps the sign outside the symbol -- "−$3.00", not "$−3.00" -- which is how a
+ * price change is written.
+ */
+export function formatSignedWithUnit(value: number, unit: string, fractionDigits = 2): string {
+  if (!unit.startsWith("$")) return `${formatSigned(value, fractionDigits)} ${unit}`;
+  const magnitude = formatNumber(Math.abs(value), fractionDigits);
+  const sign = value > 0 ? "+" : value < 0 ? MINUS : "";
+  return `${sign}$${magnitude}${unit.slice(1)}`;
+}
+
 /** Always-signed percentage, e.g. "+2.55%". */
 export function formatPercent(value: number, fractionDigits = 2): string {
   return `${formatSigned(value, fractionDigits)}%`;
