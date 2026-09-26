@@ -23,6 +23,7 @@
     "map:import": "tsx scripts/map/import-facilities.ts",
     "map:production:check": "tsx scripts/map/production-check.ts",
     "news:ingest": "tsx scripts/news/ingest.ts",
+    "uepi:ops": "tsx scripts/uepi/ops.ts",
     "tokens:ingest": "tsx scripts/tokens/ingest.ts",
     "tokens:preview:seed": "tsx scripts/tokens/preview-seed.ts",
     "db:start": "scripts/db/local.sh start",
