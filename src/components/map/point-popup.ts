@@ -1,8 +1,8 @@
 import type { GeoJSONSource, LngLat, LngLatLike, Map as MapLibreMap, MapGeoJSONFeature, MapMouseEvent, Popup as MapLibrePopup, PopupOptions } from "maplibre-gl";
 
-import { MAP_POINT_CATEGORY_LABELS, isMapPointCategory } from "@/components/map/map-point-style";
-import { CLUSTERS_LAYER_ID, CLUSTER_MAX_ZOOM, POINTS_LAYER_ID, POINTS_SOURCE_ID } from "@/components/map/point-layer";
-import type { MapPointCollection, MapPointFeature } from "@/lib/map-geojson";
+import { MAP_POINT_CATEGORY_LABELS, isMapPointCategory, visibilityGroupOf } from "@/components/map/map-point-style";
+import type { MapVisibilityState } from "@/components/map/map-point-style";
+import { CLUSTERS_LAYER_ID, POINTS_LAYER_ID, POINTS_SOURCE_ID } from "@/components/map/point-layer";
 
 /** What the profile card shows. A point with no name does not qualify. */
 export type MapPointProfile = {
@@ -60,64 +60,11 @@ export type PopupConstructor = new (options?: PopupOptions) => MapLibrePopup;
 
 /** Handle on the wired interactions. */
 export type PointInteractions = {
-  /** Replaces the exact-coordinate index after points or category visibility change. */
-  setCollection: (collection: MapPointCollection) => void;
+  /** Closes the open popup if its point's group has been hidden. */
+  applyVisibility: (visibility: MapVisibilityState) => void;
   /** Removes the handlers and any open popup. */
   dispose: () => void;
 };
-
-export type FacilityAtCoordinate = {
-  researchKey: string;
-  feature: MapPointFeature;
-  profile: MapPointProfile;
-};
-
-export type CoordinateFacilityIndex = ReadonlyMap<string, readonly FacilityAtCoordinate[]>;
-
-const coordinateKey = (coordinates: readonly number[]): string | null => {
-  if (coordinates.length < 2 || !Number.isFinite(coordinates[0]) || !Number.isFinite(coordinates[1])) return null;
-  return `${coordinates[0]}\u0000${coordinates[1]}`;
-};
-
-const compareText = (left: string, right: string): number => (left === right ? 0 : left < right ? -1 : 1);
-
-/**
- * Builds the selection model from the same visible collection MapLibre sees.
- * Coordinates are compared exactly: nearby points are never treated as one
- * location, and feature ids remain the canonical research keys. Sorting is an
- * application rule, never an accidental consequence of renderer z-order.
- */
-export function buildCoordinateFacilityIndex(collection: MapPointCollection): CoordinateFacilityIndex {
-  const groups = new Map<string, FacilityAtCoordinate[]>();
-  for (const feature of collection.features) {
-    const researchKey = typeof feature.id === "string" ? feature.id : "";
-    const key = coordinateKey(feature.geometry.coordinates);
-    const profile = readPointProfile(feature as Pick<MapGeoJSONFeature, "properties">);
-    if (!researchKey || !key || !profile) continue;
-    const group = groups.get(key) ?? [];
-    if (!group.some((member) => member.researchKey === researchKey)) {
-      group.push({ researchKey, feature, profile });
-      groups.set(key, group);
-    }
-  }
-  for (const group of groups.values()) {
-    group.sort((left, right) => {
-      const leftOperator = left.feature.properties.operatorName ?? left.feature.properties.ownerName ?? "";
-      const rightOperator = right.feature.properties.operatorName ?? right.feature.properties.ownerName ?? "";
-      return (
-        compareText(leftOperator, rightOperator) ||
-        compareText(left.profile.name, right.profile.name) ||
-        compareText(left.researchKey, right.researchKey)
-      );
-    });
-  }
-  return groups;
-}
-
-export function facilitiesAtCoordinate(index: CoordinateFacilityIndex, coordinates: readonly number[]): readonly FacilityAtCoordinate[] {
-  const key = coordinateKey(coordinates);
-  return key ? (index.get(key) ?? []) : [];
-}
 
 /**
  * Reads a clicked feature's properties defensively. GeoJSON properties are
@@ -222,65 +169,6 @@ export function buildProfileCard(profile: MapPointProfile): HTMLElement {
   return card;
 }
 
-const buttonClasses =
-  "w-full rounded-md border border-neutral-200 bg-white px-2.5 py-2 text-left transition-colors hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#526fe0]";
-
-/** A location-level list; each button keeps the canonical research key. */
-export function buildFacilityGroupCard(
-  facilities: readonly FacilityAtCoordinate[],
-  onSelect: (facility: FacilityAtCoordinate) => void,
-): HTMLElement {
-  const card = document.createElement("div");
-  card.className = "flex max-h-[min(420px,calc(100vh-7rem))] flex-col gap-2 overflow-y-auto pr-4";
-  card.setAttribute("role", "group");
-  const heading = document.createElement("p");
-  heading.className = "text-sm font-semibold leading-snug text-neutral-900";
-  heading.textContent = `${facilities.length} facilities at this location`;
-  card.setAttribute("aria-label", heading.textContent);
-  card.append(heading);
-
-  const list = document.createElement("div");
-  list.className = "flex flex-col gap-1.5";
-  for (const facility of facilities) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = buttonClasses;
-    button.dataset.researchKey = facility.researchKey;
-    button.setAttribute("aria-label", `Open ${facility.profile.name}`);
-
-    const name = document.createElement("span");
-    name.className = "block text-xs font-semibold text-neutral-900";
-    name.textContent = facility.profile.name;
-    button.append(name);
-
-    const operator = facility.feature.properties.operatorName ?? facility.feature.properties.ownerName;
-    for (const value of [operator, facility.profile.address, facility.profile.category]) {
-      if (!value) continue;
-      const detail = document.createElement("span");
-      detail.className = "block text-[11px] leading-snug text-neutral-600";
-      detail.textContent = value;
-      button.append(detail);
-    }
-    button.addEventListener("click", () => onSelect(facility));
-    list.append(button);
-  }
-  card.append(list);
-  return card;
-}
-
-function buildGroupMemberCard(profile: MapPointProfile, onBack: (button: HTMLButtonElement) => void): HTMLElement {
-  const card = document.createElement("div");
-  card.className = "flex flex-col gap-2 pr-4";
-  const back = document.createElement("button");
-  back.type = "button";
-  back.className =
-    "self-start rounded text-xs font-medium text-[#3b55c4] underline decoration-[#3b55c4]/40 underline-offset-2 hover:decoration-[#3b55c4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#526fe0]";
-  back.textContent = "Back to facilities";
-  back.addEventListener("click", () => onBack(back));
-  card.append(back, buildProfileCard(profile));
-  return card;
-}
-
 const POPUP_OPTIONS: PopupOptions = {
   closeButton: true,
   closeOnClick: true,
@@ -292,72 +180,46 @@ const POPUP_OPTIONS: PopupOptions = {
 };
 
 /**
- * Wires the mapped-point interactions onto the existing layers. Point clicks
- * resolve through an exact-coordinate index of the visible collection rather
- * than trusting renderer hit order. Normal clusters still expand; a cluster
- * whose leaves all occupy one exact coordinate opens that coordinate's group
- * because no amount of zooming can separate it.
+ * Wires the mapped-point interactions onto the existing circle layer: a
+ * click on a point opens its profile card anchored to the point (a second
+ * click elsewhere replaces it, so at most one popup exists), and the cursor
+ * turns into a pointer only while over a point. A click on a cluster asks the
+ * source for the zoom at which that cluster splits and eases the camera
+ * there, never opening a popup; hovering a cluster also shows a pointer.
+ * Hidden points never reach these handlers because they are not in the
+ * source, a popup whose point is hidden after opening is closed by
+ * applyVisibility, and a popup whose point is swallowed by a cluster after
+ * a zoom or pan is closed on moveend. dispose removes the handlers and any
+ * open popup; the map component calls it before removing the map so nothing
+ * leaks across remounts.
  */
-export function attachPointInteractions(map: MapLibreMap, Popup: PopupConstructor, initialCollection: MapPointCollection): PointInteractions {
+export function attachPointInteractions(map: MapLibreMap, Popup: PopupConstructor): PointInteractions {
   let popup: MapLibrePopup | null = null;
+  let openGroup: ReturnType<typeof visibilityGroupOf> = null;
   let openAnchor: LngLatLike | null = null;
-  let coordinateIndex = buildCoordinateFacilityIndex(initialCollection);
-  let collectionRevision = 0;
-  let disposed = false;
   const canvas = map.getCanvas();
 
   const closePopup = () => {
     popup?.remove();
     popup = null;
+    openGroup = null;
     openAnchor = null;
-  };
-
-  const focusAfterContentChange = (element: HTMLElement | null) => {
-    queueMicrotask(() => {
-      element?.focus();
-    });
-  };
-
-  const showFacilities = (facilities: readonly FacilityAtCoordinate[], focusResearchKey?: string) => {
-    if (!popup) return;
-    if (facilities.length === 1) {
-      popup.setDOMContent(buildProfileCard(facilities[0]!.profile));
-      return;
-    }
-    const card = buildFacilityGroupCard(facilities, (facility) => {
-      if (!popup) return;
-      const memberCard = buildGroupMemberCard(facility.profile, () => {
-        showFacilities(facilities, facility.researchKey);
-      });
-      popup.setDOMContent(memberCard);
-      focusAfterContentChange(memberCard.querySelector("button"));
-    });
-    popup.setDOMContent(card);
-    if (focusResearchKey) {
-      const previous = [...card.querySelectorAll<HTMLButtonElement>("[data-research-key]")].find(
-        (button) => button.dataset.researchKey === focusResearchKey,
-      );
-      focusAfterContentChange(previous ?? null);
-    }
-  };
-
-  const openFacilities = (anchor: readonly number[], facilities: readonly FacilityAtCoordinate[]) => {
-    if (facilities.length === 0) return;
-    closePopup();
-    openAnchor = [anchor[0]!, anchor[1]!];
-    popup = new Popup(POPUP_OPTIONS).setLngLat(openAnchor).setDOMContent(document.createElement("div")).addTo(map);
-    showFacilities(facilities);
-    popup.on("close", () => {
-      popup = null;
-      openAnchor = null;
-    });
   };
 
   const handleClick = (event: MapMouseEvent & { features?: MapGeoJSONFeature[] }) => {
     const feature = event.features?.[0];
-    if (!readPointProfile(feature) || feature?.geometry.type !== "Point") return;
-    const anchor = feature.geometry.coordinates;
-    openFacilities(anchor, facilitiesAtCoordinate(coordinateIndex, anchor));
+    const profile = readPointProfile(feature);
+    if (!profile || feature?.geometry.type !== "Point") return;
+    closePopup();
+    const anchor = feature.geometry.coordinates as LngLatLike;
+    popup = new Popup(POPUP_OPTIONS).setLngLat(anchor).setDOMContent(buildProfileCard(profile)).addTo(map);
+    openGroup = visibilityGroupOf(feature.properties);
+    openAnchor = anchor;
+    popup.on("close", () => {
+      popup = null;
+      openGroup = null;
+      openAnchor = null;
+    });
   };
 
   const handleClusterClick = (event: MapMouseEvent & { features?: MapGeoJSONFeature[] }) => {
@@ -367,43 +229,10 @@ export function attachPointInteractions(map: MapLibreMap, Popup: PopupConstructo
     const source = map.getSource(POINTS_SOURCE_ID) as GeoJSONSource | undefined;
     if (!source) return;
     const center = feature.geometry.coordinates as LngLatLike;
-    const pointCount = typeof feature.properties?.point_count === "number" ? feature.properties.point_count : 0;
-    const revision = collectionRevision;
-    void (async () => {
-      try {
-        const zoom = await source.getClusterExpansionZoom(clusterId);
-        if (disposed || revision !== collectionRevision) return;
-        // Ordinary clusters keep MapLibre's existing expansion behavior. Only
-        // a cluster that cannot separate beyond the configured maximum needs
-        // the more expensive leaf inspection below.
-        if (pointCount < 2 || zoom <= CLUSTER_MAX_ZOOM) {
-          map.easeTo({ center, zoom });
-          return;
-        }
-
-        const leaves = await source.getClusterLeaves(clusterId, pointCount, 0);
-        if (disposed || revision !== collectionRevision) return;
-        const pointLeaves = leaves.filter((leaf) => leaf.geometry.type === "Point");
-        const first = pointLeaves[0];
-        if (first?.geometry.type === "Point") {
-          const firstKey = coordinateKey(first.geometry.coordinates);
-          const inseparable =
-            firstKey !== null &&
-            pointLeaves.length === pointCount &&
-            pointLeaves.every((leaf) => leaf.geometry.type === "Point" && coordinateKey(leaf.geometry.coordinates) === firstKey);
-          if (inseparable) {
-            const facilities = facilitiesAtCoordinate(coordinateIndex, first.geometry.coordinates);
-            if (facilities.length > 1) {
-              openFacilities(first.geometry.coordinates, facilities);
-              return;
-            }
-          }
-        }
-        map.easeTo({ center, zoom });
-      } catch {
-        // A stale cluster id can disappear while its worker result is in flight.
-      }
-    })();
+    void source
+      .getClusterExpansionZoom(clusterId)
+      .then((zoom) => map.easeTo({ center, zoom }))
+      .catch(() => undefined);
   };
 
   const handleClusterMove = () => {
@@ -414,7 +243,7 @@ export function attachPointInteractions(map: MapLibreMap, Popup: PopupConstructo
   // if nothing is individually rendered at the popup's anchor, close it.
   const handleMoveEnd = () => {
     if (!popup || !openAnchor) return;
-    const rendered = map.queryRenderedFeatures(map.project(openAnchor as LngLat), { layers: [POINTS_LAYER_ID, CLUSTERS_LAYER_ID] });
+    const rendered = map.queryRenderedFeatures(map.project(openAnchor as LngLat), { layers: [POINTS_LAYER_ID] });
     if (rendered.length === 0) closePopup();
   };
 
@@ -435,22 +264,13 @@ export function attachPointInteractions(map: MapLibreMap, Popup: PopupConstructo
   map.on("moveend", handleMoveEnd);
 
   return {
-    setCollection: (collection) => {
-      coordinateIndex = buildCoordinateFacilityIndex(collection);
-      collectionRevision += 1;
-      if (!popup || !openAnchor) return;
-      const anchor = openAnchor as readonly number[];
-      const facilities = facilitiesAtCoordinate(coordinateIndex, anchor);
-      if (facilities.length === 0) {
+    applyVisibility: (visibility) => {
+      if (popup && openGroup && !visibility[openGroup]) {
         closePopup();
         canvas.style.cursor = "";
-        return;
       }
-      showFacilities(facilities);
     },
     dispose: () => {
-      disposed = true;
-      collectionRevision += 1;
       map.off("click", POINTS_LAYER_ID, handleClick);
       map.off("mousemove", POINTS_LAYER_ID, handleMove);
       map.off("mouseleave", POINTS_LAYER_ID, handleLeave);

@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import { applyBasemapOverrides } from "@/components/map/basemap-style";
-import { DEFAULT_MAP_VISIBILITY, filterPointCollection } from "@/components/map/map-point-style";
+import { DEFAULT_MAP_VISIBILITY } from "@/components/map/map-point-style";
 import type { MapVisibilityState } from "@/components/map/map-point-style";
 import { addPointLayer, applyPointVisibility } from "@/components/map/point-layer";
 import { attachPointInteractions } from "@/components/map/point-popup";
@@ -131,7 +131,7 @@ export function UrdaisMap({ points, visibility = DEFAULT_MAP_VISIBILITY }: Urdai
       map.on("load", () => {
         if (cancelled || !map) return;
         addPointLayer(map, collection, visibilityRef.current);
-        interactionsRef.current = attachPointInteractions(map, Popup, filterPointCollection(collection, visibilityRef.current));
+        interactionsRef.current = attachPointInteractions(map, Popup);
       });
     });
 
@@ -157,21 +157,19 @@ export function UrdaisMap({ points, visibility = DEFAULT_MAP_VISIBILITY }: Urdai
     const collection = buildMapFeatureCollection(points);
     collectionRef.current = collection;
     applyPointVisibility(map, collection, visibilityRef.current);
-    interactionsRef.current?.setCollection(filterPointCollection(collection, visibilityRef.current));
   }, [points]);
 
-  // Visibility changes never touch the map instance: the source and the
-  // exact-coordinate selection index receive the same visible subset, so
-  // cluster counts and grouped popups always agree. An open popup refreshes
-  // or closes when its members change. Before the source exists this is a
-  // no-op and the load handler seeds both with the latest state instead.
+  // Visibility changes never touch the map instance: the source is handed
+  // the visible subset (so clusters recount honestly) and the popup closes
+  // if its point was hidden. Before the source exists this is a no-op and
+  // the load handler seeds the source with the latest state instead.
   useEffect(() => {
     visibilityRef.current = visibility;
     const map = mapRef.current;
     const collection = collectionRef.current;
     if (!map || !collection) return;
     applyPointVisibility(map, collection, visibility);
-    interactionsRef.current?.setCollection(filterPointCollection(collection, visibility));
+    interactionsRef.current?.applyVisibility(visibility);
   }, [visibility]);
 
   return <div ref={containerRef} role="region" aria-label="World map" className="h-full w-full bg-[#f2f3f0]" />;
