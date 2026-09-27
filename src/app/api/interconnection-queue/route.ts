@@ -20,10 +20,18 @@ import {
   loadQueueAnalytics, unavailableQueueAnalytics, validatePublicQueueAnalytics,
 } from "@/lib/interconnection-queue/analytics/read";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
+import { denyUnlessEntitled } from "@/lib/access/server";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(): Promise<Response> {
+  // Premium authorization, before any read. Gating the page and leaving its JSON
+  // callable would be the bypass; this is the same decision the page makes, from
+  // the same module, so the two cannot disagree. Returns null -- and costs one
+  // environment check -- while enforcement is inactive.
+  const denied = await denyUnlessEntitled("power_analytics");
+  if (denied) return denied;
+
   const databaseUrl = (process.env.DATABASE_URL ?? process.env.URDAIS_DATABASE_URL ?? "").trim();
   if (!databaseUrl) {
     return Response.json(unavailableQueueAnalytics());

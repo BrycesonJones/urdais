@@ -12,22 +12,35 @@
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ANONYMOUS_VIEWER, authenticatedViewer, subscriberViewer } from "@/lib/access/entitlement";
 import { PREMIUM_PRODUCT_IDS } from "@/lib/access/products";
 import {
-  DEFERRED_PREMIUM_ENFORCEMENT,
+  PREMIUM_ENFORCEMENT_LEDGER,
   denyUnlessEntitled,
-  resolveAccess,
+  resolvePremiumGate,
   resolveViewer,
   type AccessDenialBody,
 } from "@/lib/access/server";
+import { PREMIUM_ENFORCEMENT_VAR } from "@/lib/access/activation";
 
 const REPO_ROOT = path.resolve(__dirname, "..", "..", "..");
 
 async function body(response: Response): Promise<AccessDenialBody> {
   return (await response.json()) as AccessDenialBody;
+}
+
+
+/**
+ * Enforcement is off by default, which is the whole point of the activation
+ * boundary — so every test of an actual refusal has to switch it on explicitly.
+ * That is not ceremony: a test that forgot to would pass while asserting nothing,
+ * because an unenforced gate allows everything.
+ */
+function withEnforcementActive() {
+  beforeEach(() => vi.stubEnv(PREMIUM_ENFORCEMENT_VAR, "active"));
+  afterEach(() => vi.unstubAllEnvs());
 }
 
 describe("resolveViewer", () => {
@@ -44,7 +57,9 @@ describe("resolveViewer", () => {
   });
 });
 
-describe("the guard", () => {
+describe("the guard, with enforcement active", () => {
+  withEnforcementActive();
+
   it("lets a public product through with no response", async () => {
     expect(await denyUnlessEntitled("model_economics")).toBeNull();
     expect(await denyUnlessEntitled("map", ANONYMOUS_VIEWER)).toBeNull();
@@ -79,8 +94,6 @@ describe("the guard", () => {
   });
 
   it("falls back to the server-resolved viewer when none is passed", async () => {
-    // The default path: no caller-supplied viewer, and the server's own answer
-    // is anonymous, so premium is refused.
     const denied = await denyUnlessEntitled("compute_economics");
     expect(denied!.status).toBe(401);
   });
@@ -88,24 +101,56 @@ describe("the guard", () => {
   it("carries no premium payload in a denial", async () => {
     const denied = await denyUnlessEntitled("compute_economics", ANONYMOUS_VIEWER);
     const text = await denied!.clone().text();
-    // A refusal is a refusal. Nothing about the data, not even a shape or a
-    // count, may ride along for a blur to reveal.
     expect(Object.keys(await body(denied!)).sort()).toEqual(["error", "product", "reason"]);
     expect(text.length).toBeLessThan(200);
   });
 });
 
-describe("resolveAccess", () => {
-  it("gives a Server Component the decision without an HTTP shape", async () => {
-    const decision = await resolveAccess("compute_economics", subscriberViewer());
-    expect(decision.allowed).toBe(true);
-    const denied = await resolveAccess("compute_economics", authenticatedViewer());
-    expect(denied.allowed === false && denied.reason).toBe("entitlement_required");
+describe("the guard, with enforcement inactive (the production default)", () => {
+  it("permits every premium product to an anonymous reader", async () => {
+    // Current production behaviour, asserted rather than assumed. If this ever
+    // fails, a shipped product has been paywalled with no way to buy it.
+    for (const id of PREMIUM_PRODUCT_IDS) {
+      expect(await denyUnlessEntitled(id, ANONYMOUS_VIEWER), id).toBeNull();
+    }
   });
 
-  it("defaults to the server-resolved viewer", async () => {
-    const decision = await resolveAccess("map_semiconductor_fabs");
-    expect(decision.allowed).toBe(false);
+  it("permits an unregistered product too, because nothing is being checked", async () => {
+    // Not a hole: with enforcement off the gate is not the thing deciding, and the
+    // route's own 404 handling is unaffected.
+    expect(await denyUnlessEntitled("market_nope", ANONYMOUS_VIEWER)).toBeNull();
+  });
+
+  it("resolves no viewer at all", async () => {
+    const gate = await resolvePremiumGate("compute_economics");
+    expect(gate).toEqual({ enforced: false, allowed: true });
+  });
+});
+
+describe("resolvePremiumGate", () => {
+  it("reports enforcement off by default", async () => {
+    const gate = await resolvePremiumGate("compute_economics", ANONYMOUS_VIEWER);
+    expect(gate.enforced).toBe(false);
+    expect(gate.allowed).toBe(true);
+  });
+
+  describe("with enforcement active", () => {
+    withEnforcementActive();
+
+    it("gives a Server Component the decision without an HTTP shape", async () => {
+      const allowed = await resolvePremiumGate("compute_economics", subscriberViewer());
+      expect(allowed).toMatchObject({ enforced: true, allowed: true });
+
+      const denied = await resolvePremiumGate("compute_economics", authenticatedViewer());
+      expect(denied.enforced).toBe(true);
+      expect(denied.allowed).toBe(false);
+      expect(denied.allowed === false && denied.reason).toBe("entitlement_required");
+    });
+
+    it("defaults to the server-resolved viewer", async () => {
+      const decision = await resolvePremiumGate("map_semiconductor_fabs");
+      expect(decision.allowed).toBe(false);
+    });
   });
 });
 
@@ -149,36 +194,46 @@ describe("the security boundary", () => {
   });
 });
 
-describe("the deferred-enforcement ledger", () => {
+describe("the enforcement ledger", () => {
   it("names paths that exist", () => {
-    for (const point of DEFERRED_PREMIUM_ENFORCEMENT) {
+    for (const point of PREMIUM_ENFORCEMENT_LEDGER) {
       expect(() => readFileSync(path.join(REPO_ROOT, point.path), "utf8"), point.path).not.toThrow();
     }
   });
 
   it("covers both premium analytical markets and both map read paths", () => {
-    const products = new Set(DEFERRED_PREMIUM_ENFORCEMENT.map((p) => p.product));
+    const products = new Set(PREMIUM_ENFORCEMENT_LEDGER.map((p) => p.product));
     expect(products.has("compute_economics")).toBe(true);
     expect(products.has("power_analytics")).toBe(true);
-    // The map is filtered, not refused, so its ledger entries carry the map
-    // product rather than the three premium layer products.
-    const mapPoints = DEFERRED_PREMIUM_ENFORCEMENT.filter((p) => p.product === "map");
+
+    const mapPoints = PREMIUM_ENFORCEMENT_LEDGER.filter((p) => p.product === "map");
     expect(mapPoints.map((p) => p.path).sort()).toEqual(["src/app/api/map/facilities/route.ts", "src/app/map/page.tsx"]);
     expect(mapPoints.every((p) => p.enforcement === "filter_response")).toBe(true);
   });
 
-  it("is not wired up: no route calls a guard yet", () => {
-    // Phase 1 built the primitive and deliberately did not activate it, and Phase
-    // 2 does not activate it either: authentication now exists but Stripe does
-    // not, so there is still no way to obtain an entitlement and a live gate
-    // would deny a shipped product to everyone.
-    //
-    // The check is on the *guards* rather than on the module, because Phase 2
-    // legitimately added a route that imports `resolveViewer` — /auth/status
-    // reports what the server believes about the reader. Reporting a decision is
-    // not enforcing one. What must not appear under src/app is a call to
-    // `denyUnlessEntitled` or `resolveAccess`.
-    const offenders: string[] = [];
+  it("is wired: every path it claims is implemented actually references the guard", () => {
+    // The reconciliation Phase 3 owes Phase 1. The ledger used to assert these were
+    // unguarded; now it asserts they are guarded, and this is what stops the claim
+    // from being a stale comment. A path that is renamed, or whose guard is removed,
+    // fails here.
+    for (const point of PREMIUM_ENFORCEMENT_LEDGER.filter((p) => p.implemented)) {
+      const source = readFileSync(path.join(REPO_ROOT, point.path), "utf8");
+      const guarded =
+        point.enforcement === "deny_request"
+          ? /\b(denyUnlessEntitled|resolvePremiumGate)\s*\(/.test(source)
+          : /\bresolveMapAccess\s*\(/.test(source) && /\bfilter(FacilityModel|MapPoints)\s*\(/.test(source);
+      expect(guarded, `${point.path} is listed as implemented but references no guard`).toBe(true);
+    }
+  });
+
+  it("accounts for every premium data route in the repository", () => {
+    // The failure this catches is the one Phase 1 actually suffered: four premium
+    // data routes shipped after its ledger was written and were not in it. Any route
+    // under a premium product's API namespace must appear here.
+    const premiumApiDirs = ["compute", "power-delivery", "interconnection-queue", "transmission-headroom", "grid-buildout", "flexible-capacity"];
+    const listed = new Set(PREMIUM_ENFORCEMENT_LEDGER.map((p) => p.path));
+    const missing: string[] = [];
+
     const walk = (dir: string) => {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
         const full = path.join(dir, entry.name);
@@ -186,24 +241,20 @@ describe("the deferred-enforcement ledger", () => {
           walk(full);
           continue;
         }
-        if (!/\.tsx?$/.test(entry.name)) continue;
-        const source = readFileSync(full, "utf8");
-        if (/\b(denyUnlessEntitled|resolveAccess)\s*\(/.test(source)) {
-          offenders.push(path.relative(REPO_ROOT, full));
-        }
+        if (entry.name !== "route.ts") continue;
+        const relative = path.relative(REPO_ROOT, full);
+        const namespace = relative.replace("src/app/api/", "").split("/")[0];
+        if (!premiumApiDirs.includes(namespace ?? "")) continue;
+        if (!listed.has(relative)) missing.push(relative);
       }
     };
-    walk(path.join(REPO_ROOT, "src", "app"));
-    expect(offenders).toEqual([]);
+    walk(path.join(REPO_ROOT, "src", "app", "api"));
+    expect(missing).toEqual([]);
   });
 
-  it("still leaves every deferred enforcement point unguarded", () => {
-    // The ledger is the checklist Phase 5 works from. Each of these files must
-    // still contain no guard call, verified individually so that wiring one up
-    // quietly is not possible.
-    for (const point of DEFERRED_PREMIUM_ENFORCEMENT) {
-      const source = readFileSync(path.join(REPO_ROOT, point.path), "utf8");
-      expect(/\b(denyUnlessEntitled|resolveAccess)\s*\(/.test(source), point.path).toBe(false);
-    }
+  it("distinguishes implemented from commercially activated", () => {
+    // Every guard is in place; none of them enforces anything until the flag is set.
+    expect(PREMIUM_ENFORCEMENT_LEDGER.every((p) => p.implemented)).toBe(true);
+    expect(process.env[PREMIUM_ENFORCEMENT_VAR]).toBeUndefined();
   });
 });

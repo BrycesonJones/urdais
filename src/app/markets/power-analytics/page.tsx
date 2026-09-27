@@ -1,8 +1,12 @@
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { PowerAnalyticsPage } from "@/components/power-analytics/power-analytics-page";
+import { PremiumLockedPage } from "@/components/premium/premium-locked-page";
+import { resolvePremiumGate } from "@/lib/access/server";
+import { POWER_ANALYTICS_HREF } from "@/lib/routes";
 import { loadQueueAnalytics, unavailableQueueAnalytics } from "@/lib/interconnection-queue/analytics/read";
 import { loadFlexibleCapacityReadModel, unavailableFlexibleCapacityModel } from "@/lib/flexible-capacity/analytics/read";
 import { loadGridBuildoutReadModel, unavailableGridBuildoutModel } from "@/lib/grid-buildout/analytics/read";
@@ -10,17 +14,49 @@ import { loadDeliveryGapReadModel, unconfiguredDeliveryGapReadModel } from "@/li
 import { loadTransmissionAnalytics, unavailableTransmissionModel } from "@/lib/transmission-headroom/analytics/read";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
 
+const TITLE = "Power Analytics";
+const DESCRIPTION =
+  "Whether the grid can deliver enough power, fast enough, to the Information Age: load, interconnection, transmission, buildout, and flexibility.";
+
 export const metadata: Metadata = {
-  title: "Power Analytics",
-  description: "Whether the grid can deliver enough power, fast enough, to the Information Age: load, interconnection, transmission, buildout, and flexibility.",
+  title: TITLE,
+  description: DESCRIPTION,
 };
 
 // The delivery gap and interconnection queue sections read the database on every request, so the
 // page is never statically cached with one calculation's numbers baked into it.
 export const dynamic = "force-dynamic";
 
-/** The Power Analytics analytical market: not an index route, so it has no symbol. */
+/**
+ * The Power Analytics analytical market: not an index route, so it has no symbol.
+ *
+ * ## The gate runs before any of the five loaders
+ *
+ * This page reads five independent models -- delivery gap, interconnection queue,
+ * transmission headroom, grid buildout, flexible capacity -- and every one of them
+ * would be serialised into the RSC payload the browser receives. So the gate is
+ * awaited first and returns before the database connection is even opened. A
+ * refused reader costs one activation check and nothing else: no connection, no
+ * query, no model to leak behind a blur.
+ *
+ * With enforcement inactive -- the current production state -- the gate returns
+ * immediately without resolving a viewer, and everything below runs exactly as it
+ * did before Phase 3.
+ */
 export default async function PowerAnalyticsRoute() {
+  const gate = await resolvePremiumGate("power_analytics");
+
+  if (!gate.allowed) {
+    if (gate.reason === "unknown_product") notFound();
+    return (
+      <>
+        <SiteHeader />
+        <PremiumLockedPage title={TITLE} description={DESCRIPTION} reason={gate.reason} returnTo={POWER_ANALYTICS_HREF} />
+        <SiteFooter />
+      </>
+    );
+  }
+
   // The delivery gap is read server-side. The subtraction happened in PostgreSQL when the gap was
   // calculated; nothing about it is computed in a browser, and a failed read degrades to the
   // not-initialized model rather than to an error page.

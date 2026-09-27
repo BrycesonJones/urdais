@@ -37,22 +37,26 @@
  * anywhere, and `server.test.ts` asserts a signed-in reader with no entitlement
  * is refused every premium product.
  *
- * ## The guard is still not wired to any route
+ * ## The guards are wired, and switched off (Paid Access Phase 3)
  *
- * Authentication existing is not permission to switch premium enforcement on.
- * Stripe does not exist, so there is still no way for a reader to obtain an
- * entitlement, and a live gate would deny Compute Economics and Power Analytics
- * to everyone. `DEFERRED_PREMIUM_ENFORCEMENT` remains deferred; see its own
- * comment for the activation conditions.
+ * Phase 3 wired the gate into every premium surface: both analytical pages, all
+ * seven premium data routes, and the map's point filter. The reason production is
+ * still commercially open is no longer that the guards are absent — they are
+ * present and tested — but that they are *inactive*.
+ *
+ * `resolvePremiumGate` consults `@/lib/access/activation` first, and enforcement
+ * defaults to off. Stripe does not exist, so no reader can obtain an entitlement,
+ * and a live gate would show every visitor "Get Full Access" with no way to buy
+ * it. Flipping `URDAIS_PREMIUM_ENFORCEMENT=active` is a later phase's deliberate
+ * commercial decision.
+ *
+ * `PREMIUM_ENFORCEMENT_LEDGER` below records, per path, whether the guard is
+ * implemented — which is now a different question from whether it is enforced.
  */
 
-import {
-  ANONYMOUS_VIEWER,
-  canAccess,
-  type AccessDecision,
-  type AccessDenialReason,
-  type Viewer,
-} from "@/lib/access/entitlement";
+import { gateFor, isPremiumEnforcementActive, UNENFORCED_GATE, type PremiumGate } from "@/lib/access/activation";
+import { mapAccessFor, OPEN_MAP_ACCESS, type MapAccess } from "@/lib/access/map-access";
+import { ANONYMOUS_VIEWER, type AccessDecision, type AccessDenialReason, type Viewer } from "@/lib/access/entitlement";
 import { loadPremiumEntitlement } from "@/lib/access/entitlement-store";
 import type { UrdaisProductId } from "@/lib/access/products";
 import { resolveUrdaisAccount } from "@/lib/auth/accounts";
@@ -153,104 +157,193 @@ export function accessDenialResponse(decision: Extract<AccessDecision, { allowed
 }
 
 /**
- * The enforcement primitive: resolve the reader server-side, decide, and refuse
- * with a `Response` when the answer is no.
+ * The canonical gate: activation, then the access decision, resolved server-side.
  *
- * Returns `null` on success so the happy path reads as a guard clause:
+ * **This is the only thing pages, routes and the map filter call.** It is
+ * activation-aware, so there is no unconditional variant lying around for
+ * someone to reach for by mistake and paywall production. Whether enforcement is
+ * on lives in `@/lib/access/activation` and nowhere else.
+ *
+ * When enforcement is inactive it returns immediately **without resolving a
+ * viewer**. That matters beyond tidiness: resolving one costs a Supabase round
+ * trip and two database queries, and adding those to every Compute Economics and
+ * Power Analytics request today — to reach a verdict that is always "allowed" —
+ * would be a live performance regression bought for nothing.
+ *
+ * An explicit `viewer` may be passed by a caller that already resolved one for
+ * this request, so a page gating several sections does not resolve repeatedly. It
+ * is not a way to supply a viewer from outside the server: the parameter is
+ * unreachable from a browser.
+ */
+export async function resolvePremiumGate(
+  productId: UrdaisProductId | string,
+  viewer?: Viewer,
+): Promise<PremiumGate> {
+  if (!isPremiumEnforcementActive()) return UNENFORCED_GATE;
+  const resolved = viewer ?? (await resolveViewer());
+  return gateFor(productId, resolved);
+}
+
+/**
+ * The gate as an HTTP refusal, for a Route Handler.
+ *
+ * Returns `null` when the request may proceed — including when enforcement is
+ * inactive — so the happy path reads as a guard clause:
  *
  *     const denied = await denyUnlessEntitled("power_analytics");
  *     if (denied) return denied;
  *
- * An explicit `viewer` may be passed by a caller that has already resolved one
- * for this request — a page that gates several sections should not open several
- * database connections. It is not a way to supply a viewer from outside the
- * server: the parameter is unreachable from a browser.
+ * The body carries the denial reason and the product id and nothing else. No
+ * premium value, count, shape or timestamp rides along: a refusal that leaked the
+ * number it was refusing would defeat the point.
  */
 export async function denyUnlessEntitled(
   productId: UrdaisProductId | string,
   viewer?: Viewer,
 ): Promise<Response | null> {
-  const resolved = viewer ?? (await resolveViewer());
-  const decision = canAccess(resolved, productId);
-  return decision.allowed ? null : accessDenialResponse(decision);
+  const gate = await resolvePremiumGate(productId, viewer);
+  if (gate.allowed) return null;
+  return accessDenialResponse({ allowed: false, reason: gate.reason, product: gate.product });
 }
 
 /**
- * The same decision without the HTTP shape, for a Server Component that must
- * render a gate rather than return a status code.
- */
-export async function resolveAccess(
-  productId: UrdaisProductId | string,
-  viewer?: Viewer,
-): Promise<AccessDecision> {
-  const resolved = viewer ?? (await resolveViewer());
-  return canAccess(resolved, productId);
-}
-
-/* ------------------------------------------------------------------ deferred wiring */
-
-/**
- * Every server path that must be guarded, and is not yet.
+ * The reader's map layer access, resolved server-side.
  *
- * This is the phase's honest ledger, not documentation prose: it is a typed
- * constant so that a reviewer can see the full blast radius in one place, and
- * so Phase 5 has a checklist it cannot half-complete from memory. The map
- * entries are the sharpest of them — `/map` and `/api/map/facilities` today
- * serve *every* published facility, all four categories, to anyone. Gating the
- * map means filtering the point set by category for an unentitled reader, not
- * refusing the route.
+ * Separate from `resolvePremiumGate` because the map's answer is not one verdict
+ * but a partition: some categories are served and some are withheld, on the same
+ * request. Asking the gate about the `map` product would answer "allowed", which
+ * is true and useless — the map itself is public.
+ *
+ * Like the gate, it resolves no viewer while enforcement is inactive, so the map
+ * page and the facilities endpoint behave exactly as they did before Phase 3.
  */
-export type DeferredEnforcementPoint = {
-  /** Repository path of the route, loader or read model that needs the guard. */
+export async function resolveMapAccess(viewer?: Viewer): Promise<MapAccess> {
+  if (!isPremiumEnforcementActive()) return OPEN_MAP_ACCESS;
+  const resolved = viewer ?? (await resolveViewer());
+  return mapAccessFor(resolved);
+}
+
+/* ------------------------------------------------------------------ the ledger */
+
+/**
+ * Every server path that governs premium data, and whether its guard exists.
+ *
+ * Phase 1 created this as a list of paths that were *not yet guarded*, because
+ * nothing could safely be guarded then. Phase 3 wired all of them, so the
+ * question the ledger answers has changed: `implemented` now says whether the
+ * guard is in the code, which is a different thing from whether enforcement is
+ * switched on. Nothing here is "activated" until
+ * `URDAIS_PREMIUM_ENFORCEMENT=active`, and that is one flag for the whole set —
+ * see `@/lib/access/activation`.
+ *
+ * It is kept rather than deleted because it is still the checklist: a reviewer can
+ * see every premium data path in one place, and `server.test.ts` asserts each
+ * file exists *and* actually references the guard, so a path cannot be silently
+ * unwired or renamed out from under this list.
+ *
+ * Phase 3's audit found four routes that did not exist when Phase 1 wrote its
+ * ledger — `compute/capacity`, `transmission-headroom`, `grid-buildout` and
+ * `flexible-capacity`. That is the argument for the assertion in the test rather
+ * than trusting this comment: the ledger goes stale exactly when new product
+ * surfaces land.
+ */
+export type PremiumEnforcementPoint = {
+  /** Repository path of the route, loader or read model. */
   readonly path: string;
   /** The product whose entitlement governs it. */
   readonly product: UrdaisProductId;
-  /** What the guard must do there — a refusal, or a filter. */
+  /** A refusal, or a filtered response. */
   readonly enforcement: "deny_request" | "filter_response";
+  /** Whether the guard is present in the code. Not whether it is switched on. */
+  readonly implemented: boolean;
   readonly note: string;
 };
 
-export const DEFERRED_PREMIUM_ENFORCEMENT: readonly DeferredEnforcementPoint[] = Object.freeze([
+export const PREMIUM_ENFORCEMENT_LEDGER: readonly PremiumEnforcementPoint[] = Object.freeze([
   {
     path: "src/app/markets/compute-analytics/page.tsx",
     product: "compute_economics",
     enforcement: "deny_request",
-    note: "Server Component: resolveAccess, then render the Phase 2 gate instead of loadComputeEconomicsReadModel. The read model must not be loaded for an unentitled reader, or the data ships in the RSC payload behind the blur.",
+    implemented: true,
+    note: "Gated before loadComputeEconomicsReadModel is called, so a denied reader's request never touches the database and no price reaches the RSC payload.",
+  },
+  {
+    path: "src/app/api/compute/capacity/route.ts",
+    product: "compute_economics",
+    enforcement: "deny_request",
+    implemented: true,
+    note: "Available Compute Capacity snapshot. Added after Phase 1 wrote its ledger. Confirmed as part of compute_economics on 27 September 2026, rather than as a separate or public product -- note that the section component which would render it (available-capacity-section.tsx) is on no page today, so this classification governs the API alone until it is surfaced.",
   },
   {
     path: "src/app/api/compute/capacity/series/route.ts",
     product: "compute_economics",
     enforcement: "deny_request",
-    note: "The JSON behind Compute Economics. Guarding only the page leaves this endpoint as the bypass.",
+    implemented: true,
+    note: "The capacity history. Guarding only the page would leave this as the bypass.",
   },
   {
     path: "src/app/markets/power-analytics/page.tsx",
     product: "power_analytics",
     enforcement: "deny_request",
-    note: "Same shape as Compute Economics: gate before loadDeliveryGapReadModel and loadQueueAnalytics run.",
+    implemented: true,
+    note: "Gated before all five read models load: gap, queue, headroom, buildout, flexibility.",
   },
   {
     path: "src/app/api/power-delivery/gap/route.ts",
     product: "power_analytics",
     enforcement: "deny_request",
+    implemented: true,
     note: "Delivery gap JSON.",
   },
   {
     path: "src/app/api/interconnection-queue/route.ts",
     product: "power_analytics",
     enforcement: "deny_request",
+    implemented: true,
     note: "Interconnection queue analytics JSON.",
+  },
+  {
+    path: "src/app/api/transmission-headroom/route.ts",
+    product: "power_analytics",
+    enforcement: "deny_request",
+    implemented: true,
+    note: "Transmission headroom JSON. Not in Phase 1's ledger; the product shipped after it.",
+  },
+  {
+    path: "src/app/api/grid-buildout/route.ts",
+    product: "power_analytics",
+    enforcement: "deny_request",
+    implemented: true,
+    note: "Grid buildout velocity JSON. Not in Phase 1's ledger.",
+  },
+  {
+    path: "src/app/api/flexible-capacity/route.ts",
+    product: "power_analytics",
+    enforcement: "deny_request",
+    implemented: true,
+    note: "Flexible capacity JSON. Not in Phase 1's ledger.",
   },
   {
     path: "src/app/map/page.tsx",
     product: "map",
     enforcement: "filter_response",
-    note: "The map stays public. facilityMapPoints must drop points in PREMIUM_MAP_CATEGORIES for an unentitled reader, so premium coordinates never reach the RSC payload. The legend rows for those categories become Phase 2's upsell affordance.",
+    implemented: true,
+    note: "The map stays public. Points in PREMIUM_MAP_CATEGORIES are dropped server-side for an unentitled reader, so premium coordinates never reach the RSC payload; the legend still lists those layers as premium.",
   },
   {
     path: "src/app/api/map/facilities/route.ts",
     product: "map",
     enforcement: "filter_response",
-    note: "Same filter as the page, and the more important of the two: this endpoint is directly fetchable. Note that validatePublicFacilities runs over the response, so the filter must produce a model that still satisfies the facility contract.",
+    implemented: true,
+    note: "The same filter, and the more important of the two since this endpoint is directly fetchable. The filtered model still satisfies validatePublicFacilities.",
   },
 ]);
+
+/**
+ * Phase 1's name for the ledger, kept so nothing that referenced it breaks.
+ *
+ * @deprecated Use `PREMIUM_ENFORCEMENT_LEDGER`. The old name asserted that these
+ * paths were deferred, which is no longer true of the guards — only of the
+ * activation flag.
+ */
+export const DEFERRED_PREMIUM_ENFORCEMENT = PREMIUM_ENFORCEMENT_LEDGER;

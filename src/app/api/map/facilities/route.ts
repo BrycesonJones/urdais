@@ -13,6 +13,8 @@
  * 500. A failed read is an outage, not an empty world, and says so.
  */
 
+import { filterFacilityModel } from "@/lib/access/map-access";
+import { resolveMapAccess } from "@/lib/access/server";
 import { loadFacilityReadModel } from "@/lib/facilities/read/load";
 import { emptyFacilityReadModel, validatePublicFacilities } from "@/lib/facilities/read/read-model";
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
@@ -25,9 +27,16 @@ export async function GET(): Promise<Response> {
     return Response.json(emptyFacilityReadModel("not_configured"));
   }
 
+  // Premium layers are withheld here rather than in the browser. This endpoint
+  // matters more than the map page: it is directly fetchable, so hiding markers in
+  // React would leave every premium coordinate one `curl` away.
+  const access = await resolveMapAccess();
+
   const sql = await createTokenSqlExecutor(databaseUrl);
   try {
-    const model = await loadFacilityReadModel(sql);
+    const model = filterFacilityModel(await loadFacilityReadModel(sql), access);
+    // The filtered model still has to satisfy the facility contract: narrowing the
+    // set must not produce a response that fails its own validation.
     const reasons = validatePublicFacilities(JSON.parse(JSON.stringify(model)) as unknown);
     if (reasons.length > 0) {
       console.error(`map facilities: response failed its own contract (${reasons.join("; ")})`);
