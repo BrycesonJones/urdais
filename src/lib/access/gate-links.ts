@@ -1,23 +1,28 @@
 /**
  * Where a premium gate's buttons go.
  *
- * One module so the destination is changed in one place when onboarding lands,
- * and so every CTA carries its `returnTo` the same way. Both links are built with
+ * One module so the destination is changed in one place, and so every CTA carries
+ * its `returnTo` the same way. Both links are built with
  * Phase 2's `safeReturnTo`, which is the only redirect sanitiser in Urdais — a
  * second one is how the two drift and one of them becomes an open redirect.
  *
- * ## `/access` is a placeholder, and says so
+ * ## `/access` is the real onboarding entry point
  *
- * Stripe and onboarding do not exist. The CTA therefore cannot lead to a checkout,
- * and pointing it at one that is not there would be a broken journey. It leads to
- * `/access`, which states plainly that subscriptions are not yet available and
- * offers the reader their way back. When onboarding ships, this function is what
- * changes; the gates do not.
+ * Phase 4 replaced the placeholder that used to live there. `/access` now resolves
+ * the reader's authoritative state and routes them: an anonymous reader sees the
+ * offer and chooses between creating an account and logging in, a signed-in reader
+ * goes to whichever step their account actually needs, and an existing subscriber is
+ * told they already have access rather than being sold a second subscription.
+ *
+ * The CTA target did not change, which was the point of routing it through this
+ * function: the gates were written against `/access` and were not touched when the
+ * destination behind it became real. Phase 5 replaces the checkout boundary at the
+ * end of that journey, and the gates will not need touching then either.
  */
 
 import { safeReturnTo } from "@/lib/auth/return-to";
 
-/** The temporary subscription entry point. Replaced by onboarding in a later phase. */
+/** The onboarding entry point. See @/lib/onboarding/routes for the states behind it. */
 export const ACCESS_ENTRY_HREF = "/access";
 
 /** Phase 2's sign-in route. */
