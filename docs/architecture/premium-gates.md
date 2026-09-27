@@ -160,9 +160,11 @@ Full access unlocks GPU Compute Clusters, Power Infrastructure, and Semiconducto
 
 **Four of these were not in Phase 1's ledger** — `compute/capacity`, `transmission-headroom`, `grid-buildout`, `flexible-capacity` — because the products shipped after it was written. That is why `server.test.ts` now asserts that every `route.ts` under a premium API namespace appears in the ledger, rather than trusting the list.
 
-### One classification to confirm
+### Available Compute Capacity belongs to Compute Economics
 
-`/api/compute/capacity{,/series}` serve **Available Compute Capacity**, and its section component (`available-capacity-section.tsx`) is currently rendered on no page. They are gated under `compute_economics`, inheriting Phase 1's treatment of the series route, which fails closed. If Available Compute Capacity is meant to be a separate product — or a public one — that is a classification decision, not something this phase should have settled silently. Its dataset is empty by design today, so nothing is withheld either way.
+`/api/compute/capacity{,/series}` serve **Available Compute Capacity**. It is classified under `compute_economics` — **confirmed 27 September 2026**, rather than being split out as its own product or left public.
+
+Worth knowing when you next touch it: its section component (`available-capacity-section.tsx`) is rendered on **no page**, so this classification currently governs the two API routes alone. Its dataset is also empty by design, because no permitted source exposes a capacity quantity. When the section is eventually surfaced, it belongs behind the Compute Economics gate with the rest of that product — not as a separate entitlement.
 
 ---
 
@@ -230,7 +232,8 @@ Do not set `URDAIS_PREMIUM_ENFORCEMENT=active` in production until **all** of:
 2. Onboarding exists, and `accessHref` points at it instead of `/access`.
 3. An operator can grant a `manual` entitlement to founder, support and comp accounts.
 4. Supabase custom SMTP is configured — otherwise a gated reader cannot even complete the account creation the purchase requires.
-5. The Available Compute Capacity classification in §7 has been confirmed.
+5. ~~The Available Compute Capacity classification in §7 has been confirmed.~~
+   **Done** — confirmed as part of `compute_economics`, 27 September 2026.
 
 Activating earlier denies a shipped product to everyone. Activating the pages but not the APIs is impossible by construction, which is the one failure mode that cannot happen here.
 

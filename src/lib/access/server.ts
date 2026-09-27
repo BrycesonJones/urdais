@@ -272,7 +272,7 @@ export const PREMIUM_ENFORCEMENT_LEDGER: readonly PremiumEnforcementPoint[] = Ob
     product: "compute_economics",
     enforcement: "deny_request",
     implemented: true,
-    note: "Available Compute Capacity snapshot. Added after Phase 1 wrote its ledger. Its classification under compute_economics is inherited from Phase 1's treatment of the series route and is flagged for confirmation: the section component that would render it is not currently on any page.",
+    note: "Available Compute Capacity snapshot. Added after Phase 1 wrote its ledger. Confirmed as part of compute_economics on 27 September 2026, rather than as a separate or public product -- note that the section component which would render it (available-capacity-section.tsx) is on no page today, so this classification governs the API alone until it is surfaced.",
   },
   {
     path: "src/app/api/compute/capacity/series/route.ts",
