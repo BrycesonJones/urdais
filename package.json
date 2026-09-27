@@ -2,7 +2,7 @@
   "name": "urdais",
   "version": "0.1.0",
   "private": true,
-  "description": "Urdais \u2014 an information and market-data platform for the Information Age.",
+  "description": "Urdais — an information and market-data platform for the Information Age.",
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
@@ -80,6 +80,8 @@
     "map:equinix:recover": "tsx scripts/map/equinix-precision-recovery.ts"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
     "github-slugger": "^2.0.0",
     "maplibre-gl": "^6.9.0",
     "mdast-util-gfm-table": "^2.0.0",

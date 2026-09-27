@@ -1,6 +1,6 @@
 # Paid access: the entitlement foundation
 
-**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 27 September 2026, Phase 1 of paid access. Architecture only — no Stripe, no onboarding, no paywall UI, and no production gate is active.
+**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 27 September 2026, Phase 1 of paid access; §1 revised the same day when Phase 2 landed authentication. Architecture only — no Stripe, no onboarding, no paywall UI, and no production gate is active.
 
 This document is the specification Phase 2 builds against. If you are adding a
 premium gate to a surface, everything you need is here and you should not invent
@@ -8,29 +8,34 @@ a second access model.
 
 ---
 
-## 1. The one fact that shapes everything
+## 1. The one fact that shaped everything — now resolved
 
-**Urdais has no authentication system.**
+> **Superseded by Phase 2.** Urdais authenticates with Supabase Auth as of
+> 27 September 2026. See `docs/architecture/authentication.md`. The paragraphs
+> below record why this foundation looks the way it does, and remain the reason
+> several of its choices are worth keeping.
 
-There is no Supabase Auth client in `package.json`, no session cookie, no
-`middleware.ts`, no sign-in route, and no reference to `auth.users` in any of the
-107 migrations preceding this phase. Every table has RLS enabled with zero
-policies, and the application reaches Postgres through `pg` on a privileged
-connection string; `anon` and `authenticated` hold no privileges anywhere.
+**When Phase 1 was written, Urdais had no authentication system.** There was no
+Supabase Auth client in `package.json`, no session cookie, no middleware, no
+sign-in route, and no reference to `auth.users` in any of the 107 migrations
+preceding it. Every reader was anonymous and every published product was public.
 
-So today every reader of Urdais is anonymous, and every published product is
-public. That is not a gap this phase closes — closing it is an authentication
-phase of its own — but it decides the shape of everything below:
+That decided the shape of this foundation, and each consequence still holds:
 
-- `resolveViewer()` returns the anonymous viewer unconditionally, and says so.
-- The entitlement tables are provider-agnostic: they do not foreign-key to
-  `auth.users`, because nobody has chosen the provider.
-- **No guard is wired to any route.** An anonymous reader cannot hold an
-  entitlement, so activating a gate today would deny Compute Economics and
-  Power Analytics to everyone, permanently, with no way to subscribe. See §7.
+- `resolveViewer()` was anonymous-only, and said so rather than pretending.
+  **Phase 2 replaced its body**; the signature and every caller are unchanged,
+  which was the point of isolating it.
+- The entitlement tables are provider-agnostic — no foreign key to `auth.users`
+  — because nobody had chosen a provider. Phase 2 chose Supabase and **kept that
+  design**, storing `('supabase', <user uuid>)`. A second provider still needs no
+  migration.
+- **No guard is wired to any route.** This has not changed and must not: an
+  authenticated reader still cannot obtain an entitlement, because Stripe does
+  not exist. Activating a gate would deny Compute Economics and Power Analytics
+  to everyone, with no way to subscribe. See §7.
 
-Reading order for the rest of the system: authentication phase → Phase 2 gates →
-Stripe phase → activation.
+Reading order for the rest of the system: ~~authentication phase~~ (done) →
+Phase 3 gates → Stripe phase → activation.
 
 ---
 
@@ -218,8 +223,12 @@ const decision = await resolveAccess("compute_economics");
 if (!decision.allowed) return <PremiumGate decision={decision} />;
 ```
 
-**Nothing imports these yet, and a test asserts that.** The reason is in §1: with
-no authentication and no checkout, a live gate is an outage with no remedy.
+**Nothing imports these yet, and a test asserts that.** The reason has narrowed
+but not gone away: authentication now exists, but with no checkout a live gate is
+still an outage with no remedy. The test checks for calls to
+`denyUnlessEntitled`/`resolveAccess` rather than for imports of the module, since
+Phase 2 legitimately added `/auth/status`, which reads `resolveViewer` to report
+what the server believes. Reporting a decision is not enforcing one.
 
 `DEFERRED_PREMIUM_ENFORCEMENT` in `@/lib/access/server` is the typed ledger of
 every path that must be guarded, with the enforcement each needs:
@@ -240,7 +249,8 @@ A test asserts every path in the ledger exists, so it cannot rot.
 
 Activate a gate only when **all** of these hold:
 
-1. Authentication ships and `resolveViewer()` returns real accounts.
+1. ~~Authentication ships and `resolveViewer()` returns real accounts.~~
+   **Done, Phase 2.**
 2. Checkout ships, so a denied reader has a way to become an entitled one.
 3. The operator can grant a `manual` entitlement to founder and support accounts.
 
