@@ -31,10 +31,11 @@ async function body(response: Response): Promise<AccessDenialBody> {
 }
 
 describe("resolveViewer", () => {
-  it("is anonymous, because Urdais has no authentication system yet", () => {
-    // This assertion is expected to be *changed* by the authentication phase.
-    // Until then it records the truth rather than a placeholder: every reader of
-    // Urdais today is anonymous.
+  it("is anonymous when Supabase Auth is not configured", () => {
+    // The unit-test environment sets no NEXT_PUBLIC_SUPABASE_* variables, so this
+    // exercises the unconfigured path: a deployment without auth is the
+    // public-only product, not a broken one. The authenticated path is covered in
+    // `src/lib/auth/viewer.test.ts`, which stubs the Supabase identity.
     return expect(resolveViewer()).resolves.toEqual(ANONYMOUS_VIEWER);
   });
 
@@ -166,12 +167,18 @@ describe("the deferred-enforcement ledger", () => {
     expect(mapPoints.every((p) => p.enforcement === "filter_response")).toBe(true);
   });
 
-  it("is not wired up: no route imports the guard yet", () => {
-    // Phase 1 builds the primitive and deliberately does not activate it. If
-    // this test fails, either Phase 2/5 has landed — and this test should be
-    // deleted in that change — or a guard was switched on by accident, which
-    // would deny a production product nobody can yet subscribe to.
-    const importers: string[] = [];
+  it("is not wired up: no route calls a guard yet", () => {
+    // Phase 1 built the primitive and deliberately did not activate it, and Phase
+    // 2 does not activate it either: authentication now exists but Stripe does
+    // not, so there is still no way to obtain an entitlement and a live gate
+    // would deny a shipped product to everyone.
+    //
+    // The check is on the *guards* rather than on the module, because Phase 2
+    // legitimately added a route that imports `resolveViewer` — /auth/status
+    // reports what the server believes about the reader. Reporting a decision is
+    // not enforcing one. What must not appear under src/app is a call to
+    // `denyUnlessEntitled` or `resolveAccess`.
+    const offenders: string[] = [];
     const walk = (dir: string) => {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
         const full = path.join(dir, entry.name);
@@ -180,12 +187,23 @@ describe("the deferred-enforcement ledger", () => {
           continue;
         }
         if (!/\.tsx?$/.test(entry.name)) continue;
-        if (/from\s+["']@\/lib\/access\/server["']/.test(readFileSync(full, "utf8"))) {
-          importers.push(path.relative(REPO_ROOT, full));
+        const source = readFileSync(full, "utf8");
+        if (/\b(denyUnlessEntitled|resolveAccess)\s*\(/.test(source)) {
+          offenders.push(path.relative(REPO_ROOT, full));
         }
       }
     };
     walk(path.join(REPO_ROOT, "src", "app"));
-    expect(importers).toEqual([]);
+    expect(offenders).toEqual([]);
+  });
+
+  it("still leaves every deferred enforcement point unguarded", () => {
+    // The ledger is the checklist Phase 5 works from. Each of these files must
+    // still contain no guard call, verified individually so that wiring one up
+    // quietly is not possible.
+    for (const point of DEFERRED_PREMIUM_ENFORCEMENT) {
+      const source = readFileSync(path.join(REPO_ROOT, point.path), "utf8");
+      expect(/\b(denyUnlessEntitled|resolveAccess)\s*\(/.test(source), point.path).toBe(false);
+    }
   });
 });

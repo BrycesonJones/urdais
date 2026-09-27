@@ -16,29 +16,34 @@
  * `scripts/`. It is never bundled into a client component, and `server.test.ts`
  * asserts that no `"use client"` module imports it.
  *
- * ## Urdais has no authentication system yet
+ * ## Authentication (Paid Access Phase 2)
  *
- * This is the single most important fact about this file, and it is not a
- * limitation of the design — it is the state of the repository. There is no
- * Supabase Auth client, no session cookie, no middleware, no sign-in route and
- * no user table in any of the 107 migrations preceding this one. `pg` connects
- * with a privileged connection string and every table has RLS enabled with zero
- * policies, so today *every* reader of Urdais is anonymous and the entire
- * published product is public.
+ * Urdais authenticates with Supabase Auth, email and password. Phase 1 shipped
+ * this resolver as anonymous-only because no authentication system existed at
+ * all; that is no longer true, and `resolveViewer` below is the real thing.
  *
- * `resolveViewer` therefore returns `ANONYMOUS_VIEWER`, always, and says so
- * loudly rather than pretending. When an authentication phase lands, this one
- * function is what it replaces: read the session, look the account up, call
- * `loadPremiumEntitlement`, return the viewer. Nothing else in Urdais changes,
- * because nothing else in Urdais asks who the reader is.
+ * The lifecycle is three steps, each owned by a different module, and the split
+ * is the point — Supabase proves identity, Urdais owns the account, and the
+ * entitlement system decides access:
  *
- * The consequence for this phase is unavoidable and deliberate: **the guard
- * below is not wired to any route.** An `ANONYMOUS_VIEWER` cannot hold an
- * entitlement, so activating the guard against `/markets/compute-analytics`
- * today would deny Compute Economics to every reader in production with no
- * possible way to obtain access — a self-inflicted outage in exchange for
- * nothing. See `DEFERRED_PREMIUM_ENFORCEMENT` for the wiring plan and the
- * conditions that unblock it.
+ *   1. `resolveSupabaseIdentity()`  a server-confirmed Supabase user, or anonymous.
+ *   2. `resolveUrdaisAccount()`     that subject's `identity.accounts` row, created
+ *                                   on first sight, keyed on (provider, subject).
+ *   3. `loadPremiumEntitlement()`   that account's entitlement, or null.
+ *
+ * Authentication does not imply entitlement. Step 3 returns `null` for every
+ * real user today, and `canAccess` denies premium on a null entitlement exactly
+ * as it did before this phase. There is no `if (user) return premiumAccess`
+ * anywhere, and `server.test.ts` asserts a signed-in reader with no entitlement
+ * is refused every premium product.
+ *
+ * ## The guard is still not wired to any route
+ *
+ * Authentication existing is not permission to switch premium enforcement on.
+ * Stripe does not exist, so there is still no way for a reader to obtain an
+ * entitlement, and a live gate would deny Compute Economics and Power Analytics
+ * to everyone. `DEFERRED_PREMIUM_ENFORCEMENT` remains deferred; see its own
+ * comment for the activation conditions.
  */
 
 import {
@@ -48,7 +53,11 @@ import {
   type AccessDenialReason,
   type Viewer,
 } from "@/lib/access/entitlement";
+import { loadPremiumEntitlement } from "@/lib/access/entitlement-store";
 import type { UrdaisProductId } from "@/lib/access/products";
+import { resolveUrdaisAccount } from "@/lib/auth/accounts";
+import { resolveSupabaseIdentity } from "@/lib/auth/identity";
+import { resolveTokenDatabaseUrl, tokenSqlExecutor } from "@/lib/tokens/read/database";
 
 /**
  * The reader, as established by the server.
@@ -63,11 +72,49 @@ import type { UrdaisProductId } from "@/lib/access/products";
  * reconstructed one.
  */
 export async function resolveViewer(): Promise<Viewer> {
-  // Intentionally unconditional. See the module comment: there is no
-  // authentication system to consult, and inventing a header or cookie to read
-  // here would be exactly the client-trusting shortcut this module exists to
-  // prevent. Replace the body, not the signature.
-  return ANONYMOUS_VIEWER;
+  const resolution = await resolveSupabaseIdentity();
+  if (resolution.kind === "anonymous") return ANONYMOUS_VIEWER;
+
+  const { identity } = resolution;
+
+  // The account and its entitlement live in `identity`, which no browser role can
+  // reach. This is the privileged server connection every other Urdais read uses
+  // -- the shared serverless pool, not a fresh client per request, because this
+  // runs on the request path and connection churn there is what exhausted the
+  // pooler once already (see @/lib/db/connection).
+  try {
+    // Inside the guard, not before it. Resolving the URL reads the environment and
+    // can throw, and a throw here would 500 a page whose content is public.
+    const databaseUrl = resolveTokenDatabaseUrl();
+    if (!databaseUrl) {
+      // Authenticated against Supabase, but Urdais cannot reach its own database.
+      // Reporting anonymous is the safe direction: it withholds premium data rather
+      // than granting it, and public Urdais is unaffected.
+      console.error("resolveViewer: authenticated viewer could not be resolved, no database configured");
+      return ANONYMOUS_VIEWER;
+    }
+
+    const sql = await tokenSqlExecutor(databaseUrl);
+    const account = await resolveUrdaisAccount(sql, identity);
+    const premiumEntitlement = await loadPremiumEntitlement(sql, account.id);
+
+    return {
+      authentication: {
+        kind: "authenticated",
+        accountId: account.id,
+        // From the Auth server's own column, never from token metadata.
+        emailVerified: identity.emailVerified,
+      },
+      premiumEntitlement,
+    };
+  } catch (error) {
+    // A provisioning or entitlement read failure must not 500 a page. Anonymous
+    // is the fail-safe answer: the reader loses premium they may be owed, which
+    // is recoverable, rather than gaining premium they are not, which is not.
+    const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    console.error(`resolveViewer: entitlement resolution failed (${detail})`);
+    return ANONYMOUS_VIEWER;
+  }
 }
 
 /* ------------------------------------------------------------------ the guard */
