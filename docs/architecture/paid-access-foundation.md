@@ -223,15 +223,23 @@ const decision = await resolveAccess("compute_economics");
 if (!decision.allowed) return <PremiumGate decision={decision} />;
 ```
 
-**Nothing imports these yet, and a test asserts that.** The reason has narrowed
-but not gone away: authentication now exists, but with no checkout a live gate is
-still an outage with no remedy. The test checks for calls to
-`denyUnlessEntitled`/`resolveAccess` rather than for imports of the module, since
-Phase 2 legitimately added `/auth/status`, which reads `resolveViewer` to report
-what the server believes. Reporting a decision is not enforcing one.
+> **Superseded by Phase 3.** The guards are now wired into every premium surface
+> and are held inactive by one flag instead of by their own absence. See
+> `docs/architecture/premium-gates.md`. `DEFERRED_PREMIUM_ENFORCEMENT` is now
+> `PREMIUM_ENFORCEMENT_LEDGER`, which records `implemented` separately from
+> activated; the old name remains as a deprecated alias.
 
-`DEFERRED_PREMIUM_ENFORCEMENT` in `@/lib/access/server` is the typed ledger of
-every path that must be guarded, with the enforcement each needs:
+Phase 1 and Phase 2 both left these paths unguarded, because a gate with no
+checkout behind it is an outage with no remedy. Phase 3 changed the mechanism
+rather than the outcome: every path below is guarded, and
+`URDAIS_PREMIUM_ENFORCEMENT` defaults to inactive, so production is still
+commercially open. The activation prerequisites moved to the Phase 3 document.
+
+`PREMIUM_ENFORCEMENT_LEDGER` in `@/lib/access/server` is the typed ledger of every
+path that governs premium data. Phase 3 added four routes Phase 1 never saw
+(`compute/capacity`, `transmission-headroom`, `grid-buildout`,
+`flexible-capacity`), which is why a test now asserts the ledger accounts for
+every route under a premium API namespace rather than trusting this table:
 
 | Path | Product | Enforcement |
 | --- | --- | --- |
@@ -243,7 +251,8 @@ every path that must be guarded, with the enforcement each needs:
 | `src/app/map/page.tsx` | `map` | **filter** |
 | `src/app/api/map/facilities/route.ts` | `map` | **filter** |
 
-A test asserts every path in the ledger exists, so it cannot rot.
+Tests assert every path exists, that each one actually references its guard, and
+that no premium API route is missing from the list.
 
 ### Activation conditions
 

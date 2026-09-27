@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 import { SiteHeader } from "@/components/layout/site-header";
 import { MapWorkspace } from "@/components/map/map-workspace";
+import { filterMapPoints } from "@/lib/access/map-access";
+import { resolveMapAccess } from "@/lib/access/server";
 import { facilityMapPoints } from "@/lib/facilities/read/projection";
 import { facilityMapSurface } from "@/lib/facilities/read/surface";
 
@@ -33,12 +35,24 @@ export const dynamic = "force-dynamic";
  * MapLibre lifecycle.
  */
 export default async function MapRoute() {
-  const model = await facilityMapSurface();
+  // The map stays public: the route is never refused, only narrowed. Premium
+  // points are dropped before they cross the Server/Client boundary, so an
+  // unentitled reader's RSC payload contains no premium coordinate at all --
+  // filtering in the browser would ship them and merely not draw them.
+  const [model, access] = await Promise.all([facilityMapSurface(), resolveMapAccess()]);
+  const points = filterMapPoints(facilityMapPoints(model), access);
+
   return (
     <div className="flex h-dvh flex-col">
       <SiteHeader />
       <main className="relative min-h-80 w-full flex-1">
-        <MapWorkspace points={facilityMapPoints(model)} />
+        {/* `lockedCategories` is names only, so the legend can advertise what is
+            withheld. No withheld point travels with it. */}
+        <MapWorkspace
+          points={points}
+          lockedCategories={access.lockedCategories}
+          {...(access.reason ? { lockedReason: access.reason } : {})}
+        />
       </main>
     </div>
   );
