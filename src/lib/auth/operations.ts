@@ -84,6 +84,10 @@ export type SignInOutcome =
 
 export type SignOutOutcome = { readonly kind: "signed_out" } | { readonly kind: "failed"; readonly message: string };
 
+export type ResendOutcome =
+  | { readonly kind: "sent" }
+  | { readonly kind: "rejected"; readonly reason: CredentialRejection; readonly message: string };
+
 /** Copy safe to show a reader. Nothing here reveals whether an account exists. */
 const MESSAGES: Record<CredentialRejection, string> = {
   missing_email: "Enter your email address.",
@@ -199,6 +203,48 @@ export async function signInWithPassword(
     return reject("provider_error");
   }
   return { kind: "signed_in" };
+}
+
+/**
+ * Resend the signup confirmation email.
+ *
+ * Supabase's own `auth.resend`, not a mail system of Urdais's own: the token has to
+ * be one the Auth server will accept, and only it can mint that.
+ *
+ * ## What this does and does not disclose
+ *
+ * It can only be called for `type: "signup"`, which Supabase will act on only where
+ * a signup is actually pending. It therefore adds no capability an attacker does
+ * not already have — the signup endpoint itself will send mail to any address — so
+ * it is not a new enumeration or spam vector. It is still rate-limited by the
+ * provider, and `over_email_send_rate_limit` maps to `rate_limited` so the reader is
+ * told to wait rather than shown a generic failure.
+ *
+ * A failure is reported as a failure. Telling someone an email is on its way when
+ * Supabase refused to send it is the one outcome that wastes their time completely,
+ * and with no custom SMTP configured it is currently the likely one.
+ */
+export async function resendVerificationEmail(
+  client: AuthCapableClient,
+  input: { email: string; emailRedirectTo?: string },
+): Promise<ResendOutcome> {
+  const email = normalizeEmail(input.email ?? "");
+  if (email === "") return reject("missing_email");
+  if (!looksLikeEmail(email)) return reject("invalid_email");
+
+  let result;
+  try {
+    result = await client.auth.resend({
+      type: "signup",
+      email,
+      ...(input.emailRedirectTo ? { options: { emailRedirectTo: input.emailRedirectTo } } : {}),
+    });
+  } catch {
+    return reject("provider_error");
+  }
+
+  if (result.error) return reject(classifyAuthError(result.error));
+  return { kind: "sent" };
 }
 
 /**

@@ -31,6 +31,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 
 import { createServerSupabaseClient } from "@/lib/auth/server-client";
 import { safeReturnTo } from "@/lib/auth/return-to";
+import { forgetPendingEmail } from "@/lib/onboarding/pending-email";
 
 /** The OTP types that can legitimately arrive on a confirmation link. */
 const ALLOWED_OTP_TYPES: readonly string[] = ["email", "signup", "email_change", "recovery", "invite", "magiclink"];
@@ -77,7 +78,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return failed(request, "unavailable", next);
   }
 
-  // Confirmed and signed in. `redirect` here carries the session cookies the
-  // Supabase client just set on this response.
+  // Confirmed and signed in. There is an authoritative session now, so onboarding's
+  // remembered pending address would only be a second source that could disagree
+  // with it.
+  await forgetPendingEmail();
+
+  // `redirect` here carries the session cookies the Supabase client just set on this
+  // response. `next` is already validated; for the onboarding flow it is `/access`,
+  // which resolves the newly verified viewer and continues to the checkout boundary.
   return NextResponse.redirect(new URL(next, request.nextUrl.origin));
 }

@@ -216,11 +216,13 @@ Built in one place (`src/lib/access/gate-links.ts`) and validated by Phase 2's `
 | Power Analytics | `/markets/power-analytics` |
 | Premium map layer | `/map?layer=<category>` |
 
-### `/access` is a placeholder, and says so
+### `/access` is the real onboarding journey
 
-Every CTA leads to `/access`, which states plainly that subscriptions are not available yet and offers the reader their way back. It does not present a form that cannot complete or a price that cannot be paid, and it does not send them to sign-in as though authenticating were subscribing.
+> **Updated by Phase 4.** It was a placeholder that said subscriptions were not available yet. It is now the onboarding entry point — see `docs/architecture/onboarding.md`.
 
-It is reachable today only by typing the URL, since no gate renders to anyone. When onboarding lands, `accessHref` points at it and this route is deleted — **the gates do not change.**
+Every CTA still leads to `/access`, and that is the whole value of routing it through `accessHref`: the gates were written against that destination and were not touched when what sits behind it became real. `/access` resolves the reader's authoritative state and routes them — offer and choice for an anonymous reader, the step their account needs for a signed-in one, "you already have full access" for a subscriber.
+
+Onboarding ends at a checkout boundary that states plainly that payment is not available yet. Phase 5 replaces that boundary, and the gates will not need touching then either.
 
 ---
 

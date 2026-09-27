@@ -1,35 +1,34 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
-import { signInHref } from "@/lib/access/gate-links";
-import { safeReturnTo } from "@/lib/auth/return-to";
+import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
+import { PremiumSummary } from "@/components/onboarding/premium-summary";
+import { onboardingHref, onboardingReturnTo } from "@/lib/onboarding/routes";
+import { resolveOnboardingEntry } from "@/lib/onboarding/server";
 
 export const metadata: Metadata = {
-  title: "Full access",
-  description: "Urdais premium access.",
-  // Not indexed: it is a temporary placeholder, not a product page.
+  title: "Get full access",
+  description: "One Urdais subscription unlocks every premium Urdais product.",
+  // Onboarding is not a landing page and has no business in a search index.
   robots: { index: false, follow: false },
 };
 
+export const dynamic = "force-dynamic";
+
 /**
- * Where "Get Full Access" leads, until onboarding and Stripe exist.
+ * The onboarding entry point, and where every premium gate's CTA leads.
  *
- * **This is a deliberate placeholder.** Every premium gate's primary call to
- * action points here, and there is no checkout behind it, so this page says so in
- * as many words rather than presenting a form that cannot complete or a price that
- * cannot be paid. The alternative — pointing the CTA at a route that does not
- * exist, or at a sign-in page as though authenticating were the same as
- * subscribing — would be a broken journey in production.
+ * For an anonymous reader this is the value screen: what a subscription is, what it
+ * costs, and an explicit choice between creating an account and logging in. The
+ * choice is explicit because Urdais does not tell an anonymous visitor whether their
+ * address already has an account — inferring it would be the account-enumeration
+ * disclosure Phase 2 avoided.
  *
- * It is reachable today only by typing the URL: premium enforcement is inactive,
- * so no gate is rendered to anyone and nothing links here. That is what keeps it
- * from being a visible dead end while it waits for the phase that replaces it.
- *
- * Phase 4 owns the real journey (`Get Full Access → onboarding → create account →
- * verify → Stripe`). When it lands, `accessHref` in `@/lib/access/gate-links`
- * points at it and this file is deleted. The gates themselves do not change.
+ * For anyone already signed in, this route decides nothing and renders nothing: it
+ * redirects to whichever state their account is actually in. That is what makes a
+ * refresh, a back button and a bookmarked `/access` all behave correctly without any
+ * stored progress.
  */
 export default async function AccessRoute({
   searchParams,
@@ -37,55 +36,36 @@ export default async function AccessRoute({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  // Validated with the one sanitiser, because it arrived in a query string.
-  const returnTo = safeReturnTo(params.returnTo);
-  const hasDestination = returnTo !== "/";
+  const returnTo = onboardingReturnTo(params.returnTo);
+
+  const resolution = await resolveOnboardingEntry(returnTo);
+  if (resolution.kind === "redirect") redirect(resolution.href);
 
   return (
-    <>
-      <SiteHeader />
-      <main className="mx-auto w-full max-w-lg flex-1 px-4 py-16">
-        <p className="text-xs font-semibold tracking-[0.18em] text-neutral-400">FULL ACCESS</p>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight text-neutral-50">Subscriptions are not available yet</h1>
+    <OnboardingShell
+      eyebrow="FULL ACCESS"
+      title="Get full access to Urdais"
+      lead="One subscription unlocks Urdais's premium analytics and infrastructure data."
+    >
+      <PremiumSummary />
 
-        <p className="mt-4 text-sm text-neutral-300">
-          Urdais premium products are built, and the way to buy access is not. There is no subscription to purchase
-          today and nothing on this page to fill in.
-        </p>
-        <p className="mt-3 text-sm text-neutral-400">
-          Compute Economics, Power Analytics and the premium map layers are all currently readable without a
-          subscription. Nothing you can reach today has been taken away.
-        </p>
-
-        <div className="mt-8 flex flex-col gap-3 text-sm">
-          {hasDestination ? (
-            <Link
-              href={returnTo}
-              className="rounded-md border border-white/15 px-4 py-2.5 text-center text-neutral-200 transition-colors hover:bg-white/[0.06] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
-            >
-              Back to where you were
-            </Link>
-          ) : null}
+      <div className="flex flex-col gap-3">
+        <Link
+          href={onboardingHref("create_account", returnTo)}
+          className="rounded-md bg-[#526fe0] px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-[#6480e8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
+        >
+          Continue
+        </Link>
+        <p className="text-center text-xs text-neutral-500">
+          Already have an account?{" "}
           <Link
-            href="/markets"
-            className="rounded-md border border-white/15 px-4 py-2.5 text-center text-neutral-200 transition-colors hover:bg-white/[0.06] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
+            href={onboardingHref("login", returnTo)}
+            className="text-neutral-300 underline underline-offset-2 transition-colors hover:text-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
           >
-            Browse Urdais markets
+            Log in
           </Link>
-        </div>
-
-        <p className="mt-8 text-xs text-neutral-500">
-          Already have a Urdais account?{" "}
-          <Link
-            href={signInHref(hasDestination ? returnTo : null)}
-            className="text-neutral-300 underline underline-offset-2 transition-colors hover:text-neutral-100"
-          >
-            Sign in
-          </Link>
-          . An account does not grant premium access.
         </p>
-      </main>
-      <SiteFooter />
-    </>
+      </div>
+    </OnboardingShell>
   );
 }
