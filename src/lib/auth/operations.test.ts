@@ -74,6 +74,21 @@ describe("the passwordless sign-in link", () => {
     expect(signInWithOtp).not.toHaveBeenCalled();
   });
 
+  it("logs the provider code without logging the address", async () => {
+    // "Too many attempts" cannot say which limit was hit, and the three have
+    // different fixes. The address must not reach the log with it.
+    const logged: string[] = [];
+    const spy = vi.spyOn(console, "error").mockImplementation((line) => void logged.push(String(line)));
+    const signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: { code: "over_email_send_rate_limit", status: 429 } });
+
+    await sendEmailSignInLink(client({ signInWithOtp }), { email: "reader@example.invalid" });
+
+    expect(logged.join(" ")).toContain("over_email_send_rate_limit");
+    expect(logged.join(" ")).toContain("429");
+    expect(logged.join(" ")).not.toContain("reader@example.invalid");
+    spy.mockRestore();
+  });
+
   it("reports a rate limit as something the reader can act on", async () => {
     const signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: { code: "over_email_send_rate_limit" } });
     const outcome = await sendEmailSignInLink(client({ signInWithOtp }), { email: "a@b.co" });
@@ -82,6 +97,7 @@ describe("the passwordless sign-in link", () => {
   });
 
   it("reports a provider failure as a failure, never as sent", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
     // Saying "sent" when the provider refused leaves someone waiting for mail that
     // is not coming -- the one outcome that wastes their time completely.
     const signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: { message: "smtp unavailable" } });

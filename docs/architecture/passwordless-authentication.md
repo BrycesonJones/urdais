@@ -131,7 +131,32 @@ No Urdais environment variable is involved, and no Google credential belongs in 
 
 ---
 
-## 7. SMTP stays outside the application
+## 7. Diagnosing a refused send
+
+When Supabase refuses to send, the reader sees "Too many attempts. Wait a few minutes
+and try again." That message cannot say *which* limit was hit, and the three have
+different fixes — so the server logs the provider's own code:
+
+```
+auth: sign-in link refused (reason=rate_limited code=over_email_send_rate_limit status=429)
+```
+
+The code and status only: the address and the provider's message both carry the
+reader's email into the log.
+
+| code | means | fix |
+| --- | --- | --- |
+| `over_email_send_rate_limit` | the project's **hourly email budget** is spent | raise Authentication → Rate Limits → "emails per hour", and confirm custom SMTP is on — the built-in mailer allows about two an hour |
+| `over_request_rate_limit` | too many auth requests from this caller | wait |
+| `email_address_invalid` | the hosted validator will not send to that address | the reader's problem; shown as "that address does not look valid" |
+
+Note that **configuring custom SMTP does not raise the email rate limit by itself** —
+it is a separate setting in the same dashboard, and a project can have working SMTP
+and still refuse the third message in an hour.
+
+---
+
+## 8. SMTP stays outside the application
 
 ```
 Urdais → Supabase Auth → configured SMTP provider → the reader
@@ -141,7 +166,7 @@ Urdais never holds the SMTP password or an email-provider API key. There is no `
 
 ---
 
-## 8. Security
+## 9. Security
 
 Unchanged from Phases 1–4, with one addition and one tightening.
 
@@ -162,7 +187,7 @@ The **pending-email cookie** is unchanged in role: httpOnly, server-set, used to
 
 ---
 
-## 9. Phase 5 is untouched
+## 10. Phase 5 is untouched
 
 `resolveCheckoutHandoff` still derives `accountId` from the session and refuses `anonymous`, `unverified` and `already_entitled`. Nothing about the authentication change reaches it: it reads the viewer, and a viewer established by a magic link is the same shape as one established by a password.
 

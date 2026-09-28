@@ -207,7 +207,24 @@ export async function sendEmailSignInLink(
 
   // Reported honestly. Telling someone a link is on its way when the provider
   // refused leaves them waiting for mail that will never arrive.
-  if (result.error) return reject(classifyAuthError(result.error));
+  if (result.error) {
+    const reason = classifyAuthError(result.error);
+
+    // Logged because the reader's message cannot say which limit was hit, and an
+    // operator needs to. "Too many attempts" covers a per-address frequency cap, a
+    // project-wide hourly email budget, and a generic 429 — and those have
+    // different fixes: wait, raise the rate limit, or configure custom SMTP
+    // because the built-in mailer allows only a couple of messages an hour.
+    //
+    // The code and status only. Never the address or the provider's message, both
+    // of which carry the address into the log.
+    const detail = (result.error ?? {}) as { code?: unknown; status?: unknown };
+    console.error(
+      `auth: sign-in link refused (reason=${reason} code=${String(detail.code ?? "none")} status=${String(detail.status ?? "none")})`,
+    );
+
+    return reject(reason);
+  }
   return { kind: "sent" };
 }
 
