@@ -2,7 +2,7 @@
 
 **Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 27 September 2026, Paid Access Phase 2. Identity only — no Stripe, no premium gates, no onboarding.
 
-> **Superseded in part, 28 September 2026.** The customer credential is no longer a password — Urdais emails a one-time sign-in link, and Google OAuth is available once configured. See `docs/architecture/passwordless-authentication.md`. Everything below about *identity*, the account mapping, sessions, cookies and the trust boundary still holds, because none of it depended on how the reader proved who they were. The password-specific sections are marked where they are now historical.
+> **Superseded in part, 28 September 2026.** The customer credential is no longer a password — Urdais emails a one-time verification code, which the reader enters without leaving the page, and Google OAuth is available once configured. See `docs/architecture/passwordless-authentication.md`. Everything below about *identity*, the account mapping, sessions, cookies and the trust boundary still holds, because none of it depended on how the reader proved who they were. The password-specific sections are marked where they are now historical.
 
 Urdais authenticates with **Supabase Auth**. This document is what Phase 3 built its premium gates against.
 
@@ -27,7 +27,7 @@ Supabase is an identity provider, not Urdais's account table. That is the whole 
 | Decision | Chosen | Rejected, and why |
 | --- | --- | --- |
 | Provider | Supabase Auth | — |
-| Method | ~~Email + password~~ → **emailed sign-in link**, plus Google when configured | passkeys, SSO: still out of scope |
+| Method | ~~Email + password~~ → **emailed verification code**, plus Google when configured | passkeys, SSO: still out of scope |
 | Session refresh | **`src/proxy.ts`** | `middleware.ts` — deprecated in Next 16.3.4 |
 | Identity read | **`getUser()`** | `getClaims()` — no verification state; `getSession()` — untrusted |
 | Public key | **publishable (`sb_publishable_…`)** | legacy `anon` JWT — Supabase retires it end of 2026 |

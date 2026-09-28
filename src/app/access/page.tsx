@@ -59,7 +59,7 @@ export default async function AccessRoute({
       <EmailForm returnTo={returnTo} />
 
       <p className="text-xs text-neutral-500">
-        We&rsquo;ll email you a secure sign-in link. No password required.
+        We&rsquo;ll email you a verification code. No password required.
       </p>
 
       <p className="text-xs text-neutral-500">

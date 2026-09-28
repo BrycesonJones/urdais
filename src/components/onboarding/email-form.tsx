@@ -2,14 +2,14 @@
 
 import { useActionState } from "react";
 
-import { sendSignInLinkAction } from "@/app/access/actions";
+import { sendOtpAction } from "@/app/access/actions";
 import { IDLE_AUTH_STATE } from "@/app/auth/form-state";
 
 /**
  * The whole sign-in form: one email field.
  *
  * There is no password input, and none is hidden either — Urdais authenticates by
- * emailing a one-time link, so a password is not collected because it is not used.
+ * emailing a one-time code, so a password is not collected because it is not used.
  * The same component serves "Create your account" and "Log in"; only the submit
  * label differs, because the underlying call is identical and deliberately so.
  *
@@ -19,12 +19,12 @@ import { IDLE_AUTH_STATE } from "@/app/auth/form-state";
  */
 export function EmailForm({
   returnTo,
-  submitLabel = "Send link",
+  submitLabel = "Send code",
 }: {
   returnTo: string | null;
   submitLabel?: string;
 }) {
-  const [state, formAction, pending] = useActionState(sendSignInLinkAction, IDLE_AUTH_STATE);
+  const [state, formAction, pending] = useActionState(sendOtpAction, IDLE_AUTH_STATE);
   const failed = state.status === "error";
 
   return (

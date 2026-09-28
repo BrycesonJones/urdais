@@ -14,7 +14,7 @@
  * `/access/verify?email=someone@else.test` and press "resend", turning Urdais into
  * a way to send mail to arbitrary addresses on someone else's behalf. An httpOnly
  * cookie is set by the server and unreadable to scripts, so it cannot be planted by
- * a link or by an XSS payload reading and rewriting it.
+ * a crafted URL or by an XSS payload reading and rewriting it.
  *
  * It is not *unforgeable* — a crafted HTTP request can send any cookie value — and
  * that is acceptable rather than overlooked: the signup endpoint itself will already

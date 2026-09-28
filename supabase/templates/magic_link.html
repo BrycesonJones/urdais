@@ -1,0 +1,24 @@
+<!--
+  The verification-code email.
+
+  Supabase calls this the "Magic Link" template because `signInWithOtp` is the call
+  that renders it. The name is historical: the template decides what the message
+  contains, and this one contains a code.
+
+  `{{ .Token }}` is the numeric code. `{{ .ConfirmationURL }}` is a link to the same
+  token, and is deliberately absent — Urdais asks nobody to leave the page they are
+  on, and a link in this message would be a second, redundant way in for a mail
+  scanner to consume before the recipient reads it.
+
+  This file configures the LOCAL stack. The hosted projects are configured through
+  the dashboard, by hand, and must be given the same content:
+  Authentication → Emails → Magic Link. See
+  docs/architecture/passwordless-authentication.md §2.
+-->
+<h2>Your Urdais verification code</h2>
+
+<p>Enter this code to finish signing in:</p>
+
+<p style="font-size: 28px; font-weight: 600; letter-spacing: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;">{{ .Token }}</p>
+
+<p>It expires in one hour. If you did not ask for it, you can ignore this email — nothing has been created or changed.</p>

@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
  * Log in — the same primitive as account creation, under a different heading.
  *
  * The distinction is orientation, not mechanism: both screens email a one-time
- * sign-in link, and the call is identical. That identity is the anti-enumeration
+ * verification code, and the call is identical. That identity is the anti-enumeration
  * property. A login screen that behaved differently for an address with no account
  * would answer "does this person have a Urdais account" to anyone who asked.
  *
@@ -46,7 +46,7 @@ export default async function OnboardingLoginRoute({
     <OnboardingShell
       eyebrow="LOG IN"
       title="Log in to Urdais"
-      lead="We'll email you a secure sign-in link."
+      lead="We'll email you a verification code."
       back={{ href: onboardingHref("create_account", returnTo), label: "Back" }}
     >
       {google ? (
@@ -56,7 +56,7 @@ export default async function OnboardingLoginRoute({
         </>
       ) : null}
 
-      <EmailForm returnTo={returnTo} submitLabel="Send link" />
+      <EmailForm returnTo={returnTo} submitLabel="Send code" />
 
       <p className="text-xs text-neutral-500">
         New to Urdais?{" "}

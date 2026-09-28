@@ -50,10 +50,10 @@ export type OnboardingState =
   | "create_account"
   | "login"
   /**
-   * The sign-in link has been emailed and is waiting to be opened.
+   * A verification code has been emailed and is waiting to be entered.
    *
    * Named for what it is. Under passwordless authentication this is not a
-   * verification step bolted onto a password account — the emailed link *is* the
+   * verification step bolted onto a password account — the emailed code *is* the
    * credential, so this state is the authentication challenge itself.
    */
   | "email_challenge"
@@ -71,9 +71,9 @@ export const ONBOARDING_STATES: readonly OnboardingState[] = Object.freeze([
 /**
  * The states an anonymous reader may occupy.
  *
- * `email_challenge` is here because a reader awaiting their link has no session
- * yet: the link is what creates one. It is the one anonymous state that is not a
- * form.
+ * `email_challenge` is here because a reader awaiting their code has no session
+ * yet: submitting the code is what creates one. It is the one anonymous state
+ * reached without a session, and the only one whose form is a credential.
  */
 export const ANONYMOUS_STATES: readonly OnboardingState[] = Object.freeze(["create_account", "login", "email_challenge"]);
 
@@ -96,11 +96,11 @@ export function onboardingStateFor(viewer: Viewer): OnboardingState {
   // Entitlement first. See the module comment.
   if (hasPremiumEntitlement(viewer)) return "already_entitled";
 
-  // A session established by an emailed link means the address was already proven:
-  // clicking the link IS the verification. So an authenticated reader is verified
+  // A session established by an emailed code means the address was already proven:
+  // entering the code IS the verification. So an authenticated reader is verified
   // by construction under passwordless auth, and the only way to be authenticated
   // and unverified is a legacy password account. Those are sent back to the
-  // challenge, where one emailed link both proves the address and signs them in.
+  // challenge, where one emailed code both proves the address and signs them in.
   if (!viewer.authentication.emailVerified) return "email_challenge";
 
   return "ready_for_checkout";

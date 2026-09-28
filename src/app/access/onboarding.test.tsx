@@ -40,7 +40,7 @@ vi.mock("next/navigation", () => ({ redirect, permanentRedirect: redirect }));
 vi.mock("@/components/layout/site-header", () => ({ SiteHeader: () => null }));
 vi.mock("@/components/layout/site-footer", () => ({ SiteFooter: () => null }));
 vi.mock("@/components/onboarding/email-form", () => ({
-  EmailForm: ({ submitLabel = "Send link" }: { submitLabel?: string }) => (
+  EmailForm: ({ submitLabel = "Send code" }: { submitLabel?: string }) => (
     <form data-testid="email-form">
       <label htmlFor="e">Your email</label>
       <input id="e" type="email" name="email" />
@@ -51,8 +51,18 @@ vi.mock("@/components/onboarding/email-form", () => ({
 vi.mock("@/components/onboarding/google-button", () => ({
   GoogleButton: () => <button type="submit">Continue with Google</button>,
 }));
-vi.mock("@/components/onboarding/resend-link", () => ({
-  ResendLink: () => <button type="submit">Resend email</button>,
+vi.mock("@/components/onboarding/resend-code", () => ({
+  ResendCode: () => <button type="submit">Resend code</button>,
+}));
+vi.mock("@/components/onboarding/otp-form", () => ({
+  OtpForm: ({ expectedLength }: { expectedLength: number }) => (
+    <form data-testid="otp-form">
+      <label htmlFor="c">Verification code</label>
+      <input id="c" name="code" inputMode="numeric" autoComplete="one-time-code" />
+      <p>{expectedLength}-digit code from the email.</p>
+      <button type="submit">Verify</button>
+    </form>
+  ),
 }));
 
 import AccessRoute from "@/app/access/page";
@@ -89,7 +99,7 @@ describe("/access is the account form", () => {
     expect(html).toContain("Create your account");
     expect(html).toContain("Unlock Urdais&#x27; premium analytics and infrastructure data.");
     expect(html).toContain("Your email");
-    expect(html).toContain("Send link");
+    expect(html).toContain("Send code");
   });
 
   it("collects an email and nothing else", async () => {
@@ -105,7 +115,7 @@ describe("/access is the account form", () => {
   it("says how sign-in will work", async () => {
     renderGate();
     const html = renderToStaticMarkup(await AccessRoute({ searchParams: params() }));
-    expect(html).toContain("secure sign-in link");
+    expect(html).toContain("email you a verification code");
     expect(html).toContain("No password required.");
   });
 
@@ -203,7 +213,7 @@ describe("log in", () => {
     expect(html).toContain("Log in to Urdais");
     expect(html).toContain("Your email");
     expect(html).not.toContain('type="password"');
-    expect(html).toContain("Send link");
+    expect(html).toContain("Send code");
   });
 
   it("offers account creation without switching automatically", async () => {
@@ -226,10 +236,40 @@ describe("the email challenge", () => {
 
     const html = renderToStaticMarkup(await CheckEmailRoute({ searchParams: params() }));
     expect(html).toContain("Check your email");
-    expect(html).toContain("secure sign-in link");
+    expect(html).toContain("We sent a verification code to");
     expect(html).toContain("pending@example.invalid");
-    expect(html).toContain("Resend email");
+    expect(html).toContain("Resend code");
     expect(html).toContain("Use a different email");
+  });
+
+  it("gives the reader somewhere to type the code, on the same screen", async () => {
+    // The whole point of the OTP revision: the credential is entered here, in the
+    // browser that asked for it. A screen that only said "check your email" would
+    // be the link flow with different words.
+    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access", state: "create_account" });
+    readPendingEmail.mockResolvedValue("pending@example.invalid");
+
+    const html = renderToStaticMarkup(await CheckEmailRoute({ searchParams: params() }));
+    expect(html).toContain("Verification code");
+    expect(html).toContain('name="code"');
+    expect(html).toContain("Verify");
+  });
+
+  it("offers the code to the phone keyboard and to autofill", async () => {
+    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access", state: "create_account" });
+    readPendingEmail.mockResolvedValue("pending@example.invalid");
+
+    const html = renderToStaticMarkup(await CheckEmailRoute({ searchParams: params() }));
+    expect(html).toContain('inputMode="numeric"');
+    expect(html).toContain('autoComplete="one-time-code"');
+  });
+
+  it("tells the reader how long the code is, from configuration rather than a guess", async () => {
+    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access", state: "create_account" });
+    readPendingEmail.mockResolvedValue("pending@example.invalid");
+
+    const html = renderToStaticMarkup(await CheckEmailRoute({ searchParams: params() }));
+    expect(html).toContain("6-digit code from the email.");
   });
 
   it("prefers the authoritative address when a session exists", async () => {
@@ -325,6 +365,16 @@ describe("what onboarding cannot do, asserted across the whole surface", () => {
       const code = codeOf(source);
       expect(code, file).not.toMatch(/premium_entitlements/);
       expect(code, file).not.toMatch(/\b(insert|update|upsert)\b[\s\S]{0,80}entitlement/i);
+    }
+  });
+
+  it("no longer asks anyone to follow a link, anywhere in onboarding", async () => {
+    // A removal is only real if something fails when it comes back. Copy that still
+    // says "link" after the flow stopped sending one is a reader following an
+    // instruction that cannot be carried out.
+    for (const { file, source } of onboardingSources()) {
+      expect(source, file).not.toMatch(/Send link|sign-in link|magic ?link|Resend email/i);
+      expect(source, file).not.toMatch(/sendEmailSignInLink|emailRedirectTo/);
     }
   });
 

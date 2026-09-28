@@ -259,6 +259,19 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# The verification-code email.
+#
+# `signInWithOtp` renders the template Supabase calls "Magic Link" regardless of
+# whether the message ends up containing a link, and the built-in default contains
+# `{{ .ConfirmationURL }}` and no `{{ .Token }}`. Left at the default, Urdais would
+# email people a message with no code in it while the UI asked them to type one.
+#
+# This configures the LOCAL stack only -- the hosted projects are set through the
+# dashboard by hand. See the WARNING at the top of [auth].
+[auth.email.template.magic_link]
+subject = "Your Urdais verification code"
+content_path = "./supabase/templates/magic_link.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"

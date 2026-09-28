@@ -4,7 +4,7 @@
  * Each state has a real route rather than being a step in a client-side wizard.
  * That is what makes the specification's requirements fall out for free instead of
  * needing machinery: the back button works because each state is a history entry,
- * refresh works because there is nothing in memory to lose, and a link someone
+ * refresh works because there is nothing in memory to lose, and a URL someone
  * sends themselves resolves against their current account state.
  *
  * `returnTo` travels in the query string of every one of them, and is re-validated
