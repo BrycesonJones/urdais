@@ -1,5 +1,18 @@
 /**
- * The authentication operations: create an account, sign in, sign out.
+ * The authentication operations.
+ *
+ * ## Urdais authenticates passwordlessly
+ *
+ * The customer-facing flow is a single primitive: `sendEmailSignInLink` asks
+ * Supabase to email a one-time sign-in link. Clicking it establishes the session.
+ * There is no password in the customer journey, and the email is not a
+ * verification step layered on top of a password account — **it is the
+ * credential**. Possession of the mailbox is what proves identity, so
+ * authentication and verification are the same event rather than two.
+ *
+ * `signUpWithPassword` and `signInWithPassword` remain below as **legacy**. They
+ * are not reachable from any customer surface; see their own comments for why
+ * they were kept rather than deleted.
  *
  * Each returns a typed outcome rather than throwing, and each outcome is
  * something a UI can render without knowing what Supabase is. That is deliberate:
@@ -84,10 +97,6 @@ export type SignInOutcome =
 
 export type SignOutOutcome = { readonly kind: "signed_out" } | { readonly kind: "failed"; readonly message: string };
 
-export type ResendOutcome =
-  | { readonly kind: "sent" }
-  | { readonly kind: "rejected"; readonly reason: CredentialRejection; readonly message: string };
-
 /** Copy safe to show a reader. Nothing here reveals whether an account exists. */
 const MESSAGES: Record<CredentialRejection, string> = {
   missing_email: "Enter your email address.",
@@ -123,7 +132,19 @@ export function classifyAuthError(error: { code?: string; message?: string; stat
   if (code === "weak_password" || message.includes("password should be") || message.includes("password is too short")) return "weak_password";
   if (code === "email_not_confirmed" || message.includes("email not confirmed")) return "email_not_confirmed";
   if (code === "invalid_credentials" || message.includes("invalid login credentials")) return "invalid_credentials";
-  if (code === "validation_failed" || message.includes("unable to validate email") || message.includes("invalid email")) return "invalid_email";
+  // `email_address_invalid` is what Supabase's hosted deliverability check answers
+  // for an address it will not send to. Without it the reader is told the service is
+  // unavailable, which sends them away to try again later over a problem only they
+  // can fix.
+  if (
+    code === "validation_failed" ||
+    code === "email_address_invalid" ||
+    message.includes("unable to validate email") ||
+    message.includes("invalid email") ||
+    message.includes("is invalid")
+  ) {
+    return "invalid_email";
+  }
   if (code === "over_request_rate_limit" || code === "over_email_send_rate_limit" || error?.status === 429 || message.includes("rate limit")) {
     return "rate_limited";
   }
@@ -136,8 +157,62 @@ export function classifyAuthError(error: { code?: string; message?: string; stat
 /** The subset of the Supabase client these operations use. Keeps tests honest. */
 export type AuthCapableClient = Pick<SupabaseClient, "auth">;
 
+export type EmailLinkOutcome =
+  | { readonly kind: "sent" }
+  | { readonly kind: "rejected"; readonly reason: CredentialRejection; readonly message: string };
+
 /**
- * Create an account with an email and a password.
+ * Email a one-time sign-in link. The whole customer-facing authentication flow.
+ *
+ * ## One call for both "create account" and "log in"
+ *
+ * `signInWithOtp` signs a new address up and signs an existing one in, and
+ * `shouldCreateUser` is left at its default of `true` on **both** screens. That
+ * is not laziness — it is the anti-enumeration property. If the login screen
+ * passed `false`, an unknown address would produce a different answer from a known
+ * one, and the form would become an oracle for "does this person have a Urdais
+ * account". Identical calls give identical answers.
+ *
+ * The two screens therefore differ only in their heading and their link to the
+ * other one. That is what the specification means by the distinction being "user
+ * orientation": it is real to the reader and invisible to the server.
+ *
+ * ## Link, not code
+ *
+ * Supabase sends whatever the project's Magic Link template contains, and the
+ * default contains `{{ .ConfirmationURL }}`. A numeric code requires adding
+ * `{{ .Token }}` to that template in the dashboard. Urdais sends the link, so the
+ * copy says "link" — see `docs/architecture/passwordless-authentication.md` for
+ * the trade-off and the exact change if that is ever revisited.
+ *
+ * `emailRedirectTo` must be an absolute URL on the project's redirect allow-list.
+ */
+export async function sendEmailSignInLink(
+  client: AuthCapableClient,
+  input: { email: string; emailRedirectTo?: string },
+): Promise<EmailLinkOutcome> {
+  const email = normalizeEmail(input.email ?? "");
+  if (email === "") return reject("missing_email");
+  if (!looksLikeEmail(email)) return reject("invalid_email");
+
+  let result;
+  try {
+    result = await client.auth.signInWithOtp({
+      email,
+      ...(input.emailRedirectTo ? { options: { emailRedirectTo: input.emailRedirectTo } } : {}),
+    });
+  } catch {
+    return reject("provider_error");
+  }
+
+  // Reported honestly. Telling someone a link is on its way when the provider
+  // refused leaves them waiting for mail that will never arrive.
+  if (result.error) return reject(classifyAuthError(result.error));
+  return { kind: "sent" };
+}
+
+/**
+ * LEGACY. Create an account with an email and a password.
  *
  * `emailRedirectTo` is where Supabase's confirmation link sends the reader. It
  * must be an absolute URL that the project's redirect allow-list permits, and the
@@ -178,7 +253,21 @@ export async function signUpWithPassword(
   return { kind: "confirmation_required", diagnostic: existing ? "existing_account" : "new_account" };
 }
 
-/** Sign in with an email and a password. */
+/**
+ * LEGACY. Sign in with an email and a password.
+ *
+ * Retained deliberately, and reachable from no customer surface. Two reasons:
+ *
+ *   - accounts created before this change still have passwords, and deleting the
+ *     only code path that can use them would strand them. Production holds none
+ *     today, but the development fixtures do.
+ *   - it is what lets the authenticated, entitled and signed-out states be
+ *     exercised end to end without a mailbox, which is otherwise impossible once
+ *     every customer path requires receiving real email.
+ *
+ * `/auth/sign-in` keeps it for operators. Nothing under `/access/` imports it, and
+ * a test asserts that.
+ */
 export async function signInWithPassword(
   client: AuthCapableClient,
   input: { email: string; password: string },
@@ -203,48 +292,6 @@ export async function signInWithPassword(
     return reject("provider_error");
   }
   return { kind: "signed_in" };
-}
-
-/**
- * Resend the signup confirmation email.
- *
- * Supabase's own `auth.resend`, not a mail system of Urdais's own: the token has to
- * be one the Auth server will accept, and only it can mint that.
- *
- * ## What this does and does not disclose
- *
- * It can only be called for `type: "signup"`, which Supabase will act on only where
- * a signup is actually pending. It therefore adds no capability an attacker does
- * not already have — the signup endpoint itself will send mail to any address — so
- * it is not a new enumeration or spam vector. It is still rate-limited by the
- * provider, and `over_email_send_rate_limit` maps to `rate_limited` so the reader is
- * told to wait rather than shown a generic failure.
- *
- * A failure is reported as a failure. Telling someone an email is on its way when
- * Supabase refused to send it is the one outcome that wastes their time completely,
- * and with no custom SMTP configured it is currently the likely one.
- */
-export async function resendVerificationEmail(
-  client: AuthCapableClient,
-  input: { email: string; emailRedirectTo?: string },
-): Promise<ResendOutcome> {
-  const email = normalizeEmail(input.email ?? "");
-  if (email === "") return reject("missing_email");
-  if (!looksLikeEmail(email)) return reject("invalid_email");
-
-  let result;
-  try {
-    result = await client.auth.resend({
-      type: "signup",
-      email,
-      ...(input.emailRedirectTo ? { options: { emailRedirectTo: input.emailRedirectTo } } : {}),
-    });
-  } catch {
-    return reject("provider_error");
-  }
-
-  if (result.error) return reject(classifyAuthError(result.error));
-  return { kind: "sent" };
 }
 
 /**

@@ -5,6 +5,13 @@
  * server-side viewer — never from a collection of `showSignup` / `showVerify`
  * booleans, which is how a flow ends up in two states at once or in none.
  *
+ * ## There is no intro state
+ *
+ * The premium gate already established intent: someone who pressed "Get Full
+ * Access" has decided. A marketing screen between that decision and the account
+ * form was a second ask, so `create_account` is now where an anonymous reader
+ * lands, at `/access` itself.
+ *
  * ## The state is a function of the viewer, not of where the reader has been
  *
  * `onboardingStateFor` is pure and total. That is what makes refresh, back
@@ -24,10 +31,9 @@
  * Entitlement is checked **before** verification. A reader holding an active
  * entitlement sees "you already have full access" even if their address is
  * unverified — which today can only happen to an operator comp, since manual
- * grants are the only source of entitlement. Sending such a reader to "verify your
- * email" would be doubly wrong: `canAccess` already grants them premium, so the
- * verification would gate nothing, and the screen would imply they cannot use what
- * they can already use. Flagged because it is a judgement call, not something the
+ * grants are the only source of entitlement. Sending such a reader to the email
+ * challenge would be doubly wrong: `canAccess` already grants them premium, so it
+ * would gate nothing, and the screen would imply they cannot use what they can. Flagged because it is a judgement call, not something the
  * specification settled.
  */
 
@@ -36,33 +42,43 @@ import { hasPremiumEntitlement, type Viewer } from "@/lib/access/entitlement";
 /**
  * Where a reader is in onboarding.
  *
- * `intro` is the anonymous entry point. `create_account` and `login` are the two
- * branches an anonymous reader may choose. The remaining three are all derived
- * from the server's view of an authenticated account.
+ * `create_account` is the anonymous entry point, and `login` is the same primitive
+ * under a different heading for readers who know they have an account. The rest are
+ * derived from the server's view of the session.
  */
 export type OnboardingState =
-  | "intro"
   | "create_account"
   | "login"
-  | "verification_required"
+  /**
+   * The sign-in link has been emailed and is waiting to be opened.
+   *
+   * Named for what it is. Under passwordless authentication this is not a
+   * verification step bolted onto a password account — the emailed link *is* the
+   * credential, so this state is the authentication challenge itself.
+   */
+  | "email_challenge"
   | "ready_for_checkout"
   | "already_entitled";
 
 export const ONBOARDING_STATES: readonly OnboardingState[] = Object.freeze([
-  "intro",
   "create_account",
   "login",
-  "verification_required",
+  "email_challenge",
   "ready_for_checkout",
   "already_entitled",
 ]);
 
-/** The states an anonymous reader may occupy. */
-export const ANONYMOUS_STATES: readonly OnboardingState[] = Object.freeze(["intro", "create_account", "login"]);
+/**
+ * The states an anonymous reader may occupy.
+ *
+ * `email_challenge` is here because a reader awaiting their link has no session
+ * yet: the link is what creates one. It is the one anonymous state that is not a
+ * form.
+ */
+export const ANONYMOUS_STATES: readonly OnboardingState[] = Object.freeze(["create_account", "login", "email_challenge"]);
 
 /** The states that require an authenticated viewer. */
 export const AUTHENTICATED_STATES: readonly OnboardingState[] = Object.freeze([
-  "verification_required",
   "ready_for_checkout",
   "already_entitled",
 ]);
@@ -70,19 +86,22 @@ export const AUTHENTICATED_STATES: readonly OnboardingState[] = Object.freeze([
 /**
  * The state this viewer belongs in, ignoring any choice they have made.
  *
- * An anonymous viewer resolves to `intro`; whether they are looking at the signup
- * or the login form is a routing matter, and `isStateReachable` is what decides
- * whether that choice is still valid for them.
+ * An anonymous viewer resolves to `create_account`; whether they are actually
+ * looking at that form or the login one is a routing matter, and `isStateReachable`
+ * is what decides whether their choice is still valid.
  */
 export function onboardingStateFor(viewer: Viewer): OnboardingState {
-  if (viewer.authentication.kind !== "authenticated") return "intro";
+  if (viewer.authentication.kind !== "authenticated") return "create_account";
 
   // Entitlement first. See the module comment.
   if (hasPremiumEntitlement(viewer)) return "already_entitled";
 
-  // Authoritative: `emailVerified` comes from the Auth server's own
-  // `email_confirmed_at`, never from token metadata a reader can write.
-  if (!viewer.authentication.emailVerified) return "verification_required";
+  // A session established by an emailed link means the address was already proven:
+  // clicking the link IS the verification. So an authenticated reader is verified
+  // by construction under passwordless auth, and the only way to be authenticated
+  // and unverified is a legacy password account. Those are sent back to the
+  // challenge, where one emailed link both proves the address and signs them in.
+  if (!viewer.authentication.emailVerified) return "email_challenge";
 
   return "ready_for_checkout";
 }
@@ -101,6 +120,10 @@ export function isStateReachable(viewer: Viewer, state: OnboardingState): boolea
 
   if (!authenticated) return ANONYMOUS_STATES.includes(state);
 
+  // An authenticated reader may still be shown the challenge -- a legacy password
+  // account whose address was never confirmed needs exactly that screen.
+  if (state === "email_challenge") return onboardingStateFor(viewer) === "email_challenge";
+
   // An authenticated reader belongs in exactly the state their account implies.
   // There is no legitimate reason for them to sit on a different authenticated
   // screen: "ready for checkout" for an unverified account would be a lie, and
@@ -112,10 +135,10 @@ export function isStateReachable(viewer: Viewer, state: OnboardingState): boolea
  * Where to send a reader who asked for a state they may not be in.
  *
  * Always a state they *can* be in, so a redirect can never bounce: an anonymous
- * reader goes to `intro` and an authenticated one to whatever their account
- * implies. That totality is what prevents the loop between `/access` and the auth
+ * reader goes to the account form and an authenticated one to whatever their
+ * account implies. That totality is what prevents the loop between `/access` and the auth
  * routes the specification warns about.
  */
 export function redirectStateFor(viewer: Viewer): OnboardingState {
-  return viewer.authentication.kind === "authenticated" ? onboardingStateFor(viewer) : "intro";
+  return viewer.authentication.kind === "authenticated" ? onboardingStateFor(viewer) : "create_account";
 }

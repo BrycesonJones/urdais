@@ -2,6 +2,8 @@
 
 **Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 27 September 2026, Paid Access Phase 4. Onboarding is **real**; it ends one step before payment, and there is no Stripe.
 
+> **Revised 28 September 2026.** The intro screen is removed, authentication is passwordless, and the price moved to Plan / Pay. See `docs/architecture/passwordless-authentication.md`; the sections below on state, `returnTo`, the checkout boundary and the Phase 5 handoff are unchanged.
+
 > Onboarding gets a reader to the point where a subscription *could* be bought. It never grants one.
 
 ---
@@ -11,18 +13,19 @@
 ```
 premium product
   → Get Full Access
-    → /access                 intro: what it is, what it costs
-      → /access/create        create account          ─┐
-      → /access/login         log in                   │ the reader chooses
-                                                       │
-        → /access/verify      verification required   ─┘ (when Supabase requires it)
+    → /access                 create your account: email, or Google
+      → /access/login         log in  (the same primitive, different heading)
+        → /access/verify      check your email — the link IS the credential
           → /access/ready     READY FOR CHECKOUT
-            → [Phase 5: Stripe]
+            → [Phase 5: Plan / Pay + Stripe]
 
         → /access/subscribed  already have full access
 ```
 
-Six states, six real routes. That is what makes the specification's hard requirements fall out rather than needing machinery: **back works** because each state is a history entry, **refresh works** because nothing is held in memory, and a URL someone bookmarks resolves against their account as it is *now*.
+There is no intro screen and no price: the gate established intent, and what a
+subscription costs belongs beside the payment it explains.
+
+Five states, five real routes. That is what makes the specification's hard requirements fall out rather than needing machinery: **back works** because each state is a history entry, **refresh works** because nothing is held in memory, and a URL someone bookmarks resolves against their account as it is *now*.
 
 ---
 
@@ -32,9 +35,9 @@ Six states, six real routes. That is what makes the specification's hard require
 
 | Viewer | State |
 | --- | --- |
-| anonymous | `intro` (or `create_account` / `login` if they chose) |
+| anonymous | `create_account` (or `login` / `email_challenge`) |
 | authenticated, entitled | `already_entitled` |
-| authenticated, unverified | `verification_required` |
+| authenticated, unverified | `email_challenge` — only a legacy password account |
 | authenticated, verified, no entitlement | `ready_for_checkout` |
 
 `onboardingStateFor(viewer)` is pure and total. `isStateReachable` decides whether a requested state is legitimate for that reader, and `redirectStateFor` always names a state they *can* occupy — which is what makes a redirect terminate rather than bounce. A test walks every (viewer × state) pair and asserts the second hop always renders.
@@ -56,8 +59,9 @@ Because the answer comes from Phase 2's `resolveViewer` — session → account 
 | Typed URL | Anonymous | Unverified | Subscriber |
 | --- | --- | --- | --- |
 | `/access/ready` | → `/access` | → `/access/verify` | → `/access/subscribed` |
-| `/access/create` | renders | → `/access/verify` | → `/access/subscribed` |
-| `/access` | renders intro | → `/access/verify` | → `/access/subscribed` |
+| `/access/login` | renders | → `/access/verify` | → `/access/subscribed` |
+| `/access` | renders the account form | → `/access/verify` | → `/access/subscribed` |
+| `/access/verify` (nothing pending) | → `/access` | renders | → `/access/subscribed` |
 
 Verified in a browser, not just in tests.
 
@@ -69,11 +73,11 @@ There is no progress to lose. Sign in and refresh: the server sees an authentica
 
 ## 4. The three entry states
 
-**Anonymous new user** — intro → create account → verification → ready.
+**Anonymous new user** — account form → check your email → click the link → ready.
 
-**Anonymous existing user** — intro → log in → ready (or verification first, if their address was never confirmed). Logging in proves *who* they are and nothing about what they may read; the next screen comes from their account's real state.
+**Anonymous existing user** — log in (the same email-only form) → check your email → click the link → ready. Authenticating proves *who* they are and nothing about what they may read; the next screen comes from their account's real state.
 
-**Already authenticated** — never asked to authenticate again (Invariant 3). `/access`, `/access/create` and `/access/login` all redirect to whichever state their account implies.
+**Already authenticated** — never asked to authenticate again (Invariant 3). `/access` and `/access/login` both redirect to whichever state their account implies.
 
 ---
 
@@ -81,8 +85,8 @@ There is no progress to lose. Sign in and refresh: the server sees an authentica
 
 Reached two ways, differing in whether a session exists:
 
-- **straight after signup** — Supabase issues *no session* when it requires confirmation, so the reader is anonymous. The address comes from a short-lived httpOnly cookie set by the signup action (`src/lib/onboarding/pending-email.ts`).
-- **signed in, unconfirmed** — the address comes from the Auth server, which is authoritative.
+- **straight after asking for a link** — there is no session yet, because the link is what creates one. The address comes from a short-lived httpOnly cookie set by the action (`src/lib/onboarding/pending-email.ts`).
+- **signed in, unconfirmed** — only a legacy password account. The address comes from the Auth server, which is authoritative.
 
 **The verification *state* is never taken from the page, the cookie or a form.** It is `email_confirmed_at`, read through `resolveViewer`. `user_metadata.email_verified` is writable by the user via `updateUser` and is never read — Phase 2 established that, and a test asserts it still holds.
 
@@ -96,18 +100,18 @@ It is not *unforgeable* — a crafted request can send any cookie — and that i
 
 ### Resend
 
-`auth.resend({ type: "signup" })`, Supabase's own operation — not a mail system of Urdais's. The address comes from the session or the pending record, never from the form. The button disables while in flight; Supabase's rate limit is the real ceiling and maps to a "wait a few minutes" message.
+Sending the link again is `sendEmailSignInLink` a second time — there is no separate resend primitive, because resending a credential is issuing one. The address comes from the session or the pending record, never from the form. The button disables while in flight; Supabase's rate limit is the real ceiling and maps to a "wait a few minutes" message.
 
-**A failure is reported as a failure.** Saying "sent" when Supabase refused leaves someone waiting for mail that will never arrive — currently the likely outcome, since no custom SMTP is configured.
+**A failure is reported as a failure.** Saying "sent" when Supabase refused leaves someone waiting for mail that will never arrive.
 
 ---
 
 ## 6. Confirmation continues onboarding
 
-The confirmation link's `next` is **`/access`, not the premium page**. Confirming an address finishes one step, not the journey. Sending them straight to the premium destination would drop them where they started having never seen the checkout boundary, and would spend the destination Phase 5 needs *after* payment.
+The sign-in link's `next` is **`/access`, not the premium page**. Confirming an address finishes one step, not the journey. Sending them straight to the premium destination would drop them where they started having never seen the checkout boundary, and would spend the destination Phase 5 needs *after* payment.
 
 ```
-signup → verify → click link → /auth/confirm → session established
+email → check your email → click link → /auth/confirm → session established
        → /access?returnTo=… → resolves verified viewer → /access/ready
 ```
 

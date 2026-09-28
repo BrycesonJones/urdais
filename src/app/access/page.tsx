@@ -2,33 +2,32 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { AuthDivider } from "@/components/onboarding/auth-divider";
+import { EmailForm } from "@/components/onboarding/email-form";
+import { GoogleButton } from "@/components/onboarding/google-button";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
-import { PremiumSummary } from "@/components/onboarding/premium-summary";
+import { isGoogleAuthAvailable } from "@/lib/auth/google";
 import { onboardingHref, onboardingReturnTo } from "@/lib/onboarding/routes";
 import { resolveOnboardingEntry } from "@/lib/onboarding/server";
 
 export const metadata: Metadata = {
-  title: "Get full access",
-  description: "One Urdais subscription unlocks every premium Urdais product.",
-  // Onboarding is not a landing page and has no business in a search index.
+  title: "Create your account",
   robots: { index: false, follow: false },
 };
 
 export const dynamic = "force-dynamic";
 
 /**
- * The onboarding entry point, and where every premium gate's CTA leads.
+ * `/access` — the canonical onboarding entry point, and the account form itself.
  *
- * For an anonymous reader this is the value screen: what a subscription is, what it
- * costs, and an explicit choice between creating an account and logging in. The
- * choice is explicit because Urdais does not tell an anonymous visitor whether their
- * address already has an account — inferring it would be the account-enumeration
- * disclosure Phase 2 avoided.
+ * The premium gate already established intent: someone who pressed "Get Full
+ * Access" has decided. So this is the form, not a screen asking them to press
+ * Continue to reach the form. There is no price here either — what a subscription
+ * costs belongs at Plan / Pay, next to the payment it explains.
  *
- * For anyone already signed in, this route decides nothing and renders nothing: it
- * redirects to whichever state their account is actually in. That is what makes a
- * refresh, a back button and a bookmarked `/access` all behave correctly without any
- * stored progress.
+ * For anyone with a session this route renders nothing and redirects to whichever
+ * state their account implies, which is what makes `/access` canonical rather than
+ * merely first: a bookmark, a stale link and a fresh click all resolve correctly.
  */
 export default async function AccessRoute({
   searchParams,
@@ -41,31 +40,37 @@ export default async function AccessRoute({
   const resolution = await resolveOnboardingEntry(returnTo);
   if (resolution.kind === "redirect") redirect(resolution.href);
 
+  // Server-resolved, and absent rather than disabled when Google is unconfigured.
+  const google = await isGoogleAuthAvailable();
+
   return (
     <OnboardingShell
       eyebrow="FULL ACCESS"
-      title="Get full access to Urdais"
-      lead="One subscription unlocks Urdais's premium analytics and infrastructure data."
+      title="Create your account"
+      lead="Unlock Urdais' premium analytics and infrastructure data."
     >
-      <PremiumSummary />
+      {google ? (
+        <>
+          <GoogleButton returnTo={returnTo} />
+          <AuthDivider />
+        </>
+      ) : null}
 
-      <div className="flex flex-col gap-3">
+      <EmailForm returnTo={returnTo} />
+
+      <p className="text-xs text-neutral-500">
+        We&rsquo;ll email you a secure sign-in link. No password required.
+      </p>
+
+      <p className="text-xs text-neutral-500">
+        Already have an account?{" "}
         <Link
-          href={onboardingHref("create_account", returnTo)}
-          className="rounded-md bg-[#526fe0] px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-[#6480e8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
+          href={onboardingHref("login", returnTo)}
+          className="text-neutral-300 underline underline-offset-2 transition-colors hover:text-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
         >
-          Continue
+          Log in
         </Link>
-        <p className="text-center text-xs text-neutral-500">
-          Already have an account?{" "}
-          <Link
-            href={onboardingHref("login", returnTo)}
-            className="text-neutral-300 underline underline-offset-2 transition-colors hover:text-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
-          >
-            Log in
-          </Link>
-        </p>
-      </div>
+      </p>
     </OnboardingShell>
   );
 }

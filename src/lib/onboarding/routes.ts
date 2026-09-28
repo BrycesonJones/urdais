@@ -19,10 +19,14 @@ import type { OnboardingState } from "@/lib/onboarding/state";
 export const ONBOARDING_HREF = "/access";
 
 const PATHS: Record<OnboardingState, string> = {
-  intro: ONBOARDING_HREF,
-  create_account: `${ONBOARDING_HREF}/create`,
+  // Account creation is `/access` itself. The gate's CTA lands a reader straight on
+  // the form rather than on a screen asking them to press Continue.
+  create_account: ONBOARDING_HREF,
   login: `${ONBOARDING_HREF}/login`,
-  verification_required: `${ONBOARDING_HREF}/verify`,
+  // The path is kept from the previous flow so existing links still resolve, even
+  // though the screen is now the authentication challenge rather than a
+  // post-signup verification notice.
+  email_challenge: `${ONBOARDING_HREF}/verify`,
   ready_for_checkout: `${ONBOARDING_HREF}/ready`,
   already_entitled: `${ONBOARDING_HREF}/subscribed`,
 };

@@ -24,16 +24,16 @@ const subscriber = () => resolveViewer.mockResolvedValue(subscriberViewer("acct-
 beforeEach(() => resolveViewer.mockReset());
 
 describe("the entry point", () => {
-  it("renders the intro for an anonymous reader", async () => {
+  it("renders the account form for an anonymous reader, in place", async () => {
     anonymous();
     const resolution = await resolveOnboardingEntry("/markets/compute-analytics");
     expect(resolution.kind).toBe("render");
-    expect(resolution.kind === "render" && resolution.state).toBe("intro");
+    expect(resolution.kind === "render" && resolution.state).toBe("create_account");
   });
 
-  it("never shows an authenticated reader the intro", async () => {
+  it("never shows an authenticated reader the account form", async () => {
     // Invariant 3: nobody signed in is asked to authenticate again, and that includes
-    // being shown the "create account or log in" choice.
+    // being shown the account form at `/access` itself.
     for (const [setup, expected] of [
       [unverified, "/access/verify"],
       [verified, "/access/ready"],
@@ -94,7 +94,7 @@ describe("rendering the state a reader does belong on", () => {
   const cases: [string, () => void, OnboardingState][] = [
     ["anonymous / create_account", anonymous, "create_account"],
     ["anonymous / login", anonymous, "login"],
-    ["unverified / verification_required", unverified, "verification_required"],
+    ["unverified / verification_required", unverified, "email_challenge"],
     ["verified / ready_for_checkout", verified, "ready_for_checkout"],
     ["subscriber / already_entitled", subscriber, "already_entitled"],
   ];

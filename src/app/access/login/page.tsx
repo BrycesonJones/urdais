@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { onboardingLoginAction } from "@/app/access/actions";
-import { CredentialsForm } from "@/components/onboarding/credentials-form";
+import { AuthDivider } from "@/components/onboarding/auth-divider";
+import { EmailForm } from "@/components/onboarding/email-form";
+import { GoogleButton } from "@/components/onboarding/google-button";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
+import { isGoogleAuthAvailable } from "@/lib/auth/google";
 import { onboardingHref, onboardingReturnTo } from "@/lib/onboarding/routes";
 import { resolveOnboarding } from "@/lib/onboarding/server";
 
@@ -16,11 +18,16 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 /**
- * Log in, for an existing reader inside the onboarding journey.
+ * Log in — the same primitive as account creation, under a different heading.
  *
- * Uses Phase 2's `signInWithPassword`. Logging in proves who someone is and nothing
- * about what they may read: the next screen is decided by their account's actual
- * entitlement and verification state, not by the fact that authentication succeeded.
+ * The distinction is orientation, not mechanism: both screens email a one-time
+ * sign-in link, and the call is identical. That identity is the anti-enumeration
+ * property. A login screen that behaved differently for an address with no account
+ * would answer "does this person have a Urdais account" to anyone who asked.
+ *
+ * Which is also why the two screens are never swapped automatically. Detecting that
+ * an address is unknown and switching the reader to "create account" would disclose
+ * exactly what the identical call protects.
  */
 export default async function OnboardingLoginRoute({
   searchParams,
@@ -33,27 +40,31 @@ export default async function OnboardingLoginRoute({
   const resolution = await resolveOnboarding("login", returnTo);
   if (resolution.kind === "redirect") redirect(resolution.href);
 
+  const google = await isGoogleAuthAvailable();
+
   return (
     <OnboardingShell
       eyebrow="LOG IN"
       title="Log in to Urdais"
-      lead="Use the email and password for your Urdais account."
-      back={{ href: onboardingHref("intro", returnTo), label: "Back" }}
+      lead="We'll email you a secure sign-in link."
+      back={{ href: onboardingHref("create_account", returnTo), label: "Back" }}
     >
-      <CredentialsForm
-        action={onboardingLoginAction}
-        submitLabel="Log in"
-        passwordAutoComplete="current-password"
-        returnTo={returnTo}
-      />
+      {google ? (
+        <>
+          <GoogleButton returnTo={returnTo} />
+          <AuthDivider />
+        </>
+      ) : null}
+
+      <EmailForm returnTo={returnTo} submitLabel="Send link" />
 
       <p className="text-xs text-neutral-500">
-        No account yet?{" "}
+        New to Urdais?{" "}
         <Link
           href={onboardingHref("create_account", returnTo)}
           className="text-neutral-300 underline underline-offset-2 transition-colors hover:text-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
         >
-          Create one
+          Create account
         </Link>
       </p>
     </OnboardingShell>

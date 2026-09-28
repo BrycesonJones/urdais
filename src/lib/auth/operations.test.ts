@@ -11,6 +11,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   classifyAuthError,
+  sendEmailSignInLink,
   looksLikeEmail,
   normalizeEmail,
   signInWithPassword,
@@ -21,12 +22,77 @@ import {
 
 type SignUpResult = { data: { user: unknown; session: unknown }; error: unknown };
 
-function client(overrides: Partial<Record<"signUp" | "signInWithPassword" | "signOut", unknown>>): AuthCapableClient {
+function client(overrides: Partial<Record<"signUp" | "signInWithPassword" | "signInWithOtp" | "signOut", unknown>>): AuthCapableClient {
   return { auth: overrides as never } as AuthCapableClient;
 }
 
 const NEW_USER: SignUpResult = { data: { user: { id: "u1", identities: [{ id: "i1" }] }, session: null }, error: null };
 const EXISTING_USER: SignUpResult = { data: { user: { id: "u1", identities: [] }, session: null }, error: null };
+
+describe("the passwordless sign-in link", () => {
+  it("asks Supabase to email a link", async () => {
+    const signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: null });
+    const outcome = await sendEmailSignInLink(client({ signInWithOtp }), {
+      email: "reader@example.invalid",
+      emailRedirectTo: "https://urdais.com/auth/confirm?next=%2Faccess",
+    });
+
+    expect(outcome).toEqual({ kind: "sent" });
+    expect(signInWithOtp).toHaveBeenCalledWith({
+      email: "reader@example.invalid",
+      options: { emailRedirectTo: "https://urdais.com/auth/confirm?next=%2Faccess" },
+    });
+  });
+
+  it("does not restrict signup, which is what keeps the two screens identical", async () => {
+    // `shouldCreateUser` is left at its default of true. Passing false on the login
+    // screen would make an unknown address behave differently from a known one, and
+    // the form would become an oracle for who has a Urdais account.
+    const signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: null });
+    await sendEmailSignInLink(client({ signInWithOtp }), { email: "a@b.co" });
+    expect(signInWithOtp.mock.calls[0]?.[0]?.options?.shouldCreateUser).toBeUndefined();
+  });
+
+  it("answers identically for an address that exists and one that does not", async () => {
+    // Supabase returns the same shape either way; this asserts Urdais does not add a
+    // distinction of its own.
+    const first = await sendEmailSignInLink(client({ signInWithOtp: vi.fn().mockResolvedValue({ data: {}, error: null }) }), { email: "known@example.invalid" });
+    const second = await sendEmailSignInLink(client({ signInWithOtp: vi.fn().mockResolvedValue({ data: {}, error: null }) }), { email: "unknown@example.invalid" });
+    expect(first).toEqual(second);
+  });
+
+  it("normalises the address before sending", async () => {
+    const signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: null });
+    await sendEmailSignInLink(client({ signInWithOtp }), { email: "  Reader@Example.INVALID " });
+    expect(signInWithOtp.mock.calls[0]?.[0]?.email).toBe("reader@example.invalid");
+  });
+
+  it("validates before calling the provider", async () => {
+    const signInWithOtp = vi.fn();
+    expect((await sendEmailSignInLink(client({ signInWithOtp }), { email: "" })).kind).toBe("rejected");
+    expect((await sendEmailSignInLink(client({ signInWithOtp }), { email: "not-an-email" })).kind).toBe("rejected");
+    expect(signInWithOtp).not.toHaveBeenCalled();
+  });
+
+  it("reports a rate limit as something the reader can act on", async () => {
+    const signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: { code: "over_email_send_rate_limit" } });
+    const outcome = await sendEmailSignInLink(client({ signInWithOtp }), { email: "a@b.co" });
+    expect(outcome).toMatchObject({ kind: "rejected", reason: "rate_limited" });
+    expect(outcome.kind === "rejected" && outcome.message).toMatch(/wait/i);
+  });
+
+  it("reports a provider failure as a failure, never as sent", async () => {
+    // Saying "sent" when the provider refused leaves someone waiting for mail that
+    // is not coming -- the one outcome that wastes their time completely.
+    const signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: { message: "smtp unavailable" } });
+    expect((await sendEmailSignInLink(client({ signInWithOtp }), { email: "a@b.co" })).kind).toBe("rejected");
+  });
+
+  it("survives a thrown network error", async () => {
+    const signInWithOtp = vi.fn().mockRejectedValue(new Error("fetch failed"));
+    expect((await sendEmailSignInLink(client({ signInWithOtp }), { email: "a@b.co" })).kind).toBe("rejected");
+  });
+});
 
 describe("email shape", () => {
   it("accepts ordinary addresses", () => {
@@ -161,6 +227,12 @@ describe("signing out", () => {
 });
 
 describe("classifying provider errors", () => {
+  it("maps the hosted deliverability rejection to an address problem", () => {
+    // Otherwise a reader whose address Supabase will not send to is told the service
+    // is unavailable and comes back later to the same failure.
+    expect(classifyAuthError({ code: "email_address_invalid", message: 'Email address "x@example.com" is invalid' })).toBe("invalid_email");
+  });
+
   it("matches on code where Supabase supplies one", () => {
     expect(classifyAuthError({ code: "over_request_rate_limit" })).toBe("rate_limited");
     expect(classifyAuthError({ code: "signup_disabled" })).toBe("signups_disabled");
