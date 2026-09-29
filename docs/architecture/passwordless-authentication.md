@@ -23,7 +23,7 @@ Removing the password field was the smaller half. The larger one is that possess
 ## 2. A numeric code, not a magic link
 
 Both are `signInWithOtp`. The difference is entirely in the email template and in
-what the reader is asked to do with what arrives. Urdais sends a **six-digit code**.
+what the reader is asked to do with what arrives. Urdais sends a **numeric code**.
 
 **Why.** The deciding property is that a code is typed into the browser that asked
 for it:
@@ -81,10 +81,27 @@ signup-confirmation token specifically — it is their recommended guard against
 prefetching — and the same call verifies a magic-link token. That is why the one
 primitive in `@/lib/auth/operations` needs no knowledge of the reader's history.
 
-`otp_length` (Authentication → Providers → Email) decides how many digits. It is
-settable from 6 to 10; Urdais renders the configured length as a hint and validates
-the **whole** range, because validation stricter than Supabase would turn a
-dashboard change into an outage that reads as "wrong code" to everyone.
+### The length is hosted configuration, and the app cannot read it
+
+`otp_length` (Authentication → Providers → Email) decides how many digits, from 6 to
+10. **It is not exposed on any endpoint the application can query** — `/auth/v1/settings`
+does not carry it — so Urdais can be *told* the length but can never *know* it.
+
+That cuts two ways, and the first real sign-in demonstrated both. UrdaisDev is set to
+**8**:
+
+- **Validation accepts the whole range**, so the 8-digit code was accepted and the
+  end-to-end sign-in worked on the first attempt. Had validation hard-coded six, a
+  dashboard setting would have become an outage presenting to every reader as "wrong
+  code" — with the server rejecting a perfectly good code before Supabase saw it.
+- **The hint had hard-coded six**, so the screen read "6-digit code from the email"
+  above a box expecting eight. Harmless to the mechanism, and still a defect: it tells
+  the reader their correct code is the wrong shape.
+
+So the hint now names a number only where a deployment declares `URDAIS_OTP_LENGTH`,
+and otherwise says "Enter the code from the email." An unset deployment says something
+true but vague; a configured one says something true and specific. Neither says
+something false. Set `URDAIS_OTP_LENGTH` per deployment to match that project.
 
 ### Incorrect and expired are deliberately one message
 

@@ -24,8 +24,13 @@ import { MAX_OTP_LENGTH } from "@/lib/auth/otp";
  * `maxLength` uses the widest code Supabase can mint rather than the configured
  * length, so raising `otp_length` in the dashboard cannot silently truncate what a
  * reader pastes. The server does not reject on length either; Supabase decides.
+ *
+ * The hint names a digit count only when a deployment has actually declared one.
+ * The length is hosted configuration the app cannot read, and a guessed number is a
+ * false promise about what is in the reader's email — "6-digit code" above a box
+ * expecting eight tells someone their correct code is the wrong shape.
  */
-export function OtpForm({ returnTo, expectedLength }: { returnTo: string | null; expectedLength: number }) {
+export function OtpForm({ returnTo, expectedLength }: { returnTo: string | null; expectedLength: number | null }) {
   const [state, formAction, pending] = useActionState(verifyOtpAction, IDLE_AUTH_STATE);
   const failed = state.status === "error";
 
@@ -51,7 +56,7 @@ export function OtpForm({ returnTo, expectedLength }: { returnTo: string | null;
           className="rounded-md border border-white/15 bg-black/30 px-3 py-2.5 font-mono text-lg tracking-[0.3em] text-neutral-100 placeholder:tracking-normal placeholder:font-sans placeholder:text-neutral-600 outline-none transition-colors focus-visible:border-[#526fe0] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#8ca4ff]"
         />
         <p id="onboarding-otp-hint" className="text-xs text-neutral-500">
-          {expectedLength}-digit code from the email.
+          {expectedLength === null ? "Enter the code from the email." : `${expectedLength}-digit code from the email.`}
         </p>
       </div>
 

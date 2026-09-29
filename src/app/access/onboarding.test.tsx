@@ -55,11 +55,11 @@ vi.mock("@/components/onboarding/resend-code", () => ({
   ResendCode: () => <button type="submit">Resend code</button>,
 }));
 vi.mock("@/components/onboarding/otp-form", () => ({
-  OtpForm: ({ expectedLength }: { expectedLength: number }) => (
+  OtpForm: ({ expectedLength }: { expectedLength: number | null }) => (
     <form data-testid="otp-form">
       <label htmlFor="c">Verification code</label>
       <input id="c" name="code" inputMode="numeric" autoComplete="one-time-code" />
-      <p>{expectedLength}-digit code from the email.</p>
+      <p>{expectedLength === null ? "Enter the code from the email." : `${expectedLength}-digit code from the email.`}</p>
       <button type="submit">Verify</button>
     </form>
   ),
@@ -264,12 +264,16 @@ describe("the email challenge", () => {
     expect(html).toContain('autoComplete="one-time-code"');
   });
 
-  it("tells the reader how long the code is, from configuration rather than a guess", async () => {
+  it("does not claim a digit count nobody configured", async () => {
+    // `otp_length` is hosted configuration the app cannot read. UrdaisDev is set to
+    // 8, and a hard-coded "6-digit code" told readers their correct code was the
+    // wrong shape.
     resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access", state: "create_account" });
     readPendingEmail.mockResolvedValue("pending@example.invalid");
 
     const html = renderToStaticMarkup(await CheckEmailRoute({ searchParams: params() }));
-    expect(html).toContain("6-digit code from the email.");
+    expect(html).toContain("Enter the code from the email.");
+    expect(html).not.toMatch(/\d-digit code/);
   });
 
   it("prefers the authoritative address when a session exists", async () => {

@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { MAX_OTP_LENGTH, MIN_OTP_LENGTH, expectedOtpLength, looksLikeOtp, normalizeOtp } from "@/lib/auth/otp";
+import { MAX_OTP_LENGTH, MIN_OTP_LENGTH, configuredOtpLength, looksLikeOtp, normalizeOtp } from "@/lib/auth/otp";
 
 describe("the accepted range", () => {
   it("spans exactly what Supabase's otp_length permits", () => {
@@ -49,19 +49,31 @@ describe("normalising what a reader pastes", () => {
 });
 
 describe("the length shown to the reader", () => {
-  it("is six unless the project is configured otherwise", () => {
-    expect(expectedOtpLength({})).toBe(6);
+  // UrdaisDev is set to 8. The app cannot read `otp_length` from any endpoint, so a
+  // default of 6 was a false promise: "6-digit code" above a box expecting eight
+  // tells the reader their correct code is the wrong shape.
+  it("says nothing when nobody has configured a length", () => {
+    expect(configuredOtpLength({})).toBeNull();
+    expect(configuredOtpLength({ URDAIS_OTP_LENGTH: "" })).toBeNull();
+    expect(configuredOtpLength({ URDAIS_OTP_LENGTH: "   " })).toBeNull();
   });
 
-  it("follows URDAIS_OTP_LENGTH when it names a length Supabase can produce", () => {
-    expect(expectedOtpLength({ URDAIS_OTP_LENGTH: "8" })).toBe(8);
-  });
-
-  it("falls back rather than printing nonsense for an unusable value", () => {
-    // Presentation only: a bad value here must never become a hint that tells
-    // readers to type the wrong number of digits.
-    for (const value of ["", "0", "5", "11", "six", "6.5", "-6"]) {
-      expect(expectedOtpLength({ URDAIS_OTP_LENGTH: value }), value).toBe(6);
+  it("follows URDAIS_OTP_LENGTH across the range Supabase can mint", () => {
+    for (let length = MIN_OTP_LENGTH; length <= MAX_OTP_LENGTH; length += 1) {
+      expect(configuredOtpLength({ URDAIS_OTP_LENGTH: String(length) }), String(length)).toBe(length);
     }
+  });
+
+  it("stays silent rather than printing a number Supabase could not have produced", () => {
+    for (const value of ["0", "5", "11", "six", "6.5", "-6", "8abc", "abc8"]) {
+      expect(configuredOtpLength({ URDAIS_OTP_LENGTH: value }), value).toBeNull();
+    }
+  });
+
+  it("never rejects a code, whatever it says", () => {
+    // The hint is presentation. An 8-digit code is valid on a deployment that
+    // declares 6, because Supabase — not this value — decides.
+    expect(configuredOtpLength({ URDAIS_OTP_LENGTH: "6" })).toBe(6);
+    expect(looksLikeOtp("58877743")).toBe(true);
   });
 });

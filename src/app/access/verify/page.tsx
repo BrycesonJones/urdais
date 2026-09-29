@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { useDifferentEmailAction } from "@/app/access/actions";
 import { OtpForm } from "@/components/onboarding/otp-form";
 import { ResendCode } from "@/components/onboarding/resend-code";
-import { expectedOtpLength } from "@/lib/auth/otp";
+import { configuredOtpLength } from "@/lib/auth/otp";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { resolveSupabaseIdentity } from "@/lib/auth/identity";
 import { onboardingHref, onboardingReturnTo } from "@/lib/onboarding/routes";
@@ -79,7 +79,7 @@ export default async function CheckEmailRoute({
         <span className="font-medium break-all text-neutral-50">{email}</span>.
       </p>
 
-      <OtpForm returnTo={returnTo} expectedLength={expectedOtpLength()} />
+      <OtpForm returnTo={returnTo} expectedLength={configuredOtpLength()} />
 
       <ResendCode />
 

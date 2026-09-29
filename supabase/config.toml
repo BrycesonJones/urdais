@@ -245,7 +245,13 @@ secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "1s"
 # Number of characters used in the email OTP.
-otp_length = 6
+#
+# LOCAL ONLY, and NOT the authority. Each hosted project carries its own value and
+# does not expose it on any endpoint the application can read -- UrdaisDev is set to
+# 8. So the app validates the whole 6-10 range Supabase permits rather than this
+# number, and names a digit count on screen only where URDAIS_OTP_LENGTH says so.
+# Mirrored to 8 to match UrdaisDev, so a local run looks like the real thing.
+otp_length = 8
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 

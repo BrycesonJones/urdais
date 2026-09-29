@@ -1,19 +1,23 @@
-# Email OTP — what was verified, and what is blocked
+# Email OTP — what was verified
 
-**Status: internal operations record.** Written 28 September 2026, PR #213 revision.
-Supersedes the verification record in `onboarding-phase-4-verification.md` for
-everything touching the credential.
+**Status: internal operations record.** Written 28 September 2026, PR #213 revision;
+the end-to-end run in §3 passed on **29 September 2026** against UrdaisDev. Supersedes
+the verification record in `onboarding-phase-4-verification.md` for everything
+touching the credential.
 
 > A send that succeeds is not the thing being verified. The thing being verified is
 > that a real person can receive a Urdais code, type it in, and come out the other
-> side with a real session and no password.
+> side with a real session and no password. **That now happens.**
+
+UrdaisDev is configured and passing. **UrdaisProd is not** — §1 is what it still
+needs, and it is the same two dashboard edits.
 
 ---
 
-## 1. The blocker, stated first
+## 1. The configuration without which nothing works
 
-**Supabase will send an email with no code in it unless the project's Magic Link
-template is changed by hand.**
+**Supabase sends an email with no code in it unless BOTH email templates are changed
+by hand, per project.** Done on UrdaisDev; still outstanding on UrdaisProd.
 
 `signInWithOtp` always mints a token. What the message *shows* is decided entirely by
 the template, and Supabase's built-in default contains `{{ .ConfirmationURL }}` — a
@@ -51,7 +55,7 @@ Nothing else needs to change. Specifically:
 
 | Setting | Required value | Why it is already right |
 | --- | --- | --- |
-| Authentication → Providers → Email → `otp_length` | 6 (default) | The application reads the configured length for its hint and accepts the whole 6–10 range Supabase permits, so any value works |
+| Authentication → Providers → Email → `otp_length` | any value 6–10 (**UrdaisDev is 8**) | Validation accepts the whole range Supabase permits, so any value works. Set `URDAIS_OTP_LENGTH` on the deployment to match, or the screen simply omits the digit count |
 | `otp_expiry` | 3600 (default) | The copy says "expires in one hour" |
 | Authentication → URL Configuration | unchanged | Nothing emailed is followed any more; the redirect allow-list now matters only to Google |
 | SMTP | unchanged | Already Resend, already verified for `urdais.com` |
@@ -130,12 +134,81 @@ provider's own message — which routinely contains the address.
 
 ---
 
-## 3. What a stub cannot prove, and is therefore still open
+## 3. The real end-to-end run — PASSED
 
-**The success path.** A stub can return a session object; it cannot prove that a
-person received a code, that the code Supabase minted is the one `verifyOtp` accepts,
-or that the session which results is a genuine Urdais session. That needs one real
-send to a real mailbox, and the reader typing what arrived.
+**2026-09-29T01:06Z, UrdaisDev, through the real UI.** A real person received a real
+code and emerged with a real Urdais session, with no password and without leaving the
+page. That is the claim this whole phase existed to establish.
+
+| | |
+| --- | --- |
+| Send | one, `POST /otp` → 200, template `Confirm signup` (new address) |
+| Code | **8 digits** — UrdaisDev's `otp_length` is 8, not the default 6 |
+| Verify | `verifyOtp({ type: "email" })` accepted the signup-confirmation token |
+| Session | `sb-<ref>-auth-token`, **httpOnly**, SameSite=Lax |
+| `email_confirmed_at` | set — unconfirmed rows went 2 → 1 |
+| Landing | `/access` resolved the new viewer to **`/access/ready`** |
+| Pending-email cookie | cleared once the session existed |
+
+Provisioning, checked rather than seeded:
+
+| | before | after |
+| --- | --- | --- |
+| `auth.users` | 3 | **3** — the row from the send was reused, not duplicated |
+| `identity.accounts` | 1 | **2** — exactly one new row |
+| `premium_entitlements` | 1 | **1** — unchanged |
+
+The new account `eb387ca8…` is `auth_provider = supabase`, its `auth_subject` equals
+the `auth.users.id`, exactly **one** row exists for that subject, and it has **zero**
+entitlement rows. The single pre-existing entitlement row belongs to a different
+account and is `inactive`. `/auth/status` reported `entitlement_required` for all five
+premium products — authenticated, and correctly still not entitled. **Onboarding
+granted nothing.**
+
+### The 8-digit code is the finding worth keeping
+
+`otp_length` is per-project hosted configuration, **not exposed on any endpoint the
+application can read**. UrdaisDev is set to 8.
+
+The sign-in worked on the first attempt *because* validation accepts the whole 6–10
+range Supabase permits instead of assuming six. Had it hard-coded the default, a
+dashboard setting would have been an outage — the server rejecting a perfectly good
+code before Supabase ever saw it, presenting to every reader as "wrong code".
+
+The presentation layer was not so careful: the hint said "6-digit code from the email"
+above a box expecting eight. Harmless to the mechanism, still a defect, and now fixed —
+the screen names a digit count only where `URDAIS_OTP_LENGTH` declares one.
+
+### Two notes on how the run was conducted
+
+The browser session from the send did not survive a restart, so the **pending-email
+cookie was re-set directly** rather than spending a second email. That is not an OTP
+bypass: the cookie is a plain unsigned value by design, it only selects which address
+the code is checked against, and Supabase still had to accept the code.
+
+An earlier attempt at the send **failed before reaching the form** —
+`MallocNanoZone=0` in the environment conflicts with Chrome's allocator and hung the
+browser at startup. No email was spent, confirmed from two independent sides. The
+harness now has a dry-run mode that walks to the submit button and stops, so a launch
+flake can never again cost a send.
+
+---
+
+## 4. What remains
+
+**The returning-login path.** The address is now confirmed, so the next
+`signInWithOtp` for it will select the **Magic Link** template rather than
+`Confirm signup` — the other half of §1, still unexercised. One send proves it.
+
+---
+
+## 5. What a stub cannot prove, and is therefore still open
+
+**Superseded by §3 — the success path is now proven against the real provider.** The
+reasoning is kept because it is why the run was structured this way: a stub can return
+a session object, but it cannot prove that a person received a code, that the code
+Supabase minted is the one `verifyOtp` accepts, or that the resulting session is a
+genuine Urdais session.
 
 It was deliberately **not** faked here. Driving a stubbed success would also have
 created an `identity.accounts` row for an invented subject in a real database, which
@@ -155,7 +228,7 @@ is the provisioning the real test is supposed to observe.
 
 ---
 
-## 4. The first real delivery, and what it proved
+## 6. The first real delivery, and what it proved
 
 **2026-09-28T23:26:20Z** — `POST /otp` → 500, `gomail: ... 550 "The urdais.com domain
 is not verified"`. Resend rejected the sender.
@@ -185,7 +258,7 @@ template was used or whether the body was usable. Both facts were needed here.
 
 ---
 
-## 5. Earlier real sends, for the record
+## 7. Earlier real sends, for the record
 
 Both predate the OTP conversion and neither delivered.
 
