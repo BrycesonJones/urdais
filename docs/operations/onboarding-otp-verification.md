@@ -23,12 +23,17 @@ authentication configuration, set per project through the dashboard.
 Left as it is, the flow fails in the worst available way. The send succeeds, the code
 screen renders, and the reader is asked to type six digits they were never shown.
 
-### The exact change
+### The exact change — two templates, not one
 
-**Supabase dashboard → the project → Authentication → Emails → Magic Link →** edit
-the template body so it contains `{{ .Token }}`. The content this repository uses for
-the local stack is `supabase/templates/magic_link.html`, and the hosted template
-should match it:
+**Supabase dashboard → the project → Authentication → Emails →** edit **both**
+`Confirm signup` **and** `Magic Link` so each body contains `{{ .Token }}`, with the
+same subject. `signInWithOtp` chooses between them by whether the address is already
+confirmed, not by which screen the reader used, so setting one leaves half the readers
+with the wrong email — and the half left broken is the *first* email anybody gets.
+
+The content this repository uses for the local stack is
+`supabase/templates/confirmation.html` and `supabase/templates/magic_link.html`, which
+are deliberately identical. The hosted templates should match:
 
 ```html
 <h2>Your Urdais verification code</h2>
@@ -150,7 +155,37 @@ is the provisioning the real test is supposed to observe.
 
 ---
 
-## 4. Earlier real sends, for the record
+## 4. The first real delivery, and what it proved
+
+**2026-09-28T23:26:20Z** — `POST /otp` → 500, `gomail: ... 550 "The urdais.com domain
+is not verified"`. Resend rejected the sender.
+
+**2026-09-29T00:13:35Z** — `POST /otp` → 200 in 708 ms, no error, audit action
+`user_confirmation_requested`. **The email was delivered.** Transport is settled:
+Supabase → Resend → the mailbox works, DNS and sender domain included.
+
+The message was wrong, not missing. It carried Supabase's built-in **Confirm signup**
+body — *"Follow the link below to confirm this email address and finish signing up"* —
+because the address was brand new, and only the Magic Link template had been changed.
+That is the two-template selection rule in §1, observed rather than theorised: the
+audit action in the log says `user_confirmation_requested`, which is the signup path,
+not the magic-link one.
+
+Worth keeping, because the same trap is waiting on UrdaisProd: **the flow appears to
+work in testing and breaks for every genuinely new customer.** Anyone testing with an
+already-confirmed address would see the right email and conclude the job was done.
+
+### gotrue's mailer is synchronous, which is a usable diagnostic
+
+The 500 above surfaced an SMTP-level rejection *in the HTTP response*. There is no
+queue that swallows a later failure, so on this API a 200 means gomail completed
+without error and the remote SMTP server accepted the message. That is stronger than
+"request accepted" — but it is still not delivery, and it says nothing about which
+template was used or whether the body was usable. Both facts were needed here.
+
+---
+
+## 5. Earlier real sends, for the record
 
 Both predate the OTP conversion and neither delivered.
 

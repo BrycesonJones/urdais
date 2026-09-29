@@ -259,15 +259,27 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
-# The verification-code email.
+# The verification-code email -- BOTH of the templates `signInWithOtp` can choose.
 #
-# `signInWithOtp` renders the template Supabase calls "Magic Link" regardless of
-# whether the message ends up containing a link, and the built-in default contains
-# `{{ .ConfirmationURL }}` and no `{{ .Token }}`. Left at the default, Urdais would
-# email people a message with no code in it while the UI asked them to type one.
+# It picks by the state of the address, not by which screen the reader used:
+#
+#   - not yet confirmed (a brand-new address included) -> `confirmation`
+#   - already confirmed, signing in again              -> `magic_link`
+#
+# Both built-in defaults contain `{{ .ConfirmationURL }}` and no `{{ .Token }}`, so
+# a project left at the default emails a message with no code in it while the UI asks
+# for one. Setting only one of the two fixes only half the readers -- and the half
+# that stays broken is the *first* email anybody ever gets.
+#
+# Identical content on purpose: creating an account and logging in are the same act
+# to the reader, and two different-looking emails for one act is a bug they report.
 #
 # This configures the LOCAL stack only -- the hosted projects are set through the
-# dashboard by hand. See the WARNING at the top of [auth].
+# dashboard by hand, per project. See the WARNING at the top of [auth].
+[auth.email.template.confirmation]
+subject = "Your Urdais verification code"
+content_path = "./supabase/templates/confirmation.html"
+
 [auth.email.template.magic_link]
 subject = "Your Urdais verification code"
 content_path = "./supabase/templates/magic_link.html"

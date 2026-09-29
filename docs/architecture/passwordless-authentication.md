@@ -42,24 +42,44 @@ for it:
 
 The cost is one extra field and one extra submission. That is the whole trade.
 
-### The template is the part that is not code
+### The template is the part that is not code — and there are two of them
 
 `signInWithOtp` always mints a token. **What the email shows is decided by the
-project's Magic Link template, not by the call** — `{{ .Token }}` renders the code,
-`{{ .ConfirmationURL }}` renders a link to the same token. Supabase's built-in
-default contains only the latter.
+template, not by the call** — `{{ .Token }}` renders the code,
+`{{ .ConfirmationURL }}` renders a link to the same token. Both built-in defaults
+contain only the latter, so a project left alone emails a message **with no code in
+it** while the screen asks for one.
 
-So a project left at the default emails a message **with no code in it** while the
-screen asks for one. `verifyOtp` would still accept the code if the reader could
-somehow obtain it; they cannot, because they were never shown it. This is the one
-configuration change without which the flow is dead on arrival:
+**One call, two templates.** This is the part that surprises: `signInWithOtp` chooses
+between them by the state of the *address*, not by which screen the reader used.
 
-> **Supabase dashboard → Authentication → Emails → Magic Link** — the template body
-> must contain `{{ .Token }}`. `supabase/templates/magic_link.html` in this
-> repository is the exact content, and configures the local stack; the hosted
-> projects are set by hand through the dashboard, because
+| Address | Template Supabase sends | Audit action |
+| --- | --- | --- |
+| not yet confirmed — a brand-new address included | **Confirm signup** | `user_confirmation_requested` |
+| already confirmed, signing in again | **Magic Link** | magic-link request |
+
+So the create-account and log-in screens stay identical in *code* while producing two
+different *emails*, and the split does not follow the screens. Setting only Magic Link
+fixes only returning readers — and leaves the **first** email anybody ever receives
+still saying "Confirm your email address / follow the link below", which is exactly
+the failure this project hit on its first real send.
+
+> **Supabase dashboard → Authentication → Emails →** give **both** `Confirm signup`
+> **and** `Magic Link` a body containing `{{ .Token }}`, with the same subject.
+> `supabase/templates/confirmation.html` and `supabase/templates/magic_link.html` are
+> the exact content and are deliberately identical; they configure the local stack
+> only. The hosted projects are set by hand, per project, because
 > `supabase config push` would overwrite every other hosted auth setting with the
 > local file's values.
+
+Keep the two identical. Creating an account and logging in are the same act to the
+reader, and two different-looking emails for one act is a bug they report.
+
+**`verifyOtp({ email, token, type: "email" })` covers both**, so no application code
+branches on which template fired. Supabase documents `type: "email"` for the
+signup-confirmation token specifically — it is their recommended guard against link
+prefetching — and the same call verifies a magic-link token. That is why the one
+primitive in `@/lib/auth/operations` needs no knowledge of the reader's history.
 
 `otp_length` (Authentication → Providers → Email) decides how many digits. It is
 settable from 6 to 10; Urdais renders the configured length as a hint and validates
