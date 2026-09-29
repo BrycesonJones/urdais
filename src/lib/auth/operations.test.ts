@@ -11,6 +11,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   classifyAuthError,
+  sendEmailOtp,
+  verifyEmailOtp,
   looksLikeEmail,
   normalizeEmail,
   signInWithPassword,
@@ -21,12 +23,164 @@ import {
 
 type SignUpResult = { data: { user: unknown; session: unknown }; error: unknown };
 
-function client(overrides: Partial<Record<"signUp" | "signInWithPassword" | "signOut", unknown>>): AuthCapableClient {
+function client(overrides: Partial<Record<"signUp" | "signInWithPassword" | "signInWithOtp" | "verifyOtp" | "signOut", unknown>>): AuthCapableClient {
   return { auth: overrides as never } as AuthCapableClient;
 }
 
 const NEW_USER: SignUpResult = { data: { user: { id: "u1", identities: [{ id: "i1" }] }, session: null }, error: null };
 const EXISTING_USER: SignUpResult = { data: { user: { id: "u1", identities: [] }, session: null }, error: null };
+
+describe("requesting a code", () => {
+  it("asks Supabase to email one", async () => {
+    const signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: null });
+    const outcome = await sendEmailOtp(client({ signInWithOtp }), { email: "reader@example.invalid" });
+
+    expect(outcome).toEqual({ kind: "sent" });
+    expect(signInWithOtp).toHaveBeenCalledWith({ email: "reader@example.invalid" });
+  });
+
+  it("passes no emailRedirectTo, because nothing is followed from the email", async () => {
+    // That option tells Supabase where a *link* should land. Urdais asks nobody to
+    // follow one, and sending it would put a second, redundant way in.
+    const signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: null });
+    await sendEmailOtp(client({ signInWithOtp }), { email: "a@b.co" });
+    expect(signInWithOtp.mock.calls[0]?.[0]?.options).toBeUndefined();
+  });
+
+  it("does not restrict signup, which is what keeps the two screens identical", async () => {
+    // `shouldCreateUser` is left at its default of true. Passing false on the login
+    // screen would make an unknown address behave differently from a known one, and
+    // the form would become an oracle for who has a Urdais account.
+    const signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: null });
+    await sendEmailOtp(client({ signInWithOtp }), { email: "a@b.co" });
+    expect(signInWithOtp.mock.calls[0]?.[0]?.options?.shouldCreateUser).toBeUndefined();
+  });
+
+  it("answers identically for an address that exists and one that does not", async () => {
+    const first = await sendEmailOtp(client({ signInWithOtp: vi.fn().mockResolvedValue({ data: {}, error: null }) }), { email: "known@example.invalid" });
+    const second = await sendEmailOtp(client({ signInWithOtp: vi.fn().mockResolvedValue({ data: {}, error: null }) }), { email: "unknown@example.invalid" });
+    expect(first).toEqual(second);
+  });
+
+  it("normalises the address before sending", async () => {
+    const signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: null });
+    await sendEmailOtp(client({ signInWithOtp }), { email: "  Reader@Example.INVALID " });
+    expect(signInWithOtp.mock.calls[0]?.[0]?.email).toBe("reader@example.invalid");
+  });
+
+  it("validates before calling the provider", async () => {
+    const signInWithOtp = vi.fn();
+    expect((await sendEmailOtp(client({ signInWithOtp }), { email: "" })).kind).toBe("rejected");
+    expect((await sendEmailOtp(client({ signInWithOtp }), { email: "not-an-email" })).kind).toBe("rejected");
+    expect(signInWithOtp).not.toHaveBeenCalled();
+  });
+
+  it("reports a rate limit as something the reader can act on", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: { code: "over_email_send_rate_limit" } });
+    const outcome = await sendEmailOtp(client({ signInWithOtp }), { email: "a@b.co" });
+    expect(outcome).toMatchObject({ kind: "rejected", reason: "rate_limited" });
+    expect(outcome.kind === "rejected" && outcome.message).toMatch(/wait/i);
+  });
+
+  it("reports a provider failure as a failure, never as sent", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: { message: "smtp unavailable" } });
+    expect((await sendEmailOtp(client({ signInWithOtp }), { email: "a@b.co" })).kind).toBe("rejected");
+  });
+
+  it("survives a thrown network error", async () => {
+    const signInWithOtp = vi.fn().mockRejectedValue(new Error("fetch failed"));
+    expect((await sendEmailOtp(client({ signInWithOtp }), { email: "a@b.co" })).kind).toBe("rejected");
+  });
+
+  it("logs the provider code without logging the address", async () => {
+    const logged: string[] = [];
+    const spy = vi.spyOn(console, "error").mockImplementation((line) => void logged.push(String(line)));
+    const signInWithOtp = vi.fn().mockResolvedValue({ data: {}, error: { code: "over_email_send_rate_limit", status: 429 } });
+
+    await sendEmailOtp(client({ signInWithOtp }), { email: "reader@example.invalid" });
+
+    expect(logged.join(" ")).toContain("over_email_send_rate_limit");
+    expect(logged.join(" ")).toContain("429");
+    expect(logged.join(" ")).not.toContain("reader@example.invalid");
+    spy.mockRestore();
+  });
+});
+
+describe("verifying a code", () => {
+  const session = { data: { session: { access_token: "t" }, user: { id: "u1" } }, error: null };
+
+  it("exchanges the code for a session", async () => {
+    const verifyOtp = vi.fn().mockResolvedValue(session);
+    const outcome = await verifyEmailOtp(client({ verifyOtp }), { email: "reader@example.invalid", token: "123456" });
+
+    expect(outcome).toEqual({ kind: "verified" });
+    expect(verifyOtp).toHaveBeenCalledWith({ email: "reader@example.invalid", token: "123456", type: "email" });
+  });
+
+  it("accepts a pasted code with surrounding punctuation and spaces", async () => {
+    // People paste out of an email. Rejecting "123 456" would be an error message
+    // for something the reader did correctly.
+    const verifyOtp = vi.fn().mockResolvedValue(session);
+    await verifyEmailOtp(client({ verifyOtp }), { email: "a@b.co", token: " 123 456 " });
+    expect(verifyOtp.mock.calls[0]?.[0]?.token).toBe("123456");
+  });
+
+  it("treats a wrong code and an expired one the same, because Supabase does", async () => {
+    // Supabase answers both with `otp_expired` and has no distinct invalid-OTP code.
+    // Claiming "expired" for a mistyped code would be a guess, and wrong half the time.
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const verifyOtp = vi.fn().mockResolvedValue({ data: {}, error: { code: "otp_expired", status: 403 } });
+    const outcome = await verifyEmailOtp(client({ verifyOtp }), { email: "a@b.co", token: "111111" });
+
+    expect(outcome).toMatchObject({ kind: "rejected", reason: "code_rejected" });
+    expect(outcome.kind === "rejected" && outcome.message).toMatch(/incorrect or has expired/i);
+  });
+
+  it("rejects a malformed code without calling the provider", async () => {
+    const verifyOtp = vi.fn();
+    for (const token of ["", "12", "12345", "abcdef", "1234567890123"]) {
+      expect((await verifyEmailOtp(client({ verifyOtp }), { email: "a@b.co", token })).kind, token).toBe("rejected");
+    }
+    expect(verifyOtp).not.toHaveBeenCalled();
+  });
+
+  it("accepts any length Supabase can mint, not just six", async () => {
+    // otp_length is settable from 6 to 10. Hard-coding six would mean raising it in
+    // the dashboard silently breaks sign-in, and the failure looks like a wrong code.
+    const verifyOtp = vi.fn().mockResolvedValue(session);
+    for (const token of ["123456", "1234567", "1234567890"]) {
+      expect((await verifyEmailOtp(client({ verifyOtp }), { email: "a@b.co", token })).kind, token).toBe("verified");
+    }
+  });
+
+  it("refuses when the provider returns neither error nor session", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const verifyOtp = vi.fn().mockResolvedValue({ data: {}, error: null });
+    // Reporting a sign-in that did not happen would send an unauthenticated reader
+    // onward as though they were authenticated.
+    expect((await verifyEmailOtp(client({ verifyOtp }), { email: "a@b.co", token: "123456" })).kind).toBe("rejected");
+  });
+
+  it("survives a thrown network error", async () => {
+    const verifyOtp = vi.fn().mockRejectedValue(new Error("fetch failed"));
+    expect((await verifyEmailOtp(client({ verifyOtp }), { email: "a@b.co", token: "123456" })).kind).toBe("rejected");
+  });
+
+  it("never logs the submitted code", async () => {
+    const logged: string[] = [];
+    const spy = vi.spyOn(console, "error").mockImplementation((line) => void logged.push(String(line)));
+    const verifyOtp = vi.fn().mockResolvedValue({ data: {}, error: { code: "otp_expired", status: 403 } });
+
+    await verifyEmailOtp(client({ verifyOtp }), { email: "reader@example.invalid", token: "987654" });
+
+    expect(logged.join(" ")).toContain("otp_expired");
+    expect(logged.join(" ")).not.toContain("987654");
+    expect(logged.join(" ")).not.toContain("reader@example.invalid");
+    spy.mockRestore();
+  });
+});
 
 describe("email shape", () => {
   it("accepts ordinary addresses", () => {
@@ -161,6 +315,12 @@ describe("signing out", () => {
 });
 
 describe("classifying provider errors", () => {
+  it("maps the hosted deliverability rejection to an address problem", () => {
+    // Otherwise a reader whose address Supabase will not send to is told the service
+    // is unavailable and comes back later to the same failure.
+    expect(classifyAuthError({ code: "email_address_invalid", message: 'Email address "x@example.com" is invalid' })).toBe("invalid_email");
+  });
+
   it("matches on code where Supabase supplies one", () => {
     expect(classifyAuthError({ code: "over_request_rate_limit" })).toBe("rate_limited");
     expect(classifyAuthError({ code: "signup_disabled" })).toBe("signups_disabled");

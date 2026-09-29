@@ -1,0 +1,29 @@
+<!--
+  The verification-code email, for an address that is already confirmed.
+
+  ONE OF TWO templates that must be identical. `signInWithOtp` picks between them by
+  the state of the address, not by which screen the reader used:
+
+    - address not yet confirmed (including a brand-new one)  -> "Confirm signup"
+    - address already confirmed, signing in again            -> "Magic Link"
+
+  So editing only one leaves half the readers with the wrong email. Supabase's own
+  guide says the same thing: change the template, then "repeat the previous step" for
+  the other one.
+
+  `{{ .Token }}` is the numeric code. `{{ .ConfirmationURL }}` is deliberately
+  absent from both: Urdais asks nobody to leave the page they are on, and a link here
+  is something a mail scanner can consume before the recipient reads it.
+
+  These files configure the LOCAL stack. The hosted projects are configured by hand
+  through the dashboard and must be given the same content. See
+  docs/architecture/passwordless-authentication.md and
+  docs/operations/onboarding-otp-verification.md.
+-->
+<h2>Your Urdais verification code</h2>
+
+<p>Enter this code to finish signing in:</p>
+
+<p style="font-size: 28px; font-weight: 600; letter-spacing: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;">{{ .Token }}</p>
+
+<p>It expires in one hour. If you did not ask for it, you can ignore this email — nothing has been created or changed.</p>

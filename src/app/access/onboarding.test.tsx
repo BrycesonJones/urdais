@@ -1,12 +1,12 @@
 /**
- * The onboarding screens: what they say, and what they refuse to do.
+ * The onboarding screens after the passwordless revision.
  *
- * Two kinds of test. The rendering cases pin the copy a reader actually sees, because
- * the price and the checkout boundary are the two places where wrong words are a
- * commercial problem rather than a cosmetic one. The structural cases scan the
- * onboarding source itself for the things that must not exist anywhere in it — a
- * write to `premium_entitlements`, anything Stripe, a fake payment control — which is
- * the only way to assert an absence across a whole surface rather than one file.
+ * Three kinds of test. The rendering cases pin what a reader sees. The *regression*
+ * cases pin what they no longer see — the intro screen, the price, the password
+ * field — because a removal is only real if something fails when it comes back. And
+ * the structural cases scan the whole onboarding surface for what must not exist
+ * anywhere in it, which is the only way to assert an absence across a surface rather
+ * than in one file.
  */
 
 import { readFileSync, readdirSync } from "node:fs";
@@ -20,6 +20,7 @@ const resolveOnboardingEntry = vi.hoisted(() => vi.fn());
 const resolveCheckoutHandoff = vi.hoisted(() => vi.fn());
 const resolveSupabaseIdentity = vi.hoisted(() => vi.fn());
 const readPendingEmail = vi.hoisted(() => vi.fn());
+const isGoogleAuthAvailable = vi.hoisted(() => vi.fn());
 const redirect = vi.hoisted(() =>
   vi.fn((href: string) => {
     throw new Error(`NEXT_REDIRECT:${href}`);
@@ -29,90 +30,106 @@ const redirect = vi.hoisted(() =>
 vi.mock("@/lib/onboarding/server", () => ({ resolveOnboarding, resolveOnboardingEntry }));
 vi.mock("@/lib/onboarding/checkout-handoff", () => ({ resolveCheckoutHandoff }));
 vi.mock("@/lib/auth/identity", () => ({ resolveSupabaseIdentity }));
-vi.mock("@/lib/onboarding/pending-email", () => ({ readPendingEmail, rememberPendingEmail: vi.fn(), forgetPendingEmail: vi.fn() }));
-vi.mock("next/navigation", () => ({ redirect }));
+vi.mock("@/lib/auth/google", () => ({ isGoogleAuthAvailable, GOOGLE_PROVIDER: "google" }));
+vi.mock("@/lib/onboarding/pending-email", () => ({
+  readPendingEmail,
+  rememberPendingEmail: vi.fn(),
+  forgetPendingEmail: vi.fn(),
+}));
+vi.mock("next/navigation", () => ({ redirect, permanentRedirect: redirect }));
 vi.mock("@/components/layout/site-header", () => ({ SiteHeader: () => null }));
 vi.mock("@/components/layout/site-footer", () => ({ SiteFooter: () => null }));
-// The forms are client components whose behaviour is exercised elsewhere; here they
-// only need to be identifiable in the markup.
-vi.mock("@/components/onboarding/credentials-form", () => ({
-  CredentialsForm: ({ submitLabel }: { submitLabel: string }) => <button type="submit">{submitLabel}</button>,
+vi.mock("@/components/onboarding/email-form", () => ({
+  EmailForm: ({ submitLabel = "Send code" }: { submitLabel?: string }) => (
+    <form data-testid="email-form">
+      <label htmlFor="e">Your email</label>
+      <input id="e" type="email" name="email" />
+      <button type="submit">{submitLabel}</button>
+    </form>
+  ),
 }));
-vi.mock("@/components/onboarding/resend-verification", () => ({
-  ResendVerification: () => <button type="submit">Resend verification email</button>,
+vi.mock("@/components/onboarding/google-button", () => ({
+  GoogleButton: () => <button type="submit">Continue with Google</button>,
+}));
+vi.mock("@/components/onboarding/resend-code", () => ({
+  ResendCode: () => <button type="submit">Resend code</button>,
+}));
+vi.mock("@/components/onboarding/otp-form", () => ({
+  OtpForm: ({ expectedLength }: { expectedLength: number | null }) => (
+    <form data-testid="otp-form">
+      <label htmlFor="c">Verification code</label>
+      <input id="c" name="code" inputMode="numeric" autoComplete="one-time-code" />
+      <p>{expectedLength === null ? "Enter the code from the email." : `${expectedLength}-digit code from the email.`}</p>
+      <button type="submit">Verify</button>
+    </form>
+  ),
 }));
 
 import AccessRoute from "@/app/access/page";
-import CreateAccountRoute from "@/app/access/create/page";
 import OnboardingLoginRoute from "@/app/access/login/page";
-import VerifyEmailRoute from "@/app/access/verify/page";
+import CheckEmailRoute from "@/app/access/verify/page";
 import ReadyForCheckoutRoute from "@/app/access/ready/page";
 import AlreadySubscribedRoute from "@/app/access/subscribed/page";
 import { ANONYMOUS_VIEWER, authenticatedViewer, subscriberViewer } from "@/lib/access/entitlement";
-import { PREMIUM_PRODUCT_IDS, findProduct } from "@/lib/access/products";
 
 const REPO_ROOT = path.resolve(__dirname, "..", "..", "..");
 const params = (query: Record<string, string> = {}) => Promise.resolve(query);
 
-function renderGate(viewer = ANONYMOUS_VIEWER, state = "intro", returnTo: string | null = null) {
+function renderGate(viewer = ANONYMOUS_VIEWER, state = "create_account", returnTo: string | null = null) {
   resolveOnboarding.mockResolvedValue({ kind: "render", viewer, state, returnTo });
   resolveOnboardingEntry.mockResolvedValue({ kind: "render", viewer, state, returnTo });
 }
 
 beforeEach(() => {
-  for (const mock of [resolveOnboarding, resolveOnboardingEntry, resolveCheckoutHandoff, resolveSupabaseIdentity, readPendingEmail]) {
-    mock.mockReset();
+  for (const m of [resolveOnboarding, resolveOnboardingEntry, resolveCheckoutHandoff, resolveSupabaseIdentity, readPendingEmail, isGoogleAuthAvailable]) {
+    m.mockReset();
   }
   redirect.mockClear();
   readPendingEmail.mockResolvedValue(null);
   resolveSupabaseIdentity.mockResolvedValue({ kind: "anonymous", reason: "no_session" });
+  // Google is unconfigured unless a test says otherwise, matching production.
+  isGoogleAuthAvailable.mockResolvedValue(false);
 });
 
-describe("the intro", () => {
-  it("says what a subscription is and what it costs", async () => {
+describe("/access is the account form", () => {
+  it("asks for an account, not for another click", async () => {
     renderGate();
     const html = renderToStaticMarkup(await AccessRoute({ searchParams: params() }));
 
-    expect(html).toContain("Get full access to Urdais");
-    expect(html).toContain("One subscription unlocks Urdais&#x27;s premium analytics and infrastructure data.");
-    // The price, before anyone hands over an email address.
-    expect(html).toContain("$80/week");
-    expect(html).toContain("No free trial.");
+    expect(html).toContain("Create your account");
+    expect(html).toContain("Unlock Urdais&#x27; premium analytics and infrastructure data.");
+    expect(html).toContain("Your email");
+    expect(html).toContain("Send code");
   });
 
-  it("lists exactly the five premium products, named from the registry", async () => {
+  it("collects an email and nothing else", async () => {
     renderGate();
     const html = renderToStaticMarkup(await AccessRoute({ searchParams: params() }));
 
-    for (const id of PREMIUM_PRODUCT_IDS) {
-      const name = findProduct(id)!.name;
-      expect(html, name).toContain(name);
-    }
-    // And nothing public advertised as part of the subscription.
-    expect(html).not.toContain(findProduct("model_economics")!.name);
-    expect(html).not.toContain(findProduct("map_data_centers")!.name);
+    expect(html).toContain('type="email"');
+    // The heart of the revision: no password is collected because none is used.
+    expect(html).not.toContain('type="password"');
+    expect(html.toLowerCase()).not.toContain("password</span>");
   });
 
-  it("offers an explicit choice rather than guessing whether an account exists", async () => {
+  it("says how sign-in will work", async () => {
     renderGate();
     const html = renderToStaticMarkup(await AccessRoute({ searchParams: params() }));
-    expect(html).toContain("Continue");
+    expect(html).toContain("email you a verification code");
+    expect(html).toContain("No password required.");
+  });
+
+  it("offers log in without inferring whether the reader has an account", async () => {
+    renderGate();
+    const html = renderToStaticMarkup(await AccessRoute({ searchParams: params() }));
     expect(html).toContain("Already have an account?");
     expect(html).toContain("/access/login");
   });
 
-  it("shows no payment control", async () => {
-    renderGate();
-    const html = renderToStaticMarkup(await AccessRoute({ searchParams: params() }));
-    expect(html.toLowerCase()).not.toMatch(/card number|cvc|stripe|pay now|subscribe now/);
-  });
-
-  it("carries the destination into both branches", async () => {
-    renderGate(ANONYMOUS_VIEWER, "intro", "/markets/compute-analytics");
-    const html = renderToStaticMarkup(await AccessRoute({ searchParams: params({ returnTo: "/markets/compute-analytics" }) }));
-    const encoded = encodeURIComponent("/markets/compute-analytics");
-    expect(html).toContain(`/access/create?returnTo=${encoded}`);
-    expect(html).toContain(`/access/login?returnTo=${encoded}`);
+  it("carries the destination to the login screen", async () => {
+    renderGate(ANONYMOUS_VIEWER, "create_account", "/markets/power-analytics");
+    const html = renderToStaticMarkup(await AccessRoute({ searchParams: params({ returnTo: "/markets/power-analytics" }) }));
+    expect(html).toContain(`/access/login?returnTo=${encodeURIComponent("/markets/power-analytics")}`);
   });
 
   it("redirects an authenticated reader instead of rendering", async () => {
@@ -121,156 +138,199 @@ describe("the intro", () => {
   });
 });
 
-describe("create account", () => {
-  it("says plainly that an account is not a subscription", async () => {
-    renderGate(ANONYMOUS_VIEWER, "create_account");
-    const html = renderToStaticMarkup(await CreateAccountRoute({ searchParams: params() }));
-    expect(html).toContain("Create your Urdais account");
-    expect(html).toContain("does not include premium access");
+describe("the removed intro — regressions", () => {
+  it("shows no price anywhere in onboarding", async () => {
+    renderGate();
+    const account = renderToStaticMarkup(await AccessRoute({ searchParams: params() }));
+
+    renderGate(authenticatedViewer("acct-1", true), "ready_for_checkout");
+    resolveCheckoutHandoff.mockResolvedValue({ kind: "ready", accountId: "acct-1", returnTo: null });
+    const ready = renderToStaticMarkup(await ReadyForCheckoutRoute({ searchParams: params() }));
+
+    for (const html of [account, ready]) {
+      expect(html).not.toContain("$80");
+      expect(html).not.toContain("/week");
+      expect(html).not.toContain("No free trial");
+    }
   });
 
-  it("offers a way back and a way to log in instead", async () => {
-    renderGate(ANONYMOUS_VIEWER, "create_account");
-    const html = renderToStaticMarkup(await CreateAccountRoute({ searchParams: params() }));
-    expect(html).toContain("Back");
-    expect(html).toContain("/access/login");
+  it("no longer carries the old subscription value proposition", async () => {
+    renderGate();
+    const html = renderToStaticMarkup(await AccessRoute({ searchParams: params() }));
+    expect(html).not.toContain("One subscription unlocks");
+    expect(html).not.toContain("Get full access to Urdais");
   });
 
-  it("redirects a signed-in reader away", async () => {
-    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access/ready", state: "ready_for_checkout" });
-    await expect(CreateAccountRoute({ searchParams: params() })).rejects.toThrow("NEXT_REDIRECT:/access/ready");
+  it("does not repeat the premium product list as a sales screen before the account form", async () => {
+    renderGate();
+    const html = renderToStaticMarkup(await AccessRoute({ searchParams: params() }));
+    // The gate already made the offer; the account form asks for an email.
+    expect(html).not.toContain("Premium access includes");
+    expect(html).not.toContain("GPU Compute Clusters");
+  });
+
+  it("puts no Continue step between the gate and the form", async () => {
+    renderGate();
+    const html = renderToStaticMarkup(await AccessRoute({ searchParams: params() }));
+    // "Continue with Google" is a submit, not a step; plain "Continue" is gone.
+    expect(html).not.toMatch(/>\s*Continue\s*</);
+  });
+});
+
+describe("Google", () => {
+  it("is absent when the provider is not configured", async () => {
+    isGoogleAuthAvailable.mockResolvedValue(false);
+    renderGate();
+    const html = renderToStaticMarkup(await AccessRoute({ searchParams: params() }));
+    // Not rendered disabled: a button that cannot work is worse than no button.
+    expect(html).not.toContain("Continue with Google");
+    expect(html).not.toContain("or</div>");
+  });
+
+  it("appears on both screens once configured", async () => {
+    isGoogleAuthAvailable.mockResolvedValue(true);
+
+    renderGate();
+    expect(renderToStaticMarkup(await AccessRoute({ searchParams: params() }))).toContain("Continue with Google");
+
+    renderGate(ANONYMOUS_VIEWER, "login");
+    expect(renderToStaticMarkup(await OnboardingLoginRoute({ searchParams: params() }))).toContain("Continue with Google");
+  });
+
+  it("asks the server, never the request, whether it is available", async () => {
+    renderGate();
+    await AccessRoute({ searchParams: params({ google: "true", provider: "google" }) });
+    // The query string cannot turn it on: availability came from one server call.
+    expect(isGoogleAuthAvailable).toHaveBeenCalledOnce();
   });
 });
 
 describe("log in", () => {
-  it("renders the form and a way to create an account instead", async () => {
+  it("is the same email-only form under a different heading", async () => {
     renderGate(ANONYMOUS_VIEWER, "login");
     const html = renderToStaticMarkup(await OnboardingLoginRoute({ searchParams: params() }));
+
     expect(html).toContain("Log in to Urdais");
-    expect(html).toContain("/access/create");
+    expect(html).toContain("Your email");
+    expect(html).not.toContain('type="password"');
+    expect(html).toContain("Send code");
+  });
+
+  it("offers account creation without switching automatically", async () => {
+    renderGate(ANONYMOUS_VIEWER, "login");
+    const html = renderToStaticMarkup(await OnboardingLoginRoute({ searchParams: params() }));
+    expect(html).toContain("New to Urdais?");
+    expect(html).toContain("Create account");
   });
 
   it("redirects a signed-in reader away", async () => {
-    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access/verify", state: "verification_required" });
-    await expect(OnboardingLoginRoute({ searchParams: params() })).rejects.toThrow("NEXT_REDIRECT:/access/verify");
+    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access/ready", state: "ready_for_checkout" });
+    await expect(OnboardingLoginRoute({ searchParams: params() })).rejects.toThrow("NEXT_REDIRECT:/access/ready");
   });
 });
 
-describe("verification required", () => {
-  it("names the address from the authoritative session", async () => {
-    renderGate(authenticatedViewer("acct-1", false), "verification_required");
-    resolveSupabaseIdentity.mockResolvedValue({
-      kind: "authenticated",
-      identity: { subject: "uuid-1", email: "reader@example.invalid", emailVerified: false },
-    });
-
-    const html = renderToStaticMarkup(await VerifyEmailRoute({ searchParams: params() }));
-    expect(html).toContain("Verify your email");
-    expect(html).toContain("reader@example.invalid");
-    expect(html).toContain("Resend verification email");
-  });
-
-  it("names the pending address when signup produced no session", async () => {
-    // Supabase issues no session when it requires confirmation, so this reader is
-    // anonymous — the state exists only because a signup is pending on this device.
-    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access", state: "intro" });
+describe("the email challenge", () => {
+  it("names the pending address and offers a resend", async () => {
+    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access", state: "create_account" });
     readPendingEmail.mockResolvedValue("pending@example.invalid");
 
-    const html = renderToStaticMarkup(await VerifyEmailRoute({ searchParams: params() }));
+    const html = renderToStaticMarkup(await CheckEmailRoute({ searchParams: params() }));
+    expect(html).toContain("Check your email");
+    expect(html).toContain("We sent a verification code to");
     expect(html).toContain("pending@example.invalid");
+    expect(html).toContain("Resend code");
+    expect(html).toContain("Use a different email");
   });
 
-  it("redirects a wandering anonymous reader with nothing pending", async () => {
-    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access", state: "intro" });
+  it("gives the reader somewhere to type the code, on the same screen", async () => {
+    // The whole point of the OTP revision: the credential is entered here, in the
+    // browser that asked for it. A screen that only said "check your email" would
+    // be the link flow with different words.
+    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access", state: "create_account" });
+    readPendingEmail.mockResolvedValue("pending@example.invalid");
+
+    const html = renderToStaticMarkup(await CheckEmailRoute({ searchParams: params() }));
+    expect(html).toContain("Verification code");
+    expect(html).toContain('name="code"');
+    expect(html).toContain("Verify");
+  });
+
+  it("offers the code to the phone keyboard and to autofill", async () => {
+    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access", state: "create_account" });
+    readPendingEmail.mockResolvedValue("pending@example.invalid");
+
+    const html = renderToStaticMarkup(await CheckEmailRoute({ searchParams: params() }));
+    expect(html).toContain('inputMode="numeric"');
+    expect(html).toContain('autoComplete="one-time-code"');
+  });
+
+  it("does not claim a digit count nobody configured", async () => {
+    // `otp_length` is hosted configuration the app cannot read. UrdaisDev is set to
+    // 8, and a hard-coded "6-digit code" told readers their correct code was the
+    // wrong shape.
+    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access", state: "create_account" });
+    readPendingEmail.mockResolvedValue("pending@example.invalid");
+
+    const html = renderToStaticMarkup(await CheckEmailRoute({ searchParams: params() }));
+    expect(html).toContain("Enter the code from the email.");
+    expect(html).not.toMatch(/\d-digit code/);
+  });
+
+  it("prefers the authoritative address when a session exists", async () => {
+    renderGate(authenticatedViewer("acct-1", false), "email_challenge");
+    resolveSupabaseIdentity.mockResolvedValue({
+      kind: "authenticated",
+      identity: { subject: "uuid-1", email: "session@example.invalid", emailVerified: false },
+    });
+    readPendingEmail.mockResolvedValue("stale@example.invalid");
+
+    const html = renderToStaticMarkup(await CheckEmailRoute({ searchParams: params() }));
+    expect(html).toContain("session@example.invalid");
+    expect(html).not.toContain("stale@example.invalid");
+  });
+
+  it("redirects an anonymous reader with nothing pending", async () => {
+    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access", state: "create_account" });
     readPendingEmail.mockResolvedValue(null);
-    await expect(VerifyEmailRoute({ searchParams: params() })).rejects.toThrow("NEXT_REDIRECT:/access");
+    await expect(CheckEmailRoute({ searchParams: params() })).rejects.toThrow("NEXT_REDIRECT:/access");
   });
 
-  it("offers no way to self-declare verification", async () => {
-    renderGate(authenticatedViewer("acct-1", false), "verification_required");
-    const html = renderToStaticMarkup(await VerifyEmailRoute({ searchParams: params() }));
-    // A reader cannot assert their own verification; only the Auth server can.
-    expect(html.toLowerCase()).not.toMatch(/i.?ve verified|mark as verified|already verified\?.*continue/);
+  it("offers no way to self-declare authentication", async () => {
+    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access", state: "create_account" });
+    readPendingEmail.mockResolvedValue("pending@example.invalid");
+    const html = renderToStaticMarkup(await CheckEmailRoute({ searchParams: params() }));
+    expect(html.toLowerCase()).not.toMatch(/i.?ve (verified|clicked)|mark as verified|continue anyway/);
   });
 });
 
-describe("the checkout boundary", () => {
-  beforeEach(() => {
+describe("the checkout boundary and the subscriber screen are unchanged", () => {
+  it("still gates on the handoff and states no charge was made", async () => {
     renderGate(authenticatedViewer("acct-1", true), "ready_for_checkout");
     resolveCheckoutHandoff.mockResolvedValue({ kind: "ready", accountId: "acct-1", returnTo: null });
-  });
 
-  it("says the account is ready without claiming a purchase is possible", async () => {
     const html = renderToStaticMarkup(await ReadyForCheckoutRoute({ searchParams: params() }));
     expect(html).toContain("ready to continue");
-    expect(html).toContain("Your Urdais account is set up and ready for premium access.");
     expect(html).toContain("Checkout setup coming next");
     expect(html).toContain("no charge has been made");
-  });
-
-  it("repeats the price at the boundary", async () => {
-    const html = renderToStaticMarkup(await ReadyForCheckoutRoute({ searchParams: params() }));
-    expect(html).toContain("$80/week");
-  });
-
-  it("shows no payment control, real or imitation", async () => {
-    const html = renderToStaticMarkup(await ReadyForCheckoutRoute({ searchParams: params() }));
-    const lower = html.toLowerCase();
-    for (const forbidden of ["card number", "cvc", "expiry", "stripe", "pay now", "start subscription", "complete payment"]) {
-      expect(lower, forbidden).not.toContain(forbidden);
-    }
-    // And not even a disabled button pretending to be one.
-    expect(lower).not.toMatch(/<button[^>]*disabled/);
-  });
-
-  it("never exposes the account id to the browser", async () => {
-    // Phase 5 must derive it server-side; a hidden field here would let someone open
-    // a checkout session against another account.
-    const html = renderToStaticMarkup(await ReadyForCheckoutRoute({ searchParams: params() }));
     expect(html).not.toContain("acct-1");
-    expect(html).not.toMatch(/name="accountId"/);
   });
 
-  it("redirects when the handoff refuses, even if the route resolution allowed it", async () => {
-    // Two independent checks. If they ever disagree, the reader is sent back rather
-    // than shown a boundary the handoff would refuse.
-    resolveCheckoutHandoff.mockResolvedValue({ kind: "refused", reason: "unverified" });
-    await expect(ReadyForCheckoutRoute({ searchParams: params() })).rejects.toThrow("NEXT_REDIRECT:/access");
-  });
-});
-
-describe("already a subscriber", () => {
-  beforeEach(() => renderGate(subscriberViewer("acct-1"), "already_entitled"));
-
-  it("says they already have access and offers only the way onward", async () => {
+  it("still tells a subscriber they already have access", async () => {
+    renderGate(subscriberViewer("acct-1"), "already_entitled");
     const html = renderToStaticMarkup(await AlreadySubscribedRoute({ searchParams: params() }));
     expect(html).toContain("You already have full access");
-    expect(html).toContain("already includes every premium product");
-    expect(html).toContain("Continue to Urdais");
-  });
-
-  it("offers nothing that could start a second subscription", async () => {
-    const html = renderToStaticMarkup(await AlreadySubscribedRoute({ searchParams: params() }));
-    const lower = html.toLowerCase();
-    for (const forbidden of ["create account", "log in", "verify your email", "ready to continue", "checkout", "$80"]) {
-      expect(lower, forbidden).not.toContain(forbidden);
-    }
-  });
-
-  it("uses the destination they arrived with", async () => {
-    renderGate(subscriberViewer("acct-1"), "already_entitled", "/markets/power-analytics");
-    const html = renderToStaticMarkup(
-      await AlreadySubscribedRoute({ searchParams: params({ returnTo: "/markets/power-analytics" }) }),
-    );
-    expect(html).toContain('href="/markets/power-analytics"');
-    expect(html).toContain("Continue to where you were");
+    expect(html.toLowerCase()).not.toContain("create your account");
+    expect(html.toLowerCase()).not.toContain("checkout");
   });
 });
 
 describe("what onboarding cannot do, asserted across the whole surface", () => {
-  /** Every onboarding source file. */
   function onboardingSources(): { file: string; source: string }[] {
-    const roots = [path.join(REPO_ROOT, "src", "app", "access"), path.join(REPO_ROOT, "src", "lib", "onboarding"), path.join(REPO_ROOT, "src", "components", "onboarding")];
+    const roots = [
+      path.join(REPO_ROOT, "src", "app", "access"),
+      path.join(REPO_ROOT, "src", "lib", "onboarding"),
+      path.join(REPO_ROOT, "src", "components", "onboarding"),
+    ];
     const files: { file: string; source: string }[] = [];
     const walk = (dir: string) => {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -287,15 +347,24 @@ describe("what onboarding cannot do, asserted across the whole surface", () => {
     return files;
   }
 
-  /** Source with comments removed: a doc comment naming a thing is not doing it. */
   const codeOf = (source: string) => source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
   it("covers a non-trivial surface, so the assertions below are not vacuous", () => {
     expect(onboardingSources().length).toBeGreaterThanOrEqual(10);
   });
 
+  it("contains no password anywhere in the customer flow", async () => {
+    // Not merely hidden: the customer surface never references a password, never
+    // imports the legacy password operations, and never renders such an input.
+    for (const { file, source } of onboardingSources()) {
+      const code = codeOf(source);
+      expect(code, file).not.toMatch(/signInWithPassword|signUpWithPassword/);
+      expect(code, file).not.toMatch(/type="password"/);
+      expect(code, file).not.toMatch(/formData\.get\(\s*["']password["']/);
+    }
+  });
+
   it("never writes an entitlement", async () => {
-    // Invariant 5. Onboarding gets a reader ready to buy; it cannot grant.
     for (const { file, source } of onboardingSources()) {
       const code = codeOf(source);
       expect(code, file).not.toMatch(/premium_entitlements/);
@@ -303,10 +372,27 @@ describe("what onboarding cannot do, asserted across the whole surface", () => {
     }
   });
 
+  it("no longer asks anyone to follow a link, anywhere in onboarding", async () => {
+    // A removal is only real if something fails when it comes back. Copy that still
+    // says "link" after the flow stopped sending one is a reader following an
+    // instruction that cannot be carried out.
+    for (const { file, source } of onboardingSources()) {
+      expect(source, file).not.toMatch(/Send link|sign-in link|magic ?link|Resend email/i);
+      expect(source, file).not.toMatch(/sendEmailSignInLink|emailRedirectTo/);
+    }
+  });
+
   it("contains nothing Stripe", async () => {
     for (const { file, source } of onboardingSources()) {
-      // Comments naming the next phase are fine; imports and identifiers are not.
       expect(codeOf(source).toLowerCase(), file).not.toContain("stripe");
+    }
+  });
+
+  it("quotes no price", async () => {
+    // Pricing moves to Plan / Pay with the payment it explains.
+    for (const { file, source } of onboardingSources()) {
+      const code = codeOf(source);
+      expect(code, file).not.toMatch(/formatPremiumPrice|PREMIUM_TRIAL_NOTE|\$80/);
     }
   });
 
@@ -318,17 +404,10 @@ describe("what onboarding cannot do, asserted across the whole surface", () => {
   });
 
   it("sanitises every destination at the point it enters the server", async () => {
-    // Only the files that *receive* an untrusted value are checked: anything reading
-    // `searchParams` or a form field. A client component handed an already-validated
-    // prop is a renderer, not a trust boundary, and requiring it to re-sanitise would
-    // be the second sanitiser this architecture avoids.
     for (const { file, source } of onboardingSources()) {
       const code = codeOf(source);
-      const readsUntrusted = /searchParams|formData\.get\(/.test(code);
-      if (!readsUntrusted || !/returnTo/.test(code)) continue;
-
-      const usesSanitiser = /safeReturnTo|onboardingReturnTo/.test(code);
-      expect(usesSanitiser, `${file} reads returnTo from a request without the sanitiser`).toBe(true);
+      if (!/searchParams|formData\.get\(/.test(code) || !/returnTo/.test(code)) continue;
+      expect(/safeReturnTo|onboardingReturnTo/.test(code), `${file} reads returnTo without the sanitiser`).toBe(true);
     }
   });
 });

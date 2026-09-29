@@ -245,7 +245,13 @@ secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "1s"
 # Number of characters used in the email OTP.
-otp_length = 6
+#
+# LOCAL ONLY, and NOT the authority. Each hosted project carries its own value and
+# does not expose it on any endpoint the application can read -- UrdaisDev is set to
+# 8. So the app validates the whole 6-10 range Supabase permits rather than this
+# number, and names a digit count on screen only where URDAIS_OTP_LENGTH says so.
+# Mirrored to 8 to match UrdaisDev, so a local run looks like the real thing.
+otp_length = 8
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
@@ -258,6 +264,31 @@ otp_expiry = 3600
 # pass = "env(SENDGRID_API_KEY)"
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
+
+# The verification-code email -- BOTH of the templates `signInWithOtp` can choose.
+#
+# It picks by the state of the address, not by which screen the reader used:
+#
+#   - not yet confirmed (a brand-new address included) -> `confirmation`
+#   - already confirmed, signing in again              -> `magic_link`
+#
+# Both built-in defaults contain `{{ .ConfirmationURL }}` and no `{{ .Token }}`, so
+# a project left at the default emails a message with no code in it while the UI asks
+# for one. Setting only one of the two fixes only half the readers -- and the half
+# that stays broken is the *first* email anybody ever gets.
+#
+# Identical content on purpose: creating an account and logging in are the same act
+# to the reader, and two different-looking emails for one act is a bug they report.
+#
+# This configures the LOCAL stack only -- the hosted projects are set through the
+# dashboard by hand, per project. See the WARNING at the top of [auth].
+[auth.email.template.confirmation]
+subject = "Your Urdais verification code"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Your Urdais verification code"
+content_path = "./supabase/templates/magic_link.html"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]

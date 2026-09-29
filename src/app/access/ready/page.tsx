@@ -33,9 +33,9 @@ export const dynamic = "force-dynamic";
  * cannot yet be made, and the copy says exactly that rather than implying a
  * transaction is one click away.
  *
- * The price is shown again here, deliberately. It was on the intro before they
- * created an account, and repeating it at the boundary means nobody reaches payment
- * having last seen the figure several screens ago.
+ * No price either. Onboarding no longer quotes one: what a subscription costs
+ * belongs at Plan / Pay, beside the payment it explains, and Phase 5 introduces both
+ * together. The summary below says what is included, not what it costs.
  *
  * ## Phase 5
  *
@@ -58,7 +58,7 @@ export default async function ReadyForCheckoutRoute({
   // above, the safe answer is to send the reader back rather than to render a
   // checkout boundary the handoff would refuse.
   const handoff = await resolveCheckoutHandoff(returnTo);
-  if (handoff.kind !== "ready") redirect(onboardingHref("intro", returnTo));
+  if (handoff.kind !== "ready") redirect(onboardingHref("create_account", returnTo));
 
   return (
     <OnboardingShell

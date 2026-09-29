@@ -71,9 +71,9 @@ describe("carrying the destination", () => {
   });
 
   it("survives a full round trip through the state machine unchanged", () => {
-    // intro -> create -> verify -> ready: the new-subscriber path.
+    // account form -> challenge -> ready: the new-subscriber path.
     let carried: string | null = "/markets/compute-analytics";
-    for (const state of ["intro", "create_account", "verification_required", "ready_for_checkout"] as const) {
+    for (const state of ["create_account", "login", "email_challenge", "ready_for_checkout"] as const) {
       const href = onboardingHref(state, carried);
       const params = new URL(href, "https://urdais.test").searchParams;
       carried = onboardingReturnTo(params.get("returnTo"));

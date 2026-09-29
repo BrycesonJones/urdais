@@ -26,12 +26,12 @@ const verified = (): Viewer => authenticatedViewer("acct-1", true);
 const unverified = (): Viewer => authenticatedViewer("acct-1", false);
 
 describe("deriving the state from the viewer", () => {
-  it("puts an anonymous reader at the intro", () => {
-    expect(onboardingStateFor(ANONYMOUS_VIEWER)).toBe("intro");
+  it("puts an anonymous reader at the account form", () => {
+    expect(onboardingStateFor(ANONYMOUS_VIEWER)).toBe("create_account");
   });
 
-  it("sends a signed-in unverified reader to verification", () => {
-    expect(onboardingStateFor(unverified())).toBe("verification_required");
+  it("sends a signed-in unverified reader to the email challenge", () => {
+    expect(onboardingStateFor(unverified())).toBe("email_challenge");
   });
 
   it("sends a signed-in verified reader without an entitlement to the checkout boundary", () => {
@@ -66,7 +66,7 @@ describe("deriving the state from the viewer", () => {
 });
 
 describe("which states a reader may occupy", () => {
-  it("lets an anonymous reader choose between creating an account and logging in", () => {
+  it("lets an anonymous reader use the account form, the login form and the challenge", () => {
     // The choice is theirs because Urdais does not disclose whether an address
     // already has an account.
     for (const state of ANONYMOUS_STATES) {
@@ -84,13 +84,12 @@ describe("which states a reader may occupy", () => {
     for (const viewer of [unverified(), verified(), subscriberViewer()]) {
       expect(isStateReachable(viewer, "create_account")).toBe(false);
       expect(isStateReachable(viewer, "login")).toBe(false);
-      expect(isStateReachable(viewer, "intro")).toBe(false);
     }
   });
 
   it("admits an authenticated reader to exactly one state — their own", () => {
     const cases: [Viewer, OnboardingState][] = [
-      [unverified(), "verification_required"],
+      [unverified(), "email_challenge"],
       [verified(), "ready_for_checkout"],
       [subscriberViewer(), "already_entitled"],
     ];
@@ -122,12 +121,12 @@ describe("where a misdirected reader is sent", () => {
     }
   });
 
-  it("sends an anonymous reader to the intro", () => {
-    expect(redirectStateFor(ANONYMOUS_VIEWER)).toBe("intro");
+  it("sends an anonymous reader to the account form", () => {
+    expect(redirectStateFor(ANONYMOUS_VIEWER)).toBe("create_account");
   });
 
   it("sends an authenticated reader to their own state", () => {
-    expect(redirectStateFor(unverified())).toBe("verification_required");
+    expect(redirectStateFor(unverified())).toBe("email_challenge");
     expect(redirectStateFor(verified())).toBe("ready_for_checkout");
     expect(redirectStateFor(subscriberViewer())).toBe("already_entitled");
   });

@@ -52,17 +52,19 @@ export async function resolveOnboarding(
 }
 
 /**
- * Where an authenticated reader belongs right now.
+ * What `/access` should do.
  *
- * For the entry route, which does not request a state so much as ask which one to
- * show: anonymous readers get the intro rendered, everyone else is redirected to
- * the screen their account implies.
+ * An anonymous reader gets the account form rendered **in place** — no redirect and
+ * no intervening screen, because the premium gate already established intent.
+ * Anyone with a session is sent to whichever state their account implies, which is
+ * what makes `/access` a canonical entry point rather than a page: a bookmark, a
+ * stale link and a fresh click all resolve to the right place.
  */
 export async function resolveOnboardingEntry(returnTo: string | null): Promise<OnboardingResolution> {
   const viewer = await resolveViewer();
 
   if (viewer.authentication.kind !== "authenticated") {
-    return { kind: "render", viewer, state: "intro", returnTo };
+    return { kind: "render", viewer, state: "create_account", returnTo };
   }
 
   const target = onboardingStateFor(viewer);
