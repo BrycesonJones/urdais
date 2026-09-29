@@ -1,7 +1,7 @@
 # Email OTP — what was verified
 
 **Status: internal operations record.** Written 28 September 2026, PR #213 revision;
-the end-to-end run in §3 passed on **29 September 2026** against UrdaisDev. Supersedes
+the end-to-end runs in §3 (new user) and §4 (returning user) both passed on **29 September 2026** against UrdaisDev. Supersedes
 the verification record in `onboarding-phase-4-verification.md` for everything
 touching the credential.
 
@@ -194,15 +194,52 @@ flake can never again cost a send.
 
 ---
 
-## 4. What remains
+## 4. The returning-user run — PASSED
 
-**The returning-login path.** The address is now confirmed, so the next
-`signInWithOtp` for it will select the **Magic Link** template rather than
-`Confirm signup` — the other half of §1, still unexercised. One send proves it.
+**2026-09-29, same address, after signing out through the real UI.** `/auth/status`
+went to `anonymous` and the session cookie was gone before anything else happened.
+
+The code was then requested from **`/access/login`** — the returning reader's actual
+surface — and verified. Results:
+
+| | |
+| --- | --- |
+| Send | one, accepted, 427 ms, no refusal |
+| Code | 8 digits again |
+| Verify | straight to **`/access/ready`**, no intermediate stop |
+| Account | **`eb387ca8…` — the same account**, not a new one |
+| `identity.accounts` | **2 → 2**, still exactly one row for that subject |
+| Entitlements | **0** for that account; totals unchanged |
+
+**This is the half a create-account run cannot check.** The failure it rules out is a
+second `identity.accounts` row appearing on every sign-in — which would be invisible
+to the reader, would multiply silently, and would eventually mean two accounts
+disagreeing about who owns a subscription. `resolveViewer` keyed on
+`(auth_provider, auth_subject)` is what prevents it, and that is now observed rather
+than reasoned about.
+
+The on-screen hint also read **"Enter the code from the email."** rather than the old
+hard-coded "6-digit code" — §3's fix, visible in the real UI.
+
+### Which template fired is inferred, not observed
+
+The two templates are deliberately **identical in subject and body**, so the email
+itself cannot distinguish them. The evidence is the address state: gotrue selects
+`Confirm signup` only for an unconfirmed address, and this one was confirmed with
+exactly one account row before the send. The `auth_logs` audit action would settle it
+directly — `user_confirmation_requested` for signup, otherwise magic link — and is
+worth a glance if certainty is wanted.
 
 ---
 
-## 5. What a stub cannot prove, and is therefore still open
+## 5. What remains
+
+**UrdaisProd.** Both email templates still need `{{ .Token }}` there; §1 is the
+procedure. Nothing else about this flow is unproven on the provider.
+
+---
+
+## 6. What a stub cannot prove, and is therefore still open
 
 **Superseded by §3 — the success path is now proven against the real provider.** The
 reasoning is kept because it is why the run was structured this way: a stub can return
@@ -228,7 +265,7 @@ is the provisioning the real test is supposed to observe.
 
 ---
 
-## 6. The first real delivery, and what it proved
+## 7. The first real delivery, and what it proved
 
 **2026-09-28T23:26:20Z** — `POST /otp` → 500, `gomail: ... 550 "The urdais.com domain
 is not verified"`. Resend rejected the sender.
@@ -258,7 +295,7 @@ template was used or whether the body was usable. Both facts were needed here.
 
 ---
 
-## 7. Earlier real sends, for the record
+## 8. Earlier real sends, for the record
 
 Both predate the OTP conversion and neither delivered.
 
