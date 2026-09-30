@@ -440,3 +440,35 @@ Reverting the application code is **not** part of rollback: the enforcement swit
 ### Known gap at the time of activation
 
 `/auth/status` printed "Premium enforcement is not active" **after** activation — Phase 3 prose that was true when written and false the moment the switch flipped, while the gates themselves were applying correctly. Fixed on this branch by conditioning it on `isPremiumEnforcementActive()`, the same function the gates read. **The fix is not deployed until this PR merges**, so production's status page carries a stale footer in the meantime; everything above that line on the page is correct.
+
+---
+
+## 17. Validation cleanup, and the revocation half of the lifecycle
+
+**30 September 2026,** with the founder's approval. The $1 validation subscription was cancelled **immediately**, not at period end, as a deliberate production test of revocation.
+
+| stage | result |
+| --- | --- |
+| Stripe | `sub_1ULNX2AcInDgxIu2dHBpLV6s` → **`canceled`**, `cancel_at_period_end: false`, `canceled_at` = `ended_at` |
+| Live webhook | `customer.subscription.deleted`, `livemode = t` — the third ledger row |
+| Subscription row | **`canceled`**, `canceled_at` / `ended_at` / `last_event_at` set |
+| Entitlement | **`inactive`**, `revoked_at` set, **`granted_at` preserved** |
+| All five products | **denied**, reason `entitlement_required` |
+
+**Nothing was deleted.** One account, one Customer, one subscription row, three events, one entitlement row. A revoked entitlement keeps its grant date, so the history of the relationship survives the cancellation — which is the point of revoking rather than deleting.
+
+### The revoked account, in the browser, under active enforcement
+
+Signing in now lands on `/access/ready` — **Plan / Pay, not the subscribed screen** — offering Urdais Premium at $80/week with no free trial and a live purchase control. Both premium pages are gated again, the premium API answers **403**, and the map returns 422 `data_center` with the three premium layers withheld.
+
+The 403 is worth noting against the anonymous 401: `authentication_required` and `entitlement_required` are different denials and produce different statuses. Signing in again would not help this reader, and the status says so.
+
+This run also serves as the authenticated-non-subscriber verification under active enforcement, which had previously only been observed before the payment.
+
+### The validation Price is retired
+
+`price_1ULNRSAcInDgxIu2lpaHXyYY` archived (`active: false`). Stripe now refuses it outright — *"The price specified is inactive. This field only accepts active prices."* — and it remains undiscoverable to `findPremiumPrice` on both guards. The canonical `price_1ULMsCAcInDgxIu2qPG0m7r2` is the only active Price under the Product, unchanged at 8000 USD weekly.
+
+### Final production state
+
+Migrations 131 = 131, integrity ok, freshness current, token readiness ready. Billing configuration live, webhook endpoint `enabled` with four events, all three live events delivered (`pending_webhooks = 0`). Enforcement **active**. Anonymous: both premium pages gated, seven premium APIs at 401, map clean.
