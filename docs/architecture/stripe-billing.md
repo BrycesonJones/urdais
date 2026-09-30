@@ -321,20 +321,30 @@ Started 30 September 2026 from `main` `94721b7f`. **Premium enforcement is still
 | Live Price | `price_1ULMsCAcInDgxIu2qPG0m7r2` — $80.00 USD, every 1 week, no trial |
 | Live webhook endpoint | `we_1ULMsqAcInDgxIu29dIfeJcZ` → `https://urdais.com/api/stripe/webhook`, enabled |
 | Webhook events | `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted` — exactly the four the code handles |
+| Production configuration | all three variables set in Vercel Production and verified live |
+| Production state | enforcement **inactive**, all premium surfaces public, `auth.users` = 0 |
 
 `npm run billing:setup` now refuses live mode unless given **both** `--live` and `--confirm`, and refuses `--live` against a test key. Creating a catalogue charges nobody, but it is the object real customers are billed against.
 
-### Outstanding — production environment
-
-Production reports `billing is not configured`. Three variables are needed in **Vercel Production**, then a redeploy, because `NEXT_PUBLIC_*` values are inlined at build time and the mode check reads the environment.
+### Production environment — configured and verified
 
 | variable | class | value |
 | --- | --- | --- |
 | `STRIPE_SECRET_KEY` | server-only secret | the live secret key |
 | `STRIPE_PREMIUM_PRICE_ID` | non-secret server config | `price_1ULMsCAcInDgxIu2qPG0m7r2` |
-| `STRIPE_WEBHOOK_SECRET` | server-only secret | the signing secret of `we_1ULMsqAcInDgxIu29dIfeJcZ`, from the Stripe dashboard |
+| `STRIPE_WEBHOOK_SECRET` | server-only secret | the signing secret of `we_1ULMsqAcInDgxIu29dIfeJcZ` |
 
 `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is **not** required: Checkout is Stripe-hosted and no browser Stripe client exists.
+
+Verified 30 September 2026. `POST /api/stripe/webhook` with no signature answers **400 `missing stripe-signature`**, which establishes more than that the variables are present: a *test* key in production would have failed the mode check and answered `billing is not configured` instead. **Production is genuinely on live Stripe.** A forged signature is refused with 400 `invalid signature`.
+
+All Phase 5 routes are deployed and correct for an anonymous reader: `/access` and `/access/login` render; `/access/ready`, `/access/complete` and `/access/subscribed` all redirect to `/access`; the webhook route answers 405 to GET.
+
+### Test and live isolation, verified in anger
+
+With live keys now in `.env.local`, the **local** environment resolves to `unavailable (mode_mismatch)` — development requires a test key, so local work cannot reach live Stripe and cannot charge a real card. The invariant is doing its job rather than merely being asserted in a unit test.
+
+The corollary: local **test-mode** billing work now needs the test keys restored to `.env.local`. The test Product and Price still exist for exactly that purpose.
 
 ### Checking configuration without side effects
 
