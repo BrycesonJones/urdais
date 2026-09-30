@@ -9,6 +9,12 @@
  *
  * It re-hits no source. Every figure below comes from observations UTVI already ingested.
  *
+ * It also asserts **freshness**, which is the check that has no owner anywhere else. Market
+ * Share has no ingestion of its own: it advances only when the UTVI cron writes a new date, so
+ * a cron that fails silently does not break anything visible — the page keeps rendering
+ * yesterday, correctly and forever. Comparing the latest published date against the last
+ * completed UTC day is the one assertion that turns that into a failure someone sees.
+ *
  * Usage:
  *   npm run market-share:production:check                against the resolved database
  *   npm run market-share:production:check -- --local     allow the local development database
@@ -16,9 +22,10 @@
  */
 
 import { checkAll } from "@/lib/market-share/checks";
-import { loadAllShares } from "@/lib/market-share/load";
+import { loadAllShares, usableForMarketShare, type DatedShare } from "@/lib/market-share/load";
 import { MARKET_SHARE_METHODOLOGY_VERSION } from "@/lib/market-share/view";
 import { resolveTokenDatabaseUrl, tokenSqlExecutor } from "@/lib/tokens/read/database";
+import { daysBetween, lastCompletedUtcDate } from "@/lib/utvi/settlement";
 
 function sum(values: Iterable<bigint>): bigint {
   let total = 0n;
@@ -140,6 +147,9 @@ async function main(): Promise<void> {
     }
     console.log("");
 
+    console.log(freshnessReport(shares, new Date()).map((line) => line).join("\n"));
+    console.log("");
+
     if (failures.length === 0) {
       console.log(`reconciliation  ok on all ${shares.length} dates`);
     } else {
@@ -151,7 +161,72 @@ async function main(): Promise<void> {
     }
   }
 
-  if (failures.length > 0) process.exitCode = 1;
+  if (failures.length > 0 || stale(shares, new Date())) process.exitCode = 1;
+}
+
+/**
+ * How far behind the source the published series is.
+ *
+ * The cron collects the day that just closed, at 02:00 UTC. So for the last completed UTC day
+ * `L`, a lag of 0 means today's run has happened and a lag of 1 means it has not yet — both
+ * ordinary. A lag of 2 or more means a scheduled run did not produce a date, which is the
+ * failure this whole check exists for, because nothing else on the surface reports it: Market
+ * Share keeps rendering the last good date, correctly, indefinitely.
+ */
+const STALE_AFTER_DAYS = 2;
+
+function latestHealthy(shares: readonly DatedShare[]): DatedShare | null {
+  for (let i = shares.length - 1; i >= 0; i -= 1) {
+    const share = shares[i]!;
+    if (usableForMarketShare(share)) return share;
+  }
+  return null;
+}
+
+function stale(shares: readonly DatedShare[], now: Date): boolean {
+  const healthy = latestHealthy(shares);
+  if (healthy === null) return true;
+  return daysBetween(healthy.derivation.date, lastCompletedUtcDate(now)) >= STALE_AFTER_DAYS;
+}
+
+/** The four freshness assertions, each printed with its verdict rather than only on failure. */
+function freshnessReport(shares: readonly DatedShare[], now: Date): string[] {
+  const lines: string[] = ["freshness"];
+  const healthy = latestHealthy(shares);
+  const lastClosed = lastCompletedUtcDate(now);
+
+  if (healthy === null) {
+    lines.push(`  FAIL  no date reconciles; Market Share can serve nothing`);
+    return lines;
+  }
+
+  const lag = daysBetween(healthy.derivation.date, lastClosed);
+  const verdict = lag >= STALE_AFTER_DAYS ? "FAIL" : "ok  ";
+  lines.push(`  ${verdict}  latest healthy ${healthy.derivation.date}, last completed UTC day ${lastClosed}, lag ${lag} day(s)`);
+  if (lag >= STALE_AFTER_DAYS) {
+    lines.push(`        a scheduled UTVI run has not produced a date; Market Share cannot advance on its own`);
+  }
+
+  // The denominator a reader sees must be the value UTVI published for that date. These come
+  // from different columns of different tables and are only equal because the derivation used
+  // the publication as its denominator -- worth asserting rather than assuming.
+  const denominatorMatches = healthy.derivation.totalObservedTokens === healthy.lineage.totalObservedTokens.toString();
+  lines.push(`  ${denominatorMatches ? "ok  " : "FAIL"}  denominator ${healthy.derivation.totalObservedTokens} matches the UTVI published value`);
+
+  // The latest date is also the latest *published* date: a healthy older date being served
+  // while a newer one exists would mean the newer one is broken.
+  const newest = shares[shares.length - 1]!;
+  const isNewest = newest.derivation.date === healthy.derivation.date;
+  lines.push(`  ${isNewest ? "ok  " : "FAIL"}  latest published date ${newest.derivation.date} is the latest healthy date`);
+
+  const residual = healthy.derivation.sourceResidual?.sharePercent ?? 0;
+  const labSum =
+    healthy.derivation.labs.reduce((t, r) => t + r.sharePercent, 0) +
+    healthy.derivation.unattributed.sharePercent +
+    residual;
+  lines.push(`  ${Math.abs(labSum - 100) <= 0.001 ? "ok  " : "FAIL"}  latest decomposition reconciles to ${labSum.toFixed(6)} %`);
+
+  return lines;
 }
 
 main()
