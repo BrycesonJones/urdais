@@ -402,3 +402,41 @@ The corollary: local **test-mode** billing work now needs the test keys restored
 **Do not** delete Stripe subscriptions, Customers, `identity.billing_*` rows or entitlements. Customers keep their access because the products are public again, billing continues correctly underneath, and the state needed to diagnose the fault is still there. Deleting any of it converts a reversible gating problem into an irreversible billing one.
 
 Reverting the application code is **not** part of rollback: the enforcement switch exists precisely so that gating can be turned off without a deploy of different code.
+
+---
+
+## 16. Premium enforcement activated
+
+**30 September 2026.** `URDAIS_PREMIUM_ENFORCEMENT=active` set in Vercel Production by the founder and deployed. Urdais is a paid product from this date.
+
+### Anonymous
+
+| | |
+| --- | --- |
+| Compute Economics, Power Analytics | **gated** — ACCESS REQUIRED with the Get Full Access CTA |
+| Premium payload | **no leak.** The only decimals in the gated HTML are Tailwind opacity values (`bg-white/[0.06]`), 9 distinct. Compute Economics renders 322 characters of main text gated against 2,525 for a subscriber |
+| The seven premium APIs | **401** on every one |
+| Map | 422 features, **all `data_center`**. `gpu_compute_cluster`, `power_infrastructure` and `semiconductor_fab` are absent entirely — not present as empty layers, not present as counts |
+
+### Subscriber
+
+| | |
+| --- | --- |
+| Entitlement | active, source `stripe` |
+| All five products | **allowed** |
+| Premium pages | ungated, real data (Power Analytics: 1,359 numeric values against the anonymous 50, all of which were CSS) |
+| Premium APIs | **200** on all six tested |
+| Map | **446** features — the 422 public data centres plus 11 `gpu_compute_cluster`, 12 `semiconductor_fab`, 1 `power_infrastructure` |
+| `/access` and `/access/ready` | both resolve to `/access/subscribed`; **duplicate Checkout refused** |
+| Subscriber screen | no price, offers Manage subscription |
+| Persistence | access survives a hard refresh and a fresh browser context |
+
+### Two things that look like failures and are not
+
+**Compute Economics is sparse even for a subscriber** — 2,525 characters against Power Analytics' 28,536. That is the known state of Available Compute Capacity, whose dataset is empty by design because no permitted source exposes a capacity quantity (`premium-gates.md` §"Worth knowing"). The gate is correct; the product behind it is thin for reasons that predate billing.
+
+**A returning subscriber signing in lands on `/access/subscribed`, not their original destination.** This is the designed behaviour for an already-entitled reader, and the destination is preserved in the URL and offered as the single onward link (`destination = returnTo ?? MARKETS_HREF`). The end-at-the-destination journey in §25 of the Phase 6 brief describes a *new* subscriber, who reaches it through `/access/complete`. Nothing is lost either way.
+
+### Known gap at the time of activation
+
+`/auth/status` printed "Premium enforcement is not active" **after** activation — Phase 3 prose that was true when written and false the moment the switch flipped, while the gates themselves were applying correctly. Fixed on this branch by conditioning it on `isPremiumEnforcementActive()`, the same function the gates read. **The fix is not deployed until this PR merges**, so production's status page carries a stale footer in the meantime; everything above that line on the page is correct.
