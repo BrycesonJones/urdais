@@ -5,6 +5,7 @@ import { AuthShell } from "@/app/auth/auth-shell";
 import { canAccess, hasPremiumEntitlement } from "@/lib/access/entitlement";
 import { PREMIUM_PRODUCT_IDS } from "@/lib/access/products";
 import { resolveViewer } from "@/lib/access/server";
+import { isPremiumEnforcementActive } from "@/lib/access/activation";
 
 export const metadata: Metadata = {
   title: "Session status",
@@ -34,6 +35,7 @@ export const dynamic = "force-dynamic";
 export default async function AuthStatusRoute() {
   const viewer = await resolveViewer();
   const authenticated = viewer.authentication.kind === "authenticated";
+  const enforcementActive = isPremiumEnforcementActive();
 
   return (
     <AuthShell title="Session status">
@@ -77,9 +79,27 @@ export default async function AuthStatusRoute() {
         })}
       </ul>
 
+      {/*
+        Conditional, because this sentence is the one an operator reads when they
+        want to know whether the paywall is on. It was written in Phase 3 as flat
+        prose, when enforcement was permanently inactive and the claim was always
+        true; live activation made it false while the gates themselves were working
+        correctly. A diagnostic page that states the opposite of reality is worse
+        than one that says nothing, and this is the page somebody checks precisely
+        when they are unsure.
+      */}
       <p className="mt-6 text-xs text-neutral-500">
-        Premium enforcement is not active. These decisions are reported, not applied — Compute Economics, Power
-        Analytics and the premium map layers remain publicly readable until a subscription can be purchased.
+        {enforcementActive ? (
+          <>
+            Premium enforcement is <span className="text-neutral-300">active</span>. These decisions are applied —
+            Compute Economics, Power Analytics and the premium map layers require a subscription.
+          </>
+        ) : (
+          <>
+            Premium enforcement is not active. These decisions are reported, not applied — Compute Economics, Power
+            Analytics and the premium map layers remain publicly readable until a subscription can be purchased.
+          </>
+        )}
       </p>
 
       {authenticated ? (
