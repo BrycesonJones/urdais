@@ -3,6 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
+import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
+import { billingAvailability } from "@/lib/billing/mode";
 import { MARKETS_HREF } from "@/lib/routes";
 import { onboardingReturnTo } from "@/lib/onboarding/routes";
 import { resolveOnboarding } from "@/lib/onboarding/server";
@@ -39,6 +41,11 @@ export default async function AlreadySubscribedRoute({
 
   const destination = returnTo ?? MARKETS_HREF;
 
+  // The portal is offered only where Stripe is actually reachable. An operator comp
+  // on a deployment with no billing configured has an entitlement and no Stripe
+  // customer, and a button that could only fail is worse than its absence.
+  const billing = billingAvailability();
+
   return (
     <OnboardingShell
       eyebrow="FULL ACCESS"
@@ -51,6 +58,12 @@ export default async function AlreadySubscribedRoute({
       >
         {returnTo ? "Continue to where you were" : "Continue to Urdais"}
       </Link>
+
+      {billing.kind === "available" ? (
+        <div className="border-t border-white/10 pt-5">
+          <ManageSubscriptionButton returnTo={returnTo} />
+        </div>
+      ) : null}
     </OnboardingShell>
   );
 }

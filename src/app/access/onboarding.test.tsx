@@ -139,19 +139,39 @@ describe("/access is the account form", () => {
 });
 
 describe("the removed intro — regressions", () => {
-  it("shows no price anywhere in onboarding", async () => {
+  it("shows no price before the reader has an account", async () => {
+    // Phase 5 moved the price to Plan / Pay rather than removing it. What stays true
+    // is that nobody is asked to weigh a number before they have seen what it buys,
+    // so the account form and the login form still quote nothing.
     renderGate();
     const account = renderToStaticMarkup(await AccessRoute({ searchParams: params() }));
 
-    renderGate(authenticatedViewer("acct-1", true), "ready_for_checkout");
-    resolveCheckoutHandoff.mockResolvedValue({ kind: "ready", accountId: "acct-1", returnTo: null });
-    const ready = renderToStaticMarkup(await ReadyForCheckoutRoute({ searchParams: params() }));
+    renderGate(ANONYMOUS_VIEWER, "login");
+    const login = renderToStaticMarkup(await OnboardingLoginRoute({ searchParams: params() }));
 
-    for (const html of [account, ready]) {
+    for (const html of [account, login]) {
       expect(html).not.toContain("$80");
       expect(html).not.toContain("/week");
       expect(html).not.toContain("No free trial");
     }
+  });
+
+  it("quotes the price on Plan / Pay, beside the payment it explains", async () => {
+    renderGate(authenticatedViewer("acct-1", true), "ready_for_checkout");
+    resolveCheckoutHandoff.mockResolvedValue({ kind: "ready", accountId: "acct-1", returnTo: null });
+
+    const ready = renderToStaticMarkup(await ReadyForCheckoutRoute({ searchParams: params() }));
+
+    expect(ready).toContain("$80/week");
+    expect(ready).toContain("No free trial.");
+  });
+
+  it("shows no price to somebody who already subscribes", async () => {
+    // There is nothing to sell them, and a price on this screen reads as a second charge.
+    renderGate(subscriberViewer("acct-1"), "already_entitled");
+    const subscribed = renderToStaticMarkup(await AlreadySubscribedRoute({ searchParams: params() }));
+    expect(subscribed).not.toContain("$80");
+    expect(subscribed).not.toContain("/week");
   });
 
   it("no longer carries the old subscription value proposition", async () => {
@@ -304,15 +324,27 @@ describe("the email challenge", () => {
 });
 
 describe("the checkout boundary and the subscriber screen are unchanged", () => {
-  it("still gates on the handoff and states no charge was made", async () => {
+  it("still gates on the handoff, and never puts the account id on the page", async () => {
+    // Phase 5 replaced the "coming next" notice with the real offer. What must not
+    // change is that the account id is derived from the session and never rendered
+    // -- a hidden field carrying one is a subscription somebody else pays for.
     renderGate(authenticatedViewer("acct-1", true), "ready_for_checkout");
     resolveCheckoutHandoff.mockResolvedValue({ kind: "ready", accountId: "acct-1", returnTo: null });
 
     const html = renderToStaticMarkup(await ReadyForCheckoutRoute({ searchParams: params() }));
-    expect(html).toContain("ready to continue");
-    expect(html).toContain("Checkout setup coming next");
-    expect(html).toContain("no charge has been made");
+    expect(html).toContain("Urdais Premium");
     expect(html).not.toContain("acct-1");
+  });
+
+  it("renders no purchase control when billing is not configured", async () => {
+    // Production holds no live Stripe credentials, so this is what a production
+    // reader sees -- and it is why merging Phase 5 cannot start a Checkout there.
+    renderGate(authenticatedViewer("acct-1", true), "ready_for_checkout");
+    resolveCheckoutHandoff.mockResolvedValue({ kind: "ready", accountId: "acct-1", returnTo: null });
+
+    const html = renderToStaticMarkup(await ReadyForCheckoutRoute({ searchParams: params() }));
+    expect(html).toContain("Checkout is not open yet");
+    expect(html).not.toContain("Continue to Checkout");
   });
 
   it("still tells a subscriber they already have access", async () => {
@@ -382,18 +414,36 @@ describe("what onboarding cannot do, asserted across the whole surface", () => {
     }
   });
 
-  it("contains nothing Stripe", async () => {
+  it("holds no card data and builds no payment form of its own", async () => {
+    // Phase 4 asserted "nothing Stripe" because there was no billing. Phase 5 has
+    // billing, so the real invariant is narrower and more useful: Checkout is
+    // Stripe-hosted, so Urdais renders no card field and loads no browser Stripe
+    // client anywhere in onboarding.
     for (const { file, source } of onboardingSources()) {
+      const code = codeOf(source);
+      expect(code, file).not.toMatch(/name=["'](cardNumber|card_number|cvc|cvv|expiry)["']/i);
+      expect(code, file).not.toMatch(/@stripe\/stripe-js/);
+      expect(code, file).not.toMatch(/STRIPE_SECRET_KEY/);
+    }
+  });
+
+  it("keeps Stripe out of the authentication screens specifically", async () => {
+    // The account and login forms are about proving who somebody is. Billing belongs
+    // after that, and a payment brand on a sign-in form is a different product.
+    for (const { file, source } of onboardingSources()) {
+      if (!/access\/(page|login)/.test(file)) continue;
       expect(codeOf(source).toLowerCase(), file).not.toContain("stripe");
     }
   });
 
-  it("quotes no price", async () => {
-    // Pricing moves to Plan / Pay with the payment it explains.
-    for (const { file, source } of onboardingSources()) {
-      const code = codeOf(source);
-      expect(code, file).not.toMatch(/formatPremiumPrice|PREMIUM_TRIAL_NOTE|\$80/);
-    }
+  it("quotes a price on Plan / Pay and nowhere else in onboarding", async () => {
+    // One screen may name the price: the one with the payment on it. Anywhere else is
+    // either premature (before an account exists) or meaningless (after subscribing).
+    const quoting = onboardingSources()
+      .filter(({ source }) => /formatPremiumPrice|PREMIUM_TRIAL_NOTE|\$80/.test(codeOf(source)))
+      .map(({ file }) => file);
+
+    expect(quoting).toEqual(["src/app/access/ready/page.tsx"]);
   });
 
   it("never reads a verification flag from a request", async () => {

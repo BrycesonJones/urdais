@@ -4,44 +4,50 @@ import { redirect } from "next/navigation";
 
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { PremiumSummary } from "@/components/onboarding/premium-summary";
+import { SubscribeButton } from "@/components/billing/subscribe-button";
+import { PREMIUM_PRODUCT_NAME, PREMIUM_TRIAL_NOTE, formatPremiumPrice } from "@/lib/access/pricing";
+import { billingAvailability, describeUnavailability } from "@/lib/billing/mode";
 import { onboardingHref, onboardingReturnTo } from "@/lib/onboarding/routes";
 import { resolveCheckoutHandoff } from "@/lib/onboarding/checkout-handoff";
 import { resolveOnboarding } from "@/lib/onboarding/server";
 
 export const metadata: Metadata = {
-  title: "Ready to continue",
+  title: "Urdais Premium",
   robots: { index: false, follow: false },
 };
 
 export const dynamic = "force-dynamic";
 
 /**
- * The checkout boundary. Phase 4 ends here.
+ * Plan / Pay. The subscription offer, and the only place Urdais quotes a price.
  *
- * Only an authenticated, verified reader without an entitlement can see this screen,
- * and that is enforced twice on purpose. `resolveOnboarding` decides whether to
- * render it, and `resolveCheckoutHandoff` independently re-derives the same three
- * conditions — because Phase 5 will attach a form action here, and a form submission
- * is a second entry point that must not rely on the page having checked.
+ * Only an authenticated, verified reader without an entitlement sees it, enforced
+ * twice on purpose: `resolveOnboarding` decides whether to render, and
+ * `resolveCheckoutHandoff` independently re-derives the same three conditions —
+ * because the Subscribe control is a form submission, which is a second entry point
+ * and must not rely on the page having checked. `startCheckout` re-derives them a
+ * third time for the same reason.
  *
- * ## What this screen must never do
+ * ## Why the price is here and nowhere earlier
  *
- * There is no payment control, because there is no payment. No card fields, no
- * imitation of Stripe Checkout, no "subscribe" button that does nothing, no fake
- * session id, and above all no entitlement: reaching this page writes nothing and
- * grants nothing. A reader who gets here has an account ready for a purchase that
- * cannot yet be made, and the copy says exactly that rather than implying a
- * transaction is one click away.
+ * Nobody should meet a number for the first time on a payment screen, and nobody
+ * should be asked to weigh one before they have seen what it buys. The gate
+ * established intent, account creation asked for an email, and this screen makes the
+ * offer. `@/lib/access/pricing` is the single source for the copy, and
+ * `@/lib/billing/catalog` reconciles it against the Stripe Price that will actually
+ * be charged — so the number a reader sees and the number Stripe bills cannot drift
+ * apart silently.
  *
- * No price either. Onboarding no longer quotes one: what a subscription costs
- * belongs at Plan / Pay, beside the payment it explains, and Phase 5 introduces both
- * together. The summary below says what is included, not what it costs.
+ * ## When billing is not configured
  *
- * ## Phase 5
+ * Production today holds no live Stripe credentials, and `billingAvailability`
+ * returns `unavailable` for a test key in production by design. The offer then
+ * renders **without a purchase control** and says so plainly. That is what lets this
+ * phase deploy without changing what a production reader can do: there is no button
+ * to press, so there is no Checkout to accidentally open against a sandbox.
  *
- * Replace the notice below with the real action, built on `resolveCheckoutHandoff`.
- * Its `accountId` is derived from the session; it must not become a hidden form
- * field, or a reader could open a checkout session against someone else's account.
+ * A disabled button would be worse than none — it invites clicking and reads as a
+ * bug. A stated fact does not.
  */
 export default async function ReadyForCheckoutRoute({
   searchParams,
@@ -54,32 +60,44 @@ export default async function ReadyForCheckoutRoute({
   const resolution = await resolveOnboarding("ready_for_checkout", returnTo);
   if (resolution.kind === "redirect") redirect(resolution.href);
 
-  // The same three conditions, re-derived. If these ever disagree with the line
-  // above, the safe answer is to send the reader back rather than to render a
-  // checkout boundary the handoff would refuse.
   const handoff = await resolveCheckoutHandoff(returnTo);
   if (handoff.kind !== "ready") redirect(onboardingHref("create_account", returnTo));
 
+  // Read here only to decide what to render. `startCheckout` checks it again before
+  // creating anything, because a form can be submitted by something that never
+  // rendered this page.
+  const availability = billingAvailability();
+  if (availability.kind === "unavailable") {
+    console.warn(`plan/pay rendered without a purchase control: ${describeUnavailability(availability)}`);
+  }
+
   return (
     <OnboardingShell
-      eyebrow="READY"
-      title="You&rsquo;re ready to continue"
-      lead="Your Urdais account is set up and ready for premium access."
+      eyebrow="SUBSCRIBE"
+      title={PREMIUM_PRODUCT_NAME}
+      lead="Unlock Urdais&rsquo; premium analytics and infrastructure data."
     >
-      <PremiumSummary heading="Your subscription will include" />
-
-      {/*
-        Not a button. A disabled control that looks like a payment action invites
-        clicking and reads as a bug; a stated fact does not. This is the honest
-        boundary, and Phase 5 replaces this block with the real checkout action.
-      */}
-      <div className="rounded-lg border border-dashed border-white/15 bg-white/[0.02] p-5">
-        <p className="text-sm font-medium text-neutral-100">Checkout setup coming next</p>
-        <p className="mt-2 text-sm text-neutral-400">
-          Payment is not available yet, so there is nothing to complete on this page. Your account is ready, and no
-          charge has been made.
-        </p>
+      <div className="flex flex-col gap-1">
+        <p className="text-3xl font-semibold tracking-tight text-neutral-50">{formatPremiumPrice()}</p>
+        <p className="text-xs text-neutral-500">Billed weekly. {PREMIUM_TRIAL_NOTE} Cancel any time.</p>
       </div>
+
+      <PremiumSummary heading="Your subscription includes" />
+
+      {availability.kind === "available" ? (
+        <SubscribeButton returnTo={handoff.returnTo} />
+      ) : (
+        /*
+          Deliberately not a disabled button. See the module comment.
+        */
+        <div className="rounded-lg border border-dashed border-white/15 bg-white/[0.02] p-5">
+          <p className="text-sm font-medium text-neutral-100">Checkout is not open yet</p>
+          <p className="mt-2 text-sm text-neutral-400">
+            Subscriptions are not available in this environment yet, so there is nothing to complete on this page. Your
+            account is ready, and no charge has been made.
+          </p>
+        </div>
+      )}
 
       <p className="text-xs text-neutral-500">
         {handoff.returnTo ? (
