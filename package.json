@@ -2,7 +2,7 @@
   "name": "urdais",
   "version": "0.1.0",
   "private": true,
-  "description": "Urdais — an information and market-data platform for the Information Age.",
+  "description": "Urdais \u2014 an information and market-data platform for the Information Age.",
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
@@ -77,7 +77,8 @@
     "umpi:production:check": "tsx scripts/umpi/production-check.ts",
     "grid-buildout:ingest": "tsx scripts/grid-buildout/ingest.ts",
     "map:equinix": "tsx scripts/map/equinix-manual.ts",
-    "map:equinix:recover": "tsx scripts/map/equinix-precision-recovery.ts"
+    "map:equinix:recover": "tsx scripts/map/equinix-precision-recovery.ts",
+    "billing:setup": "tsx scripts/billing/stripe-setup.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -93,6 +94,7 @@
     "react-dom": "19.2.8",
     "react-markdown": "^10.1.0",
     "remark-parse": "^11.0.0",
+    "stripe": "^22.6.2",
     "unified": "^11.0.5"
   },
   "devDependencies": {
