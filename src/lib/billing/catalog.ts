@@ -37,6 +37,44 @@ export const APPLICATION_VALUE = "urdais";
 /** The single product key. A second value here would be a second tier. */
 export const PREMIUM_PRODUCT_KEY = "premium";
 
+/**
+ * The Stripe tax code for Urdais Premium.
+ *
+ * ## Why this has to be set at all
+ *
+ * Stripe's **Managed Payments** is enabled by default on this account, and it makes
+ * Stripe the merchant of record — which means Stripe calculates and remits sales tax
+ * and therefore requires every Product to declare what it is. Without a tax code,
+ * `checkout.sessions.create` fails outright with
+ * `the product tax code is missing`. It is not optional and it cannot be inferred.
+ *
+ * ## Why this code
+ *
+ * `txcd_10701400` is "Website Information Services - Business Use". Urdais sells
+ * access to market indices and infrastructure data that a professional reader logs
+ * in and reads on a website. It is deliberately **not** a SaaS code
+ * (`txcd_10103001`): Urdais is not software the customer operates, and misdescribing
+ * it as such would classify the product wrongly in every jurisdiction Stripe remits
+ * to.
+ *
+ * ## This is a tax decision, not an engineering one
+ *
+ * Chosen as the most accurate available description, and it needs the founder's
+ * confirmation before live billing. Two things could change it:
+ *
+ *   - a different code is a better fit for how Urdais is actually sold (the nearest
+ *     alternative is `txcd_10701410`, "Electronically Delivered Information
+ *     Services - Business Use", which differs on whether delivery is the website
+ *     itself);
+ *   - Managed Payments is turned **off** for the account, in which case Urdais is
+ *     the merchant of record, no tax code is required, and remitting tax becomes
+ *     Urdais's own responsibility.
+ *
+ * Neither is a change this module should make on its own. See
+ * docs/architecture/stripe-billing.md.
+ */
+export const PREMIUM_TAX_CODE = "txcd_10701400";
+
 /** The metadata every Urdais-owned Stripe object carries. Never holds PII or secrets. */
 export function catalogMetadata(mode: StripeMode): Record<string, string> {
   return {
@@ -123,13 +161,23 @@ export async function ensurePremiumCatalog(stripe: Stripe, mode: StripeMode): Pr
   const metadata = catalogMetadata(mode);
 
   const existingProduct = await findPremiumProduct(stripe, mode);
-  const product =
+  let product =
     existingProduct ??
     (await stripe.products.create({
       name: PREMIUM_PRODUCT_NAME,
       description: "Urdais premium analytics and infrastructure data. One subscription unlocks every premium product.",
+      tax_code: PREMIUM_TAX_CODE,
       metadata,
     }));
+
+  // An existing Product created before the tax code was required, or pointed at a
+  // different one, is corrected in place. Leaving it would make Checkout fail with
+  // an error no reader could act on, and creating a second Product would give the
+  // account two "Urdais Premium" entries.
+  const currentTaxCode = typeof product.tax_code === "string" ? product.tax_code : product.tax_code?.id;
+  if (currentTaxCode !== PREMIUM_TAX_CODE) {
+    product = await stripe.products.update(product.id, { tax_code: PREMIUM_TAX_CODE });
+  }
 
   const existingPrice = await findPremiumPrice(stripe, product.id, mode);
   const price =

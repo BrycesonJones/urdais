@@ -15,7 +15,7 @@
  */
 
 import { PREMIUM_PRICE, formatPremiumPrice } from "@/lib/access/pricing";
-import { ensurePremiumCatalog, describePriceMismatch } from "@/lib/billing/catalog";
+import { PREMIUM_TAX_CODE, ensurePremiumCatalog, describePriceMismatch } from "@/lib/billing/catalog";
 import { STRIPE_PREMIUM_PRICE_ID_VAR, stripeModeOfKey } from "@/lib/billing/mode";
 import Stripe from "stripe";
 
@@ -63,6 +63,7 @@ async function main(): Promise<void> {
   console.log(`currency     ${(setup.price.currency ?? "").toUpperCase()}`);
   console.log(`recurrence   every ${setup.price.recurring?.interval_count} ${setup.price.recurring?.interval}`);
   console.log(`trial        ${PREMIUM_PRICE.trial ? "yes" : "none"}`);
+  console.log(`tax code     ${PREMIUM_TAX_CODE}   (required by Managed Payments; CONFIRM THIS CLASSIFICATION)`);
   console.log("");
   console.log(`reconciled against @/lib/access/pricing: ok`);
   console.log("");

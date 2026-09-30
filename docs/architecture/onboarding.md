@@ -139,6 +139,18 @@ Phase 5 carries it through Stripe and returns the newly entitled reader there.
 
 ## 8. The checkout boundary
 
+> **Superseded 29 September 2026 by Paid Access Phase 5.** `/access/ready` is no
+> longer a boundary that says payment is unavailable — it is **Plan / Pay**, the real
+> subscription offer, and the only screen in Urdais that quotes a price. The
+> enforcement described below (two independent re-derivations of the same three
+> conditions) is unchanged and now has a third: `startCheckout` re-derives them
+> again, because a form can be submitted by something that never rendered the page.
+> See `docs/architecture/stripe-billing.md`.
+>
+> The paragraph below about what the screen "must never contain" still holds for card
+> fields and fake payment controls. It no longer holds for the price, which belongs
+> here precisely because the payment is here.
+
 `/access/ready`. Only an authenticated, verified, non-entitled reader sees it, enforced **twice**: `resolveOnboarding` decides whether to render, and `resolveCheckoutHandoff` independently re-derives the same three conditions — because Phase 5 attaches a form action here, and a submission is a second entry point that must not rely on the page having checked.
 
 What it says:
@@ -165,7 +177,7 @@ No signup, no login, no verification prompt, no checkout action, and **no price*
 
 ## 10. Phase 5 handoff
 
-`src/lib/onboarding/checkout-handoff.ts`. No Stripe package, customer id, price id, environment variable, metadata or database column.
+**Implemented in Phase 5.** `src/lib/onboarding/checkout-handoff.ts` is unchanged and is now consumed by `@/lib/billing/checkout`, which honoured the contract below: `accountId` is derived from the session and is not posted back. See `docs/architecture/stripe-billing.md`.
 
 ```ts
 const handoff = await resolveCheckoutHandoff();
@@ -179,9 +191,9 @@ It refuses rather than returning a partial answer, for `anonymous`, `unverified`
 
 ### Price
 
-`src/lib/access/pricing.ts` is the one presentation source: **$80/week, no free trial**, stored in minor units (`8000`) the way Stripe counts them, so Phase 5 reconciles a number against a Stripe Price rather than parsing prose. **Frontend copy is not the billing authority.**
+`src/lib/access/pricing.ts` is the one presentation source: **$80/week, no free trial**, stored in minor units (`8000`) the way Stripe counts them. Phase 5 reconciles it against the Stripe Price before every Checkout Session and refuses rather than charging when they disagree. **Frontend copy is not the billing authority.**
 
-Shown twice by design: on the intro *before* anyone creates an account, and again at the boundary. Nobody should discover the price on a payment screen. The already-entitled screen shows it nowhere.
+Shown on **one** screen: Plan / Pay, beside the payment it explains. The intro is gone, the account and login forms quote nothing, and the already-entitled screen shows it nowhere — there is nothing to sell somebody who already subscribes. A test asserts exactly one onboarding file quotes a price.
 
 The copy deliberately says nothing about tax, proration, renewal or cancellation — none of that is established, and a sentence implying terms that do not exist is worse than none.
 
