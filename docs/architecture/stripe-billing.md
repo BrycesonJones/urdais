@@ -340,6 +340,39 @@ Verified 30 September 2026. `POST /api/stripe/webhook` with no signature answers
 
 All Phase 5 routes are deployed and correct for an anonymous reader: `/access` and `/access/login` render; `/access/ready`, `/access/complete` and `/access/subscribed` all redirect to `/access`; the webhook route answers 405 to GET.
 
+### The controlled production lifecycle — PASSED
+
+**30 September 2026.** The founder declined an $80 validation charge and approved a **$1/week validation-only Price** instead, to buy the one missing piece of production evidence without wasting eighty dollars. The canonical $80 Price was not touched and `STRIPE_PREMIUM_PRICE_ID` was not changed.
+
+| | |
+| --- | --- |
+| Validation Price | `price_1ULNRSAcInDgxIu2lpaHXyYY` — 100 USD minor units, weekly, under the same live Product |
+| Guarded from the offer by | `priceMatchesPremium` (amount) **and** `urdais_product_key = premium_validation` (discovery) — two independent checks, either sufficient |
+| Session | `cs_live_a1eyhAhJcjpged…` → `complete` / **`paid`**, amount_total 100 USD |
+| Subscription | `sub_1ULNX2AcInDgxIu2dHBpLV6s` — **active**, livemode true |
+| Customer | `cus_VM5YEoGFt8ze9B` |
+
+The payment was entered by the founder. Nothing about the card passed through Urdais.
+
+**The chain, end to end in production:**
+
+| stage | evidence |
+| --- | --- |
+| signed webhooks processed | `customer.subscription.created`, then `checkout.session.completed` — two rows in `identity.billing_events`, both `livemode = t` |
+| customer mapping | one row, account `ab097e6f…` → `cus_VM5YEoGFt8ze9B` |
+| subscription persisted | `active`, correct Price, `last_event_at` set, `livemode = t` |
+| entitlement | **active**, `source = stripe`, `external_reference = sub_1ULNX2…`, `granted_at` set, `revoked_at` null |
+| all five premium products | **allowed**, read through `loadPremiumEntitlement` + `canAccess` against the real production row |
+| duplicates | zero customers, zero subscriptions, exactly one entitlement, and it belongs to `ab097e6f…` |
+
+The ledger rows are themselves the proof that signature verification passed: the route answers 400 and processes nothing when a signature is absent or wrong, so a row can only exist if Stripe's signature verified.
+
+**Idempotency, proven with a real duplicate.** A genuine live event was resent to the production endpoint with `stripe events resend`. The ledger stayed at two rows, the original `processed_at` did not move, and `granted_at` was unchanged — the duplicate was absorbed rather than reprocessed.
+
+**A forged success URL grants nothing.** `/access/complete` with an invented `session_id` (live-shaped, test-shaped, and absent) redirects an anonymous reader to `/access` every time, and the billing tables were unchanged afterwards.
+
+**Delivery is healthy.** Both live events report `pending_webhooks = 0`, and the endpoint remains `enabled`.
+
 ### Test and live isolation, verified in anger
 
 With live keys now in `.env.local`, the **local** environment resolves to `unavailable (mode_mismatch)` — development requires a test key, so local work cannot reach live Stripe and cannot charge a real card. The invariant is doing its job rather than merely being asserted in a unit test.
