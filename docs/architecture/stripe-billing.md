@@ -1,6 +1,6 @@
 # Stripe subscription billing
 
-**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 29 September 2026, Paid Access Phase 5. Test mode only; **no live Stripe object exists and nothing has been charged.**
+**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 29 September 2026 (Paid Access Phase 5); live activation in progress from 30 September 2026 (Phase 6). See §14 for live objects and the activation state.
 
 > A Stripe Checkout success redirect is a string in a browser's address bar.
 > **The webhook is the authority.** Everything below follows from that one sentence.
@@ -26,13 +26,15 @@ There is no annual plan, no monthly plan, no tier, no seat, no metered component
 
 `@/lib/access/pricing` holds the price for **display**; the Stripe Price is the billing authority. `describePriceMismatch` compares them before every Checkout Session, and refuses rather than charging when they disagree — because the half that is wrong is always the half the customer read.
 
-### Test-mode objects
+### Objects, by mode
 
-| | |
-| --- | --- |
-| Product | `prod_VLudFxecD5IgCv` — Urdais Premium |
-| Price | `price_1ULCoUAbbaFaWyWpSWLWmdKn` — 8000 USD minor units, every 1 week |
-| Tax code | `txcd_10701400` — Website Information Services, Business Use |
+| | test | live |
+| --- | --- | --- |
+| Product | `prod_VLudFxecD5IgCv` | `prod_VM52Zqu7IZGiQM` |
+| Price | `price_1ULCoUAbbaFaWyWpSWLWmdKn` | `price_1ULMsCAcInDgxIu2qPG0m7r2` |
+| Tax code | `txcd_10701400` | `txcd_10701400` |
+
+Both are 8000 USD minor units, recurring every 1 week, no trial. **The test objects are retained deliberately** — future billing changes need somewhere to be proven that is not production.
 
 Created and reconciled by `npm run billing:setup`, which discovers by metadata before creating so a second run reuses both. Neither id is a secret.
 
@@ -300,3 +302,173 @@ Nothing below has been done, and none of it should be until Phase 5 is approved.
 11. **Only then** consider `URDAIS_PREMIUM_ENFORCEMENT=active` — and only against the separate prerequisites in `premium-gates.md`.
 
 Until step 3, production billing is `unavailable` and the offer is not purchasable, which is the intended state.
+
+---
+
+## 14. Live activation (Phase 6)
+
+Started 30 September 2026 from `main` `94721b7f`. **Premium enforcement is still inactive**, and stays inactive until the live purchase → webhook → entitlement chain is proven end to end.
+
+### Done
+
+| step | result |
+| --- | --- |
+| Production billing migrations | `20261024100000` and `20261025100000` applied to UrdaisProd |
+| Production ledger | **131 = 131**, identical to the repository in both directions; integrity and freshness both ok |
+| Production schema | all five `identity` tables, RLS on, **zero policies**, zero public-role grants, ledger grants `INSERT, SELECT` only, `livemode` inside the subscription → customer foreign key, all billing tables empty |
+| Live Stripe authentication | `livemode: true` confirmed from Stripe's own API, not the key prefix |
+| Live Product | `prod_VM52Zqu7IZGiQM` — Urdais Premium, tax code `txcd_10701400` |
+| Live Price | `price_1ULMsCAcInDgxIu2qPG0m7r2` — $80.00 USD, every 1 week, no trial |
+| Live webhook endpoint | `we_1ULMsqAcInDgxIu29dIfeJcZ` → `https://urdais.com/api/stripe/webhook`, enabled |
+| Webhook events | `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted` — exactly the four the code handles |
+| Production configuration | all three variables set in Vercel Production and verified live |
+| Production state | enforcement **inactive**, all premium surfaces public, `auth.users` = 0 |
+
+`npm run billing:setup` now refuses live mode unless given **both** `--live` and `--confirm`, and refuses `--live` against a test key. Creating a catalogue charges nobody, but it is the object real customers are billed against.
+
+### Production environment — configured and verified
+
+| variable | class | value |
+| --- | --- | --- |
+| `STRIPE_SECRET_KEY` | server-only secret | the live secret key |
+| `STRIPE_PREMIUM_PRICE_ID` | non-secret server config | `price_1ULMsCAcInDgxIu2qPG0m7r2` |
+| `STRIPE_WEBHOOK_SECRET` | server-only secret | the signing secret of `we_1ULMsqAcInDgxIu29dIfeJcZ` |
+
+`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is **not** required: Checkout is Stripe-hosted and no browser Stripe client exists.
+
+Verified 30 September 2026. `POST /api/stripe/webhook` with no signature answers **400 `missing stripe-signature`**, which establishes more than that the variables are present: a *test* key in production would have failed the mode check and answered `billing is not configured` instead. **Production is genuinely on live Stripe.** A forged signature is refused with 400 `invalid signature`.
+
+All Phase 5 routes are deployed and correct for an anonymous reader: `/access` and `/access/login` render; `/access/ready`, `/access/complete` and `/access/subscribed` all redirect to `/access`; the webhook route answers 405 to GET.
+
+### The controlled production lifecycle — PASSED
+
+**30 September 2026.** The founder declined an $80 validation charge and approved a **$1/week validation-only Price** instead, to buy the one missing piece of production evidence without wasting eighty dollars. The canonical $80 Price was not touched and `STRIPE_PREMIUM_PRICE_ID` was not changed.
+
+| | |
+| --- | --- |
+| Validation Price | `price_1ULNRSAcInDgxIu2lpaHXyYY` — 100 USD minor units, weekly, under the same live Product |
+| Guarded from the offer by | `priceMatchesPremium` (amount) **and** `urdais_product_key = premium_validation` (discovery) — two independent checks, either sufficient |
+| Session | `cs_live_a1eyhAhJcjpged…` → `complete` / **`paid`**, amount_total 100 USD |
+| Subscription | `sub_1ULNX2AcInDgxIu2dHBpLV6s` — **active**, livemode true |
+| Customer | `cus_VM5YEoGFt8ze9B` |
+
+The payment was entered by the founder. Nothing about the card passed through Urdais.
+
+**The chain, end to end in production:**
+
+| stage | evidence |
+| --- | --- |
+| signed webhooks processed | `customer.subscription.created`, then `checkout.session.completed` — two rows in `identity.billing_events`, both `livemode = t` |
+| customer mapping | one row, account `ab097e6f…` → `cus_VM5YEoGFt8ze9B` |
+| subscription persisted | `active`, correct Price, `last_event_at` set, `livemode = t` |
+| entitlement | **active**, `source = stripe`, `external_reference = sub_1ULNX2…`, `granted_at` set, `revoked_at` null |
+| all five premium products | **allowed**, read through `loadPremiumEntitlement` + `canAccess` against the real production row |
+| duplicates | zero customers, zero subscriptions, exactly one entitlement, and it belongs to `ab097e6f…` |
+
+The ledger rows are themselves the proof that signature verification passed: the route answers 400 and processes nothing when a signature is absent or wrong, so a row can only exist if Stripe's signature verified.
+
+**Idempotency, proven with a real duplicate.** A genuine live event was resent to the production endpoint with `stripe events resend`. The ledger stayed at two rows, the original `processed_at` did not move, and `granted_at` was unchanged — the duplicate was absorbed rather than reprocessed.
+
+**A forged success URL grants nothing.** `/access/complete` with an invented `session_id` (live-shaped, test-shaped, and absent) redirects an anonymous reader to `/access` every time, and the billing tables were unchanged afterwards.
+
+**Delivery is healthy.** Both live events report `pending_webhooks = 0`, and the endpoint remains `enabled`.
+
+### Test and live isolation, verified in anger
+
+With live keys now in `.env.local`, the **local** environment resolves to `unavailable (mode_mismatch)` — development requires a test key, so local work cannot reach live Stripe and cannot charge a real card. The invariant is doing its job rather than merely being asserted in a unit test.
+
+The corollary: local **test-mode** billing work now needs the test keys restored to `.env.local`. The test Product and Price still exist for exactly that purpose.
+
+### Checking configuration without side effects
+
+`POST /api/stripe/webhook` with no signature distinguishes all three states, creates nothing and charges nobody:
+
+| response | meaning |
+| --- | --- |
+| 500 `billing is not configured` | no secret key, or the wrong mode for this environment |
+| 500 `webhook signing secret is not configured` | key present, signing secret absent |
+| 400 `missing stripe-signature` | both configured |
+
+---
+
+## 15. Rollback
+
+**The gate fails open; the billing data stays intact.** This is the rollback for an operational gating failure — not for an authentication or billing security bypass, which is an incident rather than a rollback.
+
+1. Set `URDAIS_PREMIUM_ENFORCEMENT` in Vercel Production to anything other than `active`, or remove it.
+2. Redeploy. The value is read through `premiumEnforcement()`, which requires the exact word `active`.
+3. Premium products become publicly readable again, immediately and for everyone.
+
+**Do not** delete Stripe subscriptions, Customers, `identity.billing_*` rows or entitlements. Customers keep their access because the products are public again, billing continues correctly underneath, and the state needed to diagnose the fault is still there. Deleting any of it converts a reversible gating problem into an irreversible billing one.
+
+Reverting the application code is **not** part of rollback: the enforcement switch exists precisely so that gating can be turned off without a deploy of different code.
+
+---
+
+## 16. Premium enforcement activated
+
+**30 September 2026.** `URDAIS_PREMIUM_ENFORCEMENT=active` set in Vercel Production by the founder and deployed. Urdais is a paid product from this date.
+
+### Anonymous
+
+| | |
+| --- | --- |
+| Compute Economics, Power Analytics | **gated** — ACCESS REQUIRED with the Get Full Access CTA |
+| Premium payload | **no leak.** The only decimals in the gated HTML are Tailwind opacity values (`bg-white/[0.06]`), 9 distinct. Compute Economics renders 322 characters of main text gated against 2,525 for a subscriber |
+| The seven premium APIs | **401** on every one |
+| Map | 422 features, **all `data_center`**. `gpu_compute_cluster`, `power_infrastructure` and `semiconductor_fab` are absent entirely — not present as empty layers, not present as counts |
+
+### Subscriber
+
+| | |
+| --- | --- |
+| Entitlement | active, source `stripe` |
+| All five products | **allowed** |
+| Premium pages | ungated, real data (Power Analytics: 1,359 numeric values against the anonymous 50, all of which were CSS) |
+| Premium APIs | **200** on all six tested |
+| Map | **446** features — the 422 public data centres plus 11 `gpu_compute_cluster`, 12 `semiconductor_fab`, 1 `power_infrastructure` |
+| `/access` and `/access/ready` | both resolve to `/access/subscribed`; **duplicate Checkout refused** |
+| Subscriber screen | no price, offers Manage subscription |
+| Persistence | access survives a hard refresh and a fresh browser context |
+
+### Two things that look like failures and are not
+
+**Compute Economics is sparse even for a subscriber** — 2,525 characters against Power Analytics' 28,536. That is the known state of Available Compute Capacity, whose dataset is empty by design because no permitted source exposes a capacity quantity (`premium-gates.md` §"Worth knowing"). The gate is correct; the product behind it is thin for reasons that predate billing.
+
+**A returning subscriber signing in lands on `/access/subscribed`, not their original destination.** This is the designed behaviour for an already-entitled reader, and the destination is preserved in the URL and offered as the single onward link (`destination = returnTo ?? MARKETS_HREF`). The end-at-the-destination journey in §25 of the Phase 6 brief describes a *new* subscriber, who reaches it through `/access/complete`. Nothing is lost either way.
+
+### Known gap at the time of activation
+
+`/auth/status` printed "Premium enforcement is not active" **after** activation — Phase 3 prose that was true when written and false the moment the switch flipped, while the gates themselves were applying correctly. Fixed on this branch by conditioning it on `isPremiumEnforcementActive()`, the same function the gates read. **The fix is not deployed until this PR merges**, so production's status page carries a stale footer in the meantime; everything above that line on the page is correct.
+
+---
+
+## 17. Validation cleanup, and the revocation half of the lifecycle
+
+**30 September 2026,** with the founder's approval. The $1 validation subscription was cancelled **immediately**, not at period end, as a deliberate production test of revocation.
+
+| stage | result |
+| --- | --- |
+| Stripe | `sub_1ULNX2AcInDgxIu2dHBpLV6s` → **`canceled`**, `cancel_at_period_end: false`, `canceled_at` = `ended_at` |
+| Live webhook | `customer.subscription.deleted`, `livemode = t` — the third ledger row |
+| Subscription row | **`canceled`**, `canceled_at` / `ended_at` / `last_event_at` set |
+| Entitlement | **`inactive`**, `revoked_at` set, **`granted_at` preserved** |
+| All five products | **denied**, reason `entitlement_required` |
+
+**Nothing was deleted.** One account, one Customer, one subscription row, three events, one entitlement row. A revoked entitlement keeps its grant date, so the history of the relationship survives the cancellation — which is the point of revoking rather than deleting.
+
+### The revoked account, in the browser, under active enforcement
+
+Signing in now lands on `/access/ready` — **Plan / Pay, not the subscribed screen** — offering Urdais Premium at $80/week with no free trial and a live purchase control. Both premium pages are gated again, the premium API answers **403**, and the map returns 422 `data_center` with the three premium layers withheld.
+
+The 403 is worth noting against the anonymous 401: `authentication_required` and `entitlement_required` are different denials and produce different statuses. Signing in again would not help this reader, and the status says so.
+
+This run also serves as the authenticated-non-subscriber verification under active enforcement, which had previously only been observed before the payment.
+
+### The validation Price is retired
+
+`price_1ULNRSAcInDgxIu2lpaHXyYY` archived (`active: false`). Stripe now refuses it outright — *"The price specified is inactive. This field only accepts active prices."* — and it remains undiscoverable to `findPremiumPrice` on both guards. The canonical `price_1ULMsCAcInDgxIu2qPG0m7r2` is the only active Price under the Product, unchanged at 8000 USD weekly.
+
+### Final production state
+
+Migrations 131 = 131, integrity ok, freshness current, token readiness ready. Billing configuration live, webhook endpoint `enabled` with four events, all three live events delivered (`pending_webhooks = 0`). Enforcement **active**. Anonymous: both premium pages gated, seven premium APIs at 401, map clean.

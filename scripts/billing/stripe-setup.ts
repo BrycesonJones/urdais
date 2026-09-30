@@ -7,9 +7,14 @@
  *
  *   npm run billing:setup
  *
- * Refuses to run against live Stripe. Creating the live Product is a Phase 6 step
- * with a human present, and a script that could do it accidentally is a script
- * that eventually will.
+ * Refuses to run against live Stripe **unless explicitly told twice**:
+ *
+ *   npm run billing:setup -- --live --confirm
+ *
+ * Creating the live catalogue charges nobody — a Product and a Price are not a
+ * payment — but it is the object real customers are billed against, and a script
+ * that could touch it by accident is a script that eventually will. Two flags, and
+ * the mode is still checked against Stripe rather than the key's prefix.
  *
  * Prints the Product and Price ids, which are not secrets, and never the key.
  */
@@ -31,21 +36,37 @@ async function main(): Promise<void> {
     console.error("STRIPE_SECRET_KEY is not a recognisable Stripe secret key.");
     process.exit(2);
   }
-  if (mode === "live") {
-    console.error("Refusing to run against LIVE Stripe. The live Product and Price are a Phase 6 step.");
+  const argv = process.argv.slice(2);
+  const wantsLive = argv.includes("--live");
+  const confirmed = argv.includes("--confirm");
+
+  if (mode === "live" && !(wantsLive && confirmed)) {
+    console.error("Refusing to run against LIVE Stripe without an explicit opt-in.");
+    console.error("This would create or reconcile the catalogue real customers are billed against.");
+    console.error("");
+    console.error("  npm run billing:setup -- --live --confirm");
+    process.exit(2);
+  }
+  if (mode === "test" && wantsLive) {
+    // Guards the other direction: --live against a test key almost certainly means
+    // the wrong credential is loaded, and silently doing test setup would hide it.
+    console.error("--live was passed but the configured key is a TEST key. Stopping rather than guessing.");
     process.exit(2);
   }
 
   const stripe = new Stripe(key, { appInfo: { name: "Urdais setup" }, maxNetworkRetries: 2 });
 
-  // Confirm the credential really is test mode with Stripe itself, not only by
-  // its prefix. A prefix is a string; `livemode` is the API's own answer.
+  // Confirm the mode with Stripe itself, not only by the key's prefix. A prefix is a
+  // string; `livemode` is the API's own answer, and the two disagreeing means
+  // something is wrong that no amount of local reasoning will fix.
   const balance = await stripe.balance.retrieve();
-  if (balance.livemode !== false) {
-    console.error("Stripe reports livemode=true for this credential. Stopping.");
+  const expectedLivemode = mode === "live";
+  if (balance.livemode !== expectedLivemode) {
+    console.error(`Stripe reports livemode=${balance.livemode} for a ${mode}-mode key. Stopping.`);
     process.exit(2);
   }
-  console.log("Stripe test authentication succeeded.");
+  console.log(`Stripe ${mode} authentication succeeded.`);
+  if (mode === "live") console.log("Operating against LIVE Stripe.\n");
 
   const setup = await ensurePremiumCatalog(stripe, mode);
 
