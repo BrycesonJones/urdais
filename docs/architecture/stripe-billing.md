@@ -1,6 +1,6 @@
 # Stripe subscription billing
 
-**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 29 September 2026, Paid Access Phase 5. Test mode only; **no live Stripe object exists and nothing has been charged.**
+**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 29 September 2026 (Paid Access Phase 5); live activation in progress from 30 September 2026 (Phase 6). See §14 for live objects and the activation state.
 
 > A Stripe Checkout success redirect is a string in a browser's address bar.
 > **The webhook is the authority.** Everything below follows from that one sentence.
@@ -26,13 +26,15 @@ There is no annual plan, no monthly plan, no tier, no seat, no metered component
 
 `@/lib/access/pricing` holds the price for **display**; the Stripe Price is the billing authority. `describePriceMismatch` compares them before every Checkout Session, and refuses rather than charging when they disagree — because the half that is wrong is always the half the customer read.
 
-### Test-mode objects
+### Objects, by mode
 
-| | |
-| --- | --- |
-| Product | `prod_VLudFxecD5IgCv` — Urdais Premium |
-| Price | `price_1ULCoUAbbaFaWyWpSWLWmdKn` — 8000 USD minor units, every 1 week |
-| Tax code | `txcd_10701400` — Website Information Services, Business Use |
+| | test | live |
+| --- | --- | --- |
+| Product | `prod_VLudFxecD5IgCv` | `prod_VM52Zqu7IZGiQM` |
+| Price | `price_1ULCoUAbbaFaWyWpSWLWmdKn` | `price_1ULMsCAcInDgxIu2qPG0m7r2` |
+| Tax code | `txcd_10701400` | `txcd_10701400` |
+
+Both are 8000 USD minor units, recurring every 1 week, no trial. **The test objects are retained deliberately** — future billing changes need somewhere to be proven that is not production.
 
 Created and reconciled by `npm run billing:setup`, which discovers by metadata before creating so a second run reuses both. Neither id is a secret.
 
@@ -300,3 +302,60 @@ Nothing below has been done, and none of it should be until Phase 5 is approved.
 11. **Only then** consider `URDAIS_PREMIUM_ENFORCEMENT=active` — and only against the separate prerequisites in `premium-gates.md`.
 
 Until step 3, production billing is `unavailable` and the offer is not purchasable, which is the intended state.
+
+---
+
+## 14. Live activation (Phase 6)
+
+Started 30 September 2026 from `main` `94721b7f`. **Premium enforcement is still inactive**, and stays inactive until the live purchase → webhook → entitlement chain is proven end to end.
+
+### Done
+
+| step | result |
+| --- | --- |
+| Production billing migrations | `20261024100000` and `20261025100000` applied to UrdaisProd |
+| Production ledger | **131 = 131**, identical to the repository in both directions; integrity and freshness both ok |
+| Production schema | all five `identity` tables, RLS on, **zero policies**, zero public-role grants, ledger grants `INSERT, SELECT` only, `livemode` inside the subscription → customer foreign key, all billing tables empty |
+| Live Stripe authentication | `livemode: true` confirmed from Stripe's own API, not the key prefix |
+| Live Product | `prod_VM52Zqu7IZGiQM` — Urdais Premium, tax code `txcd_10701400` |
+| Live Price | `price_1ULMsCAcInDgxIu2qPG0m7r2` — $80.00 USD, every 1 week, no trial |
+| Live webhook endpoint | `we_1ULMsqAcInDgxIu29dIfeJcZ` → `https://urdais.com/api/stripe/webhook`, enabled |
+| Webhook events | `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted` — exactly the four the code handles |
+
+`npm run billing:setup` now refuses live mode unless given **both** `--live` and `--confirm`, and refuses `--live` against a test key. Creating a catalogue charges nobody, but it is the object real customers are billed against.
+
+### Outstanding — production environment
+
+Production reports `billing is not configured`. Three variables are needed in **Vercel Production**, then a redeploy, because `NEXT_PUBLIC_*` values are inlined at build time and the mode check reads the environment.
+
+| variable | class | value |
+| --- | --- | --- |
+| `STRIPE_SECRET_KEY` | server-only secret | the live secret key |
+| `STRIPE_PREMIUM_PRICE_ID` | non-secret server config | `price_1ULMsCAcInDgxIu2qPG0m7r2` |
+| `STRIPE_WEBHOOK_SECRET` | server-only secret | the signing secret of `we_1ULMsqAcInDgxIu29dIfeJcZ`, from the Stripe dashboard |
+
+`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is **not** required: Checkout is Stripe-hosted and no browser Stripe client exists.
+
+### Checking configuration without side effects
+
+`POST /api/stripe/webhook` with no signature distinguishes all three states, creates nothing and charges nobody:
+
+| response | meaning |
+| --- | --- |
+| 500 `billing is not configured` | no secret key, or the wrong mode for this environment |
+| 500 `webhook signing secret is not configured` | key present, signing secret absent |
+| 400 `missing stripe-signature` | both configured |
+
+---
+
+## 15. Rollback
+
+**The gate fails open; the billing data stays intact.** This is the rollback for an operational gating failure — not for an authentication or billing security bypass, which is an incident rather than a rollback.
+
+1. Set `URDAIS_PREMIUM_ENFORCEMENT` in Vercel Production to anything other than `active`, or remove it.
+2. Redeploy. The value is read through `premiumEnforcement()`, which requires the exact word `active`.
+3. Premium products become publicly readable again, immediately and for everyone.
+
+**Do not** delete Stripe subscriptions, Customers, `identity.billing_*` rows or entitlements. Customers keep their access because the products are public again, billing continues correctly underneath, and the state needed to diagnose the fault is still there. Deleting any of it converts a reversible gating problem into an irreversible billing one.
+
+Reverting the application code is **not** part of rollback: the enforcement switch exists precisely so that gating can be turned off without a deploy of different code.
