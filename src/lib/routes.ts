@@ -42,12 +42,3 @@ export const MAP_HREF = "/map";
  * Since Phase 7B it is the Account Hub: identity and subscription status.
  */
 export const ACCOUNT_HREF = "/account";
-
-/**
- * Subscription management, reached from the Account Hub's "Manage subscription".
- *
- * PHASE 7C SEAM. In Phase 7B this route explains that management is not yet
- * available here and performs no billing operation. Phase 7C replaces its
- * implementation (Stripe Customer Portal handoff); the link to it stays.
- */
-export const ACCOUNT_SUBSCRIPTION_HREF = `${ACCOUNT_HREF}/subscription`;

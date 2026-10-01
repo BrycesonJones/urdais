@@ -122,6 +122,8 @@ Plan / Pay's footer used to say premium "is still readable without a subscriptio
 
 ## 7. Phase 7C seam — subscription management
 
+> **Implemented in Phase 7C**: see `subscription-management.md`. Manage subscription (active) and Manage billing (`past_due` / `unpaid`) open Stripe's Customer Portal for the account's existing Customer and return to `/account`. `/account/subscription` now redirects to `/account`. The 7B text below is kept as the record.
+
 `/account/subscription` (`src/app/account/subscription/page.tsx`, `ACCOUNT_SUBSCRIPTION_HREF`) is authenticated-only. It currently says management from the account "isn't available yet", that nothing has been changed, and how to contact Urdais. It has no form, no button, and no billing call.
 
 **Phase 7C replaces that page's implementation**, not the hub:

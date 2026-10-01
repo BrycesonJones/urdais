@@ -27,9 +27,18 @@ vi.mock("@/app/auth/actions", () => ({ signOutAction: vi.fn() }));
 vi.mock("next/navigation", () => ({ redirect }));
 vi.mock("@/components/layout/site-header", () => ({ SiteHeader: () => null }));
 vi.mock("@/components/layout/site-footer", () => ({ SiteFooter: () => null }));
+// The real button is a client component bound to the Portal Server Action. Its
+// markup is reproduced faithfully enough to assert on: a form with no fields.
+vi.mock("@/components/billing/manage-subscription-button", () => ({
+  ManageSubscriptionButton: ({ label }: { label: string }) => (
+    <form data-testid="portal-form">
+      <button type="submit">{label}</button>
+    </form>
+  ),
+}));
 
 import AccountRoute from "@/app/account/page";
-import ManageSubscriptionRoute from "@/app/account/subscription/page";
+import RetiredManageSubscriptionRoute from "@/app/account/subscription/page";
 import { actionFor, type SubscriptionPresentation } from "@/lib/account/subscription-presentation";
 
 const PROFILE = { email: "reader@example.invalid", emailVerified: true };
@@ -69,7 +78,7 @@ describe("profile", () => {
   });
 
   it("has no name, avatar, password, editable email or delete control", async () => {
-    ready({ kind: "active", priceLabel: "$80/week", endsAt: null });
+    ready({ kind: "active", priceLabel: "$80/week", cancellationScheduled: false, endsAt: null });
     const html = await render();
     expect(html).not.toMatch(/<input(?![^>]*type="hidden")/);
     for (const absent of ["password", "avatar", "username", "Delete", "delete account", "Change email"]) {
@@ -88,26 +97,38 @@ describe("subscription states", () => {
     expect(html).toMatch(/<a [^>]*href="\/access\/ready\?returnTo=%2Faccount"[^>]*>Subscribe<\/a>/);
     expect(t).not.toContain("Urdais Premium");
     expect(t).not.toContain("Manage subscription");
+    // No Customer exists; billing management must not be offered as a way to make one.
+    expect(html).not.toContain("portal-form");
   });
 
-  it("active: Urdais Premium, Active · $80/week, Manage subscription to the 7C seam", async () => {
-    ready({ kind: "active", priceLabel: "$80/week", endsAt: null });
+  it("active: Urdais Premium, Active · $80/week, Manage subscription opens the Portal", async () => {
+    ready({ kind: "active", priceLabel: "$80/week", cancellationScheduled: false, endsAt: null });
     const html = await render();
     const t = text(html);
     expect(t).toContain("Urdais Premium");
     expect(t).toContain("Active · $80/week");
     expect(t).toContain("You have premium access.");
-    expect(html).toMatch(/<a [^>]*href="\/account\/subscription"[^>]*>Manage subscription<\/a>/);
+    expect(html).toMatch(/<form data-testid="portal-form"><button type="submit">Manage subscription<\/button><\/form>/);
     // No duplicate purchase path for somebody already paying.
     expect(html).not.toContain("/access/ready");
     expect(t).not.toMatch(/Subscribe/);
   });
 
-  it("active, cancelling at period end: still Active, with the end date", async () => {
-    ready({ kind: "active", priceLabel: "$80/week", endsAt: "2026-10-08T00:00:00.000Z" });
-    const t = text(await render());
-    expect(t).toContain("Active");
-    expect(t).toContain("set to end on October 8, 2026");
+  it("cancellation scheduled: Active until the date, access not yet ended, still manageable", async () => {
+    ready({ kind: "active", priceLabel: "$80/week", cancellationScheduled: true, endsAt: "2026-10-08T00:00:00.000Z" });
+    const html = await render();
+    const t = text(html);
+    expect(html).toMatch(/data-testid="subscription-status">Active until October 8, 2026</);
+    expect(t).toContain("Cancellation scheduled. You have premium access until then.");
+    expect(t).not.toMatch(/Canceled|has ended|Subscribe/);
+    expect(t).toContain("Manage subscription");
+  });
+
+  it("cancellation scheduled without a reported date: still says access continues", async () => {
+    ready({ kind: "active", priceLabel: "$80/week", cancellationScheduled: true, endsAt: null });
+    const html = await render();
+    expect(html).toMatch(/data-testid="subscription-status">Active</);
+    expect(text(html)).toContain("until the end of the current billing period");
   });
 
   it("canceled: Canceled, access ended, Subscribe again -- the account itself remains", async () => {
@@ -120,15 +141,27 @@ describe("subscription states", () => {
     expect(html).toMatch(/<a [^>]*href="\/access\/ready\?returnTo=%2Faccount"[^>]*>Subscribe again<\/a>/);
     expect(t).not.toContain("No active subscription");
     expect(t).toContain("Sign out");
+    // One billing call to action for a canceled account: Subscribe again.
+    expect(html).not.toContain("portal-form");
   });
 
-  it("past_due: Payment issue, unavailable now, no grace period and no second Subscribe", async () => {
+  it("past_due: Payment issue, unavailable now, Manage billing -- never a second Subscribe", async () => {
     ready({ kind: "payment_issue", status: "past_due" });
     const html = await render();
     const t = text(html);
     expect(t).toContain("Payment issue");
     expect(t).toContain("Premium access is currently unavailable");
-    expect(t).not.toMatch(/grace|until|Canceled|Subscribe|Manage/);
+    expect(t).toContain("access returns once the payment succeeds");
+    expect(html).toMatch(/<form data-testid="portal-form"><button type="submit">Manage billing<\/button><\/form>/);
+    expect(t).not.toMatch(/grace|Canceled|Subscribe/);
+    expect(html).not.toContain("/access/ready");
+  });
+
+  it("incomplete: Payment issue with nothing to manage", async () => {
+    ready({ kind: "payment_issue", status: "incomplete" });
+    const html = await render();
+    expect(text(html)).toContain("first payment did not complete");
+    expect(html).not.toContain("portal-form");
     expect(html).not.toContain("/access/ready");
   });
 
@@ -175,23 +208,11 @@ describe("subscription states", () => {
   });
 });
 
-describe("the Phase 7C seam", () => {
-  it("is authenticated-only", async () => {
-    resolveSupabaseIdentity.mockResolvedValue({ kind: "anonymous", reason: "no_session" });
-    await expect(ManageSubscriptionRoute()).rejects.toThrow(
-      `NEXT_REDIRECT:/access/login?returnTo=${encodeURIComponent("/account/subscription")}`,
-    );
-  });
-
-  it("says management is not available yet, and offers no billing control", async () => {
-    resolveSupabaseIdentity.mockResolvedValue({ kind: "authenticated", identity: { subject: "s", email: "a@b.co", emailVerified: true } });
-    const html = renderToStaticMarkup(await ManageSubscriptionRoute());
-    const t = text(html);
-    expect(t).toContain("isn’t available yet");
-    expect(t).toContain("Nothing has been changed.");
-    expect(html).not.toMatch(/<form|<button|<input/);
-    expect(t).not.toMatch(/Cancel subscription|card|invoice|payment method|billing address/i);
-    expect(html).toContain('href="/account"');
+describe("the retired /account/subscription", () => {
+  it("carries an old link to the account, and launches nothing", () => {
+    // A GET that created a Portal session could be triggered by a prefetch or a
+    // crawler; management starts from the form on /account instead.
+    expect(() => RetiredManageSubscriptionRoute()).toThrow("NEXT_REDIRECT:/account");
   });
 });
 
@@ -206,10 +227,13 @@ describe("structure", () => {
     }
   });
 
-  it("reaches no Stripe and no purchase or portal action", () => {
+  it("calls no Stripe API while rendering, and offers no purchase control of its own", () => {
+    // The Portal is reached only through ManageSubscriptionButton's Server Action,
+    // on a press. Rendering /account constructs no Stripe client.
     for (const code of [page, seam]) {
-      expect(code).not.toMatch(/stripe|startCheckout|startBillingPortal|openBillingPortalAction|startCheckoutAction|SubscribeButton|ManageSubscriptionButton/i);
+      expect(code).not.toMatch(/from "stripe"|stripeContext|startCheckout|startBillingPortal|startCheckoutAction|SubscribeButton/);
     }
+    expect(seam).not.toMatch(/ManageSubscriptionButton|openBillingPortalAction/);
   });
 
   it("is not an authorization surface", () => {

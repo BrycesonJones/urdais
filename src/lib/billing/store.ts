@@ -71,6 +71,23 @@ export async function readCustomerId(sql: TokenSqlExecutor, accountId: string): 
   return typeof value === "string" && value.trim() !== "" ? value : null;
 }
 
+export const CUSTOMER_MAPPING_BY_ACCOUNT_QUERY = `
+  select stripe_customer_id, livemode
+    from identity.billing_customers
+   where account_id = $1
+`;
+
+/** The account's Customer and the Stripe mode it was created in, or null. Read-only. */
+export async function readCustomerMapping(
+  sql: TokenSqlExecutor,
+  accountId: string,
+): Promise<{ readonly stripeCustomerId: string; readonly livemode: boolean } | null> {
+  const { rows } = await sql.query(CUSTOMER_MAPPING_BY_ACCOUNT_QUERY, [accountId]);
+  const id = rows[0]?.stripe_customer_id;
+  if (typeof id !== "string" || id.trim() === "") return null;
+  return { stripeCustomerId: id, livemode: rows[0]?.livemode === true };
+}
+
 export async function readAccountIdForCustomer(sql: TokenSqlExecutor, stripeCustomerId: string): Promise<string | null> {
   const { rows } = await sql.query(ACCOUNT_BY_CUSTOMER_QUERY, [stripeCustomerId]);
   const value = rows[0]?.account_id;

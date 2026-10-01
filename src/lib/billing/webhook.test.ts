@@ -287,3 +287,56 @@ describe("the lifecycle", () => {
     expect(outcome).toMatchObject({ kind: "rejected" });
   });
 });
+
+describe("changes made in the Customer Portal", () => {
+  // The Portal changes the subscription at Stripe; Stripe sends
+  // customer.subscription.updated / .deleted to the same signed endpoint, and the
+  // handler re-reads the subscription. There is no Portal-specific path.
+  const step = async (state: Partial<Stripe.Subscription>, type = "customer.subscription.updated") => {
+    const { stripe } = stripeWith(state);
+    const sql = sqlWith();
+    const outcome = await processStripeEvent(stripe, sql, event(type, SUBSCRIPTION_OBJECT), "test");
+    const entitlementWrite = sql.statements.find((s) => s.includes("premium_entitlements")) ?? "";
+    return { outcome, granted: entitlementWrite.includes("'active'"), revoked: entitlementWrite.includes("'inactive'") };
+  };
+
+  it("active -> cancellation scheduled: stays entitled through the paid period", async () => {
+    const r = await step({ status: "active", cancel_at_period_end: true, canceled_at: 1_790_000_000 });
+    expect(r.granted).toBe(true);
+    expect(r.revoked).toBe(false);
+  });
+
+  it("scheduled -> period ends: revoked", async () => {
+    const r = await step({ status: "canceled", cancel_at_period_end: false, ended_at: 1_790_600_000 }, "customer.subscription.deleted");
+    expect(r.revoked).toBe(true);
+  });
+
+  it("scheduled -> reader resumes before the period ends: still entitled", async () => {
+    const r = await step({ status: "active", cancel_at_period_end: false, canceled_at: null });
+    expect(r.granted).toBe(true);
+  });
+
+  it("active -> past_due: revoked immediately, no grace period", async () => {
+    const r = await step({ status: "past_due" });
+    expect(r.revoked).toBe(true);
+  });
+
+  it("past_due -> active after the payment method is fixed: re-granted automatically", async () => {
+    const r = await step({ status: "active" });
+    expect(r.granted).toBe(true);
+  });
+
+  it("immediate cancellation in the Portal: revoked", async () => {
+    const r = await step({ status: "canceled", ended_at: 1_790_000_100 }, "customer.subscription.deleted");
+    expect(r.revoked).toBe(true);
+  });
+
+  it("records the scheduled-cancellation flag the Account Hub displays", async () => {
+    const { stripe } = stripeWith({ status: "active", cancel_at_period_end: true });
+    const sql = sqlWith();
+    await processStripeEvent(stripe, sql, event("customer.subscription.updated", SUBSCRIPTION_OBJECT), "test");
+    const index = sql.statements.findIndex((s) => s.includes("insert into identity.billing_subscriptions"));
+    // Parameter 6 is cancel_at_period_end, in UPSERT_SUBSCRIPTION_SQL's order.
+    expect(sql.params[index]?.[5]).toBe(true);
+  });
+});

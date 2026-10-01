@@ -31,6 +31,9 @@
  * | none                       | yes, manual        | `complimentary` |
  * | `active` / `trialing`      | yes                | `active`        |
  * | `past_due` / `unpaid` / `incomplete` | no       | `payment_issue` |
+ *
+ * (See `actionFor` for what each state offers: Subscribe, Subscribe again, Manage
+ * subscription, Manage billing, or nothing.)
  * | `paused`                   | no                 | `paused`        |
  * | `canceled`                 | no                 | `canceled`      |
  * | any non-entitling status   | yes, manual        | `complimentary` |
@@ -73,7 +76,12 @@ export type SubscriptionPresentation =
       readonly kind: "active";
       /** "$80/week", only when the subscription is on the canonical Price. */
       readonly priceLabel: string | null;
-      /** Set when cancellation is scheduled: access continues until this ISO date. */
+      /**
+       * The reader asked to cancel; Stripe keeps the subscription `active`, and the
+       * entitlement with it, until the paid period ends. Never revokes anything.
+       */
+      readonly cancellationScheduled: boolean;
+      /** When a scheduled cancellation takes effect (ISO), if Stripe reported it. */
       readonly endsAt: string | null;
     }
   /** Entitled by an operator grant, not by billing. Nothing to buy or manage. */
@@ -90,8 +98,11 @@ export type SubscriptionPresentation =
 export type AccountAction =
   /** To Plan / Pay, the canonical purchase path. */
   | { readonly kind: "subscribe"; readonly label: "Subscribe" | "Subscribe again" }
-  /** The Phase 7C seam. Performs no billing operation in 7B. */
-  | { readonly kind: "manage" };
+  /**
+   * Stripe's hosted Customer Portal, for the account's existing Customer. Never
+   * creates a Customer or a subscription.
+   */
+  | { readonly kind: "manage"; readonly label: "Manage subscription" | "Manage billing" };
 
 /** Lower sorts first: the subscription that best describes the account now. */
 function priority(status: StripeSubscriptionStatus): number {
@@ -148,6 +159,7 @@ export function presentSubscription(input: SubscriptionPresentationInput): Subsc
     return {
       kind: "active",
       priceLabel: input.canonicalPriceId !== null && current.stripePriceId === input.canonicalPriceId ? formatPremiumPrice() : null,
+      cancellationScheduled: current.cancelAtPeriodEnd,
       endsAt: current.cancelAtPeriodEnd ? current.currentPeriodEnd : null,
     };
   }
@@ -177,10 +189,19 @@ export function actionFor(presentation: SubscriptionPresentation): AccountAction
     case "canceled":
       return { kind: "subscribe", label: "Subscribe again" };
     case "active":
-      return { kind: "manage" };
-    // `payment_issue` and `paused` deliberately offer no Subscribe: a second
-    // Checkout beside a live subscription is a duplicate subscription. Recovering
-    // the existing one is subscription management, which is Phase 7C.
+      return { kind: "manage", label: "Manage subscription" };
+    case "payment_issue":
+      // Payment-issue accounts recover through billing management, not by creating
+      // a second subscription. `past_due` and `unpaid` still have a live
+      // subscription with an open invoice: fixing the payment method in the Portal
+      // lets Stripe collect it, the webhook moves the status back to `active`, and
+      // the entitlement is re-granted. `incomplete` is a first payment that never
+      // completed and expires on its own within a day; the Portal has nothing to
+      // recover there, so it is offered nothing.
+      return presentation.status === "incomplete" ? null : { kind: "manage", label: "Manage billing" };
+    // `paused` cannot arise in Urdais today (no trials, no pausing configured), and
+    // the Portal cannot resume a paused subscription, so there is nothing honest to
+    // offer. A Subscribe beside it would be a duplicate subscription.
     default:
       return null;
   }

@@ -260,6 +260,8 @@ Event and object `livemode` flags are both checked on every webhook.
 
 Stripe Customer Portal, server-created, Customer derived from the authenticated account. Urdais builds no card-management UI and no cancel button of its own — each would be a second place billing state is presented, and the one that is wrong is always the one the customer read. Offered on `/access/subscribed`, and only where Stripe is reachable, so an operator comp with no Stripe customer is not shown a button that could only fail.
 
+> **Phase 7C**: management moved to `/account` (Manage subscription / Manage billing), and the Portal returns there. `/access/subscribed` links to the account instead of opening the Portal. See `subscription-management.md`.
+
 ---
 
 ## 12. Environment variables

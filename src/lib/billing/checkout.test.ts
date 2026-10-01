@@ -15,7 +15,8 @@ const resolveViewer = vi.hoisted(() => vi.fn());
 const resolveTokenDatabaseUrl = vi.hoisted(() => vi.fn());
 const tokenSqlExecutor = vi.hoisted(() => vi.fn());
 const resolveStripeCustomerId = vi.hoisted(() => vi.fn());
-const readCustomerId = vi.hoisted(() => vi.fn());
+const readCustomerMapping = vi.hoisted(() => vi.fn());
+const resolveUrdaisAccount = vi.hoisted(() => vi.fn());
 const sessionsCreate = vi.hoisted(() => vi.fn());
 const pricesRetrieve = vi.hoisted(() => vi.fn());
 const portalCreate = vi.hoisted(() => vi.fn());
@@ -26,10 +27,11 @@ vi.mock("@/lib/auth/identity", () => ({ resolveSupabaseIdentity }));
 vi.mock("@/lib/access/server", () => ({ resolveViewer }));
 vi.mock("@/lib/tokens/read/database", () => ({ resolveTokenDatabaseUrl, tokenSqlExecutor }));
 vi.mock("@/lib/billing/customers", () => ({ resolveStripeCustomerId }));
-vi.mock("@/lib/billing/store", () => ({ readCustomerId }));
+vi.mock("@/lib/billing/store", () => ({ readCustomerMapping }));
+vi.mock("@/lib/auth/accounts", () => ({ resolveUrdaisAccount }));
 vi.mock("@/lib/billing/stripe", () => ({ stripeContext }));
 
-import { checkoutCancelUrl, checkoutSuccessUrl, startBillingPortal, startCheckout } from "@/lib/billing/checkout";
+import { checkoutCancelUrl, checkoutSuccessUrl, portalReturnUrl, startBillingPortal, startCheckout } from "@/lib/billing/checkout";
 
 const PRICE_ID = "price_canonical";
 
@@ -45,7 +47,7 @@ function goodPrice() {
 }
 
 beforeEach(() => {
-  for (const m of [resolveCheckoutHandoff, resolveSupabaseIdentity, resolveViewer, resolveTokenDatabaseUrl, tokenSqlExecutor, resolveStripeCustomerId, readCustomerId, sessionsCreate, pricesRetrieve, portalCreate, stripeContext]) {
+  for (const m of [resolveCheckoutHandoff, resolveSupabaseIdentity, resolveViewer, resolveTokenDatabaseUrl, tokenSqlExecutor, resolveStripeCustomerId, readCustomerMapping, resolveUrdaisAccount, sessionsCreate, pricesRetrieve, portalCreate, stripeContext]) {
     m.mockReset();
   }
   resolveCheckoutHandoff.mockResolvedValue({ kind: "ready", accountId: "acct_1", returnTo: "/markets/power-analytics" });
@@ -170,29 +172,105 @@ describe("the return destinations", () => {
 });
 
 describe("the customer portal", () => {
-  it("opens against the account's own mapped Customer", async () => {
-    resolveViewer.mockResolvedValue({ authentication: { kind: "authenticated", accountId: "acct_1", emailVerified: true }, premiumEntitlement: null });
-    readCustomerId.mockResolvedValue("cus_mapped");
+  // The session belongs to account acct_1, which owns cus_mapped (test mode).
+  function signedInWithCustomer(mapping: { stripeCustomerId: string; livemode: boolean } | null = { stripeCustomerId: "cus_mapped", livemode: false }) {
+    resolveSupabaseIdentity.mockResolvedValue({ kind: "authenticated", identity: { subject: "u1", email: "reader@example.invalid", emailVerified: true } });
+    resolveUrdaisAccount.mockResolvedValue({ id: "acct_1", email: "reader@example.invalid" });
+    readCustomerMapping.mockResolvedValue(mapping);
     portalCreate.mockResolvedValue({ url: "https://billing.stripe.com/p/session/x" });
+  }
 
-    const outcome = await startBillingPortal("/markets/power-analytics");
+  it("opens against the account's own mapped Customer, returning to /account", async () => {
+    signedInWithCustomer();
+    const outcome = await startBillingPortal();
 
     expect(outcome).toEqual({ kind: "redirect", url: "https://billing.stripe.com/p/session/x" });
-    expect(portalCreate.mock.calls[0]?.[0]?.customer).toBe("cus_mapped");
+    expect(portalCreate).toHaveBeenCalledOnce();
+    expect(portalCreate.mock.calls[0]?.[0]).toEqual({ customer: "cus_mapped", return_url: portalReturnUrl() });
+    expect(new URL(portalReturnUrl()).pathname).toBe("/account");
   });
 
-  it("refuses an anonymous reader", async () => {
-    resolveViewer.mockResolvedValue({ authentication: { kind: "anonymous" }, premiumEntitlement: null });
-    expect((await startBillingPortal(null)).kind).toBe("refused");
+  it("resolves the Customer from the session's account, never from anything else", async () => {
+    signedInWithCustomer();
+    await startBillingPortal();
+    expect(resolveUrdaisAccount.mock.calls[0]?.[1]).toEqual({ subject: "u1", email: "reader@example.invalid", emailVerified: true });
+    expect(readCustomerMapping.mock.calls[0]?.[1]).toBe("acct_1");
+    // It takes no arguments: there is no parameter through which a Customer, an
+    // account or a return target could arrive.
+    expect(startBillingPortal.length).toBe(0);
+  });
+
+  it("returns to the account on the deployment's own origin, whatever the request", () => {
+    const url = new URL(portalReturnUrl());
+    expect(url.pathname).toBe("/account");
+    expect(url.search).toBe("");
+  });
+
+  it("refuses an anonymous reader and reads nothing", async () => {
+    resolveSupabaseIdentity.mockResolvedValue({ kind: "anonymous", reason: "no_session" });
+    expect(await startBillingPortal()).toEqual({ kind: "refused", reason: "anonymous" });
+    expect(readCustomerMapping).not.toHaveBeenCalled();
     expect(portalCreate).not.toHaveBeenCalled();
   });
 
-  it("refuses an account with no Stripe customer rather than inventing one", async () => {
-    // An operator comp has an entitlement and no Stripe customer; opening a portal
-    // for it would have to guess which Customer to show.
-    resolveViewer.mockResolvedValue({ authentication: { kind: "authenticated", accountId: "acct_1", emailVerified: true }, premiumEntitlement: null });
-    readCustomerId.mockResolvedValue(null);
-    expect((await startBillingPortal(null)).kind).toBe("refused");
+  it("refuses an account with no Stripe Customer, and never creates one", async () => {
+    // A never-subscribed account, or an operator comp: there is no Customer, and
+    // "managing billing" is not a reason to make one.
+    signedInWithCustomer(null);
+    expect(await startBillingPortal()).toEqual({ kind: "refused", reason: "no_customer" });
+    expect(resolveStripeCustomerId).not.toHaveBeenCalled();
     expect(portalCreate).not.toHaveBeenCalled();
+  });
+
+  it("refuses a Customer from the other Stripe mode", async () => {
+    signedInWithCustomer({ stripeCustomerId: "cus_live", livemode: true });
+    expect(await startBillingPortal()).toEqual({ kind: "refused", reason: "mode_mismatch" });
+    expect(portalCreate).not.toHaveBeenCalled();
+  });
+
+  it("reports billing being unconfigured without reading the account", async () => {
+    signedInWithCustomer();
+    stripeContext.mockReturnValue({ kind: "unavailable", availability: { kind: "unavailable", environment: "development", reason: "not_configured" } });
+    expect((await startBillingPortal()).kind).toBe("unavailable");
+    expect(portalCreate).not.toHaveBeenCalled();
+  });
+
+  it("reports a database failure as unavailable, not as anonymous or no-customer", async () => {
+    signedInWithCustomer();
+    resolveUrdaisAccount.mockRejectedValue(new Error("connection reset"));
+    expect((await startBillingPortal()).kind).toBe("unavailable");
+    resolveTokenDatabaseUrl.mockReturnValue(null);
+    expect((await startBillingPortal()).kind).toBe("unavailable");
+    expect(portalCreate).not.toHaveBeenCalled();
+  });
+
+  it("reports Stripe refusing the session, and does not retry with another Customer", async () => {
+    signedInWithCustomer();
+    portalCreate.mockRejectedValue(Object.assign(new Error("No configuration provided"), { code: "resource_missing" }));
+    const outcome = await startBillingPortal();
+    expect(outcome.kind).toBe("unavailable");
+    expect(outcome.kind === "unavailable" && outcome.detail).toContain("resource_missing");
+    expect(portalCreate).toHaveBeenCalledOnce();
+    expect(resolveStripeCustomerId).not.toHaveBeenCalled();
+  });
+
+  it("reports a session with no URL as unavailable", async () => {
+    signedInWithCustomer();
+    portalCreate.mockResolvedValue({ url: null });
+    expect((await startBillingPortal()).kind).toBe("unavailable");
+  });
+
+  it("opens one session per press and writes nothing", async () => {
+    // Repeated opens: one Portal session each, and nothing else -- no Customer, no
+    // Checkout, no SQL beyond the account read the mocks stand in for.
+    signedInWithCustomer();
+    const query = vi.fn().mockResolvedValue({ rows: [] });
+    tokenSqlExecutor.mockResolvedValue({ query });
+    await startBillingPortal();
+    await startBillingPortal();
+    expect(portalCreate).toHaveBeenCalledTimes(2);
+    expect(resolveStripeCustomerId).not.toHaveBeenCalled();
+    expect(sessionsCreate).not.toHaveBeenCalled();
+    expect(query).not.toHaveBeenCalled();
   });
 });

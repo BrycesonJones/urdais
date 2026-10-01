@@ -3,9 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
-import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
-import { billingAvailability } from "@/lib/billing/mode";
-import { MARKETS_HREF } from "@/lib/routes";
+import { ACCOUNT_HREF, MARKETS_HREF } from "@/lib/routes";
 import { onboardingReturnTo } from "@/lib/onboarding/routes";
 import { resolveOnboarding } from "@/lib/onboarding/server";
 
@@ -27,6 +25,12 @@ export const dynamic = "force-dynamic";
  * So there is deliberately no signup, no login, no verification prompt and no
  * checkout action here. The only thing offered is the way onward, using the
  * destination they arrived with where there is one.
+ *
+ * Still part of the purchase journey: `/access/complete` and every "already
+ * entitled" redirect land here, carrying the reader's destination. Since Phase 7C
+ * it is no longer a billing-management home -- `/account` is the only one, and
+ * the Portal returns there -- so this page links to the account rather than
+ * opening the Portal itself.
  */
 export default async function AlreadySubscribedRoute({
   searchParams,
@@ -41,11 +45,6 @@ export default async function AlreadySubscribedRoute({
 
   const destination = returnTo ?? MARKETS_HREF;
 
-  // The portal is offered only where Stripe is actually reachable. An operator comp
-  // on a deployment with no billing configured has an entitlement and no Stripe
-  // customer, and a button that could only fail is worse than its absence.
-  const billing = billingAvailability();
-
   return (
     <OnboardingShell
       eyebrow="FULL ACCESS"
@@ -59,11 +58,16 @@ export default async function AlreadySubscribedRoute({
         {returnTo ? "Continue to where you were" : "Continue to Urdais"}
       </Link>
 
-      {billing.kind === "available" ? (
-        <div className="border-t border-white/10 pt-5">
-          <ManageSubscriptionButton returnTo={returnTo} />
-        </div>
-      ) : null}
+      <p className="border-t border-white/10 pt-5 text-xs text-neutral-500">
+        Manage your subscription from{" "}
+        <Link
+          href={ACCOUNT_HREF}
+          className="text-neutral-300 underline underline-offset-2 transition-colors hover:text-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
+        >
+          your account
+        </Link>
+        .
+      </p>
     </OnboardingShell>
   );
 }
