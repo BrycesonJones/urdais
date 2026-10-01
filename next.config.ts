@@ -2,6 +2,23 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pg"],
+  experimental: {
+    // Off: authentication freshness outranks development fetch reuse. With this
+    // cache on (Next's development default), a hot reload re-renders open tabs
+    // with every Server Component fetch answered from the previous render --
+    // including Supabase's `GET /auth/v1/user`. After an account deletion, a tab
+    // still holding the deleted user's unexpired token was handed that user's old
+    // 200, resolved as authenticated without Supabase being asked, and
+    // `resolveUrdaisAccount` recreated the deleted account (reproduced in Phase 7D
+    // verification; see docs/architecture/account-deletion.md §11).
+    //
+    // A per-request opt-out does not exist: Next 16.3.4 reads and fills this
+    // cache whatever the fetch's `cache` / `revalidate` options say, and the only
+    // bypass (`next: { internal: true }`) is private. Turning the cache off makes
+    // Next attach none to any request, so every auth lookup reaches Supabase.
+    // Pinned by src/lib/auth/deleted-identity-replay.test.ts.
+    serverComponentsHmrCache: false,
+  },
   images: {
     // Urdais references a publisher's own image URL and never stores or
     // re-serves the bytes, so news thumbnails render `unoptimized` (see
