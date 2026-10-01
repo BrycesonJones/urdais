@@ -19,7 +19,7 @@
 import { WAVE1_SOURCE_INTERFACES } from "@/lib/tokens/catalog";
 import { loadPricingFixture } from "@/lib/tokens/fixtures";
 import { ingestTokenPricing } from "@/lib/tokens/ingest";
-import { constituentInForce, isEligibleLeg, methodologyInForce, tokenBenchmarkPrice, withholdingFor } from "@/lib/tokens/read/benchmark";
+import { constituentInForce, isEligibleLeg, methodologyForConstituent, methodologyInForce, tokenBenchmarkPrice, withholdingFor } from "@/lib/tokens/read/benchmark";
 import { loadPersistedBenchmarks, persistProviderBenchmarks, type PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
 import { persistVerificationEvents, resolveRetrievalIds, type PersistableVerificationEvent } from "@/lib/tokens/read/verification-events";
 import { tokenReadCatalogFromStore } from "@/lib/tokens/read/load";
@@ -57,7 +57,7 @@ export function verifyProviderProduction(input: ProductionVerificationInput): { 
   const onDate = input.onDate ?? input.verification.verifiedAt.slice(0, 10);
   const constituent = constituentInForce(input.provider, onDate);
   if (!constituent) throw new VerificationMismatchError(`${input.provider}: no benchmark model is designated on ${onDate}`);
-  const methodology = methodologyInForce(onDate);
+  const methodology = methodologyForConstituent(constituent, onDate);
   if (!methodology) throw new VerificationMismatchError(`no methodology version is in force on ${onDate}`);
 
   const fixture = loadPricingFixture(input.provider);

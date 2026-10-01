@@ -78,6 +78,31 @@ export function methodologyInForce(onDate: string): TokenPriceMethodologyVersion
   )[0];
 }
 
+/**
+ * The version a designated constituent's value is calculated under on a date.
+ *
+ * The rule is still the date's: a value carries the version in force on its
+ * own calculation date. But 1.0, 1.1 and 1.2 all take effect on 14 September,
+ * so on that date three versions are in force at once and `methodologyInForce`
+ * can only pick one by number. Anthropic, OpenAI and Grok 4.6 were designated
+ * under 1.1, and their 14 September values are 1.1 values; labelling them 1.2
+ * because 1.2 shares the date would assert a version they were never computed
+ * under. Where the constituent's own version is among those in force on the
+ * date, it is the one; otherwise the date's version stands unchanged.
+ */
+export function methodologyForConstituent(
+  constituent: Pick<TokenBenchmarkConstituent, "methodologyVersion">,
+  onDate: string,
+): TokenPriceMethodologyVersion | undefined {
+  const inForce = methodologyInForce(onDate);
+  if (inForce === undefined) return undefined;
+  return (
+    TOKEN_PRICE_METHODOLOGY_VERSIONS.find(
+      (row) => row.version === constituent.methodologyVersion && row.effectiveFrom === inForce.effectiveFrom,
+    ) ?? inForce
+  );
+}
+
 /** The current workload, for display and for tests. Historical values use the version in force on their own date. */
 export const TOKEN_PRICE_WORKLOAD = {
   inputTokens: 500_000,

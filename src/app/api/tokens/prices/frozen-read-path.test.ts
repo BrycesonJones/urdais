@@ -138,12 +138,14 @@ describe("GET /api/tokens/prices serves the frozen record", () => {
   });
 
   it("keeps the methodology version a row was frozen under", async () => {
-    const anthropic = PRODUCTION.filter((row) => row.provider === "anthropic");
+    // The calculator now labels this row 1.1 as well, so agreement alone would not show which
+    // source answered. A row frozen under 1.0 -- also in force on 14 September -- does: the
+    // calculator would never produce it, and the API must serve it anyway.
+    const anthropic = PRODUCTION.filter((row) => row.provider === "anthropic").map((row) => ({ ...row, version: "1.0" }));
     seed(anthropic);
-    // Not vacuous: the same observations recalculated are labelled 1.2.
-    expect(visibleTokenBenchmarks(database.catalog!).find((row) => row.providerSlug === "anthropic")?.methodologyVersion).toBe("1.2");
+    expect(visibleTokenBenchmarks(database.catalog!).find((row) => row.providerSlug === "anthropic")?.methodologyVersion).toBe("1.1");
 
-    expect(bySlug(await api(), "anthropic")?.methodologyVersion).toBe("1.1");
+    expect(bySlug(await api(), "anthropic")?.methodologyVersion).toBe("1.0");
   });
 
   it("keeps the frozen value when a later raw leg would recalculate it", async () => {
