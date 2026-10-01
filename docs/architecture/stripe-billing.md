@@ -228,6 +228,8 @@ Asking to cancel is not the same as having stopped paying, and Stripe keeps the 
 
 Verified against real Stripe: setting `cancel_at_period_end: true` recorded the flag and **kept the entitlement active**; cancelling for real revoked it.
 
+The Customer Portal schedules the same outcome differently: `cancel_at` = period end with `cancel_at_period_end: false` (observed 1 October 2026). The entitlement is still correct, because status is its only input. Presentation follow-up: `account-deletion.md` §10.
+
 ---
 
 ## 9. Reconciliation

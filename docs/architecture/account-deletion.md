@@ -18,7 +18,7 @@
 
 | | Cancel subscription (Customer Portal, 7C) | Delete account (7D) |
 | --- | --- | --- |
-| When it takes effect | end of the paid period (`cancel_at_period_end`) | now |
+| When it takes effect | end of the paid period (the Portal sets `cancel_at`; see §11) | now |
 | Premium access | kept until the period ends | ends now |
 | Unused paid time | used | **forfeited**, no refund, no proration |
 | Already-issued unpaid invoice | unchanged | **not forgiven or voided**; stays open, automatic collection stops (§5) |
@@ -125,7 +125,7 @@ complete    auth_subject and account_id nulled
 
 ---
 
-## 5. Open invoices after cancellation (verified from Stripe documentation)
+## 5. Open invoices after cancellation (verified in Stripe test mode)
 
 Stripe documents that cancelling a subscription "disables creating new invoices and stops automatic collection of all outstanding invoices from the subscription". Its `open` and `draft` invoices get `auto_advance = false`, which pauses automatic collection and reminder emails. The invoice is **not voided**: it stays open and can still be paid or collected manually.
 
@@ -136,7 +136,7 @@ So after deletion:
 
 The confirmation page says this to `past_due` / `unpaid` readers only. Urdais does not void, refund or mark anything uncollectible.
 
-*Evidence:* Stripe's cancellation documentation, read through search results; the documentation hosts and `api.stripe.com` are unreachable from the 7D build environment. This has **not** been reproduced in Stripe test mode. §9 gives the test-mode check.
+*Evidence:* reproduced in Stripe test mode on 1 October 2026 with a test clock (§11, scenario 3). After deletion the renewal invoice stayed `open` with `auto_advance=false`, `next_payment_attempt` null and the full amount outstanding. Advancing the clock three weeks through the retry window produced no further charge attempt, PaymentIntent or invoice.
 
 ---
 
@@ -157,6 +157,8 @@ Duplicate events are refused by the ledger's primary key. Stale events are refus
 A new sign-up after deletion is a new Supabase user (new subject), and so a new `identity.accounts` row. It has no entitlement, no subscriptions, and no Customer: the detached Customer can never be re-attached, so the first Checkout creates a new one through the normal path. Email is never used to infer ownership of history.
 
 While a deletion is unfinished, `resolveUrdaisAccount` refuses to provision a new account for that identity (`AccountDeletionPendingError`). `resolveViewer` turns that into anonymous, which denies premium, and the hub shows "Account deletion in progress — Finish deleting account".
+
+After completion, nothing in Urdais remembers the deleted subject. A browser still holding that user's unexpired token is refused only because `getUser()` asks Supabase, which answers `user_not_found`. That answer must therefore always be fresh: a replayed earlier success recreates the account (§11, "Recreated accounts"). `next.config.ts` disables Next's development HMR fetch cache for this reason.
 
 ---
 
@@ -210,6 +212,8 @@ With **test** keys (`sk_test_…`), a test Price, and the UrdaisDev project:
 3. Use a test clock and card `…0341` to reach `past_due`. Delete. Confirm the subscription is `canceled` and the open invoice still `open` with `auto_advance=false`. Advance the clock and confirm no charge attempt.
 4. Confirm `/account` is anonymous, the Auth user is gone in the UrdaisDev dashboard, and a new sign-up with the same email gets a new account and, at Checkout, a new Customer.
 
+Run on 1 October 2026; all four pass. Results are in §11.
+
 ---
 
 ## 10. Open questions (not decided here)
@@ -217,3 +221,84 @@ With **test** keys (`sk_test_…`), a test Price, and the UrdaisDev project:
 - Legal/accounting retention period for detached billing rows and completed deletion records.
 - Whether Stripe Customer email should eventually be redacted at Stripe for deleted accounts. It is untouched by decision in 7D.
 - Whether an outstanding invoice should ever be written off for deleted accounts. It is not, by decision in 7D.
+
+Follow-ups recorded outside 7D (§11):
+- **7C scheduled-cancellation presentation.** Stripe's Portal schedules end-of-period cancellation as `cancel_at` with `cancel_at_period_end: false`. `/account` reads only `cancel_at_period_end`, so it shows that state as plain Active. The fix should recognise both representations, because `cancel_at_period_end: true` has also been observed through the API.
+- **Deleted-identity tombstone (defense in depth).** A keyed, one-way digest of provider + Auth subject, kept after completion and checked by provisioning alongside the in-flight guard. Completed deletion would then permanently refuse that historical identity, without retaining a readable subject. Same-email sign-up stays allowed, because a new Supabase user gets a new subject. Needs its own review of key management, retention, collisions and recreation behaviour.
+
+---
+
+## 11. External verification (1 October 2026)
+
+Run locally against **UrdaisDev** and the **Urdais Stripe sandbox** (API version `2026-08-26.dahlia`). The app was configured in `test` mode for `development`. UrdaisProd, live Stripe and the Phase 6 Customer were not touched. Migration `20261026100000` was applied to UrdaisDev with `supabase db push` after a version-by-version ledger diff (131 → 132, nothing else pending, nothing database-only). Browser steps used the real UI; Stripe, database and Auth state were read directly. Accounts A–F were disposable test identities.
+
+### Lifecycle results
+
+| # | Scenario | Result |
+| --- | --- | --- |
+| 1 | Active subscription (A) | Subscription `canceled` at the deletion instant, reason `cancellation_requested`. No proration line, no new invoice, no pending items, balance 0. Deletion record went `requested` → `complete` in about 2.2 s on attempt 1. |
+| 2 | Portal-scheduled cancellation (B) | See "Portal scheduled cancellation" below. Deletion cancelled it **immediately** (`ended_at` = deletion time, `cancel_at` cleared). Stripe refuses an upcoming-invoice preview for it. No refund, credit note or proration. |
+| 3 | `past_due` (C, test clock, card `…0341`) | Subscription `canceled`. Renewal invoice stays `open`, `auto_advance=false`, `next_payment_attempt` null, full amount remaining. Clock advanced three weeks: `attempt_count` stayed 1, no new charge, PaymentIntent or invoice. The confirmation page showed the unpaid-invoice copy, and the hub showed "Payment issue". |
+| 4 | Already canceled (D) | No Stripe cancellation call during deletion. Billing reached `billing_terminated` by verification alone. |
+| — | Never subscribed | No Stripe Customer, no Stripe call, `complete` in about 0.6 s. |
+
+In every billed case the Stripe Customer was **retained**. Only `urdais_account_id` was removed from its metadata, between `billing_terminated` and `local_cleanup_complete`. Locally, the Customer and subscription rows were kept with `account_id` null and `detached_at` set. The entitlement, account, Auth user and **all Auth sessions** were removed.
+
+### Portal scheduled cancellation (observed)
+
+On this API version the Customer Portal's "cancel at end of period" produced `status: active`, **`cancel_at_period_end: false`**, `cancel_at` = `current_period_end`, `canceled_at` set, reason `cancellation_requested`. The entitlement correctly stayed active, since status is its only input. Deletion is unaffected: it cancels every non-terminal subscription regardless of either field. The 7C presentation gap this exposes is recorded in §10.
+
+### Auth, sessions and recovery
+
+- **Step-up.** Inside 15 minutes the confirmation was offered directly. Past 15 minutes, reloading `/account/delete` asked for a code, and verifying it returned to the confirmation.
+- **Other sessions.** Supabase Admin deletion removed the user and every session. A second browser holding a still-valid access token resolved anonymous: `getUser()` returned `403 user_not_found`. Once that token had expired, the proxy's refresh got `refresh_token_not_found` and the cookies were cleared.
+- **Partial failure.** With a deliberately invalid (well-formed) `SUPABASE_SECRET_KEY`, deletion stopped at `local_cleanup_complete` with `last_error = auth_admin_error`, and showed the "subscription canceled … couldn't finish" message. The hub showed "Account deletion in progress — Finish deleting account". With the key restored, **Finish** completed on attempt 2 without repeating any Stripe call. The fault was a local environment change only and was reverted.
+- **Same-email recreation.** A new sign-up with A's address got a new Auth user id, a new account and, at Checkout, a **new** Stripe Customer. A's Customer stayed detached with no subscriptions.
+
+### Webhooks
+
+- **Concurrent.** `customer.subscription.deleted` arriving between `billing_terminated` and local cleanup was stored with the entitlement **withheld**.
+- **Late.** With the listener stopped during C's deletion, the real event was delivered after the account was gone. It was stored detached (`past_due` → `canceled`), with no account and no entitlement.
+- **Idempotent.** Redelivering an already-processed event returned 200 with no ledger or state change. A tampered signature returned 400.
+
+### Recreated accounts after deletion (found and fixed)
+
+**What happened.** Two accounts were recreated for already-deleted Auth subjects:
+- **B**, at 14:51:35 UTC, about 21 minutes after B's deletion completed. This was unexplained at the time.
+- **E**, at 16:27:03 UTC, during a deliberate reproduction.
+
+Both rows are kept in UrdaisDev as evidence. Neither has billing or an entitlement.
+
+**What the evidence showed for E.** A temporary forensic trigger on `identity.accounts` (UrdaisDev only, not a migration, since removed) captured the writes:
+
+| # | UTC | Write | Writer |
+| --- | --- | --- | --- |
+| 1 | 16:22:30.746 | INSERT (E signs up) | app's pooled backend, pid 1895017 |
+| 2 | 16:27:03.872 | INSERT (E recreated after deletion) | same backend |
+| 3 | 16:27:03.920 | UPDATE (concurrent render, conflict path) | same backend |
+| 4 | 16:50:02.556 | INSERT (F signs up) | app's pooled backend, pid 1897203 |
+
+All four writes used `resolveUrdaisAccount`'s own upsert statement. No external writer appeared. Supabase Auth logs show every `/auth/v1/user` call for E's token after deletion returned `403 user_not_found`, and none was made before write 2.
+
+**Root cause.** The rows were written by `resolveUrdaisAccount`, called with a stale identity that Supabase never vouched for:
+1. The write coincided with a Next.js **development hot reload**, which re-rendered a tab still holding E's unexpired token.
+2. Next's Server Components HMR cache (`experimental.serverComponentsHmrCache`, on by default in dev) answered `getUser()`'s `GET /auth/v1/user` with the **200 stored while E existed**, without contacting Supabase.
+3. With no account row and no in-flight deletion, provisioning inserted a new row.
+
+In Next 16.3.4 that cache ignores the fetch's `cache` / `revalidate` options, and the only per-request bypass (`next: { internal: true }`) is private.
+
+**What wasn't affected.** Deployed (non-dev) builds don't use this cache. The deletion itself had completed correctly.
+
+**Fix.** `next.config.ts` sets `experimental.serverComponentsHmrCache: false`, so no request gets an HMR cache and every Auth lookup reaches Supabase. `getUser()` remains the authority; JWT claims are not substituted for it. `src/lib/auth/deleted-identity-replay.test.ts` drives Next's real patched fetch and request-cache decision with this config, and the real `resolveViewer` on `user_not_found`.
+
+**Verification of the fix.** Repeated with a fresh account F:
+- The setup matched E: two sessions, and the stale tab loaded `/account` while F existed.
+- F was then deleted, and a hot reload was triggered the same way.
+- Every render with F's still-valid token got a fresh `user_not_found` and resolved anonymous. `resolveUrdaisAccount` was never called, and no row or forensic write appeared.
+
+**B.** Consistent with the same mechanism but not independently proven:
+- Same insert-then-update pattern.
+- The write came before any `/user` response in its burst, and all of B's `/user` calls returned 403.
+- An unexplained session-mode PostgreSQL connection appears near it in the logs. That is correlation only, not shown to be the writer.
+
+**Defense in depth.** Provisioning currently relies entirely on Supabase rejecting a deleted subject. The tombstone follow-up in §10 would refuse it independently.

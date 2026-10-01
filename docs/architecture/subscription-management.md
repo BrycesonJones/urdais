@@ -89,6 +89,8 @@ Verified end to end against a real local Postgres, using the real `processStripe
 
 Throughout: one customer row and one subscription row; events append-only.
 
+> **Observed in Phase 7D verification (1 October 2026, Stripe API `2026-08-26.dahlia`):** the real Portal's "cancel at period end" sets `cancel_at` = `current_period_end` and leaves `cancel_at_period_end: false`. The hub reads only `cancel_at_period_end`, so it shows that state as plain Active rather than "Cancellation scheduled". The entitlement is unaffected. The follow-up is to recognise both representations (see `account-deletion.md` §10).
+
 `cancel_at_period_end` is recorded, displayed, and **never** an entitlement input. Payment-method changes alone do not change subscription status, so they produce no entitlement change. Their effect arrives when Stripe's retry succeeds and the status moves.
 
 ---
