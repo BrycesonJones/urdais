@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { signOutAction } from "@/app/auth/actions";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
-import { resolveViewer } from "@/lib/access/server";
-import { resolveSupabaseIdentity } from "@/lib/auth/identity";
+import { formatPremiumPrice } from "@/lib/access/pricing";
+import { resolveAccountHub, type AccountProfile } from "@/lib/account/hub";
+import { ACCOUNT_PLAN_NAME, type AccountAction, type SubscriptionPresentation } from "@/lib/account/subscription-presentation";
 import { onboardingHref } from "@/lib/onboarding/routes";
-import { ACCOUNT_HREF } from "@/lib/routes";
+import { ACCOUNT_HREF, ACCOUNT_SUBSCRIPTION_HREF } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Account",
@@ -16,58 +18,168 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 /**
- * `/account` — PHASE 7A PLACEHOLDER. Phase 7B replaces this page with the account
- * hub for identity and subscription status.
+ * `/account` — the Account Hub.
  *
- * It exists now for one reason: the header's account icon must never send a
- * signed-in reader through sign-in again. So this page does exactly two things:
+ * The reader's Urdais account: who they are signed in as, and what their
+ * subscription is doing. Two sections, Profile and Subscription, and nothing else.
  *
- *   - an anonymous reader is sent to sign in, with this page as the destination;
- *   - a signed-in reader is told they are signed in, and can sign out.
+ * Everything comes from `resolveAccountHub`, server-side. Nothing is read from the
+ * request -- no account id, no Stripe id, no status -- so there is no input that
+ * could point this page at somebody else's account.
  *
- * Deliberately absent until Phase 7B: profile fields, subscription status, billing,
- * Stripe, and any wording that depends on entitlement. A reader with an active
- * subscription, a canceled one, a `past_due` one or none at all sees the same page,
- * because they all have the same thing here -- a valid Urdais account. Account
- * identity and premium entitlement are separate; being refused premium is never a
- * reason to sign in again.
+ * ## What it is not
  *
- * The decision is the server's: `resolveViewer` is the same authoritative session ->
- * account lookup every premium surface uses. Nothing is read from the request.
+ * - **Not authorization.** The subscription section displays billing state;
+ *   whether premium products open is decided by the entitlement, through
+ *   `canAccess`, on every premium surface. Nothing rendered here grants anything.
+ * - **Not a billing surface.** Viewing it makes no Stripe call and writes no
+ *   billing state. Subscribe links to Plan / Pay, the canonical purchase path;
+ *   Manage subscription is the Phase 7C seam at `/account/subscription`.
+ * - **Not account lifecycle.** There is no Delete account. Phase 7D.
+ *
+ * An authenticated account without premium is a valid Urdais account, and this
+ * page treats it as one: it is never sent to sign in, and never to Plan / Pay
+ * merely for lacking premium.
  */
 export default async function AccountRoute() {
-  const viewer = await resolveViewer();
-  if (viewer.authentication.kind !== "authenticated") redirect(onboardingHref("login", ACCOUNT_HREF));
-
-  // The address for display only, from the Auth server -- the same source the email
-  // challenge uses. Absent for an account with no email, in which case it is omitted.
-  const identity = await resolveSupabaseIdentity();
-  const email = identity.kind === "authenticated" ? identity.identity.email : null;
+  const hub = await resolveAccountHub();
+  if (hub.kind === "anonymous") redirect(onboardingHref("login", ACCOUNT_HREF));
 
   return (
     <OnboardingShell title="Account">
-      <p className="text-sm text-neutral-300">
-        {email ? (
-          <>
-            You&rsquo;re signed in as <span className="font-medium break-all text-neutral-50">{email}</span>.
-          </>
-        ) : (
-          <>You&rsquo;re signed in.</>
-        )}
-      </p>
+      <ProfileSection profile={hub.profile} />
+      {hub.kind === "ready" ? (
+        <SubscriptionSection subscription={hub.subscription} action={hub.action} />
+      ) : (
+        <SubscriptionSection subscription={{ kind: "unavailable", reason: "read_failed" }} action={null} />
+      )}
+    </OnboardingShell>
+  );
+}
 
-      {/*
-        No `returnTo`: signing out lands on the home page, which is public and so
-        cannot bounce the reader into a sign-in screen.
-      */}
+const sectionHeading = "text-xs font-semibold tracking-[0.18em] text-neutral-400 uppercase";
+const linkFocus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]";
+
+function ProfileSection({ profile }: { profile: AccountProfile }) {
+  return (
+    <section aria-labelledby="account-profile" className="flex flex-col gap-4">
+      <h2 id="account-profile" className={sectionHeading}>
+        Profile
+      </h2>
+
+      <dl className="flex flex-col gap-1">
+        <dt className="text-xs text-neutral-500">Email</dt>
+        <dd className="flex flex-wrap items-baseline gap-x-2 text-sm text-neutral-100">
+          <span className="font-medium break-all">{profile.email ?? "No email on this account"}</span>
+          {profile.email ? (
+            <span className="text-xs text-neutral-500">{profile.emailVerified ? "Verified" : "Not verified"}</span>
+          ) : null}
+        </dd>
+      </dl>
+
+      {/* No `returnTo`: signing out lands on the public home page, which cannot loop. */}
       <form action={signOutAction}>
         <button
           type="submit"
-          className="rounded-md border border-white/15 px-4 py-2.5 text-sm font-medium text-neutral-100 transition-colors hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
+          className={`rounded-md border border-white/15 px-3.5 py-2 text-sm text-neutral-200 transition-colors hover:bg-white/5 hover:text-neutral-50 ${linkFocus}`}
         >
           Sign out
         </button>
       </form>
-    </OnboardingShell>
+    </section>
+  );
+}
+
+/** Status words and the sentence under them, one entry per presentation state. */
+function describe(subscription: SubscriptionPresentation): { plan: boolean; status: string; detail: string } {
+  switch (subscription.kind) {
+    case "none":
+      return {
+        plan: false,
+        status: "No active subscription",
+        detail: `Get full access to Urdais premium products for ${formatPremiumPrice()}.`,
+      };
+    case "active":
+      return {
+        plan: true,
+        status: "Active",
+        detail: subscription.endsAt
+          ? `Your subscription is set to end on ${formatDate(subscription.endsAt)}. You have premium access until then.`
+          : "You have premium access.",
+      };
+    case "complimentary":
+      return { plan: true, status: "Active", detail: "Premium access is included with your account." };
+    case "canceled":
+      return { plan: true, status: "Canceled", detail: "Your premium access has ended." };
+    case "payment_issue":
+      return {
+        plan: true,
+        status: "Payment issue",
+        detail: "Premium access is currently unavailable because the latest payment did not go through.",
+      };
+    case "paused":
+      return { plan: true, status: "Paused", detail: "Premium access is currently unavailable." };
+    case "unavailable":
+      return {
+        plan: false,
+        status: "Status unavailable",
+        detail: "We couldn’t load your subscription right now. Nothing about it has changed. Try again shortly.",
+      };
+  }
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
+}
+
+function SubscriptionSection({ subscription, action }: { subscription: SubscriptionPresentation; action: AccountAction | null }) {
+  const { plan, status, detail } = describe(subscription);
+  const price = subscription.kind === "active" ? subscription.priceLabel : null;
+
+  return (
+    <section aria-labelledby="account-subscription" className="flex flex-col gap-4 border-t border-white/10 pt-6">
+      <h2 id="account-subscription" className={sectionHeading}>
+        Subscription
+      </h2>
+
+      <div className="flex flex-col gap-1">
+        {plan ? <p className="text-sm font-medium text-neutral-50">{ACCOUNT_PLAN_NAME}</p> : null}
+        <p className="text-sm text-neutral-100">
+          {/* Status is words, never a colour alone. */}
+          <span data-testid="subscription-status">{status}</span>
+          {price ? <span className="text-neutral-400"> · {price}</span> : null}
+        </p>
+        <p className="mt-1 text-sm text-neutral-400">{detail}</p>
+      </div>
+
+      {action ? <ActionControl action={action} /> : null}
+    </section>
+  );
+}
+
+function ActionControl({ action }: { action: AccountAction }) {
+  if (action.kind === "subscribe") {
+    // A link, not a form: it goes to Plan / Pay, which quotes the price and holds
+    // the canonical Subscribe control. Nothing is created until the reader presses
+    // that. Plan / Pay is addressed directly because `/access?returnTo=/account`
+    // sends a signed-in reader back here.
+    return (
+      <Link
+        href={onboardingHref("ready_for_checkout", ACCOUNT_HREF)}
+        className={`self-start rounded-md bg-[#526fe0] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#6480e8] ${linkFocus}`}
+      >
+        {action.label}
+      </Link>
+    );
+  }
+
+  // Phase 7C replaces the destination's implementation, not this control.
+  return (
+    <Link
+      href={ACCOUNT_SUBSCRIPTION_HREF}
+      className={`self-start rounded-md border border-white/15 px-4 py-2 text-sm text-neutral-100 transition-colors hover:bg-white/5 ${linkFocus}`}
+    >
+      Manage subscription
+    </Link>
   );
 }

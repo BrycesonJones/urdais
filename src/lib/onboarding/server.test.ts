@@ -215,7 +215,16 @@ describe("signing in to the account rather than to buy access", () => {
       expect(entry.kind === "redirect" && entry.href, lookalike).toBe(`/access/ready?returnTo=${encodeURIComponent(lookalike)}`);
     }
     const withQuery = await resolveOnboardingEntry("/account?tab=x");
-    expect(withQuery.kind === "redirect" && withQuery.href).toBe("/account");
+    expect(withQuery.kind === "redirect" && withQuery.href).toBe("/account?tab=x");
+  });
+
+  it("treats a route beneath /account as account intent too, and returns there", async () => {
+    // Phase 7B: signing in from `/account/subscription` lands back on it, not Plan / Pay.
+    for (const setup of [verified, subscriber, lapsed]) {
+      setup();
+      const entry = await resolveOnboardingEntry("/account/subscription");
+      expect(entry.kind === "redirect" && entry.href).toBe("/account/subscription");
+    }
   });
 
   it("still renders the checkout boundary for a signed-in reader who asked for it", async () => {

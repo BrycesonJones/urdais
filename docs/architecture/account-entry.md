@@ -104,6 +104,8 @@ Every redirect target is a state its viewer can render, so none bounces: `/accou
 
 ## 5. `/account` — Phase 7A placeholder
 
+> **Superseded in Phase 7B** by the Account Hub — see `account-hub.md`. Kept below as the record of what 7A shipped.
+
 `src/app/account/page.tsx`. Server-rendered, `force-dynamic`, `noindex`.
 
 - anonymous → `redirect("/access/login?returnTo=%2Faccount")`;

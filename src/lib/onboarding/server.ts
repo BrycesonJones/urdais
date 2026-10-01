@@ -55,12 +55,18 @@ export async function resolveOnboarding(
 /**
  * Whether the reader's destination is their account rather than a premium page.
  *
- * Only the exact path counts, with or without a query or fragment. `returnTo` has
- * already been through `safeReturnTo` by the time it gets here.
+ * `/account` itself or a route beneath it (`/account/subscription`), with or
+ * without a query or fragment -- but not a lookalike such as `/accounts`.
+ * `returnTo` has already been through `safeReturnTo` by the time it gets here.
  */
 function isAccountDestination(returnTo: string | null): boolean {
   if (!returnTo) return false;
-  return returnTo === ACCOUNT_HREF || returnTo.startsWith(`${ACCOUNT_HREF}?`) || returnTo.startsWith(`${ACCOUNT_HREF}#`);
+  return (
+    returnTo === ACCOUNT_HREF ||
+    returnTo.startsWith(`${ACCOUNT_HREF}/`) ||
+    returnTo.startsWith(`${ACCOUNT_HREF}?`) ||
+    returnTo.startsWith(`${ACCOUNT_HREF}#`)
+  );
 }
 
 /**
@@ -78,8 +84,8 @@ function isAccountDestination(returnTo: string | null): boolean {
  * entitlement has a valid account and is never sent back through sign-in for it.
  */
 function redirectHref(viewer: Viewer, target: OnboardingState, returnTo: string | null): string {
-  if (viewer.authentication.kind === "authenticated" && target !== "email_challenge" && isAccountDestination(returnTo)) {
-    return ACCOUNT_HREF;
+  if (viewer.authentication.kind === "authenticated" && target !== "email_challenge" && returnTo && isAccountDestination(returnTo)) {
+    return returnTo;
   }
   return onboardingHref(target, returnTo);
 }
