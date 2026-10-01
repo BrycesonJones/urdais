@@ -21,6 +21,7 @@ import { redirect } from "next/navigation";
 import { startBillingPortal, startCheckout } from "@/lib/billing/checkout";
 import { safeReturnTo } from "@/lib/auth/return-to";
 import { onboardingHref } from "@/lib/onboarding/routes";
+import { ACCOUNT_HREF } from "@/lib/routes";
 import type { AuthFormState } from "@/app/auth/form-state";
 
 function field(formData: FormData, name: string): string {
@@ -61,20 +62,35 @@ export async function startCheckoutAction(_previous: AuthFormState, formData: Fo
 }
 
 /**
- * Open the Stripe Customer Portal, where a subscriber cancels or changes a card.
+ * Open the Stripe Customer Portal: "Manage subscription" and "Manage billing".
  *
- * The Customer is derived from the session inside `startBillingPortal`. Nothing
- * about which Stripe Customer to open is read from this form.
+ * Reads nothing from the form -- not an account, not a Customer, not a return
+ * target. `startBillingPortal` derives the Customer from the session and always
+ * returns the reader to `/account`.
+ *
+ * Every failure stays on the account page with a short, true message. None of
+ * them falls back to Checkout or creates a Customer: a reader with a payment
+ * problem must fix the subscription they have, not be sold a second one.
  */
-export async function openBillingPortalAction(_previous: AuthFormState, formData: FormData): Promise<AuthFormState> {
-  const returnTo = safeReturnTo(field(formData, "returnTo"));
-  const outcome = await startBillingPortal(returnTo);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- the shape `useActionState` requires; nothing is read from the submission.
+export async function openBillingPortalAction(_previous: AuthFormState, _formData: FormData): Promise<AuthFormState> {
+  const outcome = await startBillingPortal();
 
+  // Stripe's own Portal URL, never one assembled here.
   if (outcome.kind === "redirect") redirect(outcome.url);
 
-  console.error(`billing portal unavailable: ${outcome.detail}`);
+  // The session ended between rendering the page and pressing the button.
+  if (outcome.kind === "refused" && outcome.reason === "anonymous") redirect(onboardingHref("login", ACCOUNT_HREF));
+
+  if (outcome.kind === "refused" && outcome.reason === "no_customer") {
+    return { status: "error", message: "There is no billing account to manage yet. Nothing has been changed." };
+  }
+
+  // Unavailable or a mode mismatch. The detail is for the log: it can name a
+  // configuration fault, which means nothing to the reader.
+  console.error(`billing portal unavailable: ${outcome.kind === "refused" ? outcome.reason : outcome.detail}`);
   return {
     status: "error",
-    message: "Subscription management is not available right now. Nothing has been changed.",
+    message: "Billing management isn\u2019t available right now. Nothing has been changed. Try again shortly.",
   };
 }

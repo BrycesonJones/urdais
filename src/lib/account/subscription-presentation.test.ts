@@ -47,8 +47,8 @@ describe("the four named states", () => {
 
   it("active: an entitling subscription the entitlement agrees with, at the canonical price", () => {
     const p = presentSubscription(reconciled("active"));
-    expect(p).toEqual({ kind: "active", priceLabel: "$80/week", endsAt: null });
-    expect(actionFor(p)).toEqual({ kind: "manage" });
+    expect(p).toEqual({ kind: "active", priceLabel: "$80/week", cancellationScheduled: false, endsAt: null });
+    expect(actionFor(p)).toEqual({ kind: "manage", label: "Manage subscription" });
   });
 
   it("canceled: history exists, so it is not 'never subscribed'", () => {
@@ -60,6 +60,8 @@ describe("the four named states", () => {
   it("past_due: a payment issue, not a cancellation, and denied", () => {
     const p = presentSubscription(reconciled("past_due"));
     expect(p).toEqual({ kind: "payment_issue", status: "past_due" });
+    // Phase 7C: recovery through billing management, never a second Checkout.
+    expect(actionFor(p)).toEqual({ kind: "manage", label: "Manage billing" });
   });
 });
 
@@ -93,11 +95,29 @@ describe("every status Stripe and the schema allow", () => {
     }
   });
 
-  it("offers management only to an active subscription", () => {
+  it("offers Manage subscription to an entitled subscription and Manage billing to a recoverable payment issue", () => {
+    const expectedAction: Record<string, string | null> = {
+      active: "Manage subscription",
+      trialing: "Manage subscription",
+      past_due: "Manage billing",
+      unpaid: "Manage billing",
+      // A first payment that never completed expires by itself; nothing to manage.
+      incomplete: null,
+      // Cannot arise today, and the Portal cannot resume it.
+      paused: null,
+      canceled: "Subscribe again",
+      incomplete_expired: "Subscribe",
+    };
     for (const status of STRIPE_SUBSCRIPTION_STATUSES) {
       const action = actionFor(presentSubscription(reconciled(status)));
-      expect(action?.kind === "manage", status).toBe(statusEntitles(status));
+      expect(action ? action.label : null, status).toBe(expectedAction[status]);
     }
+  });
+
+  it("never offers billing management to an account that has never subscribed or holds only an operator grant", () => {
+    // No Stripe Customer exists for either; management must not be a way to make one.
+    expect(actionFor(presentSubscription(input({})))?.kind).toBe("subscribe");
+    expect(actionFor(presentSubscription(input({ entitlementGrants: true, entitlementSource: "manual" })))).toBeNull();
   });
 });
 
@@ -151,7 +171,7 @@ describe("details", () => {
     // The Phase 6 validation subscription was on a $1 Price: quoting $80 for it
     // would have been a lie.
     const other = presentSubscription(input({ subscriptions: [row("active", { stripePriceId: "price_validation" })], entitlementGrants: true }));
-    expect(other).toEqual({ kind: "active", priceLabel: null, endsAt: null });
+    expect(other).toEqual({ kind: "active", priceLabel: null, cancellationScheduled: false, endsAt: null });
     const unconfigured = presentSubscription(input({ subscriptions: [row("active")], entitlementGrants: true, canonicalPriceId: null }));
     expect(unconfigured.kind === "active" && unconfigured.priceLabel).toBeNull();
   });
@@ -159,7 +179,15 @@ describe("details", () => {
   it("keeps a scheduled cancellation Active until the period ends", () => {
     // The entitlement policy ignores cancel_at_period_end; so does the label.
     const p = presentSubscription(input({ subscriptions: [row("active", { cancelAtPeriodEnd: true })], entitlementGrants: true }));
-    expect(p).toEqual({ kind: "active", priceLabel: "$80/week", endsAt: "2026-10-08T00:00:00.000Z" });
+    expect(p).toEqual({ kind: "active", priceLabel: "$80/week", cancellationScheduled: true, endsAt: "2026-10-08T00:00:00.000Z" });
+    expect(actionFor(p)).toEqual({ kind: "manage", label: "Manage subscription" });
+  });
+
+  it("knows a cancellation is scheduled even when Stripe reported no period end", () => {
+    const p = presentSubscription(
+      input({ subscriptions: [row("active", { cancelAtPeriodEnd: true, currentPeriodEnd: null })], entitlementGrants: true }),
+    );
+    expect(p).toEqual({ kind: "active", priceLabel: "$80/week", cancellationScheduled: true, endsAt: null });
   });
 
   it("describes the live subscription when there is history too", () => {

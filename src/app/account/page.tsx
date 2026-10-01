@@ -3,12 +3,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { signOutAction } from "@/app/auth/actions";
+import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { formatPremiumPrice } from "@/lib/access/pricing";
 import { resolveAccountHub, type AccountProfile } from "@/lib/account/hub";
 import { ACCOUNT_PLAN_NAME, type AccountAction, type SubscriptionPresentation } from "@/lib/account/subscription-presentation";
 import { onboardingHref } from "@/lib/onboarding/routes";
-import { ACCOUNT_HREF, ACCOUNT_SUBSCRIPTION_HREF } from "@/lib/routes";
+import { ACCOUNT_HREF } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Account",
@@ -32,9 +33,12 @@ export const dynamic = "force-dynamic";
  * - **Not authorization.** The subscription section displays billing state;
  *   whether premium products open is decided by the entitlement, through
  *   `canAccess`, on every premium surface. Nothing rendered here grants anything.
- * - **Not a billing surface.** Viewing it makes no Stripe call and writes no
- *   billing state. Subscribe links to Plan / Pay, the canonical purchase path;
- *   Manage subscription is the Phase 7C seam at `/account/subscription`.
+ * - **Not a billing UI.** Viewing it makes no Stripe call and writes no billing
+ *   state. Subscribe links to Plan / Pay, the canonical purchase path. Manage
+ *   subscription / Manage billing open Stripe's hosted Customer Portal for the
+ *   account's existing Customer (`openBillingPortalAction`), which returns here.
+ *   Returning from the Portal changes nothing by itself: this page reads the
+ *   webhook-reconciled state, and the entitlement decides access.
  * - **Not account lifecycle.** There is no Delete account. Phase 7D.
  *
  * An authenticated account without premium is a valid Urdais account, and this
@@ -100,13 +104,18 @@ function describe(subscription: SubscriptionPresentation): { plan: boolean; stat
         detail: `Get full access to Urdais premium products for ${formatPremiumPrice()}.`,
       };
     case "active":
-      return {
-        plan: true,
-        status: "Active",
-        detail: subscription.endsAt
-          ? `Your subscription is set to end on ${formatDate(subscription.endsAt)}. You have premium access until then.`
-          : "You have premium access.",
-      };
+      if (subscription.cancellationScheduled) {
+        // Still entitled: Stripe keeps the subscription active until the paid
+        // period ends, and so does the entitlement. Access has not ended yet.
+        return {
+          plan: true,
+          status: subscription.endsAt ? `Active until ${formatDate(subscription.endsAt)}` : "Active",
+          detail: subscription.endsAt
+            ? "Cancellation scheduled. You have premium access until then."
+            : "Cancellation scheduled. You have premium access until the end of the current billing period.",
+        };
+      }
+      return { plan: true, status: "Active", detail: "You have premium access." };
     case "complimentary":
       return { plan: true, status: "Active", detail: "Premium access is included with your account." };
     case "canceled":
@@ -115,7 +124,10 @@ function describe(subscription: SubscriptionPresentation): { plan: boolean; stat
       return {
         plan: true,
         status: "Payment issue",
-        detail: "Premium access is currently unavailable because the latest payment did not go through.",
+        detail:
+          subscription.status === "incomplete"
+            ? "Premium access is currently unavailable because the first payment did not complete."
+            : "Premium access is currently unavailable because the latest payment did not go through. Update your payment method in billing management; access returns once the payment succeeds.",
       };
     case "paused":
       return { plan: true, status: "Paused", detail: "Premium access is currently unavailable." };
@@ -173,13 +185,7 @@ function ActionControl({ action }: { action: AccountAction }) {
     );
   }
 
-  // Phase 7C replaces the destination's implementation, not this control.
-  return (
-    <Link
-      href={ACCOUNT_SUBSCRIPTION_HREF}
-      className={`self-start rounded-md border border-white/15 px-4 py-2 text-sm text-neutral-100 transition-colors hover:bg-white/5 ${linkFocus}`}
-    >
-      Manage subscription
-    </Link>
-  );
+  // Stripe's hosted Portal for this account's existing Customer, resolved on the
+  // server. Returns to /account.
+  return <ManageSubscriptionButton label={action.label} />;
 }

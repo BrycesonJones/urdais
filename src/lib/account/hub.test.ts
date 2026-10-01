@@ -107,7 +107,7 @@ describe("states", () => {
     entitlement("active");
     subscriptionRows = [{ status: "active", stripe_price_id: "price_canonical", cancel_at_period_end: false, current_period_end: new Date("2026-10-08T00:00:00Z") }];
     const hub = await resolveAccountHub();
-    expect(hub.kind === "ready" && hub.subscription).toEqual({ kind: "active", priceLabel: "$80/week", endsAt: null });
+    expect(hub.kind === "ready" && hub.subscription).toEqual({ kind: "active", priceLabel: "$80/week", cancellationScheduled: false, endsAt: null });
   });
 
   it("canceled, with a revoked entitlement", async () => {
@@ -125,7 +125,7 @@ describe("states", () => {
     subscriptionRows = [{ status: "past_due", stripe_price_id: "price_canonical", cancel_at_period_end: false, current_period_end: null }];
     const hub = await resolveAccountHub();
     expect(hub.kind === "ready" && hub.subscription).toEqual({ kind: "payment_issue", status: "past_due" });
-    expect(hub.kind === "ready" && hub.action).toBeNull();
+    expect(hub.kind === "ready" && hub.action).toEqual({ kind: "manage", label: "Manage billing" });
   });
 });
 
@@ -165,7 +165,7 @@ describe("failure is not absence", () => {
     const hub = await resolveAccountHub();
     // Active, from the reconciled table; only the price label, which needs the
     // configured Price to verify, is withheld.
-    expect(hub.kind === "ready" && hub.subscription).toEqual({ kind: "active", priceLabel: null, endsAt: null });
+    expect(hub.kind === "ready" && hub.subscription).toEqual({ kind: "active", priceLabel: null, cancellationScheduled: false, endsAt: null });
   });
 });
 

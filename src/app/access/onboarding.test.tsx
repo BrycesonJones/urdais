@@ -407,6 +407,16 @@ describe("the checkout boundary and the subscriber screen are unchanged", () => 
     expect(html.toLowerCase()).not.toContain("create your account");
     expect(html.toLowerCase()).not.toContain("checkout");
   });
+
+  it("sends a subscriber to /account to manage billing, rather than being a second management home", async () => {
+    // Phase 7C: /account is the one place billing is managed from, and the Portal
+    // returns there. This page stays in the purchase journey and links onward.
+    renderGate(subscriberViewer("acct-1"), "already_entitled");
+    const html = renderToStaticMarkup(await AlreadySubscribedRoute({ searchParams: params({ returnTo: "/markets/power-analytics" }) }));
+    expect(html).toMatch(/<a [^>]*href="\/account"[^>]*>your account<\/a>/);
+    expect(html).not.toMatch(/Manage subscription<\/button>|<form/);
+    expect(html).toContain('href="/markets/power-analytics"');
+  });
 });
 
 describe("what onboarding cannot do, asserted across the whole surface", () => {

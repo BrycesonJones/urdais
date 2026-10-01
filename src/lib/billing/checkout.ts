@@ -28,13 +28,14 @@ import { env } from "@/config/env";
 import { PREMIUM_PRICE } from "@/lib/access/pricing";
 import { METADATA_ACCOUNT_ID, catalogMetadata, describePriceMismatch } from "@/lib/billing/catalog";
 import { resolveStripeCustomerId } from "@/lib/billing/customers";
-import { describeUnavailability } from "@/lib/billing/mode";
+import { describeUnavailability, livemodeMatches } from "@/lib/billing/mode";
 import { stripeContext } from "@/lib/billing/stripe";
 import { resolveCheckoutHandoff } from "@/lib/onboarding/checkout-handoff";
-import { onboardingHref, onboardingReturnTo } from "@/lib/onboarding/routes";
+import { onboardingHref } from "@/lib/onboarding/routes";
 import { resolveSupabaseIdentity } from "@/lib/auth/identity";
-import { resolveViewer } from "@/lib/access/server";
-import { readCustomerId } from "@/lib/billing/store";
+import { resolveUrdaisAccount } from "@/lib/auth/accounts";
+import { readCustomerMapping } from "@/lib/billing/store";
+import { ACCOUNT_HREF } from "@/lib/routes";
 import { resolveTokenDatabaseUrl } from "@/lib/tokens/read/database";
 import { tokenSqlExecutor } from "@/lib/tokens/read/database";
 
@@ -124,40 +125,89 @@ export async function startCheckout(returnTo?: string | null): Promise<CheckoutS
 
 /* -------------------------------------------------------------- the portal */
 
+/**
+ * Where Stripe's Customer Portal sends the reader back: the Account Hub, always.
+ *
+ * Fixed rather than carried from the request. Billing management starts and ends
+ * at the account, so there is no destination to preserve -- and a return target
+ * nobody can supply is one nobody can turn into an open redirect. Built from the
+ * deployment's own origin, never the request's `Host`.
+ *
+ * Returning here proves nothing. The page reads the webhook-reconciled state like
+ * any other visit; arriving from Stripe grants and revokes nothing.
+ */
+export function portalReturnUrl(): string {
+  return new URL(ACCOUNT_HREF, env.appUrl).toString();
+}
+
 export type PortalStart =
   | { readonly kind: "redirect"; readonly url: string }
-  | { readonly kind: "refused"; readonly detail: string };
+  /** The reader may not open a Portal. Nothing was created. */
+  | { readonly kind: "refused"; readonly reason: "anonymous" | "no_customer" | "mode_mismatch" }
+  /** Billing, the database or Stripe could not be reached. Nothing was created or changed. */
+  | { readonly kind: "unavailable"; readonly detail: string };
 
 /**
- * A Stripe Customer Portal session for the current reader.
+ * A Stripe Customer Portal session for the current reader. The one Portal primitive.
  *
- * The Customer is looked up from the authenticated account's mapping row — never
- * taken from the request. A portal session created against a Customer id supplied
- * by the browser would hand one reader another's invoices, payment methods and
- * cancel button, which is the worst version of this bug.
+ * Customer Portal access always resolves the Stripe Customer from the
+ * authenticated Urdais account server-side:
  *
- * Stripe hosts it, so Urdais builds no card-management UI and stores no card data.
- * Cancellation, payment-method changes and invoice history all live there; Urdais
- * learns the outcome from the webhook like any other change.
+ *   session -> Supabase identity -> Urdais account -> `identity.billing_customers`
+ *
+ * Nothing about which account or Customer to open is read from the request. A
+ * Portal opened against a browser-supplied Customer id would hand one reader
+ * another's invoices, payment methods and cancel button.
+ *
+ * It **never creates a Customer**. An account with no mapping -- one that has
+ * never been to Checkout -- is refused, not repaired: a Customer is created only
+ * at the purchase boundary, inside `startCheckout`. And it never creates a
+ * subscription, which is why it is the recovery path for a payment issue: the
+ * reader fixes the existing subscription instead of buying a second one.
+ *
+ * The mapping's `livemode` must match this deployment's Stripe mode, so a test
+ * deployment cannot open a live Customer's Portal or the reverse.
+ *
+ * Stripe hosts the Portal, so Urdais builds no card-management UI and stores no
+ * card data. Cancellation, payment methods and invoices live there; Urdais learns
+ * the outcome from the signed webhook like any other change.
  */
-export async function startBillingPortal(returnTo?: string | null): Promise<PortalStart> {
-  const viewer = await resolveViewer();
-  if (viewer.authentication.kind !== "authenticated") return { kind: "refused", detail: "not authenticated" };
+export async function startBillingPortal(): Promise<PortalStart> {
+  const identity = await resolveSupabaseIdentity();
+  if (identity.kind !== "authenticated") return { kind: "refused", reason: "anonymous" };
 
   const context = stripeContext();
-  if (context.kind === "unavailable") return { kind: "refused", detail: describeUnavailability(context.availability) };
+  if (context.kind === "unavailable") return { kind: "unavailable", detail: describeUnavailability(context.availability) };
 
-  const databaseUrl = resolveTokenDatabaseUrl();
-  if (!databaseUrl) return { kind: "refused", detail: "no database is configured" };
-  const sql = await tokenSqlExecutor(databaseUrl);
+  let mapping: Awaited<ReturnType<typeof readCustomerMapping>>;
+  try {
+    const databaseUrl = resolveTokenDatabaseUrl();
+    if (!databaseUrl) return { kind: "unavailable", detail: "no database is configured" };
+    const sql = await tokenSqlExecutor(databaseUrl);
+    // The same account resolution every authenticated surface uses.
+    const account = await resolveUrdaisAccount(sql, identity.identity);
+    mapping = await readCustomerMapping(sql, account.id);
+  } catch (error) {
+    return { kind: "unavailable", detail: `account or customer could not be read: ${error instanceof Error ? error.name : "error"}` };
+  }
 
-  const customerId = await readCustomerId(sql, viewer.authentication.accountId);
-  if (!customerId) return { kind: "refused", detail: "this account has no Stripe customer" };
+  if (!mapping) return { kind: "refused", reason: "no_customer" };
+  if (!livemodeMatches(mapping.livemode, context.availability.mode)) return { kind: "refused", reason: "mode_mismatch" };
 
-  const session = await context.stripe.billingPortal.sessions.create({
-    customer: customerId,
-    return_url: new URL(onboardingHref("already_entitled", onboardingReturnTo(returnTo)), env.appUrl).toString(),
-  });
+  let url: string | null | undefined;
+  try {
+    const session = await context.stripe.billingPortal.sessions.create({
+      customer: mapping.stripeCustomerId,
+      return_url: portalReturnUrl(),
+    });
+    url = session.url;
+  } catch (error) {
+    // Stripe rejected the session or could not be reached. Reported, never retried
+    // with a different Customer.
+    const code = (error as { code?: unknown })?.code;
+    return { kind: "unavailable", detail: `portal session refused by Stripe: ${typeof code === "string" ? code : error instanceof Error ? error.name : "error"}` };
+  }
 
-  return { kind: "redirect", url: session.url };
+  if (!url) return { kind: "unavailable", detail: "Stripe returned a portal session with no URL" };
+  return { kind: "redirect", url };
 }
