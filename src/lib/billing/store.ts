@@ -29,6 +29,16 @@
  * the last one stored, so a late `updated` cannot resurrect stale access after a
  * `deleted`. That comparison is in the `on conflict … where`, not in application
  * code, so a concurrent pair of handlers cannot both pass it.
+ *
+ * ## A deleted account is terminal (Phase 7D)
+ *
+ * Account deletion retains billing history *detached*: `account_id` null,
+ * `detached_at` set, never re-attachable (schema constraint). A late Stripe event
+ * for such an account is recorded, its subscription stored detached, and **no
+ * entitlement is written** -- and it answers success, so Stripe does not retry.
+ * The same holds for an account whose deletion has passed billing termination:
+ * its subscription is stored, its entitlement is withheld. Nothing here can
+ * create an account, and no later event can restore access to a deleted one.
  */
 
 import type { TokenSqlExecutor } from "@/lib/tokens/read/sql";
@@ -37,6 +47,9 @@ import { snapshotEntitles } from "@/lib/billing/subscription-state";
 
 /* ------------------------------------------------------------------ customers */
 
+// Detached rows have a null account_id, so `account_id = $1` only ever reads a
+// live mapping; and `account_id is not null` keeps a detached Customer from
+// naming an account.
 export const CUSTOMER_BY_ACCOUNT_QUERY = `
   select stripe_customer_id
     from identity.billing_customers
@@ -47,6 +60,7 @@ export const ACCOUNT_BY_CUSTOMER_QUERY = `
   select account_id
     from identity.billing_customers
    where stripe_customer_id = $1
+     and account_id is not null
 `;
 
 /**
@@ -61,7 +75,7 @@ export const ACCOUNT_BY_CUSTOMER_QUERY = `
 export const CLAIM_CUSTOMER_SQL = `
   insert into identity.billing_customers (account_id, stripe_customer_id, livemode)
   values ($1, $2, $3)
-  on conflict (account_id) do nothing
+  on conflict (account_id) where account_id is not null do nothing
   returning stripe_customer_id
 `;
 
@@ -161,11 +175,14 @@ export async function claimEvent(
 export const UPSERT_SUBSCRIPTION_SQL = `
   insert into identity.billing_subscriptions (
     stripe_subscription_id, account_id, stripe_customer_id, status, stripe_price_id,
-    cancel_at_period_end, current_period_end, canceled_at, ended_at, livemode, last_event_at
+    cancel_at_period_end, current_period_end, canceled_at, ended_at, livemode, last_event_at, detached_at
   )
-  values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+  values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, case when $2::uuid is null then now() end)
   on conflict (stripe_subscription_id) do update set
-    account_id           = excluded.account_id,
+    -- A detached row stays detached: no event can attach history to an account.
+    account_id           = case when identity.billing_subscriptions.detached_at is not null then null
+                                else excluded.account_id end,
+    detached_at          = coalesce(identity.billing_subscriptions.detached_at, excluded.detached_at),
     stripe_customer_id   = excluded.stripe_customer_id,
     status               = excluded.status,
     stripe_price_id      = excluded.stripe_price_id,
@@ -184,7 +201,8 @@ export type SubscriptionWrite = "applied" | "stale";
 
 export async function upsertSubscription(
   sql: TokenSqlExecutor,
-  accountId: string,
+  /** Null stores the subscription detached: its account no longer exists. */
+  accountId: string | null,
   snapshot: BillingSubscriptionSnapshot,
   eventAt: string | null,
 ): Promise<SubscriptionWrite> {
@@ -248,6 +266,25 @@ export const REVOKE_ENTITLEMENT_SQL = `
     revoked_at         = greatest(now(), coalesce(identity.premium_entitlements.granted_at, now()))
 `;
 
+/**
+ * Revoke an account's entitlement because the account is being deleted (Phase 7D).
+ *
+ * Called in the same transaction that records billing termination, after Stripe
+ * has confirmed nothing can bill. Whatever the source -- Stripe or an operator
+ * comp -- a deleted account keeps no authorization. Lives here so this module
+ * stays the only writer of `premium_entitlements`.
+ */
+export const REVOKE_FOR_DELETION_SQL = `
+  update identity.premium_entitlements
+     set status = 'inactive',
+         revoked_at = greatest(now(), coalesce(granted_at, now()))
+   where account_id = $1 and status = 'active'
+`;
+
+export async function revokeEntitlementForDeletion(sql: TokenSqlExecutor, accountId: string): Promise<void> {
+  await sql.query(REVOKE_FOR_DELETION_SQL, [accountId]);
+}
+
 export async function writeEntitlementFor(
   sql: TokenSqlExecutor,
   accountId: string,
@@ -264,9 +301,33 @@ export async function writeEntitlementFor(
 /* ------------------------------------------------------- the atomic operation */
 
 export type ApplyOutcome =
-  | { readonly kind: "applied"; readonly entitlement: "granted" | "revoked" }
+  /**
+   * Stored. `withheld`: the account was deleted (row stored detached) or is past
+   * billing termination in a deletion, so no entitlement was written.
+   */
+  | { readonly kind: "applied"; readonly entitlement: "granted" | "revoked" | "withheld" }
   | { readonly kind: "duplicate" }
-  | { readonly kind: "stale" };
+  | { readonly kind: "stale" }
+  /** No account and no retained Customer to hang the subscription on. Nothing written. */
+  | { readonly kind: "unattributable" };
+
+/** Locks the account row against concurrent deletion for the rest of the transaction. */
+export const ACCOUNT_EXISTS_FOR_EVENT_SQL = `
+  select id from identity.accounts where id = $1 for key share
+`;
+
+/**
+ * The account's deletion state, locked. A deletion advancing past `requested`
+ * (which revokes the entitlement in the same transaction) waits for this event's
+ * transaction to finish, so a grant can never land after that revocation.
+ */
+export const DELETION_STATE_FOR_EVENT_SQL = `
+  select state from identity.account_deletions where account_id = $1 for share
+`;
+
+export const RETAINED_CUSTOMER_EXISTS_SQL = `
+  select 1 from identity.billing_customers where stripe_customer_id = $1 and livemode = $2
+`;
 
 /**
  * Record the event, store the subscription and move the entitlement — atomically.
@@ -278,7 +339,8 @@ export type ApplyOutcome =
 export async function applySubscriptionEvent(
   sql: TokenSqlExecutor,
   input: {
-    readonly accountId: string;
+    /** The account the event names, or null when none could be named. */
+    readonly accountId: string | null;
     readonly snapshot: BillingSubscriptionSnapshot;
     readonly event: { readonly id: string; readonly type: string; readonly livemode: boolean; readonly createdAt: string };
   },
@@ -300,7 +362,33 @@ export async function applySubscriptionEvent(
       return { kind: "duplicate" };
     }
 
-    const write = await upsertSubscription(sql, input.accountId, input.snapshot, input.event.createdAt);
+    // Is the named account still there, and may it be granted?
+    let attachedTo: string | null = null;
+    let grantable = false;
+    if (input.accountId) {
+      const { rows } = await sql.query(ACCOUNT_EXISTS_FOR_EVENT_SQL, [input.accountId]);
+      if (rows.length > 0) {
+        attachedTo = input.accountId;
+        const deletion = await sql.query(DELETION_STATE_FOR_EVENT_SQL, [input.accountId]);
+        const state = deletion.rows[0]?.state;
+        // Before billing termination the account is an ordinary account. After it,
+        // a deleted account is a terminal authorization state.
+        grantable = state === undefined || state === "requested";
+      }
+    }
+
+    if (!attachedTo) {
+      // Deleted (or never known). Recordable only against a retained Customer --
+      // the subscription FK needs one, and without one there is nothing to attach
+      // history to.
+      const { rows } = await sql.query(RETAINED_CUSTOMER_EXISTS_SQL, [input.snapshot.stripeCustomerId, input.snapshot.livemode]);
+      if (rows.length === 0) {
+        await sql.query("rollback", []);
+        return { kind: "unattributable" };
+      }
+    }
+
+    const write = await upsertSubscription(sql, attachedTo, input.snapshot, input.event.createdAt);
 
     if (write === "stale") {
       // A newer event already described this subscription. The event is recorded
@@ -310,7 +398,12 @@ export async function applySubscriptionEvent(
       return { kind: "stale" };
     }
 
-    const entitlement = await writeEntitlementFor(sql, input.accountId, input.snapshot);
+    if (!attachedTo || !grantable) {
+      await sql.query("commit", []);
+      return { kind: "applied", entitlement: "withheld" };
+    }
+
+    const entitlement = await writeEntitlementFor(sql, attachedTo, input.snapshot);
     await sql.query("commit", []);
     return { kind: "applied", entitlement };
   } catch (error) {

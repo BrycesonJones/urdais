@@ -103,6 +103,8 @@ function describe(outcome: ApplyOutcome, subscriptionId: string): string {
       return `event already processed for ${subscriptionId}`;
     case "stale":
       return `event older than stored state for ${subscriptionId}, no change`;
+    case "unattributable":
+      return `no Urdais account or retained customer for subscription ${subscriptionId}`;
   }
 }
 
@@ -177,13 +179,11 @@ export async function processStripeEvent(
   // The customer comes from the snapshot -- i.e. from the re-fetch -- not from the
   // event payload. The payload's copy could be stale for the same reason its status
   // could be.
+  // May name a deleted account (Stripe keeps the old metadata) or none at all.
+  // `applySubscriptionEvent` decides: an existing account is processed normally; a
+  // deleted one has its subscription recorded detached with no entitlement; and
+  // with neither an account nor a retained Customer nothing is written.
   const accountId = await resolveAccountId(sql, metadata ?? subscription.metadata, snapshot.stripeCustomerId);
-  if (!accountId) {
-    // No account can be named for this subscription. Refused rather than retried:
-    // retrying will not make an account appear, and guessing is how one reader's
-    // payment entitles another.
-    return { kind: "rejected", detail: `no Urdais account for subscription ${subscriptionId}` };
-  }
 
   try {
     const outcome = await applySubscriptionEvent(sql, {
@@ -196,6 +196,11 @@ export async function processStripeEvent(
         createdAt: new Date(event.created * 1000).toISOString(),
       },
     });
+    if (outcome.kind === "unattributable") {
+      // Refused rather than retried: retrying will not make an account appear, and
+      // guessing is how one reader's payment entitles another.
+      return { kind: "rejected", detail: describe(outcome, subscriptionId) };
+    }
     return { kind: "processed", detail: describe(outcome, subscriptionId) };
   } catch (error) {
     return { kind: "failed", detail: `could not store ${event.type}: ${error instanceof Error ? error.message : "error"}` };

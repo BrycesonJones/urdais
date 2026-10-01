@@ -33,7 +33,8 @@
 
 import { hasPremiumEntitlement, type Viewer } from "@/lib/access/entitlement";
 import { loadPremiumEntitlement } from "@/lib/access/entitlement-store";
-import { resolveUrdaisAccount } from "@/lib/auth/accounts";
+import { AccountDeletionPendingError, resolveUrdaisAccount, SUPABASE_AUTH_PROVIDER } from "@/lib/auth/accounts";
+import { readInFlightDeletion } from "@/lib/account/deletion-store";
 import { resolveSupabaseIdentity } from "@/lib/auth/identity";
 import { billingAvailability } from "@/lib/billing/mode";
 import {
@@ -58,6 +59,11 @@ export type AccountHub =
   | { readonly kind: "anonymous" }
   /** Signed in, but the account could not be loaded. Nothing about billing is claimed. */
   | { readonly kind: "unavailable"; readonly profile: AccountProfile }
+  /**
+   * An account deletion is past billing termination but not finished (Phase 7D).
+   * Billing is cancelled and premium revoked; the page offers only to finish.
+   */
+  | { readonly kind: "deletion_pending"; readonly profile: AccountProfile }
   | {
       readonly kind: "ready";
       readonly profile: AccountProfile;
@@ -115,6 +121,10 @@ export async function resolveAccountHub(): Promise<AccountHub> {
       return { kind: "unavailable", profile };
     }
     sql = await tokenSqlExecutor(databaseUrl);
+    // A deletion past billing termination owns this identity now, whether or not
+    // the account row still exists.
+    const deletion = await readInFlightDeletion(sql, SUPABASE_AUTH_PROVIDER, identity.subject);
+    if (deletion && deletion.state !== "requested") return { kind: "deletion_pending", profile };
     const account = await resolveUrdaisAccount(sql, identity);
     accountId = account.id;
     viewer = {
@@ -122,6 +132,7 @@ export async function resolveAccountHub(): Promise<AccountHub> {
       premiumEntitlement: await loadPremiumEntitlement(sql, accountId),
     };
   } catch (error) {
+    if (error instanceof AccountDeletionPendingError) return { kind: "deletion_pending", profile };
     console.error(`account hub: account could not be loaded (${error instanceof Error ? error.message : String(error)})`);
     return { kind: "unavailable", profile };
   }

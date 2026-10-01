@@ -20,7 +20,7 @@ const tokenSqlExecutor = vi.hoisted(() => vi.fn());
 const billingAvailability = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/auth/identity", () => ({ resolveSupabaseIdentity }));
-vi.mock("@/lib/auth/accounts", () => ({ resolveUrdaisAccount }));
+vi.mock("@/lib/auth/accounts", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/lib/auth/accounts")>()), resolveUrdaisAccount }));
 vi.mock("@/lib/access/entitlement-store", () => ({ loadPremiumEntitlement }));
 vi.mock("@/lib/tokens/read/database", () => ({ resolveTokenDatabaseUrl, tokenSqlExecutor }));
 vi.mock("@/lib/billing/mode", () => ({ billingAvailability }));
@@ -32,14 +32,18 @@ vi.mock("@/lib/billing/stripe", () => ({
 }));
 
 import { ACCOUNT_SUBSCRIPTIONS_QUERY, resolveAccountHub } from "@/lib/account/hub";
+import { IN_FLIGHT_DELETION_SQL } from "@/lib/account/deletion-store";
+import { AccountDeletionPendingError } from "@/lib/auth/accounts";
 
 type Query = { text: string; params: unknown[] };
 let queries: Query[];
 let subscriptionRows: Record<string, unknown>[] | Error;
+let deletionRows: Record<string, unknown>[];
 
 const sql = {
   query: vi.fn(async (text: string, params: unknown[]) => {
     queries.push({ text, params });
+    if (text.includes("identity.account_deletions")) return { rows: deletionRows };
     if (subscriptionRows instanceof Error) throw subscriptionRows;
     return { rows: subscriptionRows };
   }),
@@ -57,6 +61,7 @@ beforeEach(() => {
   }
   queries = [];
   subscriptionRows = [];
+  deletionRows = [];
   resolveTokenDatabaseUrl.mockReturnValue("postgresql://local/test");
   tokenSqlExecutor.mockResolvedValue(sql);
   resolveUrdaisAccount.mockResolvedValue({ id: "acct-session", email: "reader@example.invalid" });
@@ -82,7 +87,12 @@ describe("who is asked about", () => {
     await resolveAccountHub();
     expect(resolveUrdaisAccount).toHaveBeenCalledWith(sql, { subject: "sub-1", email: "reader@example.invalid", emailVerified: true });
     expect(loadPremiumEntitlement).toHaveBeenCalledWith(sql, "acct-session");
-    expect(queries).toEqual([{ text: ACCOUNT_SUBSCRIPTIONS_QUERY, params: ["acct-session"] }]);
+    // The deletion lookup is by the session's own auth subject; the billing read by
+    // the account resolved from it.
+    expect(queries).toEqual([
+      { text: IN_FLIGHT_DELETION_SQL, params: ["supabase", "sub-1"] },
+      { text: ACCOUNT_SUBSCRIPTIONS_QUERY, params: ["acct-session"] },
+    ]);
   });
 
   it("takes no arguments, so there is nothing to point it elsewhere", () => {
@@ -184,5 +194,29 @@ describe("read-only", () => {
     expect(code).not.toMatch(/from "stripe"|@\/lib\/billing\/stripe|@\/lib\/billing\/checkout|@\/lib\/billing\/customers|@\/lib\/billing\/store/);
     expect(code).not.toMatch(/stripe\.(customers|checkout|subscriptions|billingPortal)/);
     expect(code).not.toMatch(/\b(insert into|update identity|delete from)\b/i);
+  });
+});
+
+describe("an account deletion in progress (Phase 7D)", () => {
+  it("is shown as pending once billing is terminated, and the account is not resolved", async () => {
+    signedIn();
+    for (const state of ["billing_terminated", "local_cleanup_complete", "auth_deleted"]) {
+      deletionRows = [{ id: "del-1", state, auth_subject: "sub-1", account_id: null, stripe_customer_id: null }];
+      resolveUrdaisAccount.mockClear();
+      expect((await resolveAccountHub()).kind, state).toBe("deletion_pending");
+      expect(resolveUrdaisAccount).not.toHaveBeenCalled();
+    }
+  });
+
+  it("is an ordinary account while the deletion is only requested (billing not yet terminated)", async () => {
+    signedIn();
+    deletionRows = [{ id: "del-1", state: "requested", auth_subject: "sub-1", account_id: "acct-session", stripe_customer_id: "cus_1" }];
+    expect((await resolveAccountHub()).kind).toBe("ready");
+  });
+
+  it("never provisions a fresh account for a half-deleted identity", async () => {
+    signedIn();
+    resolveUrdaisAccount.mockRejectedValue(new AccountDeletionPendingError());
+    expect((await resolveAccountHub()).kind).toBe("deletion_pending");
   });
 });

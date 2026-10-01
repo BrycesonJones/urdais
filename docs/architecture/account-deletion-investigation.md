@@ -1,13 +1,16 @@
 # Account deletion — investigation and proposal (Phase 7D, pre-implementation)
 
-**Status: investigation only. Nothing in this document is implemented.** Written 1 October 2026 against `main` at `54ccd07`. Phase 7D stopped here because several of its stop conditions were met (§6). The decisions in §7 are needed before any deletion code is written.
+**Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Investigation written 1 October 2026 against `main` at `54ccd07`; Phase 7D stopped here on its stop conditions (§6).
 
-> **Cancel subscription and Delete account are intentionally different operations.** Cancellation preserves access through the already-paid billing period. Account deletion terminates the Urdais relationship immediately and forfeits remaining paid access.
+> **Resolved and implemented — see `account-deletion.md`.** Decisions taken:
+> - **D1:** server-only `SUPABASE_SECRET_KEY` for `auth.admin.deleteUser` only.
+> - **D2:** detach-not-cascade, plus a durable workflow with a distinct `auth_deleted` stage.
+> - **D3:** 15-minute step-up with an emailed code. Implemented on the session's `amr` timestamp, because `last_sign_in_at` is per user and unsuitable; flagged for approval.
+> - **D4:** retain the Stripe Customer, unset `urdais_account_id`, leave the email.
+> - **D5:** do not void open invoices; Stripe stops automatic collection on cancellation.
+> - **D6:** Stripe/Supabase network verification is still outstanding in the build environment.
 >
-> **Urdais must never report an account successfully deleted while knowingly leaving that account with an active or potentially billable Stripe subscription.**
->
-> **A recreated account using the same email is a new Urdais account and does not inherit the deleted account's entitlement or billing relationship.**
-
+> The text below is the original investigation, unchanged.
 ---
 
 ## 1. What deleting `identity.accounts` does today (verified)

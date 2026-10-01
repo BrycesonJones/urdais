@@ -12,7 +12,17 @@ import type Stripe from "stripe";
 import { HANDLED_EVENT_TYPES, isHandledEventType, processStripeEvent } from "@/lib/billing/webhook";
 import type { TokenSqlExecutor } from "@/lib/tokens/read/sql";
 
-function sqlWith(overrides: { accountForCustomer?: string | null; claim?: "won" | "lost"; upsert?: "applied" | "stale" } = {}) {
+function sqlWith(
+  overrides: {
+    accountForCustomer?: string | null;
+    claim?: "won" | "lost";
+    upsert?: "applied" | "stale";
+    /** Phase 7D: does the named account still exist? Default yes. */
+    accountExists?: boolean;
+    deletionState?: string;
+    retainedCustomer?: boolean;
+  } = {},
+) {
   const statements: string[] = [];
   // Account ids arrive as bound parameters, never interpolated into the SQL, so
   // assertions about *which* account was written have to look here.
@@ -23,6 +33,15 @@ function sqlWith(overrides: { accountForCustomer?: string | null; claim?: "won" 
     async query(text: string, values: readonly unknown[] = []) {
       statements.push(text.trim());
       params.push([...values]);
+      if (text.includes("from identity.accounts where id")) {
+        return { rows: overrides.accountExists === false ? [] : [{ id: values[0] }] };
+      }
+      if (text.includes("from identity.account_deletions")) {
+        return { rows: overrides.deletionState ? [{ state: overrides.deletionState }] : [] };
+      }
+      if (text.includes("from identity.billing_customers where stripe_customer_id = $1 and livemode")) {
+        return { rows: overrides.retainedCustomer ? [{ x: 1 }] : [] };
+      }
       if (text.includes("select account_id")) {
         const id = overrides.accountForCustomer;
         return { rows: id ? [{ account_id: id }] : [] };
@@ -338,5 +357,63 @@ describe("changes made in the Customer Portal", () => {
     const index = sql.statements.findIndex((s) => s.includes("insert into identity.billing_subscriptions"));
     // Parameter 6 is cancel_at_period_end, in UPSERT_SUBSCRIPTION_SQL's order.
     expect(sql.params[index]?.[5]).toBe(true);
+  });
+});
+
+describe("late events after account deletion (Phase 7D)", () => {
+  // Stripe keeps `urdais_account_id` in the subscription's metadata after the
+  // account is gone. Before 7D that produced an FK violation, a rolled-back event
+  // and a Stripe retry storm.
+  const DELETED = { id: "sub_1", customer: "cus_1", metadata: { urdais_account_id: "acct_deleted" } };
+  const entitlementWrites = (sql: ReturnType<typeof sqlWith>) => sql.statements.filter((s) => s.includes("premium_entitlements")).length;
+
+  for (const [label, type, state] of [
+    ["cancellation event after local account removal", "customer.subscription.deleted", { status: "canceled", ended_at: 1_790_000_100 }],
+    ["subscription update arriving after deletion", "customer.subscription.updated", { status: "active" }],
+  ] as const) {
+    it(`${label}: recorded, no entitlement, success`, async () => {
+      const { stripe } = stripeWith(state);
+      const sql = sqlWith({ accountExists: false, retainedCustomer: true });
+      const outcome = await processStripeEvent(stripe, sql, event(type, DELETED), "test");
+      expect(outcome.kind).toBe("processed");
+      expect(outcome.detail).toContain("withheld");
+      expect(entitlementWrites(sql)).toBe(0);
+      expect(sql.statements.some((s) => /insert into identity\.accounts/.test(s))).toBe(false);
+    });
+  }
+
+  it("cancellation event during deletion (past billing termination): stored, entitlement withheld", async () => {
+    const { stripe } = stripeWith({ status: "canceled" });
+    const sql = sqlWith({ deletionState: "billing_terminated" });
+    const outcome = await processStripeEvent(stripe, sql, event("customer.subscription.deleted", SUBSCRIPTION_OBJECT), "test");
+    expect(outcome).toMatchObject({ kind: "processed", detail: expect.stringContaining("withheld") });
+    expect(entitlementWrites(sql)).toBe(0);
+  });
+
+  it("an active event carrying the historical account id cannot resurrect access", async () => {
+    const { stripe } = stripeWith({ status: "active" });
+    for (const sql of [sqlWith({ accountExists: false, retainedCustomer: true }), sqlWith({ deletionState: "local_cleanup_complete" })]) {
+      await processStripeEvent(stripe, sql, event("customer.subscription.updated", DELETED), "test");
+      expect(entitlementWrites(sql)).toBe(0);
+    }
+  });
+
+  it("a duplicate late event is acknowledged without work", async () => {
+    const { stripe } = stripeWith({ status: "canceled" });
+    const sql = sqlWith({ accountExists: false, retainedCustomer: true, claim: "lost" });
+    expect(await processStripeEvent(stripe, sql, event("customer.subscription.deleted", DELETED), "test")).toMatchObject({ kind: "processed", detail: expect.stringContaining("already processed") });
+  });
+
+  it("a stale late event changes nothing", async () => {
+    const { stripe } = stripeWith({ status: "active" });
+    const sql = sqlWith({ accountExists: false, retainedCustomer: true, upsert: "stale" });
+    expect(await processStripeEvent(stripe, sql, event("customer.subscription.updated", DELETED), "test")).toMatchObject({ kind: "processed" });
+    expect(entitlementWrites(sql)).toBe(0);
+  });
+
+  it("is refused, not retried, when there is neither an account nor a retained Customer", async () => {
+    const { stripe } = stripeWith({ status: "canceled" });
+    const sql = sqlWith({ accountExists: false, retainedCustomer: false });
+    expect((await processStripeEvent(stripe, sql, event("customer.subscription.deleted", DELETED), "test")).kind).toBe("rejected");
   });
 });

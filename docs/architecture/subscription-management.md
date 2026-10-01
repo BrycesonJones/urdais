@@ -137,6 +137,8 @@ If no default configuration has been saved in live mode, session creation fails,
 
 ## 9. Phase 7D implications
 
+> **Resolved in Phase 7D**: see `account-deletion.md`. Billing history is retained detached; a scheduled cancellation becomes immediate on deletion; open invoices are not voided.
+
 - A canceled account still has a Stripe Customer with invoices. Deleting the Urdais account cascades away the `billing_customers` row that the Portal resolves through. After that, nobody can reach those invoices from Urdais.
 - An account with a scheduled cancellation is still entitled and still billed until the period ends. "Delete account" during that window has to decide between waiting and cancelling immediately.
 - A `past_due` account has an open invoice. Deletion should decide whether to void it.
