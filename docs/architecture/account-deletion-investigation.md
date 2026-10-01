@@ -5,7 +5,7 @@
 > **Resolved and implemented — see `account-deletion.md`.** Decisions taken:
 > - **D1:** server-only `SUPABASE_SECRET_KEY` for `auth.admin.deleteUser` only.
 > - **D2:** detach-not-cascade, plus a durable workflow with a distinct `auth_deleted` stage.
-> - **D3:** 15-minute step-up with an emailed code. Implemented on the session's `amr` timestamp, because `last_sign_in_at` is per user and unsuitable; flagged for approval.
+> - **D3:** 15-minute step-up with an emailed code. Implemented on the session's `amr` timestamp, because `last_sign_in_at` is per user and unsuitable. This deviation was **approved on 1 October 2026**.
 > - **D4:** retain the Stripe Customer, unset `urdais_account_id`, leave the email.
 > - **D5:** do not void open invoices; Stripe stops automatic collection on cancellation.
 > - **D6:** Stripe/Supabase network verification is still outstanding in the build environment.

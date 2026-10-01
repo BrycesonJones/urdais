@@ -116,7 +116,11 @@ complete    auth_subject and account_id nulled
 
 - **Window.** Deletion starts only if **this session** authenticated within 15 minutes, inclusive at exactly 15:00 (`src/lib/auth/recent-auth.ts`). Otherwise `/account/delete` offers "Email a code to {your address}".
 - **Code flow.** The code is sent to, and verified against, the session's own address with the existing passwordless primitives. Success returns to `/account/delete`. Wrong, expired or replayed codes are refused by Supabase and stay on the code form.
-- **Signal: the session's `amr` timestamp from verified claims (`getClaims()`), not `user.last_sign_in_at`.** The latter is per user and is refreshed by a sign-in on any device, so an old session elsewhere would pass whenever the owner signed in on their phone.
+- **Signal: the session's `amr` timestamp from verified claims (`getClaims()`), not `user.last_sign_in_at`.**
+  - **This deliberately differs from the original Phase 7D instruction**, which named `last_sign_in_at`. The change was approved on 1 October 2026.
+  - `last_sign_in_at` is a property of the **user**, refreshed by a sign-in on *any* device. It therefore cannot establish that **this session** authenticated recently: a stale or stolen session elsewhere would pass whenever the owner signed in on their phone.
+  - The access token's `amr` entries are **per session**. They record how and when this session authenticated, they survive token refresh (which is not re-authentication), and they are reset by verifying an emailed code.
+  - The token is verified before its claims are read, and its `sub` must match the identity being deleted. A browser-supplied timestamp is never trusted.
 - **Resuming** a deletion already past `billing_terminated` needs only the session. The irreversible part is done.
 
 ---

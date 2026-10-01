@@ -7,7 +7,8 @@
  *
  * ## Why the session's `amr` timestamp, not `user.last_sign_in_at`
  *
- * The approval named `last_sign_in_at`. Its Supabase semantics make it unsuitable
+ * The original Phase 7D instruction named `last_sign_in_at`; this session-scoped
+ * reading replaces it, and that change was approved on 1 October 2026. Its Supabase semantics make it unsuitable
  * for this guarantee: it is a property of the **user**, refreshed by a sign-in on
  * *any* device. A session stolen last month would count as "fresh" the moment
  * its owner signed in on their phone, so the check would gate nothing.
