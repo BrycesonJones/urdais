@@ -168,6 +168,25 @@ describe("the removed intro — regressions", () => {
     expect(ready).toContain("No free trial.");
   });
 
+  it("does not claim premium is free to read once enforcement is active", async () => {
+    // Phase 7B: the Account Hub's Subscribe leads here, under active enforcement.
+    // The Phase 5 footer said the product "is still readable without a
+    // subscription today", which stopped being true at activation.
+    const previous = process.env.URDAIS_PREMIUM_ENFORCEMENT;
+    process.env.URDAIS_PREMIUM_ENFORCEMENT = "active";
+    try {
+      renderGate(authenticatedViewer("acct-1", true), "ready_for_checkout");
+      resolveCheckoutHandoff.mockResolvedValue({ kind: "ready", accountId: "acct-1", returnTo: "/account" });
+      const ready = renderToStaticMarkup(await ReadyForCheckoutRoute({ searchParams: params({ returnTo: "/account" }) }));
+      expect(ready).not.toContain("readable without a subscription");
+      expect(ready).toMatch(/<a [^>]*href="\/account"[^>]*>Go back<\/a>/);
+      expect(ready).toContain("$80/week");
+    } finally {
+      if (previous === undefined) delete process.env.URDAIS_PREMIUM_ENFORCEMENT;
+      else process.env.URDAIS_PREMIUM_ENFORCEMENT = previous;
+    }
+  });
+
   it("shows no price to somebody who already subscribes", async () => {
     // There is nothing to sell them, and a price on this screen reads as a second charge.
     renderGate(subscriberViewer("acct-1"), "already_entitled");

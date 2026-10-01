@@ -6,6 +6,7 @@ import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { PremiumSummary } from "@/components/onboarding/premium-summary";
 import { SubscribeButton } from "@/components/billing/subscribe-button";
 import { PREMIUM_PRODUCT_NAME, PREMIUM_TRIAL_NOTE, formatPremiumPrice } from "@/lib/access/pricing";
+import { isPremiumEnforcementActive } from "@/lib/access/activation";
 import { billingAvailability, describeUnavailability } from "@/lib/billing/mode";
 import { onboardingHref, onboardingReturnTo } from "@/lib/onboarding/routes";
 import { resolveCheckoutHandoff } from "@/lib/onboarding/checkout-handoff";
@@ -67,6 +68,7 @@ export default async function ReadyForCheckoutRoute({
   // creating anything, because a form can be submitted by something that never
   // rendered this page.
   const availability = billingAvailability();
+  const enforcementActive = isPremiumEnforcementActive();
   if (availability.kind === "unavailable") {
     console.warn(`plan/pay rendered without a purchase control: ${describeUnavailability(availability)}`);
   }
@@ -99,31 +101,48 @@ export default async function ReadyForCheckoutRoute({
         </div>
       )}
 
-      <p className="text-xs text-neutral-500">
-        {handoff.returnTo ? (
-          <>
-            You came from{" "}
+      {enforcementActive ? (
+        // Premium is gated, so the old "still readable without a subscription"
+        // reassurance below would be false. Offer the way back and nothing else.
+        handoff.returnTo ? (
+          <p className="text-xs text-neutral-500">
+            Not now?{" "}
             <Link
               href={handoff.returnTo}
               className="text-neutral-300 underline underline-offset-2 transition-colors hover:text-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
             >
-              that page
-            </Link>
-            . It is still readable without a subscription today.
-          </>
-        ) : (
-          <>
-            Urdais premium products are still readable without a subscription today.{" "}
-            <Link
-              href="/markets"
-              className="text-neutral-300 underline underline-offset-2 transition-colors hover:text-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
-            >
-              Browse Urdais markets
+              Go back
             </Link>
             .
-          </>
-        )}
-      </p>
+          </p>
+        ) : null
+      ) : (
+        <p className="text-xs text-neutral-500">
+          {handoff.returnTo ? (
+            <>
+              You came from{" "}
+              <Link
+                href={handoff.returnTo}
+                className="text-neutral-300 underline underline-offset-2 transition-colors hover:text-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
+              >
+                that page
+              </Link>
+              . It is still readable without a subscription today.
+            </>
+          ) : (
+            <>
+              Urdais premium products are still readable without a subscription today.{" "}
+              <Link
+                href="/markets"
+                className="text-neutral-300 underline underline-offset-2 transition-colors hover:text-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
+              >
+                Browse Urdais markets
+              </Link>
+              .
+            </>
+          )}
+        </p>
+      )}
     </OnboardingShell>
   );
 }
