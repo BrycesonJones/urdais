@@ -117,5 +117,19 @@ describe("where the buttons go", () => {
 
   it("refuses an auth route as a destination, so the CTA cannot loop", () => {
     expect(accessHref("/auth/sign-in")).toBe(ACCESS_ENTRY_HREF);
+    expect(signInHref("/access/login")).toBe(SIGN_IN_HREF);
+  });
+
+  it("sends 'Sign in' to the passwordless sign-in screen, not the old password form", () => {
+    // Phase 7A. The gate's secondary link was how readers reached `/auth/sign-in`.
+    expect(SIGN_IN_HREF).toBe("/access/login");
+    expect(signInHref("/markets/power-analytics")).toBe(`/access/login?returnTo=${encodeURIComponent("/markets/power-analytics")}`);
+    expect(signInHref("/map?layer=gpu_compute_cluster")).toBe(
+      `/access/login?returnTo=${encodeURIComponent("/map?layer=gpu_compute_cluster")}`,
+    );
+  });
+
+  it("leaves the primary call to action where it was", () => {
+    expect(ACCESS_ENTRY_HREF).toBe("/access");
   });
 });

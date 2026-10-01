@@ -42,7 +42,7 @@ vi.mock("@/components/layout/site-footer", () => ({ SiteFooter: () => null }));
 vi.mock("@/components/onboarding/email-form", () => ({
   EmailForm: ({ submitLabel = "Send code" }: { submitLabel?: string }) => (
     <form data-testid="email-form">
-      <label htmlFor="e">Your email</label>
+      <label htmlFor="e">Email address</label>
       <input id="e" type="email" name="email" />
       <button type="submit">{submitLabel}</button>
     </form>
@@ -97,8 +97,7 @@ describe("/access is the account form", () => {
     const html = renderToStaticMarkup(await AccessRoute({ searchParams: params() }));
 
     expect(html).toContain("Create your account");
-    expect(html).toContain("Unlock Urdais&#x27; premium analytics and infrastructure data.");
-    expect(html).toContain("Your email");
+    expect(html).toContain("Email address");
     expect(html).toContain("Send code");
   });
 
@@ -112,18 +111,21 @@ describe("/access is the account form", () => {
     expect(html.toLowerCase()).not.toContain("password</span>");
   });
 
-  it("says how sign-in will work", async () => {
+  it("tells no story about passwords or how Urdais used to authenticate", async () => {
+    // Phase 7A: the screen is one task. A reader never needed to know passwords
+    // existed, so "No password required." was migration history, not instruction.
     renderGate();
     const html = renderToStaticMarkup(await AccessRoute({ searchParams: params() }));
-    expect(html).toContain("email you a verification code");
-    expect(html).toContain("No password required.");
+    expect(html.toLowerCase()).not.toContain("password");
+    expect(html).not.toContain("FULL ACCESS");
+    expect(html).not.toContain("Supabase");
   });
 
   it("offers log in without inferring whether the reader has an account", async () => {
     renderGate();
     const html = renderToStaticMarkup(await AccessRoute({ searchParams: params() }));
     expect(html).toContain("Already have an account?");
-    expect(html).toContain("/access/login");
+    expect(html).toMatch(/<a [^>]*href="\/access\/login"[^>]*>Sign in<\/a>/);
   });
 
   it("carries the destination to the login screen", async () => {
@@ -230,17 +232,49 @@ describe("log in", () => {
     renderGate(ANONYMOUS_VIEWER, "login");
     const html = renderToStaticMarkup(await OnboardingLoginRoute({ searchParams: params() }));
 
-    expect(html).toContain("Log in to Urdais");
-    expect(html).toContain("Your email");
+    expect(html).toContain("Sign in to Urdais");
+    expect(html).toContain("Email address");
     expect(html).not.toContain('type="password"');
     expect(html).toContain("Send code");
+  });
+
+  it("carries none of the password-era copy", async () => {
+    renderGate(ANONYMOUS_VIEWER, "login");
+    const html = renderToStaticMarkup(await OnboardingLoginRoute({ searchParams: params() }));
+
+    expect(html.toLowerCase()).not.toContain("password");
+    for (const legacy of ["usual way", "Continue with email", "before that change", "Log in", "LOG IN", "Supabase"]) {
+      expect(html, legacy).not.toContain(legacy);
+    }
+  });
+
+  it("offers no way back to the account form other than the link itself", async () => {
+    // The old "Back" link pointed at account creation, which is not where a reader
+    // who came from the header's account icon came from.
+    renderGate(ANONYMOUS_VIEWER, "login");
+    const html = renderToStaticMarkup(await OnboardingLoginRoute({ searchParams: params() }));
+    expect(html).not.toMatch(/>\s*Back\s*</);
   });
 
   it("offers account creation without switching automatically", async () => {
     renderGate(ANONYMOUS_VIEWER, "login");
     const html = renderToStaticMarkup(await OnboardingLoginRoute({ searchParams: params() }));
-    expect(html).toContain("New to Urdais?");
-    expect(html).toContain("Create account");
+    expect(html).toContain("Don\u2019t have an account?");
+    expect(html).toMatch(/<a [^>]*href="\/access"[^>]*>Create account<\/a>/);
+  });
+
+  it("carries the destination to the account form", async () => {
+    renderGate(ANONYMOUS_VIEWER, "login", "/markets/power-analytics");
+    const html = renderToStaticMarkup(
+      await OnboardingLoginRoute({ searchParams: params({ returnTo: "/markets/power-analytics" }) }),
+    );
+    expect(html).toContain(`/access?returnTo=${encodeURIComponent("/markets/power-analytics")}`);
+  });
+
+  it("carries the account destination from the header's icon", async () => {
+    renderGate(ANONYMOUS_VIEWER, "login", "/account");
+    const html = renderToStaticMarkup(await OnboardingLoginRoute({ searchParams: params({ returnTo: "/account" }) }));
+    expect(html).toContain(`/access?returnTo=${encodeURIComponent("/account")}`);
   });
 
   it("redirects a signed-in reader away", async () => {

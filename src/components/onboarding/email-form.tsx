@@ -10,7 +10,7 @@ import { IDLE_AUTH_STATE } from "@/app/auth/form-state";
  *
  * There is no password input, and none is hidden either — Urdais authenticates by
  * emailing a one-time code, so a password is not collected because it is not used.
- * The same component serves "Create your account" and "Log in"; only the submit
+ * The same component serves "Create your account" and "Sign in to Urdais"; only the submit
  * label differs, because the underlying call is identical and deliberately so.
  *
  * Accessibility: a real `<label>`, an error in a live region tied to the form by
@@ -33,7 +33,7 @@ export function EmailForm({
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="onboarding-email" className="text-sm text-neutral-300">
-          Your email
+          Email address
         </label>
         <input
           id="onboarding-email"

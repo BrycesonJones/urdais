@@ -15,6 +15,11 @@ import { SiteHeader } from "@/components/layout/site-header";
  * existing subscriber sees one screen, a new user sees three, someone already
  * signed in sees one. A fixed count would be wrong for most of them, so the state
  * is communicated by the heading instead.
+ *
+ * The main column paints its own dark surface rather than inheriting the page
+ * background. The root background follows `prefers-color-scheme`, so without this a
+ * reader on a light-mode system saw the sign-in screens as a white page under the
+ * dark header.
  */
 export function OnboardingShell({
   eyebrow,
@@ -23,8 +28,8 @@ export function OnboardingShell({
   back,
   children,
 }: {
-  /** Small label above the heading, naming the state. */
-  eyebrow: string;
+  /** Small label above the heading, naming the state. The sign-in screens have none. */
+  eyebrow?: string;
   title: string;
   lead?: string;
   /** An explicit way back, where one makes sense. */
@@ -34,23 +39,25 @@ export function OnboardingShell({
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-md flex-1 px-4 py-12 sm:py-16">
-        <p className="text-xs font-semibold tracking-[0.18em] text-neutral-400">{eyebrow}</p>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight text-neutral-50">{title}</h1>
-        {lead ? <p className="mt-3 text-sm text-neutral-300">{lead}</p> : null}
+      <main className="flex-1 bg-[#0a0a0a] px-4 py-12 text-neutral-100 sm:py-16">
+        <div className="mx-auto w-full max-w-md">
+          {eyebrow ? <p className="mb-3 text-xs font-semibold tracking-[0.18em] text-neutral-400">{eyebrow}</p> : null}
+          <h1 className="text-2xl font-semibold tracking-tight text-neutral-50">{title}</h1>
+          {lead ? <p className="mt-3 text-sm text-neutral-300">{lead}</p> : null}
 
-        <div className="mt-8 flex flex-col gap-6">{children}</div>
+          <div className="mt-8 flex flex-col gap-6">{children}</div>
 
-        {back ? (
-          <p className="mt-8 text-xs text-neutral-500">
-            <Link
-              href={back.href}
-              className="underline underline-offset-2 transition-colors hover:text-neutral-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
-            >
-              {back.label}
-            </Link>
-          </p>
-        ) : null}
+          {back ? (
+            <p className="mt-8 text-xs text-neutral-500">
+              <Link
+                href={back.href}
+                className="underline underline-offset-2 transition-colors hover:text-neutral-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
+              >
+                {back.label}
+              </Link>
+            </p>
+          ) : null}
+        </div>
       </main>
       <SiteFooter />
     </>

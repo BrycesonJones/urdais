@@ -1,31 +1,22 @@
-import type { Metadata } from "next";
-import Link from "next/link";
+import { permanentRedirect } from "next/navigation";
 
-import { AuthShell } from "@/app/auth/auth-shell";
-import { LegacyPasswordForm } from "@/app/auth/legacy-password-form";
-import { safeReturnTo } from "@/lib/auth/return-to";
-import { ONBOARDING_HREF } from "@/lib/onboarding/routes";
-
-export const metadata: Metadata = {
-  title: "Sign in",
-  robots: { index: false, follow: false },
-};
+import { onboardingHref, onboardingReturnTo } from "@/lib/onboarding/routes";
 
 export const dynamic = "force-dynamic";
 
 /**
- * LEGACY password sign-in. Not the customer route.
+ * Superseded by the passwordless sign-in screen.
  *
- * Urdais authenticates passwordlessly at `/access`, and nothing in the product links
- * here. This page survives for two narrow reasons, both stated on it:
+ * This was Phase 2's password sign-in form, kept as an "operator surface" for
+ * accounts created before passwordless authentication. It was not one: premium
+ * gates linked their "Sign in" here, so readers with an account were asked for a
+ * password Urdais no longer uses, on a page explaining migration history.
  *
- *   - accounts created before the change still have passwords, and deleting the only
- *     path that can use them would strand them;
- *   - it is what lets the authenticated, entitled and signed-out states be verified
- *     end to end without a mailbox.
- *
- * Delete it once no password account remains. The page points anyone who lands here
- * by accident at the real entry point.
+ * Phase 7A removed the form. Nothing is stranded by that: a password account signs
+ * in with an emailed code like every other account, because the code is sent to an
+ * address, not to a credential type. The route survives only to carry anyone
+ * holding an old link to `/access/login`, with their destination intact -- the same
+ * treatment `/auth/sign-up` already had.
  */
 export default async function LegacySignInRoute({
   searchParams,
@@ -33,22 +24,5 @@ export default async function LegacySignInRoute({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const returnTo = safeReturnTo(params.returnTo);
-
-  return (
-    <AuthShell
-      title="Sign in with a password"
-      caption="Urdais now signs you in by email — no password needed. This page is only for accounts created before that change."
-    >
-      <LegacyPasswordForm returnTo={returnTo} />
-
-      <p className="mt-4 text-xs text-neutral-400">
-        Looking for the usual way in?{" "}
-        <Link href={ONBOARDING_HREF} className="underline">
-          Continue with email
-        </Link>
-        .
-      </p>
-    </AuthShell>
-  );
+  permanentRedirect(onboardingHref("login", onboardingReturnTo(params.returnTo)));
 }

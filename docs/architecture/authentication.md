@@ -2,6 +2,8 @@
 
 **Status: internal architecture document. Not routed publicly, not registered in the docs catalog.** Written 27 September 2026, Paid Access Phase 2. Identity only — no Stripe, no premium gates, no onboarding.
 
+> **Customer sign-in is passwordless** (`passwordless-authentication.md`), and since Phase 7A `/auth/sign-in` redirects to `/access/login` and the header's account icon is the account entry point (`account-entry.md`). The password routes described below are history.
+
 > **Superseded in part, 28 September 2026.** The customer credential is no longer a password — Urdais emails a one-time verification code, which the reader enters without leaving the page, and Google OAuth is available once configured. See `docs/architecture/passwordless-authentication.md`. Everything below about *identity*, the account mapping, sessions, cookies and the trust boundary still holds, because none of it depended on how the reader proved who they were. The password-specific sections are marked where they are now historical.
 
 Urdais authenticates with **Supabase Auth**. This document is what Phase 3 built its premium gates against.

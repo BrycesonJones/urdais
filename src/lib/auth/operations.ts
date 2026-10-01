@@ -367,17 +367,19 @@ export async function signUpWithPassword(
 /**
  * LEGACY. Sign in with an email and a password.
  *
- * Retained deliberately, and reachable from no customer surface. Two reasons:
+ * Unreachable since Phase 7A: its only caller was the `/auth/sign-in` form, which
+ * was removed because premium gates were sending customers to it. That route now
+ * redirects to the passwordless sign-in screen. The primitive itself is kept, and
+ * still tested, rather than deleted in the same change:
  *
- *   - accounts created before this change still have passwords, and deleting the
- *     only code path that can use them would strand them. Production holds none
- *     today, but the development fixtures do.
- *   - it is what lets the authenticated, entitled and signed-out states be
- *     exercised end to end without a mailbox, which is otherwise impossible once
- *     every customer path requires receiving real email.
+ *   - a password account is not stranded without it -- an emailed code signs in any
+ *     account with an address, whatever credential it was created with -- but
+ *     keeping the call costs nothing while that is confirmed in production;
+ *   - local development no longer needs it to avoid a mailbox, because the local
+ *     Supabase stack captures OTP mail (Inbucket, `supabase/config.toml`).
  *
- * `/auth/sign-in` keeps it for operators. Nothing under `/access/` imports it, and
- * a test asserts that.
+ * Delete it, with `signUpWithPassword`, once that is settled. Nothing under
+ * `/access/` imports it, and a test asserts that.
  */
 export async function signInWithPassword(
   client: AuthCapableClient,

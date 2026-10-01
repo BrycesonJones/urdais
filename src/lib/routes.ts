@@ -33,3 +33,13 @@ export function marketIndexHref(symbol: string): string {
 
 /** The map workspace: a dedicated route so the MapLibre renderer stays isolated from the rest of the product. */
 export const MAP_HREF = "/map";
+
+/**
+ * The reader's account. The header's account icon always links here, whoever is
+ * looking: `/account` itself decides on the server whether the reader is signed in,
+ * and sends an anonymous reader to sign in with this as their destination.
+ *
+ * Phase 7A ships a minimal placeholder; Phase 7B makes it the account hub for
+ * identity and subscription status.
+ */
+export const ACCOUNT_HREF = "/account";

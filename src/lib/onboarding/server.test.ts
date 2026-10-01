@@ -20,6 +20,12 @@ const anonymous = () => resolveViewer.mockResolvedValue(ANONYMOUS_VIEWER);
 const unverified = () => resolveViewer.mockResolvedValue(authenticatedViewer("acct-1", false));
 const verified = () => resolveViewer.mockResolvedValue(authenticatedViewer("acct-1", true));
 const subscriber = () => resolveViewer.mockResolvedValue(subscriberViewer("acct-1"));
+// A Stripe subscription that was canceled or went past_due: the account keeps an
+// entitlement row, and it no longer grants anything.
+const lapsed = () =>
+  resolveViewer.mockResolvedValue(
+    subscriberViewer("acct-1", { status: "inactive", source: "stripe", revokedAt: "2026-09-01T00:00:00.000Z" }),
+  );
 
 beforeEach(() => resolveViewer.mockReset());
 
@@ -137,5 +143,85 @@ describe("authority", () => {
     const after = await resolveOnboarding("ready_for_checkout", null);
     expect(after.kind).toBe("redirect");
     expect(resolveViewer).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("signing in to the account rather than to buy access", () => {
+  // The header's account icon sends an anonymous reader to `/access/login` with
+  // `/account` as the destination. After the code, `verifyOtpAction` sends them to
+  // `/access?returnTo=/account`, which must land on the account -- not on Plan / Pay.
+
+  it("sends every signed-in reader to /account, entitled or not", async () => {
+    for (const [label, setup] of [
+      ["never subscribed", verified],
+      ["active subscriber", subscriber],
+      ["canceled / past_due", lapsed],
+    ] as const) {
+      setup();
+      const entry = await resolveOnboardingEntry("/account");
+      expect(entry.kind, label).toBe("redirect");
+      expect(entry.kind === "redirect" && entry.href, label).toBe("/account");
+
+      // And a signed-in reader who reaches the sign-in screen itself is not asked
+      // to sign in again.
+      setup();
+      const login = await resolveOnboarding("login", "/account");
+      expect(login.kind === "redirect" && login.href, label).toBe("/account");
+    }
+  });
+
+  it("keeps a legacy unverified account on the email challenge first", async () => {
+    unverified();
+    const entry = await resolveOnboardingEntry("/account");
+    expect(entry.kind === "redirect" && entry.href).toBe(`/access/verify?returnTo=${encodeURIComponent("/account")}`);
+  });
+
+  it("lets an anonymous reader sign in, carrying the account destination", async () => {
+    anonymous();
+    const login = await resolveOnboarding("login", "/account");
+    expect(login.kind).toBe("render");
+  });
+
+  it("leaves the premium conversion funnel exactly as it was", async () => {
+    // A premium destination still goes to Plan / Pay, and a subscriber is still
+    // told they already have access. Only the account destination is different.
+    verified();
+    const ready = await resolveOnboardingEntry("/markets/power-analytics");
+    expect(ready.kind === "redirect" && ready.href).toBe(
+      `/access/ready?returnTo=${encodeURIComponent("/markets/power-analytics")}`,
+    );
+
+    lapsed();
+    const lapsedReady = await resolveOnboardingEntry("/markets/power-analytics");
+    expect(lapsedReady.kind === "redirect" && lapsedReady.href).toBe(
+      `/access/ready?returnTo=${encodeURIComponent("/markets/power-analytics")}`,
+    );
+
+    subscriber();
+    const subscribed = await resolveOnboardingEntry("/markets/power-analytics");
+    expect(subscribed.kind === "redirect" && subscribed.href).toBe(
+      `/access/subscribed?returnTo=${encodeURIComponent("/markets/power-analytics")}`,
+    );
+
+    verified();
+    const none = await resolveOnboardingEntry(null);
+    expect(none.kind === "redirect" && none.href).toBe("/access/ready");
+  });
+
+  it("matches the account path exactly, not by prefix", async () => {
+    verified();
+    for (const lookalike of ["/accounts", "/account-settings", "/accountx"]) {
+      const entry = await resolveOnboardingEntry(lookalike);
+      expect(entry.kind === "redirect" && entry.href, lookalike).toBe(`/access/ready?returnTo=${encodeURIComponent(lookalike)}`);
+    }
+    const withQuery = await resolveOnboardingEntry("/account?tab=x");
+    expect(withQuery.kind === "redirect" && withQuery.href).toBe("/account");
+  });
+
+  it("still renders the checkout boundary for a signed-in reader who asked for it", async () => {
+    // Account intent changes where a redirect lands, never whether a state renders.
+    verified();
+    const ready = await resolveOnboarding("ready_for_checkout", "/account");
+    expect(ready.kind).toBe("render");
   });
 });

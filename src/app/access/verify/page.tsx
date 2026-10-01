@@ -70,10 +70,7 @@ export default async function CheckEmailRoute({
   if (resolution.kind === "redirect" && identity.kind === "authenticated") redirect(resolution.href);
 
   return (
-    <OnboardingShell
-      eyebrow="CHECK YOUR EMAIL"
-      title="Check your email"
-    >
+    <OnboardingShell title="Check your email">
       <p className="text-sm text-neutral-300">
         We sent a verification code to{" "}
         <span className="font-medium break-all text-neutral-50">{email}</span>.
@@ -104,7 +101,7 @@ export default async function CheckEmailRoute({
             href={onboardingHref("login", returnTo)}
             className="text-neutral-300 underline underline-offset-2 transition-colors hover:text-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
           >
-            Log in
+            Sign in
           </Link>
         </p>
       </div>
