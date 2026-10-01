@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ContactTrigger } from "@/components/layout/contact-trigger";
 import { GITHUB_REPO_URL, LINKEDIN_URL, SITE_NAME, SITE_URL, X_URL } from "@/constants/site";
 
 const linkClass =
@@ -30,9 +31,7 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <Link href="/contact" className={linkClass}>
-                Contact
-              </Link>
+              <ContactTrigger className={linkClass} />
             </li>
             <li>
               <a href={X_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>

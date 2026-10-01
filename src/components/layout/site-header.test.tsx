@@ -29,10 +29,18 @@ describe("SiteHeader map navigation", () => {
     expect(prefetchMapRenderer).toHaveBeenCalledTimes(2);
   });
 
-  it("keeps the other navigation links as they were, without Products", () => {
+  it("shows Map, Docs and Account only, without Products or Contact", () => {
     render(<SiteHeader />);
     expect(screen.queryByRole("link", { name: "Products" })).toBeNull();
-    expect(screen.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
+    // Contact lives in the footer only, as a modal rather than a route.
+    expect(screen.queryByRole("link", { name: "Contact" })).toBeNull();
+    expect(document.querySelector('a[href="/contact"]')).toBeNull();
+    const links = Array.from(document.querySelectorAll("nav[aria-label='Primary'] a"));
+    expect(links.map((link) => link.getAttribute("aria-label") ?? link.textContent)).toEqual([
+      "Map",
+      "Docs",
+      "Account",
+    ]);
   });
 });
 
@@ -55,7 +63,7 @@ describe("SiteHeader account entry", () => {
   it("shows the icon at every width, and the icon alone", () => {
     render(<SiteHeader />);
     const account = screen.getByRole("link", { name: "Account" });
-    // Not hidden behind a breakpoint, unlike Docs and Contact.
+    // Not hidden behind a breakpoint, unlike Docs.
     expect(account.className).not.toMatch(/(^|\s)hidden(\s|$)/);
     // The name comes from aria-label; the SVG is decorative and there is no text.
     expect(account.textContent).toBe("");
