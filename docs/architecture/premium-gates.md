@@ -122,6 +122,8 @@ Both denials make the same offer, because both readers need to subscribe. The di
 
 The primary CTA deliberately does **not** go to sign-in for an anonymous reader. Whether they need to create an account or sign in is onboarding's decision.
 
+The secondary "Sign in" goes to `/access/login` (`SIGN_IN_HREF`), carrying `returnTo`. Until Phase 7A it went to `/auth/sign-in`, the legacy password form; see `account-entry.md`.
+
 `unknown_product` throws rather than returning copy (`gateCopy`), so an unregistered product can never be advertised as something Urdais sells.
 
 ### Copy

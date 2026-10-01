@@ -119,7 +119,7 @@ message covers both, and the remedy is identical either way:
 
 ```ts
 // /access  — "Create your account"
-// /access/login — "Log in to Urdais"
+// /access/login — "Sign in to Urdais"
 await sendEmailOtp(client, { email });
 ```
 
@@ -171,9 +171,9 @@ Password authentication was therefore **retained, not deleted** — §20 of the 
 - an account created before this change still has a password, and deleting the only path that can use one would strand it;
 - it is what lets the authenticated, entitled and signed-out states be verified end to end without a mailbox, which is otherwise impossible once every customer path requires receiving real email.
 
-`/auth/sign-in` keeps the password form as an **operator surface**. Nothing in the customer flow links to it, it says on the page that it is not the usual way in, and a test asserts nothing under `/access/` imports the password operations. `/auth/sign-up` is gone: it permanently redirects to `/access`, carrying the destination.
+`/auth/sign-in` kept the password form as an **operator surface**. `/auth/sign-up` is gone: it permanently redirects to `/access`, carrying the destination.
 
-Delete both once no password account remains.
+> **Superseded in Phase 7A** (`docs/architecture/account-entry.md` §6). "Nothing in the customer flow links to it" was not true: every premium gate's "Sign in" linked to `/auth/sign-in`. The form and `signInAction` are deleted, `/auth/sign-in` permanently redirects to `/access/login` carrying the destination, and the gate links there directly. The `signInWithPassword` / `signUpWithPassword` primitives remain, unreachable, until they can be deleted together.
 
 ---
 

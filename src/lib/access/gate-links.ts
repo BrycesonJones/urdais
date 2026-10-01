@@ -25,8 +25,14 @@ import { safeReturnTo } from "@/lib/auth/return-to";
 /** The onboarding entry point. See @/lib/onboarding/routes for the states behind it. */
 export const ACCESS_ENTRY_HREF = "/access";
 
-/** Phase 2's sign-in route. */
-export const SIGN_IN_HREF = "/auth/sign-in";
+/**
+ * Where a gate's "Sign in" goes: the passwordless sign-in screen.
+ *
+ * This pointed at Phase 2's `/auth/sign-in` password form until Phase 7A, which is
+ * how readers who already had an account were reaching a page that asked for a
+ * password Urdais no longer uses. The `returnTo` it carries is unchanged.
+ */
+export const SIGN_IN_HREF = "/access/login";
 
 /**
  * The "Get Full Access" destination, carrying where the reader was.

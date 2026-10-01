@@ -14,7 +14,7 @@
 premium product
   → Get Full Access
     → /access                 create your account: email, or Google
-      → /access/login         log in  (the same primitive, different heading)
+      → /access/login         sign in  (the same primitive, different heading)
         → /access/verify      enter the emailed code — the code IS the credential
           → /access/ready     READY FOR CHECKOUT
             → [Phase 5: Plan / Pay + Stripe]
@@ -77,7 +77,7 @@ There is no progress to lose. Sign in and refresh: the server sees an authentica
 
 **Anonymous existing user** — log in (the same email-only form) → check your email → type the code → ready. Authenticating proves *who* they are and nothing about what they may read; the next screen comes from their account's real state.
 
-**Already authenticated** — never asked to authenticate again (Invariant 3). `/access` and `/access/login` both redirect to whichever state their account implies.
+**Already authenticated** — never asked to authenticate again (Invariant 3). `/access` and `/access/login` both redirect to whichever state their account implies — or, since Phase 7A, to `/account` when that was their destination (the header's account icon; see `account-entry.md` §4).
 
 ---
 

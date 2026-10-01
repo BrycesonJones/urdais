@@ -23,7 +23,9 @@ export const dynamic = "force-dynamic";
  * The premium gate already established intent: someone who pressed "Get Full
  * Access" has decided. So this is the form, not a screen asking them to press
  * Continue to reach the form. There is no price here either — what a subscription
- * costs belongs at Plan / Pay, next to the payment it explains.
+ * costs belongs at Plan / Pay, next to the payment it explains. And no eyebrow, lead
+ * or note about passwords: the screen is the same shape as "Sign in to Urdais", one
+ * email field and "Send code", under its own heading.
  *
  * For anyone with a session this route renders nothing and redirects to whichever
  * state their account implies, which is what makes `/access` canonical rather than
@@ -44,11 +46,7 @@ export default async function AccessRoute({
   const google = await isGoogleAuthAvailable();
 
   return (
-    <OnboardingShell
-      eyebrow="FULL ACCESS"
-      title="Create your account"
-      lead="Unlock Urdais' premium analytics and infrastructure data."
-    >
+    <OnboardingShell title="Create your account">
       {google ? (
         <>
           <GoogleButton returnTo={returnTo} />
@@ -58,17 +56,13 @@ export default async function AccessRoute({
 
       <EmailForm returnTo={returnTo} />
 
-      <p className="text-xs text-neutral-500">
-        We&rsquo;ll email you a verification code. No password required.
-      </p>
-
-      <p className="text-xs text-neutral-500">
+      <p className="text-sm text-neutral-400">
         Already have an account?{" "}
         <Link
           href={onboardingHref("login", returnTo)}
-          className="text-neutral-300 underline underline-offset-2 transition-colors hover:text-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
+          className="text-neutral-200 underline underline-offset-2 transition-colors hover:text-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
         >
-          Log in
+          Sign in
         </Link>
       </p>
     </OnboardingShell>

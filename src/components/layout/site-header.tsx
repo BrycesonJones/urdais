@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
+import { AccountIcon } from "@/components/icons/account-icon";
 import { SearchIcon } from "@/components/icons/search-icon";
 import { SearchModal } from "@/components/layout/search-modal";
 import { prefetchMapRenderer } from "@/components/map/prefetch-map";
 import { SITE_NAME } from "@/constants/site";
-import { MAP_HREF } from "@/lib/routes";
+import { ACCOUNT_HREF, MAP_HREF } from "@/lib/routes";
 
 const NAV_LINKS = [
   { label: "Map", href: MAP_HREF, onIntent: prefetchMapRenderer },
@@ -93,11 +94,21 @@ export function SiteHeader() {
               </Link>
             );
           })}
+          {/*
+            Account entry. The same link for every reader: the header renders no
+            session state (a cached page cannot go stale, and a client-side guess is
+            never an authority). `/account` resolves the viewer on the server and
+            sends an anonymous reader to sign in. No entitlement decoration either --
+            paid and unpaid accounts look the same here. Not prefetched, so merely
+            rendering the header never asks the server who the reader is.
+          */}
           <Link
-            href="/get-started"
-            className={`ml-1 rounded-md bg-neutral-100 px-3.5 py-1.5 text-sm font-medium text-neutral-950 transition-colors hover:bg-white sm:ml-2 ${focusRing}`}
+            href={ACCOUNT_HREF}
+            prefetch={false}
+            aria-label="Account"
+            className={`ml-1 flex size-9 shrink-0 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-white/5 hover:text-neutral-100 sm:ml-2 ${focusRing}`}
           >
-            Get Started
+            <AccountIcon className="size-5" />
           </Link>
         </nav>
       </div>

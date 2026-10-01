@@ -32,6 +32,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { createServerSupabaseClient } from "@/lib/auth/server-client";
 import { safeReturnTo } from "@/lib/auth/return-to";
 import { forgetPendingEmail } from "@/lib/onboarding/pending-email";
+import { ONBOARDING_PATHS } from "@/lib/onboarding/routes";
 
 /** The OTP types that can legitimately arrive on a confirmation link. */
 const ALLOWED_OTP_TYPES: readonly string[] = ["email", "signup", "email_change", "recovery", "invite", "magiclink"];
@@ -42,7 +43,7 @@ function isEmailOtpType(value: string | null): value is EmailOtpType {
 
 /** Back to sign-in, carrying a reason and the reader's original destination. */
 function failed(request: NextRequest, reason: string, next: string): NextResponse {
-  const url = new URL("/auth/sign-in", request.nextUrl.origin);
+  const url = new URL(ONBOARDING_PATHS.login, request.nextUrl.origin);
   url.searchParams.set("error", reason);
   if (next !== "/") url.searchParams.set("returnTo", next);
   return NextResponse.redirect(url);

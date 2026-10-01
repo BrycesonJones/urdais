@@ -23,6 +23,7 @@
 import { resolveViewer } from "@/lib/access/server";
 import type { Viewer } from "@/lib/access/entitlement";
 import { onboardingHref } from "@/lib/onboarding/routes";
+import { ACCOUNT_HREF } from "@/lib/routes";
 import { isStateReachable, onboardingStateFor, redirectStateFor, type OnboardingState } from "@/lib/onboarding/state";
 
 export type OnboardingResolution =
@@ -48,7 +49,39 @@ export async function resolveOnboarding(
   }
 
   const target = redirectStateFor(viewer);
-  return { kind: "redirect", href: onboardingHref(target, returnTo), state: target };
+  return { kind: "redirect", href: redirectHref(viewer, target, returnTo), state: target };
+}
+
+/**
+ * Whether the reader's destination is their account rather than a premium page.
+ *
+ * Only the exact path counts, with or without a query or fragment. `returnTo` has
+ * already been through `safeReturnTo` by the time it gets here.
+ */
+function isAccountDestination(returnTo: string | null): boolean {
+  if (!returnTo) return false;
+  return returnTo === ACCOUNT_HREF || returnTo.startsWith(`${ACCOUNT_HREF}?`) || returnTo.startsWith(`${ACCOUNT_HREF}#`);
+}
+
+/**
+ * Where a redirect lands.
+ *
+ * Normally the onboarding state the viewer belongs in. The one exception is a
+ * signed-in reader who came to sign in *to their account* -- the header's account
+ * icon, while anonymous -- rather than to buy access to a premium page. Sending
+ * them on to Plan / Pay would turn "sign in" into a sales screen, so once their
+ * session exists they go to the account instead, subscribed or not. An account
+ * still owed the email challenge (only possible for a legacy password account)
+ * goes there first; that screen is authentication, not a sale.
+ *
+ * Signing in and holding premium are separate: an authenticated reader without an
+ * entitlement has a valid account and is never sent back through sign-in for it.
+ */
+function redirectHref(viewer: Viewer, target: OnboardingState, returnTo: string | null): string {
+  if (viewer.authentication.kind === "authenticated" && target !== "email_challenge" && isAccountDestination(returnTo)) {
+    return ACCOUNT_HREF;
+  }
+  return onboardingHref(target, returnTo);
 }
 
 /**
@@ -68,5 +101,5 @@ export async function resolveOnboardingEntry(returnTo: string | null): Promise<O
   }
 
   const target = onboardingStateFor(viewer);
-  return { kind: "redirect", href: onboardingHref(target, returnTo), state: target };
+  return { kind: "redirect", href: redirectHref(viewer, target, returnTo), state: target };
 }

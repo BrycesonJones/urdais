@@ -116,7 +116,7 @@ export default async function AuthStatusRoute() {
         </form>
       ) : (
         <p className="mt-8 text-sm">
-          <a className="underline" href="/auth/sign-in?returnTo=%2Fauth%2Fstatus">
+          <a className="underline" href="/access/login">
             Sign in
           </a>
         </p>
