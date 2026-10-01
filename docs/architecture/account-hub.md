@@ -139,6 +139,8 @@ Plan / Pay's footer used to say premium "is still readable without a subscriptio
 
 ## 8. Phase 7D boundary — account lifecycle
 
+> **Implemented in Phase 7D**: see `account-deletion.md`. The cascade facts below were the starting point; billing rows now detach instead of cascading.
+
 No delete control exists, functional or not. Nothing in 7B decides deletion with or without billing history, active-subscription handling, Stripe Customer treatment, auth-user deletion, `identity.accounts` treatment, billing/event/entitlement retention, idempotency or partial-failure recovery.
 
 Facts 7D will need:

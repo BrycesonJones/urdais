@@ -42,3 +42,9 @@ export const MAP_HREF = "/map";
  * Since Phase 7B it is the Account Hub: identity and subscription status.
  */
 export const ACCOUNT_HREF = "/account";
+
+/** Account deletion: step-up verification and the destructive confirmation (Phase 7D). */
+export const ACCOUNT_DELETE_HREF = `${ACCOUNT_HREF}/delete`;
+
+/** Public, after a completed deletion. Shows nothing about the deleted account. */
+export const ACCOUNT_DELETED_HREF = `${ACCOUNT_HREF}/deleted`;

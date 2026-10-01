@@ -43,6 +43,9 @@ function fakeSql(plan: { match: string; reply: Reply | (() => never) }[] = []): 
         if (typeof entry!.reply === "function") entry!.reply();
         return entry!.reply as Reply;
       }
+      // Unless a test says otherwise, the account the event names exists and has no
+      // deletion in progress (Phase 7D), which is every pre-7D case.
+      if (text.includes("from identity.accounts where id")) return { rows: [{ id: "acct_1" }] };
       return { rows: [] };
     },
   };
@@ -200,6 +203,7 @@ describe("the transaction", () => {
           claimed = true;
           return { rows: [{ stripe_event_id: "evt_1" }] };
         }
+        if (text.includes("from identity.accounts where id")) return { rows: [{ id: "acct_1" }] };
         if (text.includes("billing_subscriptions")) return { rows: [{ stripe_subscription_id: "sub_1" }] };
         if (text.includes("premium_entitlements")) this.entitlementWrites += 1;
         return { rows: [] };
@@ -237,5 +241,80 @@ describe("the customer mapping under concurrency", () => {
       { match: "select stripe_customer_id", reply: { rows: [] } },
     ]);
     await expect(claimCustomerId(sql, "acct_1", "cus_x", false)).rejects.toThrow(/vanished/);
+  });
+});
+
+describe("a deleted account is terminal (Phase 7D)", () => {
+  const claimAndStore = [
+    { match: "insert into identity.billing_events", reply: { rows: [{ stripe_event_id: "evt_1" }] } },
+    { match: "insert into identity.billing_subscriptions", reply: { rows: [{ stripe_subscription_id: "sub_1" }] } },
+  ];
+
+  it("records a late event for a deleted account detached, writes no entitlement, and succeeds", async () => {
+    const sql = fakeSql([
+      ...claimAndStore,
+      { match: "from identity.accounts where id", reply: { rows: [] } },
+      { match: "from identity.billing_customers where stripe_customer_id", reply: { rows: [{ "?column?": 1 }] } },
+    ]);
+    const outcome = await applySubscriptionEvent(sql, { accountId: "acct_deleted", snapshot: SNAPSHOT, event: EVENT });
+
+    expect(outcome).toEqual({ kind: "applied", entitlement: "withheld" });
+    expect(sql.statements.some((s) => s.includes("premium_entitlements"))).toBe(false);
+    expect(sql.statements.some((s) => /insert into identity\.accounts/.test(s))).toBe(false);
+    expect(sql.statements.at(-1)).toBe("commit");
+  });
+
+  it("stores the subscription with a null account, i.e. detached", async () => {
+    const params: unknown[][] = [];
+    const sql: TokenSqlExecutor = {
+      async query(text: string, values: readonly unknown[] = []) {
+        params.push([...values]);
+        if (text.includes("billing_events")) return { rows: [{ stripe_event_id: "evt_1" }] };
+        if (text.includes("from identity.billing_customers where stripe_customer_id")) return { rows: [{ x: 1 }] };
+        if (text.includes("insert into identity.billing_subscriptions")) return { rows: [{ stripe_subscription_id: "sub_1" }] };
+        return { rows: [] };
+      },
+    };
+    await applySubscriptionEvent(sql, { accountId: "acct_deleted", snapshot: SNAPSHOT, event: EVENT });
+    const upsert = params.find((p) => p[0] === "sub_1" && p.length === 11);
+    expect(upsert?.[1]).toBeNull();
+  });
+
+  it("withholds the entitlement once a deletion has passed billing termination, even for an active subscription", async () => {
+    for (const state of ["billing_terminated", "local_cleanup_complete", "auth_deleted"]) {
+      const sql = fakeSql([...claimAndStore, { match: "from identity.account_deletions", reply: { rows: [{ state }] } }]);
+      const outcome = await applySubscriptionEvent(sql, { accountId: "acct_1", snapshot: SNAPSHOT, event: EVENT });
+      expect(outcome, state).toEqual({ kind: "applied", entitlement: "withheld" });
+      expect(sql.statements.some((s) => s.includes("premium_entitlements")), state).toBe(false);
+    }
+  });
+
+  it("still processes normally while a deletion is only requested (billing not yet terminated)", async () => {
+    const sql = fakeSql([...claimAndStore, { match: "from identity.account_deletions", reply: { rows: [{ state: "requested" }] } }]);
+    expect(await applySubscriptionEvent(sql, { accountId: "acct_1", snapshot: SNAPSHOT, event: EVENT })).toEqual({ kind: "applied", entitlement: "granted" });
+  });
+
+  it("locks the deletion record, so a deletion cannot revoke between this check and this grant", async () => {
+    const sql = fakeSql([...claimAndStore]);
+    await applySubscriptionEvent(sql, { accountId: "acct_1", snapshot: SNAPSHOT, event: EVENT });
+    const check = sql.statements.find((s) => s.includes("from identity.account_deletions"));
+    expect(check).toMatch(/for share/);
+    const grantIndex = sql.statements.findIndex((s) => s.includes("premium_entitlements"));
+    expect(sql.statements.indexOf(check!)).toBeLessThan(grantIndex);
+  });
+
+  it("writes nothing when neither the account nor a retained Customer exists", async () => {
+    const sql = fakeSql([
+      { match: "insert into identity.billing_events", reply: { rows: [{ stripe_event_id: "evt_1" }] } },
+      { match: "from identity.accounts where id", reply: { rows: [] } },
+    ]);
+    expect(await applySubscriptionEvent(sql, { accountId: "acct_gone", snapshot: SNAPSHOT, event: EVENT })).toEqual({ kind: "unattributable" });
+    expect(sql.statements).toContain("rollback");
+    expect(sql.statements.some((s) => s.includes("insert into identity.billing_subscriptions"))).toBe(false);
+  });
+
+  it("never re-attaches a detached subscription, in SQL", () => {
+    expect(UPSERT_SUBSCRIPTION_SQL).toMatch(/case when identity\.billing_subscriptions\.detached_at is not null then null/);
+    expect(UPSERT_SUBSCRIPTION_SQL).toMatch(/coalesce\(identity\.billing_subscriptions\.detached_at, excluded\.detached_at\)/);
   });
 });

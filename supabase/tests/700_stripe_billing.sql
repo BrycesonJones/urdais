@@ -167,15 +167,20 @@ begin
   exception when unique_violation then null;
   end;
 
-  -- Deleting the account must take the billing rows with it, or a deleted reader
-  -- leaves a Customer mapping that a future account could collide with.
+  -- Deleting the account no longer takes billing history with it (Phase 7D):
+  -- the rows survive DETACHED -- no account, `detached_at` set -- so no future
+  -- account can collide with or inherit them. See 710_account_deletion.sql.
   delete from identity.accounts where id = account_b;
 
   select count(*) into n from identity.billing_customers where account_id = account_b;
-  if n <> 0 then raise exception 'a Stripe customer survived its account'; end if;
+  if n <> 0 then raise exception 'a Stripe customer is still attached to a deleted account'; end if;
+
+  select count(*) into n from identity.billing_customers
+   where stripe_customer_id = 'cus_test_b' and account_id is null and detached_at is not null;
+  if n <> 1 then raise exception 'the deleted account''s Stripe customer was not retained detached'; end if;
 
   select count(*) into n from identity.billing_subscriptions where account_id = account_b;
-  if n <> 0 then raise exception 'subscriptions survived their account'; end if;
+  if n <> 0 then raise exception 'subscriptions are still attached to a deleted account'; end if;
 
   -- ---------------------------------------------------------------- posture
   select count(*) into n from pg_tables

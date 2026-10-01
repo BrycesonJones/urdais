@@ -3,13 +3,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { signOutAction } from "@/app/auth/actions";
+import { FinishDeletionForm } from "@/components/account/deletion-forms";
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { formatPremiumPrice } from "@/lib/access/pricing";
 import { resolveAccountHub, type AccountProfile } from "@/lib/account/hub";
 import { ACCOUNT_PLAN_NAME, type AccountAction, type SubscriptionPresentation } from "@/lib/account/subscription-presentation";
 import { onboardingHref } from "@/lib/onboarding/routes";
-import { ACCOUNT_HREF } from "@/lib/routes";
+import { ACCOUNT_DELETE_HREF, ACCOUNT_HREF } from "@/lib/routes";
 
 export const metadata: Metadata = {
   title: "Account",
@@ -39,7 +40,10 @@ export const dynamic = "force-dynamic";
  *   account's existing Customer (`openBillingPortalAction`), which returns here.
  *   Returning from the Portal changes nothing by itself: this page reads the
  *   webhook-reconciled state, and the entitlement decides access.
- * - **Not account lifecycle.** There is no Delete account. Phase 7D.
+ * - **Delete account** (Phase 7D) is a separate, visually destructive section
+ *   at the bottom. It links to `/account/delete` for step-up and the typed
+ *   confirmation; nothing destructive happens on this page. A deletion already
+ *   past billing termination replaces the page with a "finish deleting" state.
  *
  * An authenticated account without premium is a valid Urdais account, and this
  * page treats it as one: it is never sent to sign in, and never to Plan / Pay
@@ -49,6 +53,23 @@ export default async function AccountRoute() {
   const hub = await resolveAccountHub();
   if (hub.kind === "anonymous") redirect(onboardingHref("login", ACCOUNT_HREF));
 
+  if (hub.kind === "deletion_pending") {
+    return (
+      <OnboardingShell title="Account">
+        <section aria-labelledby="account-deletion-pending" className="flex flex-col gap-4">
+          <h2 id="account-deletion-pending" className={sectionHeading}>
+            Account deletion in progress
+          </h2>
+          <p className="text-sm text-neutral-300">
+            Your subscription has been canceled and your premium access has ended, but deleting your account didn&rsquo;t
+            finish. Finish it now.
+          </p>
+          <FinishDeletionForm />
+        </section>
+      </OnboardingShell>
+    );
+  }
+
   return (
     <OnboardingShell title="Account">
       <ProfileSection profile={hub.profile} />
@@ -57,6 +78,7 @@ export default async function AccountRoute() {
       ) : (
         <SubscriptionSection subscription={{ kind: "unavailable", reason: "read_failed" }} action={null} />
       )}
+      <DeleteAccountSection />
     </OnboardingShell>
   );
 }
@@ -188,4 +210,30 @@ function ActionControl({ action }: { action: AccountAction }) {
   // Stripe's hosted Portal for this account's existing Customer, resolved on the
   // server. Returns to /account.
   return <ManageSubscriptionButton label={action.label} />;
+}
+
+/**
+ * The destructive area. Separated from everything above it by spacing, a border
+ * and red treatment, and it only links onward: the step-up check and the typed
+ * confirmation happen on `/account/delete`. It duplicates no cancellation control.
+ */
+function DeleteAccountSection() {
+  return (
+    <section aria-labelledby="account-delete" className="mt-6 flex flex-col gap-3 rounded-md border border-red-500/30 p-4">
+      <h2 id="account-delete" className="text-sm font-semibold text-red-300">
+        Delete account
+      </h2>
+      <p className="text-sm text-neutral-400">Permanently delete your Urdais account and account data.</p>
+      <p className="text-sm text-neutral-400">
+        If you have an active subscription, it will be canceled immediately and you&rsquo;ll lose access to Urdais
+        Premium. Any remaining paid access will be forfeited. This cannot be undone.
+      </p>
+      <Link
+        href={ACCOUNT_DELETE_HREF}
+        className="self-start rounded-md border border-red-500/60 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/10 hover:text-red-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
+      >
+        Delete account
+      </Link>
+    </section>
+  );
 }

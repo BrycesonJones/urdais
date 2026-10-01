@@ -70,6 +70,30 @@ const SYNC_EMAIL = `
 returning id, email
 `;
 
+/**
+ * An unfinished account deletion for this identity (Phase 7D).
+ *
+ * A deletion removes the account row before it deletes the Auth user, so for a
+ * moment -- or, if Auth deletion fails, until it is retried -- a valid session
+ * exists with no account. Provisioning a fresh account for it then would silently
+ * hand a half-deleted identity a new, usable Urdais account. A completed deletion
+ * has dropped the subject, so it never blocks the same email signing up again
+ * with a new Auth user.
+ */
+const DELETION_IN_FLIGHT = `
+  select 1
+    from identity.account_deletions
+   where auth_provider = $1 and auth_subject = $2
+`;
+
+/** Thrown instead of provisioning an account for an identity being deleted. */
+export class AccountDeletionPendingError extends Error {
+  constructor() {
+    super("this identity has an account deletion in progress");
+    this.name = "AccountDeletionPendingError";
+  }
+}
+
 function readAccount(rows: readonly Record<string, unknown>[]): UrdaisAccount | null {
   const row = rows[0];
   if (!row || typeof row.id !== "string") return null;
@@ -107,6 +131,7 @@ export async function resolveUrdaisAccount(
   const existing = readAccount((await sql.query(SELECT_ACCOUNT, [provider, subject])).rows);
 
   if (!existing) {
+    if ((await sql.query(DELETION_IN_FLIGHT, [provider, subject])).rows.length > 0) throw new AccountDeletionPendingError();
     const created = readAccount((await sql.query(UPSERT_ACCOUNT, [provider, subject, email])).rows);
     if (!created) throw new Error("account provisioning returned no row");
     return created;

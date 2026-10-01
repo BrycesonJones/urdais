@@ -89,6 +89,8 @@ Verified end to end against a real local Postgres, using the real `processStripe
 
 Throughout: one customer row and one subscription row; events append-only.
 
+> **Observed in Phase 7D verification (1 October 2026, Stripe API `2026-08-26.dahlia`):** the real Portal's "cancel at period end" sets `cancel_at` = `current_period_end` and leaves `cancel_at_period_end: false`. The hub reads only `cancel_at_period_end`, so it shows that state as plain Active rather than "Cancellation scheduled". The entitlement is unaffected. The follow-up is to recognise both representations (see `account-deletion.md` §10).
+
 `cancel_at_period_end` is recorded, displayed, and **never** an entitlement input. Payment-method changes alone do not change subscription status, so they produce no entitlement change. Their effect arrives when Stripe's retry succeeds and the status moves.
 
 ---
@@ -136,6 +138,8 @@ If no default configuration has been saved in live mode, session creation fails,
 ---
 
 ## 9. Phase 7D implications
+
+> **Resolved in Phase 7D**: see `account-deletion.md`. Billing history is retained detached; a scheduled cancellation becomes immediate on deletion; open invoices are not voided.
 
 - A canceled account still has a Stripe Customer with invoices. Deleting the Urdais account cascades away the `billing_customers` row that the Portal resolves through. After that, nobody can reach those invoices from Urdais.
 - An account with a scheduled cancellation is still entitled and still billed until the period ends. "Delete account" during that window has to decide between waiting and cancelling immediately.

@@ -29,6 +29,13 @@ vi.mock("@/components/layout/site-header", () => ({ SiteHeader: () => null }));
 vi.mock("@/components/layout/site-footer", () => ({ SiteFooter: () => null }));
 // The real button is a client component bound to the Portal Server Action. Its
 // markup is reproduced faithfully enough to assert on: a form with no fields.
+vi.mock("@/components/account/deletion-forms", () => ({
+  FinishDeletionForm: () => (
+    <form data-testid="finish-form">
+      <button type="submit">Finish deleting account</button>
+    </form>
+  ),
+}));
 vi.mock("@/components/billing/manage-subscription-button", () => ({
   ManageSubscriptionButton: ({ label }: { label: string }) => (
     <form data-testid="portal-form">
@@ -77,13 +84,16 @@ describe("profile", () => {
     expect(await render()).toContain("Not verified");
   });
 
-  it("has no name, avatar, password, editable email or delete control", async () => {
+  it("has no name, avatar, password or editable email (deletion lives in its own section; see below)", async () => {
     ready({ kind: "active", priceLabel: "$80/week", cancellationScheduled: false, endsAt: null });
     const html = await render();
     expect(html).not.toMatch(/<input(?![^>]*type="hidden")/);
-    for (const absent of ["password", "avatar", "username", "Delete", "delete account", "Change email"]) {
-      expect(html.toLowerCase(), absent).not.toContain(absent.toLowerCase());
+    const profile = html.slice(html.indexOf('aria-labelledby="account-profile"'), html.indexOf('aria-labelledby="account-subscription"'));
+    for (const absent of ["password", "avatar", "username", "change email"]) {
+      expect(html.toLowerCase(), absent).not.toContain(absent);
     }
+    // And the Profile section itself carries no destructive control.
+    expect(profile.toLowerCase()).not.toContain("delete");
   });
 });
 
@@ -95,7 +105,10 @@ describe("subscription states", () => {
     expect(t).toContain("No active subscription");
     expect(t).toContain("Get full access to Urdais premium products for $80/week.");
     expect(html).toMatch(/<a [^>]*href="\/access\/ready\?returnTo=%2Faccount"[^>]*>Subscribe<\/a>/);
-    expect(t).not.toContain("Urdais Premium");
+    // The subscription section names no plan for an account that never had one.
+    // (The Delete account section further down mentions Urdais Premium by name.)
+    const subscriptionText = text(html.slice(html.indexOf('aria-labelledby="account-subscription"'), html.indexOf('aria-labelledby="account-delete"')));
+    expect(subscriptionText).not.toContain("Urdais Premium");
     expect(t).not.toContain("Manage subscription");
     // No Customer exists; billing management must not be offered as a way to make one.
     expect(html).not.toContain("portal-form");
@@ -238,5 +251,44 @@ describe("structure", () => {
 
   it("is not an authorization surface", () => {
     expect(page).not.toMatch(/canAccess|denyUnlessEntitled|resolvePremiumGate|premium_entitlements/);
+  });
+});
+
+describe("Delete account (Phase 7D)", () => {
+  it("is its own labelled section at the bottom, after Profile and Subscription", async () => {
+    ready({ kind: "active", priceLabel: "$80/week", cancellationScheduled: false, endsAt: null });
+    const html = await render();
+    const profile = html.indexOf('aria-labelledby="account-profile"');
+    const subscription = html.indexOf('aria-labelledby="account-subscription"');
+    const del = html.indexOf('aria-labelledby="account-delete"');
+    expect(profile).toBeGreaterThan(-1);
+    expect(subscription).toBeGreaterThan(profile);
+    expect(del).toBeGreaterThan(subscription);
+    expect(html).toMatch(/<h2 id="account-delete"[^>]*>Delete account<\/h2>/);
+  });
+
+  it("states the consequences and only links onward; nothing destructive happens here", async () => {
+    ready({ kind: "none" });
+    const html = await render();
+    const t = text(html);
+    expect(t).toContain("Permanently delete your Urdais account and account data.");
+    expect(t).toContain("canceled immediately");
+    expect(t).toContain("Any remaining paid access will be forfeited. This cannot be undone.");
+    expect(html).toMatch(/<a [^>]*href="\/account\/delete"[^>]*>Delete account<\/a>/);
+  });
+
+  it("is shown even when the subscription could not be read", async () => {
+    resolveAccountHub.mockResolvedValue({ kind: "unavailable", profile: PROFILE });
+    expect(await render()).toContain('href="/account/delete"');
+  });
+
+  it("an unfinished deletion replaces the page with a finish action, and nothing else", async () => {
+    resolveAccountHub.mockResolvedValue({ kind: "deletion_pending", profile: PROFILE });
+    const html = await render();
+    const t = text(html);
+    expect(t).toContain("Account deletion in progress");
+    expect(t).toContain("Your subscription has been canceled and your premium access has ended");
+    expect(html).toContain("finish-form");
+    expect(t).not.toMatch(/Subscribe|Manage subscription|Manage billing|Profile/);
   });
 });
