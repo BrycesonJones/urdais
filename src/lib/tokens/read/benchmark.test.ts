@@ -17,17 +17,20 @@ import {
   constituentInForce,
   constituentSegments,
   isEligibleLeg,
+  methodologyForConstituent,
   methodologyInForce,
   tokenBenchmarkPrice,
 } from "@/lib/tokens/read/benchmark";
-import { providerBenchmark, providerBenchmarks, publishableBenchmarks } from "@/lib/tokens/read/benchmark-series";
+import { benchmarkPoints, providerBenchmark, providerBenchmarks, publishableBenchmarks } from "@/lib/tokens/read/benchmark-series";
 import { loadPersistedBenchmarks, persistProviderBenchmarks, persistedBenchmarks, type PersistedBenchmarkRow } from "@/lib/tokens/read/benchmark-store";
 import { validatePublicTokenBenchmark, type PublicTokenSeries } from "@/lib/tokens/read/api-contract";
 import { benchmarkInstrumentsFromSeries } from "@/lib/tokens/read/instruments";
 import { loadVisibleTokenInstruments, tokenReadCatalogFromStore, visibleTokenBenchmarks } from "@/lib/tokens/read/load";
 import { seedWave1ResearchPreview } from "@/lib/tokens/preview-seed";
 import { listVisibleTokenSeries } from "@/lib/tokens/read/series";
+import { seedTokenReadCatalog } from "@/lib/tokens/read/test-support";
 import { InMemoryTokenPricingStore } from "@/lib/tokens/store";
+import type { Wave1Provider } from "@/lib/tokens/types";
 
 // The day this suite reasons about. xAI's designation moves to Grok 4.7 on 2026-09-22 and
 // the retained xAI artifact carries that row, so the preview catalog these tests derive from
@@ -358,7 +361,8 @@ describe("Wave-1 benchmark values", () => {
     expect(row.series!.benchmarkModelId).toBe(modelId);
     expect(row.series!.priceUsdPer1m).toBeCloseTo(tokenBenchmarkPrice(input, output, V11), 10);
     expect(row.series!.priceUsdPer1m).toBeCloseTo(expected, 10);
-    expect(row.series!.methodologyVersion).toBe(methodologyInForce(row.series!.updatedAt.slice(0, 10))!.version);
+    const day = row.series!.updatedAt.slice(0, 10);
+    expect(row.series!.methodologyVersion).toBe(methodologyForConstituent(constituentInForce(provider, day)!, day)!.version);
   });
 
   it("carries a real retrieval timestamp, not a date boundary", () => {
@@ -464,9 +468,104 @@ describe("frozen benchmark observations", () => {
       expect(point.outputPriceUsdPer1m).toBeGreaterThan(0);
       // The version in force on the event's own date, not the newest one: that is the rule
       // effective dating exists to enforce, and hardcoding a version would stop testing it.
-      expect(point.methodologyVersion).toBe(methodologyInForce(point.time.slice(0, 10))!.version);
+      // Where several versions share that date, the constituent's own is the one.
+      const day = point.time.slice(0, 10);
+      expect(point.methodologyVersion).toBe(methodologyForConstituent(constituentInForce(point.providerSlug, day)!, day)!.version);
       expect(point.time).not.toMatch(/T00:00:00\.000Z$/);
     }
+  });
+
+  describe("three versions take effect on 14 September, and a value keeps its constituent's", () => {
+    const SEP_14_A = "2026-09-14T12:03:02.002Z";
+    const SEP_14_B = "2026-09-14T17:43:35.197Z";
+    const SEP_14_C = "2026-09-14T22:16:11.904Z";
+    const SEP_22 = "2026-09-22T20:26:30.000Z";
+
+    /** Production's reviewed legs, as the 14 and 22 September verifications read them. */
+    function productionCatalog() {
+      const leg = (provider: Wave1Provider, providerModelId: string, dimension: "input" | "output", price: number, retrievedAt: string, facets: { contextTier?: string; region?: string } = {}) =>
+        ({ provider, providerModelId, dimension, price, retrievedAt, acquisitionMode: "manual_verified" as const, verificationEvidence: "test", ...facets });
+      return seedTokenReadCatalog([
+        leg("anthropic", "claude-fable-5-1", "input", 10, SEP_14_A),
+        leg("anthropic", "claude-fable-5-1", "output", 50, SEP_14_A),
+        leg("openai", "gpt-6-astra", "input", 10, SEP_14_A, { contextTier: "short_context" }),
+        leg("openai", "gpt-6-astra", "output", 50, SEP_14_A, { contextTier: "short_context" }),
+        leg("xai", "grok-4.6", "input", 2, SEP_14_A, { contextTier: "prompt_lt_200k" }),
+        leg("xai", "grok-4.6", "output", 6, SEP_14_A, { contextTier: "prompt_lt_200k" }),
+        leg("xai", "grok-4.7", "input", 2, SEP_22, { contextTier: "prompt_lt_200k" }),
+        leg("xai", "grok-4.7", "output", 6, SEP_22, { contextTier: "prompt_lt_200k" }),
+        leg("google", "gemini-3.1-pro-preview", "input", 2, SEP_14_B, { contextTier: "prompt_lte_200k" }),
+        leg("google", "gemini-3.1-pro-preview", "output", 12, SEP_14_B, { contextTier: "prompt_lte_200k" }),
+        leg("alibaba", "qwen3.8-max", "input", 2, SEP_14_B, { region: "international" }),
+        leg("alibaba", "qwen3.8-max", "output", 6, SEP_14_B, { region: "international" }),
+        leg("moonshot", "kimi-k3", "input", 3, SEP_14_C, { region: "international" }),
+        leg("moonshot", "kimi-k3", "output", 15, SEP_14_C, { region: "international" }),
+      ]);
+    }
+
+    const EXPECTED = [
+      ["anthropic", "claude-fable-5-1", "1.1", 30, SEP_14_A],
+      ["openai", "gpt-6-astra", "1.1", 30, SEP_14_A],
+      ["xai", "grok-4.6", "1.1", 4, SEP_14_A],
+      ["xai", "grok-4.7", "1.3", 4, SEP_22],
+      ["google", "gemini-3.1-pro-preview", "1.2", 7, SEP_14_B],
+      ["alibaba", "qwen3.8-max", "1.2", 4, SEP_14_B],
+      ["moonshot", "kimi-k3", "1.2", 9, SEP_14_C],
+    ];
+
+    it("still has three versions in force on that date, so the date alone cannot choose", () => {
+      expect(TOKEN_PRICE_METHODOLOGY_VERSIONS.filter((row) => row.effectiveFrom === "2026-09-14").map((row) => row.version)).toEqual(["1.0", "1.1", "1.2"]);
+      expect(methodologyInForce("2026-09-14")!.version).toBe("1.2");
+    });
+
+    it("chooses the constituent's own version on a shared date, and the date's version otherwise", () => {
+      const anthropic = constituentInForce("anthropic", "2026-09-14")!;
+      expect(methodologyForConstituent(anthropic, "2026-09-14")!.version).toBe("1.1");
+      expect(methodologyForConstituent(anthropic, "2026-09-21")!.version).toBe("1.1");
+      // After 1.3 takes effect the date rule is unambiguous, and it stands: a later Anthropic
+      // value would be a 1.3 value, as the methodology's own effective-dating rule says.
+      expect(methodologyForConstituent(anthropic, "2026-10-05")!.version).toBe("1.3");
+      expect(methodologyForConstituent(anthropic, "2026-09-13")).toBeUndefined();
+      expect(methodologyForConstituent(constituentInForce("google", "2026-09-14")!, "2026-09-14")!.version).toBe("1.2");
+      expect(methodologyForConstituent(constituentInForce("xai", "2026-09-22")!, "2026-09-22")!.version).toBe("1.3");
+    });
+
+    it("calculates each designation under the version it was designated under", () => {
+      const points = benchmarkPoints(listVisibleTokenSeries(productionCatalog(), "production"), "2026-10-01");
+      expect(points.map((point) => [point.providerSlug, point.providerModelId, point.methodologyVersion, point.priceUsdPer1m, point.time])).toEqual(
+        expect.arrayContaining(EXPECTED),
+      );
+      expect(points).toHaveLength(EXPECTED.length);
+    });
+
+    it("leaves the published values, dates, history and change exactly as they were", () => {
+      const rows = publishableBenchmarks(listVisibleTokenSeries(productionCatalog(), "production"), "2026-10-01");
+      expect(rows.map((row) => [row.providerSlug, row.benchmarkModelId, row.methodologyVersion, row.priceUsdPer1m, row.updatedAt, row.percentageChange])).toEqual([
+        ["alibaba", "qwen3.8-max", "1.2", 4, SEP_14_B, null],
+        ["anthropic", "claude-fable-5-1", "1.1", 30, SEP_14_A, null],
+        ["google", "gemini-3.1-pro-preview", "1.2", 7, SEP_14_B, null],
+        ["moonshot", "kimi-k3", "1.2", 9, SEP_14_C, null],
+        ["openai", "gpt-6-astra", "1.1", 30, SEP_14_A, null],
+        ["xai", "grok-4.7", "1.3", 4, SEP_22, null],
+      ]);
+      expect(rows.find((row) => row.providerSlug === "xai")!.history).toEqual([
+        { time: SEP_14_A, priceUsdPer1m: 4 },
+        { time: SEP_22, priceUsdPer1m: 4 },
+      ]);
+      for (const row of rows.filter((row) => row.providerSlug !== "xai")) {
+        expect(row.history).toEqual([{ time: row.updatedAt, priceUsdPer1m: row.priceUsdPer1m }]);
+      }
+    });
+
+    it("freezes a new row under the constituent's version, not the date's tie-break", async () => {
+      const sql = memoryBenchmarkSql();
+      const { inserted } = await persistProviderBenchmarks(sql, productionCatalog(), "production", "2026-10-01");
+      expect(inserted).toBe(EXPECTED.length);
+      const frozen = await loadPersistedBenchmarks(sql);
+      expect(frozen.map((row) => [row.providerSlug, row.benchmarkModelId, row.methodologyVersion, row.priceUsdPer1m, row.calculatedAt])).toEqual(
+        expect.arrayContaining(EXPECTED),
+      );
+    });
   });
 
   it("is idempotent: recalculating the same state writes nothing new", async () => {

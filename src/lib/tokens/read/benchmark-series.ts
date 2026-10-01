@@ -35,6 +35,7 @@ import {
   constituentInForce,
   constituentSegments,
   isEligibleLeg,
+  methodologyForConstituent,
   methodologyInForce,
   tokenBenchmarkPrice,
   type TokenBenchmarkConstituent,
@@ -115,7 +116,8 @@ function stateAt(points: readonly LegPoint[], at: string): LegPoint | undefined 
 /**
  * One designation's points. Events are the eligible leg observations inside
  * the segment; each is computed from the state of both legs at that moment,
- * under the methodology version in force on that event's date.
+ * under the methodology version in force on that event's date -- the
+ * constituent's own version where several share that date.
  */
 function segmentPoints(
   constituent: TokenBenchmarkConstituent,
@@ -135,7 +137,7 @@ function segmentPoints(
     const input = stateAt(inputs, at);
     const output = stateAt(outputs, at);
     if (input === undefined || output === undefined) continue;
-    const methodology = methodologyInForce(dayOf(at));
+    const methodology = methodologyForConstituent(constituent, dayOf(at));
     if (methodology === undefined) continue;
     const price = tokenBenchmarkPrice(input.price, output.price, methodology);
     const previous = points[points.length - 1];
