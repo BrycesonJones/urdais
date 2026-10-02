@@ -42,6 +42,20 @@ const MAX_X_TICKS = 5;
 const X_LABEL_SPACING = 180;
 
 /**
+ * Evenly spaced, unique observation indexes for x-axis labels.
+ *
+ * The count is capped at the number of observations so a sparse series can
+ * never round several nominal tick slots onto the same point.
+ */
+export function snapshotTickIndexes(dataLength: number, requestedCount: number): number[] {
+  if (dataLength < 2) return [];
+  const count = Math.min(dataLength, Math.max(MIN_X_TICKS, requestedCount));
+  return Array.from({ length: count }, (_, i) =>
+    Math.round(((dataLength - 1) * i) / (count - 1)),
+  );
+}
+
+/**
  * Urdais-owned snapshot chart: a small SVG thumbnail for the homepage.
  * It draws an icy-blue trend line over a cobalt square-matrix field clipped to the
  * area under the line, a single current-value marker on the right, and a
@@ -94,11 +108,18 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
     const areaPath = `${linePath}L${x(data.length - 1).toFixed(1)},${plotBottom}L${plotLeft},${plotBottom}Z`;
     const lineTop = y(max);
 
-    const xTickCount = Math.max(MIN_X_TICKS, Math.min(MAX_X_TICKS, Math.floor(plotWidth / X_LABEL_SPACING)));
-    const xTicks = Array.from({ length: xTickCount }, (_, i) => {
-      const index = Math.round(((data.length - 1) * i) / (xTickCount - 1));
-      return { index, x: x(index) };
-    });
+    const requestedXTickCount = Math.max(
+      MIN_X_TICKS,
+      Math.min(MAX_X_TICKS, Math.floor(plotWidth / X_LABEL_SPACING)),
+    );
+    // Never ask for more ticks than there are observations. When a 1D daily
+    // series has only two points, requesting five ticks rounds several slots
+    // back onto the same two indexes, drawing duplicate labels on top of each
+    // other and creating duplicate React keys.
+    const xTicks = snapshotTickIndexes(data.length, requestedXTickCount).map((index) => ({
+      index,
+      x: x(index),
+    }));
 
     // Slightly wider cells on wide charts so the field never turns into noise.
     const matrixSpacing = plotWidth < 480 ? 8 : 10;
@@ -190,7 +211,7 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
               const anchor = i === 0 ? "start" : i === geometry.xTicks.length - 1 ? "end" : "middle";
               return (
                 <text
-                  key={tick.index}
+                  key={`${point.time}-${tick.index}`}
                   x={tick.x}
                   y={size.height - 8}
                   fill={AXIS_TEXT}
