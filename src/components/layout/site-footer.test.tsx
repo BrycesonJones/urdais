@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 
@@ -86,12 +86,155 @@ describe("SiteFooter contact", () => {
     expect(document.activeElement).toBe(trigger);
   });
 
-  it("does not send anything yet", () => {
+});
+
+type Deferred = { resolve: (response: Response) => void; reject: (error: Error) => void };
+
+/** Stubs fetch with responses the test settles by hand, so the in-flight state can be inspected. */
+function stubFetch() {
+  const pending: Deferred[] = [];
+  const fetchStub = vi.fn<typeof fetch>(
+    () => new Promise<Response>((resolve, reject) => pending.push({ resolve, reject })),
+  );
+  vi.stubGlobal("fetch", fetchStub);
+  return { fetchStub, pending };
+}
+
+const json = (status: number, body: unknown) =>
+  new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+
+function fill(dialog: HTMLElement, email: string, message: string) {
+  fireEvent.input(within(dialog).getByLabelText("Your email"), { target: { value: email } });
+  fireEvent.input(within(dialog).getByLabelText("How can we help?"), { target: { value: message } });
+}
+
+const sendButton = (dialog: HTMLElement) => within(dialog).getByRole("button", { name: /^send|sending/i });
+
+describe("ContactModal submission", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("posts the trimmed fields to /api/contact", async () => {
+    const { fetchStub, pending } = stubFetch();
     const { dialog } = openContact();
-    const submit = within(dialog).getByRole("button", { name: /send/i });
-    const event = new Event("submit", { bubbles: true, cancelable: true });
-    submit.closest("form")!.dispatchEvent(event);
-    expect(event.defaultPrevented).toBe(true);
+    fill(dialog, "  reader@example.com ", "  Hello there.\n");
+    fireEvent.click(sendButton(dialog));
+
+    expect(fetchStub).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchStub.mock.calls[0]!;
+    expect(url).toBe("/api/contact");
+    expect(init?.method).toBe("POST");
+    expect(JSON.parse(String(init?.body))).toEqual({ email: "reader@example.com", message: "Hello there." });
+    await act(async () => pending[0]!.resolve(json(200, { ok: true })));
+  });
+
+  it.each([
+    ["an empty email", "", "Hello.", "Your email", "Enter your email."],
+    ["an invalid email", "reader@", "Hello.", "Your email", "Enter a valid email address."],
+    ["an empty message", "reader@example.com", "", "How can we help?", "Enter a message."],
+    ["a whitespace-only message", "reader@example.com", "  \n  ", "How can we help?", "Enter a message."],
+    ["an over-long message", "reader@example.com", "x".repeat(5001), "How can we help?", "Keep your message under 5,000 characters."],
+    ["an over-long email", `${"a".repeat(250)}@example.com`, "Hello.", "Your email", "Keep your email under 254 characters."],
+  ])("blocks %s on the client with an inline error", (_label, email, message, field, text) => {
+    const { fetchStub } = stubFetch();
+    const { dialog } = openContact();
+    fill(dialog, email, message);
+    fireEvent.click(sendButton(dialog));
+
+    expect(fetchStub).not.toHaveBeenCalled();
+    const input = within(dialog).getByLabelText(field);
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input).toHaveAccessibleDescription(text);
+    expect(document.activeElement).toBe(input);
+    // Nothing is silently cut: the draft is exactly what was typed.
+    expect(input).toHaveValue(field === "Your email" ? email : message);
+  });
+
+  it("disables Send while sending and refuses to close until there is an outcome", async () => {
+    const { pending } = stubFetch();
+    const { dialog } = openContact();
+    fill(dialog, "reader@example.com", "Hello.");
+    fireEvent.click(sendButton(dialog));
+
+    expect(sendButton(dialog)).toBeDisabled();
+    expect(sendButton(dialog)).toHaveTextContent("Sending…");
+    expect(within(dialog).getByLabelText("Your email")).toHaveAttribute("readonly");
+    fireEvent.click(dialog);
+    fireEvent.click(within(dialog).getByRole("button", { name: "Close contact form" }));
+    const cancel = new Event("cancel", { cancelable: true });
+    dialog.dispatchEvent(cancel);
+    expect(cancel.defaultPrevented).toBe(true);
     expect(dialog).toHaveProperty("open", true);
+
+    await act(async () => pending[0]!.resolve(json(200, { ok: true })));
+    expect(sendButton(dialog)).toBeEnabled();
+  });
+
+  it("sends once however fast Send is clicked", async () => {
+    const { fetchStub, pending } = stubFetch();
+    const { dialog } = openContact();
+    fill(dialog, "reader@example.com", "Hello.");
+    const form = sendButton(dialog).closest("form")!;
+    // Three submits in the same tick, before React can re-render the button as disabled.
+    act(() => {
+      for (let i = 0; i < 3; i++) form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+    expect(fetchStub).toHaveBeenCalledTimes(1);
+    await act(async () => pending[0]!.resolve(json(200, { ok: true })));
+    expect(fetchStub).toHaveBeenCalledTimes(1);
+  });
+
+  it("confirms success and clears the form only after the server confirms", async () => {
+    const { pending } = stubFetch();
+    const { dialog } = openContact();
+    fill(dialog, "reader@example.com", "Hello.");
+    fireEvent.click(sendButton(dialog));
+
+    // In flight: the draft is still there.
+    expect(within(dialog).getByLabelText("Your email")).toHaveValue("reader@example.com");
+    expect(within(dialog).getByRole("status")).toHaveTextContent("");
+
+    await act(async () => pending[0]!.resolve(json(200, { ok: true })));
+    expect(within(dialog).getByRole("status")).toHaveTextContent("Message sent.");
+    expect(within(dialog).getByLabelText("Your email")).toHaveValue("");
+    expect(within(dialog).getByLabelText("How can we help?")).toHaveValue("");
+    expect(within(dialog).queryByRole("alert")).toBeNull();
+    // The modal stays open on the confirmation; it does not snap shut.
+    expect(dialog).toHaveProperty("open", true);
+    expect(document.activeElement).toBe(sendButton(dialog));
+  });
+
+  it.each([
+    ["a delivery failure", () => json(500, { ok: false, error: "delivery_failed" })],
+    ["a validation failure", () => json(400, { ok: false, error: "invalid_input" })],
+    ["a 200 without ok: true", () => json(200, { id: "x" })],
+    ["a non-JSON response", () => new Response("<html>Bad gateway</html>", { status: 502 })],
+  ])("shows a generic error and keeps the draft on %s", async (_label, response) => {
+    const { pending } = stubFetch();
+    const { dialog } = openContact();
+    fill(dialog, "reader@example.com", "Hello.");
+    fireEvent.click(sendButton(dialog));
+    await act(async () => pending[0]!.resolve(response()));
+
+    expect(within(dialog).getByRole("alert")).toHaveTextContent("Something went wrong. Please try again.");
+    expect(within(dialog).getByRole("status")).toHaveTextContent("");
+    expect(within(dialog).getByLabelText("Your email")).toHaveValue("reader@example.com");
+    expect(within(dialog).getByLabelText("How can we help?")).toHaveValue("Hello.");
+    expect(sendButton(dialog)).toBeEnabled();
+    expect(dialog.textContent).not.toMatch(/delivery_failed|invalid_input|gateway/i);
+  });
+
+  it("shows the error on a network failure, and a retry can then succeed", async () => {
+    const { fetchStub, pending } = stubFetch();
+    const { dialog } = openContact();
+    fill(dialog, "reader@example.com", "Hello.");
+    fireEvent.click(sendButton(dialog));
+    await act(async () => pending[0]!.reject(new TypeError("Failed to fetch")));
+    expect(within(dialog).getByRole("alert")).toBeInTheDocument();
+
+    fireEvent.click(sendButton(dialog));
+    expect(fetchStub).toHaveBeenCalledTimes(2);
+    await act(async () => pending[1]!.resolve(json(200, { ok: true })));
+    expect(within(dialog).queryByRole("alert")).toBeNull();
+    expect(within(dialog).getByRole("status")).toHaveTextContent("Message sent.");
   });
 });
