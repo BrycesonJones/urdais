@@ -94,7 +94,15 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
     const areaPath = `${linePath}L${x(data.length - 1).toFixed(1)},${plotBottom}L${plotLeft},${plotBottom}Z`;
     const lineTop = y(max);
 
-    const xTickCount = Math.max(MIN_X_TICKS, Math.min(MAX_X_TICKS, Math.floor(plotWidth / X_LABEL_SPACING)));
+    const requestedXTickCount = Math.max(
+      MIN_X_TICKS,
+      Math.min(MAX_X_TICKS, Math.floor(plotWidth / X_LABEL_SPACING)),
+    );
+    // Never ask for more ticks than there are observations. When a 1D daily
+    // series has only two points, requesting five ticks rounds several slots
+    // back onto the same two indexes, drawing duplicate labels on top of each
+    // other and creating duplicate React keys.
+    const xTickCount = Math.min(data.length, requestedXTickCount);
     const xTicks = Array.from({ length: xTickCount }, (_, i) => {
       const index = Math.round(((data.length - 1) * i) / (xTickCount - 1));
       return { index, x: x(index) };
@@ -190,7 +198,7 @@ export function SnapshotChart({ data, intraday, unit, label, className }: Snapsh
               const anchor = i === 0 ? "start" : i === geometry.xTicks.length - 1 ? "end" : "middle";
               return (
                 <text
-                  key={tick.index}
+                  key={`${point.time}-${tick.index}`}
                   x={tick.x}
                   y={size.height - 8}
                   fill={AXIS_TEXT}
