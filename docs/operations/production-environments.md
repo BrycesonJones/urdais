@@ -281,6 +281,45 @@ API key, and `eth.llamarpc.com` returns intermittent 525s.
    `curl -H "Authorization: Bearer $CRON_SECRET" https://<origin>/api/cron/ubwi`.
    An unauthenticated call must answer `401`.
 
+## Scheduled interconnection queue refresh
+
+`vercel.json` runs `GET /api/cron/interconnection-queue` on `30 9 * * *`
+(`maxDuration` 300). It calls `runScheduledQueueRefresh`
+(`src/lib/interconnection-queue/operations/scheduled-run.ts`), which holds an
+advisory lock and then:
+
+1. **Ingests** each of the seven sources in turn through `runQueueSource`, the
+   same runner `npm run interconnection-queue:ingest` uses. SPP is collected
+   like the others; nothing derived from it is published. ERCOT runs with
+   `--limit 3` equivalent (`SCHEDULED_ERCOT_LIMIT`): its archive walk downloads
+   every selected workbook before the store sees it already holds one, so an
+   unbounded walk would re-download the whole archive daily.
+2. **Checks** each source immediately after its ingest, writing one row to
+   `pipeline.interconnection_source_checks`: `reachable = false` on a retrieval
+   failure, the artifact hash, HTTP status and snapshot where one exists, and
+   the source's currentness against
+   `reference.interconnection_source_monitors.stale_after_hours`. A failed
+   retrieval writes the check and nothing else — never a placeholder snapshot.
+3. **Gates.** If any published market (every market but SPP) is stale or has
+   no snapshot, the analytics are not attempted and the route answers `500`
+   with `reason: "inputs_stale"` and the stale markets. The previous validated
+   run stays served, and the page shows it as **Stale** with each market's
+   source date.
+4. **Calculates** with `runQueueAnalytics` only when every published market is
+   current.
+
+The route answers `200` only when every source ingested and the analytics ran;
+any failed source is `500` even if the analytics still ran on the others. The
+response carries per-market currentness in every case.
+
+To catch up by hand after a gap (for example after first deploying this):
+
+```
+npm run interconnection-queue:ingest -- --source pjm    # likewise miso, caiso, iso-ne, spp, nyiso
+npm run interconnection-queue:ingest -- --source ercot --limit 3
+npm run interconnection-queue:analytics -- --write
+```
+
 ## Pages that read the database must not be prerendered
 
 `/markets`, `/markets/model-economics` and `/markets/[symbol]` read live benchmark state. The first two declare `export const dynamic = "force-dynamic"`. The homepage declares it too, for the production Compute news rail.

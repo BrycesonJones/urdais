@@ -10,8 +10,12 @@
  * and only `live` carries a number.
  */
 
-import { METHODOLOGY_SLUG, METHODOLOGY_VERSION } from "@/lib/interconnection-queue/analytics/methodology";
+import {
+  METHODOLOGY_SLUG, METHODOLOGY_VERSION, mayPublishMarketMetric,
+} from "@/lib/interconnection-queue/analytics/methodology";
 import type { MetricStatus } from "@/lib/interconnection-queue/analytics/calculate";
+import { statusFor } from "@/lib/interconnection-queue/monitor";
+import type { CurrentnessStatus } from "@/lib/interconnection-queue/types";
 import type { CapacitySqlExecutor } from "@/lib/power-delivery/capacity/read";
 
 export type MetricValue = {
@@ -39,12 +43,34 @@ export type MarketAnalytics = {
   metrics: MetricValue[];
 };
 
+/**
+ * How old the source behind one published market is, independent of when the analytics last ran.
+ *
+ * A daily recalculation over a fortnight-old snapshot is a fortnight old. `calculatedAt` alone
+ * cannot say that, so each published market carries the age of its own latest snapshot, measured
+ * against that source's own threshold.
+ */
+export type MarketSourceFreshness = {
+  marketSlug: string;
+  observedAt: string | null;
+  sourcePublishedAt: string | null;
+  /** The period the publisher says the snapshot describes, for sources that state one. */
+  reportPeriod: string | null;
+  ageHours: number | null;
+  staleAfterHours: number | null;
+  status: CurrentnessStatus;
+};
+
 export type QueueAnalyticsReadModel = {
   methodology: { slug: string; version: string; documentPath: string; title: string };
   calculatedAt: string | null;
   inputDigest: string | null;
   snapshotCount: number;
   markets: MarketAnalytics[];
+  /** One entry per published market. A blocked market has none. */
+  sourceFreshness: MarketSourceFreshness[];
+  /** The most recent source check the scheduled refresh recorded, if it has ever run. */
+  lastCheckedAt: string | null;
   /** Markets held internally and never published, named so an omission is visible. */
   excludedMarkets: { marketSlug: string; marketName: string; reason: string }[];
   /** Metrics the methodology names but does not approve. Named, never blank. */
@@ -65,7 +91,7 @@ export function unavailableQueueAnalytics(): QueueAnalyticsReadModel {
       title: "Urdais Interconnection Queue Analytics",
     },
     calculatedAt: null, inputDigest: null, snapshotCount: 0,
-    markets: [], excludedMarkets: [], deferredMetrics: [],
+    markets: [], sourceFreshness: [], lastCheckedAt: null, excludedMarkets: [], deferredMetrics: [],
     notes: [CROSS_MARKET_MW_NOTE],
   };
 }
@@ -78,6 +104,7 @@ export function unavailableQueueAnalytics(): QueueAnalyticsReadModel {
  */
 export async function loadQueueAnalytics(
   sql: CapacitySqlExecutor | null,
+  options: { now?: Date } = {},
 ): Promise<QueueAnalyticsReadModel> {
   if (sql === null) return unavailableQueueAnalytics();
 
@@ -154,6 +181,45 @@ export async function loadQueueAnalytics(
     [String(run.id)],
   );
 
+  // Source age for the published markets only: a blocked market's freshness is not served either.
+  const published = [...markets.keys()].filter(mayPublishMarketMetric);
+  const freshness = await sql.query(
+    `select distinct on (a.slug) a.slug as market_slug, m.stale_after_hours,
+            q.observed_at::text as observed_at, q.source_published_at::text as source_published_at,
+            q.report_period::text as report_period
+       from pipeline.interconnection_queue_snapshots q
+       join reference.grid_areas a on a.id = q.grid_area_id
+       join reference.interconnection_source_monitors m on m.source_interface_id = q.source_interface_id
+      where q.is_latest and a.slug = any($1::text[])
+      order by a.slug, q.observed_at desc`,
+    [published],
+  );
+  const now = options.now ?? new Date();
+  const sourceFreshness: MarketSourceFreshness[] = published.map((slug) => {
+    const row = freshness.rows.find((candidate) => String(candidate.market_slug) === slug);
+    if (row === undefined || row.observed_at == null) {
+      return { marketSlug: slug, observedAt: null, sourcePublishedAt: null, reportPeriod: null,
+        ageHours: null, staleAfterHours: row === undefined ? null : Number(row.stale_after_hours),
+        status: "unavailable" };
+    }
+    const observedAt = String(row.observed_at);
+    const ageHours = (now.getTime() - new Date(observedAt).getTime()) / 3_600_000;
+    const staleAfterHours = Number(row.stale_after_hours);
+    return {
+      marketSlug: slug, observedAt,
+      sourcePublishedAt: row.source_published_at == null ? null : String(row.source_published_at),
+      reportPeriod: row.report_period == null ? null : String(row.report_period),
+      ageHours: Math.round(ageHours * 10) / 10, staleAfterHours,
+      // The same rule the scheduled refresh gates on, so the page and the cron cannot disagree.
+      status: statusFor(ageHours, staleAfterHours),
+    };
+  });
+
+  const checked = await sql.query(
+    `select max(checked_at)::text as checked_at from pipeline.interconnection_source_checks`, [],
+  );
+  const lastCheckedAt = checked.rows[0]?.checked_at == null ? null : String(checked.rows[0].checked_at);
+
   const deferred = await sql.query(
     `select code, label, deferred_reason from reference.interconnection_metric_definitions
       where not is_live order by code`, [],
@@ -169,6 +235,8 @@ export async function loadQueueAnalytics(
     inputDigest: String(run.input_digest),
     snapshotCount: Number(run.snapshots),
     markets: [...markets.values()],
+    sourceFreshness,
+    lastCheckedAt,
     excludedMarkets: excluded.rows.map((row) => ({
       marketSlug: String(row.slug), marketName: String(row.display_name),
       reason: row.rights_reason == null
@@ -207,6 +275,9 @@ export function validatePublicQueueAnalytics(model: QueueAnalyticsReadModel): st
   }
   for (const market of model.markets) {
     if (market.marketSlug === "spp") problems.push("a market blocked from publication reached the read model");
+    if (!model.sourceFreshness.some((entry) => entry.marketSlug === market.marketSlug)) {
+      problems.push(`${market.marketSlug} is published without the age of its source`);
+    }
     for (const metric of market.metrics) {
       if ((metric.status === "live") !== (metric.value !== null)) {
         problems.push(`${market.marketSlug}/${metric.metric} has status ${metric.status} and ${metric.value === null ? "no" : "a"} value`);
@@ -217,6 +288,11 @@ export function validatePublicQueueAnalytics(model: QueueAnalyticsReadModel): st
       if (metric.unit === "MW" && metric.comparability !== "C") {
         problems.push(`${market.marketSlug}/${metric.metric} claims MW comparability beyond market-specific`);
       }
+    }
+  }
+  for (const entry of model.sourceFreshness) {
+    if (!mayPublishMarketMetric(entry.marketSlug)) {
+      problems.push(`${entry.marketSlug} is blocked from publication and its source freshness was served`);
     }
   }
   if (model.deferredMetrics.length === 0) {

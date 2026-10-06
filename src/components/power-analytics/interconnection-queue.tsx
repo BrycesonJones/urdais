@@ -22,6 +22,8 @@ import { formatNumber } from "@/lib/format";
  */
 
 const YEARS = (value: number) => `${value.toFixed(1)} yr`;
+const DAY = (iso: string) => new Date(iso).toLocaleDateString("en-US",
+  { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 const PERCENT = (value: number) => `${(value * 100).toFixed(1)}%`;
 
 /** Why a metric has no number, in a reader's words rather than a status code. */
@@ -141,6 +143,14 @@ export function InterconnectionQueue({ analytics }: { analytics: QueueAnalyticsR
     find(market.metrics, "active_request_count")?.value ?? 0));
   const technology = technologyComposition(analytics);
 
+  // "Live" is a claim about the sources, not about when the arithmetic last ran: it holds only
+  // when every published market's own snapshot is inside that source's freshness window.
+  const freshness = new Map(analytics.sourceFreshness.map((entry) => [entry.marketSlug, entry]));
+  const behind = markets.filter((market) => freshness.get(market.marketSlug)?.status !== "current");
+  const live = behind.length === 0;
+  const observed = markets.map((market) => freshness.get(market.marketSlug)?.observedAt ?? null)
+    .filter((value): value is string => value !== null).sort();
+
   if (markets.length === 0) {
     return (
       <section id="queues" aria-labelledby="queues-heading" className="scroll-mt-24 border-t border-white/10 pt-8">
@@ -159,20 +169,44 @@ export function InterconnectionQueue({ analytics }: { analytics: QueueAnalyticsR
         id="queues-heading"
         title="Interconnection Queue"
         subtitle="Projects waiting to connect, and how many make it through"
-        aside={
+        aside={live ? (
           <span className="inline-flex items-center rounded-[2px] bg-emerald-500/10 px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-emerald-300">
             Live
           </span>
-        }
+        ) : (
+          <span className="inline-flex items-center rounded-[2px] bg-amber-500/10 px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-amber-300">
+            Stale
+          </span>
+        )}
       />
+
+      {live ? null : (
+        // Stale keeps the last validated figures on screen and says so, as the other Power
+        // Analytics products do. Withdrawing them would lose more than it protects.
+        <p
+          role="status"
+          className="mt-4 rounded-[3px] border border-amber-500/30 bg-amber-500/[0.06] p-4 text-sm text-amber-200/90"
+        >
+          <span className="font-medium">These figures may be out of date.</span>{" "}
+          The source data for {behind.map((market) => {
+            const entry = freshness.get(market.marketSlug);
+            return entry?.observedAt == null
+              ? `${market.marketName} (date unavailable)`
+              : `${market.marketName} (as of ${DAY(entry.observedAt)})`;
+          }).join(", ")} is older than that publisher&apos;s freshness window. The values shown
+          are the last validated calculation and remain unchanged; nothing has been substituted.
+        </p>
+      )}
 
       {/* 1. How many projects are actively waiting? */}
       <p className="mt-2 text-xs text-neutral-500">
         {formatNumber(totalActive, 0)} projects actively waiting across {markets.length} markets
-        {analytics.calculatedAt === null ? null : (
-          <> · last calculated {new Date(analytics.calculatedAt).toLocaleDateString("en-US",
-            { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}</>
+        {observed.length === 0 ? null : (
+          <> · sources observed {observed[0] === observed.at(-1)
+            ? DAY(observed[0]!)
+            : `${DAY(observed[0]!)} – ${DAY(observed.at(-1)!)}`}</>
         )}
+        {analytics.calculatedAt === null ? null : <> · last calculated {DAY(analytics.calculatedAt)}</>}
       </p>
 
       <ol className="mt-6 divide-y divide-white/[0.06]" aria-label="Active interconnection requests by market">
@@ -188,10 +222,17 @@ export function InterconnectionQueue({ analytics }: { analytics: QueueAnalyticsR
           const age = find(market.metrics, "queue_age_years", "median");
           const mw = find(market.metrics, "active_mw");
           const count = active?.value ?? 0;
+          const source = freshness.get(market.marketSlug);
           return (
             <li key={market.marketSlug}
               className="grid grid-cols-[minmax(6rem,9rem)_minmax(0,1fr)_5rem_5.5rem_6rem] items-center gap-x-3 py-2.5 text-sm">
-              <span className="min-w-0 truncate font-medium text-neutral-100">{market.marketName}</span>
+              <span className="min-w-0">
+                <span className="block truncate font-medium text-neutral-100">{market.marketName}</span>
+                <span className={`block truncate text-[11px] ${source?.status === "current"
+                  ? "text-neutral-500" : "text-amber-300/80"}`}>
+                  {source?.observedAt == null ? "source date unavailable" : `source as of ${DAY(source.observedAt)}`}
+                </span>
+              </span>
               <span className="relative h-2.5 overflow-hidden rounded-[1px] bg-white/[0.04]" aria-hidden="true">
                 <span className="absolute inset-y-0 left-0 rounded-[1px] bg-[#526fe0]"
                   style={{ width: `${(count / maxActive) * 100}%` }} />
