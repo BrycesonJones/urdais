@@ -1,5 +1,5 @@
 /**
- * The scheduled UCPI listed-GPU run: collect, then calculate and publish.
+ * The scheduled UCPI listed-GPU run: calculate and publish yesterday, then collect today.
  *
  * Nothing here is new machinery. `runCollectionPhase` and `runCalculationPhase`
  * already implement the family calendar; this module supplies them with a real
@@ -20,8 +20,8 @@
  *
  * One invocation does both phases where the calendar allows it. The collection
  * phase belongs inside the calculation date's window and the calculation phase
- * at or after its cutoff, so a run at 01:00 UTC collects for today and calculates
- * and publishes yesterday. That is the whole of the cadence decision, and it is
+ * at or after its cutoff, so a run at 01:00 UTC calculates and publishes
+ * yesterday and collects for today. That is the whole of the cadence decision, and it is
  * why a single daily job is enough.
  */
 
@@ -38,7 +38,7 @@ import type { PermissionGrant } from "@/lib/ucpi/runtime/collector-runtime";
 import { collectSource } from "@/lib/ucpi/runtime/collector-runtime";
 import { DuplicateRetrievalError } from "@/lib/ucpi/runtime/persistence";
 import { CollectingSink } from "@/lib/ucpi/runtime/events";
-import { fetchHttpClient, type HttpClient } from "@/lib/ucpi/runtime/http";
+import { fetchHttpClient, type Clock, type HttpClient, type Sleep } from "@/lib/ucpi/runtime/http";
 import { previousDate, type SqlExecutor } from "@/lib/ucpi/runtime/persistence";
 import { runCalculationPhase } from "@/lib/ucpi/runtime/production-job";
 import { validatePocPrices } from "@/lib/ucpi/runtime/schema-validation";
@@ -186,6 +186,25 @@ export type DailyRunOptions = {
   /** Restricts the run to these symbols; every registry instrument by default. */
   only?: readonly string[];
   collectorIdentity?: string;
+  /**
+   * The instant, on the run's clock, by which the invocation must be done with the network.
+   * The route derives it from its own maxDuration. Collection retries never continue past it,
+   * no single attempt is allowed to outlive it, and an instrument whose collection has not
+   * started by then is skipped rather than started and killed. Absent, the window cutoff is
+   * the only bound.
+   */
+  runDeadline?: Date;
+  /** The wait between retries; real time by default. A seam for tests, as `http` is. */
+  sleep?: Sleep;
+};
+
+/** One instrument's state, shared by the two phases. */
+type InstrumentRun = {
+  instrument: ListedGpuInstrument;
+  lineage: Lineage;
+  persistence: DatabasePersistence;
+  events: CollectingSink;
+  outcome: InstrumentOutcome;
 };
 
 /**
@@ -195,6 +214,15 @@ export type DailyRunOptions = {
  * whose window has closed. A retrieval whose bytes already exist for the collection date is
  * a duplicate and is recorded as such rather than written twice, which is what makes a
  * retry or a double-fire harmless.
+ *
+ * Every instrument is calculated before any is collected. The two phases work on different
+ * dates, so the order changes nothing about what is calculated; it decides what a slow
+ * source can cost. Calculation is database-only and has a publication deadline. Collection
+ * is network-bound and can spend tens of seconds per instrument in retries. Collected first,
+ * a source answering 503 starved the later instruments' publication until the function was
+ * killed, and a re-run spent the same retries again before reaching them, so the missed
+ * days were never recovered. Calculation is idempotent (a day already calculated is
+ * reported, not written twice), so running it first on a re-run costs nothing.
  */
 export async function runDailyUcpi(sql: SqlExecutor, options: DailyRunOptions = {}): Promise<DailyRunResult> {
   const now = options.now ?? new Date();
@@ -208,12 +236,14 @@ export async function runDailyUcpi(sql: SqlExecutor, options: DailyRunOptions = 
   const collectionDate = now.toISOString().slice(0, 10);
   const calculationDate = previousDate(collectionDate);
   const http = options.http ?? fetchHttpClient;
+  const sleep: Sleep = options.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
   const baseUrl = options.baseUrl ?? process.env.UCPI_PRICE_OF_COMPUTE_BASE_URL ?? "https://priceofcompute.com";
 
   const [lineages, reg] = await Promise.all([loadApprovedLineage(sql), loadRegistry(sql, now)]);
   const wanted = options.only ? LISTED_GPU_INSTRUMENTS.filter((i) => options.only!.includes(i.symbol)) : LISTED_GPU_INSTRUMENTS;
 
   const instruments: InstrumentOutcome[] = [];
+  const runs: InstrumentRun[] = [];
   for (const instrument of wanted) {
     const lineage = lineages.get(instrument.symbol);
     if (lineage === undefined) {
@@ -229,113 +259,141 @@ export async function runDailyUcpi(sql: SqlExecutor, options: DailyRunOptions = 
     });
     persistence.versions = { methodologyVersion: lineage.methodologyVersion, instrumentSpecVersion: lineage.instrumentSpecVersion };
 
-    const events = new CollectingSink();
     const outcome: InstrumentOutcome = { instrument: instrument.symbol, collection: "failed", calculation: "failed" };
-
-    // Collection phase, inside today's window.
-    try {
-      const result = await collectSource<{ baseUrl: string; sku: string }, PocPricesResponse, ReturnType<typeof pocSellerProfiles>>({
-        adapter: priceOfComputeAdapter,
-        providerSlug: "price-of-compute",
-        params: { baseUrl, sku: instrument.upstreamSkus[PRICE_OF_COMPUTE_SLUG]![0]! },
-        companion: pocSellerProfiles(reg.entityIdBySlug, POC_SELLER_EVIDENCE_2026_09_15),
-        mode: "production",
-        calculationDate: collectionDate,
-        registry: reg.registry,
-        grant: reg.grant,
-        env: process.env as Record<string, string | undefined>,
-        http,
-        clock,
-        sleep: (ms) => new Promise((r) => setTimeout(r, ms)),
-        persistence,
-        events,
-        context: contextFor(instrument, lineage, reg),
-        validateResponse: validatePocPrices,
-        collectorIdentity: options.collectorIdentity ?? `ucpi-cron/${instrument.symbol}`,
-        idFactory: () => crypto.randomUUID(),
-        spec: LISTED_FAMILY.spec,
-        identity: instrument.identity,
-      });
-      outcome.collection = result.duplicateOfRetrievalId === null ? "collected" : "duplicate";
-      if (result.duplicateOfRetrievalId !== null) outcome.collectionDetail = `same bytes as retrieval ${result.duplicateOfRetrievalId}`;
-    } catch (error) {
-      // The same bytes already stored for this window is the cadence working, not an outage:
-      // a retry, a double-fire or a source that has not moved since the last run all land
-      // here, and none of them should read as a failure in a log someone is scanning.
-      const duplicate = error instanceof DuplicateRetrievalError;
-      outcome.collection = duplicate ? "duplicate" : "failed";
-      outcome.collectionDetail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-      // A source failure is not a reason to skip the calculation either: yesterday's
-      // observations are already stored, and whether they are enough is the methodology's
-      // question rather than today's network's.
-    }
-
-    // Calculation phase, for the date whose window has closed.
-    //
-    // A date Urdais did not collect for is not calculated at all. Running the pipeline over
-    // an empty set would produce a perfectly valid NO_ELIGIBLE_PARTICIPANT under the
-    // structural rule, and recording it would put a point on the public series asserting
-    // that the market was observed and found wanting on a day nobody looked. A child's
-    // series begins at its first real production observation date; before that there is no
-    // point, rather than an Unavailable one.
-    try {
-      if (!(await persistence.hasProductionCoverage(calculationDate))) {
-        outcome.calculation = "no_coverage";
-        outcome.calculationDetail = `no production observation was collected for ${calculationDate}; the series has not begun`;
-        instruments.push(outcome);
-        continue;
-      }
-    } catch (error) {
-      outcome.calculation = "failed";
-      outcome.calculationDetail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-      instruments.push(outcome);
-      continue;
-    }
-
-    try {
-      const calculation = await runCalculationPhase({
-        calculationDate,
-        instrument: instrument.symbol,
-        versions: {
-          methodologyVersion: lineage.methodologyVersion,
-          instrumentSpecVersion: lineage.instrumentSpecVersion,
-          methodologyVersionStatus: "approved",
-          instrumentSpecVersionStatus: "approved",
-        },
-        entities: reg.entities,
-        registry: [reg.registry],
-        persistence,
-        events,
-        clock,
-        idFactory: () => crypto.randomUUID(),
-        spec: LISTED_FAMILY.spec,
-        regionScope: LISTED_FAMILY.regionScope,
-        identity: instrument.identity,
-      });
-      const row = calculation.regional.find((r) => r.observation.canonicalRegionCode === LISTED_SCOPE_KEY) ?? calculation.regional[0];
-      if (row === undefined) {
-        outcome.calculation = "no_observations";
-        outcome.calculationDetail = `no eligible observation was stored for ${calculationDate}`;
-      } else {
-        outcome.calculation = row.status;
-        outcome.priceLevel = row.observation.priceLevel;
-        outcome.participantCount = row.observation.participantCount;
-        outcome.marketBreadth = row.observation.marketBreadth;
-        if (!row.gate.ok) outcome.calculationDetail = row.gate.reasons.join(", ");
-        else if (row.observation.outcome === "unavailable") outcome.calculationDetail = row.observation.structuralCondition ?? "unavailable";
-      }
-    } catch (error) {
-      const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-      // A day already calculated is the cadence working, not an outage. The database refuses
-      // a second current regional observation for the same instrument, region and date.
-      outcome.calculation = /already exists|duplicate key/i.test(detail) ? "already_calculated" : "failed";
-      outcome.calculationDetail = detail;
-    }
-
+    runs.push({ instrument, lineage, persistence, events: new CollectingSink(), outcome });
     instruments.push(outcome);
   }
 
+  // Calculation phase, for the date whose window has closed, for every instrument.
+  for (const run of runs) await calculate(run, calculationDate, reg, clock);
+
+  // Collection phase, inside today's window. A source failure was never a reason to skip a
+  // calculation: yesterday's observations are already stored, and whether they are enough is
+  // the methodology's question rather than today's network's. Calculating first makes that
+  // true by construction instead of by catching the right errors.
+  for (const run of runs) {
+    if (options.runDeadline !== undefined && clock().getTime() >= options.runDeadline.getTime()) {
+      run.outcome.collection = "skipped";
+      run.outcome.collectionDetail = `the run's time budget ended at ${options.runDeadline!.toISOString()} before this instrument's collection started`;
+      continue;
+    }
+    await collect(run, { collectionDate, reg, baseUrl, http, clock, sleep, runDeadline: options.runDeadline, collectorIdentity: options.collectorIdentity });
+  }
+
   return { collectionDate, calculationDate, instruments };
+}
+
+async function collect(
+  run: InstrumentRun,
+  input: {
+    collectionDate: string;
+    reg: Registry;
+    baseUrl: string;
+    http: HttpClient;
+    clock: Clock;
+    sleep: Sleep;
+    runDeadline: Date | undefined;
+    collectorIdentity: string | undefined;
+  },
+): Promise<void> {
+  const { instrument, lineage, persistence, events, outcome } = run;
+  const { reg } = input;
+  try {
+    const result = await collectSource<{ baseUrl: string; sku: string }, PocPricesResponse, ReturnType<typeof pocSellerProfiles>>({
+      adapter: priceOfComputeAdapter,
+      providerSlug: "price-of-compute",
+      params: { baseUrl: input.baseUrl, sku: instrument.upstreamSkus[PRICE_OF_COMPUTE_SLUG]![0]! },
+      companion: pocSellerProfiles(reg.entityIdBySlug, POC_SELLER_EVIDENCE_2026_09_15),
+      mode: "production",
+      calculationDate: input.collectionDate,
+      registry: reg.registry,
+      grant: reg.grant,
+      env: process.env as Record<string, string | undefined>,
+      http: input.http,
+      deadline: input.runDeadline,
+      clock: input.clock,
+      sleep: input.sleep,
+      persistence,
+      events,
+      context: contextFor(instrument, lineage, reg),
+      validateResponse: validatePocPrices,
+      collectorIdentity: input.collectorIdentity ?? `ucpi-cron/${instrument.symbol}`,
+      idFactory: () => crypto.randomUUID(),
+      spec: LISTED_FAMILY.spec,
+      identity: instrument.identity,
+    });
+    outcome.collection = result.duplicateOfRetrievalId === null ? "collected" : "duplicate";
+    if (result.duplicateOfRetrievalId !== null) outcome.collectionDetail = `same bytes as retrieval ${result.duplicateOfRetrievalId}`;
+  } catch (error) {
+    // The same bytes already stored for this window is the cadence working, not an outage:
+    // a retry, a double-fire or a source that has not moved since the last run all land
+    // here, and none of them should read as a failure in a log someone is scanning.
+    const duplicate = error instanceof DuplicateRetrievalError;
+    outcome.collection = duplicate ? "duplicate" : "failed";
+    outcome.collectionDetail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+  }
+}
+
+async function calculate(run: InstrumentRun, calculationDate: string, reg: Registry, clock: Clock): Promise<void> {
+  const { instrument, lineage, persistence, events, outcome } = run;
+
+  // A date Urdais did not collect for is not calculated at all. Running the pipeline over
+  // an empty set would produce a perfectly valid NO_ELIGIBLE_PARTICIPANT under the
+  // structural rule, and recording it would put a point on the public series asserting
+  // that the market was observed and found wanting on a day nobody looked. A child's
+  // series begins at its first real production observation date; before that there is no
+  // point, rather than an Unavailable one.
+  try {
+    if (!(await persistence.hasProductionCoverage(calculationDate))) {
+      outcome.calculation = "no_coverage";
+      outcome.calculationDetail = `no production observation was collected for ${calculationDate}; the series has not begun`;
+      return;
+    }
+  } catch (error) {
+    outcome.calculation = "failed";
+    outcome.calculationDetail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    return;
+  }
+
+  try {
+    const calculation = await runCalculationPhase({
+      calculationDate,
+      instrument: instrument.symbol,
+      versions: {
+        methodologyVersion: lineage.methodologyVersion,
+        instrumentSpecVersion: lineage.instrumentSpecVersion,
+        methodologyVersionStatus: "approved",
+        instrumentSpecVersionStatus: "approved",
+      },
+      entities: reg.entities,
+      registry: [reg.registry],
+      persistence,
+      events,
+      clock,
+      idFactory: () => crypto.randomUUID(),
+      spec: LISTED_FAMILY.spec,
+      regionScope: LISTED_FAMILY.regionScope,
+      identity: instrument.identity,
+    });
+    const row = calculation.regional.find((r) => r.observation.canonicalRegionCode === LISTED_SCOPE_KEY) ?? calculation.regional[0];
+    if (row === undefined) {
+      outcome.calculation = "no_observations";
+      outcome.calculationDetail = `no eligible observation was stored for ${calculationDate}`;
+    } else {
+      outcome.calculation = row.status;
+      outcome.priceLevel = row.observation.priceLevel;
+      outcome.participantCount = row.observation.participantCount;
+      outcome.marketBreadth = row.observation.marketBreadth;
+      if (!row.gate.ok) outcome.calculationDetail = row.gate.reasons.join(", ");
+      else if (row.observation.outcome === "unavailable") outcome.calculationDetail = row.observation.structuralCondition ?? "unavailable";
+    }
+  } catch (error) {
+    const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    // A day already calculated is the cadence working, not an outage. The database refuses
+    // a second current regional observation for the same instrument, region and date.
+    outcome.calculation = /already exists|duplicate key/i.test(detail) ? "already_calculated" : "failed";
+    outcome.calculationDetail = detail;
+  }
 }
 
 /** A compact summary for a log line and an HTTP response. */

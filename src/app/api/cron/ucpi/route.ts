@@ -26,6 +26,10 @@
  * produced no value), `blocked` (a publication gate refused, with the reasons), `not_approved`,
  * `no_observations`, `already_calculated` (the day already has its point) or `failed`. Only a
  * 500 with `reason: "run_failed"` is an outage; the rest are the pipeline working.
+ *
+ * Every instrument is calculated before any is collected, so a slow or failing source can
+ * delay only today's collection, never yesterday's publication. Collection is `collected`,
+ * `duplicate`, `failed`, or `skipped` when the run's time budget ended before it started.
  */
 
 import { timingSafeEqual } from "node:crypto";
@@ -35,9 +39,23 @@ import { runDailyUcpi, ucpiRunSummary } from "@/lib/ucpi/runtime/daily-run";
 
 // Reads and writes the production store on every invocation.
 export const dynamic = "force-dynamic";
-// Five keyless GETs and five calculations, each of a few dozen rows. Sixty seconds is
-// generous and still far under the daily interval.
-export const maxDuration = 60;
+// Five calculations, each of a few dozen rows, then five keyless GETs. A healthy run takes a
+// few seconds; the limit is for a source that is answering badly, whose retries are bounded
+// by the run deadline below rather than by the platform killing the function. The same
+// limit as the other long-running crons.
+export const maxDuration = 300;
+
+/** Time left for answering and closing the connection after the run's last network wait. */
+export const RUN_SAFETY_MARGIN_MS = 10_000;
+
+/**
+ * The instant by which the run must be done with the network, derived from maxDuration so the
+ * two cannot drift apart. Measured from the request's arrival, so connecting to the database
+ * comes out of the same budget.
+ */
+export function ucpiRunDeadline(requestStartedAt: Date): Date {
+  return new Date(requestStartedAt.getTime() + maxDuration * 1000 - RUN_SAFETY_MARGIN_MS);
+}
 
 /**
  * Length-independent comparison. `timingSafeEqual` throws on a length mismatch, which would
@@ -65,6 +83,7 @@ export function cronRequestAuthorized(authorization: string | null, secret: stri
 }
 
 export async function GET(request: Request): Promise<Response> {
+  const requestStartedAt = new Date();
   if (!cronRequestAuthorized(request.headers.get("authorization"), process.env.CRON_SECRET)) {
     return new Response("Unauthorized", { status: 401 });
   }
@@ -79,7 +98,7 @@ export async function GET(request: Request): Promise<Response> {
 
   const sql = await createTokenSqlExecutor(databaseUrl);
   try {
-    const result = await runDailyUcpi(sql);
+    const result = await runDailyUcpi(sql, { runDeadline: ucpiRunDeadline(requestStartedAt) });
     const summary = ucpiRunSummary(result);
     console.log(`ucpi cron: ${JSON.stringify(summary)}`);
     return Response.json({ ok: true, ...summary }, { status: 200 });
