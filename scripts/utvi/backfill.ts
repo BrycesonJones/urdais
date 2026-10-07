@@ -2,8 +2,11 @@
  * Operator backfill for UTVI.
  *
  * Reads the source's retained history and records it. Safe by default in the ways that matter:
- * it targets the local harness database unless a URL is given, it refuses a production target
- * without an explicit acknowledgement, and `--dry-run` plans the requests without making any.
+ * it targets the local harness database unless a URL is given, it writes to a remote database
+ * only once it has identified it as UrdaisProd or UrdaisDev by project reference, production
+ * additionally needs an explicit acknowledgement, and `--dry-run` plans the requests and confirms
+ * the target without making any request or opening any connection. The rules live in
+ * `backfill-cli.ts`.
  *
  * Idempotent by construction rather than by a flag. A second run re-reads the same dates,
  * finds the same content hashes, and confirms them — no duplicate snapshot, no duplicate
@@ -14,6 +17,11 @@
  * Usage:
  *   npx tsx scripts/utvi/backfill.ts [--start 2025-01-01] [--end 2026-09-15] [--dry-run]
  *                                    [--database-url <url>] [--i-know-this-is-production]
+ *
+ * Prefer UTVI_DATABASE_URL to --database-url for a remote target: a flag's value is visible in
+ * shell history and the process list. Production is confirmed against
+ * SUPABASE_PRODUCTION_PROJECT_REF and development against SUPABASE_PROJECT_REF, both read from
+ * the environment or `.env.local`.
  *
  * The API key comes from OPENROUTER_API_KEY and is never printed.
  */
@@ -29,12 +37,7 @@ import { readApiKey, UTVI_API_KEY_ENV } from "@/lib/utvi/source/client";
 import { SOURCE_HISTORY_FLOOR } from "@/lib/utvi/types";
 import { planBackfill } from "@/lib/utvi/windows";
 
-function flag(name: string): string | null {
-  const index = process.argv.indexOf(`--${name}`);
-  if (index === -1) return null;
-  return process.argv[index + 1] ?? null;
-}
-const present = (name: string): boolean => process.argv.includes(`--${name}`);
+import { parseBackfillArgs, resolveBackfillTarget } from "./backfill-cli";
 
 /** Load `.env.local` for the values this script needs, without printing any of them. */
 function loadLocalEnv(): void {
@@ -49,53 +52,27 @@ function loadLocalEnv(): void {
   }
 }
 
-/** The local harness database. Never a hosted project. */
-function localDatabaseUrl(): string {
-  const host = process.env.PGHOST?.trim() || "localhost";
-  const port = process.env.URDAIS_PG_PORT?.trim() || process.env.PGPORT?.trim() || "54329";
-  const user = process.env.PGUSER?.trim() || "postgres";
-  const name = process.env.URDAIS_DB_NAME?.trim() || "urdais_local";
-  return `postgresql://${user}@${host}:${port}/${name}`;
-}
-
-/** Hostname and database only. A connection string may carry a password; a log must not. */
-function describeTarget(url: string): string {
-  try {
-    const parsed = new URL(url);
-    return `${parsed.hostname}:${parsed.port || "5432"}${parsed.pathname}`;
-  } catch {
-    return "(unparseable connection string)";
-  }
-}
-
-/**
- * A hosted project is anything that is not the local harness. Pooler hostnames and any
- * non-local host count, because the cost of being wrong here is writing to production.
- */
-function looksLikeProduction(url: string): boolean {
-  try {
-    const host = new URL(url).hostname;
-    return host !== "localhost" && host !== "127.0.0.1" && host !== "::1";
-  } catch {
-    return true;
-  }
-}
-
 async function main(): Promise<void> {
   loadLocalEnv();
 
-  const now = new Date();
-  const start = flag("start") ?? SOURCE_HISTORY_FLOOR;
-  const end = flag("end") ?? lastCompletedUtcDate(now);
-  const dryRun = present("dry-run");
-  const databaseUrl = flag("database-url") ?? process.env.UTVI_DATABASE_URL ?? localDatabaseUrl();
-
-  if (looksLikeProduction(databaseUrl) && !present("i-know-this-is-production")) {
-    console.error(
-      `refusing to write to ${describeTarget(databaseUrl)}: pass --i-know-this-is-production to acknowledge a non-local target`,
-    );
+  const parsed = parseBackfillArgs(process.argv.slice(2));
+  if (!parsed.ok) {
+    console.error(parsed.error);
     process.exit(2);
   }
+  const args = parsed.args;
+
+  const resolved = resolveBackfillTarget(args, process.env);
+  if (!resolved.ok) {
+    console.error(`refusing to run: ${resolved.error}`);
+    process.exit(2);
+  }
+  const target = resolved.target;
+
+  const now = new Date();
+  const start = args.start ?? SOURCE_HISTORY_FLOOR;
+  const end = args.end ?? lastCompletedUtcDate(now);
+  const dryRun = args.dryRun;
 
   const plan = planBackfill(start, end, now);
   if (plan === null) {
@@ -103,7 +80,9 @@ async function main(): Promise<void> {
     process.exit(2);
   }
 
-  console.log(`target        ${describeTarget(databaseUrl)}`);
+  console.log(`target        ${target.description}`);
+  console.log(`environment   ${target.environment}${target.projectRef === null ? "" : ` (project ${target.projectRef}, confirmed)`}`);
+  console.log(`chosen by     ${target.source}`);
   console.log(`requested     ${start} .. ${end}`);
   console.log(`servable      ${plan.startDate} .. ${plan.endDate} (${plan.expectedDates.length} dates)`);
   console.log(`requests      ${plan.windows.length}`);
@@ -123,7 +102,7 @@ async function main(): Promise<void> {
 
   // A single client, not a pool: the revision path uses a transaction, and a pool may route
   // consecutive statements to different connections.
-  const client = new pg.Client({ connectionString: databaseUrl });
+  const client = new pg.Client({ connectionString: target.connectionString });
   await client.connect();
   const sql = {
     query: async (text: string, params: readonly unknown[]) => ({
