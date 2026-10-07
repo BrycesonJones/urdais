@@ -56,9 +56,14 @@ export function hasIntradayCadence(points: readonly TimeSeriesPoint[]): boolean 
  * period label, and headline period return always move together. Axis
  * granularity follows the actual observation cadence, not the selected range.
  */
+export function availableUcpiRanges(series: IndexSeries): TimeRange[] {
+  return TIME_RANGES.filter((option) => series[option].length >= 2);
+}
+
 export function UcpiChart({ symbol, unit, series, range, onRangeChange }: UcpiChartProps) {
   const data = series[range];
   const intraday = hasIntradayCadence(data);
+  const availableRanges = availableUcpiRanges(series);
 
   return (
     <div className="flex flex-col gap-3">
@@ -76,7 +81,7 @@ export function UcpiChart({ symbol, unit, series, range, onRangeChange }: UcpiCh
       </Link>
 
       <div role="group" aria-label="Chart timeframe" className="flex flex-wrap gap-1">
-        {TIME_RANGES.map((option) => {
+        {availableRanges.map((option) => {
           const selected = option === range;
           return (
             <button
