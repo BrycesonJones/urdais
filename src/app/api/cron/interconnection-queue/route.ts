@@ -51,16 +51,22 @@ export async function GET(request: Request): Promise<Response> {
     if (!outcome.ok) {
       console.error(`interconnection queue cron: ${outcome.reason ?? "failed"}; `
         + outcome.sources.map((source) => `${source.source} ${source.status}/${source.currentness}`).join(", ")
-        + (outcome.stale.length === 0 ? "" : `; stale: ${outcome.stale.map((row) => row.marketSlug).join(", ")}`)
+        + (outcome.stale.length === 0 ? ""
+          : `; stale: ${outcome.stale.map((row) => `${row.marketSlug} (${row.condition})`).join(", ")}`)
         + (analytics?.status === "failed" ? `; analytics: ${analytics.error}` : ""));
     } else {
       const deferred = outcome.sources.filter((source) => source.deferred.length > 0);
+      // Reachable and current, but the content has not moved in longer than expected: a warning,
+      // never a failure.
+      const unchanged = outcome.currentness.filter((row) => row.contentUnchangedWarning);
       console.log(`interconnection queue cron: ${outcome.status}`
         + (analytics?.status === "calculated"
           ? `, run ${analytics.run}, ${analytics.resultsInserted} results, ${analytics.liveResults} live`
           : "")
         + (deferred.length === 0 ? ""
           : `, deferred: ${deferred.map((source) => `${source.source} ${source.deferred.length}`).join(", ")}`)
+        + (unchanged.length === 0 ? ""
+          : `, content unchanged: ${unchanged.map((row) => `${row.marketSlug} ${row.contentAgeHours}h`).join(", ")}`)
         + `, ${outcome.elapsedMs}ms`);
     }
 
@@ -73,8 +79,11 @@ export async function GET(request: Request): Promise<Response> {
       // Reported on every outcome, so an operator can see which publisher is behind and by how much.
       currentness: outcome.currentness.map((row) => ({
         marketSlug: row.marketSlug, sourceInterfaceSlug: row.sourceInterfaceSlug,
-        publishable: row.publishable, status: row.status, latestObservedAt: row.latestObservedAt,
-        sourcePublishedAt: row.sourcePublishedAt, ageHours: row.ageHours,
+        publishable: row.publishable, status: row.status, condition: row.condition, basis: row.basis,
+        lastCheckedAt: row.lastCheckedAt, lastSuccessfulCheckAt: row.lastSuccessfulCheckAt,
+        latestObservedAt: row.latestObservedAt, ageHours: row.ageHours,
+        contentAgeHours: row.contentAgeHours, contentUnchangedWarning: row.contentUnchangedWarning,
+        sourcePublishedAt: row.sourcePublishedAt, publicationAgeHours: row.publicationAgeHours,
         staleAfterHours: Number.isFinite(row.staleAfterHours) ? row.staleAfterHours : null,
       })),
       analytics: analytics?.status === "calculated"
