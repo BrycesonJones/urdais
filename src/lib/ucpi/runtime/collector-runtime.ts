@@ -57,6 +57,8 @@ export type SourceRuntimeInput<TParams, TResponse, TCompanion> = {
   env: EnvRecord;
   http: HttpClient;
   policy?: Partial<HttpPolicy>;
+  /** A bound on retries earlier than the window cutoff, such as the invocation's own time limit. */
+  deadline?: Date;
   clock: Clock;
   sleep: Sleep;
   random?: Random;
@@ -160,7 +162,8 @@ export async function collectSource<TParams, TResponse, TCompanion>(input: Sourc
       credential,
       client: input.http,
       policy: input.policy,
-      deadline: new Date(window.cutoff),
+      // Retries stop at the window cutoff or the caller's bound, whichever comes first.
+      deadline: new Date(Math.min(Date.parse(window.cutoff), input.deadline?.getTime() ?? Infinity)),
       clock: input.clock,
       sleep: input.sleep,
       random: input.random,

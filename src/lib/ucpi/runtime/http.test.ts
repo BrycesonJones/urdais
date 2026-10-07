@@ -69,6 +69,27 @@ describe("HTTP policy", () => {
     await expect(h.run()).rejects.toBeInstanceOf(HttpDeadlineError);
   });
 
+  it("gives an attempt no more time than is left before the deadline", async () => {
+    const timeouts: number[] = [];
+    await executeWithPolicy({
+      request,
+      credential,
+      client: {
+        async send(input) {
+          timeouts.push(input.timeoutMs);
+          return jsonResponse({ gpus: [] });
+        },
+      },
+      deadline: new Date("2026-09-13T10:00:05Z"),
+      clock: new TestClock("2026-09-13T10:00:00Z").now,
+      sleep: async () => {},
+      events: new CollectingSink(),
+      source: "runpod-gpu-types",
+    });
+    // The policy's 20 s would let an attempt started now run 15 s past the deadline.
+    expect(timeouts).toEqual([5000]);
+  });
+
   it("does not retry a 4xx that is not transient", async () => {
     await expect(harness([jsonResponse({}, 404)]).run()).rejects.toBeInstanceOf(HttpStatusError);
   });

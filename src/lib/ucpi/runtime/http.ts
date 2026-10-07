@@ -179,7 +179,9 @@ export async function executeWithPolicy(input: ExecuteInput): Promise<ExecuteOut
     input.events.emit({ type: "provider_request_started", source: input.source, attempt, url: input.request.url });
     let response: HttpResponse;
     try {
-      response = await input.client.send({ method: input.request.method, url, headers, timeoutMs: policy.requestTimeoutMs });
+      // An attempt started before the deadline may not run past it either.
+      const timeoutMs = Math.min(policy.requestTimeoutMs, input.deadline.getTime() - started.getTime());
+      response = await input.client.send({ method: input.request.method, url, headers, timeoutMs });
     } catch (error) {
       const reason = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
       lastReason = reason;

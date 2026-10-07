@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { cronRequestAuthorized } from "@/app/api/cron/ucpi/route";
+import { cronRequestAuthorized, maxDuration, RUN_SAFETY_MARGIN_MS, ucpiRunDeadline } from "@/app/api/cron/ucpi/route";
 
 describe("UCPI cron authorization", () => {
   it("refuses every request when no secret is configured", () => {
@@ -31,5 +31,18 @@ describe("UCPI cron authorization", () => {
     const secret = "shared-cron-secret-x";
     expect(ubwi.cronRequestAuthorized(`Bearer ${secret}`, secret)).toBe(true);
     expect(cronRequestAuthorized(`Bearer ${secret}`, secret)).toBe(true);
+  });
+});
+
+describe("UCPI cron time budget", () => {
+  it("allows the same duration as the other long-running crons", () => {
+    expect(maxDuration).toBe(300);
+  });
+
+  it("derives the run deadline from maxDuration, leaving the safety margin to answer", () => {
+    const start = new Date("2026-10-07T01:00:00Z");
+    expect(ucpiRunDeadline(start).getTime() - start.getTime()).toBe(maxDuration * 1000 - RUN_SAFETY_MARGIN_MS);
+    expect(RUN_SAFETY_MARGIN_MS).toBeGreaterThan(0);
+    expect(RUN_SAFETY_MARGIN_MS).toBeLessThan(maxDuration * 1000);
   });
 });

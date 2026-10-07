@@ -1,6 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { LISTED_GPU_INSTRUMENTS } from "@/lib/ucpi/listed/instruments";
 import { loadApprovedLineage, loadRegistry, runDailyUcpi, ucpiRunSummary, type DailyRunResult, type InstrumentOutcome } from "@/lib/ucpi/runtime/daily-run";
+import { HttpTimeoutError, type HttpClient } from "@/lib/ucpi/runtime/http";
 import type { SqlExecutor } from "@/lib/ucpi/runtime/persistence";
 
 /** Answers each query by the first table it names, so the shape under test is the SQL's own. */
@@ -183,5 +185,148 @@ describe("a date Urdais did not collect for is not calculated", () => {
     expect(new Set(states).size).toBe(3);
     // no_coverage is a statement about Urdais; unavailable is a statement about the market.
     expect(states).toContain("no_coverage");
+  });
+});
+
+describe("a slow source cannot cost a publication", () => {
+  /**
+   * The incident this guards: collection for today ran before calculation for yesterday, per
+   * instrument, so a source answering 503 spent each instrument's retry budget before its
+   * publication, the function was killed before the later instruments were reached, and a
+   * re-run spent the same retries again. Calculation now runs for every instrument first, and
+   * collection is bounded by the run's own deadline.
+   */
+  const RUN_AT = new Date("2026-10-07T01:00:00Z");
+  const SYMBOLS = LISTED_GPU_INSTRUMENTS.map((i) => i.symbol);
+
+  /** Every listed instrument approved, the source permitted with a grant, coverage for every date. */
+  function store(log: string[]): SqlExecutor & { statements: string[] } {
+    const statements: string[] = [];
+    // The store's unique current-observation constraint: instrument, date and region.
+    const current = new Set<string>();
+    return {
+      statements,
+      async query(text: string, params: readonly unknown[] = []) {
+        statements.push(text);
+        if (text.includes("reference.instrument_spec_versions")) {
+          return { rows: SYMBOLS.map((symbol) => ({ symbol, instrument_id: `i-${symbol}`, spec_version_id: `s-${symbol}`, spec_version: "1.0.0", methodology_version_id: "m1", methodology_version: "1.0.0" })) };
+        }
+        if (text.includes("reference.source_interfaces") && text.includes("slug = $1")) {
+          return { rows: [{ id: "iface-1", slug: "price-of-compute-prices", terms_review_state: "permitted", data_use_terms_state: "permitted", production_access_state: "production_approved", written_agreement_required: false }] };
+        }
+        if (text.includes("reference.permission_grants")) {
+          return { rows: [{ id: "g1", grant_kind: "provider_terms", reference: "terms", covers_collection: true, covers_index_use: true, effective_from: "2026-01-01T00:00:00Z", effective_to: null }] };
+        }
+        if (text.includes("reference.market_entities")) return { rows: [] };
+        if (text.includes("pipeline.source_retrievals r") && text.includes("limit 1")) return { rows: [{ "?column?": 1 }] };
+        if (text.includes("insert into pipeline.regional_observations")) {
+          const key = `${String(params[2])}|${String(params[3])}|${String(params[4])}`;
+          if (current.has(key)) throw new Error('duplicate key value violates unique constraint "regional_observations_current"');
+          current.add(key);
+          log.push(`calculated ${String(params[2])}`);
+        }
+        return { rows: [] };
+      },
+    };
+  }
+
+  let nowMs = 0;
+  beforeEach(() => {
+    nowMs = RUN_AT.getTime();
+    vi.spyOn(Date, "now").mockImplementation(() => nowMs);
+    // No jitter, so the retry schedule below is exact.
+    vi.spyOn(Math, "random").mockReturnValue(0);
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const sleep = async (ms: number) => {
+    nowMs += ms;
+  };
+
+  /** A source that answers 503 after `latencyMs`, honouring the caller's timeout as the real client does. */
+  function unavailableSource(log: string[], latencyMs: number): HttpClient & { sends: number[] } {
+    const sends: number[] = [];
+    return {
+      sends,
+      async send({ url, timeoutMs }) {
+        log.push("http");
+        sends.push(nowMs);
+        if (latencyMs > timeoutMs) {
+          nowMs += timeoutMs;
+          throw new HttpTimeoutError(url, timeoutMs);
+        }
+        nowMs += latencyMs;
+        return { status: 503, headers: {}, bodyText: "", contentType: null };
+      },
+    };
+  }
+
+  it("calculates every instrument before any request is sent", async () => {
+    const log: string[] = [];
+    const result = await runDailyUcpi(store(log), { now: RUN_AT, http: unavailableSource(log, 100), sleep });
+
+    expect(result.calculationDate).toBe("2026-10-06");
+    expect(log.filter((l) => l.startsWith("calculated"))).toHaveLength(SYMBOLS.length);
+    const firstRequest = log.indexOf("http");
+    expect(firstRequest).toBe(SYMBOLS.length);
+    expect(log.slice(firstRequest).every((l) => l === "http")).toBe(true);
+  });
+
+  it("calculates every instrument even when every collection fails", async () => {
+    const log: string[] = [];
+    const sql = store(log);
+    const result = await runDailyUcpi(sql, { now: RUN_AT, http: unavailableSource(log, 100), sleep });
+
+    expect(result.instruments.map((i) => i.instrument)).toEqual(SYMBOLS);
+    for (const i of result.instruments) {
+      expect(i.collection).toBe("failed");
+      expect(i.collectionDetail).toContain("HttpRetryExhaustedError");
+      expect(["failed", "no_coverage", "already_calculated"]).not.toContain(i.calculation);
+    }
+    // One calculation run per instrument, none given up for want of a source.
+    expect(sql.statements.filter((s) => s.includes("insert into pipeline.calculation_runs"))).toHaveLength(SYMBOLS.length);
+  });
+
+  it("stops retrying at the run deadline and skips what it did not reach, never running past it", async () => {
+    const log: string[] = [];
+    // Each attempt takes 3 s and the backoff is 2, 4 and 8 s, so the first instrument's fourth
+    // attempt starts at 23 s with 2 s left and is cut off at exactly 25 s.
+    const deadlineMs = RUN_AT.getTime() + 25_000;
+    const http = unavailableSource(log, 3_000);
+    const result = await runDailyUcpi(store(log), { now: RUN_AT, http, sleep, runDeadline: new Date(deadlineMs) });
+
+    expect(nowMs).toBeLessThanOrEqual(deadlineMs);
+    expect(http.sends.every((t) => t < deadlineMs)).toBe(true);
+    const [first, ...rest] = result.instruments;
+    expect(first!.collection).toBe("failed");
+    expect(rest).toHaveLength(SYMBOLS.length - 1);
+    for (const i of rest) {
+      expect(i.collection).toBe("skipped");
+      expect(i.collectionDetail).toContain("time budget");
+    }
+    // The budget bounds collection only; every instrument was still calculated.
+    expect(log.filter((l) => l.startsWith("calculated"))).toHaveLength(SYMBOLS.length);
+    for (const i of result.instruments) expect(i.calculation).not.toBe("failed");
+  });
+
+  it("sends nothing once the deadline has passed", async () => {
+    const log: string[] = [];
+    const http = unavailableSource(log, 100);
+    const result = await runDailyUcpi(store(log), { now: RUN_AT, http, sleep, runDeadline: new Date(RUN_AT.getTime() - 1) });
+    expect(http.sends).toHaveLength(0);
+    expect(result.instruments.every((i) => i.collection === "skipped")).toBe(true);
+  });
+
+  it("reports a re-run as already calculated and writes no second point", async () => {
+    const log: string[] = [];
+    const sql = store(log);
+    const http = unavailableSource(log, 100);
+    await runDailyUcpi(sql, { now: RUN_AT, http, sleep });
+    const second = await runDailyUcpi(sql, { now: RUN_AT, http, sleep });
+
+    for (const i of second.instruments) expect(i.calculation).toBe("already_calculated");
+    expect(log.filter((l) => l.startsWith("calculated"))).toHaveLength(SYMBOLS.length);
   });
 });
