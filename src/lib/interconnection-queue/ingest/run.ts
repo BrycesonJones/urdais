@@ -17,7 +17,7 @@ export type ArchiveBackfillOutcome = {
   reportPeriods: number;
   corrections: number;
   artifactsParsed: number;
-  artifactsDeferred: { label: string; reason: string }[];
+  artifactsDeferred: { label: string; reportPeriod: string | null; reason: string }[];
   snapshotsCreated: number;
   snapshotsExisting: number;
   rawRecordsInserted: number;
@@ -30,9 +30,11 @@ export type ArchiveBackfillOutcome = {
   historicalRange: { first: string | null; last: string | null };
   /** How many of the discovered artifacts this run tried to retrieve, after any limit. */
   artifactsSelected: number;
+  /** How many of the selected artifacts came back from the publisher, parseable or not. */
+  artifactsRetrieved: number;
   /**
-   * The newest artifact actually retrieved, so a caller recording a source check can name what it
-   * saw. Null when nothing was selected or nothing could be retrieved.
+   * The newest artifact retrieved and parsed, so a caller recording a source check can name the
+   * evidence it actually used. Null when nothing was selected or nothing usable came back.
    */
   latestArtifact: {
     sha256: string; httpStatus: number; snapshotId: string | null; sourcePublishedAt: string | null;
@@ -136,7 +138,7 @@ export async function runQueueArchive(
       first: refs.map((ref) => ref.reportPeriod).filter((p): p is string => p !== null).sort()[0] ?? null,
       last: refs.map((ref) => ref.reportPeriod).filter((p): p is string => p !== null).sort().at(-1) ?? null,
     },
-    artifactsSelected: selected.length, latestArtifact: null,
+    artifactsSelected: selected.length, artifactsRetrieved: 0, latestArtifact: null,
     statements: 0, retrievalMs: retrievalIndexMs, parseMs: 0, persistMs: 0,
   };
 
@@ -147,16 +149,13 @@ export async function runQueueArchive(
       artifact = await retrieve(fetcher, { label: ref.label, url: ref.url });
     } catch (error) {
       outcome.artifactsDeferred.push({
-        label: ref.label,
+        label: ref.label, reportPeriod: ref.reportPeriod,
         reason: `unavailable: ${error instanceof Error ? error.message : String(error)}`,
       });
       continue;
     }
     outcome.retrievalMs += Date.now() - fetchStart;
-    outcome.latestArtifact = {
-      sha256: artifact.sha256, httpStatus: artifact.status, snapshotId: null,
-      sourcePublishedAt: ref.publishedAt,
-    };
+    outcome.artifactsRetrieved += 1;
 
     const parseStart = Date.now();
     let extraction;
@@ -165,7 +164,7 @@ export async function runQueueArchive(
     } catch (error) {
       // A historical variant this reader cannot handle is recorded by name, never skipped.
       outcome.artifactsDeferred.push({
-        label: ref.label,
+        label: ref.label, reportPeriod: ref.reportPeriod,
         reason: `unparseable: ${error instanceof Error ? error.message : String(error)}`,
       });
       continue;
@@ -173,6 +172,10 @@ export async function runQueueArchive(
     resolveIdentityCollisions(extraction);
     outcome.parseMs += Date.now() - parseStart;
     outcome.artifactsParsed += 1;
+    outcome.latestArtifact = {
+      sha256: artifact.sha256, httpStatus: artifact.status, snapshotId: null,
+      sourcePublishedAt: ref.publishedAt,
+    };
 
     if (options.dryRun === true || sql === null) continue;
 

@@ -34,7 +34,8 @@ function outcome(overrides: Partial<ScheduledQueueRunOutcome> = {}): ScheduledQu
   return {
     ok: true, status: "succeeded", reason: null, stale: [],
     sources: [{ source: "pjm", marketSlug: "pjm", sourceInterfaceSlug: "pjm-planning-queues",
-      status: "ingested", reachable: true, snapshotId: "snap", currentness: "current", detail: "snapshot existing" }],
+      status: "ingested", reachable: true, snapshotId: "snap", currentness: "current", deferred: [],
+      detail: "snapshot existing" }],
     currentness,
     analytics: { status: "calculated", runId: "run-1", run: "existing", methodologyVersion: "1.0.0",
       inputDigest: "d", resultsInserted: 0, liveResults: 0, blockedResults: 0, deferredResults: 0,
@@ -105,6 +106,47 @@ describe("interconnection queue cron", () => {
     configured();
     runScheduledQueueRefresh.mockResolvedValue(outcome({ ok: false, status: "failed", reason: "source_failed" }));
     expect((await GET(request())).status).toBe(500);
+  });
+
+  it("answers 200 when a source ingested with a deferred archive artifact, and lists it", async () => {
+    configured();
+    const deferred = [{ artifact: "GIS_Report_2023-01", reportPeriod: "2023-01",
+      reason: "unparseable: Error: missing sheet" }];
+    runScheduledQueueRefresh.mockResolvedValue(outcome({
+      sources: [{ source: "ercot", marketSlug: "ercot", sourceInterfaceSlug: "ercot-gis-report",
+        status: "ingested_with_deferrals", reachable: true, snapshotId: "snap", currentness: "current",
+        deferred, detail: "0 snapshot(s) created, 2 existing; deferred 1: GIS_Report_2023-01 (2023-01): unparseable" }],
+    }));
+    const response = await GET(request());
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.ok).toBe(true);
+    expect(body.sources[0]).toMatchObject({ status: "ingested_with_deferrals", deferred });
+  });
+
+  it("answers 500 for stale inputs even when the only source news is a deferral", async () => {
+    configured();
+    runScheduledQueueRefresh.mockResolvedValue(outcome({
+      ok: false, status: "failed", reason: "inputs_stale", analytics: null,
+      stale: [{ marketSlug: "ercot", status: "stale", latestObservedAt: "2026-08-01T00:00:00Z",
+        ageHours: 1600, staleAfterHours: 1128 }],
+    }));
+    const response = await GET(request());
+    expect(response.status).toBe(500);
+    expect((await response.json()).reason).toBe("inputs_stale");
+  });
+
+  it("answers 200 and names the status when another run holds the lock", async () => {
+    configured();
+    runScheduledQueueRefresh.mockResolvedValue({
+      ok: true, status: "skipped_locked", reason: null, stale: [], sources: [], currentness: [],
+      analytics: null, elapsedMs: 1,
+    } satisfies ScheduledQueueRunOutcome);
+    const response = await GET(request());
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body).toMatchObject({ ok: true, status: "skipped_locked", sources: [], analytics: null });
+    expect(end).toHaveBeenCalledTimes(1);
   });
 
   it("answers 500 when the runner throws, and still releases the connection", async () => {

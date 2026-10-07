@@ -24,6 +24,8 @@ vi.mock("@/lib/interconnection-queue/ingest/run", async (importOriginal) => {
 });
 vi.mock("@/lib/interconnection-queue/analytics/run", () => ({ runQueueAnalytics }));
 
+import { runQueueArchive } from "@/lib/interconnection-queue/ingest/run";
+import type { QueueAdapter } from "@/lib/interconnection-queue/ingest/types";
 import { recordSourceCheck, statusFor } from "@/lib/interconnection-queue/monitor";
 import {
   SCHEDULED_ERCOT_LIMIT, runScheduledQueueRefresh,
@@ -80,6 +82,26 @@ const ingested = (source: string) => ({
   observationsConfirmed: 0, quantitiesInserted: 0, resourcesInserted: 0, deferralsRecorded: 0,
   nonCanonicalRows: 0, statements: 0, retrievalMs: 0, parseMs: 0, persistMs: 0, identityCollisions: [],
 });
+
+/** An ERCOT archive walk over three releases, with the named ones deferred. */
+const backfilled = (deferred: { label: string; reportPeriod: string; reason: string }[] = [],
+  options: { stored?: boolean } = {}) => ({
+  status: "backfilled", source: "ercot", marketSlug: "ercot", artifactsDiscovered: 40, reportPeriods: 40,
+  corrections: 0, artifactsParsed: 3 - deferred.length, artifactsDeferred: deferred,
+  snapshotsCreated: 0, snapshotsExisting: 3 - deferred.length, rawRecordsInserted: 0, requestsInserted: 0,
+  observationsInserted: 0, observationsConfirmed: 0, quantitiesInserted: 0, resourcesInserted: 0,
+  deferralsRecorded: 0, historicalRange: { first: "2023-01-01", last: "2026-09-01" },
+  artifactsSelected: 3, artifactsRetrieved: 3,
+  latestArtifact: options.stored === false ? null : {
+    sha256: "e".repeat(64), httpStatus: 200, snapshotId: "snap-ercot", sourcePublishedAt: "2026-08-05T00:00:00Z",
+  },
+  statements: 0, retrievalMs: 0, parseMs: 0, persistMs: 0,
+});
+
+const OLD_WORKBOOK = { label: "GIS_Report_2026-07", reportPeriod: "2026-07-01",
+  reason: "unparseable: Error: no Project Details sheet" };
+const NEWEST_WORKBOOK = { label: "GIS_Report_2026-09", reportPeriod: "2026-09-01",
+  reason: "unparseable: Error: no Project Details sheet" };
 
 const calculated = {
   status: "calculated", runId: "run-1", run: "created", methodologyVersion: "1.0.0", inputDigest: "d",
@@ -180,6 +202,139 @@ describe("the scheduled refresh", () => {
     expect(outcome.sources.every((source) => source.status === "failed" && !source.reachable)).toBe(true);
   });
 
+  it("records a deferred historical artifact without failing the run", async () => {
+    const { sql, calls } = executor();
+    runQueueSource.mockImplementation(async (_sql: unknown, source: string) => (source === "ercot"
+      ? backfilled([OLD_WORKBOOK]) : ingested(source)));
+
+    const outcome = await runScheduledQueueRefresh(sql, { now: () => NOW });
+
+    expect(outcome.ok).toBe(true);
+    expect(outcome.status).toBe("succeeded");
+    expect(outcome.reason).toBeNull();
+    expect(runQueueAnalytics).toHaveBeenCalledTimes(1);
+    const ercot = outcome.sources.find((source) => source.source === "ercot")!;
+    expect(ercot.status).toBe("ingested_with_deferrals");
+    expect(ercot.reachable).toBe(true);
+    expect(ercot.deferred).toEqual([{ artifact: "GIS_Report_2026-07", reportPeriod: "2026-07-01",
+      reason: "unparseable: Error: no Project Details sheet" }]);
+    // The check row names the deferral, and still records the evidence that was stored.
+    const check = checks(calls).find((call) => call.params[0] === "ercot-gis-report")!;
+    expect(check.params.slice(1, 7)).toEqual([true, 200, "e".repeat(64), "2026-08-05T00:00:00Z", "snap-ercot", "current"]);
+    expect(String(check.params[7])).toMatch(/deferred 1: GIS_Report_2026-07 \(2026-07-01\): unparseable/);
+    expect(checks(calls)).toHaveLength(7);
+  });
+
+  it("lets currentness decide when the deferred artifact is the newest, and coverage is still current", async () => {
+    // ERCOT's threshold is 1128 hours; its last stored release is 800 hours old.
+    const { sql } = executor({ ercot: 800 });
+    runQueueSource.mockImplementation(async (_sql: unknown, source: string) => (source === "ercot"
+      ? backfilled([NEWEST_WORKBOOK]) : ingested(source)));
+
+    const outcome = await runScheduledQueueRefresh(sql, { now: () => NOW });
+
+    expect(outcome.ok).toBe(true);
+    expect(outcome.status).toBe("succeeded");
+    expect(runQueueAnalytics).toHaveBeenCalledTimes(1);
+    expect(outcome.sources.find((source) => source.source === "ercot")).toMatchObject({
+      status: "ingested_with_deferrals", currentness: "current",
+    });
+  });
+
+  it("fails on staleness, not on the deferral, when the newest artifact is deferred and coverage has aged out", async () => {
+    const { sql, calls } = executor({ ercot: 1200 });
+    runQueueSource.mockImplementation(async (_sql: unknown, source: string) => (source === "ercot"
+      ? backfilled([NEWEST_WORKBOOK]) : ingested(source)));
+
+    const outcome = await runScheduledQueueRefresh(sql, { now: () => NOW });
+
+    expect(runQueueAnalytics).not.toHaveBeenCalled();
+    expect(outcome.ok).toBe(false);
+    expect(outcome.reason).toBe("inputs_stale");
+    expect(outcome.stale).toEqual([expect.objectContaining({ marketSlug: "ercot", status: "stale" })]);
+    // The source itself did not fail; its check says stale and names what was deferred.
+    expect(outcome.sources.find((source) => source.source === "ercot")!.status).toBe("ingested_with_deferrals");
+    const check = checks(calls).find((call) => call.params[0] === "ercot-gis-report")!;
+    expect(check.params[6]).toBe("stale");
+    expect(String(check.params[7])).toMatch(/GIS_Report_2026-09/);
+  });
+
+  it("fails a source whose archive walk stored nothing usable", async () => {
+    const { sql, calls } = executor();
+    runQueueSource.mockImplementation(async (_sql: unknown, source: string) => (source === "ercot"
+      ? backfilled([OLD_WORKBOOK, { ...OLD_WORKBOOK, label: "GIS_Report_2026-08" }, NEWEST_WORKBOOK], { stored: false })
+      : ingested(source)));
+
+    const outcome = await runScheduledQueueRefresh(sql, { now: () => NOW });
+
+    const ercot = outcome.sources.find((source) => source.source === "ercot")!;
+    expect(ercot.status).toBe("failed");
+    expect(ercot.deferred).toHaveLength(3);
+    expect(String(checks(calls).find((call) => call.params[0] === "ercot-gis-report")!.params[7]))
+      .toMatch(/no usable artifact among 3 selected; deferred 3/);
+    expect(outcome.ok).toBe(false);
+    expect(outcome.reason).toBe("source_failed");
+  });
+
+  it("fails ERCOT and records it unreachable when its listing page cannot be fetched", async () => {
+    const { sql, calls } = executor();
+    const fetcher = vi.fn(async () => { throw new Error("fetch failed"); });
+    runQueueSource.mockImplementation(async (database: unknown, source: string, options: unknown) => (
+      source === "ercot" ? actualIngest.runQueueSource!(database, source, options) : ingested(source)));
+
+    const outcome = await runScheduledQueueRefresh(sql, { fetcher, now: () => NOW });
+
+    const ercot = outcome.sources.find((source) => source.source === "ercot")!;
+    expect(ercot).toMatchObject({ status: "failed", reachable: false, deferred: [] });
+    const check = checks(calls).find((call) => call.params[0] === "ercot-gis-report")!;
+    expect(check.params.slice(1, 6)).toEqual([false, null, null, null, null]);
+    expect(String(check.params[7])).toMatch(/failed during retrieval: .*fetch failed/);
+    expect(checks(calls)).toHaveLength(7);
+    expect(outcome.ok).toBe(false);
+    expect(outcome.reason).toBe("source_failed");
+  });
+
+  it("contains a source runner that throws, and still checks every source", async () => {
+    const { sql, calls } = executor();
+    runQueueSource.mockImplementation(async (_sql: unknown, source: string) => {
+      if (source === "pjm") throw new Error("unexpected");
+      return ingested(source);
+    });
+
+    const outcome = await runScheduledQueueRefresh(sql, { now: () => NOW });
+
+    expect(checks(calls)).toHaveLength(7);
+    expect(outcome.sources.find((source) => source.source === "pjm")).toMatchObject({
+      status: "failed", reachable: false,
+    });
+    expect(outcome.reason).toBe("source_failed");
+    expect(calls.at(-1)!.sql).toMatch(/pg_advisory_unlock/);
+  });
+
+  it("releases the lock when the analytics throw", async () => {
+    const { sql, calls } = executor();
+    runQueueAnalytics.mockRejectedValue(new Error("connection reset"));
+
+    await expect(runScheduledQueueRefresh(sql, { now: () => NOW })).rejects.toThrow("connection reset");
+    expect(calls.at(-1)!.sql).toMatch(/pg_advisory_unlock/);
+  });
+
+  it("releases the lock when recording a check throws", async () => {
+    const { sql, calls } = executor();
+    const original = sql.query.bind(sql);
+    sql.query = (async (text: string, params?: unknown[]) => {
+      if (text.includes("interconnection_source_checks")) {
+        calls.push({ sql: text, params: params ?? [] });
+        throw new Error("insert failed");
+      }
+      return original(text, params ?? []);
+    }) as typeof sql.query;
+
+    await expect(runScheduledQueueRefresh(sql, { now: () => NOW })).rejects.toThrow("insert failed");
+    expect(runQueueAnalytics).not.toHaveBeenCalled();
+    expect(calls.at(-1)!.sql).toMatch(/pg_advisory_unlock/);
+  });
+
   it("holds the analytics back when a published market is stale", async () => {
     // CAISO's threshold is 72 hours.
     const { sql } = executor({ caiso: 72.5 });
@@ -214,9 +369,11 @@ describe("the scheduled refresh", () => {
   it("collapses into a no-op when another run holds the lock", async () => {
     const { sql, calls } = executor({}, { locked: true });
     const outcome = await runScheduledQueueRefresh(sql, { now: () => NOW });
-    expect(outcome.status).toBe("skipped_locked");
+    expect(outcome).toMatchObject({ ok: true, status: "skipped_locked", reason: null, analytics: null });
     expect(runQueueSource).not.toHaveBeenCalled();
-    expect(calls.some((call) => call.sql.includes("pg_advisory_unlock"))).toBe(false);
+    expect(runQueueAnalytics).not.toHaveBeenCalled();
+    // Nothing is written: no check, no snapshot, and no unlock of a lock it never held.
+    expect(calls.map((call) => call.sql)).toEqual([expect.stringMatching(/pg_try_advisory_lock/)]);
   });
 
   it("reports an analytics failure as a failure", async () => {
@@ -225,6 +382,40 @@ describe("the scheduled refresh", () => {
     const outcome = await runScheduledQueueRefresh(sql, { now: () => NOW });
     expect(outcome.ok).toBe(false);
     expect(outcome.reason).toBe("analytics_failed");
+  });
+});
+
+describe("an archive walk with a deferred artifact", () => {
+  const refs = ["2026-07-01", "2026-08-01", "2026-09-01"].map((period) => ({
+    label: `GIS_Report_${period.slice(0, 7)}`, url: `https://example.test/${period}.xlsx`, reportPeriod: period,
+    publishedAt: `${period.slice(0, 8)}05T00:00:00Z`, isCorrection: false, nativeDocumentId: null,
+    archiveMetadata: {},
+  }));
+  const fetcher = vi.fn(async (ref: { label: string }) => ({
+    label: ref.label, status: 200, sha256: ref.label.padEnd(64, "0"), retrievedAt: NOW.toISOString(),
+  }));
+
+  function adapter(unparseable: string) {
+    return {
+      key: "ercot", marketSlug: "ercot",
+      discover: async () => refs,
+      parse: (artifacts: Map<string, unknown>) => {
+        if (artifacts.has(unparseable)) throw new Error("no Project Details sheet");
+        return { records: [], deferrals: [] };
+      },
+    } as unknown as QueueAdapter;
+  }
+
+  it("names the deferred period and keeps the older stored release as the evidence when the newest fails", async () => {
+    const outcome = await runQueueArchive(null, adapter("GIS_Report_2026-09"), {
+      fetcher: fetcher as never, dryRun: true,
+    });
+    expect(outcome).toMatchObject({
+      status: "backfilled", artifactsSelected: 3, artifactsRetrieved: 3, artifactsParsed: 2,
+      artifactsDeferred: [{ label: "GIS_Report_2026-09", reportPeriod: "2026-09-01",
+        reason: "unparseable: no Project Details sheet" }],
+      latestArtifact: { sourcePublishedAt: "2026-08-05T00:00:00Z" },
+    });
   });
 });
 

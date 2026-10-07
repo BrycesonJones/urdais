@@ -308,9 +308,23 @@ advisory lock and then:
 4. **Calculates** with `runQueueAnalytics` only when every published market is
    current.
 
-The route answers `200` only when every source ingested and the analytics ran;
-any failed source is `500` even if the analytics still ran on the others. The
-response carries per-market currentness in every case.
+An archive artifact (ERCOT, NYISO) that cannot be retrieved or parsed is
+**deferred**, not failed: the source's status is `ingested_with_deferrals`, and
+its check row's `detail` and its `deferred` list in the response name each one
+(artifact, report period, reason). A deferral never fails the run on its own,
+so one permanently unreadable historical file does not turn the cron red. If
+the deferred artifact is the newest release, coverage does not advance and the
+freshness gate (step 3) decides whether the market is still current.
+
+The route answers `200` when no source failed, every published market is
+current and the analytics ran. It answers `500` for a failed source — one that
+produced nothing usable (a single-report source's artifact could not be
+retrieved, parsed or stored; an archive's listing page could not be fetched;
+or every selected archive artifact was deferred) —
+even if the analytics still ran on the others; for `inputs_stale`; for an
+analytics failure; and when the runner throws. Another run holding the lock
+answers `200` with `status: "skipped_locked"` and writes nothing. The response
+carries per-market currentness in every case.
 
 To catch up by hand after a gap (for example after first deploying this):
 

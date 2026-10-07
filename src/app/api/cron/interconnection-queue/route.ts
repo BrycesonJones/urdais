@@ -10,7 +10,9 @@
  * The route is thin and holds no policy; the runner does. If any published market's inputs are
  * stale or missing, the analytics are not attempted, the previous validated run stays served, and
  * this answers 500 so the gap is visible. A source that failed also answers 500, even when the
- * others were current enough to recalculate.
+ * others were current enough to recalculate. A source that ingested with a deferred archive
+ * artifact did not fail: the deferral is listed in its result and check, and the answer is 200
+ * unless the freshness gate or the analytics say otherwise.
  */
 
 import { timingSafeEqual } from "node:crypto";
@@ -52,10 +54,13 @@ export async function GET(request: Request): Promise<Response> {
         + (outcome.stale.length === 0 ? "" : `; stale: ${outcome.stale.map((row) => row.marketSlug).join(", ")}`)
         + (analytics?.status === "failed" ? `; analytics: ${analytics.error}` : ""));
     } else {
+      const deferred = outcome.sources.filter((source) => source.deferred.length > 0);
       console.log(`interconnection queue cron: ${outcome.status}`
         + (analytics?.status === "calculated"
           ? `, run ${analytics.run}, ${analytics.resultsInserted} results, ${analytics.liveResults} live`
           : "")
+        + (deferred.length === 0 ? ""
+          : `, deferred: ${deferred.map((source) => `${source.source} ${source.deferred.length}`).join(", ")}`)
         + `, ${outcome.elapsedMs}ms`);
     }
 

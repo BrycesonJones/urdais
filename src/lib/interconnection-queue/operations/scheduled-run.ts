@@ -10,6 +10,13 @@
  * analytics are not attempted at all: the previous validated run stays the one served, and the
  * read model reports its sources' ages honestly. SPP is collected like every other source but
  * never gates anything, because nothing derived from it is ever published.
+ *
+ * An archive artifact that cannot be retrieved or parsed (an old ERCOT workbook in a format the
+ * reader does not handle, say) is deferred by name in the source's check and result, and does not
+ * fail the run on its own: a permanently unreadable historical file would otherwise turn every
+ * day red. A source fails only when it produced nothing usable at all. If the deferred artifact
+ * was the newest one, the market's coverage simply does not advance, and the freshness gate
+ * decides whether it is still current.
  */
 
 import { runQueueAnalytics, type AnalyticsRunOutcome } from "@/lib/interconnection-queue/analytics/run";
@@ -34,14 +41,25 @@ const LOCK_KEY = "urdais:interconnection-queue:scheduled-run";
  */
 export const SCHEDULED_ERCOT_LIMIT = 3;
 
+/** One archive artifact this run selected but could not use, named so it is never silent. */
+export type DeferredArtifact = { artifact: string; reportPeriod: string | null; reason: string };
+
+/**
+ * How one source's ingest went. `ingested_with_deferrals` means usable evidence was retrieved and
+ * stored but at least one selected archive artifact was not; it is recorded, never a failure on
+ * its own. Whether the market is current enough to publish is the freshness gate's question.
+ */
+export type ScheduledSourceStatus = "ingested" | "ingested_with_deferrals" | "failed";
+
 export type ScheduledSourceResult = {
   source: QueueSourceKey;
   marketSlug: string;
   sourceInterfaceSlug: string;
-  status: "ingested" | "failed";
+  status: ScheduledSourceStatus;
   reachable: boolean;
   snapshotId: string | null;
   currentness: CurrentnessStatus;
+  deferred: DeferredArtifact[];
   detail: string;
 };
 
@@ -60,33 +78,44 @@ export type ScheduledQueueRunOutcome = {
   elapsedMs: number;
 };
 
-/** What one source run saw, in the terms a source check records. */
-function describe(outcome: QueueRunOutcome): {
-  status: "ingested" | "failed"; reachable: boolean; httpStatus: number | null;
+type SourceObservation = {
+  status: ScheduledSourceStatus; reachable: boolean; httpStatus: number | null;
   artifactSha256: string | null; sourcePublishedAt: string | null; snapshotId: string | null;
-  detail: string;
-} {
+  deferred: DeferredArtifact[]; detail: string;
+};
+
+const listDeferred = (deferred: DeferredArtifact[]) => deferred
+  .map((item) => `${item.artifact}${item.reportPeriod === null ? "" : ` (${item.reportPeriod})`}: ${item.reason}`)
+  .join("; ");
+
+/** What one source run saw, in the terms a source check records. */
+function describe(outcome: QueueRunOutcome): SourceObservation {
   switch (outcome.status) {
     case "ingested":
       return {
         status: "ingested", reachable: true, httpStatus: outcome.httpStatus,
         artifactSha256: outcome.artifactSha256, sourcePublishedAt: outcome.sourcePublishedAt,
-        snapshotId: outcome.snapshotId, detail: `snapshot ${outcome.snapshot}`,
+        snapshotId: outcome.snapshotId, deferred: [], detail: `snapshot ${outcome.snapshot}`,
       };
     case "backfilled": {
       const latest = outcome.latestArtifact;
-      // Reachable means something was actually retrieved, not merely that the index answered.
-      const reachable = outcome.artifactsSelected === 0 || latest !== null;
-      const deferred = outcome.artifactsDeferred.map((item) => `${item.label} ${item.reason}`);
+      const deferred = outcome.artifactsDeferred.map((item) => ({
+        artifact: item.label, reportPeriod: item.reportPeriod, reason: item.reason,
+      }));
+      // A walk that selected artifacts and stored none of them retrieved nothing usable: that is a
+      // failure of the source. One that stored any is not, even when the newest release is among
+      // the deferred, because whether the market is still current is the freshness gate's call.
+      const usable = outcome.artifactsSelected === 0 || latest !== null;
+      const summary = `${outcome.snapshotsCreated} snapshot(s) created, ${outcome.snapshotsExisting} existing`;
       return {
-        // A deferred artifact in a three-release window is a reader or publisher problem worth a
-        // failure, not a footnote: the newest release may be the one that was skipped.
-        status: reachable && deferred.length === 0 ? "ingested" : "failed",
-        reachable,
+        status: !usable ? "failed" : deferred.length === 0 ? "ingested" : "ingested_with_deferrals",
+        // Reachable means something actually came back, not merely that the index answered.
+        reachable: outcome.artifactsSelected === 0 || outcome.artifactsRetrieved > 0,
         httpStatus: latest?.httpStatus ?? null, artifactSha256: latest?.sha256 ?? null,
         sourcePublishedAt: latest?.sourcePublishedAt ?? null, snapshotId: latest?.snapshotId ?? null,
-        detail: `${outcome.snapshotsCreated} snapshot(s) created, ${outcome.snapshotsExisting} existing`
-          + (deferred.length === 0 ? "" : `; deferred: ${deferred.join("; ")}`),
+        deferred,
+        detail: (usable ? summary : `no usable artifact among ${outcome.artifactsSelected} selected`)
+          + (deferred.length === 0 ? "" : `; deferred ${deferred.length}: ${listDeferred(deferred)}`),
       };
     }
     case "failed":
@@ -96,12 +125,13 @@ function describe(outcome: QueueRunOutcome): {
         // failure happened after the bytes arrived.
         reachable: outcome.phase !== undefined && outcome.phase !== "retrieval",
         httpStatus: null, artifactSha256: null, sourcePublishedAt: null, snapshotId: null,
-        detail: `failed during ${outcome.phase ?? "setup"}: ${outcome.error}`,
+        deferred: [], detail: `failed during ${outcome.phase ?? "setup"}: ${outcome.error}`,
       };
     default:
       return {
         status: "failed", reachable: true, httpStatus: null, artifactSha256: null,
-        sourcePublishedAt: null, snapshotId: null, detail: `unexpected outcome ${outcome.status}`,
+        sourcePublishedAt: null, snapshotId: null, deferred: [],
+        detail: `unexpected outcome ${outcome.status}`,
       };
   }
 }
@@ -146,11 +176,19 @@ export async function runScheduledQueueRefresh(
     const sources: ScheduledSourceResult[] = [];
     for (const key of QUEUE_SOURCE_KEYS) {
       const adapter = QUEUE_ADAPTERS[key];
-      // Sequential and isolated: one publisher failing leaves every other source to run.
-      const outcome = await runQueueSource(sql, key, {
-        ...(options.fetcher === undefined ? {} : { fetcher: options.fetcher }),
-        ...(key === "ercot" ? { limit: SCHEDULED_ERCOT_LIMIT } : {}),
-      });
+      // Sequential and isolated: one publisher failing leaves every other source to run. The
+      // runner contains its own failures; anything it lets escape is contained here too, so every
+      // source still gets its check.
+      let outcome: QueueRunOutcome;
+      try {
+        outcome = await runQueueSource(sql, key, {
+          ...(options.fetcher === undefined ? {} : { fetcher: options.fetcher }),
+          ...(key === "ercot" ? { limit: SCHEDULED_ERCOT_LIMIT } : {}),
+        });
+      } catch (error) {
+        outcome = { status: "failed", source: key,
+          error: error instanceof Error ? `${error.name}: ${error.message}` : String(error) };
+      }
       const seen = describe(outcome);
       // Measured after the attempt, so the check records the state the source is actually in.
       const current = (await sourceCurrentness(sql, now()))
@@ -165,7 +203,7 @@ export async function runScheduledQueueRefresh(
       sources.push({
         source: key, marketSlug: adapter.marketSlug, sourceInterfaceSlug: adapter.sourceInterfaceSlug,
         status: seen.status, reachable: seen.reachable, snapshotId: seen.snapshotId,
-        currentness, detail: seen.detail,
+        currentness, deferred: seen.deferred, detail: seen.detail,
       });
     }
 
