@@ -50,10 +50,13 @@ One vocabulary change is worth reading before applying: `reference.instruments.o
 ### 4. Backfill production history
 
 ```
-npx tsx scripts/utvi/backfill.ts --database-url "$PROD_URL" --i-know-this-is-production
+UTVI_DATABASE_URL="$PROD_URL" npx tsx scripts/utvi/backfill.ts --dry-run --i-know-this-is-production
+UTVI_DATABASE_URL="$PROD_URL" npx tsx scripts/utvi/backfill.ts --i-know-this-is-production
 ```
 
-The acknowledgement flag is required for any non-local target and there is no way to pass it by accident. Expect, from the local runs: **two source requests**, 623 dates planned, **621 covered**, two dates the source itself serves empty, and — before step 1 — 621 publication refusals.
+The URL goes in the environment rather than `--database-url`, which would leave it in shell history and the process list; its password must be URL-encoded. The dry run prints `environment production (project <ref>, confirmed)` before anything is written.
+
+The acknowledgement flag is a checked claim, not just a gate. The script reads the project reference out of the connection (the pooler username `postgres.<ref>`, or the host `db.<ref>.supabase.co`) and refuses unless it equals `SUPABASE_PRODUCTION_PROJECT_REF`. It also refuses a UrdaisDev target (`SUPABASE_PROJECT_REF`) when production was claimed, any remote host it cannot identify, any malformed or unknown argument, and — the failure that prompted this — `--i-know-this-is-production` with no database given, which used to fall through to the local harness silently. Expect, from the local runs: **two source requests**, 623 dates planned, **621 covered**, two dates the source itself serves empty, and — before step 1 — 621 publication refusals.
 
 Run it **twice**. The second run should report 621 confirmed and zero created, which is what idempotency looks like from the outside.
 
