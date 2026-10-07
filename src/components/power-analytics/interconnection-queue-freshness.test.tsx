@@ -23,9 +23,13 @@ const market = (slug: string, name: string, active: number): MarketAnalytics => 
 });
 
 const fresh = (slug: string, observedAt: string | null,
-  status: MarketSourceFreshness["status"]): MarketSourceFreshness => ({
+  status: MarketSourceFreshness["status"],
+  extra: Partial<MarketSourceFreshness> = {}): MarketSourceFreshness => ({
   marketSlug: slug, observedAt, sourcePublishedAt: null, reportPeriod: null,
   ageHours: null, staleAfterHours: 168, status,
+  condition: status === "current" ? "current" : status === "stale" ? "source_data_stale" : "unavailable",
+  basis: "continuous", lastCheckedAt: null, lastSuccessfulCheckAt: null,
+  contentUnchangedWarning: false, publicationAgeHours: null, ...extra,
 });
 
 const model = (sourceFreshness: MarketSourceFreshness[]): QueueAnalyticsReadModel => ({
@@ -75,6 +79,39 @@ describe("the Interconnection Queue freshness badge", () => {
     expect(screen.getByText("Stale")).toBeTruthy();
     expect(screen.getByRole("status").textContent).toMatch(/CAISO \(date unavailable\)/);
     expect(screen.getByText("source date unavailable")).toBeTruthy();
+  });
+
+  it("reads Live for a reachable PJM whose content is unchanged, and says so separately", () => {
+    render(<InterconnectionQueue analytics={model([
+      fresh("pjm", "2026-09-21T12:00:00.000Z", "current", {
+        condition: "content_unchanged", contentUnchangedWarning: true,
+        lastCheckedAt: "2026-10-07T10:16:50.000Z", lastSuccessfulCheckAt: "2026-10-07T10:16:50.000Z",
+      }),
+      fresh("caiso", "2026-10-07T06:00:00.000Z", "current"),
+    ])} />);
+    expect(screen.getByText("Live")).toBeTruthy();
+    expect(screen.queryByText("Stale")).toBeNull();
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.getByRole("note").textContent).toMatch(/PJM: the publisher was reached at the last check/);
+    expect(screen.getByText("checked Oct 7, 2026 · unchanged since Sep 21, 2026")).toBeTruthy();
+  });
+
+  it("names an unreachable market as unreachable, not as old data", () => {
+    render(<InterconnectionQueue analytics={model([
+      fresh("pjm", "2026-10-07T06:00:00.000Z", "unavailable", { condition: "unreachable" }),
+      fresh("caiso", "2026-10-07T06:00:00.000Z", "current"),
+    ])} />);
+    expect(screen.getByText("Stale")).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toMatch(/PJM \(unreachable at the last check\)/);
+  });
+
+  it("names a market whose publisher data is old by its date", () => {
+    render(<InterconnectionQueue analytics={model([
+      fresh("pjm", "2026-10-07T06:00:00.000Z", "current"),
+      fresh("caiso", "2026-10-02T00:00:00.000Z", "stale", { condition: "source_data_stale" }),
+    ])} />);
+    expect(screen.getByRole("status").textContent).toMatch(/CAISO \(as of Oct 2, 2026\)/);
+    expect(screen.queryByRole("note")).toBeNull();
   });
 
   it("has no unconditional Live badge in its source", () => {

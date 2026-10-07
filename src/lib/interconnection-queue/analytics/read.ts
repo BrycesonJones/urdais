@@ -14,7 +14,10 @@ import {
   METHODOLOGY_SLUG, METHODOLOGY_VERSION, mayPublishMarketMetric,
 } from "@/lib/interconnection-queue/analytics/methodology";
 import type { MetricStatus } from "@/lib/interconnection-queue/analytics/calculate";
-import { statusFor } from "@/lib/interconnection-queue/monitor";
+import {
+  assessFreshness, FRESHNESS_CHECK_JOINS, FRESHNESS_COLUMNS, freshnessInputsFromRow,
+  type FreshnessBasis, type FreshnessCondition,
+} from "@/lib/interconnection-queue/monitor";
 import type { CurrentnessStatus } from "@/lib/interconnection-queue/types";
 import type { CapacitySqlExecutor } from "@/lib/power-delivery/capacity/read";
 
@@ -49,16 +52,28 @@ export type MarketAnalytics = {
  * A daily recalculation over a fortnight-old snapshot is a fortnight old. `calculatedAt` alone
  * cannot say that, so each published market carries the age of its own latest snapshot, measured
  * against that source's own threshold.
+ *
+ * `status` is the verdict the badge uses; `condition` says why, and keeps apart a source that could
+ * not be reached, one whose publisher data is old, and a continuously refreshed one that answered
+ * today with content unchanged for longer than expected (current, with a warning).
  */
 export type MarketSourceFreshness = {
   marketSlug: string;
+  /** When the content last changed: the latest snapshot's `observed_at`. */
   observedAt: string | null;
   sourcePublishedAt: string | null;
   /** The period the publisher says the snapshot describes, for sources that state one. */
   reportPeriod: string | null;
+  /** Content age. */
   ageHours: number | null;
   staleAfterHours: number | null;
   status: CurrentnessStatus;
+  condition: FreshnessCondition;
+  basis: FreshnessBasis | null;
+  lastCheckedAt: string | null;
+  lastSuccessfulCheckAt: string | null;
+  contentUnchangedWarning: boolean;
+  publicationAgeHours: number | null;
 };
 
 export type QueueAnalyticsReadModel = {
@@ -184,12 +199,13 @@ export async function loadQueueAnalytics(
   // Source age for the published markets only: a blocked market's freshness is not served either.
   const published = [...markets.keys()].filter(mayPublishMarketMetric);
   const freshness = await sql.query(
-    `select distinct on (a.slug) a.slug as market_slug, m.stale_after_hours,
-            q.observed_at::text as observed_at, q.source_published_at::text as source_published_at,
+    `select distinct on (a.slug) a.slug as market_slug, s.slug as source_slug, ${FRESHNESS_COLUMNS},
             q.report_period::text as report_period
        from pipeline.interconnection_queue_snapshots q
        join reference.grid_areas a on a.id = q.grid_area_id
+       join reference.source_interfaces s on s.id = q.source_interface_id
        join reference.interconnection_source_monitors m on m.source_interface_id = q.source_interface_id
+       ${FRESHNESS_CHECK_JOINS}
       where q.is_latest and a.slug = any($1::text[])
       order by a.slug, q.observed_at desc`,
     [published],
@@ -200,18 +216,21 @@ export async function loadQueueAnalytics(
     if (row === undefined || row.observed_at == null) {
       return { marketSlug: slug, observedAt: null, sourcePublishedAt: null, reportPeriod: null,
         ageHours: null, staleAfterHours: row === undefined ? null : Number(row.stale_after_hours),
-        status: "unavailable" };
+        status: "unavailable", condition: "unavailable", basis: null, lastCheckedAt: null,
+        lastSuccessfulCheckAt: null, contentUnchangedWarning: false, publicationAgeHours: null };
     }
-    const observedAt = String(row.observed_at);
-    const ageHours = (now.getTime() - new Date(observedAt).getTime()) / 3_600_000;
-    const staleAfterHours = Number(row.stale_after_hours);
+    // The same rule the scheduled refresh gates on, so the page and the cron cannot disagree.
+    const input = freshnessInputsFromRow(String(row.source_slug ?? slug), row);
+    const assessed = assessFreshness(input, now);
     return {
-      marketSlug: slug, observedAt,
-      sourcePublishedAt: row.source_published_at == null ? null : String(row.source_published_at),
+      marketSlug: slug, observedAt: assessed.latestContentObservedAt,
+      sourcePublishedAt: assessed.sourcePublishedAt,
       reportPeriod: row.report_period == null ? null : String(row.report_period),
-      ageHours: Math.round(ageHours * 10) / 10, staleAfterHours,
-      // The same rule the scheduled refresh gates on, so the page and the cron cannot disagree.
-      status: statusFor(ageHours, staleAfterHours),
+      ageHours: assessed.contentAgeHours, staleAfterHours: input.staleAfterHours,
+      status: assessed.status, condition: assessed.condition, basis: assessed.basis,
+      lastCheckedAt: assessed.lastCheckedAt, lastSuccessfulCheckAt: assessed.lastSuccessfulCheckAt,
+      contentUnchangedWarning: assessed.contentUnchangedWarning,
+      publicationAgeHours: assessed.publicationAgeHours,
     };
   });
 

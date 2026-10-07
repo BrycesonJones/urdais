@@ -11,6 +11,11 @@
  * read model reports its sources' ages honestly. SPP is collected like every other source but
  * never gates anything, because nothing derived from it is ever published.
  *
+ * What "stale" means is `assessFreshness` in the monitor: a continuously refreshed source (PJM,
+ * MISO) that was reached and matched this run is current even when its content has not changed,
+ * and carries a content-unchanged warning instead; an unreachable source is not current, whatever
+ * its snapshot's age.
+ *
  * An archive artifact that cannot be retrieved or parsed (an old ERCOT workbook in a format the
  * reader does not handle, say) is deferred by name in the source's check and result, and does not
  * fail the run on its own: a permanently unreadable historical file would otherwise turn every
@@ -25,7 +30,7 @@ import { QUEUE_ADAPTERS } from "@/lib/interconnection-queue/ingest/registry";
 import { runQueueSource, type QueueRunOutcome } from "@/lib/interconnection-queue/ingest/run";
 import { QUEUE_SOURCE_KEYS, type QueueSourceKey } from "@/lib/interconnection-queue/ingest/types";
 import {
-  recordSourceCheck, sourceCurrentness, type SourceCurrentness,
+  recordSourceCheck, sourceCurrentness, type FreshnessCondition, type SourceCurrentness,
 } from "@/lib/interconnection-queue/monitor";
 import type { CurrentnessStatus } from "@/lib/interconnection-queue/types";
 import type { CapacitySqlExecutor } from "@/lib/power-delivery/capacity/read";
@@ -70,8 +75,8 @@ export type ScheduledQueueRunOutcome = {
   status: "succeeded" | "failed" | "skipped_locked";
   reason: "source_failed" | "inputs_stale" | "analytics_failed" | null;
   /** Published markets whose inputs held the analytics back. Empty unless the gate closed. */
-  stale: { marketSlug: string; status: CurrentnessStatus; latestObservedAt: string | null;
-    ageHours: number | null; staleAfterHours: number | null }[];
+  stale: { marketSlug: string; status: CurrentnessStatus; condition: FreshnessCondition;
+    latestObservedAt: string | null; ageHours: number | null; staleAfterHours: number | null }[];
   sources: ScheduledSourceResult[];
   currentness: MarketCurrentness[];
   analytics: AnalyticsRunOutcome | null;
@@ -146,7 +151,10 @@ function byMarket(rows: SourceCurrentness[]): MarketCurrentness[] {
       ...(row ?? {
         sourceInterfaceSlug: adapter.sourceInterfaceSlug, expectedCadence: "unknown",
         staleAfterHours: Number.NaN, latestObservedAt: null, sourcePublishedAt: null,
-        ageHours: null, status: "unavailable" as const,
+        ageHours: null, status: "unavailable" as const, condition: "unavailable" as const,
+        basis: "observed_release" as const, lastCheckedAt: null, lastSuccessfulCheckAt: null,
+        latestContentObservedAt: null, contentAgeHours: null, contentUnchangedWarning: false,
+        publicationAgeHours: null,
       }),
       marketSlug: adapter.marketSlug,
       publishable: mayPublishMarketMetric(adapter.marketSlug),
@@ -190,9 +198,13 @@ export async function runScheduledQueueRefresh(
           error: error instanceof Error ? `${error.name}: ${error.message}` : String(error) };
       }
       const seen = describe(outcome);
-      // Measured after the attempt, so the check records the state the source is actually in.
-      const current = (await sourceCurrentness(sql, now()))
-        .find((row) => row.sourceInterfaceSlug === adapter.sourceInterfaceSlug);
+      // Measured after the attempt and including it, so the check records the state the source is
+      // actually in: this run's contact counts before the row that records it exists.
+      const checkedAt = now();
+      const current = (await sourceCurrentness(sql, checkedAt, {
+        sourceInterfaceSlug: adapter.sourceInterfaceSlug, checkedAt: checkedAt.toISOString(),
+        reachable: seen.reachable, successful: seen.reachable && seen.snapshotId !== null,
+      })).find((row) => row.sourceInterfaceSlug === adapter.sourceInterfaceSlug);
       const currentness = current?.status ?? "unavailable";
       await recordSourceCheck(sql, {
         sourceInterfaceSlug: adapter.sourceInterfaceSlug, reachable: seen.reachable,
@@ -211,8 +223,8 @@ export async function runScheduledQueueRefresh(
     const stale = currentness
       .filter((row) => row.publishable && row.status !== "current")
       .map((row) => ({
-        marketSlug: row.marketSlug, status: row.status, latestObservedAt: row.latestObservedAt,
-        ageHours: row.ageHours,
+        marketSlug: row.marketSlug, status: row.status, condition: row.condition,
+        latestObservedAt: row.latestObservedAt, ageHours: row.ageHours,
         staleAfterHours: Number.isFinite(row.staleAfterHours) ? row.staleAfterHours : null,
       }));
     const sourceFailed = sources.some((source) => source.status === "failed");

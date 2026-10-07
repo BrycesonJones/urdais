@@ -28,6 +28,10 @@ const currentness = [{
   sourceInterfaceSlug: "pjm-planning-queues", expectedCadence: "continuous", staleAfterHours: 168,
   latestObservedAt: "2026-10-06T09:00:00Z", sourcePublishedAt: null, ageHours: 0.5,
   status: "current" as const, marketSlug: "pjm", publishable: true,
+  condition: "current" as const, basis: "continuous" as const,
+  lastCheckedAt: "2026-10-06T09:30:00Z", lastSuccessfulCheckAt: "2026-10-06T09:30:00Z",
+  latestContentObservedAt: "2026-10-06T09:00:00Z", contentAgeHours: 0.5,
+  contentUnchangedWarning: false, publicationAgeHours: null,
 }];
 
 function outcome(overrides: Partial<ScheduledQueueRunOutcome> = {}): ScheduledQueueRunOutcome {
@@ -87,11 +91,29 @@ describe("interconnection queue cron", () => {
     expect(end).toHaveBeenCalledTimes(1);
   });
 
+  it("answers 200 for a reachable source whose content is unchanged, and reports the warning", async () => {
+    configured();
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    runScheduledQueueRefresh.mockResolvedValue(outcome({
+      currentness: [{ ...currentness[0]!, condition: "content_unchanged", contentUnchangedWarning: true,
+        latestObservedAt: "2026-09-21T20:59:34Z", latestContentObservedAt: "2026-09-21T20:59:34Z",
+        ageHours: 376, contentAgeHours: 376 }],
+    }));
+    const response = await GET(request());
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.currentness).toEqual([expect.objectContaining({
+      marketSlug: "pjm", status: "current", condition: "content_unchanged", contentUnchangedWarning: true,
+      contentAgeHours: 376, lastSuccessfulCheckAt: "2026-10-06T09:30:00Z", basis: "continuous",
+    })]);
+    expect(String(log.mock.calls.at(-1)?.[0])).toMatch(/content unchanged: pjm 376h/);
+  });
+
   it("answers 500 and names the stale markets when the gate holds the analytics back", async () => {
     configured();
     runScheduledQueueRefresh.mockResolvedValue(outcome({
       ok: false, status: "failed", reason: "inputs_stale", analytics: null,
-      stale: [{ marketSlug: "caiso", status: "stale", latestObservedAt: "2026-09-21T00:00:00Z",
+      stale: [{ marketSlug: "caiso", status: "stale", condition: "source_data_stale", latestObservedAt: "2026-09-21T00:00:00Z",
         ageHours: 360, staleAfterHours: 72 }],
     }));
     const response = await GET(request());
@@ -128,7 +150,7 @@ describe("interconnection queue cron", () => {
     configured();
     runScheduledQueueRefresh.mockResolvedValue(outcome({
       ok: false, status: "failed", reason: "inputs_stale", analytics: null,
-      stale: [{ marketSlug: "ercot", status: "stale", latestObservedAt: "2026-08-01T00:00:00Z",
+      stale: [{ marketSlug: "ercot", status: "stale", condition: "source_data_stale", latestObservedAt: "2026-08-01T00:00:00Z",
         ageHours: 1600, staleAfterHours: 1128 }],
     }));
     const response = await GET(request());

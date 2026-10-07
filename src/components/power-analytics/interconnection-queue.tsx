@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { SectionHeading } from "@/components/analytics/section-heading";
-import { metricAcrossMarkets, type MetricValue, type QueueAnalyticsReadModel }
+import { metricAcrossMarkets, type MarketSourceFreshness, type MetricValue, type QueueAnalyticsReadModel }
   from "@/lib/interconnection-queue/analytics/read";
 import { formatNumber } from "@/lib/format";
 
@@ -126,6 +126,25 @@ export function technologyComposition(analytics: QueueAnalyticsReadModel): Techn
   return { rows, projects, contributing, omitted };
 }
 
+/** Why one market is not current, in words a reader can act on. */
+function behindReason(name: string, entry: MarketSourceFreshness | undefined): string {
+  if (entry === undefined || entry.observedAt === null) return `${name} (date unavailable)`;
+  if (entry.condition === "unreachable") return `${name} (unreachable at the last check)`;
+  if (entry.condition === "check_stale") {
+    return `${name} (last reached ${DAY(entry.lastSuccessfulCheckAt ?? entry.observedAt)})`;
+  }
+  return `${name} (as of ${DAY(entry.observedAt)})`;
+}
+
+/** The per-market source line. A reachable feed with old content says both dates, not one. */
+function sourceLabel(entry: MarketSourceFreshness | undefined): string {
+  if (entry?.observedAt == null) return "source date unavailable";
+  if (entry.contentUnchangedWarning && entry.lastSuccessfulCheckAt !== null) {
+    return `checked ${DAY(entry.lastSuccessfulCheckAt)} · unchanged since ${DAY(entry.observedAt)}`;
+  }
+  return `source as of ${DAY(entry.observedAt)}`;
+}
+
 export function InterconnectionQueue({ analytics }: { analytics: QueueAnalyticsReadModel }) {
   const markets = [...analytics.markets].sort((a, b) => {
     const left = find(a.metrics, "active_request_count")?.value ?? -1;
@@ -148,6 +167,12 @@ export function InterconnectionQueue({ analytics }: { analytics: QueueAnalyticsR
   const freshness = new Map(analytics.sourceFreshness.map((entry) => [entry.marketSlug, entry]));
   const behind = markets.filter((market) => freshness.get(market.marketSlug)?.status !== "current");
   const live = behind.length === 0;
+  // Current, because the publisher answered, but its content has not moved for longer than its
+  // window. Said separately: this is not the same thing as the source being down.
+  const unchanged = markets.filter((market) => {
+    const entry = freshness.get(market.marketSlug);
+    return entry?.status === "current" && entry.contentUnchangedWarning;
+  });
   const observed = markets.map((market) => freshness.get(market.marketSlug)?.observedAt ?? null)
     .filter((value): value is string => value !== null).sort();
 
@@ -188,13 +213,10 @@ export function InterconnectionQueue({ analytics }: { analytics: QueueAnalyticsR
           className="mt-4 rounded-[3px] border border-amber-500/30 bg-amber-500/[0.06] p-4 text-sm text-amber-200/90"
         >
           <span className="font-medium">These figures may be out of date.</span>{" "}
-          The source data for {behind.map((market) => {
-            const entry = freshness.get(market.marketSlug);
-            return entry?.observedAt == null
-              ? `${market.marketName} (date unavailable)`
-              : `${market.marketName} (as of ${DAY(entry.observedAt)})`;
-          }).join(", ")} is older than that publisher&apos;s freshness window. The values shown
-          are the last validated calculation and remain unchanged; nothing has been substituted.
+          The source data for {behind.map((market) =>
+            behindReason(market.marketName, freshness.get(market.marketSlug))).join(", ")} could not
+          be confirmed inside that publisher&apos;s freshness window. The values shown are the last
+          validated calculation and remain unchanged; nothing has been substituted.
         </p>
       )}
 
@@ -208,6 +230,13 @@ export function InterconnectionQueue({ analytics }: { analytics: QueueAnalyticsR
         )}
         {analytics.calculatedAt === null ? null : <> · last calculated {DAY(analytics.calculatedAt)}</>}
       </p>
+      {unchanged.length === 0 ? null : (
+        <p role="note" className="mt-1 text-xs text-neutral-500">
+          {unchanged.map((market) => market.marketName).join(", ")}: the publisher was reached at
+          the last check, but its queue file has not changed for longer than expected. The data
+          shown is the latest the publisher serves.
+        </p>
+      )}
 
       <ol className="mt-6 divide-y divide-white/[0.06]" aria-label="Active interconnection requests by market">
         <li aria-hidden="true" className="grid grid-cols-[minmax(6rem,9rem)_minmax(0,1fr)_5rem_5.5rem_6rem] items-center gap-x-3 pb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-600">
@@ -230,7 +259,7 @@ export function InterconnectionQueue({ analytics }: { analytics: QueueAnalyticsR
                 <span className="block truncate font-medium text-neutral-100">{market.marketName}</span>
                 <span className={`block truncate text-[11px] ${source?.status === "current"
                   ? "text-neutral-500" : "text-amber-300/80"}`}>
-                  {source?.observedAt == null ? "source date unavailable" : `source as of ${DAY(source.observedAt)}`}
+                  {sourceLabel(source)}
                 </span>
               </span>
               <span className="relative h-2.5 overflow-hidden rounded-[1px] bg-white/[0.04]" aria-hidden="true">

@@ -35,34 +35,53 @@ import type { CapacitySqlExecutor } from "@/lib/power-delivery/capacity/read";
 const NOW = new Date("2026-10-06T09:30:00.000Z");
 const hoursAgo = (hours: number) => new Date(NOW.getTime() - hours * 3_600_000).toISOString();
 
-const MONITORS: Record<string, { slug: string; staleAfter: number }> = {
-  pjm: { slug: "pjm-planning-queues", staleAfter: 168 },
-  miso: { slug: "miso-generator-interconnection-queue", staleAfter: 168 },
-  caiso: { slug: "caiso-public-queue-report", staleAfter: 72 },
-  ercot: { slug: "ercot-gis-report", staleAfter: 1128 },
-  nyiso: { slug: "nyiso-interconnection-queue", staleAfter: 1128 },
-  "iso-ne": { slug: "iso-ne-interconnection-queue", staleAfter: 72 },
-  spp: { slug: "spp-generator-interconnection-queue", staleAfter: 336 },
+/** The production monitor policies (cadence and threshold) for the seven sources. */
+const MONITORS: Record<string, { slug: string; staleAfter: number; cadence: string }> = {
+  pjm: { slug: "pjm-planning-queues", staleAfter: 168, cadence: "continuous" },
+  miso: { slug: "miso-generator-interconnection-queue", staleAfter: 168, cadence: "continuous" },
+  caiso: { slug: "caiso-public-queue-report", staleAfter: 72, cadence: "daily" },
+  ercot: { slug: "ercot-gis-report", staleAfter: 1128, cadence: "monthly" },
+  nyiso: { slug: "nyiso-interconnection-queue", staleAfter: 1128, cadence: "monthly" },
+  "iso-ne": { slug: "iso-ne-interconnection-queue", staleAfter: 72, cadence: "daily" },
+  spp: { slug: "spp-generator-interconnection-queue", staleAfter: 336, cadence: "weekly" },
 };
 
 /**
  * A stub database answering the lock, the currentness read and the check insert. `ages` is the
- * age in hours of each market's latest snapshot; null means it has none.
+ * age in hours of each market's latest snapshot; null means it has none. `published` is the age of
+ * the publisher's own timestamp, for the markets that have one. Checks the run records are
+ * remembered and served back on the next currentness read, as the real table would.
  */
-function executor(ages: Partial<Record<string, number | null>> = {}, options: { locked?: boolean } = {}) {
+function executor(ages: Partial<Record<string, number | null>> = {},
+  options: { locked?: boolean; published?: Partial<Record<string, number>> } = {}) {
   const calls: { sql: string; params: unknown[] }[] = [];
+  const recorded = new Map<string, { checkedAt: string; reachable: boolean; successful: boolean }[]>();
   const sql = {
     query: async (text: string, params: unknown[] = []) => {
       calls.push({ sql: text, params });
       if (text.includes("pg_try_advisory_lock")) return { rows: [{ acquired: options.locked !== true }] };
+      if (text.includes("insert into pipeline.interconnection_source_checks")) {
+        const slug = String(params[0]);
+        recorded.set(slug, [...(recorded.get(slug) ?? []), {
+          checkedAt: NOW.toISOString(), reachable: params[1] === true,
+          successful: params[1] === true && params[5] !== null,
+        }]);
+        return { rows: [] };
+      }
       if (text.includes("from reference.interconnection_source_monitors")) {
         return {
           rows: Object.entries(MONITORS).map(([market, monitor]) => {
             const age = market in ages ? ages[market] : 1;
+            const published = options.published?.[market];
+            const history = recorded.get(monitor.slug) ?? [];
+            const last = history.at(-1);
+            const lastOk = history.filter((check) => check.successful).at(-1);
             return {
-              slug: monitor.slug, expected_cadence: "daily", stale_after_hours: monitor.staleAfter,
+              slug: monitor.slug, expected_cadence: monitor.cadence, stale_after_hours: monitor.staleAfter,
               observed_at: age === null || age === undefined ? null : hoursAgo(age),
-              source_published_at: null,
+              source_published_at: published === undefined ? null : hoursAgo(published),
+              last_checked_at: last?.checkedAt ?? null, last_check_reachable: last?.reachable ?? null,
+              last_successful_check_at: lastOk?.checkedAt ?? null,
             };
           }),
         };
@@ -130,7 +149,7 @@ describe("the scheduled refresh", () => {
     runQueueAnalytics.mockImplementation(async () => { order.push("analytics"); return calculated; });
     const original = sql.query.bind(sql);
     sql.query = (async (text: string, params?: unknown[]) => {
-      if (text.includes("interconnection_source_checks")) order.push(`check:${String(params?.[0])}`);
+      if (text.includes("insert into pipeline.interconnection_source_checks")) order.push(`check:${String(params?.[0])}`);
       return original(text, params ?? []);
     }) as typeof sql.query;
 
@@ -178,12 +197,17 @@ describe("the scheduled refresh", () => {
     // reachable, http status, artifact hash, published at, snapshot id
     expect(miso.params.slice(1, 6)).toEqual([false, null, null, null, null]);
     expect(String(miso.params[7])).toMatch(/fetch failed/);
-    expect(outcome.sources.find((source) => source.source === "miso")!.status).toBe("failed");
-    // The older MISO snapshot is still current, so the others are recalculated, but the run is
-    // still reported as failed.
-    expect(runQueueAnalytics).toHaveBeenCalledTimes(1);
+    expect(outcome.sources.find((source) => source.source === "miso")).toMatchObject({
+      status: "failed", currentness: "unavailable",
+    });
+    // Fail closed: a published source that could not be reached is not current, however young its
+    // last snapshot, so the analytics are held back rather than recalculated around it.
+    expect(runQueueAnalytics).not.toHaveBeenCalled();
     expect(outcome.ok).toBe(false);
-    expect(outcome.reason).toBe("source_failed");
+    expect(outcome.reason).toBe("inputs_stale");
+    expect(outcome.stale).toEqual([expect.objectContaining({
+      marketSlug: "miso", status: "unavailable", condition: "unreachable",
+    })]);
   });
 
   it("writes no snapshot when retrieval fails, only the check", async () => {
@@ -289,9 +313,11 @@ describe("the scheduled refresh", () => {
     const check = checks(calls).find((call) => call.params[0] === "ercot-gis-report")!;
     expect(check.params.slice(1, 6)).toEqual([false, null, null, null, null]);
     expect(String(check.params[7])).toMatch(/failed during retrieval: .*fetch failed/);
+    expect(check.params[6]).toBe("unavailable");
     expect(checks(calls)).toHaveLength(7);
     expect(outcome.ok).toBe(false);
-    expect(outcome.reason).toBe("source_failed");
+    expect(outcome.reason).toBe("inputs_stale");
+    expect(outcome.stale.map((row) => [row.marketSlug, row.condition])).toEqual([["ercot", "unreachable"]]);
   });
 
   it("contains a source runner that throws, and still checks every source", async () => {
@@ -307,7 +333,9 @@ describe("the scheduled refresh", () => {
     expect(outcome.sources.find((source) => source.source === "pjm")).toMatchObject({
       status: "failed", reachable: false,
     });
-    expect(outcome.reason).toBe("source_failed");
+    expect(outcome.ok).toBe(false);
+    expect(outcome.reason).toBe("inputs_stale");
+    expect(outcome.stale.map((row) => [row.marketSlug, row.condition])).toEqual([["pjm", "unreachable"]]);
     expect(calls.at(-1)!.sql).toMatch(/pg_advisory_unlock/);
   });
 
@@ -323,7 +351,7 @@ describe("the scheduled refresh", () => {
     const { sql, calls } = executor();
     const original = sql.query.bind(sql);
     sql.query = (async (text: string, params?: unknown[]) => {
-      if (text.includes("interconnection_source_checks")) {
+      if (text.includes("insert into pipeline.interconnection_source_checks")) {
         calls.push({ sql: text, params: params ?? [] });
         throw new Error("insert failed");
       }
@@ -382,6 +410,60 @@ describe("the scheduled refresh", () => {
     const outcome = await runScheduledQueueRefresh(sql, { now: () => NOW });
     expect(outcome.ok).toBe(false);
     expect(outcome.reason).toBe("analytics_failed");
+  });
+});
+
+describe("unchanged content is not an outage", () => {
+  it("keeps the run green when PJM answered with an artifact identical to one stored weeks ago", async () => {
+    // The production case: PJM's latest snapshot is from Sept 21, 376 hours against a 168 threshold.
+    const { sql, calls } = executor({ pjm: 376 });
+
+    const outcome = await runScheduledQueueRefresh(sql, { now: () => NOW });
+
+    expect(outcome).toMatchObject({ ok: true, status: "succeeded", reason: null, stale: [] });
+    expect(runQueueAnalytics).toHaveBeenCalledTimes(1);
+    expect(outcome.currentness.find((row) => row.marketSlug === "pjm")).toMatchObject({
+      status: "current", condition: "content_unchanged", contentUnchangedWarning: true,
+      contentAgeHours: 376, latestObservedAt: hoursAgo(376), lastSuccessfulCheckAt: NOW.toISOString(),
+    });
+    // The check it records says current: the source was reached, and the snapshot is not restamped.
+    const check = checks(calls).find((call) => call.params[0] === "pjm-planning-queues")!;
+    expect(check.params.slice(1, 7)).toEqual([true, 200, "a".repeat(64), null, "snap-pjm", "current"]);
+    expect(calls.some((call) => /update pipeline\.interconnection_queue_snapshots/.test(call.sql))).toBe(false);
+  });
+
+  it("clears the warning when PJM's artifact has changed and a new snapshot was stored", async () => {
+    const { sql } = executor({ pjm: 0 });
+    const outcome = await runScheduledQueueRefresh(sql, { now: () => NOW });
+    expect(outcome.ok).toBe(true);
+    expect(outcome.currentness.find((row) => row.marketSlug === "pjm"))
+      .toMatchObject({ status: "current", condition: "current", contentUnchangedWarning: false });
+  });
+
+  it("still fails closed when PJM, with old content, cannot be reached", async () => {
+    const { sql } = executor({ pjm: 376 });
+    runQueueSource.mockImplementation(async (_sql: unknown, source: string) => (source === "pjm"
+      ? { status: "failed", source, phase: "retrieval", error: "Error: fetch failed" }
+      : ingested(source)));
+
+    const outcome = await runScheduledQueueRefresh(sql, { now: () => NOW });
+
+    expect(runQueueAnalytics).not.toHaveBeenCalled();
+    expect(outcome).toMatchObject({ ok: false, reason: "inputs_stale" });
+    expect(outcome.stale).toEqual([expect.objectContaining({ marketSlug: "pjm", condition: "unreachable" })]);
+  });
+
+  it("does not let a fresh check hide a publisher timestamp that is too old", async () => {
+    // CAISO answered and matched its snapshot this run, but the report it serves is 100 hours old.
+    const { sql } = executor({ caiso: 1 }, { published: { caiso: 100 } });
+
+    const outcome = await runScheduledQueueRefresh(sql, { now: () => NOW });
+
+    expect(runQueueAnalytics).not.toHaveBeenCalled();
+    expect(outcome).toMatchObject({ ok: false, reason: "inputs_stale" });
+    expect(outcome.stale).toEqual([expect.objectContaining({
+      marketSlug: "caiso", status: "stale", condition: "source_data_stale",
+    })]);
   });
 });
 

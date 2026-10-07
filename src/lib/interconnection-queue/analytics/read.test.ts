@@ -63,13 +63,18 @@ describe("source freshness on the read model", () => {
 
     const model = await loadQueueAnalytics(sql, { now: NOW });
 
+    const noChecks = { lastCheckedAt: null, lastSuccessfulCheckAt: null, contentUnchangedWarning: false };
     expect(model.sourceFreshness).toEqual([
       { marketSlug: "caiso", observedAt: "2026-10-06T09:00:00Z", sourcePublishedAt: "2026-10-06T06:00:00Z",
-        reportPeriod: null, ageHours: 3, staleAfterHours: 72, status: "current" },
+        reportPeriod: null, ageHours: 3, staleAfterHours: 72, status: "current",
+        condition: "current", basis: "source_published", publicationAgeHours: 6, ...noChecks },
       { marketSlug: "ercot", observedAt: "2026-09-02T00:00:00Z", sourcePublishedAt: "2026-09-02T00:00:00Z",
-        reportPeriod: "2026-08-01", ageHours: 828, staleAfterHours: 1128, status: "current" },
+        reportPeriod: "2026-08-01", ageHours: 828, staleAfterHours: 1128, status: "current",
+        condition: "current", basis: "source_published", publicationAgeHours: 828, ...noChecks },
+      // No scheduled check on record and no cadence given: judged exactly as before the checks.
       { marketSlug: "pjm", observedAt: "2026-09-21T12:00:00Z", sourcePublishedAt: null,
-        reportPeriod: null, ageHours: 360, staleAfterHours: 168, status: "stale" },
+        reportPeriod: null, ageHours: 360, staleAfterHours: 168, status: "stale",
+        condition: "check_stale", basis: "observed_release", publicationAgeHours: null, ...noChecks },
     ]);
     expect(model.lastCheckedAt).toBe("2026-10-06T09:31:00Z");
     // Only the published markets are asked about, so SPP's snapshot is never read for display.
@@ -77,6 +82,40 @@ describe("source freshness on the read model", () => {
     expect(asked.params[0]).toEqual(["caiso", "ercot", "pjm"]);
     expect(model.sourceFreshness.some((entry) => entry.marketSlug === "spp")).toBe(false);
     expect(validatePublicQueueAnalytics(model)).toEqual([]);
+  });
+
+  it("serves PJM as current with a content-unchanged warning when it was reached today", async () => {
+    const { sql } = executor([
+      { market_slug: "caiso", source_slug: "caiso-public-queue-report", expected_cadence: "daily",
+        stale_after_hours: 72, observed_at: "2026-10-06T09:00:00Z", source_published_at: "2026-10-06T06:00:00Z",
+        report_period: null, last_checked_at: "2026-10-06T10:16:58Z", last_check_reachable: true,
+        last_successful_check_at: "2026-10-06T10:16:58Z" },
+      { market_slug: "pjm", source_slug: "pjm-planning-queues", expected_cadence: "continuous",
+        stale_after_hours: 168, observed_at: "2026-09-21T12:00:00Z", source_published_at: null,
+        report_period: null, last_checked_at: "2026-10-06T10:16:50Z", last_check_reachable: true,
+        last_successful_check_at: "2026-10-06T10:16:50Z" },
+    ], "2026-10-06T10:17:08Z");
+
+    const model = await loadQueueAnalytics(sql, { now: NOW });
+
+    expect(model.sourceFreshness.find((entry) => entry.marketSlug === "pjm")).toEqual({
+      marketSlug: "pjm", observedAt: "2026-09-21T12:00:00Z", sourcePublishedAt: null, reportPeriod: null,
+      ageHours: 360, staleAfterHours: 168, status: "current", condition: "content_unchanged",
+      basis: "continuous", lastCheckedAt: "2026-10-06T10:16:50Z",
+      lastSuccessfulCheckAt: "2026-10-06T10:16:50Z", contentUnchangedWarning: true, publicationAgeHours: null,
+    });
+  });
+
+  it("serves a market whose latest check failed as unreachable", async () => {
+    const { sql } = executor([
+      { market_slug: "pjm", source_slug: "pjm-planning-queues", expected_cadence: "continuous",
+        stale_after_hours: 168, observed_at: "2026-10-06T08:00:00Z", source_published_at: null,
+        report_period: null, last_checked_at: "2026-10-06T10:16:50Z", last_check_reachable: false,
+        last_successful_check_at: "2026-10-05T10:16:50Z" },
+    ]);
+    const model = await loadQueueAnalytics(sql, { now: NOW });
+    expect(model.sourceFreshness.find((entry) => entry.marketSlug === "pjm"))
+      .toMatchObject({ status: "unavailable", condition: "unreachable" });
   });
 
   it("reports a published market with no snapshot as unavailable rather than dropping it", async () => {
@@ -109,9 +148,11 @@ describe("the freshness contract", () => {
       ...base(),
       sourceFreshness: [
         { marketSlug: "pjm", observedAt: null, sourcePublishedAt: null, reportPeriod: null,
-          ageHours: null, staleAfterHours: null, status: "unavailable" },
+          ageHours: null, staleAfterHours: null, status: "unavailable",
+          condition: "unavailable", basis: null, lastCheckedAt: null, lastSuccessfulCheckAt: null, contentUnchangedWarning: false, publicationAgeHours: null },
         { marketSlug: "spp", observedAt: null, sourcePublishedAt: null, reportPeriod: null,
-          ageHours: null, staleAfterHours: null, status: "unavailable" },
+          ageHours: null, staleAfterHours: null, status: "unavailable",
+          condition: "unavailable", basis: null, lastCheckedAt: null, lastSuccessfulCheckAt: null, contentUnchangedWarning: false, publicationAgeHours: null },
       ],
     };
     expect(validatePublicQueueAnalytics(model).join(" ")).toMatch(/spp is blocked from publication/);
