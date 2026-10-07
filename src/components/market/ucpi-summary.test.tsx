@@ -67,13 +67,13 @@ describe("UcpiSummary range synchronization", () => {
     expect(screen.getByRole("button", { name: "3M" })).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("withholds a period return when the selected range has fewer than two observations", () => {
-    const sparse = { ...series, "1W": [{ time: 2, value: 150 }] };
+  it("does not offer a range that cannot draw a line", () => {
+    const sparse = { ...series, "1D": [{ time: 2, value: 150 }] };
 
     render(<UcpiSummary index={index} snapshot={snapshot} series={sparse} provenance="production" />);
-    fireEvent.click(screen.getByRole("button", { name: "1W" }));
 
-    expect(screen.getByText(/1W · as of/)).toBeInTheDocument();
-    expect(screen.queryByText("+999.00%")).toBeNull();
+    expect(screen.queryByRole("button", { name: "1D" })).toBeNull();
+    expect(screen.getByRole("button", { name: "1W" })).toBeInTheDocument();
+    expect(screen.getByLabelText("UCPI historical chart, 1M range")).toBeInTheDocument();
   });
 });

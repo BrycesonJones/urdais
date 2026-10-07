@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { hasIntradayCadence } from "@/components/market/ucpi-chart";
+import { availableUcpiRanges, hasIntradayCadence } from "@/components/market/ucpi-chart";
 import type { TimeSeriesPoint } from "@/types/market";
 
 const HOUR = 60 * 60;
@@ -27,5 +27,22 @@ describe("hasIntradayCadence", () => {
 
   it("does not infer intraday cadence from one point", () => {
     expect(hasIntradayCadence(points([0]))).toBe(false);
+  });
+});
+
+
+describe("availableUcpiRanges", () => {
+  it("hides a 1D range that has only one real observation", () => {
+    const point = { time: DAY, value: 3.86 };
+    const series = {
+      "1D": [point],
+      "1W": [point, { time: 2 * DAY, value: 3.87 }],
+      "1M": [point, { time: 2 * DAY, value: 3.87 }],
+      "3M": [point, { time: 2 * DAY, value: 3.87 }],
+      "1Y": [point, { time: 2 * DAY, value: 3.87 }],
+      ALL: [point, { time: 2 * DAY, value: 3.87 }],
+    };
+
+    expect(availableUcpiRanges(series)).toEqual(["1W", "1M", "3M", "1Y", "ALL"]);
   });
 });
