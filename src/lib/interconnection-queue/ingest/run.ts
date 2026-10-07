@@ -17,7 +17,7 @@ export type ArchiveBackfillOutcome = {
   reportPeriods: number;
   corrections: number;
   artifactsParsed: number;
-  artifactsDeferred: { label: string; reason: string }[];
+  artifactsDeferred: { label: string; reportPeriod: string | null; reason: string }[];
   snapshotsCreated: number;
   snapshotsExisting: number;
   rawRecordsInserted: number;
@@ -28,15 +28,30 @@ export type ArchiveBackfillOutcome = {
   resourcesInserted: number;
   deferralsRecorded: number;
   historicalRange: { first: string | null; last: string | null };
+  /** How many of the discovered artifacts this run tried to retrieve, after any limit. */
+  artifactsSelected: number;
+  /** How many of the selected artifacts came back from the publisher, parseable or not. */
+  artifactsRetrieved: number;
+  /**
+   * The newest artifact retrieved and parsed, so a caller recording a source check can name the
+   * evidence it actually used. Null when nothing was selected or nothing usable came back.
+   */
+  latestArtifact: {
+    sha256: string; httpStatus: number; snapshotId: string | null; sourcePublishedAt: string | null;
+  } | null;
   statements: number;
   retrievalMs: number;
   parseMs: number;
   persistMs: number;
 };
 
+/** Where a source run stopped: retrieval failures mean the publisher was not reachable. */
+export type QueueRunPhase = "retrieval" | "parse" | "persist";
+
 export type QueueRunOutcome =
   | ({ status: "ingested" } & QueueWriteResult
-      & { retrievalMs: number; parseMs: number; persistMs: number; identityCollisions: IdentityCollision[] })
+      & { artifactSha256: string; httpStatus: number;
+        retrievalMs: number; parseMs: number; persistMs: number; identityCollisions: IdentityCollision[] })
   | {
       status: "parsed"; source: string; snapshotKey: string; sourcePublishedAt: string | null;
       records: number; canonicalRecords: number; quantities: number; resources: number;
@@ -44,7 +59,7 @@ export type QueueRunOutcome =
       lifecycle: Record<string, number>; retrievalMs: number; parseMs: number;
     }
   | ArchiveBackfillOutcome
-  | { status: "failed"; source: string; error: string };
+  | { status: "failed"; source: string; error: string; phase?: QueueRunPhase };
 
 export type QueueRunReport = {
   ok: boolean;
@@ -101,7 +116,8 @@ async function retrieve(
 export async function runQueueArchive(
   sql: CapacitySqlExecutor | null,
   adapter: QueueAdapter,
-  options: { fetcher: ArtifactFetcher; dryRun?: boolean; batchSize?: number; limit?: number },
+  options: { fetcher: ArtifactFetcher; dryRun?: boolean; batchSize?: number; limit?: number;
+    onPhase?: (phase: QueueRunPhase) => void },
 ): Promise<QueueRunOutcome> {
   const fetcher = options.fetcher;
   const retrievalStart = Date.now();
@@ -122,6 +138,7 @@ export async function runQueueArchive(
       first: refs.map((ref) => ref.reportPeriod).filter((p): p is string => p !== null).sort()[0] ?? null,
       last: refs.map((ref) => ref.reportPeriod).filter((p): p is string => p !== null).sort().at(-1) ?? null,
     },
+    artifactsSelected: selected.length, artifactsRetrieved: 0, latestArtifact: null,
     statements: 0, retrievalMs: retrievalIndexMs, parseMs: 0, persistMs: 0,
   };
 
@@ -132,12 +149,13 @@ export async function runQueueArchive(
       artifact = await retrieve(fetcher, { label: ref.label, url: ref.url });
     } catch (error) {
       outcome.artifactsDeferred.push({
-        label: ref.label,
+        label: ref.label, reportPeriod: ref.reportPeriod,
         reason: `unavailable: ${error instanceof Error ? error.message : String(error)}`,
       });
       continue;
     }
     outcome.retrievalMs += Date.now() - fetchStart;
+    outcome.artifactsRetrieved += 1;
 
     const parseStart = Date.now();
     let extraction;
@@ -146,7 +164,7 @@ export async function runQueueArchive(
     } catch (error) {
       // A historical variant this reader cannot handle is recorded by name, never skipped.
       outcome.artifactsDeferred.push({
-        label: ref.label,
+        label: ref.label, reportPeriod: ref.reportPeriod,
         reason: `unparseable: ${error instanceof Error ? error.message : String(error)}`,
       });
       continue;
@@ -154,10 +172,15 @@ export async function runQueueArchive(
     resolveIdentityCollisions(extraction);
     outcome.parseMs += Date.now() - parseStart;
     outcome.artifactsParsed += 1;
+    outcome.latestArtifact = {
+      sha256: artifact.sha256, httpStatus: artifact.status, snapshotId: null,
+      sourcePublishedAt: ref.publishedAt,
+    };
 
     if (options.dryRun === true || sql === null) continue;
 
     const persistStart = Date.now();
+    options.onPhase?.("persist");
     const written = await persistQueueExtraction(
       sql, { ...adapter, artifacts: [{ label: ref.label, url: ref.url }] }, new Map([[ref.label, artifact]]),
       extraction, QUEUE_COLLECTOR,
@@ -165,6 +188,7 @@ export async function runQueueArchive(
         observedAt: ref.publishedAt ?? artifact.retrievedAt, ref },
     );
     outcome.persistMs += Date.now() - persistStart;
+    outcome.latestArtifact.snapshotId = written.snapshotId;
     if (written.snapshot === "created") outcome.snapshotsCreated += 1; else outcome.snapshotsExisting += 1;
     outcome.rawRecordsInserted += written.rawRecordsInserted;
     outcome.requestsInserted += written.requestsInserted;
@@ -187,10 +211,12 @@ export async function runQueueSource(
 ): Promise<QueueRunOutcome> {
   const adapter = queueAdapter(source);
   if (adapter === null) return { status: "failed", source, error: `unknown queue source ${source}` };
+  let phase: QueueRunPhase = "retrieval";
   try {
     if (adapter.discover !== undefined) {
       return await runQueueArchive(sql, adapter, {
         fetcher: options?.fetcher ?? httpArtifactFetcher(),
+        onPhase: (next) => { phase = next; },
         ...(options?.dryRun === undefined ? {} : { dryRun: options.dryRun }),
         ...(options?.batchSize === undefined ? {} : { batchSize: options.batchSize }),
         ...(options?.limit === undefined ? {} : { limit: options.limit }),
@@ -199,7 +225,9 @@ export async function runQueueSource(
     const retrievalStart = Date.now();
     const artifacts = await collectQueueArtifacts(adapter, options?.fetcher ?? httpArtifactFetcher());
     const retrievalMs = Date.now() - retrievalStart;
+    const primary = artifacts.get(adapter.artifacts[0]!.label);
 
+    phase = "parse";
     const parseStart = Date.now();
     const extraction = adapter.parse(artifacts);
     // A publisher that served one queue id twice has made that identity ambiguous. Raw evidence
@@ -226,6 +254,7 @@ export async function runQueueSource(
       };
     }
 
+    phase = "persist";
     const persistStart = Date.now();
     const written = await persistQueueExtraction(
       sql, adapter, artifacts, extraction, QUEUE_COLLECTOR,
@@ -235,10 +264,12 @@ export async function runQueueSource(
       },
     );
     return { status: "ingested", ...written, identityCollisions,
+      // persistQueueExtraction has already refused a missing primary artifact.
+      artifactSha256: primary!.sha256, httpStatus: primary!.status,
       retrievalMs, parseMs, persistMs: Date.now() - persistStart };
   } catch (error) {
     return {
-      status: "failed", source,
+      status: "failed", source, phase,
       error: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
     };
   }

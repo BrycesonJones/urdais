@@ -42,7 +42,7 @@ const model = (markets: MarketAnalytics[],
     title: "Urdais Interconnection Queue Analytics",
   },
   calculatedAt: "2026-09-21T21:24:53.637Z",
-  inputDigest: "digest", snapshotCount: 1, markets,
+  inputDigest: "digest", snapshotCount: 1, markets, sourceFreshness: [], lastCheckedAt: null,
   excludedMarkets: [], deferredMetrics: [], notes: [], ...overrides,
 });
 
