@@ -98,6 +98,8 @@ describe("typing a URL you do not belong on", () => {
 
 describe("rendering the state a reader does belong on", () => {
   const cases: [string, () => void, OnboardingState][] = [
+    ["anonymous / discover", anonymous, "discover"],
+    ["anonymous / audience", anonymous, "audience"],
     ["anonymous / create_account", anonymous, "create_account"],
     ["anonymous / login", anonymous, "login"],
     ["unverified / verification_required", unverified, "email_challenge"],
@@ -143,6 +145,28 @@ describe("authority", () => {
     const after = await resolveOnboarding("ready_for_checkout", null);
     expect(after.kind).toBe("redirect");
     expect(resolveViewer).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("premium introduction bypass", () => {
+  it("sends authenticated non-subscribers straight to Plan / Pay", async () => {
+    for (const requested of ["discover", "audience"] as const) {
+      verified();
+      const resolution = await resolveOnboarding(requested, "/markets/power-analytics");
+      expect(resolution.kind === "redirect" && resolution.href).toBe(
+        `/access/ready?returnTo=${encodeURIComponent("/markets/power-analytics")}`,
+      );
+    }
+  });
+
+  it("sends subscribers away from both introductory pages", async () => {
+    for (const requested of ["discover", "audience"] as const) {
+      subscriber();
+      const resolution = await resolveOnboarding(requested, "/markets/power-analytics");
+      expect(resolution.kind === "redirect" && resolution.href).toBe(
+        `/access/subscribed?returnTo=${encodeURIComponent("/markets/power-analytics")}`,
+      );
+    }
   });
 });
 

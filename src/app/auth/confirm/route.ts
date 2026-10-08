@@ -33,6 +33,7 @@ import { createServerSupabaseClient } from "@/lib/auth/server-client";
 import { safeReturnTo } from "@/lib/auth/return-to";
 import { forgetPendingEmail } from "@/lib/onboarding/pending-email";
 import { ONBOARDING_PATHS } from "@/lib/onboarding/routes";
+import { persistPendingAudienceForViewer } from "@/lib/onboarding/audience-store";
 
 /** The OTP types that can legitimately arrive on a confirmation link. */
 const ALLOWED_OTP_TYPES: readonly string[] = ["email", "signup", "email_change", "recovery", "invite", "magiclink"];
@@ -83,6 +84,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   // remembered pending address would only be a second source that could disagree
   // with it.
   await forgetPendingEmail();
+  await persistPendingAudienceForViewer();
 
   // `redirect` here carries the session cookies the Supabase client just set on this
   // response. `next` is already validated; for the onboarding flow it is `/access`,

@@ -5,12 +5,14 @@
  * server-side viewer — never from a collection of `showSignup` / `showVerify`
  * booleans, which is how a flow ends up in two states at once or in none.
  *
- * ## There is no intro state
+ * ## Public introduction states
  *
- * The premium gate already established intent: someone who pressed "Get Full
- * Access" has decided. A marketing screen between that decision and the account
- * form was a second ask, so `create_account` is now where an anonymous reader
- * lands, at `/access` itself.
+ * Premium conversion has two intentionally public states before account creation:
+ * `discover` explains what full access contains and `audience` optionally records
+ * who is considering it. They are choices in the journey, like `login`, rather
+ * than states inferred from authentication. An authenticated reader never renders
+ * either one; their authoritative account state sends them straight to Plan / Pay
+ * or back to the product they already hold.
  *
  * ## The state is a function of the viewer, not of where the reader has been
  *
@@ -47,6 +49,8 @@ import { hasPremiumEntitlement, type Viewer } from "@/lib/access/entitlement";
  * derived from the server's view of the session.
  */
 export type OnboardingState =
+  | "discover"
+  | "audience"
   | "create_account"
   | "login"
   /**
@@ -61,6 +65,8 @@ export type OnboardingState =
   | "already_entitled";
 
 export const ONBOARDING_STATES: readonly OnboardingState[] = Object.freeze([
+  "discover",
+  "audience",
   "create_account",
   "login",
   "email_challenge",
@@ -75,7 +81,13 @@ export const ONBOARDING_STATES: readonly OnboardingState[] = Object.freeze([
  * yet: submitting the code is what creates one. It is the one anonymous state
  * reached without a session, and the only one whose form is a credential.
  */
-export const ANONYMOUS_STATES: readonly OnboardingState[] = Object.freeze(["create_account", "login", "email_challenge"]);
+export const ANONYMOUS_STATES: readonly OnboardingState[] = Object.freeze([
+  "discover",
+  "audience",
+  "create_account",
+  "login",
+  "email_challenge",
+]);
 
 /** The states that require an authenticated viewer. */
 export const AUTHENTICATED_STATES: readonly OnboardingState[] = Object.freeze([

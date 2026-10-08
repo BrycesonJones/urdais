@@ -32,6 +32,7 @@ import { DEFAULT_RETURN_TO, safeReturnTo } from "@/lib/auth/return-to";
 import type { AuthFormState } from "@/app/auth/form-state";
 import { onboardingHref, ONBOARDING_HREF } from "@/lib/onboarding/routes";
 import { forgetPendingEmail, readPendingEmail, rememberPendingEmail } from "@/lib/onboarding/pending-email";
+import { persistPendingAudienceForViewer } from "@/lib/onboarding/audience-store";
 
 const UNAVAILABLE: AuthFormState = {
   status: "error",
@@ -110,6 +111,13 @@ export async function verifyOtpAction(_previous: AuthFormState, formData: FormDa
   // Stay on the code screen. The address is untouched, so the reader can simply
   // retype the code or ask for a new one.
   if (outcome.kind === "rejected") return { status: "error", message: outcome.message };
+
+  // The emailed code has established the session. Only now resolve the Urdais
+  // account on the server and attach the signed pre-auth audience choice to it.
+  // The cookie is consumed at most once, before the write: a failed write loses
+  // the optional choice rather than leaving it for the next account to sign in
+  // here. Failure never undoes a successful sign-in.
+  await persistPendingAudienceForViewer();
 
   // Authenticated now, so the authoritative address is on the viewer and this copy
   // would only be a second source that could disagree with it.

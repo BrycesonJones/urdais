@@ -13,7 +13,7 @@
 | Customer credential | email + password | emailed one-time verification code |
 | Verification | a step after signup | the same event as authentication |
 | Second method | — | Google OAuth, when configured |
-| Entry | gate → `/access` intro → Continue → form | gate → **form** |
+| Entry | gate → `/access` intro → Continue → form | gate → Phase 8 discovery and optional audience pages → **form** |
 | Price during onboarding | `$80/week` on the intro and the boundary | none; moves to Plan / Pay |
 
 Removing the password field was the smaller half. The larger one is that possession of the mailbox now *is* proof of identity, so there is no longer a "create account, then verify" sequence to model — one email does both.
@@ -133,17 +133,22 @@ So the two screens differ only in heading and cross-link. The distinction is rea
 
 ```
 premium product → ACCESS REQUIRED → Get Full Access
-  → /access                     Create your account  (email, or Google)
+  → /access/discover            Discover Full Access
+    → /access/audience          Optional audience classification
+      → /access                 Create your account  (email, or Google)
     → /access/verify            Check your email — enter the code
       → verifyOtp               session established, in the same tab
         → /access               resolves the new viewer
           → /access/ready       ready for checkout
 ```
 
-Five states, five routes, unchanged in shape from Phase 4 except that the intro is gone and `verification_required` is now `email_challenge`:
+Seven states, seven routes. Phase 8 adds two optional public conversion states;
+`verification_required` remains `email_challenge`:
 
 | State | Path |
 | --- | --- |
+| `discover` | `/access/discover` |
+| `audience` | `/access/audience` |
 | `create_account` | `/access` |
 | `login` | `/access/login` |
 | `email_challenge` | `/access/verify` |
@@ -156,7 +161,11 @@ Five states, five routes, unchanged in shape from Phase 4 except that the intro 
 
 ### `/access` is canonical
 
-Anonymous readers get the form rendered **in place** — no redirect, no intervening screen, because the gate already established intent. Anyone with a session is redirected to whichever state their account implies. A bookmark, a stale link and a fresh click therefore all resolve correctly.
+Anonymous readers who open `/access` directly still get the form rendered **in
+place**. Premium gates point to `/access/discover` instead. Anyone with a session
+who reaches either introductory route is redirected to whichever state their
+account implies, so existing non-subscribers do not repeat marketing and subscribers
+are not offered another subscription.
 
 `email_challenge` is the one anonymous state reached without a session: a reader awaiting their code has none, because submitting the code is what creates one. The screen redirects to the form when there is no address to name — a typed URL or a cleared cookie should not produce an empty instruction, and there would be nothing to verify a submitted code *against*.
 

@@ -16,6 +16,7 @@ const readPendingEmail = vi.hoisted(() => vi.fn());
 const rememberPendingEmail = vi.hoisted(() => vi.fn());
 const forgetPendingEmail = vi.hoisted(() => vi.fn());
 const isGoogleAuthAvailable = vi.hoisted(() => vi.fn());
+const persistPendingAudienceForViewer = vi.hoisted(() => vi.fn());
 const redirect = vi.hoisted(() =>
   vi.fn((href: string) => {
     throw new Error(`NEXT_REDIRECT:${href}`);
@@ -26,6 +27,7 @@ vi.mock("@/lib/auth/operations", () => ({ sendEmailOtp, verifyEmailOtp }));
 vi.mock("@/lib/auth/server-client", () => ({ createServerSupabaseClient }));
 vi.mock("@/lib/auth/google", () => ({ isGoogleAuthAvailable, GOOGLE_PROVIDER: "google" }));
 vi.mock("@/lib/onboarding/pending-email", () => ({ readPendingEmail, rememberPendingEmail, forgetPendingEmail }));
+vi.mock("@/lib/onboarding/audience-store", () => ({ persistPendingAudienceForViewer }));
 vi.mock("next/navigation", () => ({ redirect }));
 
 import { IDLE_AUTH_STATE } from "@/app/auth/form-state";
@@ -52,7 +54,7 @@ async function destinationOf(run: Promise<unknown>): Promise<string | null> {
 }
 
 beforeEach(() => {
-  for (const m of [sendEmailOtp, verifyEmailOtp, createServerSupabaseClient, readPendingEmail, rememberPendingEmail, forgetPendingEmail, isGoogleAuthAvailable, signInWithOAuth]) {
+  for (const m of [sendEmailOtp, verifyEmailOtp, createServerSupabaseClient, readPendingEmail, rememberPendingEmail, forgetPendingEmail, isGoogleAuthAvailable, signInWithOAuth, persistPendingAudienceForViewer]) {
     m.mockReset();
   }
   redirect.mockClear();
@@ -126,6 +128,7 @@ describe("verifying a code", () => {
     );
 
     expect(href).toBe(`/access?returnTo=${encodeURIComponent("/markets/power-analytics")}`);
+    expect(persistPendingAudienceForViewer).toHaveBeenCalledOnce();
     expect(forgetPendingEmail).toHaveBeenCalled();
   });
 
