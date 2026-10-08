@@ -31,11 +31,16 @@ The browser never submits an account id. Before authentication, the selected sta
 role value is held for 30 minutes in an HTTP-only, SameSite=Lax cookie signed with
 `URDAIS_ONBOARDING_STATE_SECRET` (minimum 32 characters). The payload contains only
 the allow-listed role and issuance time—no email, auth subject, session token,
-entitlement or return destination. Tampered, expired and unknown values are ignored.
+entitlement or return destination. Tampered, expired, unknown and future-dated
+values (more than 60 seconds of clock skew) are ignored.
 
-After OTP verification or the OAuth callback establishes a session, the server
-resolves the authoritative Urdais account through `resolveViewer()` and upserts the
-role into `identity.account_audience_profiles`. The table is keyed by `account_id`,
+After OTP verification or the confirmation-link callback establishes a session, the
+server consumes the pending state **at most once**: it reads the cookie, clears it,
+and only then resolves the authoritative Urdais account through `resolveViewer()` and
+upserts the role into `identity.account_audience_profiles`. If the account cannot be
+resolved or the write fails, the choice is dropped rather than retained, so it can
+never be attributed to a different account that later signs in on the same browser.
+Sign-in itself is never failed by this step. The table is keyed by `account_id`,
 has an allow-list constraint, is RLS-on with no browser policies, and references
 `identity.accounts(id) on delete cascade`. Replays are idempotent. Skip writes no
 default and clears only pending pre-auth state; it never clears an existing account

@@ -114,8 +114,9 @@ export async function verifyOtpAction(_previous: AuthFormState, formData: FormDa
 
   // The emailed code has established the session. Only now resolve the Urdais
   // account on the server and attach the signed pre-auth audience choice to it.
-  // Failure does not undo a successful sign-in; the pending cookie remains for a
-  // later authenticated handoff rather than being assigned to a guessed identity.
+  // The cookie is consumed at most once, before the write: a failed write loses
+  // the optional choice rather than leaving it for the next account to sign in
+  // here. Failure never undoes a successful sign-in.
   await persistPendingAudienceForViewer();
 
   // Authenticated now, so the authoritative address is on the viewer and this copy

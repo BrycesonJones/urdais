@@ -23,7 +23,10 @@ describe("signed audience onboarding state", () => {
     const encoded = encodePendingAudience("other", NOW, SECRET);
     expect(decodePendingAudience(encoded, SECRET, NOW + 30 * 60)).toBe("other");
     expect(decodePendingAudience(encoded, SECRET, NOW + 30 * 60 + 1)).toBeNull();
+    // Sixty seconds of clock skew is tolerated; anything later is refused.
+    expect(decodePendingAudience(encodePendingAudience("other", NOW + 60, SECRET), SECRET, NOW)).toBe("other");
     expect(decodePendingAudience(encodePendingAudience("other", NOW + 61, SECRET), SECRET, NOW)).toBeNull();
+    expect(decodePendingAudience(encodePendingAudience("other", NOW + 365 * 86400, SECRET), SECRET, NOW)).toBeNull();
   });
 
   it("carries no account or authentication identifier", () => {
