@@ -19,8 +19,10 @@ import type { OnboardingState } from "@/lib/onboarding/state";
 export const ONBOARDING_HREF = "/access";
 
 const PATHS: Record<OnboardingState, string> = {
+  discover: `${ONBOARDING_HREF}/discover`,
+  audience: `${ONBOARDING_HREF}/audience`,
   // Account creation is `/access` itself. The gate's CTA lands a reader straight on
-  // the form rather than on a screen asking them to press Continue.
+  // the form when used directly. Premium gates use the discover route instead.
   create_account: ONBOARDING_HREF,
   login: `${ONBOARDING_HREF}/login`,
   // The path is kept from the previous flow so existing links still resolve, even

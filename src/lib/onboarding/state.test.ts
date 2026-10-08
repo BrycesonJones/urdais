@@ -66,7 +66,7 @@ describe("deriving the state from the viewer", () => {
 });
 
 describe("which states a reader may occupy", () => {
-  it("lets an anonymous reader use the account form, the login form and the challenge", () => {
+  it("lets an anonymous reader use the public introductions, account form, login and challenge", () => {
     // The choice is theirs because Urdais does not disclose whether an address
     // already has an account.
     for (const state of ANONYMOUS_STATES) {

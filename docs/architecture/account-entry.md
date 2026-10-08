@@ -4,6 +4,48 @@
 
 > **Account identity and premium entitlement are separate.** An authenticated reader without an active entitlement still has a valid Urdais account and must not be sent back through authentication merely because premium access is denied.
 
+## Phase 8 amendment — premium conversion and audience onboarding
+
+Phase 8 adds two public pages to the premium-gate journey without changing direct
+account entry:
+
+| Route | Purpose |
+| --- | --- |
+| `/access/discover` | explains the four premium product areas; no pricing or protected data |
+| `/access/audience` | optional single-select audience classification |
+| `/access` | unchanged direct account-creation route |
+
+Premium gates now link to `/access/discover`, carrying the validated `returnTo`.
+Continue links to `/access/audience`; selection or Skip then continues to the
+existing `/access` account form. The existing passwordless challenge, Plan / Pay,
+Stripe Checkout, webhook-backed entitlement, and final product return are unchanged.
+
+Both new routes call the existing server-side onboarding resolver. Anonymous readers
+may render them. An authenticated reader without access bypasses both and goes to
+`/access/ready`; an active subscriber goes to `/access/subscribed`. Direct signup,
+sign-in, account and billing links keep their existing routes and behavior.
+
+### Audience state and storage
+
+The browser never submits an account id. Before authentication, the selected stable
+role value is held for 30 minutes in an HTTP-only, SameSite=Lax cookie signed with
+`URDAIS_ONBOARDING_STATE_SECRET` (minimum 32 characters). The payload contains only
+the allow-listed role and issuance time—no email, auth subject, session token,
+entitlement or return destination. Tampered, expired and unknown values are ignored.
+
+After OTP verification or the OAuth callback establishes a session, the server
+resolves the authoritative Urdais account through `resolveViewer()` and upserts the
+role into `identity.account_audience_profiles`. The table is keyed by `account_id`,
+has an allow-list constraint, is RLS-on with no browser policies, and references
+`identity.accounts(id) on delete cascade`. Replays are idempotent. Skip writes no
+default and clears only pending pre-auth state; it never clears an existing account
+classification. Audience data is product analytics, never an entitlement or Stripe
+Customer metadata.
+
+Deployment requires migration `20261027100000_account_audience_profiles.sql` and a
+shared server-only `URDAIS_ONBOARDING_STATE_SECRET` on every application instance.
+No production migration or environment change is performed by the feature branch.
+
 ---
 
 ## 1. What changed in Phase 7A
@@ -18,7 +60,9 @@
 | Auth screens inherited the `prefers-color-scheme` page background: white on a light-mode system | Their main column paints the dark Urdais surface (`#0a0a0a`, the footer's colour) |
 | `/account` did not exist | a minimal placeholder: "You're signed in as …" and **Sign out** |
 
-The premium conversion funnel — gate → Get Full Access → `/access` → code → Plan / Pay → Checkout → the original page — is untouched. So are OTP semantics, pending-email binding, resend, account provisioning, entitlement checks, enforcement and every billing path.
+The Phase 7 premium conversion funnel described below was later extended by the
+Phase 8 amendment above. OTP semantics, pending-email binding, resend, account
+provisioning, entitlement checks, enforcement and every billing path remain intact.
 
 ---
 

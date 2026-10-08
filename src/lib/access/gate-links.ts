@@ -22,8 +22,8 @@
 
 import { safeReturnTo } from "@/lib/auth/return-to";
 
-/** The onboarding entry point. See @/lib/onboarding/routes for the states behind it. */
-export const ACCESS_ENTRY_HREF = "/access";
+/** The premium-conversion entry point. Direct account creation remains `/access`. */
+export const ACCESS_ENTRY_HREF = "/access/discover";
 
 /**
  * Where a gate's "Sign in" goes: the passwordless sign-in screen.

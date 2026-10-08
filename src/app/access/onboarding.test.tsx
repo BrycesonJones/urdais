@@ -66,6 +66,8 @@ vi.mock("@/components/onboarding/otp-form", () => ({
 }));
 
 import AccessRoute from "@/app/access/page";
+import DiscoverFullAccessRoute from "@/app/access/discover/page";
+import AudienceClassificationRoute from "@/app/access/audience/page";
 import OnboardingLoginRoute from "@/app/access/login/page";
 import CheckEmailRoute from "@/app/access/verify/page";
 import ReadyForCheckoutRoute from "@/app/access/ready/page";
@@ -140,7 +142,55 @@ describe("/access is the account form", () => {
   });
 });
 
-describe("the removed intro — regressions", () => {
+describe("premium conversion introduction", () => {
+  it("renders the approved four text-only product cards", async () => {
+    renderGate(ANONYMOUS_VIEWER, "discover", "/markets/power-analytics");
+    const html = renderToStaticMarkup(await DiscoverFullAccessRoute({
+      params: Promise.resolve({}),
+      searchParams: params({ returnTo: "/markets/power-analytics" }),
+    }));
+
+    expect(html).toContain("Intelligence for the Information Age.");
+    for (const title of ["Compute Economics", "Power Analytics", "Infrastructure Maps", "Market Intelligence"]) {
+      expect(html).toContain(title);
+    }
+    expect(html).toContain(`/access/audience?returnTo=${encodeURIComponent("/markets/power-analytics")}`);
+    expect(html).not.toMatch(/<svg|<img/);
+    for (const excluded of ["$80", "No free trial", "One subscription. Every premium product.", "No separate product purchases."]) {
+      expect(html).not.toContain(excluded);
+    }
+  });
+
+  it("renders an optional, unselected native dropdown and both onward actions", async () => {
+    renderGate(ANONYMOUS_VIEWER, "audience", "/markets/compute-analytics");
+    const html = renderToStaticMarkup(await AudienceClassificationRoute({
+      params: Promise.resolve({}),
+      searchParams: params({ returnTo: "/markets/compute-analytics" }),
+    }));
+
+    expect(html).toContain("What best describes you?");
+    expect(html).toContain("Primary role or organization");
+    expect(html).toMatch(/<select[^>]*name="primaryRole"/);
+    expect(html).toContain('<option value="" selected="">Select your primary role</option>');
+    expect(html).not.toContain("required=\"\"");
+    expect(html).toContain("Continue to account creation");
+    expect(html).toContain("Skip for now");
+    expect(html).toContain("Sign in");
+    expect(html).toContain("Your selection won’t restrict the products you can access.");
+  });
+
+  it("redirects authenticated visitors instead of repeating either introduction", async () => {
+    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access/ready?returnTo=%2Fmarkets%2Fpower-analytics", state: "ready_for_checkout" });
+    await expect(DiscoverFullAccessRoute({ params: Promise.resolve({}), searchParams: params({ returnTo: "/markets/power-analytics" }) }))
+      .rejects.toThrow("NEXT_REDIRECT:/access/ready");
+
+    resolveOnboarding.mockResolvedValue({ kind: "redirect", href: "/access/subscribed?returnTo=%2Fmarkets%2Fpower-analytics", state: "already_entitled" });
+    await expect(AudienceClassificationRoute({ params: Promise.resolve({}), searchParams: params({ returnTo: "/markets/power-analytics" }) }))
+      .rejects.toThrow("NEXT_REDIRECT:/access/subscribed");
+  });
+});
+
+describe("pricing and account-form regressions", () => {
   it("shows no price before the reader has an account", async () => {
     // Phase 5 moved the price to Plan / Pay rather than removing it. What stays true
     // is that nobody is asked to weigh a number before they have seen what it buys,

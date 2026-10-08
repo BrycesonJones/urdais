@@ -129,7 +129,7 @@ describe("where the buttons go", () => {
     );
   });
 
-  it("leaves the primary call to action where it was", () => {
-    expect(ACCESS_ENTRY_HREF).toBe("/access");
+  it("sends the primary call to action to premium discovery", () => {
+    expect(ACCESS_ENTRY_HREF).toBe("/access/discover");
   });
 });
