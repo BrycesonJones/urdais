@@ -22,11 +22,12 @@
  * but `posthog-node` has no business in a browser bundle.
  */
 
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { after } from "next/server";
 import { PostHog } from "posthog-node";
 
 import { analyticsConfig } from "@/lib/analytics/config";
+import type { ServerConsent } from "@/lib/analytics/consent";
 import { ANALYTICS_EVENTS, type AnalyticsEventName } from "@/lib/analytics/events";
 
 export type ServerEvent = {
@@ -95,12 +96,36 @@ export function captureServerEvent(input: ServerEvent): void {
   }
 }
 
-/** `checkout_started`: Stripe has created a Checkout Session for this account. */
-export function recordCheckoutStarted(accountId: string, sourcePage: string | null): void {
+/**
+ * Who a server event is about.
+ *
+ * With consent, the account: the same distinct id the browser identified with, so
+ * the event joins the reader's history. Without it, nobody: a fresh random
+ * distinct id and person processing off, so PostHog counts that the event
+ * happened and can attach it to no one. Nothing derived from the account or the
+ * subscription is sent in that case — a hash of either is still an identifier.
+ */
+function subject(accountId: string, consent: ServerConsent): { distinctId: string; personless: boolean } {
+  return consent === "granted" ? { distinctId: accountId, personless: false } : { distinctId: randomUUID(), personless: true };
+}
+
+/**
+ * `checkout_started`: Stripe has created a Checkout Session for this account.
+ *
+ * `consent` is the request's (`requestAnalyticsConsent`): the reader's cookie
+ * choice, Do Not Track, and the regional default.
+ */
+export function recordCheckoutStarted(accountId: string, sourcePage: string | null, consent: ServerConsent): void {
+  const { distinctId, personless } = subject(accountId, consent);
   captureServerEvent({
-    distinctId: accountId,
+    distinctId,
     event: ANALYTICS_EVENTS.checkoutStarted,
-    properties: { product_name: "Urdais Premium", access_tier: "premium", source_page: sourcePage },
+    properties: {
+      product_name: "Urdais Premium",
+      access_tier: "premium",
+      source_page: sourcePage,
+      ...(personless ? { $process_person_profile: false } : {}),
+    },
   });
 }
 
@@ -108,25 +133,32 @@ export function recordCheckoutStarted(accountId: string, sourcePage: string | nu
  * `subscription_completed`: this account's entitlement has just become active.
  *
  * The caller only invokes it for a transition the database reported as new (see
- * `applySubscriptionEvent`), and the uuid is derived from the subscription, so a
- * retried webhook, a resent event, or a webhook racing the post-checkout
- * reconciliation cannot produce a second conversion.
+ * `applySubscriptionEvent`), so a retried webhook, a resent event, or a webhook
+ * racing the post-checkout reconciliation cannot produce a second conversion.
+ * With consent the uuid is also derived from the subscription, as a second guard.
+ *
+ * `consent` is the one recorded on the subscription when checkout started
+ * (`consentFromStripeMetadata`): a webhook carries no cookie, and that record is
+ * the only evidence of the reader's choice the server has.
  */
 export function recordSubscriptionCompleted(input: {
   readonly accountId: string;
   readonly subscriptionId: string;
   readonly livemode: boolean;
   readonly via: "webhook" | "reconciliation";
+  readonly consent: ServerConsent;
 }): void {
+  const { distinctId, personless } = subject(input.accountId, input.consent);
   captureServerEvent({
-    distinctId: input.accountId,
+    distinctId,
     event: ANALYTICS_EVENTS.subscriptionCompleted,
-    uuid: stableEventUuid(`subscription_completed:${input.subscriptionId}`),
+    ...(personless ? {} : { uuid: stableEventUuid(`subscription_completed:${input.subscriptionId}`) }),
     properties: {
       product_name: "Urdais Premium",
       access_tier: "premium",
       livemode: input.livemode,
       confirmed_by: input.via,
+      ...(personless ? { $process_person_profile: false } : {}),
     },
   });
 }

@@ -296,8 +296,15 @@ describe("the lifecycle", () => {
     const outcome = await processStripeEvent(stripe, sqlWith({ activates: true }), event("customer.subscription.created", SUBSCRIPTION_OBJECT), "test");
     expect(outcome).toMatchObject({
       kind: "processed",
-      activation: { accountId: "acct_1", subscriptionId: "sub_1", livemode: false },
+      // No consent recorded at checkout: the conversion may not name the account.
+      activation: { accountId: "acct_1", subscriptionId: "sub_1", livemode: false, consent: "not_granted" },
     });
+  });
+
+  it("carries the analytics consent recorded on the subscription at checkout", async () => {
+    const { stripe } = stripeWith({ status: "active", metadata: { urdais_account_id: "acct_1", urdais_analytics_consent: "granted" } });
+    const outcome = await processStripeEvent(stripe, sqlWith({ activates: true }), event("customer.subscription.created", SUBSCRIPTION_OBJECT), "test");
+    expect(outcome).toMatchObject({ activation: { consent: "granted" } });
   });
 
   it("reports no activation for an account that was already active, or for a duplicate", async () => {

@@ -21,6 +21,8 @@ const recordCheckoutStarted = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({ redirect }));
 vi.mock("@/lib/analytics/server", () => ({ recordCheckoutStarted }));
+const requestAnalyticsConsent = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/analytics/request-consent", () => ({ requestAnalyticsConsent }));
 
 import { openBillingPortalAction, startCheckoutAction } from "@/app/access/billing-actions";
 import { IDLE_AUTH_STATE } from "@/app/auth/form-state";
@@ -32,6 +34,7 @@ beforeEach(() => {
   startCheckout.mockReset();
   redirect.mockClear();
   recordCheckoutStarted.mockReset();
+  requestAnalyticsConsent.mockReset().mockResolvedValue("granted");
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -91,7 +94,17 @@ describe("startCheckoutAction and checkout_started", () => {
   it("records checkout_started once Stripe has created a Session, for the server-resolved account", async () => {
     startCheckout.mockResolvedValue({ kind: "redirect", url: "https://checkout.stripe.com/c/pay/cs_1", accountId: "acct_1" });
     await expect(start()).rejects.toThrow("NEXT_REDIRECT:https://checkout.stripe.com/c/pay/cs_1");
-    expect(recordCheckoutStarted).toHaveBeenCalledExactlyOnceWith("acct_1", "/markets/power-analytics");
+    expect(recordCheckoutStarted).toHaveBeenCalledExactlyOnceWith("acct_1", "/markets/power-analytics", "granted");
+    // The same consent is recorded on the Session, for the webhook's conversion event.
+    expect(startCheckout).toHaveBeenCalledWith("/markets/power-analytics", "granted");
+  });
+
+  it("passes a refusal through to both the event and the Session", async () => {
+    requestAnalyticsConsent.mockResolvedValue("not_granted");
+    startCheckout.mockResolvedValue({ kind: "redirect", url: "https://checkout.stripe.com/c/pay/cs_1", accountId: "acct_1" });
+    await expect(start()).rejects.toThrow("NEXT_REDIRECT");
+    expect(startCheckout).toHaveBeenCalledWith("/markets/power-analytics", "not_granted");
+    expect(recordCheckoutStarted).toHaveBeenCalledWith("acct_1", "/markets/power-analytics", "not_granted");
   });
 
   it("records nothing when checkout was refused or unavailable", async () => {

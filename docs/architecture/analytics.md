@@ -26,7 +26,7 @@ the key in PostHog.
 
 ## What PostHog captures by itself
 
-Initialised once in `src/instrumentation-client.ts`, before hydration.
+Initialised once in `src/instrumentation-client.ts`, before hydration, through `startAnalytics` (`src/lib/analytics/consent-client.ts`). What is captured depends on consent; see below.
 
 | Capture | Setting |
 | --- | --- |
@@ -73,6 +73,57 @@ conversion.
 
 The success redirect is never treated as payment. See `src/lib/billing/webhook.ts`.
 
+## Consent
+
+`src/lib/analytics/consent.ts` (rules), `consent-client.ts` (browser), `request-consent.ts` (server), `src/components/analytics/consent-banner.tsx` (UI).
+
+| Visitor | Browser analytics | Server events (`checkout_started`, `subscription_completed`) |
+| --- | --- | --- |
+| Accepted | full PostHog: persistent anonymous id; identified on sign-in | keyed on the account |
+| Declined | **cookieless**: nothing stored on the device; visitors counted by PostHog's daily server-side hash; never identified | personless |
+| Not decided, EEA / UK / CH, or country unknown | **nothing** captured, nothing stored, no `/flags` call | personless |
+| Not decided, elsewhere | full PostHog, with the banner offering Decline | keyed on the account |
+| Do Not Track or Global Privacy Control | PostHog never starts | personless |
+
+- **The choice** is a first-party cookie, `urdais_analytics_consent=granted|denied`
+  (1 year, `SameSite=Lax`). It records a decision, which is the one thing that must
+  be stored to honour a refusal, and the server reads it for checkout events.
+- **The region** comes from Vercel's `x-vercel-ip-country` header, read by
+  `GET /api/privacy/consent-default`. The banner calls it once per full page load, and
+  only while the visitor has not chosen. Reading it in the root layout would make every
+  page, the static docs included, render per request. Urdais has no geolocation of its own.
+  A missing header (local, non-Vercel) means the conservative default.
+- **The prior-consent list** (EEA, UK, Switzerland) is a product/legal judgement in
+  `PRIOR_CONSENT_COUNTRIES`, not something code can verify.
+- **SDK configuration:** `cookieless_mode: "on_reject"`, verified against posthog-js
+  1.438. Pending captures nothing, and pending also *deletes* persisted data, which is
+  why a browser already counted by regional default is never cycled through pending
+  to re-check its region. PostHog's `respect_dnt` is not used: under `on_reject` it
+  maps DNT to "rejected", which would make a DNT browser cookieless-*tracked*.
+- **When capture becomes allowed** (accept, decline, or the default-on answer
+  arriving), the SDK sends the pageview it held back. Nothing in Urdais sends one by hand.
+- **Changing your mind:** "Privacy settings" in the footer reopens the panel. Declining
+  after accepting resets PostHog (identity and persisted data) and removes its leftover
+  `ph_*` session window ids.
+- **The banner** offers Accept and Decline with identical size and style, has no
+  dismiss-without-choosing on the first ask, and is not modal.
+
+### Server events follow the same choice
+
+A server event never names a visitor who has not consented. Without consent, it is
+**personless**: a random distinct id, `$process_person_profile: false`, and nothing
+derived from the account or subscription. It still counts that the checkout or
+conversion happened.
+
+- `checkout_started` reads the request's consent (cookie, `DNT` / `Sec-GPC` headers,
+  regional default).
+- The Stripe webhook has no cookie. The checkout records the consent in force at that
+  moment as Stripe metadata `urdais_analytics_consent` on the Session and the
+  Subscription. Billing reads nothing from it. A subscription without it (created
+  before this change, or outside Checkout) counts as `not_granted`.
+- **Limitation:** consent withdrawn between starting checkout and activation is not
+  seen by that one conversion event.
+
 ## Identity
 
 Sessions are httpOnly cookies and the browser has no Supabase client, so the browser
@@ -82,46 +133,85 @@ server render `<AnalyticsIdentity accountId=… />`:
 | Page | Result |
 | --- | --- |
 | `/access`, `/access/discover`, `/access/audience`, `/access/login` | anonymous: reset if PostHog thinks this browser is identified |
-| `/access/ready`, `/access/subscribed`, `/access/complete`, `/account` | identify with the account id |
+| `/access/ready`, `/access/subscribed`, `/access/complete`, `/account` | identify with the account id, **only with consent** |
 | `/account/deleted` | reset |
-| Sign-out (`SignOutForm` on `/account`) | reset on submit |
+| Sign-out (`SignOutForm` on `/account`) | reset on submit, then re-apply the visitor's consent (`reset()` clears it) |
 
-Every sign-in lands on one of the identifying pages, so the browser is identified on
-the first page after sign-in and PostHog merges its anonymous history. The distinct
-id is `identity.accounts.id` — the same id the server events use. No email, name or
-payment detail is sent; person profiles are created for identified users only.
+Every sign-in lands on one of the identifying pages. With consent, the browser is
+identified on the first page after sign-in and PostHog merges its anonymous history;
+a reader who accepts later is identified then. The distinct id is
+`identity.accounts.id`, the same id consented server events use. No email, name or
+payment detail is sent, and person profiles exist for identified users only.
 
 ## Privacy
 
 - **Session replay is off**, and surveys, product tours and conversations with it.
   `disable_external_dependency_loading` stops PostHog loading any further script, so
   a project-settings toggle cannot turn replay on. Turning it on is a code change.
+- **No feature-flag requests** (`advanced_disable_flags`): Urdais uses none, and
+  `/flags` would otherwise be called on every load with a distinct id.
 - **URLs are sanitised** before sending (`src/lib/analytics/privacy.ts`): fragments
   are dropped and `token_hash`, `code`, `session_id`, access/refresh tokens and
   `email` parameters are redacted in every property whose name ends in `url` or
   `referrer` (current URL, referrer, `$initial_*`, `$session_entry_*`, …), on the
   event and on the person. UTM parameters are kept.
 - Ad click ids (gclid, fbclid, …) are masked.
-- Do Not Track is respected.
 - The email on `/account` is marked `ph-no-capture`.
 - Server events disable GeoIP, which would otherwise locate Vercel.
 
-There is no consent banner in Urdais today, and this integration does not add one.
-PostHog persists an anonymous id in a first-party cookie and localStorage. If Urdais
-needs opt-in consent for some audience, `opt_out_capturing_by_default` plus a
-banner, or `cookieless_mode: "on_reject"`, are the PostHog mechanisms.
+## PostHog project setup (manual)
 
-## PostHog dashboard setup (manual)
+1. Confirm the project belongs to Urdais; copy its **project** key (`phc_…`) and its
+   ingestion host into Vercel Production only. Never the personal key (`phx_…`).
+2. Project settings → Web analytics → **enable "Cookieless server hash mode"**.
+   **Without it, every declined visitor's events are dropped at ingestion.**
+3. Project settings → authorized domains: add `https://urdais.com`.
+4. Leave Session replay off. Features that load extra scripts (replay, surveys, web
+   vitals) do nothing while `disable_external_dependency_loading` is set.
+5. Optionally filter internal traffic (Urdais operators) by person or IP.
 
-1. Create (or choose) the project; copy its project key and host into Vercel
-   Production.
-2. Leave Session replay off in project settings. Features that load extra scripts
-   (replay, surveys, web vitals) do nothing while
-   `disable_external_dependency_loading` is set, whatever the settings say.
-3. Project settings → Web analytics: add `urdais.com` as an authorized domain.
-4. Build a funnel: `premium_cta_clicked` → `checkout_started` →
-   `subscription_completed`, aggregated by person.
-5. Filter internal traffic (Urdais operators) by person or IP if desired.
+## Dashboards
+
+Build these in PostHog; nothing here can be created from code.
+
+**Website overview** — PostHog's built-in Web analytics dashboard covers unique
+visitors, pageviews, top pages, entry (landing) pages, channels, referring domains,
+UTM sources/campaigns and countries (GeoIP from the browser request; server events
+have none).
+
+**Product engagement** — Product analytics → new dashboard:
+
+| Insight | Definition |
+| --- | --- |
+| Most-viewed indices | Trends, `index_viewed`, total count, breakdown `product_name` |
+| Most-viewed analytics products | Trends, `analytics_viewed`, breakdown `product_name` |
+| Map engagement | Trends, `map_viewed` (unique users and total) |
+| Premium vs free engagement | Trends, `product_viewed`, breakdown `access_tier` |
+| Gate views | Trends, `product_viewed` where `locked = true`, breakdown `product_name` |
+| Premium CTA clicks | Trends, `premium_cta_clicked`, breakdown `product_name` and `cta_surface` |
+
+**Subscription funnel** — Funnel `premium_cta_clicked → checkout_started →
+subscription_completed`, aggregated by unique users, conversion window 7 days.
+PostHog shows step-to-step and overall conversion. Breakdowns:
+`$initial_utm_campaign`, `$initial_referring_domain`, `$initial_pathname` (landing page)
+on the person, or `product_category` on the first step.
+
+**Conversion counts** (Trends) — `checkout_started` and `subscription_completed`
+totals. These include personless events, so they are complete even when the funnel
+is not.
+
+### Attribution limits
+
+- **Declined and undecided visitors cannot be in a per-person funnel.** Their browser
+  events are cookieless (or absent) and their server events are personless, so the
+  funnel covers consenting visitors only. The Trends totals above count everyone.
+- **Cookieless visitors are counted per day.** PostHog's hash rotates daily, so a
+  visitor who returns tomorrow is a new visitor, and multi-day attribution is lost.
+- **Undecided visitors in prior-consent regions are not counted at all** until they
+  choose.
+- **Ad blockers** drop browser events (there is no `/ingest` reverse proxy).
+- **Sign-in on another device** starts a new anonymous history, which identify then
+  merges only if that device has consent.
 
 ## Not done, deliberately
 
@@ -129,3 +219,5 @@ banner, or `cookieless_mode: "on_reject"`, are the PostHog mechanisms.
   route would also run through `src/proxy.ts` on every batch; add it as its own
   change if the loss matters.
 - No feature flags, experiments or error tracking.
+- No third-party consent platform: one cookie, one banner and PostHog's own consent
+  API cover the requirement.

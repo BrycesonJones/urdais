@@ -24,6 +24,7 @@
  * paying twice — which is a refund conversation rather than a bug report.
  */
 
+import { STRIPE_METADATA_ANALYTICS_CONSENT, type ServerConsent } from "@/lib/analytics/consent";
 import { env } from "@/config/env";
 import { PREMIUM_PRICE } from "@/lib/access/pricing";
 import { METADATA_ACCOUNT_ID, catalogMetadata, describePriceMismatch } from "@/lib/billing/catalog";
@@ -67,7 +68,7 @@ export type CheckoutStart =
  * entitlement moves here — a Session is an intention, and the webhook is what
  * makes it mean anything.
  */
-export async function startCheckout(returnTo?: string | null): Promise<CheckoutStart> {
+export async function startCheckout(returnTo?: string | null, analyticsConsent: ServerConsent = "not_granted"): Promise<CheckoutStart> {
   const handoff = await resolveCheckoutHandoff(returnTo);
   if (handoff.kind === "refused") return { kind: "refused", reason: handoff.reason };
 
@@ -100,6 +101,10 @@ export async function startCheckout(returnTo?: string | null): Promise<CheckoutS
   const metadata = {
     ...catalogMetadata(availability.mode),
     [METADATA_ACCOUNT_ID]: handoff.accountId,
+    // Analytics only: the reader's analytics consent at this moment, so the
+    // webhook -- which carries no cookie -- knows whether its conversion event may
+    // name the account. Read by nothing in billing.
+    [STRIPE_METADATA_ANALYTICS_CONSENT]: analyticsConsent,
   };
 
   const session = await stripe.checkout.sessions.create({

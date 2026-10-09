@@ -101,6 +101,7 @@ export default async function CheckoutCompleteRoute({
             subscriptionId: reconciliation.subscriptionId,
             livemode: reconciliation.livemode,
             via: "reconciliation",
+            consent: reconciliation.analyticsConsent,
           });
         }
       }
