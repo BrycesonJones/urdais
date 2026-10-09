@@ -11,11 +11,8 @@ vi.mock("@/lib/onboarding/pending-audience", () => ({
 }));
 vi.mock("next/navigation", () => ({ redirect }));
 
-import {
-  continueWithAudienceAction,
-  IDLE_AUDIENCE_STATE,
-  skipAudienceAction,
-} from "@/app/access/audience/actions";
+import { continueWithAudienceAction, skipAudienceAction } from "@/app/access/audience/actions";
+import { IDLE_AUDIENCE_STATE } from "@/app/access/audience/form-state";
 
 function form(fields: Record<string, string>): FormData {
   const data = new FormData();
