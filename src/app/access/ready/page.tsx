@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { AnalyticsIdentity } from "@/components/analytics/analytics-identity";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { PremiumSummary } from "@/components/onboarding/premium-summary";
 import { SubscribeButton } from "@/components/billing/subscribe-button";
+import { analyticsAccountId } from "@/lib/analytics/identity";
 import { PREMIUM_PRODUCT_NAME, PREMIUM_TRIAL_NOTE, formatPremiumPrice } from "@/lib/access/pricing";
 import { isPremiumEnforcementActive } from "@/lib/access/activation";
 import { billingAvailability, describeUnavailability } from "@/lib/billing/mode";
@@ -79,6 +81,7 @@ export default async function ReadyForCheckoutRoute({
       title={PREMIUM_PRODUCT_NAME}
       lead="Unlock Urdais&rsquo; premium analytics and infrastructure data."
     >
+      <AnalyticsIdentity accountId={analyticsAccountId(resolution.viewer)} />
       <div className="flex flex-col gap-1">
         <p className="text-3xl font-semibold tracking-tight text-neutral-50">{formatPremiumPrice()}</p>
         <p className="text-xs text-neutral-500">Billed weekly. {PREMIUM_TRIAL_NOTE} Cancel any time.</p>

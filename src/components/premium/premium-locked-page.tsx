@@ -1,5 +1,6 @@
 import { AccessRequiredPanel } from "@/components/premium/access-required-panel";
 import type { AccessDenialReason } from "@/lib/access/entitlement";
+import type { UrdaisProductId } from "@/lib/access/products";
 
 /**
  * The locked page: a premium product's structure, with the gate over it.
@@ -33,13 +34,15 @@ export type PremiumLockedPageProps = {
   description: string;
   reason: Exclude<AccessDenialReason, "unknown_product">;
   returnTo: string;
+  /** The gated product, for the CTA's analytics event. */
+  productId?: UrdaisProductId;
 };
 
 /** Bar widths, in Tailwind fractions. Fixed so nothing here is random per render. */
 const SKELETON_ROWS = ["w-5/6", "w-2/3", "w-3/4", "w-1/2", "w-4/6"] as const;
 const SKELETON_TILES = 4;
 
-export function PremiumLockedPage({ title, description, reason, returnTo }: PremiumLockedPageProps) {
+export function PremiumLockedPage({ title, description, reason, returnTo, productId }: PremiumLockedPageProps) {
   return (
     <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-6 text-neutral-50 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-screen-2xl">
@@ -98,7 +101,7 @@ export function PremiumLockedPage({ title, description, reason, returnTo }: Prem
           */}
           <div className="pointer-events-none absolute inset-0 flex items-start justify-center pt-10 sm:items-center sm:pt-0">
             <div className="pointer-events-auto">
-              <AccessRequiredPanel reason={reason} surface="page" returnTo={returnTo} headingLevel={2} />
+              <AccessRequiredPanel reason={reason} surface="page" returnTo={returnTo} headingLevel={2} {...(productId ? { productId } : {})} />
             </div>
           </div>
         </div>

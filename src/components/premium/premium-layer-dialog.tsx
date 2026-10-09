@@ -5,6 +5,9 @@ import { useEffect, useRef, type MouseEvent } from "react";
 import { gateCopy } from "@/lib/access/gate-copy";
 import { accessHref, signInHref } from "@/lib/access/gate-links";
 import type { AccessDenialReason } from "@/lib/access/entitlement";
+import type { UrdaisProductId } from "@/lib/access/products";
+import { track } from "@/lib/analytics/client";
+import { ANALYTICS_EVENTS, productProperties } from "@/lib/analytics/events";
 
 /**
  * The map's premium gate: the access-required proposition in a modal, over a map
@@ -36,11 +39,13 @@ export type PremiumLayerDialogProps = {
   reason: Exclude<AccessDenialReason, "unknown_product">;
   /** Where to come back to, including the layer the reader wanted. */
   returnTo: string;
+  /** The locked layer's product, for the CTA's analytics event. */
+  productId?: UrdaisProductId | null;
 };
 
 const HEADING_ID = "premium-layer-gate-heading";
 
-export function PremiumLayerDialog({ open, onClose, layerName, reason, returnTo }: PremiumLayerDialogProps) {
+export function PremiumLayerDialog({ open, onClose, layerName, reason, returnTo, productId }: PremiumLayerDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const copy = gateCopy(reason, "map_layer");
 
@@ -88,6 +93,14 @@ export function PremiumLayerDialog({ open, onClose, layerName, reason, returnTo 
 
         <a
           href={accessHref(returnTo)}
+          onClick={() => {
+            const product = productId ? productProperties(productId) : null;
+            track(ANALYTICS_EVENTS.premiumCtaClicked, {
+              ...(product ?? {}),
+              cta_surface: "map_layer",
+              source_page: window.location.pathname,
+            });
+          }}
           className="mt-1 w-full rounded-md bg-[#526fe0] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#6480e8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
         >
           {copy.ctaLabel}

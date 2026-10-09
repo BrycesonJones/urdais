@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { AnalyticsIdentity } from "@/components/analytics/analytics-identity";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
+import { analyticsAccountId } from "@/lib/analytics/identity";
 import { hasPremiumEntitlement } from "@/lib/access/entitlement";
 import { resolveViewer } from "@/lib/access/server";
+import { recordSubscriptionCompleted } from "@/lib/analytics/server";
 import { reconcileAccount } from "@/lib/billing/reconcile";
 import { stripeContext } from "@/lib/billing/stripe";
 import { onboardingHref, onboardingReturnTo } from "@/lib/onboarding/routes";
@@ -81,6 +84,16 @@ export default async function CheckoutCompleteRoute({
       });
 
       if (reconciliation.kind === "entitled") {
+        // Only when this reconciliation was the one that activated access: if the
+        // webhook got there first, it has already recorded the conversion.
+        if (reconciliation.activated) {
+          recordSubscriptionCompleted({
+            accountId: viewer.authentication.accountId,
+            subscriptionId: reconciliation.subscriptionId,
+            livemode: reconciliation.livemode,
+            via: "reconciliation",
+          });
+        }
         // Resolved on a fresh request rather than rendered from this one: the viewer
         // in hand was resolved before the entitlement was written, and rendering
         // "you're in" from stale state is how a page disagrees with the database.
@@ -110,6 +123,7 @@ export default async function CheckoutCompleteRoute({
       title="We&rsquo;re confirming your subscription"
       lead="Stripe has your payment. Urdais is waiting for confirmation, which usually takes a few seconds."
     >
+      <AnalyticsIdentity accountId={analyticsAccountId(viewer)} />
       <div className="rounded-lg border border-white/10 bg-[#111111] p-5">
         <p className="text-sm text-neutral-300">
           Nothing further is needed from you. This page does not need to stay open — your access is attached to your

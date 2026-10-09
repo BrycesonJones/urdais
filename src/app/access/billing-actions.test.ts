@@ -17,9 +17,12 @@ const redirect = vi.hoisted(() =>
 );
 
 vi.mock("@/lib/billing/checkout", () => ({ startBillingPortal, startCheckout }));
-vi.mock("next/navigation", () => ({ redirect }));
+const recordCheckoutStarted = vi.hoisted(() => vi.fn());
 
-import { openBillingPortalAction } from "@/app/access/billing-actions";
+vi.mock("next/navigation", () => ({ redirect }));
+vi.mock("@/lib/analytics/server", () => ({ recordCheckoutStarted }));
+
+import { openBillingPortalAction, startCheckoutAction } from "@/app/access/billing-actions";
 import { IDLE_AUTH_STATE } from "@/app/auth/form-state";
 
 const press = (form = new FormData()) => openBillingPortalAction(IDLE_AUTH_STATE, form);
@@ -28,6 +31,7 @@ beforeEach(() => {
   startBillingPortal.mockReset();
   startCheckout.mockReset();
   redirect.mockClear();
+  recordCheckoutStarted.mockReset();
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -75,4 +79,26 @@ describe("openBillingPortalAction", () => {
       expect(startCheckout).not.toHaveBeenCalled();
     });
   }
+});
+
+describe("startCheckoutAction and checkout_started", () => {
+  const start = (returnTo = "/markets/power-analytics") => {
+    const form = new FormData();
+    form.set("returnTo", returnTo);
+    return startCheckoutAction(IDLE_AUTH_STATE, form);
+  };
+
+  it("records checkout_started once Stripe has created a Session, for the server-resolved account", async () => {
+    startCheckout.mockResolvedValue({ kind: "redirect", url: "https://checkout.stripe.com/c/pay/cs_1", accountId: "acct_1" });
+    await expect(start()).rejects.toThrow("NEXT_REDIRECT:https://checkout.stripe.com/c/pay/cs_1");
+    expect(recordCheckoutStarted).toHaveBeenCalledExactlyOnceWith("acct_1", "/markets/power-analytics");
+  });
+
+  it("records nothing when checkout was refused or unavailable", async () => {
+    startCheckout.mockResolvedValue({ kind: "refused", reason: "already_entitled" });
+    await expect(start()).rejects.toThrow("NEXT_REDIRECT");
+    startCheckout.mockResolvedValue({ kind: "unavailable", detail: "no key" });
+    await start();
+    expect(recordCheckoutStarted).not.toHaveBeenCalled();
+  });
 });

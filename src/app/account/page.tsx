@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { signOutAction } from "@/app/auth/actions";
 import { FinishDeletionForm } from "@/components/account/deletion-forms";
+import { SignOutForm } from "@/components/account/sign-out-form";
+import { AnalyticsIdentity } from "@/components/analytics/analytics-identity";
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { formatPremiumPrice } from "@/lib/access/pricing";
@@ -72,6 +73,7 @@ export default async function AccountRoute() {
 
   return (
     <OnboardingShell title="Account">
+      {hub.kind === "ready" ? <AnalyticsIdentity accountId={hub.accountId} /> : null}
       <ProfileSection profile={hub.profile} />
       {hub.kind === "ready" ? (
         <SubscriptionSection subscription={hub.subscription} action={hub.action} />
@@ -96,22 +98,26 @@ function ProfileSection({ profile }: { profile: AccountProfile }) {
       <dl className="flex flex-col gap-1">
         <dt className="text-xs text-neutral-500">Email</dt>
         <dd className="flex flex-wrap items-baseline gap-x-2 text-sm text-neutral-100">
-          <span className="font-medium break-all">{profile.email ?? "No email on this account"}</span>
+          {/* `ph-no-capture`: analytics autocapture never records this element or its text. */}
+          <span className="ph-no-capture font-medium break-all">{profile.email ?? "No email on this account"}</span>
           {profile.email ? (
             <span className="text-xs text-neutral-500">{profile.emailVerified ? "Verified" : "Not verified"}</span>
           ) : null}
         </dd>
       </dl>
 
-      {/* No `returnTo`: signing out lands on the public home page, which cannot loop. */}
-      <form action={signOutAction}>
+      {/*
+        No `returnTo`: signing out lands on the public home page, which cannot loop.
+        `SignOutForm` is the same Server Action, plus an analytics identity reset.
+      */}
+      <SignOutForm>
         <button
           type="submit"
           className={`rounded-md border border-white/15 px-3.5 py-2 text-sm text-neutral-200 transition-colors hover:bg-white/5 hover:text-neutral-50 ${linkFocus}`}
         >
           Sign out
         </button>
-      </form>
+      </SignOutForm>
     </section>
   );
 }

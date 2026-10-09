@@ -35,6 +35,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 
+import { recordSubscriptionCompleted } from "@/lib/analytics/server";
 import { STRIPE_WEBHOOK_SECRET_VAR, describeUnavailability } from "@/lib/billing/mode";
 import { stripeContext } from "@/lib/billing/stripe";
 import { processStripeEvent } from "@/lib/billing/webhook";
@@ -99,6 +100,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     switch (outcome.kind) {
       case "processed":
         console.log(`stripe webhook: ${event.type} ${event.id} -> ${outcome.detail}`);
+        // Sent after this response, and never able to change it: the entitlement is
+        // committed, and a 500 now would only make Stripe resend a finished event.
+        if (outcome.activation) {
+          try {
+            recordSubscriptionCompleted({ ...outcome.activation, via: "webhook" });
+          } catch {
+            // Analytics only.
+          }
+        }
         return json(200, { received: true });
       case "ignored":
         console.log(`stripe webhook: ${event.type} ${event.id} ignored (${outcome.detail})`);

@@ -61,7 +61,16 @@ export function isHandledEventType(value: string): value is HandledEventType {
 }
 
 export type WebhookOutcome =
-  | { readonly kind: "processed"; readonly detail: string }
+  | {
+      readonly kind: "processed";
+      readonly detail: string;
+      /**
+       * Present only when this event moved the account's entitlement into active —
+       * at most once per activation, however often Stripe delivers. The route
+       * records `subscription_completed` from it.
+       */
+      readonly activation?: { readonly accountId: string; readonly subscriptionId: string; readonly livemode: boolean };
+    }
   | { readonly kind: "ignored"; readonly detail: string }
   /** Something is wrong with the request itself. Stripe should not retry. */
   | { readonly kind: "rejected"; readonly detail: string }
@@ -200,6 +209,13 @@ export async function processStripeEvent(
       // Refused rather than retried: retrying will not make an account appear, and
       // guessing is how one reader's payment entitles another.
       return { kind: "rejected", detail: describe(outcome, subscriptionId) };
+    }
+    if (outcome.kind === "applied" && outcome.activated && accountId) {
+      return {
+        kind: "processed",
+        detail: describe(outcome, subscriptionId),
+        activation: { accountId, subscriptionId, livemode: snapshot.livemode },
+      };
     }
     return { kind: "processed", detail: describe(outcome, subscriptionId) };
   } catch (error) {

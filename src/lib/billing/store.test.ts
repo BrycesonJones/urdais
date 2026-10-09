@@ -12,6 +12,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  ACTIVATE_ENTITLEMENT_SQL,
   CLAIM_EVENT_SQL,
   GRANT_ENTITLEMENT_SQL,
   REVOKE_ENTITLEMENT_SQL,
@@ -120,12 +121,32 @@ describe("out-of-order delivery", () => {
 describe("the entitlement write", () => {
   it("grants for an entitling status and revokes otherwise", async () => {
     const granting = fakeSql();
-    expect(await writeEntitlementFor(granting, "acct_1", SNAPSHOT)).toBe("granted");
+    expect(await writeEntitlementFor(granting, "acct_1", SNAPSHOT)).toEqual({ entitlement: "granted", activated: false });
     expect(granting.statements.join(" ")).toContain("'active'");
 
     const revoking = fakeSql();
-    expect(await writeEntitlementFor(revoking, "acct_1", { ...SNAPSHOT, status: "past_due" })).toBe("revoked");
+    expect(await writeEntitlementFor(revoking, "acct_1", { ...SNAPSHOT, status: "past_due" })).toEqual({ entitlement: "revoked", activated: false });
     expect(revoking.statements.join(" ")).toContain("'inactive'");
+  });
+
+  it("reports an activation only when the conditional grant changed the row, and then grants once", async () => {
+    const activating = fakeSql([{ match: "returning account_id", reply: { rows: [{ account_id: "acct_1" }] } }]);
+    expect(await writeEntitlementFor(activating, "acct_1", SNAPSHOT)).toEqual({ entitlement: "granted", activated: true });
+    // The conditional statement was the grant; the unconditional one is not repeated.
+    expect(activating.statements.filter((s) => s.includes("premium_entitlements"))).toHaveLength(1);
+  });
+
+  it("re-grants an already-active row without reporting an activation", async () => {
+    // The conditional grant matches nothing, so the ordinary grant keeps the row
+    // following the latest subscription, exactly as before.
+    const regranting = fakeSql();
+    expect(await writeEntitlementFor(regranting, "acct_1", SNAPSHOT)).toEqual({ entitlement: "granted", activated: false });
+    expect(regranting.statements.at(-1)).toBe(GRANT_ENTITLEMENT_SQL.trim());
+  });
+
+  it("decides the activation in the locked upsert itself, so a race cannot report it twice", () => {
+    expect(ACTIVATE_ENTITLEMENT_SQL).toContain(GRANT_ENTITLEMENT_SQL.trimEnd());
+    expect(ACTIVATE_ENTITLEMENT_SQL).toMatch(/where identity\.premium_entitlements\.status <> 'active'\s+returning account_id/);
   });
 
   it("names the subscription, because the schema refuses a stripe grant without one", () => {
@@ -205,7 +226,11 @@ describe("the transaction", () => {
         }
         if (text.includes("from identity.accounts where id")) return { rows: [{ id: "acct_1" }] };
         if (text.includes("billing_subscriptions")) return { rows: [{ stripe_subscription_id: "sub_1" }] };
-        if (text.includes("premium_entitlements")) this.entitlementWrites += 1;
+        if (text.includes("premium_entitlements")) {
+          this.entitlementWrites += 1;
+          // A first activation: the conditional grant changes the row.
+          if (text.includes("returning account_id")) return { rows: [{ account_id: "acct_1" }] };
+        }
         return { rows: [] };
       },
     };
@@ -213,8 +238,10 @@ describe("the transaction", () => {
     const first = await applySubscriptionEvent(sql, { accountId: "acct_1", snapshot: SNAPSHOT, event: EVENT });
     const second = await applySubscriptionEvent(sql, { accountId: "acct_1", snapshot: SNAPSHOT, event: EVENT });
 
-    expect(first.kind).toBe("applied");
-    expect(second.kind).toBe("duplicate");
+    expect(first).toEqual({ kind: "applied", entitlement: "granted", activated: true });
+    // The replay is a duplicate, so it carries no activation and analytics records
+    // one conversion, not two.
+    expect(second).toEqual({ kind: "duplicate" });
     expect(sql.entitlementWrites).toBe(1);
   });
 });

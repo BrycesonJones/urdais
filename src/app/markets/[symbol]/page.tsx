@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { TrackProductView } from "@/components/analytics/track-product-view";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MarketDetailPage } from "@/components/market-detail/market-detail-page";
 import { isPubliclyListed } from "@/data/market-catalog";
+import { findProduct } from "@/lib/access/products";
 import { findMarket } from "@/data/mock/market-detail";
 import { hydrateMarketWithTokenPrices, tokenResearchPreviewActive } from "@/lib/tokens/read/load";
 import { hydrateMarketWithListedCompute } from "@/lib/ucpi/read/load";
@@ -69,6 +71,7 @@ function publicMarket(symbol: string) {
 export default async function MarketIndexPage({ params }: PageProps) {
   const found = publicMarket((await params).symbol);
   if (!found) notFound();
+  const productId = findProduct(`market_${found.symbol.toLowerCase()}`)?.id ?? null;
   // The same hydrations /markets performs, in the same order. This route used to run
   // only the token one, so /markets served the live listed-GPU children while
   // /markets/ucpi -- the page the homepage links to -- served the mock Compute family.
@@ -122,6 +125,7 @@ export default async function MarketIndexPage({ params }: PageProps) {
     return (
       <>
         <SiteHeader />
+        {productId ? <TrackProductView productId={productId} /> : null}
         <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-10 text-neutral-50 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-screen-2xl">
             <UgaiSection model={model} series={series} />
@@ -160,6 +164,7 @@ export default async function MarketIndexPage({ params }: PageProps) {
     return (
       <>
         <SiteHeader />
+        {productId ? <TrackProductView productId={productId} /> : null}
         <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-10 text-neutral-50 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-screen-2xl">
             <UaviSection model={model} series={series} />
@@ -184,6 +189,7 @@ export default async function MarketIndexPage({ params }: PageProps) {
     return (
       <>
         <SiteHeader />
+        {productId ? <TrackProductView productId={productId} /> : null}
         <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-10 text-neutral-50 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-screen-2xl">
             <UmpiSection model={model} />
@@ -210,6 +216,7 @@ export default async function MarketIndexPage({ params }: PageProps) {
     return (
       <>
         <SiteHeader />
+        {productId ? <TrackProductView productId={productId} /> : null}
         <main className="flex flex-1 flex-col bg-[#0a0a0a] px-4 pb-16 pt-10 text-neutral-50 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-screen-2xl">
             <UbwiSection
@@ -226,6 +233,7 @@ export default async function MarketIndexPage({ params }: PageProps) {
   return (
     <>
       <SiteHeader />
+        {productId ? <TrackProductView productId={productId} /> : null}
       <MarketDetailPage key={market.symbol} market={market} researchPreview={researchPreview} />
       <SiteFooter />
     </>

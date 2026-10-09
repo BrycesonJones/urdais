@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
 import { ComputeAnalyticsPage } from "@/components/compute-analytics/compute-analytics-page";
+import { TrackProductView } from "@/components/analytics/track-product-view";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { PremiumLockedPage } from "@/components/premium/premium-locked-page";
@@ -53,7 +54,8 @@ export default async function ComputeAnalyticsRoute() {
     return (
       <>
         <SiteHeader />
-        <PremiumLockedPage title={TITLE} description={DESCRIPTION} reason={gate.reason} returnTo={COMPUTE_ANALYTICS_HREF} />
+        <TrackProductView productId="compute_economics" locked />
+        <PremiumLockedPage title={TITLE} description={DESCRIPTION} reason={gate.reason} returnTo={COMPUTE_ANALYTICS_HREF} productId="compute_economics" />
         <SiteFooter />
       </>
     );
@@ -63,6 +65,7 @@ export default async function ComputeAnalyticsRoute() {
   return (
     <>
       <SiteHeader />
+      <TrackProductView productId="compute_economics" />
       <ComputeAnalyticsPage model={model} />
       <SiteFooter />
     </>

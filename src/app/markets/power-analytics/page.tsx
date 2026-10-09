@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
+import { TrackProductView } from "@/components/analytics/track-product-view";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { PowerAnalyticsPage } from "@/components/power-analytics/power-analytics-page";
@@ -51,7 +52,8 @@ export default async function PowerAnalyticsRoute() {
     return (
       <>
         <SiteHeader />
-        <PremiumLockedPage title={TITLE} description={DESCRIPTION} reason={gate.reason} returnTo={POWER_ANALYTICS_HREF} />
+        <TrackProductView productId="power_analytics" locked />
+        <PremiumLockedPage title={TITLE} description={DESCRIPTION} reason={gate.reason} returnTo={POWER_ANALYTICS_HREF} productId="power_analytics" />
         <SiteFooter />
       </>
     );
@@ -108,6 +110,7 @@ export default async function PowerAnalyticsRoute() {
   return (
     <>
       <SiteHeader />
+      <TrackProductView productId="power_analytics" />
       <PowerAnalyticsPage gap={gap} queue={queue} headroom={headroom} buildout={buildout} flexibility={flexibility} />
       <SiteFooter />
     </>

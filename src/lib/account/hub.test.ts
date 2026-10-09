@@ -106,6 +106,7 @@ describe("states", () => {
     const hub = await resolveAccountHub();
     expect(hub).toEqual({
       kind: "ready",
+      accountId: "acct-session",
       profile: { email: "reader@example.invalid", emailVerified: true },
       subscription: { kind: "none" },
       action: { kind: "subscribe", label: "Subscribe" },

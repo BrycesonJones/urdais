@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { AnalyticsIdentity } from "@/components/analytics/analytics-identity";
 import { AuthDivider } from "@/components/onboarding/auth-divider";
 import { EmailForm } from "@/components/onboarding/email-form";
 import { GoogleButton } from "@/components/onboarding/google-button";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
+import { analyticsAccountId } from "@/lib/analytics/identity";
 import { isGoogleAuthAvailable } from "@/lib/auth/google";
 import { onboardingHref, onboardingReturnTo } from "@/lib/onboarding/routes";
 import { resolveOnboardingEntry } from "@/lib/onboarding/server";
@@ -47,6 +49,7 @@ export default async function AccessRoute({
 
   return (
     <OnboardingShell title="Create your account">
+      <AnalyticsIdentity accountId={analyticsAccountId(resolution.viewer)} />
       {google ? (
         <>
           <GoogleButton returnTo={returnTo} />

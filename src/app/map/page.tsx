@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { TrackProductView } from "@/components/analytics/track-product-view";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MapWorkspace } from "@/components/map/map-workspace";
 import { filterMapPoints } from "@/lib/access/map-access";
@@ -45,6 +46,7 @@ export default async function MapRoute() {
   return (
     <div className="flex h-dvh flex-col">
       <SiteHeader />
+      <TrackProductView productId="map" />
       <main className="relative min-h-80 w-full flex-1">
         {/* `lockedCategories` is names only, so the legend can advertise what is
             withheld. No withheld point travels with it. */}

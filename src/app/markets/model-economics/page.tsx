@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { TrackProductView } from "@/components/analytics/track-product-view";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ModelEconomicsPage } from "@/components/model-economics/model-economics-page";
@@ -38,6 +39,7 @@ export default async function ModelEconomicsRoute() {
   return (
     <>
       <SiteHeader />
+      <TrackProductView productId="model_economics" />
       <ModelEconomicsPage
         tokenInstruments={tokenInstruments}
         utvi={utvi}

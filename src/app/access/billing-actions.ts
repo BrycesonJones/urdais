@@ -18,6 +18,7 @@
 
 import { redirect } from "next/navigation";
 
+import { recordCheckoutStarted } from "@/lib/analytics/server";
 import { startBillingPortal, startCheckout } from "@/lib/billing/checkout";
 import { safeReturnTo } from "@/lib/auth/return-to";
 import { onboardingHref } from "@/lib/onboarding/routes";
@@ -41,6 +42,9 @@ export async function startCheckoutAction(_previous: AuthFormState, formData: Fo
   const outcome = await startCheckout(returnTo);
 
   if (outcome.kind === "redirect") {
+    // A Session exists now, so this is a checkout that really started -- a press
+    // that was refused or failed above never reaches here. Sent after the redirect.
+    recordCheckoutStarted(outcome.accountId, returnTo);
     // Stripe's session URL, never one assembled here.
     redirect(outcome.url);
   }

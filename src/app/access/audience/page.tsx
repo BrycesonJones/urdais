@@ -3,7 +3,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AudienceForm } from "@/components/onboarding/audience-form";
+import { AnalyticsIdentity } from "@/components/analytics/analytics-identity";
 import { PremiumOnboardingShell } from "@/components/onboarding/premium-onboarding-shell";
+import { analyticsAccountId } from "@/lib/analytics/identity";
 import { onboardingHref, onboardingReturnTo } from "@/lib/onboarding/routes";
 import { resolveOnboarding } from "@/lib/onboarding/server";
 
@@ -18,6 +20,7 @@ export default async function AudienceClassificationRoute({ searchParams }: Page
 
   return (
     <PremiumOnboardingShell label="STEP 2 OF 2">
+      <AnalyticsIdentity accountId={analyticsAccountId(resolution.viewer)} />
       <div className="flex w-full flex-1 flex-col justify-center py-10 sm:py-14">
         <h1 className="text-3xl font-semibold tracking-tight text-neutral-50 sm:text-4xl">What best describes you?</h1>
         <p className="mt-4 text-base leading-relaxed text-neutral-300 sm:text-lg">

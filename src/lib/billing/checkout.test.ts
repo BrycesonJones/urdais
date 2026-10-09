@@ -73,7 +73,8 @@ beforeEach(() => {
 describe("what the server decides", () => {
   it("redirects to Stripe's own session URL", async () => {
     const outcome = await startCheckout("/markets/power-analytics");
-    expect(outcome).toEqual({ kind: "redirect", url: "https://checkout.stripe.com/c/pay/cs_1" });
+    // The account is the server-resolved one, for the `checkout_started` analytics event.
+    expect(outcome).toEqual({ kind: "redirect", url: "https://checkout.stripe.com/c/pay/cs_1", accountId: "acct_1" });
   });
 
   it("chooses the Price from configuration, never from the caller", async () => {

@@ -14,6 +14,7 @@ import type {
 import { UrdaisMap } from "@/components/map/urdais-map";
 import { PremiumLayerDialog } from "@/components/premium/premium-layer-dialog";
 import type { AccessDenialReason } from "@/lib/access/entitlement";
+import { productForMapCategory } from "@/lib/access/products";
 import { MAP_HREF } from "@/lib/routes";
 import type { FacilityCategory } from "@/lib/facilities/domain";
 import type { UrdaisMapPoint } from "@/types/map";
@@ -76,6 +77,7 @@ export function MapWorkspace({
           onClose={() => setGateLayer(null)}
           layerName={gateLayer ? MAP_POINT_CATEGORY_LABELS[gateLayer] : null}
           reason={lockedReason}
+          productId={gateLayer ? productForMapCategory(gateLayer).id : null}
           // Back to the map, naming the layer they wanted so a later onboarding flow
           // can return them to it. Sanitised by `safeReturnTo` inside the links module.
           returnTo={
