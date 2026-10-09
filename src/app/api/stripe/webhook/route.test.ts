@@ -16,12 +16,14 @@ import Stripe from "stripe";
 const processStripeEvent = vi.hoisted(() => vi.fn());
 const resolveTokenDatabaseUrl = vi.hoisted(() => vi.fn());
 const tokenSqlExecutor = vi.hoisted(() => vi.fn());
+const recordSubscriptionCompleted = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/billing/webhook", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/billing/webhook")>()),
   processStripeEvent,
 }));
 vi.mock("@/lib/tokens/read/database", () => ({ resolveTokenDatabaseUrl, tokenSqlExecutor }));
+vi.mock("@/lib/analytics/server", () => ({ recordSubscriptionCompleted }));
 
 import { POST } from "@/app/api/stripe/webhook/route";
 
@@ -60,6 +62,7 @@ function signed(body: string): string {
 beforeEach(() => {
   vi.restoreAllMocks();
   processStripeEvent.mockReset();
+  recordSubscriptionCompleted.mockReset();
   resolveTokenDatabaseUrl.mockReset().mockReturnValue("postgresql://localhost/test");
   tokenSqlExecutor.mockReset().mockResolvedValue({ query: vi.fn().mockResolvedValue({ rows: [] }) });
   vi.stubEnv("STRIPE_SECRET_KEY", TEST_KEY);
@@ -146,6 +149,41 @@ describe("a genuine webhook is processed", () => {
     const body = payload();
     await POST(request(body, signed(body)) as never);
     expect(processStripeEvent.mock.calls[0]?.[3]).toBe("test");
+  });
+});
+
+describe("subscription_completed", () => {
+  it("is recorded when the processed event activated access, keyed on the account", async () => {
+    const activation = { accountId: "acct_1", subscriptionId: "sub_1", livemode: false };
+    processStripeEvent.mockResolvedValue({ kind: "processed", detail: "ok", activation });
+    const body = payload();
+    const response = await POST(request(body, signed(body)) as never);
+    expect(response.status).toBe(200);
+    expect(recordSubscriptionCompleted).toHaveBeenCalledExactlyOnceWith({ ...activation, via: "webhook" });
+  });
+
+  it("is not recorded for any other outcome, however often Stripe resends", async () => {
+    for (const outcome of [
+      { kind: "processed", detail: "event already processed for sub_1" },
+      { kind: "ignored", detail: "d" },
+      { kind: "rejected", detail: "d" },
+      { kind: "failed", detail: "d" },
+    ]) {
+      processStripeEvent.mockResolvedValue(outcome);
+      const body = payload();
+      await POST(request(body, signed(body)) as never);
+    }
+    expect(recordSubscriptionCompleted).not.toHaveBeenCalled();
+  });
+
+  it("never changes the answer to Stripe when analytics throws", async () => {
+    recordSubscriptionCompleted.mockImplementation(() => {
+      throw new Error("analytics down");
+    });
+    processStripeEvent.mockResolvedValue({ kind: "processed", detail: "ok", activation: { accountId: "a", subscriptionId: "s", livemode: false } });
+    const body = payload();
+    const response = await POST(request(body, signed(body)) as never);
+    expect(response.status).toBe(200);
   });
 });
 

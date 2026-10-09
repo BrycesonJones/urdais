@@ -66,6 +66,8 @@ export type AccountHub =
   | { readonly kind: "deletion_pending"; readonly profile: AccountProfile }
   | {
       readonly kind: "ready";
+      /** The server-resolved account id. Used only as the analytics distinct id. */
+      readonly accountId: string;
       readonly profile: AccountProfile;
       readonly subscription: SubscriptionPresentation;
       readonly action: AccountAction | null;
@@ -159,5 +161,5 @@ export async function resolveAccountHub(): Promise<AccountHub> {
     console.warn(`account hub: billing and entitlement disagree for account ${accountId}`);
   }
 
-  return { kind: "ready", profile, subscription, action: actionFor(subscription) };
+  return { kind: "ready", accountId, profile, subscription, action: actionFor(subscription) };
 }

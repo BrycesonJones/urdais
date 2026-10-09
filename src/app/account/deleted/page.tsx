@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AnalyticsIdentity } from "@/components/analytics/analytics-identity";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 
 export const metadata: Metadata = {
@@ -16,6 +17,8 @@ export const metadata: Metadata = {
 export default function AccountDeletedRoute() {
   return (
     <OnboardingShell title="Your Urdais account has been deleted.">
+      {/* Forget the deleted account in analytics; the next visit is anonymous. */}
+      <AnalyticsIdentity accountId={null} />
       <p className="text-sm text-neutral-300">
         You&rsquo;ve been signed out. A minimal record of past billing is kept, detached from any account, as
         financial records require.

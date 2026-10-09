@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { AnalyticsIdentity } from "@/components/analytics/analytics-identity";
 import { PremiumOnboardingShell } from "@/components/onboarding/premium-onboarding-shell";
+import { analyticsAccountId } from "@/lib/analytics/identity";
 import { onboardingHref, onboardingReturnTo } from "@/lib/onboarding/routes";
 import { resolveOnboarding } from "@/lib/onboarding/server";
 
@@ -24,6 +26,7 @@ export default async function DiscoverFullAccessRoute({ searchParams }: PageProp
 
   return (
     <PremiumOnboardingShell label="FULL ACCESS">
+      <AnalyticsIdentity accountId={analyticsAccountId(resolution.viewer)} />
       <div className="flex flex-1 flex-col py-10 sm:py-14">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-neutral-50 sm:text-4xl lg:text-5xl">

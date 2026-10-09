@@ -34,7 +34,8 @@ import { snapshotEntitles, snapshotSubscription, type BillingSubscriptionSnapsho
 import type { TokenSqlExecutor } from "@/lib/tokens/read/sql";
 
 export type Reconciliation =
-  | { readonly kind: "entitled"; readonly subscriptionId: string }
+  /** `activated`: this reconciliation, not an earlier webhook, made the entitlement active. */
+  | { readonly kind: "entitled"; readonly subscriptionId: string; readonly livemode: boolean; readonly activated: boolean }
   | { readonly kind: "not_entitled"; readonly subscriptionId: string; readonly status: string }
   | { readonly kind: "nothing_found" }
   | { readonly kind: "refused"; readonly detail: string };
@@ -103,7 +104,7 @@ export async function reconcileAccount(
     return { kind: "refused", detail: "the Stripe subscription belongs to another customer" };
   }
 
-  await applySubscriptionEvent(sql, {
+  const applied = await applySubscriptionEvent(sql, {
     accountId: input.accountId,
     snapshot,
     event: {
@@ -120,6 +121,11 @@ export async function reconcileAccount(
   // comparison is how reconciliation and webhooks drift into disagreeing about who
   // is entitled.
   return snapshotEntitles(snapshot)
-    ? { kind: "entitled", subscriptionId: snapshot.stripeSubscriptionId }
+    ? {
+        kind: "entitled",
+        subscriptionId: snapshot.stripeSubscriptionId,
+        livemode: snapshot.livemode,
+        activated: applied.kind === "applied" && applied.activated === true,
+      }
     : { kind: "not_entitled", subscriptionId: snapshot.stripeSubscriptionId, status: snapshot.status };
 }

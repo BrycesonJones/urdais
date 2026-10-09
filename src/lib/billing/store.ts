@@ -247,6 +247,23 @@ export const GRANT_ENTITLEMENT_SQL = `
 `;
 
 /**
+ * The same grant, applied only when the row is not already active, returning a row
+ * exactly when this statement made it active — a first grant, or a resumption after
+ * a revocation.
+ *
+ * That is the one fact analytics needs for `subscription_completed`, and it has to
+ * come from here: every entitling event (checkout completion, subscription created,
+ * each later update) grants, and so does reconciliation, so "granted" says nothing
+ * about whether access is *new*. The `where` is evaluated against the locked row,
+ * so two transactions racing for the same account cannot both see the transition;
+ * the loser updates nothing and falls through to the ordinary grant.
+ */
+export const ACTIVATE_ENTITLEMENT_SQL = `${GRANT_ENTITLEMENT_SQL.trimEnd()}
+  where identity.premium_entitlements.status <> 'active'
+  returning account_id
+`;
+
+/**
  * Revoke.
  *
  * `greatest` keeps `revoked_at >= granted_at`, which the schema requires. Taking
@@ -285,17 +302,27 @@ export async function revokeEntitlementForDeletion(sql: TokenSqlExecutor, accoun
   await sql.query(REVOKE_FOR_DELETION_SQL, [accountId]);
 }
 
+export type EntitlementWrite = { readonly entitlement: "granted" | "revoked"; readonly activated: boolean };
+
+/**
+ * Grant or revoke. `activated` is true only when this call moved the entitlement
+ * into `active`; see `ACTIVATE_ENTITLEMENT_SQL`.
+ */
 export async function writeEntitlementFor(
   sql: TokenSqlExecutor,
   accountId: string,
   snapshot: BillingSubscriptionSnapshot,
-): Promise<"granted" | "revoked"> {
+): Promise<EntitlementWrite> {
   if (snapshotEntitles(snapshot)) {
+    const { rows } = await sql.query(ACTIVATE_ENTITLEMENT_SQL, [accountId, snapshot.stripeSubscriptionId]);
+    if (rows.length > 0) return { entitlement: "granted", activated: true };
+    // Already active: re-grant as before, so the row still follows the latest
+    // subscription (`external_reference`) and is marked as Stripe's.
     await sql.query(GRANT_ENTITLEMENT_SQL, [accountId, snapshot.stripeSubscriptionId]);
-    return "granted";
+    return { entitlement: "granted", activated: false };
   }
   await sql.query(REVOKE_ENTITLEMENT_SQL, [accountId, snapshot.stripeSubscriptionId]);
-  return "revoked";
+  return { entitlement: "revoked", activated: false };
 }
 
 /* ------------------------------------------------------- the atomic operation */
@@ -305,7 +332,16 @@ export type ApplyOutcome =
    * Stored. `withheld`: the account was deleted (row stored detached) or is past
    * billing termination in a deletion, so no entitlement was written.
    */
-  | { readonly kind: "applied"; readonly entitlement: "granted" | "revoked" | "withheld" }
+  | {
+      readonly kind: "applied";
+      readonly entitlement: "granted" | "revoked" | "withheld";
+      /**
+       * Present, and true, only when this event moved the entitlement into active.
+       * At most one event per activation carries it. Analytics only — authorization
+       * reads the entitlement row, never this.
+       */
+      readonly activated?: true;
+    }
   | { readonly kind: "duplicate" }
   | { readonly kind: "stale" }
   /** No account and no retained Customer to hang the subscription on. Nothing written. */
@@ -403,9 +439,9 @@ export async function applySubscriptionEvent(
       return { kind: "applied", entitlement: "withheld" };
     }
 
-    const entitlement = await writeEntitlementFor(sql, attachedTo, input.snapshot);
+    const { entitlement, activated } = await writeEntitlementFor(sql, attachedTo, input.snapshot);
     await sql.query("commit", []);
-    return { kind: "applied", entitlement };
+    return activated ? { kind: "applied", entitlement, activated: true } : { kind: "applied", entitlement };
   } catch (error) {
     try {
       await sql.query("rollback", []);

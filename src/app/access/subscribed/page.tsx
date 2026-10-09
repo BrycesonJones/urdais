@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { AnalyticsIdentity } from "@/components/analytics/analytics-identity";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
+import { analyticsAccountId } from "@/lib/analytics/identity";
 import { ACCOUNT_HREF, MARKETS_HREF } from "@/lib/routes";
 import { onboardingReturnTo } from "@/lib/onboarding/routes";
 import { resolveOnboarding } from "@/lib/onboarding/server";
@@ -51,6 +53,7 @@ export default async function AlreadySubscribedRoute({
       title="You already have full access"
       lead="Your Urdais subscription already includes every premium product."
     >
+      <AnalyticsIdentity accountId={analyticsAccountId(resolution.viewer)} />
       <Link
         href={destination}
         className="rounded-md bg-[#526fe0] px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-[#6480e8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"

@@ -21,6 +21,8 @@ function sqlWith(
     accountExists?: boolean;
     deletionState?: string;
     retainedCustomer?: boolean;
+    /** Was the entitlement inactive (or absent) before this event? Default no. */
+    activates?: boolean;
   } = {},
 ) {
   const statements: string[] = [];
@@ -48,6 +50,9 @@ function sqlWith(
       }
       if (text.includes("insert into identity.billing_events")) {
         return { rows: overrides.claim === "lost" ? [] : [{ stripe_event_id: "evt" }] };
+      }
+      if (text.includes("returning account_id")) {
+        return { rows: overrides.activates ? [{ account_id: values[0] }] : [] };
       }
       if (text.includes("insert into identity.billing_subscriptions")) {
         return { rows: overrides.upsert === "stale" ? [] : [{ stripe_subscription_id: "sub_1" }] };
@@ -284,6 +289,27 @@ describe("the lifecycle", () => {
     const sql = sqlWith();
     const outcome = await processStripeEvent(stripe, sql, event("customer.subscription.updated", SUBSCRIPTION_OBJECT), "test");
     expect(outcome).toMatchObject({ kind: "processed", detail: expect.stringContaining("granted") });
+  });
+
+  it("reports the activation when this event is the one that made access active", async () => {
+    const { stripe } = stripeWith({ status: "active" });
+    const outcome = await processStripeEvent(stripe, sqlWith({ activates: true }), event("customer.subscription.created", SUBSCRIPTION_OBJECT), "test");
+    expect(outcome).toMatchObject({
+      kind: "processed",
+      activation: { accountId: "acct_1", subscriptionId: "sub_1", livemode: false },
+    });
+  });
+
+  it("reports no activation for an account that was already active, or for a duplicate", async () => {
+    // Stripe sends several entitling events per purchase. Only the first activates;
+    // analytics records `subscription_completed` from that one alone.
+    const { stripe } = stripeWith({ status: "active" });
+    const regrant = await processStripeEvent(stripe, sqlWith(), event("customer.subscription.updated", SUBSCRIPTION_OBJECT), "test");
+    expect(regrant.kind).toBe("processed");
+    expect(regrant).not.toHaveProperty("activation");
+
+    const duplicate = await processStripeEvent(stripe, sqlWith({ claim: "lost", activates: true }), event("customer.subscription.updated", SUBSCRIPTION_OBJECT), "test");
+    expect(duplicate).not.toHaveProperty("activation");
   });
 
   it("reports a duplicate as processed so Stripe stops retrying", async () => {

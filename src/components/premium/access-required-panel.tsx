@@ -1,8 +1,10 @@
 import Link from "next/link";
 
+import { PremiumCtaLink } from "@/components/analytics/premium-cta-link";
 import { gateCopy, type GateSurface } from "@/lib/access/gate-copy";
 import { accessHref, signInHref } from "@/lib/access/gate-links";
 import type { AccessDenialReason } from "@/lib/access/entitlement";
+import type { UrdaisProductId } from "@/lib/access/products";
 
 /**
  * The premium gate's content: heading, proposition, and actions.
@@ -12,8 +14,9 @@ import type { AccessDenialReason } from "@/lib/access/entitlement";
  * no data and reads no state; the surrounding component decides how it is
  * presented.
  *
- * A Server Component: it has no interactivity of its own, so nothing here needs to
- * reach the browser as JavaScript. The map's dialog wraps it in a client component
+ * A Server Component. Its one interactive part, the CTA's analytics event, is the
+ * small `PremiumCtaLink` client component; the rest never reaches the browser as
+ * JavaScript. The map's dialog wraps it in a client component
  * for the modal behaviour, which is the only part that genuinely needs one.
  *
  * ## Accessibility
@@ -33,9 +36,11 @@ export type AccessRequiredPanelProps = {
   headingLevel?: 1 | 2;
   /** Ties a dialog's `aria-labelledby` to the heading. */
   headingId?: string;
+  /** The product behind the gate, for the CTA's analytics event. */
+  productId?: UrdaisProductId;
 };
 
-export function AccessRequiredPanel({ reason, surface, returnTo, headingLevel = 2, headingId }: AccessRequiredPanelProps) {
+export function AccessRequiredPanel({ reason, surface, returnTo, headingLevel = 2, headingId, productId }: AccessRequiredPanelProps) {
   const copy = gateCopy(reason, surface);
   const Heading = headingLevel === 1 ? "h1" : "h2";
 
@@ -59,12 +64,14 @@ export function AccessRequiredPanel({ reason, surface, returnTo, headingLevel = 
       <p className="text-base font-medium text-neutral-50">{copy.lead}</p>
       <p className="text-sm text-neutral-400">{copy.body}</p>
 
-      <Link
+      <PremiumCtaLink
         href={accessHref(returnTo)}
+        surface={surface}
+        {...(productId ? { productId } : {})}
         className="mt-1 w-full rounded-md bg-[#526fe0] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#6480e8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
       >
         {copy.ctaLabel}
-      </Link>
+      </PremiumCtaLink>
 
       {copy.secondary ? (
         <p className="text-xs text-neutral-500">

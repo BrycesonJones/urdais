@@ -105,10 +105,25 @@ describe("when it does reconcile", () => {
 
     const outcome = await reconcileAccount(stripe, sql, { accountId: "acct_mine", sessionId: "cs_mine", mode: "test" });
 
-    expect(outcome).toEqual({ kind: "entitled", subscriptionId: "sub_1" });
+    expect(outcome).toEqual({ kind: "entitled", subscriptionId: "sub_1", livemode: false, activated: false });
     expect(applySubscriptionEvent).toHaveBeenCalledOnce();
     // Same function, same ledger. A reconciliation and a webhook racing cannot both grant.
     expect(applySubscriptionEvent.mock.calls[0]?.[1]?.accountId).toBe("acct_mine");
+  });
+
+  it("reports whether this reconciliation was the one that activated access", async () => {
+    // Only then does the post-checkout page record `subscription_completed`. When the
+    // webhook activated first, the store reports no activation and neither does this.
+    applySubscriptionEvent.mockResolvedValue({ kind: "applied", entitlement: "granted", activated: true });
+    const stripe = stripeWith({ session: { customer: "cus_mine", subscription: "sub_1" } });
+    const outcome = await reconcileAccount(stripe, sql, { accountId: "acct_mine", sessionId: "cs_mine", mode: "test" });
+    expect(outcome).toMatchObject({ kind: "entitled", activated: true });
+
+    applySubscriptionEvent.mockResolvedValue({ kind: "duplicate" });
+    expect(await reconcileAccount(stripe, sql, { accountId: "acct_mine", sessionId: "cs_mine", mode: "test" })).toMatchObject({
+      kind: "entitled",
+      activated: false,
+    });
   });
 
   it("reports not_entitled without granting when Stripe says the subscription is not good", async () => {

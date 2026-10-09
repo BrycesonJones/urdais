@@ -55,7 +55,8 @@ export function checkoutCancelUrl(returnTo: string | null): string {
 }
 
 export type CheckoutStart =
-  | { readonly kind: "redirect"; readonly url: string }
+  /** `accountId` is the server-resolved account the Session was created for. */
+  | { readonly kind: "redirect"; readonly url: string; readonly accountId: string }
   | { readonly kind: "refused"; readonly reason: "anonymous" | "unverified" | "already_entitled" }
   | { readonly kind: "unavailable"; readonly detail: string };
 
@@ -120,7 +121,7 @@ export async function startCheckout(returnTo?: string | null): Promise<CheckoutS
   });
 
   if (!session.url) return { kind: "unavailable", detail: "Stripe returned a session with no URL" };
-  return { kind: "redirect", url: session.url };
+  return { kind: "redirect", url: session.url, accountId: handoff.accountId };
 }
 
 /* -------------------------------------------------------------- the portal */
