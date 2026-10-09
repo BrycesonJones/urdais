@@ -58,14 +58,15 @@ export function stableEventUuid(seed: string): string {
 }
 
 async function send(config: { key: string; host: string }, input: ServerEvent): Promise<void> {
-  const client = new PostHog(config.key, {
-    host: config.host,
-    flushAt: 1,
-    flushInterval: 0,
-    requestTimeout: REQUEST_TIMEOUT_MS,
-    fetchRetryCount: 1,
-  });
+  let client: PostHog | null = null;
   try {
+    client = new PostHog(config.key, {
+      host: config.host,
+      flushAt: 1,
+      flushInterval: 0,
+      requestTimeout: REQUEST_TIMEOUT_MS,
+      fetchRetryCount: 1,
+    });
     await client.captureImmediate({
       distinctId: input.distinctId,
       event: input.event,
@@ -78,7 +79,7 @@ async function send(config: { key: string; host: string }, input: ServerEvent): 
   } catch (error) {
     console.warn(`analytics: ${input.event} was not recorded (${error instanceof Error ? error.name : "error"})`);
   } finally {
-    await client.shutdown(REQUEST_TIMEOUT_MS).catch(() => undefined);
+    await client?.shutdown(REQUEST_TIMEOUT_MS).catch(() => undefined);
   }
 }
 

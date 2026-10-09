@@ -76,6 +76,30 @@ describe("server events", () => {
     await expect(flushAfter()).resolves.toBeUndefined();
   });
 
+  it("never hold up the caller: a PostHog that never answers is waited on only after the response", async () => {
+    enable();
+    // The worst outage: the request hangs forever.
+    captureImmediate.mockReturnValue(new Promise(() => {}));
+    after.mockImplementation((task: () => Promise<void>) => void task());
+    const started = Date.now();
+    recordSubscriptionCompleted({ accountId: "acct_1", subscriptionId: "sub_1", livemode: true, via: "webhook" });
+    recordCheckoutStarted("acct_1", null);
+    // Synchronous return: the webhook answers Stripe and the action redirects regardless.
+    expect(Date.now() - started).toBeLessThan(50);
+    expect(captureImmediate).toHaveBeenCalledTimes(2);
+  });
+
+  it("swallow a client that fails to construct", async () => {
+    enable();
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { PostHog } = await import("posthog-node");
+    vi.mocked(PostHog).mockImplementationOnce(function () {
+      throw new Error("bad config");
+    } as never);
+    recordCheckoutStarted("acct_1", null);
+    await expect(flushAfter()).resolves.toBeUndefined();
+  });
+
   it("swallow after() refusing to run outside a request", () => {
     enable();
     after.mockImplementation(() => {
