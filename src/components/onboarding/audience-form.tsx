@@ -2,11 +2,8 @@
 
 import { useActionState } from "react";
 
-import {
-  continueWithAudienceAction,
-  IDLE_AUDIENCE_STATE,
-  skipAudienceAction,
-} from "@/app/access/audience/actions";
+import { continueWithAudienceAction, skipAudienceAction } from "@/app/access/audience/actions";
+import { IDLE_AUDIENCE_STATE } from "@/app/access/audience/form-state";
 import { AUDIENCE_ROLES } from "@/lib/onboarding/audience";
 
 export function AudienceForm({ returnTo }: { returnTo: string | null }) {
