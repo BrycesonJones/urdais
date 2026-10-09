@@ -71,6 +71,11 @@ export default async function CheckoutCompleteRoute({
   const context = stripeContext();
   const databaseUrl = resolveTokenDatabaseUrl();
 
+  // Set inside the `try`, acted on after it. `redirect()` works by throwing, so
+  // calling it inside the `try` let the catch below swallow it as a "reconciliation
+  // failure" and render the confirming page to a reader who was already entitled.
+  let entitled = false;
+
   if (context.kind === "ready" && databaseUrl) {
     try {
       const sql = await tokenSqlExecutor(databaseUrl);
@@ -80,12 +85,7 @@ export default async function CheckoutCompleteRoute({
         mode: context.availability.mode,
       });
 
-      if (reconciliation.kind === "entitled") {
-        // Resolved on a fresh request rather than rendered from this one: the viewer
-        // in hand was resolved before the entitlement was written, and rendering
-        // "you're in" from stale state is how a page disagrees with the database.
-        redirect(returnTo ?? onboardingHref("already_entitled", null));
-      }
+      entitled = reconciliation.kind === "entitled";
 
       if (reconciliation.kind === "refused") {
         console.warn(`checkout complete: reconciliation refused (${reconciliation.detail})`);
@@ -95,6 +95,13 @@ export default async function CheckoutCompleteRoute({
       // they reached after paying. The webhook remains the authority and will land.
       console.error(`checkout complete: reconciliation failed (${error instanceof Error ? error.message : "error"})`);
     }
+  }
+
+  if (entitled) {
+    // Resolved on a fresh request rather than rendered from this one: the viewer
+    // in hand was resolved before the entitlement was written, and rendering
+    // "you're in" from stale state is how a page disagrees with the database.
+    redirect(returnTo ?? onboardingHref("already_entitled", null));
   }
 
   // Re-entering this same route re-runs the authoritative Stripe lookup, carrying the
