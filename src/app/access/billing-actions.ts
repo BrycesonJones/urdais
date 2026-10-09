@@ -18,6 +18,7 @@
 
 import { redirect } from "next/navigation";
 
+import { requestAnalyticsConsent } from "@/lib/analytics/request-consent";
 import { recordCheckoutStarted } from "@/lib/analytics/server";
 import { startBillingPortal, startCheckout } from "@/lib/billing/checkout";
 import { safeReturnTo } from "@/lib/auth/return-to";
@@ -39,12 +40,14 @@ function field(formData: FormData, name: string): string {
 export async function startCheckoutAction(_previous: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const returnTo = safeReturnTo(field(formData, "returnTo"));
 
-  const outcome = await startCheckout(returnTo);
+  // Analytics only. Never throws; anything unclear is "not_granted".
+  const analyticsConsent = await requestAnalyticsConsent();
+  const outcome = await startCheckout(returnTo, analyticsConsent);
 
   if (outcome.kind === "redirect") {
     // A Session exists now, so this is a checkout that really started -- a press
     // that was refused or failed above never reaches here. Sent after the redirect.
-    recordCheckoutStarted(outcome.accountId, returnTo);
+    recordCheckoutStarted(outcome.accountId, returnTo, analyticsConsent);
     // Stripe's session URL, never one assembled here.
     redirect(outcome.url);
   }

@@ -105,7 +105,7 @@ describe("when it does reconcile", () => {
 
     const outcome = await reconcileAccount(stripe, sql, { accountId: "acct_mine", sessionId: "cs_mine", mode: "test" });
 
-    expect(outcome).toEqual({ kind: "entitled", subscriptionId: "sub_1", livemode: false, activated: false });
+    expect(outcome).toEqual({ kind: "entitled", subscriptionId: "sub_1", livemode: false, activated: false, analyticsConsent: "not_granted" });
     expect(applySubscriptionEvent).toHaveBeenCalledOnce();
     // Same function, same ledger. A reconciliation and a webhook racing cannot both grant.
     expect(applySubscriptionEvent.mock.calls[0]?.[1]?.accountId).toBe("acct_mine");

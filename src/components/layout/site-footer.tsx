@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PrivacySettingsItem } from "@/components/analytics/privacy-settings-button";
 import { ContactTrigger } from "@/components/layout/contact-trigger";
 import { GITHUB_REPO_URL, LINKEDIN_URL, SITE_NAME, SITE_URL, X_URL } from "@/constants/site";
 
@@ -43,6 +44,7 @@ export function SiteFooter() {
                 LinkedIn
               </a>
             </li>
+            <PrivacySettingsItem className={linkClass} />
           </ul>
           <a href={GITHUB_REPO_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
             Open source

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { PrivacySettingsButton } from "@/components/analytics/privacy-settings-button";
 import { TrackProductView } from "@/components/analytics/track-product-view";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MapWorkspace } from "@/components/map/map-workspace";
@@ -48,6 +49,12 @@ export default async function MapRoute() {
       <SiteHeader />
       <TrackProductView productId="map" />
       <main className="relative min-h-80 w-full flex-1">
+        {/*
+          The map has no footer, so "Privacy settings" sits in the top-left corner,
+          the one corner no map control uses (zoom top-right, legend bottom-left,
+          scale and attribution bottom-right). Styled like the legend card.
+        */}
+        <PrivacySettingsButton className="absolute left-3 top-3 z-10 rounded-md border border-neutral-200 bg-white/95 px-2.5 py-1.5 text-xs text-neutral-700 shadow-sm transition-colors hover:bg-white hover:text-neutral-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#526fe0]" />
         {/* `lockedCategories` is names only, so the legend can advertise what is
             withheld. No withheld point travels with it. */}
         <MapWorkspace

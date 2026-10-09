@@ -36,13 +36,13 @@ afterEach(() => vi.unstubAllEnvs());
 
 describe("server events", () => {
   it("do nothing at all when analytics is off", () => {
-    recordCheckoutStarted("acct_1", "/map");
+    recordCheckoutStarted("acct_1", "/map", "granted");
     expect(after).not.toHaveBeenCalled();
   });
 
   it("are queued after the response, keyed on the account, with no geo lookup", async () => {
     enable();
-    recordCheckoutStarted("acct_1", "/markets/power-analytics");
+    recordCheckoutStarted("acct_1", "/markets/power-analytics", "granted");
     expect(captureImmediate).not.toHaveBeenCalled();
     await flushAfter();
     expect(captureImmediate).toHaveBeenCalledWith(
@@ -58,7 +58,7 @@ describe("server events", () => {
 
   it("give one subscription the same conversion id however many times it is recorded", async () => {
     enable();
-    const input = { accountId: "acct_1", subscriptionId: "sub_1", livemode: true, via: "webhook" as const };
+    const input = { accountId: "acct_1", subscriptionId: "sub_1", livemode: true, via: "webhook" as const, consent: "granted" as const };
     recordSubscriptionCompleted(input);
     recordSubscriptionCompleted({ ...input, via: "reconciliation" });
     await flushAfter();
@@ -72,7 +72,7 @@ describe("server events", () => {
     enable();
     vi.spyOn(console, "warn").mockImplementation(() => {});
     captureImmediate.mockRejectedValue(new Error("down"));
-    recordCheckoutStarted("acct_1", null);
+    recordCheckoutStarted("acct_1", null, "granted");
     await expect(flushAfter()).resolves.toBeUndefined();
   });
 
@@ -82,8 +82,8 @@ describe("server events", () => {
     captureImmediate.mockReturnValue(new Promise(() => {}));
     after.mockImplementation((task: () => Promise<void>) => void task());
     const started = Date.now();
-    recordSubscriptionCompleted({ accountId: "acct_1", subscriptionId: "sub_1", livemode: true, via: "webhook" });
-    recordCheckoutStarted("acct_1", null);
+    recordSubscriptionCompleted({ accountId: "acct_1", subscriptionId: "sub_1", livemode: true, via: "webhook", consent: "granted" });
+    recordCheckoutStarted("acct_1", null, "granted");
     // Synchronous return: the webhook answers Stripe and the action redirects regardless.
     expect(Date.now() - started).toBeLessThan(50);
     expect(captureImmediate).toHaveBeenCalledTimes(2);
@@ -96,7 +96,7 @@ describe("server events", () => {
     vi.mocked(PostHog).mockImplementationOnce(function () {
       throw new Error("bad config");
     } as never);
-    recordCheckoutStarted("acct_1", null);
+    recordCheckoutStarted("acct_1", null, "granted");
     await expect(flushAfter()).resolves.toBeUndefined();
   });
 
@@ -105,7 +105,28 @@ describe("server events", () => {
     after.mockImplementation(() => {
       throw new Error("outside a request scope");
     });
-    expect(() => recordCheckoutStarted("acct_1", null)).not.toThrow();
+    expect(() => recordCheckoutStarted("acct_1", null, "granted")).not.toThrow();
+  });
+});
+
+describe("server events without analytics consent", () => {
+  it("name nobody: a random distinct id, person processing off, no account-derived id", async () => {
+    enable();
+    recordCheckoutStarted("acct_1", "/map", "not_granted");
+    recordSubscriptionCompleted({ accountId: "acct_1", subscriptionId: "sub_1", livemode: true, via: "webhook", consent: "not_granted" });
+    await flushAfter();
+    const messages = captureImmediate.mock.calls.map(([message]) => message);
+    expect(messages.map((m) => m.event)).toEqual(["checkout_started", "subscription_completed"]);
+    for (const message of messages) {
+      expect(message.distinctId).not.toBe("acct_1");
+      expect(message.distinctId).toMatch(/^[0-9a-f-]{36}$/);
+      expect(message.properties.$process_person_profile).toBe(false);
+      // A hash of the subscription is an identifier too, so it is not sent.
+      expect(message.uuid).toBeUndefined();
+      expect(JSON.stringify(message)).not.toContain("acct_1");
+      expect(JSON.stringify(message)).not.toContain("sub_1");
+    }
+    expect(messages[0].distinctId).not.toBe(messages[1].distinctId);
   });
 });
 

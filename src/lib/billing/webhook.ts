@@ -40,6 +40,7 @@
 
 import type Stripe from "stripe";
 
+import { consentFromStripeMetadata, STRIPE_METADATA_ANALYTICS_CONSENT, type ServerConsent } from "@/lib/analytics/consent";
 import { METADATA_ACCOUNT_ID } from "@/lib/billing/catalog";
 import { livemodeMatches, type StripeMode } from "@/lib/billing/mode";
 import { applySubscriptionEvent, readAccountIdForCustomer, type ApplyOutcome } from "@/lib/billing/store";
@@ -69,7 +70,13 @@ export type WebhookOutcome =
        * at most once per activation, however often Stripe delivers. The route
        * records `subscription_completed` from it.
        */
-      readonly activation?: { readonly accountId: string; readonly subscriptionId: string; readonly livemode: boolean };
+      readonly activation?: {
+        readonly accountId: string;
+        readonly subscriptionId: string;
+        readonly livemode: boolean;
+        /** The analytics consent recorded on the subscription at checkout. Analytics only. */
+        readonly consent: ServerConsent;
+      };
     }
   | { readonly kind: "ignored"; readonly detail: string }
   /** Something is wrong with the request itself. Stripe should not retry. */
@@ -214,7 +221,13 @@ export async function processStripeEvent(
       return {
         kind: "processed",
         detail: describe(outcome, subscriptionId),
-        activation: { accountId, subscriptionId, livemode: snapshot.livemode },
+        activation: {
+          accountId,
+          subscriptionId,
+          livemode: snapshot.livemode,
+          // From the re-fetched subscription; the event's own copy for a Session.
+          consent: consentFromStripeMetadata(subscription.metadata?.[STRIPE_METADATA_ANALYTICS_CONSENT] ? subscription.metadata : metadata),
+        },
       };
     }
     return { kind: "processed", detail: describe(outcome, subscriptionId) };

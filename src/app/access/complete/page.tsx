@@ -7,6 +7,7 @@ import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { analyticsAccountId } from "@/lib/analytics/identity";
 import { hasPremiumEntitlement } from "@/lib/access/entitlement";
 import { resolveViewer } from "@/lib/access/server";
+import { requestAnalyticsConsent } from "@/lib/analytics/request-consent";
 import { recordSubscriptionCompleted } from "@/lib/analytics/server";
 import { reconcileAccount } from "@/lib/billing/reconcile";
 import { stripeContext } from "@/lib/billing/stripe";
@@ -101,6 +102,13 @@ export default async function CheckoutCompleteRoute({
             subscriptionId: reconciliation.subscriptionId,
             livemode: reconciliation.livemode,
             via: "reconciliation",
+            // Both must allow it: the consent recorded at checkout, and this request's
+            // (the reader may have withdrawn since). Here, unlike in the webhook, the
+            // reader's current choice is available.
+            consent:
+              reconciliation.analyticsConsent === "granted" && (await requestAnalyticsConsent()) === "granted"
+                ? "granted"
+                : "not_granted",
           });
         }
       }

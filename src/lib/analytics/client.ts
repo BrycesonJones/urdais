@@ -11,6 +11,7 @@
 
 import posthog from "posthog-js";
 
+import { identificationAllowed, reapplyConsentAfterReset } from "@/lib/analytics/consent-client";
 import type { AnalyticsEventName } from "@/lib/analytics/events";
 
 type Properties = Readonly<Record<string, string | number | boolean | null>>;
@@ -30,7 +31,11 @@ export function track(event: AnalyticsEventName, properties: Properties = {}): v
 }
 
 /**
- * Tie this browser to an Urdais account.
+ * Tie this browser to an Urdais account — only with analytics consent.
+ *
+ * A visitor who declined, or has not yet chosen where consent comes first, is
+ * never identified: their browser stays cookieless or silent, and nothing links
+ * it to the account.
  *
  * The account id is the stable internal key (`identity.accounts.id`), the same id
  * server-side events use, so a browser's anonymous history and the webhook's
@@ -42,6 +47,7 @@ export function track(event: AnalyticsEventName, properties: Properties = {}): v
 export function identifyAccount(accountId: string): void {
   if (!loaded()) return;
   try {
+    if (!identificationAllowed()) return;
     if (posthog.get_distinct_id() !== accountId) posthog.identify(accountId);
   } catch {
     // Never surfaced.
@@ -58,7 +64,11 @@ export function identifyAccount(accountId: string): void {
 export function resetIdentity(): void {
   if (!loaded()) return;
   try {
-    if (posthog.get_property("$user_state") === "identified") posthog.reset();
+    if (posthog.get_property("$user_state") !== "identified") return;
+    posthog.reset();
+    // `reset()` also clears PostHog's consent flag. Signing out must not change
+    // the visitor's analytics choice, so it is put back.
+    reapplyConsentAfterReset();
   } catch {
     // Never surfaced.
   }

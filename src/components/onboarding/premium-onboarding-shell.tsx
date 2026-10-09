@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PrivacySettingsButton } from "@/components/analytics/privacy-settings-button";
 import { SITE_NAME } from "@/constants/site";
 
 /** The wide, minimal two-page premium-conversion frame. */
@@ -23,6 +24,10 @@ export function PremiumOnboardingShell({
           <p className="text-sm font-medium tracking-[0.08em] text-neutral-400 sm:text-base">{label}</p>
         </header>
         {children}
+        {/* This frame has no site footer; the privacy control would otherwise be unreachable here. */}
+        <div className="flex justify-end">
+          <PrivacySettingsButton className="mt-6 rounded-sm text-xs text-neutral-500 transition-colors hover:text-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]" />
+        </div>
       </section>
     </main>
   );

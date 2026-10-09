@@ -28,6 +28,7 @@
 
 import type Stripe from "stripe";
 
+import { consentFromStripeMetadata, type ServerConsent } from "@/lib/analytics/consent";
 import { livemodeMatches, type StripeMode } from "@/lib/billing/mode";
 import { applySubscriptionEvent, readCustomerId } from "@/lib/billing/store";
 import { snapshotEntitles, snapshotSubscription, type BillingSubscriptionSnapshot } from "@/lib/billing/subscription-state";
@@ -35,7 +36,14 @@ import type { TokenSqlExecutor } from "@/lib/tokens/read/sql";
 
 export type Reconciliation =
   /** `activated`: this reconciliation, not an earlier webhook, made the entitlement active. */
-  | { readonly kind: "entitled"; readonly subscriptionId: string; readonly livemode: boolean; readonly activated: boolean }
+  | {
+      readonly kind: "entitled";
+      readonly subscriptionId: string;
+      readonly livemode: boolean;
+      readonly activated: boolean;
+      /** The analytics consent recorded on the subscription at checkout. Analytics only. */
+      readonly analyticsConsent: ServerConsent;
+    }
   | { readonly kind: "not_entitled"; readonly subscriptionId: string; readonly status: string }
   | { readonly kind: "nothing_found" }
   | { readonly kind: "refused"; readonly detail: string };
@@ -126,6 +134,7 @@ export async function reconcileAccount(
         subscriptionId: snapshot.stripeSubscriptionId,
         livemode: snapshot.livemode,
         activated: applied.kind === "applied" && applied.activated === true,
+        analyticsConsent: consentFromStripeMetadata(subscription.metadata),
       }
     : { kind: "not_entitled", subscriptionId: snapshot.stripeSubscriptionId, status: snapshot.status };
 }
