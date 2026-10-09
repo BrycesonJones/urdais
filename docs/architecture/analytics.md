@@ -80,7 +80,7 @@ The success redirect is never treated as payment. See `src/lib/billing/webhook.t
 | Visitor | Browser analytics | Server events (`checkout_started`, `subscription_completed`) |
 | --- | --- | --- |
 | Accepted | full PostHog: persistent anonymous id; identified on sign-in | keyed on the account |
-| Declined | **cookieless**: nothing stored on the device; visitors counted by PostHog's daily server-side hash; never identified | personless |
+| Declined | **cookieless**: no cookie or identifier stored on the device (only the choice itself); visitors counted by PostHog's daily server-side hash; never identified | personless |
 | Not decided, EEA / UK / CH, or country unknown | **nothing** captured, nothing stored, no `/flags` call | personless |
 | Not decided, elsewhere | full PostHog, with the banner offering Decline | keyed on the account |
 | Do Not Track or Global Privacy Control | PostHog never starts | personless |
@@ -212,8 +212,11 @@ payment detail is sent, and person profiles exist for identified users only.
 2. Project settings → Web analytics → **enable "Cookieless server hash mode"**.
    **Without it, every declined visitor's events are dropped at ingestion.**
 3. Project settings → authorized domains: add `https://urdais.com`.
-4. Leave Session replay off. Features that load extra scripts (replay, surveys, web
-   vitals) do nothing while `disable_external_dependency_loading` is set.
+4. Leave Session replay off. Project settings cannot turn client features on:
+   `advanced_disable_flags` also disables PostHog's remote config, so heatmaps, web
+   vitals, dead clicks and exception capture stay off whatever the settings say (the
+   last three also need external scripts, which are disabled). Configure IP storage,
+   GeoIP and retention as in docs/operations/posthog-activation.md.
 5. Optionally filter internal traffic (Urdais operators) by person or IP.
 
 ## Dashboards
