@@ -10,9 +10,7 @@ import {
 } from "@/lib/onboarding/pending-audience";
 import { onboardingHref } from "@/lib/onboarding/routes";
 import { safeReturnTo } from "@/lib/auth/return-to";
-
-export type AudienceFormState = { readonly status: "idle" | "error"; readonly message?: string };
-export const IDLE_AUDIENCE_STATE: AudienceFormState = { status: "idle" };
+import type { AudienceFormState } from "@/app/access/audience/form-state";
 
 function field(formData: FormData, name: string): string {
   const value = formData.get(name);
