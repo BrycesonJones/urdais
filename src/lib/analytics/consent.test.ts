@@ -12,7 +12,18 @@ describe("consentDefaultFor", () => {
   });
 
   it("treats an unknown country as one that asks first", () => {
-    for (const country of [null, undefined, "", "XX1", "unknown"]) expect(consentDefaultFor(country)).toBe("pending");
+    for (const country of [null, undefined, "", "XX1", "unknown", "T1", "A1"]) expect(consentDefaultFor(country)).toBe("pending");
+  });
+
+  it("treats two-letter non-country placeholders as unknown, including Europe-level EU", () => {
+    for (const country of ["XX", "ZZ", "EU", "AP", "eu"]) expect(consentDefaultFor(country), country).toBe("pending");
+  });
+
+  it("covers all 27 EU members, the 3 other EEA states, the UK and Switzerland", async () => {
+    const { PRIOR_CONSENT_COUNTRIES } = await import("@/lib/analytics/consent");
+    const eu27 = ["AT","BE","BG","HR","CY","CZ","DK","EE","FI","FR","DE","GR","HU","IE","IT","LV","LT","LU","MT","NL","PL","PT","RO","SK","SI","ES","SE"];
+    expect(eu27).toHaveLength(27);
+    expect([...PRIOR_CONSENT_COUNTRIES].sort()).toEqual([...eu27, "IS", "LI", "NO", "GB", "CH"].sort());
   });
 });
 

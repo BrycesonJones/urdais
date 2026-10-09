@@ -26,11 +26,12 @@ vi.mock("@/lib/analytics/consent-client", () => ({
 }));
 
 import { ConsentBanner } from "@/components/analytics/consent-banner";
-import { PrivacySettingsItem } from "@/components/analytics/privacy-settings-button";
+import { PrivacySettingsButton, PrivacySettingsItem } from "@/components/analytics/privacy-settings-button";
 
 beforeEach(() => {
   act(() => store.set({ status: "off", explicit: false, preferencesOpen: false }));
   store.chooseConsent.mockReset();
+  store.close.mockReset();
 });
 
 const banner = () => screen.queryByRole("region", { name: "Analytics on Urdais" });
@@ -85,6 +86,38 @@ describe("ConsentBanner", () => {
     render(<ConsentBanner />);
     expect(banner()!.getAttribute("aria-modal")).toBeNull();
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+});
+
+describe("keyboard and screen readers", () => {
+  it("takes focus when opened from Privacy settings, closes on Escape, and gives focus back", () => {
+    act(() => store.set({ status: "granted", explicit: true }));
+    render(
+      <>
+        <PrivacySettingsButton className="c" />
+        <ConsentBanner />
+      </>,
+    );
+    store.close.mockImplementation(() => store.set({ preferencesOpen: false }));
+    const trigger = screen.getByRole("button", { name: "Privacy settings" });
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    trigger.focus();
+    act(() => store.set({ preferencesOpen: true }));
+    const panel = banner()!;
+    expect(document.activeElement).toBe(panel);
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
+    expect(trigger.getAttribute("aria-controls")).toBe(panel.id);
+    act(() => {
+      fireEvent.keyDown(panel, { key: "Escape" });
+    });
+    expect(banner()).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it("does not steal focus on the first ask", () => {
+    act(() => store.set({ status: "pending" }));
+    render(<ConsentBanner />);
+    expect(document.activeElement).toBe(document.body);
   });
 });
 

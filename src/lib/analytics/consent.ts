@@ -49,6 +49,14 @@ export const PRIOR_CONSENT_COUNTRIES: ReadonlySet<string> = new Set([
   "GB", "CH",
 ]);
 
+/**
+ * Two-letter values geolocation databases use for "not a country": unknown (`XX`,
+ * `ZZ`) and region-level fallbacks (`EU` Europe, `AP` Asia/Pacific). They pass the
+ * shape check, so they are listed; each gets the strict default — `EU` because it
+ * means somewhere in Europe.
+ */
+const NOT_A_COUNTRY: ReadonlySet<string> = new Set(["XX", "ZZ", "EU", "AP"]);
+
 export function parseConsentChoice(value: string | null | undefined): ConsentChoice | null {
   return value === "granted" || value === "denied" ? value : null;
 }
@@ -56,7 +64,7 @@ export function parseConsentChoice(value: string | null | undefined): ConsentCho
 /** The default before a choice, from an ISO 3166-1 alpha-2 country code. */
 export function consentDefaultFor(country: string | null | undefined): ConsentDefault {
   const code = country?.trim().toUpperCase() ?? "";
-  if (!/^[A-Z]{2}$/.test(code)) return "pending";
+  if (!/^[A-Z]{2}$/.test(code) || NOT_A_COUNTRY.has(code)) return "pending";
   return PRIOR_CONSENT_COUNTRIES.has(code) ? "pending" : "granted";
 }
 

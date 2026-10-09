@@ -1,6 +1,8 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore, type KeyboardEvent } from "react";
+
+import { CONSENT_PANEL_ID } from "@/components/analytics/privacy-settings-button";
 
 import {
   chooseConsent,
@@ -23,6 +25,8 @@ import {
  *   leave the visitor not knowing what they had agreed to.
  * - It is not modal. It sits over the bottom of the page, and every link and
  *   control on the page keeps working while it is open.
+ * - Opened from "Privacy settings", it takes focus, closes on Escape, and returns
+ *   focus to the control that opened it. The first ask does not steal focus.
  *
  * Shown when there is a decision to make: before a choice (whether the regional
  * default is "nothing yet" or "on, unless you decline"), and whenever the visitor
@@ -35,12 +39,37 @@ import {
  */
 export function ConsentBanner() {
   const view = useSyncExternalStore(subscribeConsent, getConsentView, getServerConsentView);
+  const panelRef = useRef<HTMLElement>(null);
+  const returnFocusTo = useRef<HTMLElement | null>(null);
+
+  // Opened from "Privacy settings": move focus into the panel, so a keyboard or
+  // screen-reader user lands on it rather than having to find it at the bottom of
+  // the page; give focus back to the control that opened it when it closes.
+  useEffect(() => {
+    if (view.preferencesOpen) {
+      returnFocusTo.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      panelRef.current?.focus();
+      return;
+    }
+    const target = returnFocusTo.current;
+    returnFocusTo.current = null;
+    if (target?.isConnected) target.focus();
+  }, [view.preferencesOpen]);
+
   if (!shouldShow(view)) return null;
+
+  function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "Escape" && view.preferencesOpen) closeConsentPreferences();
+  }
 
   const blocked = view.status === "blocked";
 
   return (
     <section
+      ref={panelRef}
+      id={CONSENT_PANEL_ID}
+      tabIndex={-1}
+      onKeyDown={handleKeyDown}
       aria-labelledby="analytics-consent-heading"
       className="fixed inset-x-3 bottom-3 z-50 rounded-lg border border-white/10 bg-[#111111] p-4 text-sm text-neutral-300 shadow-2xl shadow-black/50 sm:inset-x-auto sm:right-4 sm:bottom-4 sm:max-w-md"
     >

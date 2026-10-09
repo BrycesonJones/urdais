@@ -94,7 +94,19 @@ The success redirect is never treated as payment. See `src/lib/billing/webhook.t
   page, the static docs included, render per request. Urdais has no geolocation of its own.
   A missing header (local, non-Vercel) means the conservative default.
 - **The prior-consent list** (EEA, UK, Switzerland) is a product/legal judgement in
-  `PRIOR_CONSENT_COUNTRIES`, not something code can verify.
+  `PRIOR_CONSENT_COUNTRIES`, not something code can verify. A missing or malformed
+  code, and the two-letter placeholders geolocation databases use for "not a
+  country" (`XX`, `ZZ`, and the region-level `EU`, `AP`), all get the strict default.
+- **Trusting the header.** Vercel documents that it overwrites `x-forwarded-for` to
+  prevent spoofing, but says nothing explicit about `x-vercel-ip-country`; it has not
+  been tested against a deployment (previews are behind Vercel Authentication).
+  Check with `vercel curl -H "x-vercel-ip-country: DE" <preview>/api/privacy/consent-default`
+  from outside the EEA: `"granted"` means the client value was ignored. The exposure
+  is limited either way: the header only sets the requesting visitor's *own*
+  pre-choice default, so a spoofed value can opt in only the person sending it.
+- **Consistency:** the region is looked up once per full page load, never on
+  client-side navigation, and a browser already counted under a default-on region
+  keeps its id on later loads.
 - **SDK configuration:** `cookieless_mode: "on_reject"`, verified against posthog-js
   1.438. Pending captures nothing, and pending also *deletes* persisted data, which is
   why a browser already counted by regional default is never cycled through pending
@@ -102,7 +114,12 @@ The success redirect is never treated as payment. See `src/lib/billing/webhook.t
   maps DNT to "rejected", which would make a DNT browser cookieless-*tracked*.
 - **When capture becomes allowed** (accept, decline, or the default-on answer
   arriving), the SDK sends the pageview it held back. Nothing in Urdais sends one by hand.
-- **Changing your mind:** "Privacy settings" in the footer reopens the panel. Declining
+- **Changing your mind:** "Privacy settings" reopens the panel, signed in or not. It is
+  in the site footer, in the map's top-left corner (the map has no footer; no map
+  control uses that corner), and at the foot of the premium onboarding frame
+  (`/access/discover`, `/access/audience`, also footerless). The one footerless page
+  without it is `/auth/status`, the operator diagnostic. Opened from any of them, the
+  panel takes focus, closes on Escape and returns focus to the control. Declining
   after accepting resets PostHog (identity and persisted data) and removes its leftover
   `ph_*` session window ids.
 - **The banner** offers Accept and Decline with identical size and style, has no
@@ -121,8 +138,37 @@ conversion happened.
   moment as Stripe metadata `urdais_analytics_consent` on the Session and the
   Subscription. Billing reads nothing from it. A subscription without it (created
   before this change, or outside Checkout) counts as `not_granted`.
+- On `/access/complete` (reconciliation) the reader's request is available, so the
+  conversion may name the account only if **both** the checkout-time consent and the
+  current request's consent allow it.
 - **Limitation:** consent withdrawn between starting checkout and activation is not
-  seen by that one conversion event.
+  seen by a **webhook** conversion, which has only the checkout-time record. It
+  affects at most that one event.
+
+### What the code cannot settle
+
+These are decisions or facts outside the code. They are recorded here so nobody
+mistakes the implementation for legal advice:
+
+- **Cookieless counting of decliners and of undecided visitors.** PostHog positions
+  cookieless mode as storing nothing on the device. That addresses the ePrivacy
+  storage rule, but GDPR still governs the processing of IP address and user agent
+  to make the daily hash, so it needs a lawful basis (typically legitimate interest)
+  and a privacy-notice entry. Whether counting a visitor who clicked Decline is
+  acceptable is a legal judgement, not a technical one. Turning it off means
+  `cookieless_mode` is removed and declined visitors send nothing.
+- **Default-on outside the EEA/UK/CH.** Some US states give users an opt-out right
+  that Global Privacy Control must honour (handled: PostHog never starts), and other
+  jurisdictions (e.g. Brazil, Canada, Quebec, South Korea, India) have their own
+  rules. The list treats them as default-on; extend `PRIOR_CONSENT_COUNTRIES` if
+  counsel says otherwise.
+- **IP geolocation is approximate.** VPNs and travel put visitors in the wrong
+  region. An EEA resident on a US VPN gets the US default; the banner still offers
+  Decline.
+- **PostHog as processor.** A data processing agreement with PostHog, and EU-hosted
+  ingestion (`https://eu.i.posthog.com`) if wanted, are account-level decisions.
+- **The privacy policy** must describe all of this. Urdais has no privacy-policy page
+  in this repository.
 
 ## Identity
 
