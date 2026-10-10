@@ -21,8 +21,7 @@ Each step is a gate: do not start one until the previous is done.
 - [ ] Every "To confirm" item in the privacy policy answered (legal entity and address,
       privacy contact, retention periods, auth email provider, DPAs, legal bases,
       minimum age, change notification, the no-ads/no-sale commitment).
-- [ ] Account-deletion handling for analytics chosen (§ Account deletion): manual for
-      now, or the automated design approved.
+- [ ] Automated analytics erasure on account deletion is merged (§ Account deletion).
 
 ### 2. Finalize and publish the privacy policy
 
@@ -102,13 +101,21 @@ server; neither is built.
 
 ### 8. Set the variables in Vercel Production
 
-Project → Settings → Environment Variables, **Production scope only**:
+Project → Settings → Environment Variables, **Production scope only**. Set the
+erasure credentials **first**: from the moment analytics is on, account deletions
+wait for them.
 
-- `NEXT_PUBLIC_POSTHOG_KEY` = the project key (`phc_…`). Never a personal key
-  (`phx_…`); the code refuses one.
-- `NEXT_PUBLIC_POSTHOG_HOST` = the ingestion host, e.g. `https://eu.i.posthog.com`.
+1. `POSTHOG_PERSONAL_API_KEY` — a **personal** API key created in PostHog (Settings →
+   Personal API keys) with the **`person:write`** scope only, limited to this project.
+   Server-only secret: never `NEXT_PUBLIC_`.
+2. `POSTHOG_PROJECT_ID` — the numeric project id (Project settings → General).
+3. `NEXT_PUBLIC_POSTHOG_KEY` — the project key (`phc_…`). Never a personal key; the
+   code refuses one.
+4. `NEXT_PUBLIC_POSTHOG_HOST` — the ingestion host, e.g. `https://eu.i.posthog.com`.
 
-Not Preview or Development: preview traffic would be counted as visitors.
+Not Preview or Development: preview traffic would be counted as visitors. Keep the
+erasure credentials for as long as PostHog may hold Urdais data, even if analytics is
+later turned off.
 
 ### 9. Fresh production deployment
 
@@ -132,7 +139,10 @@ Fastest first:
 
 1. **Vercel Instant Rollback** to the production deployment built before the
    variables existed. Immediate; that build contains no key, so nothing initialises.
-2. Remove both variables from Production and redeploy, so the next build is inert too.
+2. Remove the two `NEXT_PUBLIC_POSTHOG_*` variables from Production and redeploy, so
+   the next build is inert too. **Keep `POSTHOG_PERSONAL_API_KEY` and
+   `POSTHOG_PROJECT_ID`**: PostHog still holds data, and account deletions must still
+   erase it.
 3. If data that should not have been collected was ingested: delete it in PostHog
    (§ Account deletion for persons; events by filter in the UI) and record what
    happened.
@@ -197,62 +207,76 @@ hashing. Hence decline = nothing.
 
 ## Account deletion and analytics
 
-### What happens today
+### What happens on deletion
 
 | Data | On account deletion |
 | --- | --- |
-| Supabase Auth user | deleted (`auth.admin.deleteUser`) |
-| Urdais account (`identity.accounts`), role answer, entitlement | deleted (cascade) |
+| Supabase Auth user | deleted |
+| Urdais account, role answer, entitlement | deleted (cascade) |
 | Billing rows | retained, detached from the account |
-| `identity.account_deletions` | retained; `account_id` and `auth_subject` **nulled at `complete`** |
 | Stripe Customer | retained; `urdais_account_id` metadata unset |
-| Stripe subscriptions | cancelled; their `urdais_account_id` metadata cannot be edited and **remains** |
+| Stripe subscriptions | cancelled; their `urdais_account_id` metadata cannot be edited and remains |
+| PostHog person: profile, merged anonymous ids, person properties | **deletion requested** (`bulk_delete` by the account id) within about a day; PostHog removes it shortly after accepting |
+| PostHog events of that person, browser and consented server events | **queued for deletion** (`delete_events`); PostHog runs it asynchronously, off-peak (typically weekends). Urdais records that PostHog **accepted** the request, not that every event is gone |
 | PostHog identity on the deleting browser | reset (`/account/deleted`) |
-| PostHog identity on other browsers the account signed in on | **remains** until that browser reaches a page that resets it (any `/access` page) or signs out; until then its events keep the account id as distinct id |
-| PostHog person (profile, merged anonymous ids, person properties) | **remains** |
-| PostHog events keyed on the account (browser and consented server events) | **remain** |
+| PostHog identity on other browsers the account was signed in on | reset the next time PostHog starts there (within ten minutes for an open tab that reloads), before anything is sent: the identity check below |
 | Anonymous counts, cookieless events | nothing to delete: no identifier |
+| `identity.account_deletions` | held at `auth_deleted` (account id kept) until PostHog accepts; then `complete`, identifiers nulled |
 
-So deleting an account **does** leave an analytics profile and a pseudonymous event
-history. For a former subscriber it stays linkable through the Stripe subscription
-metadata above.
+### How it works (`src/lib/account/analytics-erasure.ts`)
 
-### Manual procedure (available now)
+1. The workflow deletes billing, the account and the Supabase user exactly as before
+   and reaches `auth_deleted`. The reader is told the deletion is done.
+2. If this deployment uses PostHog (analytics configured, or erasure credentials
+   present) the record is **held**: lease released, `last_error =
+   'analytics_erasure_pending'`, account id kept. Otherwise it completes at once, as
+   before.
+3. `/api/cron/analytics-erasure` (daily, 12:30 UTC) takes every record held for **at
+   least an hour**, oldest first, leases it, and asks PostHog to delete the person by
+   the account id and queue its events. The hour matters: PostHog deletes only events
+   **captured before** the request, so requesting at the moment of deletion would race
+   the reader's last events still being ingested, and they would recreate the person.
+4. Accepted (202): the deletion completes and drops the identifiers. Anything else:
+   released with `analytics_erasure_failed` or `analytics_erasure_unconfigured`,
+   account id kept, retried the next day. The route answers **500 while any remain
+   held**, so an outage or a missing key shows in the cron log every day. It also
+   completes any record left at `auth_deleted` for other reasons.
+5. "Complete" means PostHog **accepted** the erasure request. Event deletion then runs
+   on PostHog's schedule; Urdais neither waits for nor claims it. Confirm it in
+   PostHog if a specific request needs evidence.
 
-1. The request must be handled **before** the Urdais account deletion completes:
-   after `complete`, nothing in Urdais maps the person to a PostHog distinct id.
-2. Find the account id (`identity.accounts.id`) for the requester's verified email.
-3. With a personal API key scoped to `person:write` in the shell (never committed):
-   `npm run analytics:erase -- --account <uuid>` (dry run), then add `--execute`.
-4. It calls `POST /api/projects/{id}/persons/bulk_delete/` with
-   `{ distinct_ids: [<uuid>], delete_events: true }` (PostHog's server source:
-   `PersonViewSet.bulk_delete`, scope `person:write`, at most 1,000 ids, 202 Accepted).
-   That deletes the **person** — profile and every merged distinct id, so anonymous
-   activity from before sign-in on an identified browser too — and **queues** its
-   **events** for asynchronous deletion. Profile deletion and event deletion are
-   separate operations in PostHog; `delete_events` is what requests the second.
-5. Then let the account deletion proceed. Billing records are untouched by this.
+Properties:
 
-Verify the endpoint against a test project before first use (*the `/api/projects/`
-prefix is from PostHog's documentation and source, not yet exercised*).
+- **Where the request lives:** the existing `identity.account_deletions` row (state
+  `auth_deleted`, `account_id` kept, `last_error` the reason). Ordinary Postgres
+  state: it survives deployments and restarts. No new table or migration.
+- **Discovery:** the cron selects `state = 'auth_deleted'` rows older than an hour.
+- **Never discarded early:** the row becomes `complete` only after PostHog answers 202.
+  A crash mid-attempt leaves it at `auth_deleted`; its 2-minute lease simply expires.
+- **Idempotent:** the lease admits one attempt at a time; a completed row can never be
+  leased again; if completing fails after PostHog accepted, the retry asks again and
+  PostHog does not duplicate an already-queued person deletion.
+- **Batch:** 50 per run, oldest first.
+- **Authenticated:** `Authorization: Bearer $CRON_SECRET`, compared in constant time;
+  every request is refused (401) when `CRON_SECRET` is unset.
+- The key never leaves the server and is never logged; only codes and counts are
+  logged, never an account id. Deletion never waits on PostHog.
 
-### Automated design (not implemented; needs approval)
+### Other signed-in browsers (`GET /api/analytics/identity`)
 
-- **Where:** inside the existing workflow, between `auth_deleted` and `complete`,
-  while the account id is still held. On success, complete as today.
-- **Never blocks deletion:** the reader's account and sign-in are already gone at
-  `auth_deleted`; the reader is told the deletion is done.
-- **Never loses the request:** if PostHog fails, the row stays at `auth_deleted` with
-  `last_error = 'posthog_erasure_failed'` (fits the existing code constraint), keeping
-  the account id. The existing states and columns suffice: **no migration**.
-- **Retry:** a new cron route that leases rows at `auth_deleted` and retries erasure.
-  A new endpoint and schedule — needs approval.
-- **Credentials:** `POSTHOG_PERSONAL_API_KEY` (scope `person:write` only) and
-  `POSTHOG_PROJECT_ID`, server-only, in Vercel Production.
-- **Unknown:** whether the persons API has plan restrictions *(not stated in the
-  sources found)*.
-- Built and tested now, unwired: `src/lib/analytics/erasure.ts` and the operator
-  script.
+A browser PostHog has identified keeps the account id across visits. Before PostHog
+starts on such a browser, the browser asks `/api/analytics/identity` which account the
+current session belongs to (no input; null without a session cookie; never provisions
+an account). If the answer is not that id — account deleted, signed out elsewhere,
+session ended, or the check failed — PostHog starts already reset, so nothing is sent
+under the old id and an erased person is not recreated. A matching answer is cached in
+the tab for ten minutes.
+
+### Manual erasure
+
+For a request to erase analytics **without** deleting the account, or to check a
+held record by hand: `npm run analytics:erase -- --account <uuid>` (dry run), then add
+`--execute`. Needs the same two credentials in the shell.
 
 ## Verification
 
@@ -289,6 +313,18 @@ and a private window per scenario. Live PostHog is required for all of it.
 - [ ] `subscription_completed`: never a live test payment. Wait for a genuine
       subscription, or use a preview deployment with Stripe test mode and its own
       PostHog project. Exactly one per activation however many webhooks arrive.
+
+**Account deletion** (with a test account; no live payment):
+
+- [ ] With analytics accepted, sign in, browse, delete the account. The record waits at
+      `auth_deleted` (`analytics_erasure_pending`) until the next cron run at least an
+      hour later.
+- [ ] After that run: `identity.account_deletions` for it reaches `complete`, and the
+      PostHog person with that distinct id disappears shortly after. Its events are
+      deleted later, on PostHog's schedule.
+- [ ] The cron log for `/api/cron/analytics-erasure` shows `held 0` and a 200.
+- [ ] A second browser that was signed in to the same account sends its next events
+      under a new anonymous id, not the account id.
 
 **Payloads**
 

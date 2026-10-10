@@ -240,7 +240,87 @@ function syncAtLoad(): void {
   });
 }
 
-function init(config: AnalyticsConfig): void {
+/* ------------------------------------------------- stored identity check */
+
+/**
+ * The sessionStorage key recording that this tab recently confirmed its PostHog
+ * identity against the session: `<account id> <epoch ms>`. A short-lived cache of a
+ * yes, so the check runs at most once per `IDENTITY_RECHECK_MS` per tab — and a tab
+ * that verified before its account was deleted elsewhere re-checks soon after.
+ */
+const IDENTITY_VERIFIED_KEY = "urdais_analytics_identity_verified";
+export const IDENTITY_RECHECK_MS = 10 * 60 * 1000;
+
+/**
+ * The account id a browser PostHog has identified, read from PostHog's own
+ * persistence (`ph_<key>_posthog`, cookie or localStorage) before PostHog starts.
+ * Null for an anonymous or never-seen browser.
+ */
+export function storedIdentifiedId(key: string): string | null {
+  const name = `ph_${key}_posthog`;
+  const candidates: string[] = [];
+  try {
+    const entry = document.cookie.split("; ").find((part) => part.startsWith(`${name}=`));
+    if (entry) candidates.push(decodeURIComponent(entry.slice(name.length + 1)));
+  } catch {
+    // Unreadable cookie: try storage.
+  }
+  try {
+    const stored = window.localStorage.getItem(name);
+    if (stored) candidates.push(stored);
+  } catch {
+    // Storage unavailable.
+  }
+  for (const raw of candidates) {
+    try {
+      const data = JSON.parse(raw) as { distinct_id?: unknown; $user_state?: unknown };
+      if (data.$user_state === "identified" && typeof data.distinct_id === "string") return data.distinct_id;
+    } catch {
+      // Not PostHog's JSON.
+    }
+  }
+  return null;
+}
+
+function verifiedInThisTab(): string | null {
+  try {
+    const [accountId, at] = (window.sessionStorage.getItem(IDENTITY_VERIFIED_KEY) ?? "").split(" ");
+    if (!accountId || !(Date.now() - Number(at) < IDENTITY_RECHECK_MS)) return null;
+    return accountId;
+  } catch {
+    return null;
+  }
+}
+
+/** Record that this tab's identity is the session's. Called after a check, and after `identify()`. */
+export function markIdentityVerified(accountId: string): void {
+  try {
+    window.sessionStorage.setItem(IDENTITY_VERIFIED_KEY, `${accountId} ${Date.now()}`);
+  } catch {
+    // Unavailable: the next page load checks again.
+  }
+}
+
+export function forgetVerifiedIdentity(): void {
+  try {
+    window.sessionStorage.removeItem(IDENTITY_VERIFIED_KEY);
+  } catch {
+    // Nothing to forget.
+  }
+}
+
+/** Does the server agree this browser's stored identity is the current session's account? Failure is no. */
+async function identityStillCurrent(accountId: string): Promise<boolean> {
+  try {
+    const response = await fetch("/api/analytics/identity", { cache: "no-store" });
+    const body = (await response.json()) as { accountId?: unknown };
+    return body.accountId === accountId;
+  } catch {
+    return false;
+  }
+}
+
+function init(config: AnalyticsConfig, options: { resetFirst?: boolean } = {}): void {
   posthog.init(config.key, {
     api_host: config.host,
     defaults: "2026-08-30",
@@ -259,6 +339,13 @@ function init(config: AnalyticsConfig): void {
     before_send: redactSensitiveUrls,
     loaded: () => {
       try {
+        // A stale identity (deleted account, signed out elsewhere, session ended):
+        // drop it before anything is captured. `syncAtLoad` then re-applies consent,
+        // which `reset()` clears, and the first pageview goes out anonymous.
+        if (options.resetFirst) {
+          posthog.reset();
+          forgetVerifiedIdentity();
+        }
         syncAtLoad();
       } catch {
         // Leave PostHog at its own default, which for a visitor with no stored
@@ -287,6 +374,17 @@ export function startAnalytics(): void {
       void fetchRegionDefault().then((regionDefault) => {
         if (regionDefault === "granted" && readChoice() === "denied") init(config);
         else removeLeftoverStorage();
+      });
+      return;
+    }
+    // An identified browser: confirm (at most every few minutes per tab) that the
+    // identity still belongs to the current session before PostHog sends anything
+    // under it.
+    const identified = storedIdentifiedId(config.key);
+    if (identified && verifiedInThisTab() !== identified) {
+      void identityStillCurrent(identified).then((current) => {
+        if (current) markIdentityVerified(identified);
+        init(config, { resetFirst: !current });
       });
       return;
     }

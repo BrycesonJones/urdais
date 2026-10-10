@@ -11,7 +11,12 @@
 
 import posthog from "posthog-js";
 
-import { identificationAllowed, reapplyConsentAfterReset } from "@/lib/analytics/consent-client";
+import {
+  forgetVerifiedIdentity,
+  identificationAllowed,
+  markIdentityVerified,
+  reapplyConsentAfterReset,
+} from "@/lib/analytics/consent-client";
 import type { AnalyticsEventName } from "@/lib/analytics/events";
 
 type Properties = Readonly<Record<string, string | number | boolean | null>>;
@@ -49,6 +54,8 @@ export function identifyAccount(accountId: string): void {
   try {
     if (!identificationAllowed()) return;
     if (posthog.get_distinct_id() !== accountId) posthog.identify(accountId);
+    // The server just told this page who the reader is: no need to re-check this tab.
+    markIdentityVerified(accountId);
   } catch {
     // Never surfaced.
   }
@@ -66,6 +73,7 @@ export function resetIdentity(): void {
   try {
     if (posthog.get_property("$user_state") !== "identified") return;
     posthog.reset();
+    forgetVerifiedIdentity();
     // `reset()` also clears PostHog's consent flag. Signing out must not change
     // the visitor's analytics choice, so it is put back.
     reapplyConsentAfterReset();

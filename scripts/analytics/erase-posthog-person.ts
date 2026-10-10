@@ -9,10 +9,10 @@
  *   POSTHOG_PROJECT_ID         the numeric project id
  *   NEXT_PUBLIC_POSTHOG_HOST   the project's ingestion host (us./eu.i.posthog.com)
  *
- * The account id must be found BEFORE the Urdais account deletion completes: the
- * workflow nulls it in identity.account_deletions at `complete`, after which
- * nothing in Urdais maps a person to a PostHog distinct id. See
- * docs/operations/posthog-activation.md § Account deletion and analytics.
+ * Account deletion erases automatically (src/lib/account/analytics-erasure.ts).
+ * This tool is for erasing analytics WITHOUT deleting the account, or for checking
+ * a held deletion by hand. See docs/operations/posthog-activation.md § Account
+ * deletion and analytics.
  */
 
 import { erasePostHogPerson, erasureConfig, erasureRequest } from "@/lib/analytics/erasure";

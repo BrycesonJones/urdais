@@ -186,6 +186,15 @@ server render `<AnalyticsIdentity accountId=… />`:
 | `/account/deleted` | reset |
 | Sign-out (`SignOutForm` on `/account`) | reset on submit, then re-apply the visitor's consent (`reset()` clears it) |
 
+**Stale identities.** Before PostHog starts on a browser it previously identified,
+the browser asks `GET /api/analytics/identity` which account the current session
+belongs to, at most every ten minutes per tab. Anything but that same id (account
+deleted, signed out elsewhere, session ended, the check failing) and PostHog starts
+already reset, so nothing is sent under the old id. On account deletion Urdais requests
+deletion of the PostHog person and its events (PostHog runs the event deletion
+asynchronously): docs/operations/posthog-activation.md § Account deletion and
+analytics.
+
 Every sign-in lands on one of the identifying pages. With consent, the browser is
 identified on the first page after sign-in and PostHog merges its anonymous history;
 a reader who accepts later is identified then. The distinct id is

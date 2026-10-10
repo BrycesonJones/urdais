@@ -9,10 +9,12 @@ const posthog = vi.hoisted(() => ({
   get_property: vi.fn((): unknown => "anonymous"),
 }));
 vi.mock("posthog-js", () => ({ default: posthog }));
-const consent = vi.hoisted(() => ({ allowed: true, reapply: vi.fn() }));
+const consent = vi.hoisted(() => ({ allowed: true, reapply: vi.fn(), verified: vi.fn(), forget: vi.fn() }));
 vi.mock("@/lib/analytics/consent-client", () => ({
   identificationAllowed: () => consent.allowed,
   reapplyConsentAfterReset: consent.reapply,
+  markIdentityVerified: consent.verified,
+  forgetVerifiedIdentity: consent.forget,
 }));
 
 import { identifyAccount, resetIdentity, track } from "@/lib/analytics/client";
@@ -24,6 +26,8 @@ beforeEach(() => {
   posthog.get_property.mockReturnValue("anonymous");
   consent.allowed = true;
   consent.reapply.mockReset();
+  consent.verified.mockReset();
+  consent.forget.mockReset();
 });
 
 describe("when PostHog never loaded (no key, dev, tests, an ad blocker)", () => {
@@ -56,6 +60,14 @@ describe("identity", () => {
     posthog.get_distinct_id.mockReturnValue("acct_1");
     identifyAccount("acct_1");
     expect(posthog.identify).toHaveBeenCalledOnce();
+  });
+
+  it("marks the tab verified after identifying, and forgets it on sign-out", () => {
+    identifyAccount("acct_1");
+    expect(consent.verified).toHaveBeenCalledWith("acct_1");
+    posthog.get_property.mockReturnValue("identified");
+    resetIdentity();
+    expect(consent.forget).toHaveBeenCalledOnce();
   });
 
   it("never identifies without analytics consent", () => {

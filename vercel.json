@@ -52,6 +52,10 @@
     {
       "path": "/api/cron/uepi",
       "schedule": "45 10 * * *"
+    },
+    {
+      "path": "/api/cron/analytics-erasure",
+      "schedule": "30 12 * * *"
     }
   ]
 }

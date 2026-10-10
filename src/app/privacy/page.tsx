@@ -235,11 +235,16 @@ export default function PrivacyPolicyRoute() {
               <li><strong>Hosting logs</strong>: <Todo>Vercel log retention</Todo></li>
             </ul>
             <p>
-              Deleting your account does not yet automatically delete the analytics associated with it. If you want
-              that deleted too, contact us <em>before</em> deleting your account: once the deletion completes, we no
-              longer hold the identifier that links your analytics to you. Deleting it removes your PostHog profile
-              and queues its events for deletion, which PostHog carries out asynchronously.{" "}
-              <Todo>whether to automate this, and the response time for requests</Todo>
+              Deleting your account also deletes the analytics associated with it. We ask PostHog to delete the
+              profile linked to your account, together with its events, including activity from before you signed in
+              on a browser that was then linked to your account. We make that request within about a day of the
+              deletion, once your last visits have been recorded; PostHog then removes the profile shortly afterwards
+              and deletes the events on its own schedule. If PostHog cannot be reached, we keep retrying daily and hold
+              only the internal identifier needed to do so, until PostHog accepts the request. Visits that were never linked to your account
+              (cookieless counts, or anonymous browsing on a browser where you never signed in) carry no identifier
+              and cannot be traced to you. Other browsers where you were signed in stop using your identifier within
+              minutes of loading the site again.{" "}
+              <Todo>expected completion time to state publicly</Todo>
             </p>
           </Section>
 

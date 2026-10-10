@@ -25,7 +25,12 @@
  *   4. Stripe Customer metadata detached; account row deleted (billing rows
  *                     detach, entitlement cascades) -> local_cleanup_complete.
  *   5. Supabase Auth user deleted -> auth_deleted.
- *   6. complete       identifiers nulled.
+ *   6. complete       identifiers nulled. Where analytics is in use, only once
+ *                     PostHog has accepted the erasure of the account's analytics;
+ *                     until then the record waits at `auth_deleted`, holding the
+ *                     account id, and is settled by the daily cron at least an hour
+ *                     later (see `./analytics-erasure`). The reader's deletion is
+ *                     done either way.
  *
  *   - Never report success while a subscription can still bill: `complete` is only
  *     reachable through stage 2's verified termination.
@@ -36,6 +41,7 @@
  * Customer, subscriptions and Auth user are all resolved server-side.
  */
 
+import { analyticsErasureRequired, ERASURE_PENDING } from "@/lib/account/analytics-erasure";
 import { resolveSupabaseIdentity } from "@/lib/auth/identity";
 import { authAdminAvailability, deleteAuthUser } from "@/lib/auth/admin";
 import { resolveUrdaisAccount, SUPABASE_AUTH_PROVIDER } from "@/lib/auth/accounts";
@@ -200,6 +206,14 @@ async function advance(sql: TokenSqlExecutor, start: DeletionRecord): Promise<De
 
     // ---------------------------------------------------- 6. complete
     if (record.state === "auth_deleted") {
+      if (analyticsErasureRequired()) {
+        // Hold the account id until PostHog has accepted the erasure. Released with a
+        // code so the record reads as waiting, not stuck. The daily cron settles it
+        // once the reader's last events have been ingested. Nothing here waits on
+        // PostHog.
+        await releaseLease(sql, record.id, ERASURE_PENDING);
+        return { kind: "complete" };
+      }
       await completeDeletion(sql, record.id);
     }
     return { kind: "complete" };
