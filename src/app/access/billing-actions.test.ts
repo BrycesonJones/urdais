@@ -100,11 +100,11 @@ describe("startCheckoutAction and checkout_started", () => {
   });
 
   it("passes a refusal through to both the event and the Session", async () => {
-    requestAnalyticsConsent.mockResolvedValue("not_granted");
+    requestAnalyticsConsent.mockResolvedValue("none");
     startCheckout.mockResolvedValue({ kind: "redirect", url: "https://checkout.stripe.com/c/pay/cs_1", accountId: "acct_1" });
     await expect(start()).rejects.toThrow("NEXT_REDIRECT");
-    expect(startCheckout).toHaveBeenCalledWith("/markets/power-analytics", "not_granted");
-    expect(recordCheckoutStarted).toHaveBeenCalledWith("acct_1", "/markets/power-analytics", "not_granted");
+    expect(startCheckout).toHaveBeenCalledWith("/markets/power-analytics", "none");
+    expect(recordCheckoutStarted).toHaveBeenCalledWith("acct_1", "/markets/power-analytics", "none");
   });
 
   it("records nothing when checkout was refused or unavailable", async () => {

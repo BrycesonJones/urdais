@@ -169,12 +169,32 @@ describe("a stored choice", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 
-  it("applies a refusal as cookieless, after clearing anything stored", () => {
+  it("a refusal in a prior-consent region never starts PostHog at all", async () => {
+    regionDefault = "pending";
+    setCookie("denied");
+    startAnalytics();
+    await flush();
+    expect(fake.api.init).not.toHaveBeenCalled();
+    expect(fake.calls).toEqual([]);
+    expect(getConsentView()).toMatchObject({ status: "denied", explicit: true, regionDefault: "pending" });
+  });
+
+  it("a refusal where the region lookup fails is treated as prior-consent: PostHog never starts", async () => {
+    regionDefault = "error";
+    setCookie("denied");
+    startAnalytics();
+    await flush();
+    expect(fake.api.init).not.toHaveBeenCalled();
+  });
+
+  it("a refusal in a default-on region starts PostHog cookieless, after clearing anything stored", async () => {
+    regionDefault = "granted";
     fake.state.consent = "granted";
     setCookie("denied");
     startAnalytics();
+    expect(fake.api.init).not.toHaveBeenCalled(); // waits for the region
+    await flush();
     expect(fake.calls).toEqual(["init", "reset", "opt_out"]);
-    expect(getConsentView()).toMatchObject({ status: "denied", explicit: true });
     expect(identificationAllowed()).toBe(false);
   });
 });
@@ -190,28 +210,72 @@ describe("choosing", () => {
     expect(getConsentView()).toMatchObject({ status: "granted", explicit: true, preferencesOpen: false });
   });
 
-  it("declining from pending goes cookieless, without a manual pageview", async () => {
+  it("EEA: declining from pending collects nothing — no opt-out, so no cookieless counting", async () => {
+    regionDefault = "pending";
     startAnalytics();
     await flush();
     chooseConsent("denied");
     expect(document.cookie).toContain("urdais_analytics_consent=denied");
+    expect(fake.api.opt_out_capturing).not.toHaveBeenCalled();
+    expect(fake.state.consent).toBe("pending"); // the SDK state that captures and stores nothing
+    expect(fake.api.capture).not.toHaveBeenCalled();
+  });
+
+  it("default-on region: declining goes cookieless, without a manual pageview", async () => {
+    regionDefault = "granted";
+    startAnalytics();
+    await flush();
+    chooseConsent("denied");
     expect(fake.calls.slice(-2)).toEqual(["reset", "opt_out"]);
     expect(fake.api.capture).not.toHaveBeenCalled();
   });
 
-  it("declining after accepting clears identity and stored data, including PostHog's session window ids", () => {
+  it("EEA withdrawal: accepted then declined clears identity and storage and does not go cookieless", async () => {
     // sessionStorage only: jsdom's localStorage is unusable under this Node, and the
     // real-browser check covers localStorage.
     sessionStorage.setItem("ph_phc_test_window_id", "w");
     sessionStorage.setItem("unrelated", "kept");
+    regionDefault = "pending";
     setCookie("granted");
     startAnalytics();
-    openConsentPreferences();
+    openConsentPreferences(); // learns the region
+    await flush();
     chooseConsent("denied");
-    expect(fake.calls.slice(-2)).toEqual(["reset", "opt_out"]);
+    expect(fake.calls.slice(-1)).toEqual(["reset"]);
+    expect(fake.api.opt_out_capturing).not.toHaveBeenCalled();
+    expect(fake.state.consent).toBe("pending");
     expect(getConsentView().preferencesOpen).toBe(false);
     expect(sessionStorage.getItem("ph_phc_test_window_id")).toBeNull();
     expect(sessionStorage.getItem("unrelated")).toBe("kept");
+  });
+
+  it("withdrawal before the region is known takes the conservative path", () => {
+    setCookie("granted");
+    startAnalytics(); // no region lookup for a stored acceptance
+    chooseConsent("denied");
+    expect(fake.api.opt_out_capturing).not.toHaveBeenCalled();
+    expect(fake.state.consent).toBe("pending");
+  });
+
+  it("default-on withdrawal: accepted then declined goes cookieless", async () => {
+    regionDefault = "granted";
+    setCookie("granted");
+    startAnalytics();
+    openConsentPreferences();
+    await flush();
+    chooseConsent("denied");
+    expect(fake.calls.slice(-2)).toEqual(["reset", "opt_out"]);
+  });
+
+  it("EEA: accepting after a refusal starts PostHog then, and the SDK counts this page", async () => {
+    regionDefault = "pending";
+    setCookie("denied");
+    startAnalytics();
+    await flush();
+    expect(fake.api.init).not.toHaveBeenCalled();
+    chooseConsent("granted");
+    expect(fake.calls).toEqual(["init", "opt_in:false"]);
+    expect(getConsentView()).toMatchObject({ status: "granted", explicit: true });
   });
 
   it("re-applies the choice after a sign-out reset clears it", () => {
@@ -221,5 +285,16 @@ describe("choosing", () => {
     reapplyConsentAfterReset();
     expect(fake.calls.slice(-2)).toEqual(["reset", "opt_in:false"]);
     expect(fake.state.consent).toBe("granted");
+  });
+
+  it("sign-out keeps an EEA refusal silent", async () => {
+    regionDefault = "pending";
+    startAnalytics();
+    await flush();
+    chooseConsent("denied");
+    fake.api.reset();
+    reapplyConsentAfterReset();
+    expect(fake.api.opt_out_capturing).not.toHaveBeenCalled();
+    expect(fake.state.consent).toBe("pending");
   });
 });

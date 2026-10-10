@@ -40,7 +40,7 @@ function field(formData: FormData, name: string): string {
 export async function startCheckoutAction(_previous: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const returnTo = safeReturnTo(field(formData, "returnTo"));
 
-  // Analytics only. Never throws; anything unclear is "not_granted".
+  // Analytics only. Never throws; anything unclear is "none".
   const analyticsConsent = await requestAnalyticsConsent();
   const outcome = await startCheckout(returnTo, analyticsConsent);
 

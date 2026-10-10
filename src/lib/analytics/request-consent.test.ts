@@ -22,7 +22,7 @@ describe("requestAnalyticsConsent", () => {
     jar.headers.set("x-vercel-ip-country", "US");
     expect(await requestAnalyticsConsent()).toBe("granted");
     jar.headers.set("x-vercel-ip-country", "DE");
-    expect(await requestAnalyticsConsent()).toBe("not_granted");
+    expect(await requestAnalyticsConsent()).toBe("none");
   });
 
   it("honours the explicit cookie, and DNT / Sec-GPC over everything", async () => {
@@ -30,13 +30,23 @@ describe("requestAnalyticsConsent", () => {
     jar.cookies.set("urdais_analytics_consent", "granted");
     expect(await requestAnalyticsConsent()).toBe("granted");
     jar.headers.set("sec-gpc", "1");
-    expect(await requestAnalyticsConsent()).toBe("not_granted");
+    expect(await requestAnalyticsConsent()).toBe("none");
   });
 
-  it("is not_granted with no country and no cookie, and when it cannot read the request", async () => {
-    expect(await requestAnalyticsConsent()).toBe("not_granted");
+  it("is none with no country and no cookie, and when it cannot read the request", async () => {
+    expect(await requestAnalyticsConsent()).toBe("none");
     jar.fail = true;
-    expect(await requestAnalyticsConsent()).toBe("not_granted");
+    expect(await requestAnalyticsConsent()).toBe("none");
+  });
+});
+
+describe("a refusal", () => {
+  it("is an anonymous count in a default-on region and nothing in a prior-consent one", async () => {
+    jar.cookies.set("urdais_analytics_consent", "denied");
+    jar.headers.set("x-vercel-ip-country", "US");
+    expect(await requestAnalyticsConsent()).toBe("anonymous");
+    jar.headers.set("x-vercel-ip-country", "IE");
+    expect(await requestAnalyticsConsent()).toBe("none");
   });
 });
 

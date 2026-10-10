@@ -78,7 +78,8 @@
     "grid-buildout:ingest": "tsx scripts/grid-buildout/ingest.ts",
     "map:equinix": "tsx scripts/map/equinix-manual.ts",
     "map:equinix:recover": "tsx scripts/map/equinix-precision-recovery.ts",
-    "billing:setup": "tsx scripts/billing/stripe-setup.ts"
+    "billing:setup": "tsx scripts/billing/stripe-setup.ts",
+    "analytics:erase": "tsx scripts/analytics/erase-posthog-person.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

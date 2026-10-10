@@ -94,14 +94,14 @@ describe("what the server decides", () => {
     });
   });
 
-  it("records the reader's analytics consent on the Session and the Subscription, defaulting to not_granted", async () => {
+  it("records the reader's analytics consent on the Session and the Subscription, defaulting to none", async () => {
     await startCheckout("/markets/power-analytics", "granted");
     const granted = sessionsCreate.mock.calls.at(-1)?.[0];
     expect(granted.metadata.urdais_analytics_consent).toBe("granted");
     expect(granted.subscription_data.metadata.urdais_analytics_consent).toBe("granted");
 
     await startCheckout("/markets/power-analytics");
-    expect(sessionsCreate.mock.calls.at(-1)?.[0].metadata.urdais_analytics_consent).toBe("not_granted");
+    expect(sessionsCreate.mock.calls.at(-1)?.[0].metadata.urdais_analytics_consent).toBe("none");
   });
 
   it("carries the account id to Stripe in metadata the server wrote", async () => {

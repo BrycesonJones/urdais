@@ -297,7 +297,7 @@ describe("the lifecycle", () => {
     expect(outcome).toMatchObject({
       kind: "processed",
       // No consent recorded at checkout: the conversion may not name the account.
-      activation: { accountId: "acct_1", subscriptionId: "sub_1", livemode: false, consent: "not_granted" },
+      activation: { accountId: "acct_1", subscriptionId: "sub_1", livemode: false, consent: "none" },
     });
   });
 

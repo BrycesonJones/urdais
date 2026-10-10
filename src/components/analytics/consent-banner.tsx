@@ -88,8 +88,10 @@ export function ConsentBanner() {
           <p className="mt-2">
             We use analytics to understand which pages and data products are useful. If you accept, a cookie
             remembers this browser between visits, and if you sign in, your activity is linked to your Urdais
-            account. If you decline, visits are still counted, but without cookies or any identifier stored on your
-            device; only your choice is remembered.
+            account.{" "}
+            {view.regionDefault === "granted"
+              ? "If you decline, visits are still counted, but without cookies or any identifier stored on your device; only your choice is remembered."
+              : "If you decline, no analytics are collected from this browser; only your choice is remembered."}
           </p>
           {view.status === "granted" && !view.explicit ? (
             <p className="mt-2 text-neutral-400">Analytics is on by default where you are. You can decline it here.</p>

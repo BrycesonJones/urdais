@@ -99,13 +99,16 @@ export function captureServerEvent(input: ServerEvent): void {
 /**
  * Who a server event is about.
  *
- * With consent, the account: the same distinct id the browser identified with, so
- * the event joins the reader's history. Without it, nobody: a fresh random
- * distinct id and person processing off, so PostHog counts that the event
- * happened and can attach it to no one. Nothing derived from the account or the
- * subscription is sent in that case — a hash of either is still an identifier.
+ * - `granted`: the account — the same distinct id the browser identified with, so
+ *   the event joins the reader's history.
+ * - `anonymous`: nobody — a fresh random distinct id and person processing off, so
+ *   PostHog counts that the event happened and can attach it to no one. Nothing
+ *   derived from the account or the subscription is sent: a hash of either is
+ *   still an identifier.
+ * - `none`: no event at all. Returns null.
  */
-function subject(accountId: string, consent: ServerConsent): { distinctId: string; personless: boolean } {
+function subject(accountId: string, consent: ServerConsent): { distinctId: string; personless: boolean } | null {
+  if (consent === "none") return null;
   return consent === "granted" ? { distinctId: accountId, personless: false } : { distinctId: randomUUID(), personless: true };
 }
 
@@ -116,7 +119,9 @@ function subject(accountId: string, consent: ServerConsent): { distinctId: strin
  * choice, Do Not Track, and the regional default.
  */
 export function recordCheckoutStarted(accountId: string, sourcePage: string | null, consent: ServerConsent): void {
-  const { distinctId, personless } = subject(accountId, consent);
+  const who = subject(accountId, consent);
+  if (!who) return;
+  const { distinctId, personless } = who;
   captureServerEvent({
     distinctId,
     event: ANALYTICS_EVENTS.checkoutStarted,
@@ -148,7 +153,9 @@ export function recordSubscriptionCompleted(input: {
   readonly via: "webhook" | "reconciliation";
   readonly consent: ServerConsent;
 }): void {
-  const { distinctId, personless } = subject(input.accountId, input.consent);
+  const who = subject(input.accountId, input.consent);
+  if (!who) return;
+  const { distinctId, personless } = who;
   captureServerEvent({
     distinctId,
     event: ANALYTICS_EVENTS.subscriptionCompleted,

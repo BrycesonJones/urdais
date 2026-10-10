@@ -6,10 +6,11 @@
  * | visitor | browser analytics | server events |
  * | --- | --- | --- |
  * | accepted | full PostHog: persistent anonymous id, identify on sign-in | keyed on the account |
- * | rejected | cookieless: counted by a daily server-side hash, nothing stored on the device, never identified | personless |
- * | not decided, prior-consent region | nothing at all until they choose | personless |
+ * | rejected, default-on region | cookieless: counted by a daily server-side hash, no identifier stored on the device, never identified | personless |
+ * | rejected, prior-consent or unknown region | nothing at all | nothing |
+ * | not decided, prior-consent or unknown region | nothing at all until they choose | nothing |
  * | not decided, elsewhere | full PostHog, with the banner offering Reject | keyed on the account |
- * | Do Not Track or Global Privacy Control | PostHog never starts | personless |
+ * | Do Not Track or Global Privacy Control | PostHog never starts | nothing |
  *
  * "Personless" means a server event with a random distinct id and person
  * processing off: it counts that a checkout or conversion happened and says
@@ -38,8 +39,24 @@ export type ConsentChoice = "granted" | "denied";
 /** What applies before a visitor has chosen. */
 export type ConsentDefault = "granted" | "pending";
 
-/** Whether a server event may be tied to the account. */
-export type ServerConsent = "granted" | "not_granted";
+/**
+ * What a server-side event may do:
+ *
+ * - `granted` — keyed on the account (consent given, or the default where the
+ *   region is default-on);
+ * - `anonymous` — counted with no identifier at all, for a visitor who declined
+ *   in a default-on region, matching the cookieless counting their browser gets;
+ * - `none` — not sent: a refusal or an undecided visitor in a prior-consent or
+ *   unknown region, or a Do Not Track / GPC signal.
+ */
+export type ServerConsent = "granted" | "anonymous" | "none";
+
+const SERVER_CONSENT_ORDER: Readonly<Record<ServerConsent, number>> = { none: 0, anonymous: 1, granted: 2 };
+
+/** The more restrictive of two consents. */
+export function stricterServerConsent(a: ServerConsent, b: ServerConsent): ServerConsent {
+  return SERVER_CONSENT_ORDER[a] <= SERVER_CONSENT_ORDER[b] ? a : b;
+}
 
 /** EU member states, plus Iceland, Liechtenstein and Norway (EEA), the UK and Switzerland. */
 export const PRIOR_CONSENT_COUNTRIES: ReadonlySet<string> = new Set([
@@ -71,22 +88,30 @@ export function consentDefaultFor(country: string | null | undefined): ConsentDe
 /**
  * The consent a server-side event may assume for one request.
  *
- * A Do Not Track or Global Privacy Control signal wins over everything, then an
- * explicit choice, then the regional default. Anything short of a clear grant is
- * `not_granted`.
+ * A Do Not Track or Global Privacy Control signal wins over everything (`none`),
+ * then an explicit choice, then the regional default. A refusal is an anonymous
+ * count only in a default-on region; in a prior-consent or unknown one it is
+ * `none`, as is anything unclear.
  */
 export function serverAnalyticsConsent(input: {
   readonly cookie: string | null | undefined;
   readonly country: string | null | undefined;
   readonly doNotTrack: boolean;
 }): ServerConsent {
-  if (input.doNotTrack) return "not_granted";
+  if (input.doNotTrack) return "none";
+  const defaultOn = consentDefaultFor(input.country) === "granted";
   const choice = parseConsentChoice(input.cookie);
-  if (choice) return choice === "granted" ? "granted" : "not_granted";
-  return consentDefaultFor(input.country) === "granted" ? "granted" : "not_granted";
+  if (choice === "granted") return "granted";
+  if (choice === "denied") return defaultOn ? "anonymous" : "none";
+  return defaultOn ? "granted" : "none";
 }
 
-/** The consent recorded on a Stripe object at checkout. Absent or anything else is `not_granted`. */
+/**
+ * The consent recorded on a Stripe object at checkout. Anything absent or
+ * unrecognised — including the `not_granted` written before this distinction
+ * existed — is `none`.
+ */
 export function consentFromStripeMetadata(metadata: Readonly<Record<string, string>> | null | undefined): ServerConsent {
-  return metadata?.[STRIPE_METADATA_ANALYTICS_CONSENT] === "granted" ? "granted" : "not_granted";
+  const value = metadata?.[STRIPE_METADATA_ANALYTICS_CONSENT];
+  return value === "granted" || value === "anonymous" ? value : "none";
 }

@@ -7,8 +7,7 @@
  * of Urdais's own: the platform header or nothing, and nothing is the
  * conservative answer.
  *
- * Server-only (it reads request headers). Never throws: a failure is
- * `not_granted`.
+ * Server-only (it reads request headers). Never throws: a failure is `none`.
  */
 
 import { cookies, headers } from "next/headers";
@@ -26,7 +25,7 @@ export async function requestAnalyticsConsent(): Promise<ServerConsent> {
       doNotTrack: request.get("dnt") === "1" || request.get("sec-gpc") === "1",
     });
   } catch {
-    return "not_granted";
+    return "none";
   }
 }
 

@@ -111,7 +111,8 @@ export default function PrivacyPolicyRoute() {
               head={["Situation", "What is collected"]}
               rows={[
                 ["You accept analytics", "Full analytics. PostHog stores a random identifier in a cookie and in your browser’s local storage, so return visits are recognised."],
-                ["You decline analytics", "Visits are still counted, but no cookie or identifier is stored on your device; only a record of your choice is. To count a visit once, PostHog’s servers combine your IP address, user agent and our site name with a random value that changes every day and is then deleted, so the same browser cannot be recognised from one day to the next."],
+                ["You decline analytics, and you are in the European Economic Area, the United Kingdom or Switzerland, or we cannot tell where you are", "Nothing. Our pages do not send analytics from your browser; only a record of your choice is stored."],
+                ["You decline analytics, and you are elsewhere", "Visits are still counted, but no cookie or identifier is stored on your device; only a record of your choice is. To count a visit once, PostHog’s servers combine your IP address, user agent and our site name with a random value that changes every day and is then deleted, so the same browser cannot be recognised from one day to the next."],
                 ["You have not chosen, and you are in the European Economic Area, the United Kingdom or Switzerland, or we cannot tell where you are", "Nothing. Our pages do not contact PostHog at all until you choose."],
                 ["You have not chosen, and you are elsewhere", "Full analytics, as if you had accepted. The banner lets you decline."],
                 ["Your browser sends a Do Not Track or Global Privacy Control signal", "Nothing. PostHog is not started in your browser."],
@@ -148,7 +149,10 @@ export default function PrivacyPolicyRoute() {
             <p>
               <strong>Subscription events.</strong> Our server tells PostHog when a checkout starts and when a
               subscription is confirmed by Stripe. These events are associated with your account only if analytics was
-              accepted (or on by default in your region) when you started checkout. Otherwise they are recorded without any identifier, only as a count.
+              accepted (or on by default in your region) when you started checkout. If you had declined outside the
+              European Economic Area, the United Kingdom and Switzerland, they are recorded only as a count, without any
+              identifier. If you had declined or not yet chosen within those regions, or we could not tell where you
+              were, or your browser sent Do Not Track or Global Privacy Control, they are not sent at all.
             </p>
           </Section>
 
@@ -231,8 +235,11 @@ export default function PrivacyPolicyRoute() {
               <li><strong>Hosting logs</strong>: <Todo>Vercel log retention</Todo></li>
             </ul>
             <p>
-              Deleting your account does not yet automatically delete the analytics already associated with it. You can
-              ask us to delete it. <Todo>analytics deletion procedure</Todo>
+              Deleting your account does not yet automatically delete the analytics associated with it. If you want
+              that deleted too, contact us <em>before</em> deleting your account: once the deletion completes, we no
+              longer hold the identifier that links your analytics to you. Deleting it removes your PostHog profile
+              and queues its events for deletion, which PostHog carries out asynchronously.{" "}
+              <Todo>whether to automate this, and the response time for requests</Todo>
             </p>
           </Section>
 

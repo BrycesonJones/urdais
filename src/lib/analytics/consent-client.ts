@@ -16,10 +16,15 @@
  * (posthog-js 1.438):
  *
  * - **granted** — normal PostHog: cookie and localStorage persistence.
- * - **denied** — cookieless: nothing stored on the device, the distinct id is the
- *   placeholder `$posthog_cookieless`, and PostHog's servers derive a daily hash to
- *   count visitors. Requires "Cookieless server hash mode" in the PostHog project's
- *   settings, **or every rejected visitor's events are dropped at ingestion**.
+ * - **denied, in a default-on region** — cookieless: no identifier stored on the
+ *   device, the distinct id is the placeholder `$posthog_cookieless`, and PostHog's
+ *   servers derive a daily hash to count visitors. Requires "Cookieless server hash
+ *   mode" in the PostHog project's settings, **or those events are dropped**.
+ * - **denied, in a prior-consent region (EEA, UK, Switzerland) or where the region
+ *   is unknown** — nothing at all. PostHog is left pending (it captures and stores
+ *   nothing) or, on a later visit, never started. Cookieless counting is not used
+ *   there: whether it is lawful after a refusal is unsettled (see
+ *   docs/operations/posthog-activation.md §5), so the conservative answer applies.
  * - **pending** — nothing captured, persistence disabled and *removed*.
  *
  * That last point is why `syncAtLoad` never moves an already-granted browser
@@ -55,11 +60,20 @@ export type ConsentView = {
   readonly explicit: boolean;
   /** The preferences panel was opened from "Privacy settings". */
   readonly preferencesOpen: boolean;
+  /**
+   * This visitor's regional default, once asked: `granted` (default-on region,
+   * where a refusal is counted cookielessly) or `pending` (prior-consent or unknown
+   * region, where a refusal means nothing is collected). Null until known, which
+   * is treated as `pending`.
+   */
+  readonly regionDefault: ConsentDefault | null;
 };
 
-const OFF: ConsentView = Object.freeze({ status: "off", explicit: false, preferencesOpen: false });
+const OFF: ConsentView = Object.freeze({ status: "off", explicit: false, preferencesOpen: false, regionDefault: null });
 
 let view: ConsentView = OFF;
+/** Kept from `startAnalytics`, so a visitor who accepts later can start PostHog then. */
+let startedConfig: AnalyticsConfig | null = null;
 const listeners = new Set<() => void>();
 
 function update(next: Partial<ConsentView>): void {
@@ -129,6 +143,15 @@ function applyToSdk(status: "granted" | "denied"): void {
     if (posthog.get_explicit_consent_status() !== "granted") posthog.opt_in_capturing({ captureEventName: false });
     return;
   }
+  if (view.regionDefault !== "granted") {
+    // Prior-consent or unknown region: collect nothing. `reset()` drops identity and
+    // persisted data and clears consent, which under `on_reject` is pending — the
+    // state that captures and stores nothing. Not `opt_out_capturing()`, which would
+    // switch to cookieless counting.
+    posthog.reset();
+    removeLeftoverStorage();
+    return;
+  }
   if (posthog.get_explicit_consent_status() !== "denied") {
     // Reset first: it drops any identity and persisted data, and it clears consent,
     // so it must come before the opt-out rather than undo it.
@@ -141,10 +164,19 @@ function applyToSdk(status: "granted" | "denied"): void {
 /**
  * PostHog's per-tab window ids live in sessionStorage and outlive `reset()`, so a
  * browser that accepted and then declined would keep them. Cookieless mode never
- * writes them; this removes what an earlier acceptance left. PostHog's record of
- * the refusal itself (`__ph_opt_in_out_…`) is kept: it is the choice, not tracking.
+ * writes them; this removes what an earlier acceptance left, including PostHog's
+ * `ph_…` cookie when PostHog is not running to remove it. PostHog's record of a
+ * refusal (`__ph_opt_in_out_…`) is kept: it is the choice, not tracking.
  */
 function removeLeftoverStorage(): void {
+  try {
+    for (const entry of document.cookie.split("; ")) {
+      const name = entry.split("=")[0] ?? "";
+      if (name.startsWith("ph_")) document.cookie = `${name}=; Path=/; Max-Age=0`;
+    }
+  } catch {
+    // Cookies unavailable: nothing to remove.
+  }
   for (const store of [window.sessionStorage, window.localStorage]) {
     try {
       for (const key of Object.keys(store)) if (key.startsWith("ph_")) store.removeItem(key);
@@ -155,13 +187,16 @@ function removeLeftoverStorage(): void {
 }
 
 async function fetchRegionDefault(): Promise<ConsentDefault> {
+  let answer: ConsentDefault = "pending";
   try {
     const response = await fetch("/api/privacy/consent-default", { cache: "no-store" });
     const body = (await response.json()) as { default?: unknown };
-    return body.default === "granted" ? "granted" : "pending";
+    answer = body.default === "granted" ? "granted" : "pending";
   } catch {
-    return "pending";
+    // Unreachable: the conservative default.
   }
+  update({ regionDefault: answer });
+  return answer;
 }
 
 /**
@@ -244,6 +279,17 @@ export function startAnalytics(): void {
       update({ status: "blocked", explicit: false });
       return;
     }
+    startedConfig = config;
+    if (readChoice() === "denied") {
+      // A refusal: start PostHog only if this region counts refusals cookielessly.
+      // Elsewhere it never starts, so this page makes no request to PostHog at all.
+      update({ status: "denied", explicit: true });
+      void fetchRegionDefault().then((regionDefault) => {
+        if (regionDefault === "granted" && readChoice() === "denied") init(config);
+        else removeLeftoverStorage();
+      });
+      return;
+    }
     init(config);
   } catch {
     // Analytics failing to start must not stop Urdais from starting.
@@ -255,6 +301,10 @@ export function chooseConsent(choice: ConsentChoice): void {
   writeChoice(choice);
   try {
     if (loaded()) applyToSdk(choice);
+    // Never started because of an earlier refusal: start now. `syncAtLoad` reads the
+    // choice just written, and the SDK sends this page's pageview.
+    else if (choice === "granted" && startedConfig) init(startedConfig);
+    else if (choice === "denied") removeLeftoverStorage();
   } catch {
     // The choice is recorded; the next load applies it.
   }
@@ -263,6 +313,9 @@ export function chooseConsent(choice: ConsentChoice): void {
 
 export function openConsentPreferences(): void {
   update({ preferencesOpen: true });
+  // So the panel can say what declining means here, and declining does the right
+  // thing. Until it answers, the conservative reading applies.
+  if (view.regionDefault === null && view.status !== "off" && view.status !== "blocked") void fetchRegionDefault();
 }
 
 export function closeConsentPreferences(): void {
@@ -285,5 +338,6 @@ export function reapplyConsentAfterReset(): void {
 /** Test seam: restore the initial state. */
 export function resetConsentForTests(): void {
   view = OFF;
+  startedConfig = null;
   listeners.clear();
 }
