@@ -101,6 +101,20 @@ function readAccount(rows: readonly Record<string, unknown>[]): UrdaisAccount | 
 }
 
 /**
+ * The existing account id for this Supabase subject, or null. Read-only: unlike
+ * `resolveUrdaisAccount` it never provisions, so asking cannot create (or
+ * recreate) an account. Used by the analytics identity check.
+ */
+export async function readUrdaisAccountId(
+  sql: TokenSqlExecutor,
+  subject: string,
+  provider: string = SUPABASE_AUTH_PROVIDER,
+): Promise<string | null> {
+  if (subject.trim() === "") return null;
+  return readAccount((await sql.query(SELECT_ACCOUNT, [provider, subject.trim()])).rows)?.id ?? null;
+}
+
+/**
  * The Urdais account for this Supabase subject, provisioning it on first sight.
  *
  * Deterministic, idempotent and concurrency-safe: the same subject always

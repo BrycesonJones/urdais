@@ -26,11 +26,11 @@
  *
  * ## Where it runs
  *
- * Server-side only. The personal key can read and delete data across the project,
- * so it is never `NEXT_PUBLIC_` and never reaches a browser. **Nothing calls this
- * automatically yet**: wiring it into account deletion needs a stored credential and
- * a retry path that are product decisions (docs/operations/posthog-activation.md).
- * Today it backs `scripts/analytics/erase-posthog-person.ts`, an operator tool.
+ * Server-side only. The personal key can delete data across the project, so it is
+ * never `NEXT_PUBLIC_`, never logged, and never reaches a browser. Called by
+ * account deletion (`@/lib/account/analytics-erasure`, after the response and from
+ * the daily `/api/cron/analytics-erasure`) and by the operator tool
+ * `scripts/analytics/erase-posthog-person.ts`.
  */
 
 export const POSTHOG_PERSONAL_API_KEY_VAR = "POSTHOG_PERSONAL_API_KEY";

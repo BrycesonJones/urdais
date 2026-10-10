@@ -38,6 +38,7 @@ vi.mock("@/lib/tokens/read/database", async (importOriginal) => ({
 }));
 
 import { createTokenSqlExecutor } from "@/lib/tokens/read/database";
+import { settleHeldDeletion } from "@/lib/account/analytics-erasure";
 import { deleteCurrentAccount } from "@/lib/account/deletion";
 import { AccountDeletionPendingError, resolveUrdaisAccount } from "@/lib/auth/accounts";
 import { readCustomerMapping } from "@/lib/billing/store";
@@ -194,6 +195,41 @@ suite("account deletion against a real database", () => {
     expect(await deleteCurrentAccount({ confirmed: true })).toEqual({ kind: "complete" });
     await expectFullyDeleted(who);
     expect(await count(`select count(*) n from identity.account_deletions where state = 'complete' and stripe_customer_id is null and auth_subject is null`)).toBeGreaterThan(0);
+  });
+
+  it("with analytics in use: the reader's deletion completes, the record is held for erasure, a retry settles it", async () => {
+    vi.stubEnv("POSTHOG_PERSONAL_API_KEY", ["phx", "integrationfixture"].join("_"));
+    try {
+      const who = await newAccount();
+      signIn(who);
+      stripeContext.mockReturnValue({ kind: "unavailable", availability: { kind: "unavailable" } });
+
+      // The reader is told it is done, and it is: account and Auth user are gone.
+      expect(await deleteCurrentAccount({ confirmed: true })).toEqual({ kind: "complete" });
+      expect(await count(`select count(*) n from identity.accounts where id = $1`, [who.accountId])).toBe(0);
+      expect(deleteAuthUser).toHaveBeenCalledWith(who.subject);
+
+      // Held: the account id survives, as the key to the PostHog person.
+      const held = await one<{ id: string; state: string; account_id: string; last_error: string; lease_until: unknown }>(
+        `select id, state, account_id, last_error, lease_until from identity.account_deletions where auth_subject = $1`,
+        [who.subject],
+      );
+      expect(held).toMatchObject({ state: "auth_deleted", account_id: who.accountId, last_error: "analytics_erasure_pending", lease_until: null });
+
+      // PostHog down: still held, nothing lost.
+      const config = { apiHost: "https://eu.posthog.com", projectId: "1", personalApiKey: "phx_x" };
+      const failing = { required: () => true, config: () => config, erase: vi.fn(async () => ({ kind: "failed" as const, status: 503 })) };
+      expect(await settleHeldDeletion(sql, held!.id, failing)).toEqual({ kind: "held", code: "analytics_erasure_failed" });
+      expect((await deletionOf(who.subject))).toMatchObject({ state: "auth_deleted", account_id: who.accountId });
+
+      // Back up: erased by the account id, completed, identifiers dropped.
+      const erase = vi.fn(async () => ({ kind: "queued" as const, personsFound: 1 }));
+      expect(await settleHeldDeletion(sql, held!.id, { ...failing, erase })).toEqual({ kind: "erased" });
+      expect(erase).toHaveBeenCalledWith(who.accountId, config);
+      await expectFullyDeleted(who);
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   for (const [label, sub, cape] of [

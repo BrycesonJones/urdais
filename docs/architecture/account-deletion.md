@@ -91,6 +91,10 @@ billing_terminated      + entitlement revoked, same transaction
 local_cleanup_complete
             auth.admin.deleteUser(subject)   (404 = already done)
 auth_deleted
+            ── analytics in use (PostHog or erasure credentials configured): held
+               here, account id kept, last_error 'analytics_erasure_pending'; the
+               reader is told it is done. PostHog erasure is tried after the
+               response and daily by /api/cron/analytics-erasure until accepted.
 complete    auth_subject and account_id nulled
 ```
 
@@ -195,8 +199,10 @@ select id, state, attempts, last_error, requested_at, billing_terminated_at,
 | --- | --- | --- |
 | `requested`, `last_error` set | billing could not be verified or terminated; account intact | the reader retries; or an operator checks the Customer in Stripe |
 | `billing_terminated` | Stripe terminated, premium revoked; metadata detach or local delete failed | the reader presses "Finish deleting account" on `/account` |
-| `local_cleanup_complete` | account removed; Auth user not yet deleted (the session still works but gets no account) | the reader finishes; or an operator deletes the Auth user in the Supabase dashboard, then sets `state='auth_deleted', auth_deleted_at=now()` and lets the next attempt complete |
-| `auth_deleted` | only the final bookkeeping remains | the next attempt completes it |
+| `local_cleanup_complete` | account removed; Auth user not yet deleted (the session still works but gets no account) | the reader finishes; or an operator deletes the Auth user in the Supabase dashboard, then sets `state='auth_deleted', auth_deleted_at=now()` and lets the daily analytics-erasure cron complete it |
+| `auth_deleted`, `last_error` `analytics_erasure_pending` / `_failed` | account and Auth user gone; waiting for PostHog to accept the analytics erasure (src/lib/account/analytics-erasure.ts). Expected, not stuck | none: the daily cron retries. Persisting `analytics_erasure_failed` means PostHog is refusing; check the key's `person:write` scope and the project id |
+| `auth_deleted`, `last_error` `analytics_erasure_unconfigured` | as above, but `POSTHOG_PERSONAL_API_KEY` / `POSTHOG_PROJECT_ID` are missing | set them in Vercel Production; the next cron run settles every held row |
+| `auth_deleted`, no `last_error` | only the final bookkeeping remains | the daily analytics-erasure cron completes it (the reader can no longer sign in to retry) |
 
 Never delete an `account_deletions` row (the grant forbids it), never re-attach a detached billing row (the constraint forbids it), and never void or refund as part of recovery.
 

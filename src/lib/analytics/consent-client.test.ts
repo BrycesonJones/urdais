@@ -48,9 +48,11 @@ import {
   reapplyConsentAfterReset,
   resetConsentForTests,
   startAnalytics,
+  storedIdentifiedId,
 } from "@/lib/analytics/consent-client";
 
 let regionDefault: "granted" | "pending" | "error" = "pending";
+let sessionAccount: string | null | "error" = null;
 
 function setCookie(value: string | null) {
   document.cookie = value ? `urdais_analytics_consent=${value}; path=/` : "urdais_analytics_consent=; path=/; max-age=0";
@@ -66,9 +68,16 @@ beforeEach(() => {
   config.value = { key: "phc_test", host: "https://ph.invalid" };
   setCookie(null);
   regionDefault = "pending";
+  sessionAccount = null;
+  sessionStorage.clear();
+  document.cookie = "ph_phc_test_posthog=; path=/; max-age=0";
   vi.stubGlobal(
     "fetch",
-    vi.fn(async () => {
+    vi.fn(async (url: string) => {
+      if (String(url).includes("/api/analytics/identity")) {
+        if (sessionAccount === "error") throw new Error("offline");
+        return { json: async () => ({ accountId: sessionAccount }) };
+      }
       if (regionDefault === "error") throw new Error("offline");
       return { json: async () => ({ default: regionDefault }) };
     }),
@@ -296,5 +305,68 @@ describe("choosing", () => {
     reapplyConsentAfterReset();
     expect(fake.api.opt_out_capturing).not.toHaveBeenCalled();
     expect(fake.state.consent).toBe("pending");
+  });
+});
+
+describe("a browser PostHog identified on an earlier visit", () => {
+  const ACCOUNT = "0f8e1c3a-5b6d-4e7f-8a9b-0c1d2e3f4a5b";
+  const identifiedCookie = (id = ACCOUNT) => {
+    document.cookie = `ph_phc_test_posthog=${encodeURIComponent(JSON.stringify({ distinct_id: id, $user_state: "identified" }))}; path=/`;
+  };
+  const identityChecks = () => (fetch as unknown as { mock: { calls: unknown[][] } }).mock.calls.filter(([url]) => String(url).includes("/api/analytics/identity")).length;
+
+  it("reads PostHog's own persistence for an identified id, and ignores anonymous ones", () => {
+    identifiedCookie();
+    expect(storedIdentifiedId("phc_test")).toBe(ACCOUNT);
+    document.cookie = `ph_phc_test_posthog=${encodeURIComponent(JSON.stringify({ distinct_id: "anon", $user_state: "anonymous" }))}; path=/`;
+    expect(storedIdentifiedId("phc_test")).toBeNull();
+  });
+
+  it("keeps the identity when the session still belongs to that account, and checks once per tab", async () => {
+    setCookie("granted");
+    identifiedCookie();
+    sessionAccount = ACCOUNT;
+    startAnalytics();
+    expect(fake.api.init).not.toHaveBeenCalled(); // waits for the check
+    await flush();
+    expect(fake.calls).toEqual(["init", "opt_in:false"]);
+    expect(fake.api.reset).not.toHaveBeenCalled();
+    resetConsentForTests();
+    fake.api.init.mockClear();
+    startAnalytics();
+    expect(fake.api.init).toHaveBeenCalled(); // verified in this tab: no second check
+    expect(identityChecks()).toBe(1);
+  });
+
+  it("re-checks a tab whose verification is older than the re-check window", async () => {
+    setCookie("granted");
+    identifiedCookie();
+    sessionStorage.setItem("urdais_analytics_identity_verified", `${ACCOUNT} ${Date.now() - 11 * 60 * 1000}`);
+    sessionAccount = null; // deleted elsewhere since
+    startAnalytics();
+    await flush();
+    expect(identityChecks()).toBe(1);
+    expect(fake.calls).toEqual(["init", "reset", "opt_in:false"]);
+  });
+
+  it("resets before anything is sent when the account is gone or the session ended", async () => {
+    for (const answer of [null, "a-different-account", "error"] as const) {
+      resetConsentForTests();
+      fake.calls.length = 0;
+      sessionStorage.clear();
+      setCookie("granted");
+      identifiedCookie();
+      sessionAccount = answer;
+      startAnalytics();
+      await flush();
+      // reset() first, inside loaded, before the SDK schedules the first pageview; then consent re-applied.
+      expect(fake.calls, String(answer)).toEqual(["init", "reset", "opt_in:false"]);
+    }
+  });
+
+  it("does not check browsers that were never identified", async () => {
+    setCookie("granted");
+    startAnalytics();
+    expect(identityChecks()).toBe(0);
   });
 });
