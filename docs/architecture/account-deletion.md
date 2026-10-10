@@ -93,8 +93,9 @@ local_cleanup_complete
 auth_deleted
             ── analytics in use (PostHog or erasure credentials configured): held
                here, account id kept, last_error 'analytics_erasure_pending'; the
-               reader is told it is done. PostHog erasure is tried after the
-               response and daily by /api/cron/analytics-erasure until accepted.
+               reader is told it is done. The daily /api/cron/analytics-erasure
+               requests the PostHog erasure once the hold is an hour old (so the
+               reader's last events are ingested first), retrying until accepted.
 complete    auth_subject and account_id nulled
 ```
 

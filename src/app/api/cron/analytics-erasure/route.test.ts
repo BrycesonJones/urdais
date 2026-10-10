@@ -30,15 +30,15 @@ describe("analytics erasure cron", () => {
   });
 
   it("answers 200 when nothing is left held", async () => {
-    settleHeldDeletions.mockResolvedValue({ completed: 1, erased: 2, held: 0, skipped: 0, codes: [] });
+    settleHeldDeletions.mockResolvedValue({ completed: 1, erasure_requested: 2, held: 0, skipped: 0, codes: [] });
     const response = await call(`Bearer ${SECRET}`);
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ ok: true, erased: 2 });
+    expect(await response.json()).toMatchObject({ ok: true, erasure_requested: 2 });
     expect(end).toHaveBeenCalled();
   });
 
   it("answers 500 while anything is held, so the gap is visible daily", async () => {
-    settleHeldDeletions.mockResolvedValue({ completed: 0, erased: 0, held: 3, skipped: 0, codes: ["analytics_erasure_unconfigured"] });
+    settleHeldDeletions.mockResolvedValue({ completed: 0, erasure_requested: 0, held: 3, skipped: 0, codes: ["analytics_erasure_unconfigured"] });
     const response = await call(`Bearer ${SECRET}`);
     expect(response.status).toBe(500);
     expect(await response.json()).toMatchObject({ ok: false, held: 3, codes: ["analytics_erasure_unconfigured"] });

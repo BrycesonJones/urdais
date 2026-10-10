@@ -216,8 +216,8 @@ hashing. Hence decline = nothing.
 | Billing rows | retained, detached from the account |
 | Stripe Customer | retained; `urdais_account_id` metadata unset |
 | Stripe subscriptions | cancelled; their `urdais_account_id` metadata cannot be edited and remains |
-| PostHog person: profile, merged anonymous ids, person properties | **deleted** (`bulk_delete` by the account id) |
-| PostHog events of that person, browser and consented server events | **queued for deletion** (`delete_events`); PostHog runs it asynchronously, off-peak |
+| PostHog person: profile, merged anonymous ids, person properties | **deletion requested** (`bulk_delete` by the account id) within about a day; PostHog removes it shortly after accepting |
+| PostHog events of that person, browser and consented server events | **queued for deletion** (`delete_events`); PostHog runs it asynchronously, off-peak (typically weekends). Urdais records that PostHog **accepted** the request, not that every event is gone |
 | PostHog identity on the deleting browser | reset (`/account/deleted`) |
 | PostHog identity on other browsers the account was signed in on | reset the next time PostHog starts there (within ten minutes for an open tab that reloads), before anything is sent: the identity check below |
 | Anonymous counts, cookieless events | nothing to delete: no identifier |
@@ -231,19 +231,36 @@ hashing. Hence decline = nothing.
    present) the record is **held**: lease released, `last_error =
    'analytics_erasure_pending'`, account id kept. Otherwise it completes at once, as
    before.
-3. Right after the response (`after()`), the record is leased and PostHog asked to
-   erase the person by the account id. Accepted (202): the deletion completes and
-   drops the identifiers. Anything else: released with `analytics_erasure_failed` or
-   `analytics_erasure_unconfigured`, account id kept.
-4. `/api/cron/analytics-erasure` (daily, 12:30 UTC, `CRON_SECRET`) retries every held
-   record, oldest first, and answers **500 while any remain held**, so an outage or a
-   missing key is visible in the cron log every day. It also completes any record
-   left at `auth_deleted` for other reasons.
+3. `/api/cron/analytics-erasure` (daily, 12:30 UTC) takes every record held for **at
+   least an hour**, oldest first, leases it, and asks PostHog to delete the person by
+   the account id and queue its events. The hour matters: PostHog deletes only events
+   **captured before** the request, so requesting at the moment of deletion would race
+   the reader's last events still being ingested, and they would recreate the person.
+4. Accepted (202): the deletion completes and drops the identifiers. Anything else:
+   released with `analytics_erasure_failed` or `analytics_erasure_unconfigured`,
+   account id kept, retried the next day. The route answers **500 while any remain
+   held**, so an outage or a missing key shows in the cron log every day. It also
+   completes any record left at `auth_deleted` for other reasons.
+5. "Complete" means PostHog **accepted** the erasure request. Event deletion then runs
+   on PostHog's schedule; Urdais neither waits for nor claims it. Confirm it in
+   PostHog if a specific request needs evidence.
 
-Properties: deletion never waits on PostHog; nothing is lost while PostHog is down;
-the lease admits one attempt at a time; no new table or migration; the key never
-leaves the server and is never logged; only codes and counts are logged, never an
-account id.
+Properties:
+
+- **Where the request lives:** the existing `identity.account_deletions` row (state
+  `auth_deleted`, `account_id` kept, `last_error` the reason). Ordinary Postgres
+  state: it survives deployments and restarts. No new table or migration.
+- **Discovery:** the cron selects `state = 'auth_deleted'` rows older than an hour.
+- **Never discarded early:** the row becomes `complete` only after PostHog answers 202.
+  A crash mid-attempt leaves it at `auth_deleted`; its 2-minute lease simply expires.
+- **Idempotent:** the lease admits one attempt at a time; a completed row can never be
+  leased again; if completing fails after PostHog accepted, the retry asks again and
+  PostHog does not duplicate an already-queued person deletion.
+- **Batch:** 50 per run, oldest first.
+- **Authenticated:** `Authorization: Bearer $CRON_SECRET`, compared in constant time;
+  every request is refused (401) when `CRON_SECRET` is unset.
+- The key never leaves the server and is never logged; only codes and counts are
+  logged, never an account id. Deletion never waits on PostHog.
 
 ### Other signed-in browsers (`GET /api/analytics/identity`)
 
@@ -299,10 +316,12 @@ and a private window per scenario. Live PostHog is required for all of it.
 
 **Account deletion** (with a test account; no live payment):
 
-- [ ] With analytics accepted, sign in, browse, delete the account. The PostHog person
-      with that distinct id disappears shortly after; its events are queued for
-      deletion.
-- [ ] `identity.account_deletions` for it reaches `complete`.
+- [ ] With analytics accepted, sign in, browse, delete the account. The record waits at
+      `auth_deleted` (`analytics_erasure_pending`) until the next cron run at least an
+      hour later.
+- [ ] After that run: `identity.account_deletions` for it reaches `complete`, and the
+      PostHog person with that distinct id disappears shortly after. Its events are
+      deleted later, on PostHog's schedule.
 - [ ] The cron log for `/api/cron/analytics-erasure` shows `held 0` and a 200.
 - [ ] A second browser that was signed in to the same account sends its next events
       under a new anonymous id, not the account id.

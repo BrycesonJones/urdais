@@ -237,9 +237,10 @@ export default function PrivacyPolicyRoute() {
             <p>
               Deleting your account also deletes the analytics associated with it. We ask PostHog to delete the
               profile linked to your account, together with its events, including activity from before you signed in
-              on a browser that was then linked to your account. PostHog removes the profile shortly afterwards and
-              deletes the events asynchronously. If PostHog cannot be reached, we keep retrying daily and hold only the
-              internal identifier needed to do so, until it succeeds. Visits that were never linked to your account
+              on a browser that was then linked to your account. We make that request within about a day of the
+              deletion, once your last visits have been recorded; PostHog then removes the profile shortly afterwards
+              and deletes the events on its own schedule. If PostHog cannot be reached, we keep retrying daily and hold
+              only the internal identifier needed to do so, until PostHog accepts the request. Visits that were never linked to your account
               (cookieless counts, or anonymous browsing on a browser where you never signed in) carry no identifier
               and cannot be traced to you. Other browsers where you were signed in stop using your identifier within
               minutes of loading the site again.{" "}

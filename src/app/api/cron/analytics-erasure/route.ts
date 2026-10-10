@@ -1,16 +1,15 @@
 /**
  * The daily analytics-erasure sweep.
  *
- * Settles every account deletion held at `auth_deleted` (see
- * `@/lib/account/analytics-erasure`): asks PostHog to erase the deleted account's
- * person and events, then completes the deletion. A deletion is normally settled
- * right after the reader confirms it; this is the retry for when PostHog was
- * unreachable then, and it also completes any deletion that stopped at
- * `auth_deleted` for another reason.
+ * Settles every account deletion held at `auth_deleted` for at least an hour (see
+ * `@/lib/account/analytics-erasure`): asks PostHog to delete the deleted account's
+ * person and queue its events for deletion, then completes the deletion. It is the
+ * only path that settles them, and retries every day until PostHog accepts. It also
+ * completes any deletion that stopped at `auth_deleted` for another reason.
  *
  * Answers 500 while anything remains held, so a PostHog outage or missing erasure
  * credentials show up in the cron log every day until fixed. Nothing is lost
- * meanwhile: a held record keeps the account id until the erasure succeeds.
+ * meanwhile: a held record keeps the account id until PostHog accepts the request.
  */
 
 import { timingSafeEqual } from "node:crypto";
@@ -45,7 +44,7 @@ export async function GET(request: Request): Promise<Response> {
     const summary = await settleHeldDeletions(sql);
     const ok = summary.held === 0;
     // Counts and codes only: never an account id.
-    const line = `analytics erasure cron: completed ${summary.completed}, erased ${summary.erased}, held ${summary.held}, skipped ${summary.skipped}`
+    const line = `analytics erasure cron: completed ${summary.completed}, erasure requested ${summary.erasure_requested}, held ${summary.held}, skipped ${summary.skipped}`
       + (summary.codes.length > 0 ? ` (${summary.codes.join(", ")})` : "");
     if (ok) console.log(line);
     else console.error(line);

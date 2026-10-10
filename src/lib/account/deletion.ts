@@ -28,8 +28,8 @@
  *   6. complete       identifiers nulled. Where analytics is in use, only once
  *                     PostHog has accepted the erasure of the account's analytics;
  *                     until then the record waits at `auth_deleted`, holding the
- *                     account id, and is settled after the response or by the daily
- *                     cron (see `./analytics-erasure`). The reader's deletion is
+ *                     account id, and is settled by the daily cron at least an hour
+ *                     later (see `./analytics-erasure`). The reader's deletion is
  *                     done either way.
  *
  *   - Never report success while a subscription can still bill: `complete` is only
@@ -41,9 +41,7 @@
  * Customer, subscriptions and Auth user are all resolved server-side.
  */
 
-import { after } from "next/server";
-
-import { analyticsErasureRequired, ERASURE_PENDING, settleHeldDeletion } from "@/lib/account/analytics-erasure";
+import { analyticsErasureRequired, ERASURE_PENDING } from "@/lib/account/analytics-erasure";
 import { resolveSupabaseIdentity } from "@/lib/auth/identity";
 import { authAdminAvailability, deleteAuthUser } from "@/lib/auth/admin";
 import { resolveUrdaisAccount, SUPABASE_AUTH_PROVIDER } from "@/lib/auth/accounts";
@@ -154,17 +152,6 @@ export async function deleteCurrentAccount(input: { readonly confirmed: boolean 
   return advance(sql, leased);
 }
 
-/** Settle the held deletion after the response. Outside a request (a script, a test) the cron settles it. */
-function scheduleErasure(sql: TokenSqlExecutor, deletionId: string): void {
-  try {
-    after(async () => {
-      await settleHeldDeletion(sql, deletionId);
-    });
-  } catch {
-    // No request scope: left for the daily cron.
-  }
-}
-
 /** Run every remaining stage, releasing the lease with a code on any failure. */
 async function advance(sql: TokenSqlExecutor, start: DeletionRecord): Promise<DeletionOutcome> {
   let record = start;
@@ -221,10 +208,10 @@ async function advance(sql: TokenSqlExecutor, start: DeletionRecord): Promise<De
     if (record.state === "auth_deleted") {
       if (analyticsErasureRequired()) {
         // Hold the account id until PostHog has accepted the erasure. Released with a
-        // code so the record reads as waiting, not stuck; settled after the response
-        // and, failing that, by the daily cron. Nothing here waits on PostHog.
+        // code so the record reads as waiting, not stuck. The daily cron settles it
+        // once the reader's last events have been ingested. Nothing here waits on
+        // PostHog.
         await releaseLease(sql, record.id, ERASURE_PENDING);
-        scheduleErasure(sql, record.id);
         return { kind: "complete" };
       }
       await completeDeletion(sql, record.id);

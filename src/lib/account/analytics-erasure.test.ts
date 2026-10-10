@@ -4,6 +4,7 @@ import {
   analyticsErasureRequired,
   ERASURE_FAILED,
   ERASURE_UNCONFIGURED,
+  HELD_DELETIONS_SQL,
   settleHeldDeletion,
   settleHeldDeletions,
   type ErasureDeps,
@@ -51,7 +52,7 @@ describe("settleHeldDeletion", () => {
   it("erases by the held account id, then completes and drops the identifiers", async () => {
     const { sql, row } = fakeDb({ state: "auth_deleted", accountId: ACCOUNT });
     const d = deps();
-    expect(await settleHeldDeletion(sql, "del_1", d)).toEqual({ kind: "erased" });
+    expect(await settleHeldDeletion(sql, "del_1", d)).toEqual({ kind: "erasure_requested" });
     expect(d.erase).toHaveBeenCalledWith(ACCOUNT, CONFIG);
     expect(row).toMatchObject({ state: "complete", account_id: null, auth_subject: null });
   });
@@ -106,8 +107,17 @@ describe("settleHeldDeletions", () => {
   it("summarises the sweep with counts and codes only", async () => {
     const { sql } = fakeDb({ state: "auth_deleted", accountId: ACCOUNT });
     const summary = await settleHeldDeletions(sql, 50, deps({ erase: vi.fn(async () => ({ kind: "failed" as const, status: null })) }));
-    expect(summary).toEqual({ completed: 0, erased: 0, held: 1, skipped: 0, codes: [ERASURE_FAILED] });
+    expect(summary).toEqual({ completed: 0, erasure_requested: 0, held: 1, skipped: 0, codes: [ERASURE_FAILED] });
     expect(JSON.stringify(summary)).not.toContain(ACCOUNT);
+  });
+});
+
+describe("the sweep waits for the reader's last events to be ingested", () => {
+  it("selects only deletions held for at least an hour", () => {
+    // PostHog deletes only events captured before the request; erasing at once would
+    // race events still in flight and let them recreate the person.
+    expect(HELD_DELETIONS_SQL).toMatch(/auth_deleted_at < now\(\) - interval '1 hour'/);
+    expect(HELD_DELETIONS_SQL).toContain("state = 'auth_deleted'");
   });
 });
 

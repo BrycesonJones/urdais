@@ -12,10 +12,23 @@
  *
  * The reader is not kept waiting and nothing they can see depends on PostHog: at
  * `auth_deleted` their account and sign-in are gone, and they are told so. The
- * erasure is tried immediately after the response and retried daily by
- * `/api/cron/analytics-erasure` until it succeeds; a PostHog outage delays it and
- * loses nothing. The existing states, lease and `last_error` column carry all of
- * this: no new table.
+ * daily `/api/cron/analytics-erasure` then requests the erasure, retrying until
+ * PostHog accepts; a PostHog outage delays it and loses nothing. The existing
+ * states, lease and `last_error` column carry all of this: no new table.
+ *
+ * ## Not immediately, and "requested", not "erased"
+ *
+ * PostHog's `bulk_delete` deletes only events **captured before the request**, and
+ * PostHog ingests asynchronously. Erasing at the moment of deletion would race the
+ * reader's last few events still in flight, which would then recreate the person
+ * with nothing left to erase it. So a held deletion is only settled once it is at
+ * least `ERASURE_MIN_AGE` old.
+ *
+ * Settling means PostHog **accepted** the request (202): the person is removed
+ * shortly after and its events are queued for deletion, which PostHog runs later
+ * (off-peak, typically weekends on PostHog Cloud). Urdais records that the erasure
+ * was requested and accepted. It does not, and cannot from this API, confirm that
+ * every historical event is gone; nothing here claims it.
  *
  * ## When it applies
  *
@@ -56,8 +69,11 @@ const DEFAULT_DEPS: ErasureDeps = {
 export type SettleOutcome =
   /** Completed without contacting PostHog: erasure not required, or nothing to erase. */
   | { readonly kind: "completed" }
-  /** PostHog accepted the erasure; the deletion is complete. */
-  | { readonly kind: "erased" }
+  /**
+   * PostHog accepted the erasure request; the deletion is complete. Event deletion
+   * itself is asynchronous on PostHog's side and is not confirmed here.
+   */
+  | { readonly kind: "erasure_requested" }
   /** Still held at `auth_deleted`, with the account id, for the next attempt. */
   | { readonly kind: "held"; readonly code: string }
   /** Another attempt holds the lease, or the record is not at `auth_deleted`. */
@@ -91,26 +107,41 @@ export async function settleHeldDeletion(sql: TokenSqlExecutor, deletionId: stri
     const outcome = await deps.erase(record.accountId, config);
     if (outcome.kind !== "queued") return hold(ERASURE_FAILED);
     await completeDeletion(sql, deletionId);
-    return { kind: "erased" };
+    return { kind: "erasure_requested" };
   } catch {
     return hold("database_error");
   }
 }
 
-/** Deletions waiting at `auth_deleted`, oldest first. Ids only. */
+/**
+ * How long a held deletion waits before its erasure is requested, so the reader's
+ * last events have been ingested (see the module comment). Generous: PostHog's
+ * ingestion lag is normally seconds to minutes.
+ */
+export const ERASURE_MIN_AGE = "1 hour";
+
+/** Deletions waiting at `auth_deleted` for at least `ERASURE_MIN_AGE`, oldest first. Ids only. */
 export const HELD_DELETIONS_SQL = `
   select id from identity.account_deletions
    where state = 'auth_deleted'
+     and (auth_deleted_at is null or auth_deleted_at < now() - interval '${ERASURE_MIN_AGE}')
    order by auth_deleted_at asc nulls first
    limit $1
 `;
 
-export type SweepSummary = { readonly completed: number; readonly erased: number; readonly held: number; readonly skipped: number; readonly codes: readonly string[] };
+export type SweepSummary = {
+  readonly completed: number;
+  /** PostHog accepted the erasure request. Not a confirmation that events are gone. */
+  readonly erasure_requested: number;
+  readonly held: number;
+  readonly skipped: number;
+  readonly codes: readonly string[];
+};
 
 /** Settle every held deletion, up to `limit`. Used by the daily cron. */
 export async function settleHeldDeletions(sql: TokenSqlExecutor, limit = 50, deps: ErasureDeps = DEFAULT_DEPS): Promise<SweepSummary> {
   const { rows } = await sql.query(HELD_DELETIONS_SQL, [limit]);
-  const summary = { completed: 0, erased: 0, held: 0, skipped: 0, codes: [] as string[] };
+  const summary = { completed: 0, erasure_requested: 0, held: 0, skipped: 0, codes: [] as string[] };
   for (const row of rows) {
     if (typeof row.id !== "string") continue;
     const outcome = await settleHeldDeletion(sql, row.id, deps);
