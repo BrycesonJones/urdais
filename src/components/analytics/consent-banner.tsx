@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useSyncExternalStore, type KeyboardEvent } from "react";
 
 import { CONSENT_PANEL_ID } from "@/components/analytics/privacy-settings-button";
+import { PRIVACY_POLICY_HREF, privacyPolicyLinked } from "@/lib/privacy/policy";
 
 import {
   chooseConsent,
@@ -86,7 +88,8 @@ export function ConsentBanner() {
           <p className="mt-2">
             We use analytics to understand which pages and data products are useful. If you accept, a cookie
             remembers this browser between visits, and if you sign in, your activity is linked to your Urdais
-            account. If you decline, visits are only counted anonymously, with nothing stored on your device.
+            account. If you decline, visits are still counted, but without cookies or any identifier stored on your
+            device; only your choice is remembered.
           </p>
           {view.status === "granted" && !view.explicit ? (
             <p className="mt-2 text-neutral-400">Analytics is on by default where you are. You can decline it here.</p>
@@ -98,6 +101,17 @@ export function ConsentBanner() {
           ) : null}
         </>
       )}
+
+      {privacyPolicyLinked() ? (
+        <p className="mt-2">
+          <Link
+            href={PRIVACY_POLICY_HREF}
+            className="text-neutral-400 underline underline-offset-2 transition-colors hover:text-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]"
+          >
+            Privacy policy
+          </Link>
+        </p>
+      ) : null}
 
       <div className="mt-4 flex flex-wrap gap-2">
         {blocked ? null : (

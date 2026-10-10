@@ -25,6 +25,9 @@ vi.mock("@/lib/analytics/consent-client", () => ({
   closeConsentPreferences: store.close,
 }));
 
+const policy = vi.hoisted(() => ({ linked: false }));
+vi.mock("@/lib/privacy/policy", () => ({ PRIVACY_POLICY_HREF: "/privacy", privacyPolicyLinked: () => policy.linked }));
+
 import { ConsentBanner } from "@/components/analytics/consent-banner";
 import { PrivacySettingsButton, PrivacySettingsItem } from "@/components/analytics/privacy-settings-button";
 
@@ -118,6 +121,27 @@ describe("keyboard and screen readers", () => {
     act(() => store.set({ status: "pending" }));
     render(<ConsentBanner />);
     expect(document.activeElement).toBe(document.body);
+  });
+});
+
+describe("privacy policy link", () => {
+  it("is absent while the policy is a draft and present once published", () => {
+    act(() => store.set({ status: "pending" }));
+    policy.linked = false;
+    const { unmount } = render(<ConsentBanner />);
+    expect(screen.queryByRole("link", { name: "Privacy policy" })).toBeNull();
+    unmount();
+    policy.linked = true;
+    render(<ConsentBanner />);
+    expect(screen.getByRole("link", { name: "Privacy policy" }).getAttribute("href")).toBe("/privacy");
+    policy.linked = false;
+  });
+
+  it("does not claim nothing is stored when the visitor declines", () => {
+    act(() => store.set({ status: "pending" }));
+    render(<ConsentBanner />);
+    expect(banner()!.textContent).not.toMatch(/nothing stored/);
+    expect(banner()!.textContent).toContain("only your choice is remembered");
   });
 });
 
