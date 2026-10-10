@@ -110,10 +110,18 @@ describe("server events", () => {
 });
 
 describe("server events without analytics consent", () => {
-  it("name nobody: a random distinct id, person processing off, no account-derived id", async () => {
+  it("are not sent at all when consent is none", async () => {
     enable();
-    recordCheckoutStarted("acct_1", "/map", "not_granted");
-    recordSubscriptionCompleted({ accountId: "acct_1", subscriptionId: "sub_1", livemode: true, via: "webhook", consent: "not_granted" });
+    recordCheckoutStarted("acct_1", "/map", "none");
+    recordSubscriptionCompleted({ accountId: "acct_1", subscriptionId: "sub_1", livemode: true, via: "webhook", consent: "none" });
+    expect(after).not.toHaveBeenCalled();
+    expect(captureImmediate).not.toHaveBeenCalled();
+  });
+
+  it("name nobody when anonymous: a random distinct id, person processing off, no account-derived id", async () => {
+    enable();
+    recordCheckoutStarted("acct_1", "/map", "anonymous");
+    recordSubscriptionCompleted({ accountId: "acct_1", subscriptionId: "sub_1", livemode: true, via: "webhook", consent: "anonymous" });
     await flushAfter();
     const messages = captureImmediate.mock.calls.map(([message]) => message);
     expect(messages.map((m) => m.event)).toEqual(["checkout_started", "subscription_completed"]);

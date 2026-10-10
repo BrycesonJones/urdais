@@ -68,7 +68,7 @@ export type CheckoutStart =
  * entitlement moves here — a Session is an intention, and the webhook is what
  * makes it mean anything.
  */
-export async function startCheckout(returnTo?: string | null, analyticsConsent: ServerConsent = "not_granted"): Promise<CheckoutStart> {
+export async function startCheckout(returnTo?: string | null, analyticsConsent: ServerConsent = "none"): Promise<CheckoutStart> {
   const handoff = await resolveCheckoutHandoff(returnTo);
   if (handoff.kind === "refused") return { kind: "refused", reason: handoff.reason };
 

@@ -47,9 +47,11 @@ const activated = (analyticsConsent: string) => ({ kind: "entitled", subscriptio
 describe("subscription_completed from reconciliation", () => {
   it.each([
     ["granted", "granted", "granted"],
-    ["granted", "not_granted", "not_granted"], // withdrawn since checkout
-    ["not_granted", "granted", "not_granted"], // declined at checkout
-    ["not_granted", "not_granted", "not_granted"],
+    ["granted", "anonymous", "anonymous"], // declined since checkout, default-on region
+    ["granted", "none", "none"], // declined since checkout, prior-consent region
+    ["anonymous", "granted", "anonymous"], // declined at checkout
+    ["none", "granted", "none"],
+    ["none", "none", "none"],
   ])("checkout %s + request %s => %s", async (atCheckout, now, expected) => {
     reconcileAccount.mockResolvedValue(activated(atCheckout));
     requestAnalyticsConsent.mockResolvedValue(now);

@@ -60,4 +60,13 @@ describe("the policy matches the code", () => {
     expect(source).toContain("We do not record your screen or sessions");
     expect(source).toContain("European Economic Area, the United Kingdom or Switzerland");
   });
+
+  it("says a decline in the prior-consent regions collects nothing, as the code does", () => {
+    const client = readFileSync(join(process.cwd(), "src/lib/analytics/consent-client.ts"), "utf8");
+    const consent = readFileSync(join(process.cwd(), "src/lib/analytics/consent.ts"), "utf8");
+    expect(client).toContain('if (view.regionDefault !== "granted")');
+    expect(consent).toContain('if (choice === "denied") return defaultOn ? "anonymous" : "none";');
+    expect(source).toContain("You decline analytics, and you are in the European Economic Area, the United Kingdom or Switzerland");
+    expect(source).toContain("Our pages do not send analytics from your browser");
+  });
 });

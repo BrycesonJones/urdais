@@ -80,10 +80,11 @@ The success redirect is never treated as payment. See `src/lib/billing/webhook.t
 | Visitor | Browser analytics | Server events (`checkout_started`, `subscription_completed`) |
 | --- | --- | --- |
 | Accepted | full PostHog: persistent anonymous id; identified on sign-in | keyed on the account |
-| Declined | **cookieless**: no cookie or identifier stored on the device (only the choice itself); visitors counted by PostHog's daily server-side hash; never identified | personless |
-| Not decided, EEA / UK / CH, or country unknown | **nothing** captured, nothing stored, no `/flags` call | personless |
+| Declined, default-on region | **cookieless**: no cookie or identifier stored on the device (only the choice itself); visitors counted by PostHog's daily server-side hash; never identified | anonymous count (random id, no person) |
+| Declined, EEA / UK / CH, or country unknown | **nothing**: PostHog left pending, or not started at all on later visits | **not sent** |
+| Not decided, EEA / UK / CH, or country unknown | **nothing** captured, nothing stored, no request to PostHog | **not sent** |
 | Not decided, elsewhere | full PostHog, with the banner offering Decline | keyed on the account |
-| Do Not Track or Global Privacy Control | PostHog never starts | personless |
+| Do Not Track or Global Privacy Control | PostHog never starts | **not sent** |
 
 - **The choice** is a first-party cookie, `urdais_analytics_consent=granted|denied`
   (1 year, `SameSite=Lax`). It records a decision, which is the one thing that must
@@ -127,10 +128,13 @@ The success redirect is never treated as payment. See `src/lib/billing/webhook.t
 
 ### Server events follow the same choice
 
-A server event never names a visitor who has not consented. Without consent, it is
-**personless**: a random distinct id, `$process_person_profile: false`, and nothing
-derived from the account or subscription. It still counts that the checkout or
-conversion happened.
+A server event never names a visitor who has not consented (`ServerConsent` in
+`src/lib/analytics/consent.ts`): `granted` keys it on the account; `anonymous` (a
+refusal in a default-on region) sends it **personless** — a random distinct id,
+`$process_person_profile: false`, nothing derived from the account or
+subscription; `none` (any prior-consent or unknown-region visitor without a grant,
+or DNT/GPC) sends nothing. Stripe metadata written before this three-way rule
+(`not_granted`) reads as `none`.
 
 - `checkout_started` reads the request's consent (cookie, `DNT` / `Sec-GPC` headers,
   regional default).
@@ -139,8 +143,8 @@ conversion happened.
   Subscription. Billing reads nothing from it. A subscription without it (created
   before this change, or outside Checkout) counts as `not_granted`.
 - On `/access/complete` (reconciliation) the reader's request is available, so the
-  conversion may name the account only if **both** the checkout-time consent and the
-  current request's consent allow it.
+  conversion follows the **stricter** of the checkout-time consent and the current
+  request's consent.
 - **Limitation:** consent withdrawn between starting checkout and activation is not
   seen by a **webhook** conversion, which has only the checkout-time record. It
   affects at most that one event.
@@ -150,13 +154,12 @@ conversion happened.
 These are decisions or facts outside the code. They are recorded here so nobody
 mistakes the implementation for legal advice:
 
-- **Cookieless counting of decliners and of undecided visitors.** PostHog positions
-  cookieless mode as storing nothing on the device. That addresses the ePrivacy
-  storage rule, but GDPR still governs the processing of IP address and user agent
-  to make the daily hash, so it needs a lawful basis (typically legitimate interest)
-  and a privacy-notice entry. Whether counting a visitor who clicked Decline is
-  acceptable is a legal judgement, not a technical one. Turning it off means
-  `cookieless_mode` is removed and declined visitors send nothing.
+- **Cookieless counting of decliners.** Used only outside the EEA, UK and Switzerland
+  (and never where the country is unknown). PostHog positions cookieless mode as
+  storing nothing on the device, but its hash still processes IP address and user
+  agent, which needs a lawful basis and a privacy-notice entry. In the prior-consent
+  regions a decline sends nothing, because whether cookieless counting after a
+  refusal is lawful there is unsettled (EDPB Guidelines 2/2023 ¶43, ¶55–56).
 - **Default-on outside the EEA/UK/CH.** Some US states give users an opt-out right
   that Global Privacy Control must honour (handled: PostHog never starts), and other
   jurisdictions (e.g. Brazil, Canada, Quebec, South Korea, India) have their own
@@ -209,8 +212,9 @@ payment detail is sent, and person profiles exist for identified users only.
 
 1. Confirm the project belongs to Urdais; copy its **project** key (`phc_…`) and its
    ingestion host into Vercel Production only. Never the personal key (`phx_…`).
-2. Project settings → Web analytics → **enable "Cookieless server hash mode"**.
-   **Without it, every declined visitor's events are dropped at ingestion.**
+2. Project settings → Web analytics → **enable "Cookieless server hash mode"** if
+   decliners in default-on regions should be counted. Without it, their events are
+   dropped at ingestion (decliners in the EEA/UK/CH send nothing either way).
 3. Project settings → authorized domains: add `https://urdais.com`.
 4. Leave Session replay off. Project settings cannot turn client features on:
    `advanced_disable_flags` also disables PostHog's remote config, so heatmaps, web
@@ -246,14 +250,18 @@ PostHog shows step-to-step and overall conversion. Breakdowns:
 on the person, or `product_category` on the first step.
 
 **Conversion counts** (Trends) — `checkout_started` and `subscription_completed`
-totals. These include personless events, so they are complete even when the funnel
-is not.
+totals. These include personless events, so they count more than the funnel does,
+but they are **not complete**: checkouts and conversions by visitors who declined or
+had not chosen in the EEA/UK/CH (or an unknown region), or who send DNT/GPC, are not
+sent at all. Stripe remains the authoritative count of subscriptions.
 
 ### Attribution limits
 
 - **Declined and undecided visitors cannot be in a per-person funnel.** Their browser
-  events are cookieless (or absent) and their server events are personless, so the
-  funnel covers consenting visitors only. The Trends totals above count everyone.
+  events are cookieless or absent and their server events are personless or absent,
+  so the funnel covers consenting visitors only. The Trends totals count consenting
+  visitors plus decliners outside the EEA/UK/CH; EEA/UK/CH decliners and undecided
+  visitors are not counted at all.
 - **Cookieless visitors are counted per day.** PostHog's hash rotates daily, so a
   visitor who returns tomorrow is a new visitor, and multi-day attribution is lost.
 - **Undecided visitors in prior-consent regions are not counted at all** until they

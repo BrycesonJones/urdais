@@ -2,7 +2,12 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const store = vi.hoisted(() => {
-  let view = { status: "off", explicit: false, preferencesOpen: false };
+  let view: { status: string; explicit: boolean; preferencesOpen: boolean; regionDefault: string | null } = {
+    status: "off",
+    explicit: false,
+    preferencesOpen: false,
+    regionDefault: null,
+  };
   const listeners = new Set<() => void>();
   return {
     set(next: Partial<typeof view>) {
@@ -32,7 +37,7 @@ import { ConsentBanner } from "@/components/analytics/consent-banner";
 import { PrivacySettingsButton, PrivacySettingsItem } from "@/components/analytics/privacy-settings-button";
 
 beforeEach(() => {
-  act(() => store.set({ status: "off", explicit: false, preferencesOpen: false }));
+  act(() => store.set({ status: "off", explicit: false, preferencesOpen: false, regionDefault: null }));
   store.chooseConsent.mockReset();
   store.close.mockReset();
 });
@@ -142,6 +147,22 @@ describe("privacy policy link", () => {
     render(<ConsentBanner />);
     expect(banner()!.textContent).not.toMatch(/nothing stored/);
     expect(banner()!.textContent).toContain("only your choice is remembered");
+  });
+
+  it("says declining collects nothing in a prior-consent or unknown region", () => {
+    for (const regionDefault of ["pending", null]) {
+      act(() => store.set({ status: "pending", regionDefault }));
+      const { unmount } = render(<ConsentBanner />);
+      expect(banner()!.textContent).toContain("If you decline, no analytics are collected from this browser");
+      expect(banner()!.textContent).not.toContain("still counted");
+      unmount();
+    }
+  });
+
+  it("says declining still counts visits cookielessly only in a default-on region", () => {
+    act(() => store.set({ status: "granted", explicit: false, regionDefault: "granted" }));
+    render(<ConsentBanner />);
+    expect(banner()!.textContent).toContain("visits are still counted, but without cookies");
   });
 });
 

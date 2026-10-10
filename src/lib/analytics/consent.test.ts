@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { consentDefaultFor, consentFromStripeMetadata, parseConsentChoice, serverAnalyticsConsent } from "@/lib/analytics/consent";
+import { consentDefaultFor, consentFromStripeMetadata, parseConsentChoice, serverAnalyticsConsent, stricterServerConsent } from "@/lib/analytics/consent";
 
 describe("consentDefaultFor", () => {
   it("asks first in the EEA, the UK and Switzerland", () => {
@@ -28,19 +28,42 @@ describe("consentDefaultFor", () => {
 });
 
 describe("serverAnalyticsConsent", () => {
-  it("lets Do Not Track / GPC override even an explicit grant", () => {
-    expect(serverAnalyticsConsent({ cookie: "granted", country: "US", doNotTrack: true })).toBe("not_granted");
+  const consent = (cookie: string | null, country: string | null, doNotTrack = false) =>
+    serverAnalyticsConsent({ cookie, country, doNotTrack });
+
+  it("sends nothing for Do Not Track / GPC, even over an explicit grant", () => {
+    expect(consent("granted", "US", true)).toBe("none");
+    expect(consent(null, "US", true)).toBe("none");
   });
 
-  it("prefers the explicit choice to the region", () => {
-    expect(serverAnalyticsConsent({ cookie: "denied", country: "US", doNotTrack: false })).toBe("not_granted");
-    expect(serverAnalyticsConsent({ cookie: "granted", country: "DE", doNotTrack: false })).toBe("granted");
+  it("keys on the account with an explicit grant, anywhere", () => {
+    expect(consent("granted", "DE")).toBe("granted");
+    expect(consent("granted", "US")).toBe("granted");
   });
 
-  it("falls back to the regional default, and to not_granted for anything unclear", () => {
-    expect(serverAnalyticsConsent({ cookie: null, country: "US", doNotTrack: false })).toBe("granted");
-    expect(serverAnalyticsConsent({ cookie: null, country: "FR", doNotTrack: false })).toBe("not_granted");
-    expect(serverAnalyticsConsent({ cookie: "yes", country: null, doNotTrack: false })).toBe("not_granted");
+  it("EEA, UK, Switzerland and unknown: a refusal or no decision sends nothing", () => {
+    for (const country of ["DE", "FR", "GB", "CH", null, "XX", "EU"]) {
+      expect(consent("denied", country), `denied ${country}`).toBe("none");
+      expect(consent(null, country), `undecided ${country}`).toBe("none");
+    }
+  });
+
+  it("default-on regions: no decision keys on the account; a refusal is an anonymous count", () => {
+    expect(consent(null, "US")).toBe("granted");
+    expect(consent("denied", "US")).toBe("anonymous");
+  });
+
+  it("treats an unreadable choice as no choice", () => {
+    expect(consent("yes", null)).toBe("none");
+    expect(consent("yes", "US")).toBe("granted");
+  });
+});
+
+describe("stricterServerConsent", () => {
+  it("takes the more restrictive", () => {
+    expect(stricterServerConsent("granted", "anonymous")).toBe("anonymous");
+    expect(stricterServerConsent("anonymous", "none")).toBe("none");
+    expect(stricterServerConsent("granted", "granted")).toBe("granted");
   });
 });
 
@@ -53,8 +76,10 @@ describe("parsing", () => {
 
   it("reads Stripe metadata conservatively", () => {
     expect(consentFromStripeMetadata({ urdais_analytics_consent: "granted" })).toBe("granted");
-    expect(consentFromStripeMetadata({ urdais_analytics_consent: "not_granted" })).toBe("not_granted");
-    expect(consentFromStripeMetadata({})).toBe("not_granted");
-    expect(consentFromStripeMetadata(null)).toBe("not_granted");
+    expect(consentFromStripeMetadata({ urdais_analytics_consent: "anonymous" })).toBe("anonymous");
+    // Written before the three-way distinction: treated as the strictest.
+    expect(consentFromStripeMetadata({ urdais_analytics_consent: "not_granted" })).toBe("none");
+    expect(consentFromStripeMetadata({})).toBe("none");
+    expect(consentFromStripeMetadata(null)).toBe("none");
   });
 });
