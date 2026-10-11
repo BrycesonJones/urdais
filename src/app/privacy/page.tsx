@@ -78,7 +78,7 @@ export default function PrivacyPolicyRoute() {
               <li>We use PostHog to understand how the site is used. What it records depends on your choice and your region, and you can change your choice at any time.</li>
               <li>If you create an account, we keep your email address and an internal account identifier.</li>
               <li>Payments are handled by Stripe on Stripe&rsquo;s own checkout page. Urdais never receives your card number.</li>
-              <li>We do not show advertising and do not sell personal information. <Todo>confirm as a standing commitment</Todo></li>
+              <li>We do not sell personal information, and we do not use it for third-party behavioural advertising.</li>
               <li>You can delete your account yourself from your account page.</li>
               <li>Privacy questions and requests go through our contact form, which does not need an account.</li>
             </ul>
@@ -119,7 +119,7 @@ export default function PrivacyPolicyRoute() {
               rows={[
                 ["You accept analytics", "Full analytics. PostHog stores a random identifier in a cookie and in your browser’s local storage, so return visits are recognised."],
                 ["You decline analytics, and you are in the European Economic Area, the United Kingdom or Switzerland, or we cannot tell where you are", "Nothing. Our pages do not send analytics from your browser; only a record of your choice is stored."],
-                ["You decline analytics, and you are elsewhere", "Visits are still counted, but no cookie or identifier is stored on your device; only a record of your choice is. To count a visit once, PostHog’s servers combine your IP address, user agent and our site name with a random value that changes every day and is then deleted, so the same browser cannot be recognised from one day to the next."],
+                ["You decline analytics, and you are elsewhere", "No cookie or identifier is stored on your device; only a record of your choice is. Our pages still send PostHog a page event without any identifier, but PostHog discards it on arrival under our settings, so your visit is not counted or stored."],
                 ["You have not chosen, and you are in the European Economic Area, the United Kingdom or Switzerland, or we cannot tell where you are", "Nothing. Our pages do not contact PostHog at all until you choose."],
                 ["You have not chosen, and you are elsewhere", "Full analytics, as if you had accepted. The banner lets you decline."],
                 ["Your browser sends a Do Not Track or Global Privacy Control signal", "Nothing. PostHog is not started in your browser."],
@@ -140,11 +140,9 @@ export default function PrivacyPolicyRoute() {
               on your account page is excluded from click recording.
             </p>
             <p>
-              <strong>Your IP address and location.</strong> PostHog receives your IP address with each event. Unless it
-              is configured not to, PostHog stores the address and derives an approximate location from it, which can
-              include country, region, city, postal code and approximate coordinates.{" "}
-              <Todo>PostHog project settings for IP storage (&ldquo;Discard client IP data&rdquo;) and location
-              enrichment, and the hosting region (US or EU)</Todo>
+              <strong>Your IP address and location.</strong> PostHog receives your IP address with each event, as any
+              web server does. We have configured PostHog not to store it and not to derive a location from it. PostHog
+              stores our analytics data in its European Union region (Frankfurt, Germany).
             </p>
             <p>
               <strong>If you have an account.</strong> When you have accepted analytics (or it is on by default in your
@@ -176,7 +174,8 @@ export default function PrivacyPolicyRoute() {
             </ul>
             <p>
               Our production database and authentication run on Supabase in the United States (AWS us-east-1).
-              <Todo>the email provider that sends sign-in codes</Todo>
+              Sign-in emails are sent by Supabase&rsquo;s authentication service, directly or through an email
+              delivery provider acting for us.
             </p>
           </Section>
 
@@ -194,8 +193,8 @@ export default function PrivacyPolicyRoute() {
             <p>
               If you use the contact form, we receive your email address and your message. They are delivered to our
               inbox through <ExtLink href="https://resend.com/legal/privacy-policy">Resend</ExtLink>. We use them only
-              to reply. Resend keeps a copy of each message for 30 days. <Todo>how long contact messages are kept in
-              our inbox</Todo>
+              to reply. Resend keeps a copy of each message for 30 days. We keep messages in our inbox for as long as
+              we need them to handle your message and any follow-up.
             </p>
           </Section>
 
@@ -218,8 +217,10 @@ export default function PrivacyPolicyRoute() {
             <p>
               We use the providers named above to run Urdais: Vercel (hosting), Supabase (database and sign-in), Stripe
               (payments), PostHog (analytics), Resend (contact email), Google (only if you choose Google sign-in) and
-              OpenFreeMap (map tiles). We do not sell personal information. <Todo>data processing agreements in place with
-              each provider</Todo>
+              OpenFreeMap (map tiles). Vercel, Supabase, PostHog and Resend process information on our behalf; Stripe
+              and Google also process it under their own privacy policies, and OpenFreeMap and publishers&rsquo; image
+              hosts receive only what your browser sends when it loads their content. We do not sell personal
+              information, and we do not use it for third-party behavioural advertising.
             </p>
             <p>
               We may disclose information if required by law, or to protect Urdais and its users from fraud or abuse.
@@ -235,18 +236,16 @@ export default function PrivacyPolicyRoute() {
                 of your payments under its obligations.
               </li>
               <li>
-                <strong>Analytics data</strong> is kept by PostHog for the retention period of our PostHog plan.{" "}
-                <Todo>the period: PostHog states 1 year on its free plan and 7 years on paid plans, and that it cannot be
-                shortened</Todo>
+                <strong>Analytics data</strong> is kept by PostHog for 1 year, the fixed retention period of the PostHog
+                plan we use, unless it is deleted sooner (for example, when you delete your account).
               </li>
               <li>
-                <strong>Contact messages</strong>: 30 days at Resend; in our inbox,{" "}
-                <Todo>retention period</Todo>
+                <strong>Contact messages</strong>: 30 days at Resend; in our inbox, as long as we need them to handle
+                your message and any follow-up.
               </li>
               <li>
-                <strong>Hosting logs</strong>: kept by Vercel for a period set by our Vercel plan.{" "}
-                <Todo>the period: Vercel keeps runtime logs for 1 hour on its Hobby plan and 1 day on Pro (30 days with
-                Observability Plus)</Todo>
+                <strong>Hosting logs</strong>: the request logs Vercel makes available to us are kept for a limited
+                period of no more than 30 days. Vercel&rsquo;s own records are covered by its privacy notice.
               </li>
             </ul>
             <p>
@@ -256,18 +255,16 @@ export default function PrivacyPolicyRoute() {
               deletion, once your last visits have been recorded; PostHog then removes the profile shortly afterwards
               and deletes the events on its own schedule. If PostHog cannot be reached, we keep retrying daily and hold
               only the internal identifier needed to do so, until PostHog accepts the request. Visits that were never linked to your account
-              (cookieless counts, or anonymous browsing on a browser where you never signed in) carry no identifier
+              (anonymous counts, or anonymous browsing on a browser where you never signed in) carry no identifier
               and cannot be traced to you. Other browsers where you were signed in stop using your identifier within
-              minutes of loading the site again.{" "}
-              <Todo>expected completion time to state publicly</Todo>
+              minutes of loading the site again.
             </p>
             <p>
               The deletion request covers the events PostHog has received when we make it. Events that reach PostHog
               unusually late can remain after it: for example, from a browser tab on another device that was opened
               while you were signed in and has not been reloaded since, or from a delay in PostHog&rsquo;s own
               processing. Such events can recreate an analytics profile linked to your former account identifier. We
-              check for these profiles and ask PostHog to delete them as well.{" "}
-              <Todo>how often this check runs, before stating it</Todo>
+              check for these profiles regularly and ask PostHog to delete them as well.
             </p>
           </Section>
 
@@ -300,17 +297,39 @@ export default function PrivacyPolicyRoute() {
                 Privacy questions and requests
               </a>
               ). We will not treat you differently for exercising these rights.
-              <Todo>legal bases relied on (consent, contract, legitimate interests) and region-specific notices, after legal review</Todo>
             </p>
+          </Section>
+
+          <Section id="legal-bases" title="Why we may use your information">
+            <p>Where the law requires a legal basis for using personal information, we rely on:</p>
+            <ul>
+              <li>
+                <strong>your consent</strong>, for analytics wherever we ask before collecting it, and whenever you accept
+                analytics. You can withdraw it at any time with the privacy settings control;
+              </li>
+              <li>
+                <strong>performing our contract with you</strong>, to provide your account, sign-in and subscription,
+                and to process payments;
+              </li>
+              <li>
+                <strong>our legitimate interests</strong> in operating, securing and improving Urdais, for hosting and
+                request logs, protecting the site from abuse, analytics where it is on by default, and replying to
+                messages you send us;
+              </li>
+              <li>
+                <strong>legal obligations</strong>, to keep records of payments.
+              </li>
+            </ul>
           </Section>
 
           <Section id="international" title="International visitors">
             <p>
-              Urdais and most of its providers process information in the United States. If you visit from elsewhere,
-              your information is transferred there. PostHog states in its data processing agreement that it
-              participates in the EU-U.S. Data Privacy Framework (with its UK and Swiss extensions) and also relies on
-              the EU Standard Contractual Clauses. <Todo>PostHog hosting region, and the transfer mechanisms for the other
-              providers</Todo>
+              Urdais is operated from the United States, and most of its providers process information there. If you
+              visit from elsewhere, your information is transferred there. PostHog stores our analytics data in the
+              European Union, and its subprocessors include services in the United States; PostHog states in its data
+              processing agreement that it participates in the EU-U.S. Data Privacy Framework (with its UK and Swiss
+              extensions) and also relies on the EU Standard Contractual Clauses. Our other providers&rsquo; data
+              processing terms likewise include safeguards for international transfers.
             </p>
           </Section>
 
@@ -324,13 +343,16 @@ export default function PrivacyPolicyRoute() {
 
           <Section id="children" title="Children">
             <p>
-              Urdais is a professional market-data service and is not directed at children. <Todo>minimum age</Todo>
+              Urdais is a professional market-data service for people aged 18 or older and is not directed at children.
+              We do not knowingly collect personal information from anyone under 18. If you believe someone under 18 has
+              given us personal information, tell us through the contact form and we will delete it.
             </p>
           </Section>
 
           <Section id="changes" title="Changes to this policy">
             <p>
-              When this policy changes, we will update the effective date above. <Todo>how significant changes are announced</Todo>
+              When this policy changes, we will publish the updated policy on this page and update the effective date
+              above. If a change is significant, we will also give additional notice where the law requires it.
             </p>
           </Section>
 
@@ -359,9 +381,8 @@ export default function PrivacyPolicyRoute() {
               account yourself from{" "}
               <Link href="/account" className="underline underline-offset-2 text-neutral-100 hover:text-white">your account page</Link>, and change
               your analytics choice with the privacy settings control described under &ldquo;Your choices&rdquo;.{" "}
-              <Todo>how we confirm a requester&rsquo;s identity, and any response time to state, after legal review</Todo>
-              <Todo>whether any law that applies to Urdais requires a postal address or email address in addition to
-              the form, after legal review</Todo>
+              Before acting on a request about personal information, we may ask you for details that let us confirm it
+              comes from you.
             </p>
           </Section>
         </article>
