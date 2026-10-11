@@ -1,8 +1,4 @@
-import Link from "next/link";
-
-import { PrivacySettingsItem } from "@/components/analytics/privacy-settings-button";
 import { ContactTrigger } from "@/components/layout/contact-trigger";
-import { PRIVACY_POLICY_HREF, privacyPolicyLinked } from "@/lib/privacy/policy";
 import { GITHUB_REPO_URL, LINKEDIN_URL, SITE_NAME, SITE_URL, X_URL } from "@/constants/site";
 
 const linkClass =
@@ -28,11 +24,6 @@ export function SiteFooter() {
         <nav aria-label="Footer" className="flex flex-col items-center gap-y-7">
           <ul className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
             <li>
-              <Link href="/docs" className={linkClass}>
-                Docs
-              </Link>
-            </li>
-            <li>
               <ContactTrigger className={`uppercase ${linkClass}`} />
             </li>
             <li>
@@ -45,14 +36,6 @@ export function SiteFooter() {
                 LinkedIn
               </a>
             </li>
-            {privacyPolicyLinked() ? (
-              <li>
-                <Link href={PRIVACY_POLICY_HREF} className={linkClass}>
-                  Privacy
-                </Link>
-              </li>
-            ) : null}
-            <PrivacySettingsItem className={linkClass} />
           </ul>
           <a href={GITHUB_REPO_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
             Open source

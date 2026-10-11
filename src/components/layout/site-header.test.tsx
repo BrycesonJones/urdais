@@ -42,6 +42,13 @@ describe("SiteHeader map navigation", () => {
       "Account",
     ]);
   });
+
+  it("puts the More options menu between Docs and Account", () => {
+    render(<SiteHeader />);
+    const nav = screen.getByRole("navigation", { name: "Primary" });
+    const order = Array.from(nav.querySelectorAll("a, button")).map((el) => el.getAttribute("aria-label") ?? el.textContent);
+    expect(order).toEqual(["Map", "Docs", "More options", "Account"]);
+  });
 });
 
 describe("SiteHeader account entry", () => {
