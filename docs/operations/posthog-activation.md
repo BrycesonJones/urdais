@@ -1,7 +1,8 @@
 # PostHog production activation
 
 **Status: runbook. Nothing in it has been executed.** Prepared 8 October 2026,
-revised 10 October 2026 for the final privacy-readiness changes. Every step that
+revised 10 October 2026 for the final privacy-readiness changes, and 11 October 2026
+for the privacy contact decision and late-arriving events. Every step that
 changes PostHog, Vercel or production needs separate, explicit approval.
 
 Background: docs/architecture/analytics.md (what is sent, consent, identity). The
@@ -18,10 +19,65 @@ Each step is a gate: do not start one until the previous is done.
       decision that decliners in the UK and Switzerland send nothing (conservative;
       reversible in one place).
 - [ ] Default-on outside the EEA/UK/CH accepted, with the limitations in § Consent.
-- [ ] Every "To confirm" item in the privacy policy answered (legal entity and address,
-      privacy contact, retention periods, auth email provider, DPAs, legal bases,
-      minimum age, change notification, the no-ads/no-sale commitment).
-- [ ] Automated analytics erasure on account deletion is merged (§ Account deletion).
+- [x] Privacy contact: **the existing contact form** (decided 11 October 2026; no
+      dedicated privacy address). The policy's "Privacy Questions and Requests" section
+      opens it in place.
+- [ ] The contact form delivers in production: send one real test message from
+      urdais.com (signed out) and confirm it reaches the `CONTACT_TO_EMAIL` inbox with a
+      working Reply-To. `RESEND_API_KEY`, `CONTACT_TO_EMAIL` and `CONTACT_FROM_EMAIL`
+      must be set in Production; a 500 from `/api/contact` means one is missing or
+      Resend refused.
+- [x] Operator (confirmed 11 October 2026): Urdais is operated individually by
+      **Bryceson Jones, Georgia, United States**. Not a registered company, and not
+      associated with any other company. No public postal address is published.
+- [ ] Every remaining "To confirm" item in the privacy policy answered. They fall into
+      three groups:
+
+  **A. Technical facts** (verified 11 October 2026 unless marked)
+
+  | Item | Finding | Policy |
+  | --- | --- | --- |
+  | Vercel function region | `iad1`, Washington, D.C.: every dynamic route on urdais.com answers `x-vercel-id: iad1::iad1::…` | stated |
+  | Vercel log retention | Plan-dependent (vercel.com/docs/logs/runtime): Hobby 1 hour, Pro 1 day, 30 days with Observability Plus, Enterprise 3 days. **The plan is not visible from the repo.** | To confirm: the plan |
+  | Auth email provider | **Not verifiable without dashboard access.** Supabase's built-in mailer "is not meant for production use", sends only to the project's team members, and is capped at 2 messages an hour (supabase.com/docs/guides/auth/auth-smtp). If real readers receive sign-in codes, custom SMTP is configured. Check Supabase → UrdaisProd → Authentication → Emails → SMTP Settings. | To confirm |
+  | Contact-message retention | Resend keeps email content and logs **30 days** on Free, Pro and Scale (custom on Enterprise), stored in the US. The inbox copy is the operator's choice. | 30 days at Resend stated; inbox: To confirm |
+  | PostHog retention | Events: **1 year free, 7 years paid**; cannot be shortened or set on request (posthog.com/docs/data/events-retention). No documented period for person profiles. | To confirm: plan |
+  | PostHog processing settings | Project not yet created: set at § 3–§ 7. Production currently ships **no `phc_` key**, so PostHog is off. | To confirm after setup |
+  | Account deletion | As implemented and documented (§ Account deletion and analytics). Unchanged. | stated |
+
+  **B. Provider setup decisions** (recommendations; each is a manual action)
+
+  | Decision | Recommendation |
+  | --- | --- |
+  | PostHog region | **EU** (§ 3). Fixed at creation. |
+  | IP retention | "Discard client IP data" **on** (§ 6). |
+  | GeoIP | **Off** initially (§ 6); the policy then needs no location wording beyond what it says. |
+  | DPAs | Sign PostHog's DPA in-app (§ 4). Confirm the DPAs of Vercel, Supabase, Stripe and Resend are accepted under their terms for this account. Each publishes one. |
+  | Cookieless mode | **Off at launch** (§ 5): decliners outside the EEA/UK/CH are then simply not counted. Turn on later if those counts are wanted. |
+  | Retention | **Free plan (1 year)** unless a paid feature is needed; the policy states whichever applies. |
+  | Late-event check | **Weekly**, by hand, to start (§ Late-arriving events). |
+
+  **C. Owner or legal decisions** (not answerable from the code or provider docs)
+
+  - minimum user age (nothing in sign-up asks for or checks one);
+  - whether "no advertising, no sale of personal information" is a standing commitment;
+  - how significant policy changes are announced (e.g. a notice on the site, an
+    email to account holders);
+  - legal bases for each purpose (consent, contract, legitimate interests);
+  - **additional contact requirements**: whether any law that applies requires a postal
+    address or an email address in addition to the form. Examples to check with legal
+    review: GDPR Art. 13(1)(a) asks for the controller's "identity and contact details",
+    and Art. 27 can require an EU representative for a non-EU controller that monitors
+    EU visitors' behaviour; California's CCPA (Civ. Code § 1798.130(a)(1)), if Urdais
+    ever meets its thresholds (§ Assessment), requires a business that operates only
+    online to offer **an email address** for requests, which a form alone would not
+    satisfy. This runbook does not decide these;
+  - any regional notices (EEA/UK, US states);
+  - how a requester's identity is confirmed, and any response time to state;
+  - the public statement of erasure completion time;
+  - the effective date (set on publication).
+- [x] Automated analytics erasure on account deletion is merged (#239,
+      `a23064610a8a1bbe5f33e80ecd55fede86c0a18a`).
 
 ### 2. Finalize and publish the privacy policy
 
@@ -272,6 +328,132 @@ session ended, or the check failed — PostHog starts already reset, so nothing 
 under the old id and an erased person is not recreated. A matching answer is cached in
 the tab for ten minutes.
 
+### Late-arriving events (residual risk)
+
+The erasure request covers the events PostHog holds **when it is made**. An event that
+reaches PostHog later, carrying the deleted account's id as its distinct id, is not
+covered, and it **recreates a PostHog person under that id**. Urdais has nulled the id
+by then, so nothing on the Urdais side can say the person belonged to a deleted account.
+Known ways it happens:
+
+- **A long-open tab on another device.** The identity check (`/api/analytics/identity`)
+  runs when PostHog starts, i.e. on a full page load. A tab opened while the reader was
+  signed in, and navigated client-side ever since, keeps sending under the account id
+  until it reloads. The one-hour hold does not cover a tab left open for days.
+- **Ingestion delay at PostHog** longer than the one-hour hold, so events captured
+  before the request are processed after it. PostHog does not document whether such
+  events fall inside the deletion.
+
+Server events cannot cause it: after deletion there is no account to key them on.
+
+The policy discloses this risk and says we check for such profiles and ask PostHog to
+delete them. This procedure is what makes that true. **Do not publish the policy until
+the first weekly check is on someone's calendar.** It is a manual check: nothing here is
+scheduled or automated, and nothing is deleted without a person approving it.
+
+**Cadence.** Weekly to start, plus before closing any individual erasure request that
+needs evidence. Revisit after a few clean months; the expected yield is near zero.
+
+**What PostHog does with an erasure.** It is not instantaneous. PostHog accepts the
+request (202), removes the person shortly after, and deletes its events
+asynchronously, off-peak (typically weekends on PostHog Cloud). "Erased" in this
+procedure means **PostHog accepted the request**; the check below is what confirms the
+person is gone.
+
+#### 1. Find candidates (PostHog → SQL editor)
+
+Two independent signals, so the check does not rest on UUID format alone:
+
+- **Identified browsers.** posthog-js stamps every event with `$is_identified`, and
+  adds `$user_id` once the browser is identified (posthog-js 1.438; Urdais's
+  `before_send` redacts URLs only and keeps both). Any distinct id sending
+  `$is_identified = true` events belongs to a browser that called `identify`, which
+  Urdais does only with an account id.
+- **Account-shaped ids.** Urdais account ids are `gen_random_uuid()` (UUID version 4).
+  posthog-js anonymous ids are version 7. This catches identified events whose
+  `$is_identified` flag was lost (for example, a server-side merge).
+
+```sql
+SELECT
+  distinct_id,
+  count() AS events,
+  countIf(properties.$is_identified = true) AS identified_events,
+  min(timestamp) AS first_seen,
+  max(timestamp) AS last_seen
+FROM events
+WHERE timestamp >= now() - INTERVAL 8 DAY
+  AND event NOT IN ('checkout_started', 'subscription_completed')
+  AND (
+    properties.$is_identified = true
+    OR match(distinct_id, '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')
+  )
+GROUP BY distinct_id
+ORDER BY last_seen DESC
+```
+
+If the SQL editor rejects `= true` for the property, compare with `= 'true'`. Eight
+days overlaps consecutive weekly runs. The two server events are excluded
+because a decliner's copy uses a random v4 id with no person. A consented copy uses the
+account id, but it cannot be sent once the account is gone.
+
+#### 2. Verify candidates against Urdais records (Supabase → UrdaisProd → SQL editor)
+
+Paste the candidate ids into this read-only query. It returns each id with what Urdais
+knows about it:
+
+```sql
+select
+  c.id,
+  exists (select 1 from identity.accounts a where a.id::text = c.id) as live_account,
+  (select d.state from identity.account_deletions d
+    where d.account_id::text = c.id and d.state <> 'complete'
+    order by d.requested_at desc limit 1) as deletion_in_flight
+from unnest(array['<id>', '<id>']) as c(id);
+```
+
+Classify each row:
+
+| `live_account` | `deletion_in_flight` | Meaning | Action |
+| --- | --- | --- | --- |
+| true | – | a current account | none |
+| false | `auth_deleted` (or earlier) | a deletion still held for the daily cron | none: the cron erases it; erasing early races the reader's last events |
+| false | null | **orphan**: no account and no pending deletion | review (step 3) |
+
+A completed deletion nulls its `account_id`, so an orphan cannot be positively traced
+to a deletion record. "Not a live account and not in flight" is the test.
+
+#### 3. Human review (required before any deletion)
+
+For each orphan, a person looks at it in PostHog before anything is deleted:
+
+- its events: `$current_url`, `$session_id`, timestamps. Do they look like a real
+  reader's browsing that continued after a deletion?
+- whether it could be a test or operator account (from the activation checklist or a
+  preview mistakenly sending to production);
+- whether the id is well-formed. Anything that is not a v4 UUID with
+  `$is_identified = true` is unexpected and should be understood first, not erased.
+
+Record the decision in the operations log: date, reviewer, number of orphans, number
+approved for erasure, reasons for any not approved. **Never record the ids.**
+
+#### 4. Remediate (approved orphans only)
+
+1. `npm run analytics:erase -- --account <id>` (dry run). Check the URL and body.
+2. Add `--execute`. Expected: `queued: 1 person(s) found`, exit 0. `0 person(s)
+   found` (exit 1) means PostHog already removed it: nothing to do.
+3. Any failure: treat it as an open erasure, retry, and escalate if it persists.
+
+#### 5. Verify
+
+- **Within a day:** searching PostHog → People for the distinct id finds no person.
+- **Next weekly run:** the id is not a candidate again. If it is, a tab is still open
+  and sending. Repeat steps 3–4; it stops at that tab's next full page load. A third
+  appearance: investigate the source from `$current_url` and `$session_id` before
+  erasing again.
+- Event deletion completes on PostHog's schedule; do not record it as done before
+  then. If a specific request needs evidence, confirm in PostHog that no events remain
+  for the id after the next weekend.
+
 ### Manual erasure
 
 For a request to erase analytics **without** deleting the account, or to check a
@@ -325,6 +507,10 @@ and a private window per scenario. Live PostHog is required for all of it.
 - [ ] The cron log for `/api/cron/analytics-erasure` shows `held 0` and a 200.
 - [ ] A second browser that was signed in to the same account sends its next events
       under a new anonymous id, not the account id.
+- [ ] Late events: before the cron run, leave a third tab signed in to the test account
+      open and navigate it client-side after the deletion. After the run, the late-event
+      check (§ Late-arriving events) lists the test account's id as an orphan; review
+      and remediation erase it; after that tab reloads, the next check does not list it.
 
 **Payloads**
 
