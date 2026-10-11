@@ -168,8 +168,8 @@ mistakes the implementation for legal advice:
 - **IP geolocation is approximate.** VPNs and travel put visitors in the wrong
   region. An EEA resident on a US VPN gets the US default; the banner still offers
   Decline.
-- **PostHog as processor.** A data processing agreement with PostHog, and EU-hosted
-  ingestion (`https://eu.i.posthog.com`) if wanted, are account-level decisions.
+- **PostHog as processor.** A data processing agreement with PostHog is an
+  account-level step. The project is on US Cloud (`https://us.i.posthog.com`).
 - **The privacy policy** must describe all of this. Urdais has no privacy-policy page
   in this repository.
 

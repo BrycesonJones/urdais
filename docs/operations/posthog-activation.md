@@ -11,15 +11,17 @@ see `src/lib/privacy/policy.ts`).
 
 ## Launch: the short path
 
-The published policy **states** the PostHog configuration below (EU hosting, 1-year
+The published policy **states** the PostHog configuration below (US hosting, 1-year
 free-plan retention, IP not stored, no location lookup). So the order is fixed:
 
 **A. Create and configure PostHog** (no data flows: production has no key yet)
 
-1. Sign up or log in at **eu.posthog.com** (EU Cloud). Create a **dedicated project**
-   for urdais.com. Stay on the **free plan** (1-year event retention).
+1. **Done (11 October 2026):** a dedicated urdais.com project on **US Cloud**
+   (`us.posthog.com`). Stay on the **free plan** (1-year event retention). The region
+   cannot be changed later (§ 3).
 2. Organization → Legal → "+ New" → **Data Processing Agreement** → send for signature.
-3. Project settings: **"Discard client IP data" on**.
+3. Project settings: **"Discard client IP data" on**. Check it explicitly: PostHog
+   turns it on by default only for EU organisations.
 4. Data pipelines: **GeoIP transformation off** (disable it if listed).
 5. Project settings → Session replay: **off**.
 6. Web analytics: **"Cookieless server hash mode" off**. With it off, the cookieless
@@ -43,7 +45,7 @@ order (secrets go straight into Vercel, never into chat or the repo):
 | `POSTHOG_PERSONAL_API_KEY` | the `person:write` key | server-only; account erasure |
 | `POSTHOG_PROJECT_ID` | the numeric project id | server-only; account erasure |
 | `NEXT_PUBLIC_POSTHOG_KEY` | the `phc_…` project key | enables analytics |
-| `NEXT_PUBLIC_POSTHOG_HOST` | `https://eu.i.posthog.com` | enables analytics |
+| `NEXT_PUBLIC_POSTHOG_HOST` | `https://us.i.posthog.com` | enables analytics |
 
 **D. Redeploy production without the build cache** (the public variables are inlined
 at build time). Note the previous deployment id as the rollback target.
@@ -112,7 +114,7 @@ Each step is a gate: do not start one until the previous is done.
 
   | Decision | Recommendation |
   | --- | --- |
-  | PostHog region | **EU** (§ 3). Fixed at creation. |
+  | PostHog region | **US Cloud**, chosen at creation (11 October 2026). Fixed. |
   | IP retention | "Discard client IP data" **on** (§ 6). |
   | GeoIP | **Off** initially (§ 6); the policy then needs no location wording beyond what it says. |
   | DPAs | Sign PostHog's DPA in-app (§ 4). Confirm the DPAs of Vercel, Supabase, Stripe and Resend are accepted under their terms for this account. Each publishes one. |
@@ -156,18 +158,19 @@ Each step is a gate: do not start one until the previous is done.
 
 - A **dedicated** project for urdais.com in the organisation that will own the data;
   never one holding other sites' data. Confirm the organisation and project names.
-- **EU (Frankfurt) is the preferred region.** Ingestion host `https://eu.i.posthog.com`;
-  app and API host `https://eu.posthog.com`. US equivalents: `us.i.posthog.com`,
-  `us.posthog.com`.
+- **Region: US Cloud** (project created 11 October 2026). Ingestion host
+  `https://us.i.posthog.com`; app and API host `https://us.posthog.com`, which the
+  erasure code derives from the ingestion host.
 - **The region is effectively permanent**: PostHog offers cross-region migration only
-  on its Scale/Enterprise plans, run by PostHog. Choose before collecting any data.
-- EU hosting is not by itself a transfer guarantee: PostHog's subprocessors include US
-  services (posthog.com/subprocessors), and its DPA relies on the EU-U.S. Data Privacy
-  Framework plus the Standard Contractual Clauses.
+  on its Scale/Enterprise plans, run by PostHog.
+- Visitors outside the US, including consenting EEA/UK/CH visitors, therefore have
+  analytics data transferred to the US. The policy says so; PostHog's DPA relies on the
+  EU-U.S. Data Privacy Framework (UK and Swiss extensions) plus the Standard
+  Contractual Clauses.
 
 ### 4. Data processing agreement and retention
 
-- **DPA:** app.posthog.com (or eu.posthog.com) → Organization → Legal
+- **DPA:** us.posthog.com → Organization → Legal
   (`/legal`) → "+ New" → "Data Processing Agreement (DPA)" → "Send for signature".
   Available on every plan; PostHog countersigns in advance.
 - **Retention** (posthog.com/docs/data/events-retention):
@@ -230,7 +233,7 @@ wait for them.
 2. `POSTHOG_PROJECT_ID` — the numeric project id (Project settings → General).
 3. `NEXT_PUBLIC_POSTHOG_KEY` — the project key (`phc_…`). Never a personal key; the
    code refuses one.
-4. `NEXT_PUBLIC_POSTHOG_HOST` — the ingestion host, e.g. `https://eu.i.posthog.com`.
+4. `NEXT_PUBLIC_POSTHOG_HOST` — the ingestion host: `https://us.i.posthog.com`.
 
 Not Preview or Development: preview traffic would be counted as visitors. Keep the
 erasure credentials for as long as PostHog may hold Urdais data, even if analytics is

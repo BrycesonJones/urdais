@@ -52,6 +52,14 @@ describe("/privacy once published", () => {
     expect(source).toContain("PRIVACY_POLICY_EFFECTIVE_DATE ?? <Todo>");
   });
 
+  it("states US hosting for analytics, matching the PostHog project", () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    render(<PrivacyPolicyRoute />);
+    const text = (document.body.textContent ?? "").replace(/\s+/g, " ");
+    expect(text.match(/PostHog stores our analytics data in the United States/g)).toHaveLength(2);
+    expect(text).not.toMatch(/Frankfurt|European Union region|analytics data in the European/);
+  });
+
   it("describes a decline outside the prior-consent regions as PostHog handles it with cookieless mode off", () => {
     const source = readFileSync(join(process.cwd(), "src/app/privacy/page.tsx"), "utf8");
     expect(source).toContain("PostHog discards it on arrival under our settings, so your visit is not counted or stored");

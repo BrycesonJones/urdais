@@ -142,7 +142,7 @@ export default function PrivacyPolicyRoute() {
             <p>
               <strong>Your IP address and location.</strong> PostHog receives your IP address with each event, as any
               web server does. We have configured PostHog not to store it and not to derive a location from it. PostHog
-              stores our analytics data in its European Union region (Frankfurt, Germany).
+              stores our analytics data in the United States.
             </p>
             <p>
               <strong>If you have an account.</strong> When you have accepted analytics (or it is on by default in your
@@ -325,11 +325,11 @@ export default function PrivacyPolicyRoute() {
           <Section id="international" title="International visitors">
             <p>
               Urdais is operated from the United States, and most of its providers process information there. If you
-              visit from elsewhere, your information is transferred there. PostHog stores our analytics data in the
-              European Union, and its subprocessors include services in the United States; PostHog states in its data
-              processing agreement that it participates in the EU-U.S. Data Privacy Framework (with its UK and Swiss
-              extensions) and also relies on the EU Standard Contractual Clauses. Our other providers&rsquo; data
-              processing terms likewise include safeguards for international transfers.
+              visit from elsewhere, your information is transferred there. This includes analytics: PostHog stores our
+              analytics data in the United States. PostHog states in its data processing agreement that it participates
+              in the EU-U.S. Data Privacy Framework (with its UK and Swiss extensions) and also relies on the EU Standard
+              Contractual Clauses. Our other providers&rsquo; data processing terms likewise include safeguards for
+              international transfers.
             </p>
           </Section>
 
