@@ -34,14 +34,19 @@ describe("SiteFooter contact", () => {
     expect(document.querySelector('a[href="/contact"]')).toBeNull();
   });
 
-  it("links the published privacy policy", () => {
+  it("has Contact, X and LinkedIn on the first row and Open source beneath, and nothing else", () => {
     render(<SiteFooter />);
-    expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
+    const nav = screen.getByRole("navigation", { name: "Footer" });
+    const firstRow = nav.querySelector("ul")!;
+    expect(Array.from(firstRow.children).map((item) => item.firstElementChild?.textContent)).toEqual(["Contact", "X", "LinkedIn"]);
+    expect(firstRow.nextElementSibling).toBe(screen.getByRole("link", { name: "Open source" }));
+    // Docs, Privacy and Privacy settings moved to the header.
+    for (const name of ["Docs", "Privacy"]) expect(screen.queryByRole("link", { name })).toBeNull();
+    expect(screen.queryByRole("button", { name: /privacy settings/i })).toBeNull();
   });
 
   it("keeps the other footer links", () => {
     render(<SiteFooter />);
-    expect(screen.getByRole("link", { name: "Docs" })).toHaveAttribute("href", "/docs");
     for (const name of ["X", "LinkedIn", "Open source"]) {
       expect(screen.getByRole("link", { name })).toHaveAttribute("target", "_blank");
     }

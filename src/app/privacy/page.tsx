@@ -273,7 +273,7 @@ export default function PrivacyPolicyRoute() {
               <li>
                 <strong>Analytics.</strong> Change your choice at any time:{" "}
                 <PrivacySettingsButton className="underline underline-offset-2 text-neutral-100 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]" />
-                . The same control is in the site footer and on the map. Declining after accepting removes PostHog&rsquo;s
+                . The same control is in the &ldquo;More options&rdquo; menu (&bull;&bull;&bull;) in the site header. Declining after accepting removes PostHog&rsquo;s
                 identifiers from your browser.
               </li>
               <li>
@@ -372,7 +372,7 @@ export default function PrivacyPolicyRoute() {
               </ContactTrigger>
             </div>
             <p>
-              The same form opens from &ldquo;Contact&rdquo; in the site footer on every page. You do not need an
+              The same form opens from &ldquo;Contact&rdquo; in the site footer. You do not need an
               account to use it. It sends us the email address you enter and your message, as described under
               &ldquo;Contact form&rdquo; above, and we reply to that address.
             </p>

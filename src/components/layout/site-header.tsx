@@ -5,6 +5,7 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { AccountIcon } from "@/components/icons/account-icon";
 import { SearchIcon } from "@/components/icons/search-icon";
+import { MoreMenu } from "@/components/layout/more-menu";
 import { SearchModal } from "@/components/layout/search-modal";
 import { prefetchMapRenderer } from "@/components/map/prefetch-map";
 import { SITE_NAME } from "@/constants/site";
@@ -93,6 +94,7 @@ export function SiteHeader() {
               </Link>
             );
           })}
+          <MoreMenu focusRing={focusRing} />
           {/*
             Account entry. The same link for every reader: the header renders no
             session state (a cached page cannot go stale, and a client-side guess is

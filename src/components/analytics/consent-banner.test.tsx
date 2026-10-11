@@ -34,7 +34,7 @@ const policy = vi.hoisted(() => ({ linked: false }));
 vi.mock("@/lib/privacy/policy", () => ({ PRIVACY_POLICY_HREF: "/privacy", privacyPolicyLinked: () => policy.linked }));
 
 import { ConsentBanner } from "@/components/analytics/consent-banner";
-import { PrivacySettingsButton, PrivacySettingsItem } from "@/components/analytics/privacy-settings-button";
+import { PrivacySettingsButton } from "@/components/analytics/privacy-settings-button";
 
 beforeEach(() => {
   act(() => store.set({ status: "off", explicit: false, preferencesOpen: false, regionDefault: null }));
@@ -166,16 +166,3 @@ describe("privacy policy link", () => {
   });
 });
 
-describe("PrivacySettingsItem", () => {
-  it("is absent when analytics is off and reopens the panel otherwise", () => {
-    render(
-      <ul>
-        <PrivacySettingsItem className="c" />
-      </ul>,
-    );
-    expect(screen.queryByRole("button", { name: "Privacy settings" })).toBeNull();
-    act(() => store.set({ status: "granted", explicit: true }));
-    fireEvent.click(screen.getByRole("button", { name: "Privacy settings" }));
-    expect(store.open).toHaveBeenCalled();
-  });
-});
