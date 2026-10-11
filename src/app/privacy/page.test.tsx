@@ -45,6 +45,20 @@ describe("/privacy while a draft", () => {
   });
 });
 
+describe("the operator", () => {
+  it("names the individual operator and location, and no company or address", () => {
+    vi.stubEnv("VERCEL_ENV", "preview");
+    render(<PrivacyPolicyRoute />);
+    const about = screen.getByRole("heading", { level: 2, name: "About this policy" }).closest("section")!;
+    const text = about.textContent ?? "";
+    expect(text).toContain("operated by Bryceson Jones, based in Georgia, United States");
+    expect(text).toContain("refer to Bryceson Jones as the operator of the platform");
+    expect(text).not.toMatch(/To confirm/);
+    const source = readFileSync(join(process.cwd(), "src/app/privacy/page.tsx"), "utf8");
+    expect(source).not.toMatch(/Hachisu|\bLLC\b|legal entity name and postal address/);
+  });
+});
+
 describe("privacy questions and requests", () => {
   function requestsSection() {
     vi.stubEnv("VERCEL_ENV", "preview");

@@ -30,8 +30,9 @@ export const dynamic = "force-dynamic";
  *
  * Every statement here describes behaviour verified in this repository or in the
  * network payloads PostHog actually receives (see docs/architecture/analytics.md).
- * Anything that could not be verified — the legal entity, retention periods,
- * provider account settings — is a visible "To confirm" item,
+ * The operator details are as confirmed by the operator. Anything that could not
+ * be verified — retention periods, provider account settings, legal-review
+ * questions — is a visible "To confirm" item,
  * never a guess. Publication is gated in `@/lib/privacy/policy`.
  */
 export default function PrivacyPolicyRoute() {
@@ -60,12 +61,15 @@ export default function PrivacyPolicyRoute() {
           <Section id="about" title="About this policy">
             <p>
               This policy explains what information Urdais collects when you use urdais.com, why, who else processes it,
-              and the choices you have. &ldquo;Urdais&rdquo;, &ldquo;we&rdquo; and &ldquo;us&rdquo; refer to the operator
-              of urdais.com: <Todo>legal entity name and postal address</Todo>.
+              and the choices you have.
             </p>
             <p>
-              Urdais is an information and market-data platform. Most of it can be used without an account. An account is
-              needed only to subscribe to Urdais Premium.
+              Urdais is an independently operated AI and compute market intelligence platform operated by Bryceson
+              Jones, based in Georgia, United States. References to &ldquo;Urdais&rdquo;, &ldquo;we&rdquo;,
+              &ldquo;us&rdquo; and &ldquo;our&rdquo; refer to Bryceson Jones as the operator of the platform.
+            </p>
+            <p>
+              Most of Urdais can be used without an account. An account is needed only to subscribe to Urdais Premium.
             </p>
           </Section>
 
@@ -85,7 +89,8 @@ export default function PrivacyPolicyRoute() {
               <strong>Hosting.</strong> Urdais is hosted on{" "}
               <ExtLink href="https://vercel.com/legal/privacy-notice">Vercel</ExtLink>. Like any web server, Vercel receives your IP address,
               browser user agent and the address of each page you request, in order to deliver the site and protect it
-              from abuse. <Todo>Vercel log retention and function region</Todo>
+              from abuse. Our server code runs in Vercel&rsquo;s Washington, D.C. (United States) region; pages may be
+              delivered from the Vercel location nearest to you.
             </p>
             <p>
               <strong>Your region.</strong> Vercel tells our server which country a request comes from, derived from the
@@ -189,7 +194,8 @@ export default function PrivacyPolicyRoute() {
             <p>
               If you use the contact form, we receive your email address and your message. They are delivered to our
               inbox through <ExtLink href="https://resend.com/legal/privacy-policy">Resend</ExtLink>. We use them only
-              to reply. <Todo>how long contact messages are kept</Todo>
+              to reply. Resend keeps a copy of each message for 30 days. <Todo>how long contact messages are kept in
+              our inbox</Todo>
             </p>
           </Section>
 
@@ -233,8 +239,15 @@ export default function PrivacyPolicyRoute() {
                 <Todo>the period: PostHog states 1 year on its free plan and 7 years on paid plans, and that it cannot be
                 shortened</Todo>
               </li>
-              <li><strong>Contact messages</strong>: <Todo>retention period</Todo></li>
-              <li><strong>Hosting logs</strong>: <Todo>Vercel log retention</Todo></li>
+              <li>
+                <strong>Contact messages</strong>: 30 days at Resend; in our inbox,{" "}
+                <Todo>retention period</Todo>
+              </li>
+              <li>
+                <strong>Hosting logs</strong>: kept by Vercel for a period set by our Vercel plan.{" "}
+                <Todo>the period: Vercel keeps runtime logs for 1 hour on its Hobby plan and 1 day on Pro (30 days with
+                Observability Plus)</Todo>
+              </li>
             </ul>
             <p>
               Deleting your account also deletes the analytics associated with it. We ask PostHog to delete the
@@ -347,6 +360,8 @@ export default function PrivacyPolicyRoute() {
               <Link href="/account" className="underline underline-offset-2 text-neutral-100 hover:text-white">your account page</Link>, and change
               your analytics choice with the privacy settings control described under &ldquo;Your choices&rdquo;.{" "}
               <Todo>how we confirm a requester&rsquo;s identity, and any response time to state, after legal review</Todo>
+              <Todo>whether any law that applies to Urdais requires a postal address or email address in addition to
+              the form, after legal review</Todo>
             </p>
           </Section>
         </article>
