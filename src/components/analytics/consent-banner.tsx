@@ -90,7 +90,7 @@ export function ConsentBanner() {
             remembers this browser between visits, and if you sign in, your activity is linked to your Urdais
             account.{" "}
             {view.regionDefault === "granted"
-              ? "If you decline, visits are still counted, but without cookies or any identifier stored on your device; only your choice is remembered."
+              ? "If you decline, we won't store analytics about your visits. You can change your choice anytime in Privacy Settings."
               : "If you decline, no analytics are collected from this browser; only your choice is remembered."}
           </p>
           {view.status === "granted" && !view.explicit ? (

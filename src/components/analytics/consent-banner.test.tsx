@@ -159,10 +159,12 @@ describe("privacy policy link", () => {
     }
   });
 
-  it("says declining still counts visits cookielessly only in a default-on region", () => {
+  it("says declining stores no visit analytics in a default-on region, matching cookieless mode being off", () => {
     act(() => store.set({ status: "granted", explicit: false, regionDefault: "granted" }));
     render(<ConsentBanner />);
-    expect(banner()!.textContent).toContain("visits are still counted, but without cookies");
+    const text = banner()!.textContent;
+    expect(text).toContain("If you decline, we won't store analytics about your visits. You can change your choice anytime in Privacy Settings.");
+    expect(text).not.toContain("still counted");
   });
 });
 
