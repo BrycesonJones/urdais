@@ -10,11 +10,12 @@ const notFound = vi.hoisted(() => vi.fn(() => {
 }));
 vi.mock("next/navigation", () => ({ notFound }));
 
-import PrivacyPolicyRoute from "@/app/privacy/page";
+import PrivacyPolicyRoute, { metadata } from "@/app/privacy/page";
 import { ContactTrigger } from "@/components/layout/contact-trigger";
 import { CONSENT_COOKIE } from "@/lib/analytics/consent";
 import { PENDING_AUDIENCE_COOKIE } from "@/lib/onboarding/pending-audience";
 import { PENDING_EMAIL_COOKIE } from "@/lib/onboarding/pending-email";
+import { PRIVACY_POLICY_EFFECTIVE_DATE } from "@/lib/privacy/policy";
 
 afterEach(() => vi.unstubAllEnvs());
 
@@ -30,18 +31,39 @@ beforeAll(() => {
   };
 });
 
-describe("/privacy while a draft", () => {
-  it("404s on Vercel Production", () => {
+describe("/privacy once published", () => {
+  it("renders on Vercel Production, with its effective date and no draft markings", () => {
     vi.stubEnv("VERCEL_ENV", "production");
-    expect(() => PrivacyPolicyRoute()).toThrow("NEXT_NOT_FOUND");
-  });
-
-  it("renders on previews, marked as a draft with its open items visible", () => {
-    vi.stubEnv("VERCEL_ENV", "preview");
     render(<PrivacyPolicyRoute />);
     expect(screen.getByRole("heading", { level: 1, name: "Privacy Policy" })).toBeTruthy();
-    expect(screen.getByRole("note").textContent).toContain("Draft — not in effect.");
-    expect(screen.getAllByText(/^To confirm:/).length).toBeGreaterThan(5);
+    expect(screen.getByText(`Effective date: ${PRIVACY_POLICY_EFFECTIVE_DATE}`)).toBeTruthy();
+    expect(screen.queryByRole("note")).toBeNull();
+    expect(screen.queryAllByText(/To confirm/)).toHaveLength(0);
+  });
+
+  it("is indexable", () => {
+    expect(metadata.robots).toBeUndefined();
+  });
+
+  it("leaves no open item in the source", () => {
+    const source = readFileSync(join(process.cwd(), "src/app/privacy/page.tsx"), "utf8");
+    // The only <Todo> left is the effective-date fallback, which renders only while the date is null.
+    expect(source.match(/<Todo>/g)).toHaveLength(1);
+    expect(source).toContain("PRIVACY_POLICY_EFFECTIVE_DATE ?? <Todo>");
+  });
+
+  it("states US hosting for analytics, matching the PostHog project", () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    render(<PrivacyPolicyRoute />);
+    const text = (document.body.textContent ?? "").replace(/\s+/g, " ");
+    expect(text.match(/PostHog stores our analytics data in the United States/g)).toHaveLength(2);
+    expect(text).not.toMatch(/Frankfurt|European Union region|analytics data in the European/);
+  });
+
+  it("describes a decline outside the prior-consent regions as PostHog handles it with cookieless mode off", () => {
+    const source = readFileSync(join(process.cwd(), "src/app/privacy/page.tsx"), "utf8");
+    expect(source).toContain("PostHog discards it on arrival under our settings, so your visit is not counted or stored");
+    expect(source).not.toContain("Visits are still counted");
   });
 });
 

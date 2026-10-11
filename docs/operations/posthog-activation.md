@@ -6,8 +6,71 @@ for the privacy contact decision and late-arriving events. Every step that
 changes PostHog, Vercel or production needs separate, explicit approval.
 
 Background: docs/architecture/analytics.md (what is sent, consent, identity). The
-privacy policy draft: `/privacy` (preview deployments only; see
-`src/lib/privacy/policy.ts`).
+privacy policy: `/privacy` (published by the `feat/publish-urdais-privacy-policy` PR;
+see `src/lib/privacy/policy.ts`).
+
+## Launch: the short path
+
+The published policy **states** the PostHog configuration below (US hosting, 1-year
+free-plan retention, IP not stored, no location lookup). So the order is fixed:
+
+**A. Create and configure PostHog** (no data flows: production has no key yet)
+
+1. **Done (11 October 2026):** a dedicated urdais.com project on **US Cloud**
+   (`us.posthog.com`). Stay on the **free plan** (1-year event retention). The region
+   cannot be changed later (§ 3).
+2. Organization → Legal → "+ New" → **Data Processing Agreement** → send for signature.
+3. Project settings: **"Discard client IP data" on**. Check it explicitly: PostHog
+   turns it on by default only for EU organisations.
+4. Data pipelines: **GeoIP transformation off** (disable it if listed).
+5. Project settings → Session replay: **off**.
+6. Web analytics: **"Cookieless server hash mode" off**. With it off, the cookieless
+   events a decliner outside the EEA/UK/CH sends are accepted and then dropped at
+   ingestion (`cookieless_team_disabled` in PostHog's ingestion pipeline; they may
+   briefly show in Live events, never in stored events or insights). The policy says
+   exactly this. The app is unchanged: regional consent behaviour stays as
+   implemented.
+7. Authorized URLs: add `https://urdais.com`.
+8. Settings → Personal API keys: create a key with **`person:write`** only, scoped to
+   this project. Note the numeric **project id** and the **project key** (`phc_…`).
+
+**B. Publish the policy:** merge the publication PR. `/privacy` then serves in
+production and the footer and consent panel link to it.
+
+**C. Vercel → Project → Settings → Environment Variables, Production only**, in this
+order (secrets go straight into Vercel, never into chat or the repo):
+
+| Variable | Value | Scope |
+| --- | --- | --- |
+| `POSTHOG_PERSONAL_API_KEY` | the `person:write` key | server-only; account erasure |
+| `POSTHOG_PROJECT_ID` | the numeric project id | server-only; account erasure |
+| `NEXT_PUBLIC_POSTHOG_KEY` | the `phc_…` project key | enables analytics |
+| `NEXT_PUBLIC_POSTHOG_HOST` | `https://us.i.posthog.com` | enables analytics |
+
+**D. Redeploy production without the build cache** (the public variables are inlined
+at build time). Note the previous deployment id as the rollback target.
+
+**E. Verify** (normal browser, no DNT/GPC, PostHog → Activity / Live events open):
+
+1. Open `https://urdais.com/?utm_source=launch_test&utm_campaign=launch`: one
+   `$pageview`, with those UTM properties.
+2. Navigate client-side to another page: exactly **one** more `$pageview`.
+3. Open an index page and `/map`: `product_viewed` plus `index_viewed` / `map_viewed`.
+4. Consent: in a private window, Decline → no new stored events for that window.
+   Privacy settings → Accept → events resume. With a GPC browser: no request to
+   PostHog at all. (EEA behaviour by VPN if available: no request before a choice.)
+5. `premium_cta_clicked` from "Get Full Access" on a locked page. No real payment;
+   `checkout_started` only from a test account that abandons Stripe's page.
+6. Erasure job: Vercel → Logs, `/api/cron/analytics-erasure` returns **200** (`held 0`)
+   on its next 12:30 UTC run. A 401 means `CRON_SECRET` is missing; a 500 with held
+   records means the PostHog credentials are wrong.
+
+**Rollback:** Vercel Instant Rollback to the noted deployment (§ Kill switch). Keep the
+two server-only variables either way.
+
+**After launch:** the weekly late-event check (§ Late-arriving events).
+
+The detailed reasoning for each step follows.
 
 ## The activation sequence
 
@@ -30,8 +93,10 @@ Each step is a gate: do not start one until the previous is done.
 - [x] Operator (confirmed 11 October 2026): Urdais is operated individually by
       **Bryceson Jones, Georgia, United States**. Not a registered company, and not
       associated with any other company. No public postal address is published.
-- [ ] Every remaining "To confirm" item in the privacy policy answered. They fall into
-      three groups:
+- [x] Every "To confirm" item in the policy resolved for publication (11 October 2026):
+      operator defaults confirmed (18+, no sale, no third-party behavioural advertising,
+      change notice), PostHog configuration stated as in § Launch, general wording where
+      a plan-specific value could not be verified. The record of how each was found:
 
   **A. Technical facts** (verified 11 October 2026 unless marked)
 
@@ -49,11 +114,11 @@ Each step is a gate: do not start one until the previous is done.
 
   | Decision | Recommendation |
   | --- | --- |
-  | PostHog region | **EU** (§ 3). Fixed at creation. |
+  | PostHog region | **US Cloud**, chosen at creation (11 October 2026). Fixed. |
   | IP retention | "Discard client IP data" **on** (§ 6). |
   | GeoIP | **Off** initially (§ 6); the policy then needs no location wording beyond what it says. |
   | DPAs | Sign PostHog's DPA in-app (§ 4). Confirm the DPAs of Vercel, Supabase, Stripe and Resend are accepted under their terms for this account. Each publishes one. |
-  | Cookieless mode | **Off at launch** (§ 5): decliners outside the EEA/UK/CH are then simply not counted. Turn on later if those counts are wanted. |
+  | Cookieless mode | **Off at launch** (§ 5): decliners outside the EEA/UK/CH are then simply not counted. Turning it on later requires a policy update first. |
   | Retention | **Free plan (1 year)** unless a paid feature is needed; the policy states whichever applies. |
   | Late-event check | **Weekly**, by hand, to start (§ Late-arriving events). |
 
@@ -93,18 +158,19 @@ Each step is a gate: do not start one until the previous is done.
 
 - A **dedicated** project for urdais.com in the organisation that will own the data;
   never one holding other sites' data. Confirm the organisation and project names.
-- **EU (Frankfurt) is the preferred region.** Ingestion host `https://eu.i.posthog.com`;
-  app and API host `https://eu.posthog.com`. US equivalents: `us.i.posthog.com`,
-  `us.posthog.com`.
+- **Region: US Cloud** (project created 11 October 2026). Ingestion host
+  `https://us.i.posthog.com`; app and API host `https://us.posthog.com`, which the
+  erasure code derives from the ingestion host.
 - **The region is effectively permanent**: PostHog offers cross-region migration only
-  on its Scale/Enterprise plans, run by PostHog. Choose before collecting any data.
-- EU hosting is not by itself a transfer guarantee: PostHog's subprocessors include US
-  services (posthog.com/subprocessors), and its DPA relies on the EU-U.S. Data Privacy
-  Framework plus the Standard Contractual Clauses.
+  on its Scale/Enterprise plans, run by PostHog.
+- Visitors outside the US, including consenting EEA/UK/CH visitors, therefore have
+  analytics data transferred to the US. The policy says so; PostHog's DPA relies on the
+  EU-U.S. Data Privacy Framework (UK and Swiss extensions) plus the Standard
+  Contractual Clauses.
 
 ### 4. Data processing agreement and retention
 
-- **DPA:** app.posthog.com (or eu.posthog.com) → Organization → Legal
+- **DPA:** us.posthog.com → Organization → Legal
   (`/legal`) → "+ New" → "Data Processing Agreement (DPA)" → "Send for signature".
   Available on every plan; PostHog countersigns in advance.
 - **Retention** (posthog.com/docs/data/events-retention):
@@ -167,7 +233,7 @@ wait for them.
 2. `POSTHOG_PROJECT_ID` — the numeric project id (Project settings → General).
 3. `NEXT_PUBLIC_POSTHOG_KEY` — the project key (`phc_…`). Never a personal key; the
    code refuses one.
-4. `NEXT_PUBLIC_POSTHOG_HOST` — the ingestion host, e.g. `https://eu.i.posthog.com`.
+4. `NEXT_PUBLIC_POSTHOG_HOST` — the ingestion host: `https://us.i.posthog.com`.
 
 Not Preview or Development: preview traffic would be counted as visitors. Keep the
 erasure credentials for as long as PostHog may hold Urdais data, even if analytics is

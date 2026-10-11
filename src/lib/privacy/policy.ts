@@ -17,10 +17,10 @@
 
 export type PrivacyPolicyStatus = "draft" | "published";
 
-export const PRIVACY_POLICY_STATUS: PrivacyPolicyStatus = "draft";
+export const PRIVACY_POLICY_STATUS: PrivacyPolicyStatus = "published";
 
 /** Set when the policy is published. Null while it is a draft. */
-export const PRIVACY_POLICY_EFFECTIVE_DATE: string | null = null;
+export const PRIVACY_POLICY_EFFECTIVE_DATE: string | null = "11 October 2026";
 
 export const PRIVACY_POLICY_HREF = "/privacy";
 

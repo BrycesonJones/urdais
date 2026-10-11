@@ -34,6 +34,11 @@ describe("SiteFooter contact", () => {
     expect(document.querySelector('a[href="/contact"]')).toBeNull();
   });
 
+  it("links the published privacy policy", () => {
+    render(<SiteFooter />);
+    expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
+  });
+
   it("keeps the other footer links", () => {
     render(<SiteFooter />);
     expect(screen.getByRole("link", { name: "Docs" })).toHaveAttribute("href", "/docs");
