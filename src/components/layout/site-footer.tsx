@@ -33,7 +33,7 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <ContactTrigger className={linkClass} />
+              <ContactTrigger className={`uppercase ${linkClass}`} />
             </li>
             <li>
               <a href={X_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>

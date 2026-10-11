@@ -2,7 +2,7 @@
  * The privacy policy's publication state.
  *
  * The policy at `/privacy` is a **draft** until the open items it marks — legal
- * entity, privacy contact, retention periods, provider settings — are confirmed
+ * entity, retention periods, provider settings — are confirmed
  * and someone decides to publish it. While it is a draft:
  *
  * - production answers `/privacy` with a 404, so an unfinished policy is never

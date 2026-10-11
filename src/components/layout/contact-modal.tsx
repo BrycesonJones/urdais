@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, MouseEvent, SyntheticEvent } from "react";
 
 import {
@@ -16,10 +16,6 @@ type ContactModalProps = {
 
 type Status = "idle" | "sending" | "success" | "error";
 type FieldErrors = { email?: ContactFieldError; message?: ContactFieldError };
-
-const HEADING_ID = "contact-modal-heading";
-const EMAIL_ERROR_ID = "contact-email-error";
-const MESSAGE_ERROR_ID = "contact-message-error";
 
 /** Long enough for a slow provider, short enough that Send never hangs indefinitely. */
 const REQUEST_TIMEOUT_MS = 20_000;
@@ -65,6 +61,9 @@ async function postContact(value: { email: string; message: string }): Promise<b
  * read-only, and Send is disabled. The ref guard is what actually stops a fast
  * double-click: the second click can land before React re-renders the button
  * as disabled.
+ *
+ * Element ids come from `useId`, because a page can hold more than one form: the
+ * footer's, and the one the privacy policy opens.
  */
 export function ContactModal({ open, onClose }: ContactModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -75,6 +74,12 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
   const [status, setStatus] = useState<Status>("idle");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const sending = status === "sending";
+  const id = useId();
+  const headingId = `${id}-heading`;
+  const emailId = `${id}-email`;
+  const messageId = `${id}-message`;
+  const emailErrorId = `${id}-email-error`;
+  const messageErrorId = `${id}-message-error`;
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -153,7 +158,7 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
   return (
     <dialog
       ref={dialogRef}
-      aria-labelledby={HEADING_ID}
+      aria-labelledby={headingId}
       onCancel={handleCancel}
       onClose={handleDialogClose}
       onClick={handleBackdropClick}
@@ -183,19 +188,19 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
           </svg>
         </button>
 
-        <h2 id={HEADING_ID} className="text-2xl font-semibold tracking-tight text-neutral-50">
+        <h2 id={headingId} className="text-2xl font-semibold tracking-tight text-neutral-50">
           Contact
         </h2>
 
         {/* noValidate: the shared rules decide, so the browser's own bubbles never disagree with them. */}
         <form onSubmit={handleSubmit} noValidate className="mt-8 flex flex-col gap-8">
           <div>
-            <label htmlFor="contact-email" className={labelClass}>
+            <label htmlFor={emailId} className={labelClass}>
               Your email
             </label>
             <input
               ref={emailRef}
-              id="contact-email"
+              id={emailId}
               name="email"
               type="email"
               autoComplete="email"
@@ -203,33 +208,33 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
               readOnly={sending}
               onInput={() => handleFieldInput("email")}
               aria-invalid={fieldErrors.email ? true : undefined}
-              aria-describedby={fieldErrors.email ? EMAIL_ERROR_ID : undefined}
+              aria-describedby={fieldErrors.email ? emailErrorId : undefined}
               className={`mt-2 ${fieldClass}`}
             />
             {fieldErrors.email && (
-              <p id={EMAIL_ERROR_ID} className={fieldErrorClass}>
+              <p id={emailErrorId} className={fieldErrorClass}>
                 {CONTACT_FIELD_ERROR_TEXT[fieldErrors.email]}
               </p>
             )}
           </div>
 
           <div>
-            <label htmlFor="contact-message" className={labelClass}>
+            <label htmlFor={messageId} className={labelClass}>
               How can we help?
             </label>
             <textarea
               ref={messageRef}
-              id="contact-message"
+              id={messageId}
               name="message"
               rows={5}
               readOnly={sending}
               onInput={() => handleFieldInput("message")}
               aria-invalid={fieldErrors.message ? true : undefined}
-              aria-describedby={fieldErrors.message ? MESSAGE_ERROR_ID : undefined}
+              aria-describedby={fieldErrors.message ? messageErrorId : undefined}
               className={`mt-2 resize-none ${fieldClass}`}
             />
             {fieldErrors.message && (
-              <p id={MESSAGE_ERROR_ID} className={fieldErrorClass}>
+              <p id={messageErrorId} className={fieldErrorClass}>
                 {CONTACT_FIELD_ERROR_TEXT[fieldErrors.message]}
               </p>
             )}

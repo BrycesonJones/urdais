@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 
 import { PrivacySettingsButton } from "@/components/analytics/privacy-settings-button";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { ContactTrigger } from "@/components/layout/contact-trigger";
 import { SiteHeader } from "@/components/layout/site-header";
 import {
   PRIVACY_POLICY_EFFECTIVE_DATE,
@@ -29,8 +30,8 @@ export const dynamic = "force-dynamic";
  *
  * Every statement here describes behaviour verified in this repository or in the
  * network payloads PostHog actually receives (see docs/architecture/analytics.md).
- * Anything that could not be verified — the legal entity, a privacy contact,
- * retention periods, provider account settings — is a visible "To confirm" item,
+ * Anything that could not be verified — the legal entity, retention periods,
+ * provider account settings — is a visible "To confirm" item,
  * never a guess. Publication is gated in `@/lib/privacy/policy`.
  */
 export default function PrivacyPolicyRoute() {
@@ -75,6 +76,7 @@ export default function PrivacyPolicyRoute() {
               <li>Payments are handled by Stripe on Stripe&rsquo;s own checkout page. Urdais never receives your card number.</li>
               <li>We do not show advertising and do not sell personal information. <Todo>confirm as a standing commitment</Todo></li>
               <li>You can delete your account yourself from your account page.</li>
+              <li>Privacy questions and requests go through our contact form, which does not need an account.</li>
             </ul>
           </Section>
 
@@ -246,6 +248,14 @@ export default function PrivacyPolicyRoute() {
               minutes of loading the site again.{" "}
               <Todo>expected completion time to state publicly</Todo>
             </p>
+            <p>
+              The deletion request covers the events PostHog has received when we make it. Events that reach PostHog
+              unusually late can remain after it: for example, from a browser tab on another device that was opened
+              while you were signed in and has not been reloaded since, or from a delay in PostHog&rsquo;s own
+              processing. Such events can recreate an analytics profile linked to your former account identifier. We
+              check for these profiles and ask PostHog to delete them as well.{" "}
+              <Todo>how often this check runs, before stating it</Todo>
+            </p>
           </Section>
 
           <Section id="choices" title="Your choices">
@@ -272,7 +282,11 @@ export default function PrivacyPolicyRoute() {
               Depending on where you live, you may have the right to access the personal information we hold about you,
               correct it, delete it, receive a copy of it, object to or restrict how we use it, and withdraw consent you
               have given. You may also have the right to complain to your data protection authority. To make a request,
-              contact us (below). We will not treat you differently for exercising these rights.
+              use the contact form (see{" "}
+              <a href="#privacy-requests" className="underline underline-offset-2 text-neutral-100 hover:text-white">
+                Privacy questions and requests
+              </a>
+              ). We will not treat you differently for exercising these rights.
               <Todo>legal bases relied on (consent, contract, legitimate interests) and region-specific notices, after legal review</Todo>
             </p>
           </Section>
@@ -307,9 +321,32 @@ export default function PrivacyPolicyRoute() {
             </p>
           </Section>
 
-          <Section id="contact" title="Contact">
+          <Section id="privacy-requests" title="Privacy Questions and Requests">
+            <p>Use our contact form for any question or request about your personal information, including:</p>
+            <ul>
+              <li>a request to access the personal information we hold about you;</li>
+              <li>a request to correct it;</li>
+              <li>a request to delete it;</li>
+              <li>questions about analytics and your consent choices;</li>
+              <li>any other privacy question.</li>
+            </ul>
+            {/* A div, not a p: the trigger renders the form's <dialog>, which a <p> cannot contain. */}
+            <div>
+              <ContactTrigger className="font-medium underline underline-offset-2 text-neutral-100 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8ca4ff]">
+                Open the contact form
+              </ContactTrigger>
+            </div>
             <p>
-              Use the contact form in the site footer. <Todo>a dedicated privacy contact address</Todo>
+              The same form opens from &ldquo;Contact&rdquo; in the site footer on every page. You do not need an
+              account to use it. It sends us the email address you enter and your message, as described under
+              &ldquo;Contact form&rdquo; above, and we reply to that address.
+            </p>
+            <p>
+              You do not need to ask us to delete your account or change your analytics choice: you can delete your
+              account yourself from{" "}
+              <Link href="/account" className="underline underline-offset-2 text-neutral-100 hover:text-white">your account page</Link>, and change
+              your analytics choice with the privacy settings control described under &ldquo;Your choices&rdquo;.{" "}
+              <Todo>how we confirm a requester&rsquo;s identity, and any response time to state, after legal review</Todo>
             </p>
           </Section>
         </article>
@@ -321,7 +358,7 @@ export default function PrivacyPolicyRoute() {
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section aria-labelledby={`${id}-heading`} className="mt-10 flex flex-col gap-3 text-sm leading-relaxed [&_li]:mt-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_code]:text-neutral-100 [&_strong]:text-neutral-100">
+    <section id={id} aria-labelledby={`${id}-heading`} className="mt-10 scroll-mt-24 flex flex-col gap-3 text-sm leading-relaxed [&_li]:mt-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_code]:text-neutral-100 [&_strong]:text-neutral-100">
       <h2 id={`${id}-heading`} className="text-lg font-semibold text-neutral-50">
         {title}
       </h2>

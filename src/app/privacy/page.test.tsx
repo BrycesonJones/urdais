@@ -1,7 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/components/layout/site-header", () => ({ SiteHeader: () => null }));
 vi.mock("@/components/layout/site-footer", () => ({ SiteFooter: () => null }));
@@ -11,11 +11,24 @@ const notFound = vi.hoisted(() => vi.fn(() => {
 vi.mock("next/navigation", () => ({ notFound }));
 
 import PrivacyPolicyRoute from "@/app/privacy/page";
+import { ContactTrigger } from "@/components/layout/contact-trigger";
 import { CONSENT_COOKIE } from "@/lib/analytics/consent";
 import { PENDING_AUDIENCE_COOKIE } from "@/lib/onboarding/pending-audience";
 import { PENDING_EMAIL_COOKIE } from "@/lib/onboarding/pending-email";
 
 afterEach(() => vi.unstubAllEnvs());
+
+// jsdom implements <dialog> markup but none of its methods; the same stubs as the footer test.
+beforeAll(() => {
+  HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+    this.open = true;
+  };
+  HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+    if (!this.open) return;
+    this.open = false;
+    this.dispatchEvent(new Event("close"));
+  };
+});
 
 describe("/privacy while a draft", () => {
   it("404s on Vercel Production", () => {
@@ -29,6 +42,60 @@ describe("/privacy while a draft", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Privacy Policy" })).toBeTruthy();
     expect(screen.getByRole("note").textContent).toContain("Draft — not in effect.");
     expect(screen.getAllByText(/^To confirm:/).length).toBeGreaterThan(5);
+  });
+});
+
+describe("privacy questions and requests", () => {
+  function requestsSection() {
+    vi.stubEnv("VERCEL_ENV", "preview");
+    render(<PrivacyPolicyRoute />);
+    const heading = screen.getByRole("heading", { level: 2, name: "Privacy Questions and Requests" });
+    return heading.closest("section")!;
+  }
+
+  it("names every kind of request the contact form takes", () => {
+    const text = requestsSection().textContent ?? "";
+    for (const kind of ["access", "correct", "delete", "analytics and your consent choices", "any other privacy question"]) {
+      expect(text).toContain(kind);
+    }
+    expect(text).toContain("You do not need an account");
+  });
+
+  it("opens the existing contact form in place", () => {
+    const section = requestsSection();
+    const trigger = within(section).getByRole("button", { name: "Open the contact form" });
+    expect(trigger).toHaveAttribute("aria-haspopup", "dialog");
+    fireEvent.click(trigger);
+    const dialog = within(section).getByRole<HTMLDialogElement>("dialog", { name: "Contact" });
+    expect(dialog.open).toBe(true);
+    expect(within(dialog).getByLabelText("Your email")).toBeTruthy();
+  });
+
+  it("is reached from the rights section", () => {
+    vi.stubEnv("VERCEL_ENV", "preview");
+    render(<PrivacyPolicyRoute />);
+    const rights = screen.getByRole("heading", { level: 2, name: "Your rights" }).closest("section")!;
+    expect(within(rights).getByRole("link", { name: "Privacy questions and requests" })).toHaveAttribute("href", "#privacy-requests");
+    expect(document.getElementById("privacy-requests")).not.toBeNull();
+  });
+
+  it("keeps its form's ids distinct from the footer's form on the same page", () => {
+    vi.stubEnv("VERCEL_ENV", "preview");
+    render(
+      <>
+        <PrivacyPolicyRoute />
+        <ContactTrigger />
+      </>,
+    );
+    const ids = screen.getAllByLabelText("Your email").map((input) => input.id);
+    expect(ids).toHaveLength(2);
+    expect(new Set(ids).size).toBe(2);
+    const headings = screen.getAllByRole("dialog", { hidden: true }).map((dialog) => dialog.getAttribute("aria-labelledby"));
+    expect(new Set(headings).size).toBe(2);
+  });
+
+  it("no longer asks for a dedicated privacy address: the contact form is the channel", () => {
+    expect(readFileSync(join(process.cwd(), "src/app/privacy/page.tsx"), "utf8")).not.toContain("dedicated privacy contact");
   });
 });
 

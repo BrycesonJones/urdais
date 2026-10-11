@@ -103,6 +103,7 @@ complete    auth_subject and account_id nulled
 - **Billing management survives until billing is terminated.** No local or Auth deletion happens before `billing_terminated`.
 - **Premium ends at the irreversible boundary.** The revocation commits with `billing_terminated`. A deletion that stalls later never leaves access active.
 - **Never cross-account.** Only the Customer mapped to the session's account is listed or modified.
+- **Late analytics events are a residual risk.** The PostHog erasure covers events received when it is requested. One that arrives later under the deleted account's id (a tab on another device left open without reloading, or a PostHog ingestion delay) recreates a PostHog person after `complete` has nulled the id. A periodic check finds these by id shape and erases them: docs/operations/posthog-activation.md § Late-arriving events. The privacy policy discloses it.
 
 ### Behaviour by state
 
